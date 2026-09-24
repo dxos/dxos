@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MirrorPatch, type Op, applyOps, isContainer } from './ops.ts';
+import { InvalidOpError, type MirrorPatch, type Op, applyOps, isContainer } from './ops.ts';
 import { transformLists } from './transform.ts';
 
 /**
@@ -160,10 +160,11 @@ export class MirrorClientState<T = unknown> {
 
   /**
    * Adopts a fresh snapshot after the worker lost the history this tab was confirmed against.
-   * Unconfirmed edits are replayed on top as a best effort and sent again.
+   * Unconfirmed edits are replayed on top as a best effort and sent again, except an in-flight batch
+   * the snapshot already contains.
    */
-  reset(snapshot: T, version: number, heads: readonly string[]): MirrorPatch[] {
-    const pending = this.pendingOps;
+  reset(snapshot: T, version: number, heads: readonly string[], inflightApplied = false): MirrorPatch[] {
+    const pending = inflightApplied ? this.#buffer : this.pendingOps;
     this.#confirmed = snapshot;
     this.#version = version;
     this.#heads = heads;
@@ -193,11 +194,42 @@ export class MirrorClientState<T = unknown> {
     }
     this.#version = version;
     this.#heads = heads;
+    this.requeue();
+    return { patches, rebuilt };
+  }
+
+  /**
+   * Discards the in-flight batch the worker refused for good. Buffered edits that still apply to the
+   * confirmed state are kept; what readers see is rebuilt from them.
+   */
+  drop(): MirrorPatch[] {
+    if (!this.#inflight) {
+      return [];
+    }
+    this.#inflight = undefined;
+    let root = this.#confirmed;
+    const kept: Op[] = [];
+    for (const op of this.#buffer) {
+      try {
+        root = applyOps(root, [op], { strict: true }).root;
+        kept.push(op);
+      } catch (err) {
+        if (!(err instanceof InvalidOpError)) {
+          throw err;
+        }
+      }
+    }
+    this.#buffer = kept;
+    this.#current = root;
+    return [{ action: 'put', path: [], value: root }];
+  }
+
+  /** Returns the in-flight batch to the buffer, once the worker has settled that it did not apply it. */
+  requeue(): void {
     if (this.#inflight) {
       this.#buffer = [...this.#inflight.ops, ...this.#buffer];
       this.#inflight = undefined;
     }
-    return { patches, rebuilt };
   }
 }
 
@@ -247,9 +279,9 @@ export class MirrorSequencer {
     return next;
   }
 
-  /** Entries after `version`, or undefined when some were already trimmed. */
+  /** Entries after `version`, or undefined when some were already trimmed or `version` is not from this numbering. */
   since(version: number): Entry[] | undefined {
-    if (version < this.oldestBase) {
+    if (version < this.oldestBase || version > this.#version) {
       return undefined;
     }
     return this.#entries.filter((entry) => entry.version > version);
@@ -263,7 +295,7 @@ export class MirrorSequencer {
 
 /** Structural equality of two mirror values; leaves such as RawString compare by class and text. */
 export const mirrorEquals = (left: unknown, right: unknown): boolean => {
-  if (left === right) {
+  if (left === right || Object.is(left, right)) {
     return true;
   }
   if (!isContainer(left) || !isContainer(right)) {
@@ -285,6 +317,9 @@ export const mirrorEquals = (left: unknown, right: unknown): boolean => {
 };
 
 const leafEquals = (left: unknown, right: unknown): boolean => {
+  if (left instanceof Date && right instanceof Date) {
+    return left.getTime() === right.getTime();
+  }
   if (left instanceof Uint8Array && right instanceof Uint8Array) {
     return left.length === right.length && left.every((byte, index) => byte === right[index]);
   }

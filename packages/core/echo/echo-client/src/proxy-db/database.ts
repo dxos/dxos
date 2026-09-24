@@ -1123,12 +1123,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     dataService,
     queryService,
     feedService,
+    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
     feedService?: FeedService.Client;
+    mirrorService?: MirrorService.Client;
   }): void {
-    this._entityManager._updateServices({ dataService, queryService });
+    this._entityManager._updateServices({ dataService, queryService, mirrorService });
     if (feedService !== undefined && feedService !== this.#feedService) {
       const stale = [...this.#feeds.values()];
       this.#feeds.clear();

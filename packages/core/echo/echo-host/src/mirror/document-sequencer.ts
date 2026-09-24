@@ -17,7 +17,9 @@ export interface SequencedDocument {
 export type SubmitResult =
   | { type: 'applied'; entries: Mirror.Entry[] }
   /** The batch is older than the retained window; the tab must resubscribe from its heads. */
-  | { type: 'resync'; entries: Mirror.Entry[] };
+  | { type: 'resync'; entries: Mirror.Entry[] }
+  /** The batch does not fit the document or holds a value Automerge refuses; nothing of it was written. */
+  | { type: 'rejected'; entries: Mirror.Entry[]; error: Error };
 
 /** An entry rebuilt from Automerge history, numbered by the receiving tab. */
 export type RecoveredEntry = Omit<Mirror.Entry, 'version'>;
@@ -72,8 +74,7 @@ export class DocumentSequencer {
 
   /**
    * Applies a tab's batch. Returns every entry it produced, including one absorbing changes that
-   * arrived since the last entry. Throws if an op no longer fits the document, which means the
-   * transforms and the document disagree.
+   * arrived since the last entry, which the caller must send whatever the outcome.
    */
   submit(target: SequencedDocument, clientId: string, batch: Mirror.Batch): SubmitResult {
     const entries: Mirror.Entry[] = [];
@@ -87,21 +88,30 @@ export class DocumentSequencer {
       return { type: 'resync', entries };
     }
 
-    let skipped = 0;
     if (ops.length > 0) {
-      target.change(
-        (draft) => {
-          skipped = applyOpsToDraft(draft, ops);
-        },
-        { message: encodeBatchMessage(clientId, batch.batchId) },
-      );
-    }
-    if (skipped > 0) {
-      throw new Error(`Batch ${batch.batchId} had ${skipped} ops that did not fit the document`);
+      try {
+        // Automerge rolls a change back when its callback throws, so a batch lands whole or not at all.
+        target.change(
+          (draft) => {
+            const skipped = applyOpsToDraft(draft, ops);
+            if (skipped > 0) {
+              throw new Error(`Batch ${batch.batchId} had ${skipped} ops that did not fit the document`);
+            }
+          },
+          { message: encodeBatchMessage(clientId, batch.batchId) },
+        );
+      } catch (err) {
+        return { type: 'rejected', entries, error: err instanceof Error ? err : new Error(String(err)) };
+      }
     }
     this.#heads = A.getHeads(target.doc());
     entries.push(this.#sequencer.append({ ops, heads: this.#heads, origin: { clientId, batchId: batch.batchId } }));
     return { type: 'applied', entries };
+  }
+
+  /** Whether any change in the document's history was written for the batch. Reads all change metadata. */
+  static containsBatch(doc: A.Doc<unknown>, batchId: string): boolean {
+    return A.getChangesMetaSince(doc, []).some((change) => decodeBatchMessage(change.message)?.batchId === batchId);
   }
 
   /**

@@ -349,7 +349,7 @@ export class RepoProxy extends Resource implements ClientRepo {
   /**
    * Update the data service reference after reconnection.
    */
-  _updateDataService(dataService: DataService.Client): void {
+  _updateServices({ dataService }: { dataService: DataService.Client }): void {
     this._dataService = dataService;
   }
 

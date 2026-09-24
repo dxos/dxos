@@ -204,15 +204,20 @@ export class EchoClient extends Resource {
     dataService,
     queryService,
     feedService,
+    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
     feedService?: FeedService.Client;
+    mirrorService?: MirrorService.Client;
   }): void {
     log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
+    if (mirrorService) {
+      this._mirrorService = mirrorService;
+    }
 
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
@@ -231,7 +236,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService, feedService });
+      db._updateServices({ dataService, queryService, feedService, mirrorService });
     }
   }
 

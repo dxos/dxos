@@ -1,0 +1,151 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { type Op, applyOps, freezeValue } from './ops.ts';
+import { mirrorEquals } from './protocol.ts';
+import { transformLists } from './transform.ts';
+
+/** A leaf class, as RawString is: stored and compared whole, never merged. */
+class Leaf {
+  constructor(readonly value: string) {}
+
+  toString(): string {
+    return this.value;
+  }
+}
+
+/** Both orders of applying two concurrent op lists reach the same state (TP1), and every op still applies. */
+const converges = (base: unknown, left: Op[], right: Op[], leftFirst: boolean): boolean => {
+  const [leftPrime, rightPrime] = transformLists(left, right, leftFirst);
+  const viaRight = applyOps(applyOps(base, right, { strict: true }).root, leftPrime, { strict: true }).root;
+  const viaLeft = applyOps(applyOps(base, left, { strict: true }).root, rightPrime, { strict: true }).root;
+  return mirrorEquals(viaLeft, viaRight);
+};
+
+/** Edge cases an adversarial review of the transforms picked, kept so each stays covered by name. */
+describe('transform edge cases', () => {
+  const base = freezeValue({
+    text: 'abcdef',
+    empty: '',
+    leaf: new Leaf('r'),
+    list: [{ title: 'zero', items: ['x'] }, { title: 'one', items: [] }, 'two', 'three'],
+    map: { 'key': { nested: [1, 2, 3] }, '0': 'numeric key' },
+  });
+
+  const cases: [string, Op[], Op[]][] = [
+    [
+      'splice at the end against splice at the end',
+      [{ type: 'splice', path: ['text'], index: 6, remove: 0, insert: 'X' }],
+      [{ type: 'splice', path: ['text'], index: 6, remove: 0, insert: 'Y' }],
+    ],
+    [
+      'splice at the end against deleting the tail',
+      [{ type: 'splice', path: ['text'], index: 6, remove: 0, insert: 'X' }],
+      [{ type: 'splice', path: ['text'], index: 3, remove: 3, insert: '' }],
+    ],
+    [
+      'inserts into an empty text',
+      [{ type: 'splice', path: ['empty'], index: 0, remove: 0, insert: 'A' }],
+      [{ type: 'splice', path: ['empty'], index: 0, remove: 0, insert: 'B' }],
+    ],
+    [
+      'a no-op splice against deleting everything',
+      [{ type: 'splice', path: ['text'], index: 2, remove: 0, insert: '' }],
+      [{ type: 'splice', path: ['text'], index: 0, remove: 6, insert: '' }],
+    ],
+    [
+      'overlapping replacements',
+      [{ type: 'splice', path: ['text'], index: 1, remove: 3, insert: 'PQ' }],
+      [{ type: 'splice', path: ['text'], index: 2, remove: 3, insert: 'RS' }],
+    ],
+    [
+      'put at a list index against a remove covering it',
+      [{ type: 'put', path: ['list', 2], value: 'TWO' }],
+      [{ type: 'remove', path: ['list', 1], count: 3 }],
+    ],
+    [
+      'put at a list index against an insert at it',
+      [{ type: 'put', path: ['list', 2], value: 'TWO' }],
+      [{ type: 'insert', path: ['list', 2], values: ['new'] }],
+    ],
+    [
+      'puts at the same list index',
+      [{ type: 'put', path: ['list', 2], value: 'A' }],
+      [{ type: 'put', path: ['list', 2], value: 'B' }],
+    ],
+    [
+      'removing to the end against appending',
+      [{ type: 'remove', path: ['list', 2], count: 2 }],
+      [{ type: 'insert', path: ['list', 4], values: ['end'] }],
+    ],
+    [
+      'overlapping removes',
+      [{ type: 'remove', path: ['list', 1], count: 3 }],
+      [{ type: 'remove', path: ['list', 2], count: 2 }],
+    ],
+    [
+      'deleting a map key against an insert inside it',
+      [{ type: 'del', path: ['map', 'key'] }],
+      [{ type: 'insert', path: ['map', 'key', 'nested', 0], values: [0] }],
+    ],
+    [
+      'deleting a map key against a put inside it',
+      [{ type: 'del', path: ['map', 'key'] }],
+      [{ type: 'put', path: ['map', 'key', 'extra'], value: 1 }],
+    ],
+    [
+      'a text in a list element against removing the element',
+      [{ type: 'splice', path: ['list', 0, 'title'], index: 4, remove: 0, insert: '!' }],
+      [{ type: 'remove', path: ['list', 0], count: 1 }],
+    ],
+    [
+      'a text in a list element against replacing the element',
+      [{ type: 'splice', path: ['list', 0, 'title'], index: 0, remove: 1, insert: 'Z' }],
+      [{ type: 'put', path: ['list', 0], value: { title: 'replaced' } }],
+    ],
+    [
+      'a text in a list element against moving the element',
+      [{ type: 'splice', path: ['list', 0, 'title'], index: 0, remove: 0, insert: '>' }],
+      [
+        { type: 'remove', path: ['list', 0], count: 1 },
+        { type: 'insert', path: ['list', 3], values: [{ title: 'zero', items: ['x'] }] },
+      ],
+    ],
+    [
+      'a text that is a list element against an insert before it',
+      [{ type: 'splice', path: ['list', 2], index: 3, remove: 0, insert: '?' }],
+      [{ type: 'insert', path: ['list', 0], values: ['a', 'b'] }],
+    ],
+    [
+      'a numeric-string map key written by name and by number',
+      [{ type: 'put', path: ['map', '0'], value: 'A' }],
+      [{ type: 'put', path: ['map', 0], value: 'B' }],
+    ],
+    [
+      'puts of leaf values',
+      [{ type: 'put', path: ['leaf'], value: new Leaf('a') }],
+      [{ type: 'put', path: ['leaf'], value: new Leaf('b') }],
+    ],
+    [
+      'a remove split by an insert, followed by more ops',
+      [
+        { type: 'remove', path: ['list', 0], count: 4 },
+        { type: 'insert', path: ['list', 0], values: ['fresh'] },
+      ],
+      [
+        { type: 'insert', path: ['list', 2], values: ['mid1', 'mid2'] },
+        { type: 'splice', path: ['list', 2], index: 0, remove: 0, insert: '*' },
+      ],
+    ],
+  ];
+
+  for (const [name, left, right] of cases) {
+    test(name, () => {
+      expect(converges(base, left, right, true)).toBe(true);
+      expect(converges(base, left, right, false)).toBe(true);
+    });
+  }
+});

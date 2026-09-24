@@ -87,6 +87,8 @@ export class EchoTestPeer extends Resource {
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _clients = new Set<EchoClient>();
+  /** Clients served JSON mirrors; a restarted host hands them its new mirror service. */
+  private readonly _mirrorClients = new WeakSet<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   /** Owns the in-process effect-rpc clients bridged from the host handlers. */
@@ -188,6 +190,15 @@ export class EchoTestPeer extends Resource {
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
   private async _connectServices(client: EchoClient, mirror = Boolean(process.env.DX_ECHO_MIRROR)): Promise<void> {
+    const { mirrorService, ...services } = await this._makeServiceClients();
+    if (mirror) {
+      this._mirrorClients.add(client);
+    }
+    // DX_ECHO_MIRROR runs every test client on JSON mirrors instead of Automerge replicas.
+    client.connectToService({ ...services, ...(mirror ? { mirrorService } : {}) });
+  }
+
+  private async _makeServiceClients() {
     invariant(this._serviceScope, 'Service scope not initialized');
     const [dataService, queryService, feedService, mirrorService] = await EffectEx.runPromise(
       Effect.all([
@@ -197,8 +208,34 @@ export class EchoTestPeer extends Resource {
         makeInProcessClient(MirrorService.Rpcs, this._echoHost.mirrorService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    // DX_ECHO_MIRROR runs every test client on JSON mirrors instead of Automerge replicas.
-    client.connectToService({ dataService, queryService, feedService, ...(mirror ? { mirrorService } : {}) });
+    return { dataService, queryService, feedService, mirrorService };
+  }
+
+  /**
+   * Replaces the host with a new one over the same storage while clients stay open, as when a
+   * dedicated worker restarts and tabs reconnect in place.
+   * @param whileDown Runs after the old host closed and before clients reconnect.
+   */
+  async restartHost(whileDown?: () => Promise<void> | void): Promise<void> {
+    await this._echoHost.close(this._ctx);
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+    }
+    await this._managedRuntime.dispose();
+    await whileDown?.();
+
+    this._managedRuntime = this._createManagedRuntime();
+    this._echoHost = new EchoHost({
+      runtime: this._managedRuntime.contextEffect,
+      assignQueuePositions: this._assignQueuePositions,
+    });
+    this._serviceScope = Effect.runSync(Scope.make());
+    await this._echoHost.open(this._ctx);
+    for (const client of this._clients) {
+      const { mirrorService, ...services } = await this._makeServiceClients();
+      client._updateServices({ ...services, ...(this._mirrorClients.has(client) ? { mirrorService } : {}) });
+      await client._notifyReconnect();
+    }
   }
 
   protected override async _close(ctx: Context): Promise<void> {

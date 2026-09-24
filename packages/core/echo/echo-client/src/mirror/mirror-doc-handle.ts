@@ -10,6 +10,7 @@ import { Event, Trigger, TriggerState } from '@dxos/async';
 import { Mirror } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type MirrorService } from '@dxos/protocols/rpc';
 
 import {
@@ -43,6 +44,9 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   /** Fires when the worker confirms a batch or the handle catches up; flush waits on it. */
   readonly confirmed = new Event<void>();
 
+  /** Fires when an entry skips versions; resubscribing from this tab's version fills the gap. */
+  readonly gap = new Event<void>();
+
   readonly #clientId: string;
   readonly #onDelete: () => void;
   readonly #ready = new Trigger();
@@ -56,12 +60,15 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   /** Edits made before the worker's first snapshot. */
   #early: Mirror.Op[] = [];
   #deleted = false;
+  /** Created by this tab, so flush waits for the worker's first snapshot of it. */
+  readonly #created: boolean;
 
   constructor({ clientId, documentId, initialValue, onDelete }: MirrorDocHandleOptions<T>) {
     super();
     this.#clientId = clientId;
     this.#documentId = documentId;
     this.#onDelete = onDelete;
+    this.#created = initialValue !== undefined;
     // Wire and caller data become the mirror's frozen state; T is the caller's promise about its shape.
     this.#local = Mirror.freezeValue((initialValue ?? {}) as T);
   }
@@ -90,6 +97,23 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   get hasPending(): boolean {
     return this.#early.length > 0 || (this.#client?.hasPending ?? false);
+  }
+
+  /** Whether an unconfirmed op writes at `path`, inside it, or replaces a container above it. */
+  hasPendingAt(path: readonly (string | number)[]): boolean {
+    return this.pendingOps.some((op) => {
+      const shared = Math.min(op.path.length, path.length);
+      return op.path.slice(0, shared).every((key, index) => String(key) === String(path[index]));
+    });
+  }
+
+  /** A document this tab created that the worker has not sent back yet. */
+  get awaitingCreation(): boolean {
+    return this.#created && !this.isReady();
+  }
+
+  get isDeleted(): boolean {
+    return this.#deleted;
   }
 
   doc(): AutomergeDoc<T> {
@@ -162,7 +186,13 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (!this.#client || !this.#epoch) {
       return undefined;
     }
-    return { epoch: this.#epoch, version: this.#client.version, heads: [...this.#client.heads] };
+    const inflight = this.#client.inflight?.batchId;
+    return {
+      epoch: this.#epoch,
+      version: this.#client.version,
+      heads: [...this.#client.heads],
+      ...(inflight ? { inflight } : {}),
+    };
   }
 
   /** The next batch to submit, if there is no batch in flight and there are buffered edits. */
@@ -216,6 +246,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
         return this.#applyEntry(event);
       case 'recovered':
         return this.#applyRecovered(event);
+      case 'caughtUp':
+        return this.#applyCaughtUp(event);
       case 'requesting':
         return this._markRequesting();
       case 'unavailable':
@@ -230,7 +262,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     this.#epoch = event.epoch;
     let patches: Mirror.MirrorPatch[];
     if (this.#client) {
-      patches = this.#client.reset(value, event.version, event.heads);
+      patches = this.#client.reset(value, event.version, event.heads, event.applied ?? false);
     } else {
       this.#client = new Mirror.MirrorClientState<T>(this.#clientId, value, event.version, event.heads);
       this.#client.applyLocal(this.#early);
@@ -243,8 +275,12 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   #applyEntry(event: Extract<MirrorService.DocumentEvent, { type: 'entry' }>): void {
-    if (!this.#client || event.epoch !== this.#epoch || event.entry.version !== this.#client.version + 1) {
-      // A resubscription after a worker restart brings this handle up to date.
+    if (!this.#client || event.epoch !== this.#epoch || event.entry.version <= this.#client.version) {
+      // Another numbering, which a resubscription replaces, or an entry already integrated.
+      return;
+    }
+    if (event.entry.version > this.#client.version + 1) {
+      this.gap.emit();
       return;
     }
     const before = this.doc();
@@ -263,7 +299,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   #applyRecovered(event: Extract<MirrorService.DocumentEvent, { type: 'recovered' }>): void {
-    if (!this.#client) {
+    if (!this.#client || event.epoch === this.#epoch) {
+      // Recovery answers a tab that knew another worker; this one already follows the stream.
       return;
     }
     const before = this.doc();
@@ -280,6 +317,34 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (patches.length > 0) {
       this.#emitHostChange(before, patches);
     }
+    this.confirmed.emit();
+  }
+
+  /** Discards the batch in flight once the worker has refused it for good. */
+  _drop(batchId: string): void {
+    if (!this.#client || this.#client.inflight?.batchId !== batchId) {
+      return;
+    }
+    const before = this.doc();
+    const patches = this.#client.drop();
+    this.#emitHostChange(before, patches);
+    this.confirmed.emit();
+  }
+
+  #applyCaughtUp(event: Extract<MirrorService.DocumentEvent, { type: 'caughtUp' }>): void {
+    if (!this.#client || event.epoch !== this.#epoch) {
+      return;
+    }
+    if (event.version !== this.#client.version) {
+      // The in-flight batch stays unsettled rather than risk sending it twice.
+      log.warn('caught-up marker does not match the entries received', {
+        documentId: this.#documentId,
+        expected: event.version,
+        actual: this.#client.version,
+      });
+      return;
+    }
+    this.#client.requeue();
     this.confirmed.emit();
   }
 

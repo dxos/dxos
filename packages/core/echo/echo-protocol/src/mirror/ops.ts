@@ -320,36 +320,3 @@ export const isOp = (value: unknown): value is Op => {
       return false;
   }
 };
-
-/**
- * Maps a position in the text at `path` through later entries' edits to that text. `assoc` decides
- * whether a position at an insertion point stays before (-1) or moves after (1) the inserted text.
- */
-export const mapPosition = (
-  position: number,
-  path: Path,
-  entries: readonly { readonly ops: readonly Op[] }[],
-  assoc: -1 | 1 = 1,
-): number => {
-  let mapped = position;
-  for (const entry of entries) {
-    for (const op of entry.ops) {
-      if (
-        op.type !== 'splice' ||
-        op.path.length !== path.length ||
-        !op.path.every((key, i) => String(key) === String(path[i]))
-      ) {
-        continue;
-      }
-      if (mapped < op.index || (mapped === op.index && assoc < 0)) {
-        continue;
-      }
-      if (mapped >= op.index + op.remove) {
-        mapped += op.insert.length - op.remove;
-      } else {
-        mapped = op.index + (assoc > 0 ? op.insert.length : 0);
-      }
-    }
-  }
-  return mapped;
-};

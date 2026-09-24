@@ -43,6 +43,8 @@ export const SnapshotEvent = Schema.Struct({
   version: Schema.Number,
   heads: Heads,
   value: Schema.Unknown,
+  /** Whether `value` contains the in-flight batch the resubscribing tab named in `Known.inflight`. */
+  applied: Schema.optional(Schema.Boolean),
 });
 
 /** The next step of a document's history, in the worker's order. */
@@ -55,7 +57,8 @@ export const EntryEvent = Schema.Struct({
 
 /**
  * What happened after a resubscribing tab's confirmed heads, rebuilt from Automerge history by a
- * worker that restarted, followed by the new worker's numbering.
+ * worker that restarted, followed by the new worker's numbering. Sent only to a tab that knew
+ * another epoch; the origins in `entries` settle whether its in-flight batch was applied.
  */
 export const RecoveredEvent = Schema.Struct({
   type: Schema.Literal('recovered'),
@@ -64,6 +67,17 @@ export const RecoveredEvent = Schema.Struct({
   version: Schema.Number,
   heads: Heads,
   entries: mutableArray(RecoveredEntry),
+});
+
+/**
+ * Ends the entries answering a tab that resubscribed to the same worker. The tab holds everything
+ * through `version`, so an in-flight batch it has seen no entry for was not applied and never will be.
+ */
+export const CaughtUpEvent = Schema.Struct({
+  type: Schema.Literal('caughtUp'),
+  documentId: Schema.String,
+  epoch: Schema.String,
+  version: Schema.Number,
 });
 
 /** The document is not on the worker's disk; it is being fetched from the network. */
@@ -82,6 +96,7 @@ export const DocumentEvent = Schema.Union([
   SnapshotEvent,
   EntryEvent,
   RecoveredEvent,
+  CaughtUpEvent,
   RequestingEvent,
   UnavailableEvent,
 ]);
@@ -98,7 +113,13 @@ export const SubscribeRequest = Schema.Struct({
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
-export const Known = Schema.Struct({ epoch: Schema.String, version: Schema.Number, heads: Heads });
+export const Known = Schema.Struct({
+  epoch: Schema.String,
+  version: Schema.Number,
+  heads: Heads,
+  /** The batch the tab has in flight, whose fate the answer settles. */
+  inflight: Schema.optional(Schema.String),
+});
 export interface Known extends Schema.Schema.Type<typeof Known> {}
 
 export const UpdateSubscriptionRequest = Schema.Struct({
@@ -128,10 +149,13 @@ export const SubmitResult = Schema.Struct({
   batchId: Schema.String,
   /**
    * `applied`: saved, and its entry is on the subscription stream.
-   * `resync`: based on history the worker no longer holds; resubscribe with known heads.
-   * `stale`: sent to a previous worker's epoch; a recovery event follows.
+   * `resync`: based on history the worker no longer holds, and not applied.
+   * `stale`: not applied: sent to another worker's epoch, or before the subscription followed the document.
+   * On `resync` and `stale` the tab resubscribes, and the answer settles the batch.
+   * `rejected`: does not fit the document or holds a value Automerge refuses; nothing of it was written,
+   * and resending cannot help, so the tab drops it.
    */
-  status: Schema.Literals(['applied', 'resync', 'stale']),
+  status: Schema.Literals(['applied', 'resync', 'stale', 'rejected']),
 });
 
 export const SubmitResponse = Schema.Struct({ results: mutableArray(SubmitResult) });

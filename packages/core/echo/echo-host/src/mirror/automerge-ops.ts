@@ -155,18 +155,17 @@ export const applyOpsToDraft = (draft: unknown, ops: readonly Mirror.Op[]): numb
 
 /**
  * Converts the patches of `A.diff(doc, before, after)` into mirror ops that take a mirror of
- * `before` to a mirror of `after`. Patches apply in order; the after-document tells text deletions
- * from list removals and RawString values from text, which patches leave ambiguous.
+ * `before` to a mirror of `after`. Patches apply in order. RawString values arrive as instances; a
+ * new text arrives as an empty string followed by splices. The after-document tells text deletions
+ * from list removals: a deletion's parent path is final, since Automerge reports an object's own
+ * patches before those of its children.
  */
 export const patchesToOps = (patches: readonly Patch[], after: unknown): Mirror.Op[] => {
   const ops: Mirror.Op[] = [];
-  const isRaw = (path: readonly (string | number)[]) => Mirror.getAt(after, path) instanceof A.RawString;
   for (const patch of patches) {
     switch (patch.action) {
       case 'put': {
-        const value =
-          typeof patch.value === 'string' && isRaw(patch.path) ? new A.RawString(patch.value) : toMirror(patch.value);
-        ops.push({ type: 'put', path: patch.path, value });
+        ops.push({ type: 'put', path: patch.path, value: toMirror(patch.value) });
         break;
       }
       case 'del': {
@@ -183,12 +182,7 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Mirror.
         break;
       }
       case 'insert': {
-        const listPath = patch.path.slice(0, -1);
-        const start = Number(patch.path[patch.path.length - 1]);
-        const values = patch.values.map((value, offset) =>
-          typeof value === 'string' && isRaw([...listPath, start + offset]) ? new A.RawString(value) : toMirror(value),
-        );
-        ops.push({ type: 'insert', path: patch.path, values });
+        ops.push({ type: 'insert', path: patch.path, values: patch.values.map((value) => toMirror(value)) });
         break;
       }
       case 'splice': {

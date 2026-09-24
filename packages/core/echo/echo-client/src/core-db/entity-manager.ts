@@ -949,6 +949,15 @@ export class EntityManager implements IDatabaseBinding {
     if (!rootHeads?.length) {
       return;
     }
+    if (this._repoProxy instanceof MirrorRepo) {
+      // A mirror cannot test ancestry; the worker holds the heads by now, so catching up with it covers them.
+      await asyncTimeout(
+        this._repoProxy.catchUp(rootDocumentId),
+        RPC_TIMEOUT,
+        'waiting for the space root document to replicate to the client',
+      );
+      return;
+    }
 
     await asyncTimeout(
       Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
@@ -1084,13 +1093,15 @@ export class EntityManager implements IDatabaseBinding {
   _updateServices({
     dataService,
     queryService,
+    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
+    mirrorService?: MirrorService.Client;
   }): void {
     this._dataService = dataService;
     this._queryService = queryService;
-    this._repoProxy._updateDataService(dataService);
+    this._repoProxy._updateServices({ dataService, mirrorService });
   }
 
   async _onReconnect(): Promise<void> {

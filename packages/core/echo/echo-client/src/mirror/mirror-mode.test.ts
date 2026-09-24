@@ -9,13 +9,14 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
 import { toMirror } from '@dxos/echo-host';
-import { Mirror } from '@dxos/echo-protocol';
+import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { getObjectCore } from '../echo-handler/index.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
+import { MirrorDocHandle } from './mirror-doc-handle.ts';
 import { MirrorRepo } from './mirror-repo.ts';
 
 /** Tabs holding JSON mirrors against one host, which is the only realm running Automerge here. */
@@ -110,12 +111,14 @@ describe('mirror mode', () => {
     Obj.update(obj, (obj) => {
       obj.value = 2;
     });
-    // Unconfirmed: the value is visible at once, the heads are not.
+    // Unconfirmed: the value is visible at once, the heads are not, so there is no version to report.
     expect(obj.value).toBe(2);
-    expect(Obj.version(obj)).toEqual(before);
+    expect(Obj.version(obj).automergeHeads).toEqual(before.automergeHeads);
+    expect(Obj.version(obj).versioned).toBe(false);
 
     await db.flush();
-    expect(Obj.version(obj)).not.toEqual(before);
+    expect(Obj.version(obj).versioned).toBe(true);
+    expect(Obj.version(obj).automergeHeads).not.toEqual(before.automergeHeads);
   });
 
   test('cursors resolve through concurrent and unconfirmed edits', async () => {
@@ -163,5 +166,145 @@ describe('mirror mode', () => {
     Obj.update(obj, (obj) => Text.update(obj, 'title', 'edited by replica'));
     await replica.flush();
     await expect.poll(() => inTab?.title).toBe('edited by replica');
+  });
+
+  test('a worker restart keeps confirmed edits and applies edits made while it was down once', async () => {
+    const [tabA, tabB] = await openTabs(2);
+    const task = tabA.add(Obj.make(TestSchema.Expando, { title: 'before', log: ['confirmed'] }));
+    await tabA.flush();
+    const [inB] = await tabB.query(Filter.id(task.id)).run();
+    const documentId = getObjectCore(task).docHandle?.documentId;
+    invariant(documentId, 'object has no document');
+
+    await peer.restartHost(() => {
+      // No worker is running: both tabs hold these as unconfirmed edits.
+      Obj.update(task, (task) => {
+        task.log.push('A while down');
+      });
+      Obj.update(inB, (inB) => {
+        inB.log.push('B while down');
+        Text.update(inB, 'title', 'before, after');
+      });
+    });
+    await Promise.all([tabA.flush(), tabB.flush()]);
+    await Promise.all([tabA.flush(), tabB.flush()]);
+
+    for (const obj of [task, inB]) {
+      expect([...obj.log].sort()).toEqual(['A while down', 'B while down', 'confirmed']);
+      expect(obj.title).toBe('before, after');
+    }
+    // The new worker's Automerge copy holds each edit once.
+    const host = await hostValue(documentId);
+    const data = Mirror.getAt(host, ['objects', task.id, 'data']);
+    expect(data).toEqual(expect.objectContaining({ title: 'before, after' }));
+    expect(Mirror.getAt(host, ['objects', task.id, 'data', 'log'])).toHaveLength(3);
+    const handle = getObjectCore(task).docHandle;
+    invariant(handle instanceof MirrorDocHandle, 'not a mirror document');
+    expect(handle.hasPending).toBe(false);
+    expect(handle.heads.length).toBeGreaterThan(0);
+  });
+
+  test('a tab reconnecting to the same worker writes once, whether or not the worker kept the document', async () => {
+    const [tabA, tabB] = await openTabs(2);
+    const task = tabA.add(Obj.make(TestSchema.Expando, { log: ['one'] }));
+    await tabA.flush();
+    const [inB] = await tabB.query(Filter.id(task.id)).run();
+    const documentId = getObjectCore(task).docHandle?.documentId;
+    invariant(documentId, 'object has no document');
+
+    // Tab B keeps the document followed, so the worker keeps its numbering; the edit may be in flight.
+    Obj.update(task, (task) => {
+      task.log.push('two');
+    });
+    await tabA._onReconnect();
+    Obj.update(task, (task) => {
+      task.log.push('three');
+    });
+    await tabA.flush();
+    await expect.poll(() => [...inB.log]).toEqual(['one', 'two', 'three']);
+
+    // Alone, the tab is the document's last subscriber: the worker starts a new numbering for it.
+    const [solo] = await openTabs(1);
+    const note = solo.add(Obj.make(TestSchema.Expando, { log: ['one'] }));
+    await solo.flush();
+    Obj.update(note, (note) => {
+      note.log.push('two');
+    });
+    await solo._onReconnect();
+    Obj.update(note, (note) => {
+      note.log.push('three');
+    });
+    await solo.flush();
+    expect([...note.log]).toEqual(['one', 'two', 'three']);
+
+    for (const [obj, id] of [
+      [task, documentId],
+      [note, getObjectCore(note).docHandle?.documentId],
+    ] as const) {
+      invariant(id, 'object has no document');
+      expect(Mirror.getAt(await hostValue(id), ['objects', obj.id, 'data', 'log'])).toEqual(['one', 'two', 'three']);
+    }
+  });
+
+  test('random edits across worker restarts converge with every edit applied once', async () => {
+    const seeds = Number(process.env.MIRROR_FUZZ_SEEDS ?? 3);
+    const totals = { restarts: 0, edits: 0 };
+    for (let seed = 1; seed <= seeds; seed++) {
+      // A peer per seed, so a restart reconnects only this seed's tabs.
+      peer = await builder.createPeer();
+      const random = MirrorTesting.createRandom(seed);
+      const tabs = await openTabs(3);
+      const task = tabs[0].add(Obj.make(TestSchema.Expando, { log: [], text: '' }));
+      await tabs[0].flush();
+      const objects = await Promise.all(tabs.map(async (tab) => (await tab.query(Filter.id(task.id)).run())[0]));
+      const expected: string[] = [];
+
+      const edit = (round: number) => {
+        objects.forEach((obj, tab) => {
+          if (random.chance(0.6)) {
+            const marker = `${seed}.${round}.${tab}`;
+            expected.push(marker);
+            // Between markers only, so a marker is never split and each one can be counted.
+            const boundaries = [0, ...[...obj.text].flatMap((char, index) => (char === '>' ? [index + 1] : []))];
+            Obj.update(obj, (obj) => {
+              obj.log.push(marker);
+              Text.splice(obj, 'text', random.pick(boundaries), 0, `<${marker}>`);
+            });
+          }
+        });
+      };
+
+      for (let round = 0; round < 12; round++) {
+        edit(round);
+        if (random.chance(0.3)) {
+          // Batches may be in flight when the worker goes away; more edits arrive while it is down.
+          totals.restarts++;
+          await peer.restartHost(() => edit(round + 0.5));
+        } else if (random.chance(0.5)) {
+          await Promise.all(tabs.map((tab) => tab.flush()));
+        }
+      }
+      await Promise.all(tabs.map((tab) => tab.flush()));
+      await Promise.all(tabs.map((tab) => tab.flush()));
+
+      const markers = expected.slice().sort();
+      for (const obj of objects) {
+        expect([...obj.log].sort(), `seed ${seed}`).toEqual(markers);
+        expect(obj.text, `seed ${seed}`).toBe(objects[0].text);
+        expect(
+          obj.text
+            .match(/<[^>]+>/g)
+            ?.slice()
+            .sort() ?? [],
+          `seed ${seed}`,
+        ).toEqual(markers.map((marker) => `<${marker}>`).sort());
+      }
+      const documentId = getObjectCore(task).docHandle?.documentId;
+      invariant(documentId, 'object has no document');
+      expect(Mirror.getAt(await hostValue(documentId), ['objects', task.id, 'data', 'text'])).toBe(objects[0].text);
+      totals.edits += expected.length;
+      await peer.close();
+    }
+    console.log(totals);
   });
 });

@@ -8,7 +8,7 @@ import type { EventEmitter } from 'eventemitter3';
 
 import type { Event } from '@dxos/async';
 import type { Context } from '@dxos/context';
-import type { DataService } from '@dxos/protocols/rpc';
+import type { DataService, MirrorService } from '@dxos/protocols/rpc';
 
 import type * as Doc from './Doc.ts';
 
@@ -78,6 +78,7 @@ export interface ClientRepo {
   flushCreations(): Promise<void>;
   open(ctx?: Context): Promise<unknown>;
   close(ctx?: Context): Promise<unknown>;
-  _updateDataService(dataService: DataService.Client): void;
+  /** Replaces service clients after the worker changed; a mirror repo also takes the new mirror service. */
+  _updateServices(services: { dataService: DataService.Client; mirrorService?: MirrorService.Client }): void;
   _onReconnect(): Promise<void>;
 }

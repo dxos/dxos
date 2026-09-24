@@ -34,10 +34,17 @@ type Subscription = {
 
 type HostedDocument = {
   readonly documentId: DocumentId;
+  /**
+   * Names the sequencer's numbering. A new one each time the worker starts following the document,
+   * including after its last subscriber left, so a tab never reads versions from another numbering.
+   */
+  readonly epoch: string;
   readonly sequencer: DocumentSequencer;
   readonly subscribers: Set<Subscription>;
   /** Batches already applied, so a batch resent after a lost response is not applied twice. */
   readonly applied: Set<string>;
+  /** Entries whose changes may not be saved yet; sent in order once a save succeeds. */
+  readonly unsent: Mirror.Entry[];
   /** Serializes work on the document, so entries reach tabs in the order they reached Automerge. */
   queue: Promise<unknown>;
 };
@@ -52,8 +59,6 @@ export type MirrorServiceProps = {
  * and only then broadcast, so no tab ever confirms a change a restart could lose.
  */
 export class MirrorServiceImpl extends Resource implements MirrorService.Handlers {
-  /** Identifies this worker's numbering; a tab holding another epoch resubscribes from its heads. */
-  readonly #epoch = PublicKey.random().toHex();
   readonly #automergeHost: AutomergeHost;
   readonly #documents = new Map<DocumentId, HostedDocument>();
   readonly #subscriptions = new Map<string, Subscription>();
@@ -63,8 +68,10 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
     this.#automergeHost = automergeHost;
   }
 
-  get 'epoch'(): string {
-    return this.#epoch;
+  protected override async '_close'(): Promise<void> {
+    // Work still queued stops at its next step; the Automerge host closes right after this service.
+    this.#documents.clear();
+    this.#subscriptions.clear();
   }
 
   protected override async '_open'(): Promise<void> {
@@ -126,12 +133,18 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
           request.batches.map(async (batch) => {
             const documentId = batch.documentId as DocumentId;
             const hosted = this.#documents.get(documentId);
-            if (batch.epoch !== this.#epoch || !hosted || !hosted.subscribers.has(subscription)) {
+            if (!hosted || batch.epoch !== hosted.epoch || !hosted.subscribers.has(subscription)) {
               return { documentId, batchId: batch.batchId, status: 'stale' as const };
             }
             const ops = batch.ops.filter(Mirror.isOp);
             const status = await this.#enqueue(hosted, async () => {
+              if (this.#documents.get(documentId) !== hosted) {
+                // Dropped while queued: its numbering is gone, and the tab's catch-up settles the batch.
+                return 'stale' as const;
+              }
               if (hosted.applied.has(batch.batchId)) {
+                // A resend after a lost response; its entry may still wait for a save.
+                await this.#publish(hosted);
                 return 'applied' as const;
               }
               const result = await this.#withDocument(documentId, (lease) =>
@@ -144,12 +157,13 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
               if (!result) {
                 throw new Error(`Document ${documentId} could not be loaded`);
               }
-              await this.#automergeHost.flush(Context.default(), { documentIds: [documentId] });
-              this.#broadcast(hosted, result.entries);
-              hosted.sequencer.trim(hosted.sequencer.version - ENTRY_WINDOW);
+              hosted.unsent.push(...result.entries);
               if (result.type === 'applied') {
                 rememberBatch(hosted.applied, batch.batchId);
+              } else if (result.type === 'rejected') {
+                log.warn('mirror batch rejected', { documentId, batchId: batch.batchId, error: result.error });
               }
+              await this.#publish(hosted);
               return result.type;
             });
             return { documentId, batchId: batch.batchId, status };
@@ -204,11 +218,18 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
   }
 
   #requireSubscription(subscriptionId: string): Subscription {
+    this.#requireOpen();
     const subscription = this.#subscriptions.get(subscriptionId);
     if (!subscription) {
       throw new Error('Subscription not found');
     }
     return subscription;
+  }
+
+  #requireOpen(): void {
+    if (!this.isOpen) {
+      throw new Error('Mirror service is closed');
+    }
   }
 
   /**
@@ -218,8 +239,12 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
    */
   async #attach(subscription: Subscription, documentId: DocumentId, known?: MirrorService.Known): Promise<void> {
     subscription.documents.add(documentId);
-    void this.#probeDisk(subscription, documentId);
+    void this.#probeDisk(subscription, documentId).catch((err) => this.#reportBackgroundError(err));
     void this.#deliver(subscription, documentId, known).catch((err) => {
+      if (!this.isOpen) {
+        log('mirror delivery stopped by close', { documentId, err });
+        return;
+      }
       log.warn('mirror document could not be delivered', { documentId, err });
       if (subscription.documents.has(documentId)) {
         subscription.send([{ type: 'unavailable', documentId }]);
@@ -245,37 +270,58 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
       }
       hosted = this.#documents.get(documentId) ?? {
         documentId,
+        epoch: PublicKey.random().toHex(),
         sequencer: new DocumentSequencer(heads),
         subscribers: new Set(),
         applied: new Set(),
+        unsent: [],
         queue: Promise.resolve(),
       };
       this.#documents.set(documentId, hosted);
     }
     const target = hosted;
     if (!subscription.documents.has(documentId)) {
+      this.#dropIfUnfollowed(target);
       return;
     }
     await this.#enqueue(target, async () => {
-      // Anything the tab is about to see must survive a restart.
-      await this.#automergeHost.flush(Context.default(), { documentIds: [documentId] });
+      const current = this.#documents.get(documentId);
+      if (current !== target) {
+        // The last subscriber left while this delivery waited, which dropped the document.
+        if (current) {
+          await this.#deliver(subscription, documentId, known);
+          return;
+        }
+        this.#documents.set(documentId, target);
+      }
+      if (!subscription.documents.has(documentId)) {
+        this.#dropIfUnfollowed(target);
+        return;
+      }
       const event = await this.#withDocument(documentId, (lease): MirrorService.DocumentEvent[] => {
         this.#absorbLoaded(target, lease);
-        const { sequencer } = target;
-        if (known?.epoch === this.#epoch) {
+        const { sequencer, epoch } = target;
+        if (known?.epoch === epoch) {
           const entries = sequencer.since(known.version);
           if (entries) {
-            return entries.map((entry) => ({ type: 'entry', documentId, epoch: this.#epoch, entry: toWire(entry) }));
+            return [
+              ...entries.map((entry): MirrorService.DocumentEvent => ({
+                type: 'entry',
+                documentId,
+                epoch,
+                entry: toWire(entry),
+              })),
+              { type: 'caughtUp', documentId, epoch, version: sequencer.version },
+            ];
           }
-        }
-        if (known) {
+        } else if (known) {
           const recovered = DocumentSequencer.recover(lease.doc(), known.heads);
           if (recovered) {
             return [
               {
                 type: 'recovered',
                 documentId,
-                epoch: this.#epoch,
+                epoch,
                 version: sequencer.version,
                 heads: [...sequencer.heads],
                 entries: recovered.map((entry) => ({
@@ -292,19 +338,30 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
           {
             type: 'snapshot',
             documentId,
-            epoch: this.#epoch,
+            epoch,
             version: sequencer.version,
             heads: [...sequencer.heads],
             value: toMirror(lease.doc()),
+            ...(known?.inflight ? { applied: DocumentSequencer.containsBatch(lease.doc(), known.inflight) } : {}),
           },
         ];
       });
+      // Current subscribers get what was absorbed; the answer goes out only once its changes are saved.
+      await this.#publish(target);
       if (!subscription.documents.has(documentId)) {
+        this.#dropIfUnfollowed(target);
         return;
       }
       target.subscribers.add(subscription);
       subscription.send(event ?? [{ type: 'unavailable', documentId }]);
     });
+  }
+
+  /** Forgets a document nobody follows, unless another numbering already replaced it. */
+  #dropIfUnfollowed(hosted: HostedDocument): void {
+    if (hosted.subscribers.size === 0 && this.#documents.get(hosted.documentId) === hosted) {
+      this.#documents.delete(hosted.documentId);
+    }
   }
 
   #detach(subscription: Subscription, documentId: DocumentId): void {
@@ -321,14 +378,27 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
 
   async #absorb(hosted: HostedDocument): Promise<void> {
     await this.#withDocument(hosted.documentId, (lease) => this.#absorbLoaded(hosted, lease));
+    await this.#publish(hosted);
   }
 
-  /** Broadcasts changes that reached the document outside the sequencer; they are saved by now. */
+  /** Turns changes that reached the document outside the sequencer into an entry to send. */
   #absorbLoaded(hosted: HostedDocument, lease: DocumentLease): void {
     const entry = hosted.sequencer.absorb(lease.doc());
     if (entry) {
-      this.#broadcast(hosted, [entry]);
+      hosted.unsent.push(entry);
     }
+  }
+
+  /**
+   * Saves the document, then sends every entry not sent yet, so no tab confirms a change a restart
+   * could lose. Runs on the document's queue; a failed save keeps the entries for the next attempt.
+   */
+  async #publish(hosted: HostedDocument): Promise<void> {
+    if (hosted.unsent.length === 0) {
+      return;
+    }
+    await this.#automergeHost.flush(Context.default(), { documentIds: [hosted.documentId] });
+    this.#broadcast(hosted, hosted.unsent.splice(0));
   }
 
   #broadcast(hosted: HostedDocument, entries: readonly Mirror.Entry[]): void {
@@ -338,12 +408,13 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
     const events: MirrorService.DocumentEvent[] = entries.map((entry) => ({
       type: 'entry',
       documentId: hosted.documentId,
-      epoch: this.#epoch,
+      epoch: hosted.epoch,
       entry: toWire(entry),
     }));
     for (const subscriber of hosted.subscribers) {
       subscriber.send(events);
     }
+    hosted.sequencer.trim(hosted.sequencer.version - ENTRY_WINDOW);
   }
 
   async #withDocument<T>(documentId: DocumentId, fn: (lease: DocumentLease) => T): Promise<T | undefined> {
@@ -351,10 +422,24 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
     return lease ? fn(lease) : undefined;
   }
 
+  /** Runs `task` after the document's earlier work; the caller gets its failure too. */
   #enqueue<T>(hosted: HostedDocument, task: () => Promise<T>): Promise<T> {
-    const run = hosted.queue.then(task, task);
-    hosted.queue = run.catch((err) => log.catch(err));
+    const guarded = async () => {
+      this.#requireOpen();
+      return task();
+    };
+    const run = hosted.queue.then(guarded, guarded);
+    hosted.queue = run.catch((err) => this.#reportBackgroundError(err));
     return run;
+  }
+
+  /** Work racing a close fails by design; anything else is a fault worth logging. */
+  #reportBackgroundError(err: unknown): void {
+    if (this.isOpen) {
+      log.catch(err);
+    } else {
+      log('mirror work stopped by close', { err });
+    }
   }
 }
 

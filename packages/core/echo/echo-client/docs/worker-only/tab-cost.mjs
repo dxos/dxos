@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Measures what one tab holds for a corpus: an Automerge replica versus a JSON mirror.
+// Measures what one tab holds for a corpus: an Automerge replica, a JSON mirror, or mirrors plus one replica.
 // Each mode runs in its own worker thread, so wasm memory and V8 heap are that realm's alone.
 // Usage: node --expose-gc tab-cost.mjs <corpus.json>
 import { readFileSync } from 'node:fs';
@@ -27,12 +27,21 @@ if (isMainThread) {
           : v;
   const mirrors = docs.map((doc) => plain(doc));
   const bytes = corpus.docs.map((d) => Buffer.from(d.bytes, 'base64'));
+  // The hybrid tab hands one long document to an Automerge library as a replica and mirrors the rest.
+  const handedOver = corpus.docs.findIndex((d) => d.kind === 'document');
+  const payloads = {
+    empty: {},
+    module: {},
+    replica: { bytes },
+    mirror: { mirrors },
+    hybrid: { bytes: [bytes[handedOver]], mirrors: mirrors.filter((_, index) => index !== handedOver) },
+  };
   const run = (mode) =>
     new Promise((resolve, reject) => {
       const worker = new Worker(new URL(import.meta.url), { workerData: { mode } });
       worker.on('message', (msg) => {
         if (msg.ready) {
-          worker.postMessage(mode === 'mirror' ? { mirrors } : mode === 'replica' ? { bytes } : {});
+          worker.postMessage(payloads[mode]);
         } else {
           resolve(msg);
           worker.terminate();
@@ -41,7 +50,7 @@ if (isMainThread) {
       worker.on('error', reject);
     });
   const results = {};
-  for (const mode of ['empty', 'replica', 'mirror', 'replica', 'mirror']) {
+  for (const mode of ['empty', 'module', 'replica', 'mirror', 'hybrid', 'module', 'replica', 'mirror', 'hybrid']) {
     const r = await run(mode);
     results[mode] ??= [];
     results[mode].push(r);
@@ -97,26 +106,39 @@ if (isMainThread) {
   let held;
   parentPort.once('message', async (msg) => {
     let note;
-    if (workerData.mode === 'replica') {
+    const freeze = (v) => {
+      if (v && typeof v === 'object') {
+        Object.values(v).forEach(freeze);
+        Object.freeze(v);
+      }
+      return v;
+    };
+    // As DocHandleProxy does: load the host's bytes, then read the document.
+    const load = (all) => {
       const A = require('@automerge/automerge');
-      // As DocHandleProxy does: load the host's bytes, then read the document.
-      held = msg.bytes.map((b) => A.loadIncremental(A.init(), new Uint8Array(b)));
+      const docs = all.map((b) => A.loadIncremental(A.init(), new Uint8Array(b)));
       let chars = 0;
-      for (const doc of held) {
+      for (const doc of docs) {
         chars += JSON.stringify(doc).length;
       }
-      note = `docs ${held.length}, json chars ${chars}`;
+      return { docs, chars };
+    };
+    if (workerData.mode === 'module') {
+      // What a tab pays before its first replica: the module and one empty document.
+      held = load([]);
+      held.docs.push(require('@automerge/automerge').init());
+      note = 'no documents';
+    } else if (workerData.mode === 'replica') {
+      const { docs, chars } = load(msg.bytes);
+      held = docs;
+      note = `docs ${docs.length}, json chars ${chars}`;
     } else if (workerData.mode === 'mirror') {
-      held = msg.mirrors;
-      const freeze = (v) => {
-        if (v && typeof v === 'object') {
-          Object.values(v).forEach(freeze);
-          Object.freeze(v);
-        }
-        return v;
-      };
-      held.forEach(freeze);
+      held = msg.mirrors.map(freeze);
       note = `docs ${held.length}`;
+    } else if (workerData.mode === 'hybrid') {
+      const { docs, chars } = load(msg.bytes);
+      held = [...docs, ...msg.mirrors.map(freeze)];
+      note = `replicas ${docs.length} (json chars ${chars}), mirrors ${msg.mirrors.length}`;
     }
     await settle();
     const heap = v8.getHeapStatistics().used_heap_size;

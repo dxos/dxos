@@ -42,6 +42,10 @@ class TestWorker {
   submit(clientId: string, batch: Mirror.Batch): 'applied' | 'resync' {
     const result = this.sequencer.submit(this.target, clientId, batch);
     this.#unsaved.push(...result.entries);
+    if (result.type === 'rejected') {
+      // The transforms and the document disagree, which is the property under test.
+      throw result.error;
+    }
     return result.type;
   }
 

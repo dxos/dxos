@@ -115,6 +115,7 @@ import { deepMapValues, defaultMap } from '@dxos/util';
 import * as Doc from '../automerge/Doc.ts';
 import { type ObjectCore } from '../core-db/index.ts';
 import * as DocOps from '../mirror/doc-ops.ts';
+import { MirrorDocHandle } from '../mirror/mirror-doc-handle.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { getBody, getHeader } from './devtools-formatter.ts';
 import {
@@ -343,14 +344,18 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
 
 /** Backs the `ObjectVersionId` slot, i.e. `Obj.version`. The only version accessor in this package. */
 const getVersion = (target: ProxyTarget): Obj.Version => {
-  const accessor = target[symbolInternals].getDocAccessor();
-  const doc = accessor.handle.doc();
+  const core = target[symbolInternals];
+  const doc = core.getDocAccessor().handle.doc();
   invariant(doc);
-  // A mirror's heads are the last confirmed ones; an object the worker has not confirmed has none.
   const heads = DocOps.getHeads(doc);
+  // A mirror's heads are the last confirmed ones, so they do not describe an object with unconfirmed edits.
+  const versioned =
+    core.docHandle instanceof MirrorDocHandle
+      ? heads.length > 0 && !core.docHandle.hasPendingAt(core.mountPath)
+      : !DocOps.isMirrorDoc(doc) || heads.length > 0;
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
-    versioned: !DocOps.isMirrorDoc(doc) || heads.length > 0,
+    versioned,
     automergeHeads: heads,
   };
 };
