@@ -613,7 +613,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
         // in the browser, in the same frame; placing each row ourselves meant re-placing every row
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
-        <div key={message.id} data-index={index} data-object-id={message.id}>
+        <div key={message.id} data-index={index} data-object-id={message.id} data-window-id={message.id}>
           {!empty && (
             <Column.Root gutter={gutter}>
               {/* The widgets' query container: it must be an element whose width is definite, since

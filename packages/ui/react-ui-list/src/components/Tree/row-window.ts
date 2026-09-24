@@ -34,53 +34,33 @@ export const END_UNIT_KEY = 'end:';
 export const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>[] = []): TreeNodeEntry<T>[] =>
   entries.flatMap((entry) => (entry.group ? spliceGroups(entry.children) : [entry]));
 
-/**
- * The id the window measures a row against — the item's own, because that is what the row element
- * already carries as `data-object-id` and what the window reads back off the DOM.
- */
-export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
+/** The id the window measures a unit by, namespaced by kind so no item collides with a header or the end strip. */
+export const rowUnitId = (unit: RowUnit): string => `${unit.kind}:${unit.key}`;
 
 const indexSiblings = (entries: readonly TreeNodeEntry[] | undefined): Map<TreeNodeEntry, number> =>
   new Map(spliceGroups([...(entries ?? [])]).map((entry, index) => [entry, index]));
 
-/**
- * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
- * cannot be windowed.
- */
-export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
+/** Flattens the visible entries into the rows the window would mount. */
+export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] => {
   const units: RowUnit[] = [];
-  const ids = new Set<string>([END_UNIT_KEY]);
-
-  const visit = (nodes: readonly TreeNodeEntry[] | undefined, siblings: Map<TreeNodeEntry, number>): boolean => {
+  const visit = (nodes: readonly TreeNodeEntry[] | undefined, siblings: Map<TreeNodeEntry, number>) => {
     for (const node of nodes ?? []) {
       if (node.group) {
-        const key = `header:${node.value}`;
-        if (ids.has(key)) {
-          return false;
-        }
-        ids.add(key);
-        units.push({ kind: 'header', key, label: node.props.label });
-        if (!visit(node.children, siblings)) {
-          return false;
-        }
+        units.push({ kind: 'header', key: `header:${node.value}`, label: node.props.label });
+        visit(node.children, siblings);
         continue;
       }
-      if (ids.has(node.id)) {
-        return false;
-      }
 
-      ids.add(node.id);
       const position = { posinset: (siblings.get(node) ?? 0) + 1, setsize: siblings.size };
       units.push({ kind: 'row', key: node.value, node, position });
-      if (node.branch && node.open && !visit(node.children, indexSiblings(node.children))) {
-        return false;
+      if (node.branch && node.open) {
+        visit(node.children, indexSiblings(node.children));
       }
     }
-
-    return true;
   };
 
-  return visit(entries, indexSiblings(entries)) ? units : undefined;
+  visit(entries, indexSiblings(entries));
+  return units;
 };
 
 /**

@@ -404,6 +404,7 @@ const TimelineRowView = memo(
         role='listitem'
         data-index={index}
         data-object-id={commit.id}
+        data-window-id={commit.id}
         data-commit-index={row.index}
         aria-current={current ? 'true' : undefined}
         className='group/row grid gap-1 px-[2px] overflow-hidden items-center pe-2 dx-hover dx-current'

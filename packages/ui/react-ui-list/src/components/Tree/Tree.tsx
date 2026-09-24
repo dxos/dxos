@@ -472,7 +472,7 @@ export const Tree = <T extends { id: string } = any>({
     }
     // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
     // forward one.
-    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"][tabindex]`);
+    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
     if (!row) {
       return;
     }
@@ -621,8 +621,12 @@ export const Tree = <T extends { id: string } = any>({
   );
 
   const units = useMemo(() => {
-    const units = virtualize ? flattenRowUnits(root.children) : undefined;
-    return units && dropAtEnd && draggable ? [...units, { kind: 'end' as const, key: END_UNIT_KEY }] : units;
+    if (!virtualize) {
+      return undefined;
+    }
+
+    const units = flattenRowUnits(root.children);
+    return dropAtEnd && draggable ? [...units, { kind: 'end' as const, key: END_UNIT_KEY }] : units;
   }, [virtualize, root.children, dropAtEnd, draggable]);
   const endData = useMemo<TreeData>(
     () => ({ treeId, id: root.id, path: root.path, item: root.item }),
@@ -756,11 +760,17 @@ const TreeWindow = ({
 
     mounted.push(
       unit.kind === 'header' ? (
-        <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} objectId={unit.key} />
+        <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} windowId={rowUnitId(unit)} />
       ) : unit.kind === 'end' ? (
-        <TreeEndDropTarget key={unit.key} data={endData} windowIndex={index} objectId={unit.key} />
+        <TreeEndDropTarget key={unit.key} data={endData} windowIndex={index} windowId={rowUnitId(unit)} />
       ) : (
-        <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} position={unit.position} />
+        <TreeNodeRow
+          key={unit.key}
+          node={unit.node}
+          windowIndex={index}
+          windowId={rowUnitId(unit)}
+          position={unit.position}
+        />
       ),
     );
   }
@@ -783,11 +793,11 @@ const TreeWindow = ({
 const TreeSectionHeader = ({
   label,
   windowIndex,
-  objectId,
+  windowId,
 }: {
   label: Label;
   windowIndex?: number;
-  objectId?: string;
+  windowId?: string;
 }) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
@@ -797,7 +807,7 @@ const TreeSectionHeader = ({
     <div
       role='presentation'
       data-index={windowIndex}
-      data-object-id={objectId}
+      data-window-id={windowId}
       className={mx(
         'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
         // Cleared past the toggle track so the label starts where the rows' first cell does.
@@ -811,12 +821,14 @@ const TreeSectionHeader = ({
 
 type TreeNodeRowProps = {
   node: TreeNodeEntry;
-  /** Position in the mounted window, when the tree is windowed; the window measures rows by it. */
+  /** Position in the mounted window, when the tree is windowed. */
   windowIndex?: number;
+  /** What the window measures the row by, when the tree is windowed. */
+  windowId?: string;
   position?: RowPosition;
 };
 
-const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position }) => {
+const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, windowId, position }) => {
   if (node.group) {
     return (
       <>
@@ -835,7 +847,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position })
         <TreeView.Branch
           className='col-[tree-row] grid grid-cols-subgrid'
           data-index={windowIndex}
-          data-object-id={node.id}
+          data-window-id={windowId}
           aria-posinset={position?.posinset}
           aria-setsize={position?.setsize}
         >
@@ -847,7 +859,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position })
           <TreeBranchContent node={node} />
         </TreeView.Branch>
       ) : (
-        <TreeNodeRowContent node={node} windowIndex={windowIndex} position={position} />
+        <TreeNodeRowContent node={node} windowIndex={windowIndex} windowId={windowId} position={position} />
       )}
     </TreeView.NodeProvider>
   );
@@ -907,11 +919,11 @@ TreeBranchContent.displayName = 'Tree.BranchContent';
 const TreeEndDropTarget = ({
   data,
   windowIndex,
-  objectId,
+  windowId,
 }: {
   data: TreeData;
   windowIndex?: number;
-  objectId?: string;
+  windowId?: string;
 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [over, setOver] = useState(false);
@@ -937,7 +949,7 @@ const TreeEndDropTarget = ({
       ref={ref}
       role='none'
       data-index={windowIndex}
-      data-object-id={objectId}
+      data-window-id={windowId}
       className='relative col-[tree-row] min-h-(--dx-control)'
     >
       {over && <div className='absolute inset-x-0 top-0 h-0.5 bg-accent-bg' />}
@@ -950,7 +962,7 @@ TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
-const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position }) => {
+const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, windowId, position }) => {
   const {
     treeId,
     draggable: treeDraggable,
@@ -1176,9 +1188,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, posi
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
       data-testid={props.testId}
-      // Read by the window to measure this row; it reads the id off `data-object-id` above, which
-      // is why a windowed tree is one whose item ids are unique.
       data-index={windowIndex}
+      data-window-id={windowId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
       aria-posinset={branch ? undefined : position?.posinset}
       aria-setsize={branch ? undefined : position?.setsize}

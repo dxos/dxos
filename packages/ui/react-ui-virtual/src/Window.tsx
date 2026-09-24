@@ -131,7 +131,7 @@ export type UseWindowOptions = Omit<WindowProps, 'classNames' | 'children'> & {
 export type UseWindowResult = {
   placement: Placement;
   layout: Layout;
-  /** Ref for the element holding the mounted rows, which is what gets measured. */
+  /** Ref for the element holding the mounted rows; each is a direct child carrying `data-index` and `data-window-id`. */
   windowRef: React.RefObject<HTMLDivElement | null>;
   /** Extent of the whole document along the axis, reserve included: what the thumb is scaled to. */
   sizerExtent: number;
@@ -281,7 +281,7 @@ export const useWindow = ({
     for (const element of parent.children) {
       const row = element as HTMLElement;
       const index = Number(row.dataset.index);
-      const id = row.dataset.objectId!;
+      const id = row.dataset.windowId!;
       const actual = Math.round(axis === 'block' ? row.offsetHeight : row.offsetWidth);
       const declared = placement.extentOf(index);
       if (extents.exact) {
@@ -416,7 +416,7 @@ export const Window = ({ classNames, children, controllerRef, ...options }: Wind
   const rows = [];
   for (let index = first; index <= last; index++) {
     rows.push(
-      <div key={getId(index)} data-index={index} data-object-id={getId(index)}>
+      <div key={getId(index)} data-index={index} data-window-id={getId(index)}>
         {children(index, getId(index))}
       </div>,
     );

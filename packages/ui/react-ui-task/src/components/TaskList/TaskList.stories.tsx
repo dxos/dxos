@@ -1313,7 +1313,7 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    await expect(canvasElement.querySelectorAll('[data-object-id][tabindex]')).toHaveLength(7);
+    await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it
     // has no ordinal gutter and does not step in with the tree. Only its own two cells line up.
