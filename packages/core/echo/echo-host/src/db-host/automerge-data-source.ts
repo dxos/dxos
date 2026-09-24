@@ -22,19 +22,6 @@ import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
 
-/**
- * Heads of the document when an object's snapshot was read from it, stored in the snapshot: the
- * cursor records the saved heads, which can trail the resident document the snapshot comes from.
- */
-export const ATTR_HEADS = '@heads';
-
-/**
- * The document's `access` and the object's stored fields other than `data`, exactly as stored, since
- * the JSON form reshapes or drops some of them. Absent when the object holds a value JSON cannot
- * carry, so that a reader rebuilding the document from the snapshot gets it exactly or not at all.
- */
-export const ATTR_STORED = '@stored';
-
 /** Whether a stored value survives JSON unchanged; RawString, bytes, dates and counters do not. */
 const isJsonValue = (value: unknown): boolean => {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') {
@@ -229,11 +216,11 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               queuePosition: null,
               recordId: null,
-              data: {
-                ...objectStructureToJson(objectId, structure),
-                [ATTR_HEADS]: readHeads,
+              data: objectStructureToJson(objectId, structure),
+              documentCopy: {
+                heads: readHeads,
                 ...(isJsonValue(doc.access ?? null) && isJsonValue(structure)
-                  ? { [ATTR_STORED]: { access: doc.access, structure: stored } }
+                  ? { stored: { access: doc.access, structure: stored } }
                   : {}),
               },
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,

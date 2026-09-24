@@ -28,7 +28,7 @@ import {
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { type DocumentObjectRow, IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -48,7 +48,6 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
-import { type IndexedObject } from '../mirror/indexed.ts';
 import { MirrorServiceImpl } from '../mirror/mirror-service.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
@@ -282,7 +281,7 @@ export class EchoHost extends Resource {
 
     this._mirrorService = new MirrorServiceImpl({
       automergeHost: this._automergeHost,
-      readIndexed: (documentId) => this.#readIndexedDocument(documentId),
+      readIndexed: (documentIds) => this.#readIndexedDocuments(documentIds),
     });
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
@@ -1270,29 +1269,12 @@ export class EchoHost extends Resource {
     }
   };
 
-  /** The objects of a document as the index holds them; reads no document. */
-  async #readIndexedDocument(documentId: DocumentId): Promise<IndexedObject[] | undefined> {
+  /** The objects of the given documents as the index holds them; reads no document. */
+  async #readIndexedDocuments(documentIds: readonly string[]): Promise<readonly DocumentObjectRow[]> {
     if (!this._indexEngine) {
-      return undefined;
+      return [];
     }
-    const rows = (
-      await this._indexEngine.queryDocuments([documentId]).pipe(RuntimeProvider.runPromise(this._runtime))
-    ).filter((row) => row.documentId === documentId && !row.queueId);
-    if (rows.length === 0) {
-      return undefined;
-    }
-    const snapshots = new Map(
-      (
-        await this._indexEngine
-          .querySnapshotsJSON(rows.map((row) => row.recordId))
-          .pipe(RuntimeProvider.runPromise(this._runtime))
-      ).map(({ recordId, snapshot }) => [recordId, snapshot]),
-    );
-    const objects = rows.flatMap((row) => {
-      const snapshot = snapshots.get(row.recordId);
-      return snapshot ? [{ objectId: row.objectId, snapshot }] : [];
-    });
-    return objects.length === rows.length ? objects : undefined;
+    return this._indexEngine.queryDocumentObjects(documentIds).pipe(RuntimeProvider.runPromise(this._runtime));
   }
 
   /**
@@ -1433,7 +1415,7 @@ export class EchoHost extends Resource {
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
-        this._mirrorService.onIndexed();
+        this._mirrorService.onIndexed(combinedResult.documents);
       }
 
       return {

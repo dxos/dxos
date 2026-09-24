@@ -14,6 +14,18 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/inde
 import { chunkArray, chunkRows } from '../utils.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
+/** An object as the snapshot store holds it, with what a reader needs to rebuild its document. */
+export type DocumentObjectRow = {
+  readonly documentId: string;
+  readonly objectId: string;
+  /** Null while the store has not caught up with the object. */
+  readonly snapshot: Obj.JSON | null;
+  /** Heads of the document when the object was read; null for rows written before they were kept. */
+  readonly heads: readonly string[] | null;
+  /** The document's `access` and the object's stored fields other than `data`; null when not kept. */
+  readonly stored: unknown;
+};
+
 /**
  * The JSON of every indexed object, keyed by its `objectMeta` record id.
  *
@@ -84,6 +96,39 @@ export class ObjectSnapshotIndex implements Index {
     });
   }
 
+  /** The objects stored in the given documents, read without loading the documents. */
+  queryDocumentObjects = Effect.fn('ObjectSnapshotIndex.queryDocumentObjects')(
+    (documentIds: readonly string[]): Effect.Effect<readonly DocumentObjectRow[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const results: DocumentObjectRow[] = [];
+        for (const chunk of chunkArray([...new Set(documentIds)])) {
+          const rows = yield* sql<{
+            documentId: string;
+            objectId: string;
+            snapshot: string | null;
+            heads: string | null;
+            stored: string | null;
+          }>`
+            SELECT m.documentId, m.objectId, s.snapshot, s.heads, s.stored
+            FROM objectMeta AS m
+            LEFT JOIN objectSnapshot AS s ON s.recordId = m.recordId
+            WHERE ${sql.in('m.documentId', chunk)} AND m.queueId = ''
+          `;
+          for (const row of rows) {
+            results.push({
+              documentId: row.documentId,
+              objectId: row.objectId,
+              snapshot: row.snapshot === null ? null : JSON.parse(row.snapshot),
+              heads: row.heads === null ? null : JSON.parse(row.heads),
+              stored: row.stored === null ? null : JSON.parse(row.stored),
+            });
+          }
+        }
+        return results;
+      }),
+  );
+
   /** Delete snapshot rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ObjectSnapshotIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
@@ -146,13 +191,20 @@ export class ObjectSnapshotIndex implements Index {
         const stored = object.documentId
           ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
           : merged;
-        return { recordId, snapshot: JSON.stringify(stored) };
+        const copy = object.documentCopy;
+        return {
+          recordId,
+          snapshot: JSON.stringify(stored),
+          heads: copy ? JSON.stringify(copy.heads) : null,
+          stored: copy?.stored === undefined ? null : JSON.stringify(copy.stored),
+        };
       });
 
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
+            ON CONFLICT (recordId) DO UPDATE SET
+              snapshot = excluded.snapshot, heads = excluded.heads, stored = excluded.stored
           `;
       }
     }),

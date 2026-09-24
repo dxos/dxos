@@ -49,6 +49,14 @@ export interface IndexerObject {
   data: Obj.JSON;
 
   /**
+   * For an object read from an Automerge document, what the snapshot store keeps beside its JSON so
+   * a reader can rebuild the document without loading it: the document's heads at the read, and the
+   * document's `access` with the object's stored fields other than `data`, exactly as stored.
+   * `stored` is absent when the object holds a value JSON cannot carry.
+   */
+  documentCopy?: { heads: readonly string[]; stored?: unknown };
+
+  /**
    * Unix ms timestamp when this object was first created.
    * Sourced from system.createdAt in the automerge document; null for legacy objects
    * created before this field was introduced.

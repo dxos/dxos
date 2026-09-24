@@ -4,53 +4,52 @@
 
 import type { Obj } from '@dxos/echo';
 import { type DatabaseDirectory, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-
-import { ATTR_HEADS, ATTR_STORED } from '../db-host/automerge-data-source.ts';
-
-/** An object as the index holds it. */
-export type IndexedObject = { readonly objectId: string; readonly snapshot: Obj.JSON };
+import { type DocumentObjectRow } from '@dxos/index-core';
 
 /** A document rebuilt from the index, and the Automerge heads it was read at. */
 export type IndexedDocument = { readonly heads: string[]; readonly value: DatabaseDirectory };
 
-/** What {@link ATTR_STORED} holds: the object's stored fields other than `data`, and its document's `access`. */
+/** What the snapshot store keeps beside an object's JSON: its document's `access` and its other stored fields. */
 type Stored = { readonly access: DatabaseDirectory['access']; readonly structure: Omit<EntityStructure, 'data'> };
 
+/** Rebuilds each document from its objects' rows, leaving out any the index cannot reproduce exactly. */
+export const documentsFromIndex = (rows: readonly DocumentObjectRow[]): Map<string, IndexedDocument> => {
+  const byDocument = Map.groupBy(rows, (row) => row.documentId);
+  const documents = new Map<string, IndexedDocument>();
+  for (const [documentId, documentRows] of byDocument) {
+    const document = documentFromIndex(documentRows);
+    if (document) {
+      documents.set(documentId, document);
+    }
+  }
+  return documents;
+};
+
 /**
- * Rebuilds a document of objects from their index snapshots. Returns undefined when the index cannot
- * stand in for the document exactly: a snapshot without heads or stored fields, or objects read at
- * different heads, since a tab that writes later resubscribes from those heads.
+ * Rebuilds a document of objects from their index rows. Returns undefined unless every object has a
+ * snapshot, its stored fields and the same heads, since a tab that writes later resubscribes from
+ * those heads and receives only what changed since.
  */
-export const documentFromIndex = (objects: readonly IndexedObject[]): IndexedDocument | undefined => {
-  const heads = new Set(objects.map(({ snapshot }) => headsOf(snapshot)?.join('|')));
+export const documentFromIndex = (rows: readonly DocumentObjectRow[]): IndexedDocument | undefined => {
+  const objects: [string, EntityStructure][] = [];
+  const heads = new Set<string>();
+  let access: Stored['access'];
+  for (const { objectId, snapshot, heads: objectHeads, stored } of rows) {
+    if (snapshot === null || objectHeads === null || !isStored(stored)) {
+      return undefined;
+    }
+    heads.add(objectHeads.toSorted().join('|'));
+    access = stored.access;
+    objects.push([objectId, { ...stored.structure, data: dataOf(snapshot) }]);
+  }
   const [only] = heads;
-  const stored = objects.map(({ snapshot }) => storedOf(snapshot));
-  if (objects.length === 0 || heads.size !== 1 || only === undefined || !stored.every((entry) => entry !== undefined)) {
+  if (objects.length === 0 || heads.size !== 1 || only === undefined) {
     return undefined;
   }
   return {
     heads: only.split('|'),
-    value: {
-      version: SpaceDocVersion.CURRENT,
-      ...(stored[0].access ? { access: stored[0].access } : {}),
-      objects: Object.fromEntries(
-        objects.map(({ objectId, snapshot }, index) => [
-          objectId,
-          { ...stored[index].structure, data: dataOf(snapshot) },
-        ]),
-      ),
-    },
+    value: { version: SpaceDocVersion.CURRENT, ...(access ? { access } : {}), objects: Object.fromEntries(objects) },
   };
-};
-
-const headsOf = (snapshot: Obj.JSON): string[] | undefined => {
-  const heads: unknown = Reflect.get(snapshot, ATTR_HEADS);
-  return Array.isArray(heads) && heads.every((head) => typeof head === 'string') ? heads.toSorted() : undefined;
-};
-
-const storedOf = (snapshot: Obj.JSON): Stored | undefined => {
-  const stored: unknown = Reflect.get(snapshot, ATTR_STORED);
-  return isStored(stored) ? stored : undefined;
 };
 
 const isStored = (value: unknown): value is Stored =>

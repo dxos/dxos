@@ -233,6 +233,7 @@ export class EchoTestPeer extends Resource {
     this._echoHost = new EchoHost({
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
+      queryExecutor: this._queryExecutor,
     });
     this._serviceScope = Effect.runSync(Scope.make());
     await this._echoHost.open(this._ctx);

@@ -240,6 +240,11 @@ export class IndexEngine {
     return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));
   }
 
+  /** The objects stored in the given documents, with what a reader needs to rebuild each document. */
+  queryDocumentObjects(documentIds: readonly string[]) {
+    return this.#objectSnapshotIndex.queryDocumentObjects(documentIds);
+  }
+
   /**
    * Query snapshots by recordIds.
    * Used to load queue objects from indexed snapshots.
@@ -353,11 +358,6 @@ export class IndexEngine {
     queueId: string;
   }): Effect.Effect<EntityMeta | null, SqlError.SqlError> {
     return this.#objectMetaIndex.lookupByObjectId(query);
-  }
-
-  /** Rows of the objects stored in the given documents, without loading the documents. */
-  queryDocuments(documentIds: readonly string[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
-    return this.#objectMetaIndex.queryDocuments(documentIds);
   }
 
   queryObjectIds(query: {

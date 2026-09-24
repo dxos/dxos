@@ -38,7 +38,10 @@ describe('objects read from the index', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager] });
+    peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager],
+      queryExecutor: 'sql',
+    });
   });
 
   afterEach(async () => {
@@ -130,12 +133,29 @@ describe('objects read from the index', () => {
     expect(residentOf(documentIds)).toEqual([documentIds[5]]);
   });
 
-  test('objects a query returns are read from the index', async () => {
-    const { spaceKey, rootUrl, ids } = await setup(10);
+  test('a query shows objects without the worker loading their documents', async () => {
+    const { spaceKey, rootUrl, ids, documentIds } = await setup(10);
     const reader = await openTab(spaceKey, rootUrl, { indexed: true });
     const objects = await reader.query(Filter.type(TestSchema.Expando)).run();
     expect(objects.map((obj) => obj.title).toSorted()).toEqual(ids.map((_, index) => `object ${index}`));
     expect(objects.map((obj) => handleOf(obj).isIndexed)).toEqual(ids.map(() => true));
+    expect(residentOf(documentIds)).toEqual([]);
+  });
+
+  test('a document whose index copy stops being exact is followed live', async () => {
+    const { spaceKey, rootUrl, ids } = await setup(1);
+    const reader = await openTab(spaceKey, rootUrl, { indexed: true });
+    const inReader = await load(reader, ids[0]);
+    const writer = await openTab(spaceKey, rootUrl, { indexed: false });
+    const inWriter = await load(writer, ids[0]);
+    // JSON cannot carry bytes, so the index can no longer stand in for the document.
+    Obj.update(inWriter, (inWriter) => {
+      inWriter.bytes = new Uint8Array([1, 2, 3]);
+    });
+    await writer.flush();
+    await peer.host.updateIndexes();
+    await expect.poll(() => handleOf(inReader).isIndexed).toBe(false);
+    expect(inReader.bytes).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   test('an object read from the index follows edits made elsewhere', async () => {

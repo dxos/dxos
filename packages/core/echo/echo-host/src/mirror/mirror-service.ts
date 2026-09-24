@@ -10,6 +10,7 @@ import type * as EffectStream from 'effect/Stream';
 import { Context, Resource } from '@dxos/context';
 import { Mirror } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
+import { type DocumentObjectRow } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { toServiceError } from '@dxos/protocols';
@@ -18,7 +19,7 @@ import { type MirrorService } from '@dxos/protocols/rpc';
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
 import { toMirror } from './automerge-ops.ts';
 import { DocumentSequencer } from './document-sequencer.ts';
-import { type IndexedDocument, type IndexedObject, documentFromIndex } from './indexed.ts';
+import { type IndexedDocument, documentsFromIndex } from './indexed.ts';
 
 /** Entries kept per document for batches based on older versions. */
 const ENTRY_WINDOW = 1_000;
@@ -36,7 +37,7 @@ type Subscription = {
 };
 
 /** Subscriptions following a document through the index, and the heads they were last sent. */
-type IndexWatch = { readonly subscriptions: Set<Subscription>; heads: string };
+type IndexWatch = { readonly documentId: DocumentId; readonly subscriptions: Set<Subscription>; heads: string };
 
 type HostedDocument = {
   readonly documentId: DocumentId;
@@ -57,8 +58,8 @@ type HostedDocument = {
 
 export type MirrorServiceProps = {
   automergeHost: AutomergeHost;
-  /** The objects of a document as the index holds them, read without loading the document. */
-  readIndexed?: (documentId: DocumentId) => Promise<IndexedObject[] | undefined>;
+  /** The objects of the given documents as the index holds them, read without loading the documents. */
+  readIndexed?: (documentIds: readonly string[]) => Promise<readonly DocumentObjectRow[]>;
 };
 
 /**
@@ -71,7 +72,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
   readonly #readIndexed: MirrorServiceProps['readIndexed'];
   readonly #documents = new Map<DocumentId, HostedDocument>();
   readonly #subscriptions = new Map<string, Subscription>();
-  readonly #indexWatches = new Map<DocumentId, IndexWatch>();
+  readonly #indexWatches = new Map<string, IndexWatch>();
   #indexedPushes: Promise<void> = Promise.resolve();
 
   'constructor'({ automergeHost, readIndexed }: MirrorServiceProps) {
@@ -132,10 +133,18 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
         for (const documentId of request.remove ?? []) {
           this.#detach(subscription, documentId as DocumentId);
         }
+        const add = request.add ?? [];
+        // One index read answers every document the tab asked to follow that way.
+        const indexed = this.#readIndexed ? add.filter(({ mode }) => mode === 'indexed') : [];
+        if (indexed.length > 0) {
+          const documentIds = indexed.map(({ documentId }) => documentId as DocumentId);
+          documentIds.forEach((documentId) => subscription.indexed.add(documentId));
+          void this.#deliverIndexed(subscription, documentIds).catch((err) => this.#reportBackgroundError(err));
+        }
         await Promise.all(
-          (request.add ?? []).map(({ documentId, known, mode }) =>
-            this.#attach(subscription, documentId as DocumentId, known, mode),
-          ),
+          add
+            .filter((entry) => !indexed.includes(entry))
+            .map(({ documentId, known }) => this.#attach(subscription, documentId as DocumentId, known)),
         );
       },
       catch: toServiceError,
@@ -260,17 +269,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
    * arrives on the stream once the document is loaded, after a `requesting` event when it has to
    * come from the network, as the replica protocol's disk probe reports it.
    */
-  async #attach(
-    subscription: Subscription,
-    documentId: DocumentId,
-    known?: MirrorService.Known,
-    mode: 'live' | 'indexed' = 'live',
-  ): Promise<void> {
-    if (mode === 'indexed' && this.#readIndexed) {
-      subscription.indexed.add(documentId);
-      void this.#deliverIndexed(subscription, documentId).catch((err) => this.#reportBackgroundError(err));
-      return;
-    }
+  async #attach(subscription: Subscription, documentId: DocumentId, known?: MirrorService.Known): Promise<void> {
     this.#unwatchIndexed(subscription, documentId);
     subscription.documents.add(documentId);
     void this.#probeDisk(subscription, documentId).catch((err) => this.#reportBackgroundError(err));
@@ -414,33 +413,55 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
   }
 
   /**
-   * Sends a document as the index holds it and keeps sending it as the index changes, without
-   * loading it. Falls back to following it live when the index has no exact copy.
+   * Sends documents as the index holds them and keeps sending them as the index changes, without
+   * loading them. A document the index has no exact copy of is followed live instead.
    */
-  async #deliverIndexed(subscription: Subscription, documentId: DocumentId): Promise<void> {
-    const read = await this.#readIndexedDocument(documentId);
-    if (!subscription.indexed.has(documentId)) {
-      // Unfollowed, or followed live, while the index was read.
-      return;
+  async #deliverIndexed(subscription: Subscription, documentIds: readonly DocumentId[]): Promise<void> {
+    const reads = await this.#readIndexedDocuments(documentIds);
+    const events: MirrorService.DocumentEvent[] = [];
+    for (const documentId of documentIds) {
+      if (!subscription.indexed.has(documentId)) {
+        // Unfollowed, or followed live, while the index was read.
+        continue;
+      }
+      const read = reads.get(documentId);
+      if (!read) {
+        await this.#attach(subscription, documentId);
+        continue;
+      }
+      const watch = this.#indexWatches.get(documentId) ?? { documentId, subscriptions: new Set(), heads: '' };
+      watch.subscriptions.add(subscription);
+      watch.heads = read.heads.join('|');
+      this.#indexWatches.set(documentId, watch);
+      events.push({ type: 'indexed', documentId, heads: read.heads, value: read.value });
     }
-    if (!read) {
-      await this.#attach(subscription, documentId);
-      return;
+    if (events.length > 0) {
+      subscription.send(events);
     }
-    const watch = this.#indexWatches.get(documentId) ?? { subscriptions: new Set(), heads: '' };
-    watch.subscriptions.add(subscription);
-    watch.heads = read.heads.join('|');
-    this.#indexWatches.set(documentId, watch);
-    subscription.send([{ type: 'indexed', documentId, heads: read.heads, value: read.value }]);
   }
 
-  /** Sends the documents followed through the index again when an index pass changed them. */
-  'onIndexed'(): void {
+  /** Sends the followed documents an index pass changed again; one it can no longer copy exactly goes live. */
+  'onIndexed'(documentIds: ReadonlySet<string>): void {
+    const watched = [...documentIds].filter((documentId) => this.#indexWatches.has(documentId));
+    if (watched.length === 0) {
+      return;
+    }
     this.#indexedPushes = this.#indexedPushes
       .then(async () => {
-        for (const [documentId, watch] of this.#indexWatches) {
-          const read = await this.#readIndexedDocument(documentId);
-          if (!read || read.heads.join('|') === watch.heads) {
+        const reads = await this.#readIndexedDocuments(watched);
+        for (const documentId of watched) {
+          const watch = this.#indexWatches.get(documentId);
+          if (!watch) {
+            continue;
+          }
+          const read = reads.get(documentId);
+          if (!read) {
+            for (const subscription of [...watch.subscriptions]) {
+              await this.#attach(subscription, watch.documentId);
+            }
+            continue;
+          }
+          if (read.heads.join('|') === watch.heads) {
             continue;
           }
           watch.heads = read.heads.join('|');
@@ -452,9 +473,8 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
       .catch((err) => this.#reportBackgroundError(err));
   }
 
-  async #readIndexedDocument(documentId: DocumentId): Promise<IndexedDocument | undefined> {
-    const objects = await this.#readIndexed?.(documentId);
-    return objects ? documentFromIndex(objects) : undefined;
+  async #readIndexedDocuments(documentIds: readonly string[]): Promise<Map<string, IndexedDocument>> {
+    return documentsFromIndex((await this.#readIndexed?.(documentIds)) ?? []);
   }
 
   #unwatchIndexed(subscription: Subscription, documentId: DocumentId): void {

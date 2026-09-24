@@ -663,22 +663,6 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
-  /** Rows of the objects stored in the given documents. */
-  queryDocuments = Effect.fn('EntityMetaIndex.queryDocuments')(
-    (documentIds: readonly string[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
-      Effect.gen({ self: this }, function* () {
-        const sql = this.#sql;
-        const results: EntityMeta[] = [];
-        for (const chunk of chunkArray([...new Set(documentIds)])) {
-          const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('documentId', chunk)}`;
-          for (const row of rows) {
-            results.push({ ...row, deleted: !!row.deleted });
-          }
-        }
-        return results;
-      }),
-  );
-
   /**
    * Look up object metadata by object id across one or more spaces (space db and queue items).
    */
