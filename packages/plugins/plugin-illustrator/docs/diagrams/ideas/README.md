@@ -50,3 +50,44 @@ Findings the diagrams surface but do not fix, each a candidate issue:
   (`one-mechanism-per-concern` 0.24).
 - `echo-client` imports `QueryPlanner` and filters from `@dxos/echo-host`, so the query engine runs on both tiers.
 - `@dxos/client-protocol` imports `@dxos/echo-client` and `@dxos/worker-framework`, above it in the stack.
+
+## Letting System One see the layout
+
+System One reads structured input, not images, so the judge above sees the graph and nothing of how the
+diagram is drawn. `View` in `@dxos/diagram` renders the laid-out scene as text: `coordinates` (positions
+in grid cells), `ascii` (a character-grid drawing) and `rows` (boxes in reading order, which way each
+arrow runs, and which arrows cross). `eval-layout-views` checks each rendering two ways, on the 7 corpus
+diagrams, these 4 and their 4 first drafts: layout questions whose answers come from the geometry (is X
+above Y, do any lines cross, which way do the arrows run), and the six rules against a reference grader,
+Sonnet, that saw only the rendered PNG.
+
+| Jev input                | Layout accuracy | Crossings | Rules: mean abs. difference from reference, r |
+| ------------------------ | --------------- | --------- | --------------------------------------------- |
+| Sonnet, from the image   | 97%             | 93%       | —                                             |
+| graph only               | 55%             | 14%       | 0.18, 0.35                                    |
+| `coordinates`            | 87%             | 79%       | 0.17, 0.41                                    |
+| `ascii`                  | 81%             | 21%       | 0.17, 0.38                                    |
+| `rows`                   | 88%             | 100%      | 0.19, 0.38                                    |
+| `ascii` + `rows`         | 94%             | 100%      | 0.18, 0.37                                    |
+| `coordinates` + `rows`   | 92%             | 100%      | 0.18, 0.39                                    |
+
+- With the graph alone, Jev guesses about layout (55%, near chance). With `ascii` plus `rows` it reads the
+  drawing almost as well as Sonnet does from the picture: 94% against 97%.
+- Crossings are the one thing a text drawing does not convey: a `┼` in the ASCII grid is also where a
+  shared port or a trunk meets. Stating them in `rows` took crossings from 21% to 100%.
+- "Which box is nearest the top-left corner" stays at 36–50% under every rendering, so Jev compares
+  positions pairwise well but does not find an extreme.
+- The rules barely move. Agreement with the reference stays within the gap between two identical
+  graph-only runs (0.18, r 0.34–0.35), because the rules judge what the diagram says, not how it is laid
+  out. Only `dependency-direction` gains (r 0.62–0.68 to 0.72–0.75 with coordinates or ASCII): that rule
+  asks whether dependencies point down the stack, which the drawing shows. The two graders disagree most
+  on `state-owned-once` and `bounded-live-state`, where r is negative. That is a difference in reading
+  the content, which no layout rendering fixes.
+
+So `layout` in the judge's input is worth sending for rules about placement, such as layering, flow
+direction, grouping and crossings, and not for rules about content.
+
+```bash
+moon run plugin-illustrator:eval-layout-views -- --questions /abs/questions.json <diagrams…>   # for the reference grader
+moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json <diagrams…>     # needs TYPESAFE_API_KEY
+```

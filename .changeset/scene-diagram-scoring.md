@@ -17,3 +17,8 @@ one mechanism per concern, no pointless indirection, public surface only, bounde
 diagram's content, and `Architecture.judge` answers all of them in one batched `DecisionModel` call.
 `Score` scorers now take a subject and requirements, a `Score.Batch` yields several scores from one
 evaluation, and a scorer that cannot judge reports an `error` that `Score.overall` leaves out.
+
+`View` renders a laid-out diagram as text for a judge that cannot read images: `View.coordinates`
+(positions in grid cells), `View.ascii` (a character-grid drawing) and `View.rows` (boxes in reading
+order, which way each arrow runs, and which arrows cross). `Architecture.Content` takes an optional
+`layout` so a judge can be given one.
