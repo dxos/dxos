@@ -90,7 +90,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
         >
-          <Select.TriggerButton disabled={!canAdmit} />
+          <Select.TriggerButton classNames='min-w-[6rem]' disabled={!canAdmit} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>

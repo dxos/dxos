@@ -173,17 +173,17 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-            <div role='group' className='min-w-0'>
+            <div role='group' className='min-w-0 px-trim-md'>
               <h3 className='text-lg mb-2'>{t('members.label')}</h3>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </div>
             {showContactPicker && (
-              <div role='group' className='min-w-0'>
+              <div role='group' className='min-w-0 px-trim-md pt-3'>
                 <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
                 <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
               </div>
             )}
-            <div role='group' className='min-w-0'>
+            <div role='group' className='min-w-0 px-trim-md pt-3'>
               <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
               {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
               {!selectedInvitation && (
