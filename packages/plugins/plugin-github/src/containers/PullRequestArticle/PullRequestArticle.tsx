@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Button, Panel, Toolbar, Tabs, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Tabs, Toolbar, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
