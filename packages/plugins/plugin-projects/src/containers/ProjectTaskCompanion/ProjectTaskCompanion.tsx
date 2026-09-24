@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { Flex, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Task } from '@dxos/types';
@@ -39,6 +39,10 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
   const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   const selected = useSelection(attendableId, 'single');
   const task = tasks.find(({ id }) => id === selected);
+  // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
+  // on the open task would otherwise not reach the stack until the reader selected away and back.
+  // Subscribing to the object itself would hand the article a snapshot in place of the live task.
+  const [artifacts] = useObject(task, 'artifacts');
 
   if (!task) {
     return (
@@ -49,12 +53,26 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
   }
 
   return (
-    <Surface.Surface
-      type={AppSurface.Article}
-      data={{ subject: task, attendableId: `${attendableId}/task` }}
-      limit={1}
-      role={role}
-    />
+    // The article takes the room; the stack sits under it, sized by its cards and scrolling within
+    // its own half once there are more than the companion can show.
+    <Flex column grow classNames='min-h-0'>
+      <Flex grow column classNames='min-h-0'>
+        <Surface.Surface
+          type={AppSurface.Article}
+          data={{ subject: task, attendableId: `${attendableId}/task` }}
+          limit={1}
+          role={role}
+        />
+      </Flex>
+      {/* What the task produced, as cards. `plugin-space` renders the stack; nothing shows for a
+          task with no artifacts, so the article keeps the whole companion until there are some. */}
+      <Surface.Surface
+        type={AppSurface.CardStack}
+        data={{ objects: artifacts ?? [], attendableId }}
+        limit={1}
+        classNames='max-h-[50%] border-t border-separator'
+      />
+    </Flex>
   );
 };
 

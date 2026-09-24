@@ -11,9 +11,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -33,6 +31,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -47,6 +46,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import { ProjectTaskCompanion } from '../ProjectTaskCompanion/ProjectTaskCompanion.tsx';
 import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
@@ -56,6 +56,7 @@ const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
+const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 
@@ -97,6 +98,9 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
+  // What the task produced, linked the way the verbs link it: a ref on the task, with the object
+  // filed in the space rather than parented to the task.
+  Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
   const linkTask = space.db.add(
     Task.make({
       [Obj.Parent]: taskSet,
@@ -218,13 +222,11 @@ const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
         </TestGrid.Panel>
         {task && (
           <TestGrid.Panel>
-            {/* Through the surface rather than the component, so the story also proves plugin-tasks'
-                `article.task` registration is what the deck would resolve. */}
-            <Surface.Surface
-              type={AppSurface.Article}
-              data={{ subject: task, attendableId: `${attendableId}/task` }}
-              limit={1}
-            />
+            {/* The companion the deck mounts, not the task article directly: it reads the ledger's
+                selection itself, renders the article through the surface (so plugin-tasks'
+                `article.task` registration is still what resolves), and adds the task's artifacts
+                as cards beneath it. */}
+            <ProjectTaskCompanion role={role} attendableId={attendableId} project={project} />
           </TestGrid.Panel>
         )}
       </TestGrid.Stack>
@@ -271,6 +273,9 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
+        // For the card stack under the task companion: the surface is plugin-space's, so without it
+        // the companion renders the article alone and the stack silently resolves to nothing.
+        SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
@@ -357,6 +362,16 @@ export const TaskDetail: Story = {
     // The detail panel renders the same title as an editable field, so the form is what is asserted
     // rather than a second copy of the row's text.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // What the task produced, under its editor: the card stack plugin-space contributes. Scoped to
+    // the stack rather than the canvas — the ledger row carries a chip with the same text, which
+    // would pass this assertion with no stack rendered at all.
+    const stack = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardStack"]');
+    await waitFor(() => expect(stack()).toBeTruthy(), { timeout: 10_000 });
+    // `findAllByText`: the card names the artifact in its header and again in the form its type
+    // contributes as the card's body, so the single-match query would throw on its own success.
+    await expect(
+      within(stack()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
+    ).resolves.not.toHaveLength(0);
   },
 };
 

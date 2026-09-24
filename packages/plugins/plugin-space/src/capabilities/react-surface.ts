@@ -15,6 +15,7 @@ import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import {
+  CardStack,
   CollectionArticle,
   CollectionSection,
   CreateSpaceDialog,
@@ -253,6 +254,17 @@ export default Capability.makeModule(
         ),
         component: NavbarPresenceSurface,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      // Role-only: one generic stack serves every host, since the host supplies the objects rather
+      // than the surface deriving them from a subject it would have to match on.
+      Surface.create({
+        id: 'cardStack',
+        filter: Surface.makeFilter(AppSurface.CardStack),
+        component: CardStack,
+        // `classNames` rides through: a host bounds the stack's height against its own layout, and
+        // the classes land on the stack itself rather than a wrapper, so an empty stack renders nothing
+        // at all instead of a bordered gap.
+        props: ({ data: { objects }, classNames }) => ({ objects, classNames }),
       }),
       Surface.create({
         id: 'collectionSection',

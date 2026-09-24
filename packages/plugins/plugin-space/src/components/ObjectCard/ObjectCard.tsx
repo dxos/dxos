@@ -13,13 +13,21 @@ import { ActionMenu } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-export type RelatedObjectCardProps = {
+export type ObjectCardProps = {
   data: Entity.Unknown;
+  /** Fill the container rather than taking the card's own width — for a stack, not a masonry column. */
+  fullWidth?: boolean;
   classNames?: string;
 };
 
-/** Masonry tile renderer for a related entity. */
-export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCardProps) => {
+/**
+ * One entity as a card: its depiction and label from the schema's annotations, its body from the
+ * type's own `CardContent` surface, and the object's graph actions in the header menu.
+ *
+ * Nothing here is type-specific, and the props are the masonry tile signature, so the same card
+ * renders a related object, a record's reference or an item in a `CardStack`.
+ */
+export const ObjectCard = ({ data: subject, fullWidth, classNames }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
@@ -30,7 +38,7 @@ export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCa
   const menuItems = useObjectMenuItems(subject, pivotId);
 
   return (
-    <Card.Root ref={cardRef} classNames={classNames}>
+    <Card.Root ref={cardRef} fullWidth={fullWidth} classNames={classNames}>
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={subject}>
@@ -56,4 +64,4 @@ export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCa
   );
 };
 
-RelatedObjectCard.displayName = 'RelatedObjectCard';
+ObjectCard.displayName = 'ObjectCard';
