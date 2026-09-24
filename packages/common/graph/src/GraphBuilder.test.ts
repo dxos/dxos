@@ -6,7 +6,7 @@ import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { AtomEx } from '@dxos/effect';
 
@@ -458,6 +458,37 @@ describe('GraphBuilder', () => {
 
     expect(model.findNode('root/a')).to.be.undefined;
     expect(model.findNode('root/a/y')).to.be.undefined;
+  });
+
+  test('an idle builder keeps its connectors past the anchor idle TTL, and destroy lets them expire', async () => {
+    vi.useFakeTimers();
+    try {
+      const { builder, registry, children } = setup();
+      let inputRuns = 0;
+      const input = Atom.make(() => ++inputRuns);
+      GraphBuilder.addExtension(builder, { id: 'children', connector: connector((get) => [{ id: `a${get(input)}` }]) });
+      const settle = async () => {
+        const flushed = GraphBuilder.flush(builder);
+        await vi.advanceTimersByTimeAsync(10);
+        await flushed;
+      };
+      const anchors = () => [...registry.getNodes().values()].filter((node) => node.atom.idleTTL !== undefined).length;
+
+      children(GraphNode.RootId);
+      await settle();
+      expect(anchors()).to.be.greaterThan(0);
+
+      // Idle for several anchor lifetimes: a lapsed anchor would drop the connector and rebuild its input.
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      await settle();
+      expect(inputRuns).to.equal(1);
+
+      GraphBuilder.destroy(builder);
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      expect(anchors()).to.equal(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('an unrelated node changing leaves a connector alone', async () => {

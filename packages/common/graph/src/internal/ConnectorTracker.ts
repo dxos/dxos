@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
@@ -10,38 +11,35 @@ import { log } from '@dxos/log';
 /** Keys are spread over this many anchors, so a relink re-reads only a slice of them. */
 const ANCHORS = 64;
 
+/** How long an anchor outlives its last touch; the tracker touches its anchors twice as often. */
+const DEFAULT_ANCHOR_TTL = Duration.minutes(1);
+
 export type ConnectorTrackerOptions<A> = {
   registry: Registry.AtomRegistry;
   /** Computes the connector tracked under `key`. */
   read: (get: Atom.AtomContext, key: string) => A;
   /** Called when a tracked key goes from clean to dirty. */
   onDirty: (key: string) => void;
+  anchorTtl?: Duration.Input;
 };
-
-type Holder<A> = { current?: ConnectorTracker<A> };
 
 /**
  * Keeps an atom per tracked key without subscribing to it, so an invalidation only marks the key dirty
  * and the atom recomputes when {@link read}.
  *
- * The registry drops an atom nothing reads, so `keepAlive` anchors read every tracked atom that reading
- * would not recompute. A stale atom is left out until it is read; without an idle TTL, the registry may
- * reclaim its inputs in the meantime, and reading rebuilds them.
+ * The registry drops an atom nothing reads, so anchors read every tracked atom that reading would not
+ * recompute. A stale atom is left out until it is read; without an idle TTL, the registry may reclaim its
+ * inputs in the meantime, and reading rebuilds them.
+ *
+ * The anchors expire rather than being mounted, since a mounted anchor would make its connectors recompute
+ * on invalidation. Touching them keeps them alive until {@link dispose}, after which they expire.
  */
 export class ConnectorTracker<A> {
-  // Pinned for good, so they capture only a holder that `dispose` empties; a mounted anchor would make
-  // its connectors recompute on invalidation.
-  static #anchor<A>(holder: Holder<A>, index: number): Atom.Atom<void> {
-    return Atom.make((get) => {
-      if (holder.current) {
-        holder.current.#readAnchor(get, index);
-      }
-    }).pipe(Atom.keepAlive);
-  }
-
   readonly #options: ConnectorTrackerOptions<A>;
-  readonly #holder: Holder<A> = { current: this };
+  readonly #anchorTtl: Duration.Duration;
   readonly #anchors = new Map<number, Atom.Atom<void>>();
+  #heartbeat?: ReturnType<typeof setInterval>;
+  #disposed = false;
   readonly #live: Set<string>[] = Array.from({ length: ANCHORS }, () => new Set());
   readonly #dirty = new Set<string>();
   /** Anchors whose keys were read or untracked since they last read them. */
@@ -59,6 +57,7 @@ export class ConnectorTracker<A> {
 
   constructor(options: ConnectorTrackerOptions<A>) {
     this.#options = options;
+    this.#anchorTtl = Duration.fromInputUnsafe(options.anchorTtl ?? DEFAULT_ANCHOR_TTL);
   }
 
   /** Keys invalidated since they were last read. */
@@ -68,7 +67,7 @@ export class ConnectorTracker<A> {
 
   /** Starts tracking `key`, dirty until its first read; false once disposed. */
   track(key: string): boolean {
-    if (!this.#holder.current) {
+    if (this.#disposed) {
       return false;
     }
     this.#live[anchorOf(key)].add(key);
@@ -96,8 +95,7 @@ export class ConnectorTracker<A> {
   /** Re-reads the anchors of keys read or untracked since the last call. */
   relink(): void {
     for (const index of this.#stale) {
-      const anchor = this.#anchors.get(index) ?? ConnectorTracker.#anchor(this.#holder, index);
-      this.#anchors.set(index, anchor);
+      const anchor = this.#anchors.get(index) ?? this.#anchor(index);
       try {
         // Refreshed even when valid: a key joining or leaving it does not invalidate it.
         this.#options.registry.refresh(anchor);
@@ -109,14 +107,37 @@ export class ConnectorTracker<A> {
     this.#stale.clear();
   }
 
-  /** Untracks every key, lets the registry reclaim their atoms, and tracks nothing more. */
+  /** Untracks every key, lets the registry reclaim their atoms and the anchors, and tracks nothing more. */
   dispose(): void {
+    this.#disposed = true;
+    clearInterval(this.#heartbeat);
     this.#live.forEach((keys) => keys.clear());
     this.#dirty.clear();
     this.#stale.clear();
     this.#anchors.forEach((_, index) => this.#stale.add(index));
     this.relink();
-    this.#holder.current = undefined;
+    this.#anchors.clear();
+  }
+
+  #anchor(index: number): Atom.Atom<void> {
+    const anchor = Atom.make((get) => this.#readAnchor(get, index)).pipe(Atom.setIdleTTL(this.#anchorTtl));
+    this.#anchors.set(index, anchor);
+    if (!this.#heartbeat && !this.#disposed) {
+      const heartbeat = setInterval(() => this.#touch(), Duration.toMillis(this.#anchorTtl) / 2);
+      // Node would otherwise stay up for as long as the builder is undisposed; browsers return a number.
+      if (typeof heartbeat === 'object') {
+        heartbeat.unref();
+      }
+      this.#heartbeat = heartbeat;
+    }
+    return anchor;
+  }
+
+  /** Restarts each anchor's idle countdown without recomputing it. */
+  #touch(): void {
+    for (const anchor of this.#anchors.values()) {
+      this.#options.registry.subscribe(anchor, noop)();
+    }
   }
 
   #invalidated(key: string): void {
@@ -137,6 +158,8 @@ export class ConnectorTracker<A> {
     }
   }
 }
+
+const noop = () => {};
 
 /** FNV-1a, for an even spread of keys across anchors. */
 const anchorOf = (key: string): number => {
