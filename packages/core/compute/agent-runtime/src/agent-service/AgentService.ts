@@ -22,7 +22,6 @@ import {
   type Session,
   getSession,
 } from '@dxos/compute/AgentService';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -135,11 +134,6 @@ export interface Options {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 /**
@@ -250,7 +244,6 @@ export const layer = (
           makeTurnProducer: opts?.makeTurnProducer,
           defaultModel: opts?.defaultModel,
           provider: provider ?? opts?.provider,
-          getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
         });
