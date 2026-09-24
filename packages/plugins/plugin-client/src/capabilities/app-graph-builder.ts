@@ -185,6 +185,25 @@ export default Capability.makeModule(
         ]),
     });
 
+    const accountSpaceInvitations = yield* AppGraphBuilder.createExtension({
+      id: 'accountSpaceInvitations',
+      url: { key: Account.SpaceInvitations, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: () =>
+        Effect.succeed([
+          AppGraphNode.make({
+            id: Account.SpaceInvitations,
+            data: Account.path(Account.SpaceInvitations),
+            type: meta.profile.key,
+            properties: {
+              label: ['space-invitations.label', { ns: meta.profile.key }],
+              icon: 'ph--envelope-simple--regular',
+              testId: 'clientPlugin.spaceInvitations',
+            },
+          }),
+        ]),
+    });
+
     const accountInvitations = yield* AppGraphBuilder.createExtension({
       id: 'accountInvitations',
       url: { key: Account.Invitations, kind: 'singleton', path: [] },
@@ -238,6 +257,7 @@ export default Capability.makeModule(
       ...accountSecurity,
       ...accountDevices,
       ...accountContacts,
+      ...accountSpaceInvitations,
       ...accountInvitations,
       ...accountUsage,
     ]);
