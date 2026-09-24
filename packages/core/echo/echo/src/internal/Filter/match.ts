@@ -336,6 +336,10 @@ export const makeFilterMatcher = <T>(
         throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
       }
 
+      case 'changes': {
+        throw new Error('changes filters select change records on the host; they never match an object.');
+      }
+
       case 'has-parent': {
         return accessor.hasParent(record) === filter.value;
       }
