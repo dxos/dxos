@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 import { EffectEx } from '@dxos/effect';
 
 import { EVENT_FEED_URI as FEED, makeEventServer } from '../../testing/index.ts';
-import { type ListenEvent, type ListenOptions, listenEvents } from './listen.ts';
+import { type ListenEvent, type ListenOptions, listenEvents, mcpEndpoint } from './listen.ts';
 
 const ENDPOINT = 'http://events.test/mcp';
 
@@ -274,5 +274,12 @@ describe('dx mcp listen', () => {
   test('tolerates an error response with a null id', async ({ expect }) => {
     const body = `${sse({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'parse error' } })}${sse({ jsonrpc: '2.0', id: 'dx-mcp-listen', result: {} })}`;
     expect(await collect(eventStream(body))).to.deep.equal({ events: [], error: undefined });
+  });
+
+  test('resolves every spelling of a server URL to its one /mcp endpoint', ({ expect }) => {
+    for (const url of ['https://host', 'https://host/', 'https://host/mcp', 'https://host/mcp/']) {
+      expect(mcpEndpoint(url)).to.equal('https://host/mcp');
+    }
+    expect(mcpEndpoint('https://host/tenant/mcp/')).to.equal('https://host/tenant/mcp');
   });
 });

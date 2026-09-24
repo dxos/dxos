@@ -279,6 +279,9 @@ const encodeRoutingHeader = (value: string): string =>
     ? value
     : `=?base64?${Buffer.from(value, 'utf8').toString('base64')}?=`;
 
+/** The server's `/mcp` endpoint, whether `url` names the server, its `/mcp` path, or either with a trailing slash. */
+export const mcpEndpoint = (url: string): string => `${url.replace(/\/+$/, '').replace(/\/mcp$/, '')}/mcp`;
+
 /**
  * Resolves the endpoint and credentials: a stored `dx mcp connect` session when there is one for
  * the server, otherwise no credentials, so an unauthenticated server works too. Either way the
@@ -289,7 +292,7 @@ const resolveTarget = (profile: string, url: Option.Option<string>) =>
     if (Option.isNone(url)) {
       return fromSession(profile, yield* requireSession(profile, url));
     }
-    const endpoint = `${url.value.replace(/\/(mcp)?$/, '')}/mcp`;
+    const endpoint = mcpEndpoint(url.value);
     // Sessions are stored per host, so the requested path wins over the one the session was made for.
     const session = yield* loadSession(profile, url.value);
     return session === undefined ? { endpoint } : { ...fromSession(profile, session), endpoint };
