@@ -30,6 +30,7 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
+  MirrorService,
   NetworkService,
   QueryService,
   SpacesService,
@@ -67,6 +68,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   DataService.Rpcs,
   QueryService.Rpcs,
   FeedService.Rpcs,
+  MirrorService.Rpcs,
   ContactsService.Rpcs,
   InboxService.Rpcs,
   EdgeAgentService.Rpcs,
@@ -91,6 +93,7 @@ export type ClientServicesHandlers = {
   DataService: DataService.Handlers;
   QueryService: QueryService.Handlers;
   FeedService: FeedService.Handlers;
+  MirrorService: MirrorService.Handlers;
   ContactsService: ContactsService.Handlers;
   InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
@@ -347,6 +350,7 @@ export interface ClientServicesRpc
     DataService.Client,
     QueryService.Client,
     FeedService.Client,
+    MirrorService.Client,
     ContactsService.Client,
     InboxService.Client,
     EdgeAgentService.Client,

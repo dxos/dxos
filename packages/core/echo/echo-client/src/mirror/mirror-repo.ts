@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { Mirror } from '@dxos/echo-protocol';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
@@ -25,6 +27,9 @@ import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
 import { isMirrorIndexedReads } from './mode.ts';
+
+/** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
+const WIRE: Mirror.FromWireOptions = { rawString: (text) => new A.RawString(text) };
 
 const RPC_TIMEOUT = 30_000;
 const FLUSH_TIMEOUT = 30_000;
@@ -464,7 +469,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
         ready.wake();
         for (const event of events) {
           const handle = this.#handles[event.documentId];
-          handle?._receive(event);
+          handle?._receive(Mirror.eventFromWire(event, WIRE));
           if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
             // The tab wrote after asking for the index copy, so its write needs the worker's copy.
             if (event.type === 'indexed' && handle && !handle.followsIndex) {
@@ -592,7 +597,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
           epoch: next.epoch,
           batchId: next.batch.batchId,
           baseVersion: next.batch.baseVersion,
-          changes: next.batch.changes.map((change) => [...change]),
+          changes: Mirror.changesToWire(next.batch.changes),
         });
       }
     }

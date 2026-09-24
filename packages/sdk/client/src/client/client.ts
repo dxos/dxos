@@ -20,7 +20,7 @@ import {
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-client';
+import { EchoClient, setMirrorIndexedReads } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -73,6 +73,12 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /**
+   * Experimental: this tab keeps a JSON mirror of each document and only the worker runs Automerge.
+   * With `indexedReads`, the tab shows objects from the worker's index until it writes to them.
+   */
+  echoMirror?: { indexedReads?: boolean };
 };
 
 /**
@@ -499,10 +505,13 @@ export class Client {
     log('client._open: connecting echo client to service...');
     // The effect-rpc client nests every service under its key, so the same `rpc` surface satisfies
     // each per-service Client (DataService.Client, etc.).
+    const mirror = this._options.echoMirror;
+    setMirrorIndexedReads(mirror?.indexedReads ?? false);
     this._echoClient.connectToService({
       dataService: this._services.rpc,
       queryService: this._services.rpc,
       feedService: this._services.rpc,
+      ...(mirror ? { mirrorService: this._services.rpc } : {}),
       runtime: this._effectRuntime,
     });
     log('client._open: opening echo client...');

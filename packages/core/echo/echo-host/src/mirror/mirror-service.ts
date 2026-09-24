@@ -21,6 +21,9 @@ import { toMirror } from './automerge-ops.ts';
 import { DocumentSequencer } from './document-sequencer.ts';
 import { type IndexedDocument, documentsFromIndex } from './indexed.ts';
 
+/** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
+const WIRE: Mirror.FromWireOptions = { rawString: (text) => new A.RawString(text) };
+
 /** Entries kept per document for batches based on older versions. */
 const ENTRY_WINDOW = 1_000;
 
@@ -107,7 +110,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
         clientId: request.clientId,
         documents: new Set(),
         indexed: new Set(),
-        send: (events) => void emit.single({ events }),
+        send: (events) => void emit.single({ events: events.map(Mirror.eventToWire) }),
       };
       this.#subscriptions.set(request.subscriptionId, subscription);
       // Ready beacon, as in DataService.subscribe: `updateSubscription` may follow.
@@ -176,7 +179,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
                 hosted.sequencer.submit(lease, subscription.clientId, {
                   batchId: batch.batchId,
                   baseVersion: batch.baseVersion,
-                  changes: batch.changes,
+                  changes: Mirror.changesFromWire(batch.changes, WIRE),
                 }),
               );
               if (!result) {

@@ -26,7 +26,7 @@ const differences = (left: unknown, right: unknown, path: string[] = []): string
     const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
     return [...keys].flatMap((key) => differences(Reflect.get(left, key), Reflect.get(right, key), [...path, key]));
   }
-  return Object.is(left, right)
+  return Mirror.mirrorEquals(left, right)
     ? []
     : [`${path.join('.')}: index ${JSON.stringify(left)}, worker ${JSON.stringify(right)}`];
 };
