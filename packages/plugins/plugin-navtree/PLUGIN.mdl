@@ -220,19 +220,22 @@ feat F-3: Item Selection
 feat F-4: Drag and Drop
 
   req F-4.1: NavTree items can be dragged to rearrange within the same parent.
-  req F-4.2: NavTree items can be dragged to copy or transfer to a different parent.
+  req F-4.2: NavTree items can be dragged to a different parent, moving within a shared move scope and linking elsewhere when the target accepts links.
   req F-4.3:
     when: drop instruction is rearrange
     then: onRearrange callback on the parent node is called with the new order
   req F-4.4:
-    when: drop instruction is copy
-    then: onCopy callback on the target node is called
+    when: the source's parent and the target share a move scope
+    then: onMoveOut is called on the source's parent, then onMoveIn on the target
   req F-4.5:
-    when: drop instruction is transfer
-    then: onTransferStart and onTransferEnd callbacks are called on source and target parents
+    when: the drop crosses a move scope and the target accepts links
+    then: onLink callback on the target is called and the source's parent is left alone
   req F-4.6:
-    when: target node reports blockInstruction for an instruction type
+    when: target node's blockInstruction returns true for an instruction
     then: that instruction is blocked and the drop is not applied
+  req F-4.7:
+    when: the dropped item would only be listed at the target, its parent elsewhere
+    then: the drop indicator is dashed
 ```
 
 ```mdl

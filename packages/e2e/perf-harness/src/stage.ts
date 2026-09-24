@@ -23,6 +23,7 @@ import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
 import { type RpcReading, diffRpc, readRpc } from './collectors/rpc.ts';
+import { recordDetailedDump, takeMemorySnapshot } from './collectors/snapshot.ts';
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
@@ -72,6 +73,13 @@ export type RunnerOptions = {
    * outside the measured window rather than because it is fast.
    */
   screenshotDir?: string;
+  /**
+   * Stages to take a memory snapshot after (`takeMemorySnapshot`), written under
+   * `snapshotDir/<stage>/`. Taken last, after the row is complete; list the stages on
+   * `comparability.snapshotStages` too, since every later stage inherits the snapshot's cost.
+   */
+  snapshotStages?: ReadonlySet<string>;
+  snapshotDir?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -244,6 +252,13 @@ export class StageRunner {
     const profiled = await this.#instruments.profiler?.endStage();
     const profiles = profiled?.files ?? [];
 
+    // Before the heap read's GC, so a snapshot stage can compare the footprint above with what one
+    // collection leaves of it.
+    const { snapshotStages, snapshotDir } = this.#options;
+    const snapshotting = snapshotDir && snapshotStages?.has(id);
+    const preGcHeap = snapshotting ? await readHeap(this.#targets, { collect: false }) : undefined;
+    const preGc = snapshotting ? await recordDetailedDump(browserCdp, { deterministic: false }) : undefined;
+
     // Heap last, because it forces a GC: read earlier it would charge the collection's CPU to this
     // stage, and read before the DOM counters it would drop nodes the stage had just created.
     const heap = await readHeap(this.#targets);
@@ -252,7 +267,18 @@ export class StageRunner {
     // paint and a PNG encode, and neither belongs in this stage's numbers or the next one's.
     const shot = await this.#screenshot(id);
 
-    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : [])];
+    // Not caught: a snapshot that times out keeps serializing into every later stage.
+    const snapshot = snapshotting
+      ? await takeMemorySnapshot({
+          browserCdp,
+          targets: this.#targets,
+          dir: path.join(snapshotDir, id),
+          preGc,
+          preGcHeap,
+        })
+      : undefined;
+
+    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : []), ...(snapshot?.files ?? [])];
     const row: StageRow = {
       flow: this.#options.flow,
       stage: id,

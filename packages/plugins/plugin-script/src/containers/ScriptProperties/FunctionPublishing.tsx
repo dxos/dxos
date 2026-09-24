@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Clipboard, Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -110,7 +110,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
       {githubToken && (
         <Flex gap='sm' justify='end'>
-          {gistUrl && <Clipboard.IconButton value={gistUrl} />}
+          {gistUrl && <SystemIconButton.Clipboard iconOnly value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
           </Button>

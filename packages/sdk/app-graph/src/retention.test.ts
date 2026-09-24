@@ -101,9 +101,7 @@ describe('retention', () => {
 
     // View atoms mounted above the graph (a rendered row's subscriptions) are reclaimed on unmount:
     // `Atom.family` memoizes weakly, and the registry drops a node once it has no listener and no
-    // dependents, cascading to its parents. The graph's own node atoms are deliberately NOT in that
-    // pool — every materialized node holds a mount (see `_pin`), so its atoms stay live until
-    // released, and a subscriber never finds a node's atom dropped and re-created between reads.
+    // dependents, cascading to its parents.
     expect(counts(harness).registryNodes).to.equal(idle);
   });
 
@@ -126,6 +124,20 @@ describe('retention', () => {
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
     expect(registry.getNodes().size).to.be.lessThan(pinned);
+  });
+
+  test('destroying the builder releases every node atom it pinned', async () => {
+    const harness = setup();
+    const { registry, builder, graph } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, `${GraphNode.RootId}/w0`);
+    await settle();
+    const child = `${GraphNode.RootId}/w0/c0`;
+    expect(registry.getNodes().has(graph.node(child))).to.be.true;
+
+    GraphBuilder.destroy(builder);
+    await settle();
+    expect(registry.getNodes().has(graph.node(child))).to.be.false;
   });
 
   test('the graph itself does grow with every node ever materialized', async () => {

@@ -30,6 +30,16 @@ describe('firstOpenableChild', () => {
     AppGraph.addNode(graph, { id: 'root/w/a', type: 'test', data: {} });
     AppGraph.addEdge(graph, { source: 'root/w', target: 'root/w/a', relation: 'child' });
     expect(await waiting).toBe('root/w/a');
+    expect(registry.getNodes().get(connections)?.listeners.size ?? 0).toBe(0);
+  });
+
+  test('resolves with a child already present and stops listening', async ({ expect }) => {
+    const { registry, graph } = setup();
+    AppGraph.addNode(graph, { id: 'root/w/a', type: 'test', data: {} });
+    AppGraph.addEdge(graph, { source: 'root/w', target: 'root/w/a', relation: 'child' });
+
+    expect(await EffectEx.runPromise(firstOpenableChild(registry, graph, 'root/w', 1_000))).toBe('root/w/a');
+    expect(registry.getNodes().get(graph.connections('root/w', 'child'))?.listeners.size ?? 0).toBe(0);
   });
 
   test('is undefined when no child arrives in time', async ({ expect }) => {

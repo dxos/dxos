@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EntityId } from '@dxos/echo/Key';
 import { Task, TaskSet } from '@dxos/types';
 
 import { FORECAST_URL, daysAgo } from './util.ts';
@@ -70,7 +71,12 @@ export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', 
           status: 'todo',
           // Task carries no due date; its dates are activity-log lines, so that is where they go.
           history: [
-            { date: daysAgo(0), event: 'created' as const, description: 'Filed from the weather MCP template.' },
+            {
+              id: EntityId.random(),
+              date: daysAgo(0),
+              event: 'created' as const,
+              description: 'Filed from the weather MCP template.',
+            },
           ],
         }),
       );

@@ -138,6 +138,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['security.label', { ns: meta.profile.key }],
                 icon: 'ph--key--regular',
+                testId: 'clientPlugin.security',
               },
             }),
           ];
@@ -163,6 +164,25 @@ export default Capability.makeModule(
             }),
           ];
         }).pipe(Effect.orDie),
+    });
+
+    const accountContacts = yield* AppGraphBuilder.createExtension({
+      id: 'accountContacts',
+      url: { key: Account.Contacts, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: () =>
+        Effect.succeed([
+          AppGraphNode.make({
+            id: Account.Contacts,
+            data: Account.path(Account.Contacts),
+            type: meta.profile.key,
+            properties: {
+              label: ['contacts.label', { ns: meta.profile.key }],
+              icon: 'ph--address-book--regular',
+              testId: 'clientPlugin.contacts',
+            },
+          }),
+        ]),
     });
 
     const accountInvitations = yield* AppGraphBuilder.createExtension({
@@ -217,6 +237,7 @@ export default Capability.makeModule(
       ...accountAccount,
       ...accountSecurity,
       ...accountDevices,
+      ...accountContacts,
       ...accountInvitations,
       ...accountUsage,
     ]);

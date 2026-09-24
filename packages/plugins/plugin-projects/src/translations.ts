@@ -57,6 +57,7 @@ export const translations = [
         'outline.description':
           'Notes are a scratch surface for the project. Use the menu to promote items into assignable tasks.',
         'create-artifact.label': 'Create artifact',
+        'remove-from-project.label': 'Remove from project',
         'create-chat.label': 'Create session',
         'delegate-tasks.label': 'Assign selected tasks to agent',
         'create-panel.name.placeholder': 'Project name (optional)',

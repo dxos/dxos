@@ -547,9 +547,9 @@ export class WorkingSetQueryExecutor {
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        // The working set has no queue/insertion order (that lives in the feed index); fall back
-        // to a stable id ordering so results are deterministic.
-        const comparison = itemA.objectId.localeCompare(itemB.objectId);
+        // Code-unit order, as the host sorts: a locale comparison disagrees with it on a
+        // mixed-case pair of ids, and the two sources' results are merged by position.
+        const comparison = itemA.objectId < itemB.objectId ? -1 : itemA.objectId > itemB.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'rank':
@@ -608,7 +608,8 @@ export class WorkingSetQueryExecutor {
   }
 }
 
-const MAX_DEPTH_FOR_CHILD_OF_TRACING = 16;
+/** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
+const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
 
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
@@ -627,13 +628,16 @@ const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueB == null) {
     return -1;
   }
+  // Code-unit order, the collation the host's SQLite sort uses.
   if (typeof valueA === 'string' && typeof valueB === 'string') {
-    return valueA.localeCompare(valueB);
+    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
   }
   if (typeof valueA === 'number' && typeof valueB === 'number') {
     return valueA - valueB;
   }
-  return String(valueA).localeCompare(String(valueB));
+  const stringA = String(valueA);
+  const stringB = String(valueB);
+  return stringA < stringB ? -1 : stringA > stringB ? 1 : 0;
 };
 
 const _filterContainsTimestamp = (filter: QueryAST.Filter): boolean => {

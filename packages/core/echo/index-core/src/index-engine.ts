@@ -33,6 +33,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes/index.ts';
+import { isUnauthorizedFunctionError } from './utils.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -105,10 +106,25 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
 /** Name every index tracks its cursor under; a new name retires the old cursor and rebuilds. */
 const INDEX_NAMES = {
   objectSnapshot: 'objectSnapshot',
-  reverseRef: 'reverseRef2',
+  // Bumped for `propPathNormalized`, which the compiled query path matches reference paths on.
+  reverseRef: 'reverseRef3',
   fts: 'fts7',
   activity: 'activity',
 } as const;
+
+/** `json_type(x, path)`, which the compiled query path relies on, returns NULL for a missing path only from here. */
+const MIN_SQLITE_VERSION = [3, 45, 0] as const;
+
+const compareVersions = (version: string, minimum: readonly number[]): number => {
+  const parts = version.split('.').map((part) => Number.parseInt(part, 10));
+  for (let index = 0; index < minimum.length; index++) {
+    const actual = parts[index] ?? 0;
+    if (actual !== minimum[index]) {
+      return actual < minimum[index] ? -1 : 1;
+    }
+  }
+  return 0;
+};
 
 export class IndexEngine {
   readonly #sql: SqlClient.SqlClient;
@@ -138,6 +154,17 @@ export class IndexEngine {
 
   migrate() {
     return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const version = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`.pipe(
+        Effect.map(([row]) => row.version),
+        // Durable Object SQLite denies `sqlite_version()`, and its bundled SQLite is well past the minimum.
+        Effect.catchIf(isUnauthorizedFunctionError, () => Effect.succeed(undefined)),
+      );
+      if (version !== undefined && compareVersions(version, MIN_SQLITE_VERSION) < 0) {
+        return yield* Effect.die(
+          new Error(`SQLite ${version} is below the ${MIN_SQLITE_VERSION.join('.')} the index requires`),
+        );
+      }
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
@@ -186,6 +213,20 @@ export class IndexEngine {
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryAll(query);
+  }
+
+  /**
+   * True once every `objectMeta` row has a snapshot.
+   *
+   * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
+   * without one, and the store fills over several passes after upgrade. The compiled query path
+   * reads that store directly instead of loading documents, so until it is complete a query there
+   * would silently return fewer objects than exist — not stale data, missing data. The query
+   * service gates a compiled query's first execution on this and caches `true` once seen, since it
+   * never goes back to false. The in-memory path loads documents itself and is not gated.
+   */
+  hasCompleteSnapshots(): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));
   }
 
   /**

@@ -30,6 +30,8 @@ export type TaskListContextValue = {
   descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
+  /** Render the questions in each task's history under its title. */
+  showQuestions: boolean;
   hierarchical: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
@@ -58,6 +60,7 @@ export type TaskListContextValue = {
   /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */
   onTaskCheck?: (task: Task.Task) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
+  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 };
 
 export const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);

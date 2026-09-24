@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { ContentBlock, Question } from '@dxos/types';
+import { ContentBlock, Task } from '@dxos/types';
 
 export const CreateChat = Operation.make({
   meta: {
@@ -161,11 +161,12 @@ export const RunPromptInChat = Operation.make({
 });
 
 /**
- * Records a reader's answer to a {@link Question.Question} and resumes the conversation that asked it.
+ * Records a reader's answer to a question in a task's history and resumes the conversation that
+ * asked it.
  *
  * The resume is a synthetic prompt naming the question rather than the answer itself: the answer is
- * already durable on the object, and an agent that reads it back there sees whatever the reader
- * actually chose — including an edit made after the fact — rather than a copy frozen into a message.
+ * already durable in the task's history, and an agent that reads it back there sees the record
+ * itself rather than a copy frozen into a message.
  */
 export const AnswerQuestion = Operation.make({
   meta: {
@@ -180,11 +181,16 @@ export const AnswerQuestion = Operation.make({
   // services it needs itself, so requiring them here too would fail a caller that only records.
   services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
-    question: Type.getSchema(Question.Question),
+    task: Type.getSchema(Task.Task),
+    /** Id of the question's entry in the task's history. */
+    question: Schema.String,
     answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
   }),
   output: Schema.Struct({
-    /** False when the answer was blank, or the question was already answered — nothing was written. */
+    /**
+     * False when the answer was blank, the question is not in the task's history, or it was already
+     * answered — nothing was written.
+     */
     accepted: Schema.Boolean,
     /**
      * Whether the asking conversation was woken. Separate from `accepted` because the answer is

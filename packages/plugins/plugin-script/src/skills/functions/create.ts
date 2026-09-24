@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -32,7 +32,7 @@ export default Create.pipe(
         name,
         source: Ref.make(script),
       });
-      yield* CollectionModel.add({ object: fn });
+      yield* ContainerModel.add({ object: fn });
 
       return {
         function: Obj.getURI(fn),

@@ -10,8 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-
-import { Video } from '#types';
+import { Video } from '@dxos/types';
 
 /** Input schema for creating a Video; types the `props` passed to createObject and drives the create form. */
 const CreateVideoSchema = Schema.Struct({
