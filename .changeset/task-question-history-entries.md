@@ -2,6 +2,8 @@
 '@dxos/types': minor
 '@dxos/react-ui-task': minor
 '@dxos/plugin-assistant': minor
+'@dxos/plugin-tasks': minor
+'@dxos/plugin-projects': minor
 ---
 
 Questions an agent asks about a task now live in the task's history instead of in a separate
@@ -13,3 +15,8 @@ it answers by `questionId`; a change entry's `id` is optional, so history logged
 `TaskList` renders each task's questions under its title (`showQuestions`, on by default) and answers
 them through `onQuestionAnswer`; the new `TaskQuestion` component draws one question. `AnswerQuestion`
 now takes the task and the question entry's id.
+
+`TaskOperation.AskQuestion` files a question on a task by its ref and blocks the task, with no chat
+needed, and the project skill lists it, so MCP clients get it as `tasks-ask-question` along with
+instructions on asking and reading the answer back. `TaskOperation.AnswerQuestion` records an
+answer; the task set view answers through it.
