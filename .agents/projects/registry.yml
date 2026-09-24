@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: architecture-rules
+    status: active
+    user: dmaretskyi
+    host: cloud
+    created: 2026-09-24
+    summary: 'Encode good architecture as agentic-review `rule` blocks. Two inputs: a hand-picked seed list (one mechanism per concern, state owned once, no impossible-state handling, dependency direction, functions before classes, errors handled at one level) and a mined dataset of every human review comment on dxos/dxos with its diff hunk, classified by Sonnet subagents into candidate rules. Bounded-state rules already landed in non-negotiables.mdl.'
+    tasks: .agents/projects/architecture-rules/TASKS.md
+    design: .agents/projects/architecture-rules/DESIGN.md
+    prs: [13373]
+    resume: 'PR #13373 OPEN (bounded-state rules; CodeRabbit grep findings fixed in 71595f0e). Phase 1 mining in progress under .agents/projects/architecture-rules/dataset/. NEXT: cluster classifications into CANDIDATES.md, then write architecture.mdl.'
   - name: composer-e2e
     status: active
     user: dmytro
