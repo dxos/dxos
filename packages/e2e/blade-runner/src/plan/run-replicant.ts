@@ -20,8 +20,9 @@ export const runReplicant = async ({ replicantProps }: RunProps) => {
     initLogProcessor(replicantProps);
     log.info('running replicant', { params: replicantProps });
 
-    process.on('SIGINT', () => void finish('SIGINT'));
-    process.on('SIGTERM', () => void finish('SIGTERM'));
+    // The conventional codes for the signals: `process.exit` throws on a signal name.
+    process.on('SIGINT', () => void finish(130));
+    process.on('SIGTERM', () => void finish(143));
     if (isNode()) {
       await startSpanExport();
     }
@@ -58,7 +59,7 @@ const initLogProcessor = (params: ReplicantProps) => {
   }
 };
 
-const finish = async (code: number | string) => {
+const finish = async (code: number) => {
   if (isNode()) {
     // The orchestrator ends a run by killing its replicants, which would drop the last batch of spans.
     await flushSpanExport();

@@ -34,7 +34,7 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
-import { setSpanTags } from '../tracing/index.ts';
+import { onBeforeSpanFlush, setSpanTags } from '../tracing/index.ts';
 
 /**
  * The one document type the stress test manipulates.
@@ -108,6 +108,9 @@ export class ClientReplicant {
 
   constructor(env: ReplicantEnv) {
     this.#env = env;
+    // Closing the client ends a sync still in flight when the run kills this replicant, so its
+    // `CollectionSynchronizer.syncPeer` span is exported as `closed` rather than dropped.
+    onBeforeSpanFlush(() => this.destroy());
   }
 
   //
