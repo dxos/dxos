@@ -39,7 +39,12 @@ real worker boundary or run in a browser yet.
 6. **The largest blockers** are the cursor consumers, worker RPCs for branches, history and
    migrations, and shared operation code that calls Automerge through `Doc.Handle`. The CodeMirror
    binding, the largest UI item, has a working prototype.
-7. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
+7. **A tab can show objects whose documents the worker never loads.** The worker answers from its
+   SQLite index, and a tab's first write to a document loads it and rebases the write. The index copy
+   matches the document exactly once the indexer keeps the fields its JSON form reshapes. Sync still
+   loads a document that receives remote changes, so this saves loads for reading, not for changes
+   (see [Reading objects from the index](#reading-objects-from-the-index)).
+8. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
    behind one interface. The mirror protocol is a separate RPC group, and `DataService` is unchanged.
@@ -265,6 +270,99 @@ transform by path, as in ShareDB's json0 type.
 7. An edit the worker refuses disappears from the tab. Apps should listen to `db.editsRejected` and
    tell the user. A replica has no such case: Automerge refuses a bad write inside `change()`, and
    the mirror's draft refuses the same writes there too.
+
+## Snapshot atoms
+
+A mirror tab's document is a frozen JSON tree, and a subtree an edit did not touch keeps its
+identity. So the atom can be the document instead of a copy of it. `MirrorDocHandle.atom` holds the
+tree `doc()` returns, and an object's snapshot is a projection of its subtree. A replica has no such
+tree. Its state is the Automerge document, and an atom can only copy it on each change, which is
+what `Obj.atom` does today.
+
+`mirror-atoms.test.ts` measures three ways to keep a snapshot atom for every mounted object while
+one object is edited. The first column is the edit alone; the others are what the atoms add to it.
+
+| Scenario                                        | Edit, no atoms | `Obj.atom` | Document atom | Routed projection |
+| ----------------------------------------------- | -------------- | ---------- | ------------- | ----------------- |
+| Small object (20 items), 50 mounted             | 0.095 ms       | +0.172 ms  | +0.187 ms     | +0.164 ms         |
+| Large object (1,000 items), 50 mounted          | 0.185 ms       | +3.156 ms  | +0.381 ms     | +0.422 ms         |
+| 200 objects inline in the root, one title typed | 0.131 ms       | +0.212 ms  | +0.453 ms     | +0.170 ms         |
+
+- `Obj.atom` walks the proxy and copies the whole object on every change, so its cost grows with
+  the object.
+- The document atom projects each object from one atom per document. Unchanged subtrees keep their
+  identity, but every object in the document recomputes when any of them changes, which is why it is
+  slowest with 200 objects inline in the space root.
+- The routed projection listens to the object's own update event and projects only that object. It
+  costs about the same as the others on small objects and about an eighth of `Obj.atom` on the large
+  one.
+
+All three send one notification per edit in the benchmark. The projections match `Obj.atom`'s
+value, symbols and meta included, and keep the identity of unchanged items; `Obj.atom` never does.
+
+## Reading objects from the index
+
+The worker's SQLite index already holds every object's JSON. In this experiment a mirror tab asks
+for an object's document in `indexed` mode, and the worker answers from the index without loading
+the Automerge document. The tab's first write to the document switches it to live. The tab
+resubscribes from the heads the index copy was read at, the worker loads the document, and its
+recovery path sends what changed since those heads. That rebases the write the way a restart does.
+`setMirrorIndexedReads` turns it on; it is off by default.
+
+The index copy is used only when it reproduces the document exactly. After the switch, recovery
+sends only what changed since the index heads, so a field the copy got wrong would stay wrong in the
+tab, and the worker would refuse a write to a path that exists only in the tab's copy. Two fields
+make it exact:
+
+- `@heads`: the document's heads when the indexer read the object.
+- `@stored`: the document's `access` and the object's stored `system` and `meta`. The JSON form
+  reshapes these. It drops `createdAt`, `kind` and empty meta containers and re-parses references,
+  and a test comparing every document both ways found each of those differences.
+
+The worker serves a document live instead when its objects were read at different heads (so the
+space root and inline objects stay live), or when one holds a value JSON cannot carry: bytes, a
+date, or a string over 300,000 characters, which ECHO stores as `RawString`. After each index pass
+the worker re-reads the documents tabs follow this way and sends those whose heads moved.
+
+| Question                                                                           | Result                                                                                                                                            |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does a tab show objects whose documents the worker never loads?                    | 10 objects shown, 0 documents loaded; a write loads only its own                                                                                  |
+| Do query results hydrate from the index copy, so the nav tree needs no change?     | Yes, but the worker still loads each result's document to answer the query (below)                                                                |
+| Does a remote edit reach a tab reading from the index?                             | Yes, after the next index pass                                                                                                                    |
+| Does a write against an index copy that missed an insert land where the tab meant? | Yes, recovery rebases it                                                                                                                          |
+| Does a write survive arriving with the index copy, or a worker restart in flight?  | Yes. Before a fix, both left the write unsent                                                                                                     |
+| Is the index copy identical to the worker's copy?                                  | Yes for plain values, references, meta keys, typed objects, a parent, a relation and a deleted object; an object holding bytes falls back to live |
+
+Time for a tab to show every object after a worker restart, in Node over the in-process transport
+(`MIRROR_BENCH=1` for 200). The index run goes first, so warm-up favors the other one.
+
+| Reads                | Objects | Time to show all | Documents the worker loaded |
+| -------------------- | ------- | ---------------- | --------------------------- |
+| From the index       | 40      | 56 ms            | 0                           |
+| From the worker copy | 40      | 151 ms           | 40                          |
+| From the index       | 200     | 104 ms           | 0                           |
+| From the worker copy | 200     | 619 ms           | 200                         |
+
+What stops "load only to mutate" from holding in production:
+
+1. **Sync binds to loaded documents.** Subduction sources are bound to handles; after eviction,
+   inbound data is stored but not applied and the heads store is not updated. Until collection sync
+   lands, a document that receives remote changes is loaded to apply them, and the indexer loads
+   each changed document to index it. The index copy removes loads for reading, not for changes.
+2. **Queries load their results in the worker.** On this branch `QueryExecutor` reads each
+   document-backed result from Automerge (`_loadFromAutomerge`), so a query in a tab reading from
+   the index still makes the worker load all ten result documents briefly. [#13288](https://github.com/dxos/dxos/pull/13288) on main answers
+   queries from SQL without loading documents. The two together should let a nav-tree query load
+   nothing, but they have not run together.
+3. **Index lag.** A tab reading from the index sees a remote edit one index pass after the worker's
+   copy does, so the nav tree shows a remote rename that much later.
+4. **The push re-reads every followed document after every pass.** It should read only the
+   documents the pass changed.
+5. **Existing indexes lack `@heads` and `@stored`.** They need a reindex; until then every document
+   falls back to live, which is safe but saves nothing.
+6. **Per-object fields are a stand-in.** A per-document snapshot table would serve the space root
+   and inline objects too, without storing `@stored` beside every object.
+7. **A tab never returns to the index after editing a document** until it reloads.
 
 ## Blockers
 

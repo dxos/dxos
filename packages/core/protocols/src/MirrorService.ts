@@ -90,6 +90,18 @@ export const CaughtUpEvent = Schema.Struct({
   version: Schema.Number,
 });
 
+/**
+ * A document read from the worker's index instead of its Automerge copy, which the worker then need
+ * not load. `heads` are the Automerge heads the index read it at, so a tab that writes later
+ * resubscribes live from them and receives what changed since. Sent again when the index changes.
+ */
+export const IndexedEvent = Schema.Struct({
+  type: Schema.Literal('indexed'),
+  documentId: Schema.String,
+  heads: Heads,
+  value: Schema.Unknown,
+});
+
 /** The document is not on the worker's disk; it is being fetched from the network. */
 export const RequestingEvent = Schema.Struct({
   type: Schema.Literal('requesting'),
@@ -107,6 +119,7 @@ export const DocumentEvent = Schema.Union([
   EntryEvent,
   RecoveredEvent,
   CaughtUpEvent,
+  IndexedEvent,
   RequestingEvent,
   UnavailableEvent,
 ]);
@@ -134,8 +147,19 @@ export interface Known extends Schema.Schema.Type<typeof Known> {}
 
 export const UpdateSubscriptionRequest = Schema.Struct({
   subscriptionId: Schema.String,
-  /** Documents to follow, with what the tab already holds when it is resubscribing. */
-  add: Schema.optional(mutableArray(Schema.Struct({ documentId: Schema.String, known: Schema.optional(Known) }))),
+  /**
+   * Documents to follow, with what the tab already holds when it is resubscribing. `indexed` asks for
+   * the document as the index holds it, falling back to `live` when the index has no exact copy.
+   */
+  add: Schema.optional(
+    mutableArray(
+      Schema.Struct({
+        documentId: Schema.String,
+        known: Schema.optional(Known),
+        mode: Schema.optional(Schema.Literals(['live', 'indexed'])),
+      }),
+    ),
+  ),
   remove: Schema.optional(mutableArray(Schema.String)),
 });
 export interface UpdateSubscriptionRequest extends Schema.Schema.Type<typeof UpdateSubscriptionRequest> {}

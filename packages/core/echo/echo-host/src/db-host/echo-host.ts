@@ -48,6 +48,7 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { type IndexedObject } from '../mirror/indexed.ts';
 import { MirrorServiceImpl } from '../mirror/mirror-service.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
@@ -247,7 +248,10 @@ export class EchoHost extends Resource {
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
     });
 
-    this._mirrorService = new MirrorServiceImpl({ automergeHost: this._automergeHost });
+    this._mirrorService = new MirrorServiceImpl({
+      automergeHost: this._automergeHost,
+      readIndexed: (documentId) => this.#readIndexedDocument(documentId),
+    });
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
@@ -1233,6 +1237,31 @@ export class EchoHost extends Resource {
     }
   };
 
+  /** The objects of a document as the index holds them; reads no document. */
+  async #readIndexedDocument(documentId: DocumentId): Promise<IndexedObject[] | undefined> {
+    if (!this._indexEngine) {
+      return undefined;
+    }
+    const rows = (
+      await this._indexEngine.queryDocuments([documentId]).pipe(RuntimeProvider.runPromise(this._runtime))
+    ).filter((row) => row.documentId === documentId && !row.queueId);
+    if (rows.length === 0) {
+      return undefined;
+    }
+    const snapshots = new Map(
+      (
+        await this._indexEngine
+          .querySnapshotsJSON(rows.map((row) => row.recordId))
+          .pipe(RuntimeProvider.runPromise(this._runtime))
+      ).map(({ recordId, snapshot }) => [recordId, snapshot]),
+    );
+    const objects = rows.flatMap((row) => {
+      const snapshot = snapshots.get(row.recordId);
+      return snapshot ? [{ objectId: row.objectId, snapshot }] : [];
+    });
+    return objects.length === rows.length ? objects : undefined;
+  }
+
   /**
    * One indexing pass over both data sources.
    *
@@ -1371,6 +1400,7 @@ export class EchoHost extends Resource {
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
+        this._mirrorService.onIndexed();
       }
 
       return {

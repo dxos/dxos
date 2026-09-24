@@ -309,6 +309,13 @@ export class EchoTestPeer extends Resource {
     return client;
   }
 
+  /** Closes a client this peer created and stops reconnecting it after a host restart. */
+  async closeClient(client: EchoClient): Promise<void> {
+    this._clients.delete(client);
+    this._mirrorClients.delete(client);
+    await client.close();
+  }
+
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},

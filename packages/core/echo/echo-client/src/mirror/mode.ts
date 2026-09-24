@@ -14,3 +14,15 @@ export const isMirrorMode = (): boolean => mirrorMode;
 export const setMirrorMode = (enabled: boolean): void => {
   mirrorMode = enabled;
 };
+
+/**
+ * Whether a mirror tab reads object documents from the worker's index, so the worker need not load
+ * them, and switches a document to the worker's Automerge copy on its first write.
+ */
+let indexedReads = false;
+
+export const isMirrorIndexedReads = (): boolean => indexedReads;
+
+export const setMirrorIndexedReads = (enabled: boolean): void => {
+  indexedReads = enabled;
+};

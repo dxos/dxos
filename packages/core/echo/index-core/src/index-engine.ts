@@ -289,6 +289,11 @@ export class IndexEngine {
     return this.#objectMetaIndex.lookupByObjectId(query);
   }
 
+  /** Rows of the objects stored in the given documents, without loading the documents. */
+  queryDocuments(documentIds: readonly string[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
+    return this.#objectMetaIndex.queryDocuments(documentIds);
+  }
+
   queryObjectIds(query: {
     spaceIds: readonly SpaceId[];
     objectIds: readonly EntityMeta['objectId'][];

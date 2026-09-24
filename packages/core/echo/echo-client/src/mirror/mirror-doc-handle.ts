@@ -24,11 +24,16 @@ import { DocumentUnavailableError } from '../errors.ts';
 import { registerMirrorDoc } from './doc-ops.ts';
 import { Recorder } from './recorder.ts';
 
+/** Names the state of a document read from the index, which no worker numbering ever uses. */
+const INDEXED_EPOCH = 'indexed';
+
 export type MirrorDocHandleOptions<T> = {
   clientId: string;
   documentId?: DocumentId;
   /** Content of a document this tab is creating; edits made before the worker answers are kept. */
   initialValue?: T;
+  /** Follow the worker's index rather than its Automerge copy until the tab first writes. */
+  indexed?: boolean;
   onDelete: () => void;
 };
 
@@ -50,6 +55,9 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   /** Fires with this tab's changes the worker refused, before the {@link confirmed} that settles them. */
   readonly refused = new Event<Mirror.Change[]>();
+
+  /** Fires on the tab's first write to a document that follows the index, which needs the worker's copy to land. */
+  readonly upgrade = new Event<void>();
 
   /**
    * The document as an atom whose value is the frozen tree {@link doc} returns, not a copy of it, so an
@@ -75,15 +83,20 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   /** Changes made before the worker's first snapshot. */
   #early: Mirror.Op[][] = [];
   #deleted = false;
+  /** Read from the worker's index: shown, but not written until the worker's copy answers. */
+  #indexed = false;
+  /** Until the first write or a live answer, since a live handle ignores index copies and must not ask for them. */
+  #followsIndex: boolean;
   /** Created by this tab, so flush waits for the worker's first snapshot of it. */
   readonly #created: boolean;
 
-  constructor({ clientId, documentId, initialValue, onDelete }: MirrorDocHandleOptions<T>) {
+  constructor({ clientId, documentId, initialValue, indexed = false, onDelete }: MirrorDocHandleOptions<T>) {
     super();
     this.#clientId = clientId;
     this.#documentId = documentId;
     this.#onDelete = onDelete;
     this.#created = initialValue !== undefined;
+    this.#followsIndex = indexed;
     // Wire and caller data become the mirror's frozen state; T is the caller's promise about its shape.
     this.#local = Mirror.freezeValue((initialValue ?? {}) as T);
   }
@@ -131,6 +144,16 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     return this.#deleted;
   }
 
+  /** Whether the document is still read from the index, with no live subscription to the worker. */
+  get isIndexed(): boolean {
+    return this.#indexed;
+  }
+
+  /** Whether (re)subscriptions should ask for the worker's index rather than its Automerge copy. */
+  get followsIndex(): boolean {
+    return this.#followsIndex;
+  }
+
   doc(): AutomergeDoc<T> {
     invariant(!this.#deleted, 'MirrorDocHandle.doc called on deleted doc');
     return this.#view();
@@ -171,6 +194,10 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
       patches: toPatches(patches),
       patchInfo: { before, after, source: 'change' },
     });
+    if (this.#followsIndex) {
+      this.#followsIndex = false;
+      this.upgrade.emit();
+    }
   }
 
   /**
@@ -212,7 +239,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   /** The next batch to submit, if there is no batch in flight and there are buffered edits. */
   _takeBatch(): { epoch: string; batch: Mirror.Batch } | undefined {
-    if (!this.#client || !this.#epoch) {
+    if (!this.#client || !this.#epoch || this.#indexed) {
       return undefined;
     }
     const batch = this.#client.takeBatch(`${this.#clientId}:${PublicKey.random().toHex().slice(0, 16)}`);
@@ -263,6 +290,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
         return this.#applyRecovered(event);
       case 'caughtUp':
         return this.#applyCaughtUp(event);
+      case 'indexed':
+        return this.#applyIndexed(event);
       case 'requesting':
         return this._markRequesting();
       case 'unavailable':
@@ -275,6 +304,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     // Structured-clone data from the worker; T is the database layer's promise about its shape.
     const value = Mirror.freezeValue(event.value as T);
     this.#epoch = event.epoch;
+    this.#indexed = false;
+    this.#followsIndex = false;
     let patches: Mirror.MirrorPatch[];
     let refused: Mirror.Change[] = [];
     if (this.#client) {
@@ -340,10 +371,42 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
       event.heads,
     );
     this.#epoch = event.epoch;
+    this.#indexed = false;
+    this.#followsIndex = false;
     if (patches.length > 0) {
       this.#emitHostChange(before, patches);
     }
     this.#emitRefused(refused);
+    this.confirmed.emit();
+  }
+
+  /**
+   * Shows the document as the worker's index holds it. Its heads are where a live subscription
+   * resumes from on the first write, so edits made meanwhile are rebased over anything newer.
+   */
+  #applyIndexed(event: Extract<MirrorService.DocumentEvent, { type: 'indexed' }>): void {
+    if (this.#client && !(this.#indexed && this.#followsIndex)) {
+      // Live already, or switching to live, whose answer settles the document.
+      return;
+    }
+    const before = this.doc();
+    // Structured-clone data from the worker; T is the database layer's promise about its shape.
+    const value = Mirror.freezeValue(event.value as T);
+    let patches: Mirror.MirrorPatch[];
+    if (this.#client) {
+      ({ patches } = this.#client.reset(value, 0, event.heads));
+    } else {
+      this.#client = new Mirror.MirrorClientState<T>(this.#clientId, value, 0, event.heads);
+      for (const change of this.#early) {
+        this.#client.applyLocal(change);
+      }
+      this.#early = [];
+      patches = topLevelPuts(this.#client.current);
+    }
+    this.#epoch = INDEXED_EPOCH;
+    this.#indexed = true;
+    this.#wakeReady();
+    this.#emitHostChange(before, patches);
     this.confirmed.emit();
   }
 

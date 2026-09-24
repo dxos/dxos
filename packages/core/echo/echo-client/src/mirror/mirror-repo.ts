@@ -24,6 +24,7 @@ import { RepoProxy } from '../automerge/repo-proxy.ts';
 import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
+import { isMirrorIndexedReads } from './mode.ts';
 
 const RPC_TIMEOUT = 30_000;
 const FLUSH_TIMEOUT = 30_000;
@@ -42,7 +43,13 @@ const RESUBSCRIBE_DELAY_MS = 250;
 const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
 /** Events that answer a (re)subscription to a document. */
-const ANSWERS = new Set<MirrorService.DocumentEvent['type']>(['snapshot', 'recovered', 'caughtUp', 'unavailable']);
+const ANSWERS = new Set<MirrorService.DocumentEvent['type']>([
+  'snapshot',
+  'recovered',
+  'caughtUp',
+  'indexed',
+  'unavailable',
+]);
 
 /**
  * A repo whose documents are JSON mirrors served by the worker's `MirrorService`: the tab loads no
@@ -112,6 +119,28 @@ export class MirrorRepo extends Resource implements ClientRepo {
     }
     this.#requireOpen(documentId);
     const handle = this.#createHandle<T>({ documentId });
+    this.#handles[documentId] = handle;
+    this.#pendingRemove.delete(documentId);
+    this.#catchUp(documentId);
+    return handle;
+  }
+
+  /**
+   * Finds a document of objects, read from the worker's index while the tab only shows it: the
+   * worker loads its Automerge copy only once the tab writes. Not for the space root, whose links the
+   * index does not hold.
+   */
+  findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
+    if (!isMirrorIndexedReads() || typeof id !== 'string') {
+      return this.find(id);
+    }
+    const documentId = toDocumentId(id);
+    const existing = this.#handles[documentId];
+    if (existing) {
+      return existing;
+    }
+    this.#requireOpen(documentId);
+    const handle = this.#createHandle<T>({ documentId, indexed: true });
     this.#handles[documentId] = handle;
     this.#pendingRemove.delete(documentId);
     this.#catchUp(documentId);
@@ -363,7 +392,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
     }
   }
 
-  #createHandle<T>(options: { documentId?: DocumentId; initialValue?: T }): MirrorDocHandle<T> {
+  #createHandle<T>(options: { documentId?: DocumentId; initialValue?: T; indexed?: boolean }): MirrorDocHandle<T> {
     const handle: MirrorDocHandle<T> = new MirrorDocHandle<T>({
       ...options,
       clientId: this.#clientId,
@@ -387,6 +416,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
       }
     });
     handle.gap.on(() => {
+      if (handle.documentId) {
+        this.#catchUp(handle.documentId);
+      }
+    });
+    handle.upgrade.on(() => {
+      // The worker loads its copy and answers from the heads the index was read at.
       if (handle.documentId) {
         this.#catchUp(handle.documentId);
       }
@@ -428,8 +463,13 @@ export class MirrorRepo extends Resource implements ClientRepo {
         this.#resubscribeAttempts = 0;
         ready.wake();
         for (const event of events) {
-          this.#handles[event.documentId]?._receive(event);
+          const handle = this.#handles[event.documentId];
+          handle?._receive(event);
           if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
+            // The tab wrote after asking for the index copy, so its write needs the worker's copy.
+            if (event.type === 'indexed' && handle && !handle.followsIndex) {
+              this.#catchUp(event.documentId);
+            }
             this.#answered.emit(event.documentId);
             this.#submitJob?.trigger();
           }
@@ -493,8 +533,13 @@ export class MirrorRepo extends Resource implements ClientRepo {
     if (this.#pendingAdd.size > 0 || this.#pendingRemove.size > 0) {
       // Read now, not when the catch-up was requested, so the answer is relative to what the tab holds.
       const add = [...this.#pendingAdd].map((documentId) => {
-        const known = this.#handles[documentId]?._known();
-        return { documentId, ...(known ? { known } : {}) };
+        const handle = this.#handles[documentId];
+        const known = handle?._known();
+        return {
+          documentId,
+          ...(known ? { known } : {}),
+          ...(handle?.followsIndex ? { mode: 'indexed' as const } : {}),
+        };
       });
       const remove = [...this.#pendingRemove];
       this.#pendingAdd.clear();

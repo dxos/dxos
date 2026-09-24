@@ -1742,7 +1742,10 @@ export class EntityManager implements IDatabaseBinding {
       }
       let handle: ClientDocHandle<DatabaseDirectory>;
       try {
-        handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
+        handle =
+          this._repoProxy instanceof MirrorRepo
+            ? this._repoProxy.findIndexed<DatabaseDirectory>(automergeUrl as DocumentId)
+            : this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
       } catch (err) {
         if (!RepoClosedError.is(err)) {
           throw err;
