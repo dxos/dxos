@@ -377,11 +377,13 @@ describe('Query', () => {
     });
   });
 
-  describe('changes', () => {
+  // The SQL executor declines change queries and `sum`/`time` aggregates; both modes must answer them.
+  describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
     const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
 
     test('a space-wide count by day follows new edits', async () => {
-      const { db } = await builder.createDatabase();
+      const db = await createDatabase();
       const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
       await db.flush({ indexes: true });
 
@@ -411,7 +413,7 @@ describe('Query', () => {
     });
 
     test("an object's history comes back as frozen change records, newest first", async () => {
-      const { db } = await builder.createDatabase();
+      const db = await createDatabase();
       const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
       for (const value of [2, 3]) {
         Obj.update(object, (object) => {
@@ -435,7 +437,7 @@ describe('Query', () => {
     });
 
     test("the index and a replay agree on an object's changes", async () => {
-      const { db } = await builder.createDatabase();
+      const db = await createDatabase();
       const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
       Obj.update(object, (object) => {
         object.value = 2;
@@ -466,7 +468,7 @@ describe('Query', () => {
     });
 
     test('sums and time buckets apply to ordinary objects', async () => {
-      const { db } = await builder.createDatabase();
+      const db = await createDatabase();
       const day = Date.UTC(2026, 0, 2);
       db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
       db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));

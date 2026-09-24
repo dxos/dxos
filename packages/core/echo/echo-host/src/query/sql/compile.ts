@@ -986,7 +986,10 @@ export class SqlPlanCompiler {
         case 'group':
         case 'type':
         case 'timestamp':
+        case 'time':
           return sql`k.${sql.literal(keyColumn(aggregate.name))} AS ${name}`;
+        case 'sum':
+          return sql`TOTAL(${this.#numericProperty(aggregate.property)}) OVER (PARTITION BY k.groupKey) AS ${name}`;
         case 'count':
           return sql`COUNT(*) OVER (PARTITION BY k.groupKey) AS ${name}`;
         case 'max':
@@ -1031,6 +1034,8 @@ export class SqlPlanCompiler {
         return sql`CASE WHEN m.typeDXN = ${UNTYPED_INDEX_TYPE} THEN NULL ELSE m.typeDXN END`;
       case 'timestamp':
         return this.#truncatedTimestamp(aggregate);
+      case 'time':
+        return this.#truncatedProperty(aggregate);
       default:
         throw new QueryError({ message: 'Not a group key aggregate', context: { kind: aggregate.kind } });
     }
@@ -1073,6 +1078,37 @@ export class SqlPlanCompiler {
       ...shape.aggregateNames.map((name) => sql`${row}.${sql.literal(aggregateColumn(name))}`),
     ];
     return sql.csv(columns);
+  }
+
+  /**
+   * The start of the hour or UTC day a unix-ms property falls in, or `null` when it is not a number.
+   * Floored rather than truncated, as `GroupBy.truncateTimeProperty` is, so times before 1970 land
+   * in the same bucket on both executors.
+   */
+  #truncatedProperty(aggregate: QueryAST.GroupAggregate & { kind: 'time' }): Fragment {
+    const sql = this.#sql;
+    if (aggregate.unit === 'day' && aggregate.timeZone && aggregate.timeZone !== 'UTC') {
+      // Declined by `planDeclinedByCompiler`, as a `timestamp` day in a named zone is.
+      throw new QueryError({
+        message: 'Day grouping in a named time zone is not compilable',
+        context: { timeZone: aggregate.timeZone },
+      });
+    }
+    const size = aggregate.unit === 'hour' ? HOUR_MS : DAY_MS;
+    const value = this.#numericProperty(aggregate.property);
+    // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
+    const floored = sql`(CAST(${value} AS INTEGER) - (${value} < CAST(${value} AS INTEGER)))`;
+    return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
+  }
+
+  /** A numeric property, or `null` for anything else (`id` included), as `GroupBy.sum` reads it. */
+  #numericProperty(property: string): Fragment {
+    const sql = this.#sql;
+    if (property === 'id') {
+      return sql`NULL`;
+    }
+    const at = jsonPathLiteral(sql, [property]);
+    return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('integer', 'real') THEN json_extract(d.snapshot, ${at}) END`;
   }
 
   /** A property coerced to the scalar domain (`null` for anything else); `id` is the entity id. */
@@ -1151,7 +1187,7 @@ export const compilePlan = (
 
 const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
 
-/** IANA zones of every `timestamp` group key that truncates to a local day, sub-plans included. */
+/** IANA zones of every `timestamp` or `time` group key that truncates to a local day, sub-plans included. */
 const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
   const zones = new Set<string>();
   const visit = (plan: QueryPlan.Plan) => {
@@ -1160,7 +1196,7 @@ const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
         case 'AggregateStep':
           for (const aggregate of step.aggregates) {
             if (
-              aggregate.kind === 'timestamp' &&
+              (aggregate.kind === 'timestamp' || aggregate.kind === 'time') &&
               aggregate.unit === 'day' &&
               aggregate.timeZone &&
               aggregate.timeZone !== 'UTC'
@@ -1219,7 +1255,6 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
  */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
   planSelectsChanges(plan) ||
-  planUsesUncompiledAggregates(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||
   collectMetaVersionFilters(plan, planSubquery).length > 0 ||
   collectDayTimeZones(plan).size > 0;
@@ -1227,21 +1262,6 @@ export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanS
 /** A `Filter.changes` plan runs on its own executor over change records, not object rows. */
 const planSelectsChanges = (plan: QueryPlan.Plan): boolean =>
   plan.steps.some((step) => step._tag === 'SelectStep' && step.selector._tag === 'ChangesSelector');
-
-/** `sum` and `time` aggregates have no SQL form yet. */
-const planUsesUncompiledAggregates = (plan: QueryPlan.Plan): boolean =>
-  plan.steps.some((step) => {
-    switch (step._tag) {
-      case 'AggregateStep':
-        return step.aggregates.some((aggregate) => aggregate.kind === 'sum' || aggregate.kind === 'time');
-      case 'UnionStep':
-        return step.plans.some(planUsesUncompiledAggregates);
-      case 'SetDifferenceStep':
-        return planUsesUncompiledAggregates(step.source) || planUsesUncompiledAggregates(step.exclude);
-      default:
-        return false;
-    }
-  });
 
 const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
   const readsMeta = (filter: QueryAST.Filter): boolean => {

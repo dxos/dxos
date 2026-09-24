@@ -81,7 +81,7 @@ const seed = Effect.gen(function* () {
     doc(
       ids.t1,
       TASK,
-      { title: 'alpha', priority: 2, tags: ['a', 'b'], assignee: ref(ids.alice) },
+      { title: 'alpha', priority: 2, due: -1, tags: ['a', 'b'], assignee: ref(ids.alice) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.project }) },
     ),
     doc(
@@ -90,9 +90,10 @@ const seed = Effect.gen(function* () {
       { title: 'beta', priority: 1, tags: ['b'], assignee: ref(ids.bob) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.deletedProject }) },
     ),
-    doc(ids.t3, TASK, { title: 'gamma', priority: 3, tags: [], assignee: ref(ids.alice) }),
+    doc(ids.t3, TASK, { title: 'gamma', priority: 3, due: 3_600_001, tags: [], assignee: ref(ids.alice) }),
     doc(ids.t4, TASK, {
       title: 'delta',
+      due: 'soon',
       tags: ['a'],
       done: true,
       [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }] },
@@ -435,7 +436,29 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it('declines change queries and aggregates with no SQL form', () => {
+  it.effect('sums a property and buckets a time property by floored hour', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const { rows } = yield* run(
+        fixture,
+        Query.select(Filter.type(TASK))
+          .aggregate({ hour: Aggregate.time('due', 'hour'), priority: Aggregate.sum('priority'), n: Aggregate.count() })
+          .from(scope),
+      );
+      // t2 sits under the deleted project; a due before 1970 floors to the hour before; a string due has no hour.
+      const groups = rows
+        .map((row) => ({ ...JSON.parse(row.groupKey ?? '{}'), ...JSON.parse(row.aggregates ?? '{}') }))
+        .sort((a, b) => (a.hour ?? Infinity) - (b.hour ?? Infinity));
+      expect(groups).toEqual([
+        { hour: -3_600_000, priority: 2, n: 1 },
+        { hour: 3_600_000, priority: 3, n: 1 },
+        { hour: null, priority: 0, n: 1 },
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it('declines change queries and a time bucket by day in a named zone', () => {
     const scope = [{ _tag: 'space' as const, spaceId: SpaceId.random() }];
     const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.from(scope).ast);
     expect(
@@ -446,10 +469,25 @@ describe('SqlPlanCompiler', () => {
     ).toBe(true);
     expect(
       planDeclinedByCompiler(
-        plan(Query.select(Filter.type(TASK)).aggregate({ total: Aggregate.sum('estimate') })),
+        plan(
+          Query.select(Filter.type(TASK)).aggregate({
+            day: Aggregate.time('due', 'day', { timeZone: 'Asia/Kolkata' }),
+          }),
+        ),
         planSubquery,
       ),
     ).toBe(true);
+    expect(
+      planDeclinedByCompiler(
+        plan(
+          Query.select(Filter.type(TASK)).aggregate({
+            day: Aggregate.time('due', 'day'),
+            total: Aggregate.sum('estimate'),
+          }),
+        ),
+        planSubquery,
+      ),
+    ).toBe(false);
     expect(
       planDeclinedByCompiler(plan(Query.select(Filter.type(TASK)).aggregate({ n: Aggregate.count() })), planSubquery),
     ).toBe(false);

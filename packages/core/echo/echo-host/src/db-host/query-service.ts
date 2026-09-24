@@ -188,9 +188,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        // Only the compiled path reads the snapshot store directly, so only it has to wait for the
-        // store to fill; a memory-path query loads the documents itself and is not affected.
-        if (queryEntry.feedScoped || (queryEntry.executor.mode === 'sql' && !(await this.#snapshotsComplete()))) {
+        // Only a compiled plan reads the snapshot store directly, so only it has to wait for the
+        // store to fill; a plan run in memory, declined or not, loads the documents itself.
+        if (queryEntry.feedScoped || (queryEntry.executor.compiled && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
         queryEntry.open = true;

@@ -699,13 +699,17 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  /**
-   * The path this host asked for. Answerable before the first execution, because the caller gating
-   * on indexing has to know which store the query may read; a plan the compiler declines still
-   * reports `sql` here and runs in memory, which only makes that gate conservative.
-   */
+  /** The path this host asked for; a plan the compiler declines still reports `sql` and runs in memory. */
   get mode(): QueryExecutorMode {
     return this.#mode;
+  }
+
+  /**
+   * Whether the plan runs as one compiled statement, which reads the snapshot store directly and so
+   * needs it filled. Known from construction, so a caller can gate the first execution on indexing.
+   */
+  get compiled(): boolean {
+    return this._plan.steps.some((step) => step._tag === 'SqlStep');
   }
 
   getResults(): QueryService.QueryResult[] {
@@ -830,7 +834,7 @@ export class QueryExecutor extends Resource {
       const { workingSet, trace } = await this._execPlan(this._plan, []);
       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
       // the compiler declined runs step by step even under `sql` and needs the filter.
-      if (this._plan.steps.some((step) => step._tag === 'SqlStep')) {
+      if (this.compiled) {
         return { workingSet, trace };
       }
       // Unresolvable items never reach the client, where hydration would fail or stall on them.
