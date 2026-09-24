@@ -49,9 +49,10 @@ const parseArgs = () => {
     // App boot is rarely what a demo is about: the first `goto` waits for the app to be ready and cuts
     // everything before it. `--boot keep` records it when the boot is the subject.
     'boot': 'cut',
-    'ready': '[data-testid="deck.sidebar"], #storybook-root > *',
+    // A plank, not the sidebar: Composer's sidebar renders ~8s before any space content does.
+    'ready': '[data-testid="deck.plank"], #storybook-root > *',
     'ready-timeout': 180_000,
-    'settle': 2_000,
+    'settle': 5_000,
     'feed': 'top-right',
   };
   for (let index = 0; index < args.length; index += 2) {
@@ -278,8 +279,7 @@ const handlers = {
         .then(() => true)
         .catch(() => false);
       if (ready) {
-        // The shell appears before its content does; a cut on the first chrome would still show panels
-        // filling in.
+        // A plank mounts seconds before its content has filled in, more on a fresh profile.
         await page.waitForTimeout(options.settle);
         result.boot = cut();
       } else {

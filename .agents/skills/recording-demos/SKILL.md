@@ -137,7 +137,7 @@ not perform. The chip is the proof; without it a palette just appears. See "The 
 
 App boot is almost never what a demo is about, and it is the longest stretch of motion in a session, so
 the trimmer cannot remove it. The first `goto` therefore waits for the app to be ready — `--ready`,
-by default Composer's sidebar or a rendered storybook story — lets it settle for `--settle` ms, and
+by default a Composer plank or a rendered storybook story (not the sidebar, which renders ~8s before any content) — lets it settle for `--settle` ms, and
 discards everything recorded before that. Its reply says what happened: `"boot":{"cut":true}`, or
 `cut:false` with the reason (the selector never appeared within `--ready-timeout`, or the 1x fallback,
 which cannot drop frames).
