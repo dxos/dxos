@@ -6,6 +6,7 @@
   /* One clock for every slide in the layout and for the view transition that stands in for them. */
   :root {
     --dx-main-transition-duration: 200ms;
+    --dx-main-plank-transition-duration: 50ms;
     --dx-main-transition-easing: cubic-bezier(0.4, 0, 0.6, 1);
   }
 
@@ -332,5 +333,9 @@
   ::view-transition-group(*) {
     animation-duration: var(--dx-main-transition-duration);
     animation-timing-function: var(--dx-main-transition-easing);
+  }
+
+  :root:active-view-transition-type(dx-plank)::view-transition-group(*) {
+    animation-duration: var(--dx-main-plank-transition-duration);
   }
 }

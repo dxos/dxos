@@ -670,8 +670,6 @@ const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
   ),
 ];
 
-// A reveal that leaves focus where it is brings the plank forward without focusing it; a plain reveal
-// focuses it.
 export const RevealWithoutFocus: Story = {
   tags: ['test'],
   args: { count: 6, revealControls: true },
@@ -687,6 +685,7 @@ export const RevealWithoutFocus: Story = {
     withoutFocus.click();
     await waitFor(() => expect(withoutFocus).toHaveAttribute('data-revealed', 'true'));
     await expect(document.activeElement).toBe(withoutFocus);
+    await waitFor(() => expect(plankTitle(canvasElement, REVEAL_PLANK_ID)).toHaveAttribute('data-attention', 'true'));
 
     const reveal = await canvas.findByTestId('story.reveal');
     reveal.focus();
