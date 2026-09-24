@@ -24,7 +24,7 @@
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -241,6 +241,26 @@ if (options.report) {
   process.exit(0);
 }
 
+// VP8 and VP9 are separate libraries in ffmpeg builds; a build with only VP8 still trims, at the older
+// fixed bitrate, rather than failing outright.
+const hasVp9 = spawnSync(FFMPEG, ['-hide_banner', '-encoders'], { encoding: 'utf8' }).stdout?.includes('libvpx-vp9');
+const encoderArgs = hasVp9
+  ? [
+      '-c:v',
+      'libvpx-vp9',
+      '-crf',
+      String(options.crf),
+      '-b:v',
+      '0',
+      '-row-mt',
+      '1',
+      '-deadline',
+      'good',
+      '-cpu-used',
+      '4',
+    ]
+  : ['-c:v', 'libvpx', '-b:v', '1400k'];
+
 const decoder = spawn(FFMPEG, decodeArgs);
 
 const encoder = spawn(FFMPEG, [
@@ -257,18 +277,7 @@ const encoder = spawn(FFMPEG, [
   String(options.fps),
   '-i',
   '-',
-  '-c:v',
-  'libvpx-vp9',
-  '-crf',
-  String(options.crf),
-  '-b:v',
-  '0',
-  '-row-mt',
-  '1',
-  '-deadline',
-  'good',
-  '-cpu-used',
-  '4',
+  ...encoderArgs,
   '-y',
   output,
 ]);

@@ -212,7 +212,10 @@ const describe = async (target, command) => {
  */
 const pointAt = async (target, command, kind) => {
   const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
-  const label = await describe(target, command);
+  // No box means no element yet; probing it for a name would wait out the default timeout first.
+  const label = box
+    ? await describe(target, command)
+    : summarize(command.label || command.text || command.selector, 60);
   if (box) {
     await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   }
@@ -375,9 +378,11 @@ const handlers = {
     const recorded = await recorder?.stop();
     await context.close();
     await browser.close();
-    const video = recorded?.file ?? readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
+    // `recorded.file` already carries the output directory; only the fallback's bare name needs it.
+    const fallback = recorded ? undefined : readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
+    const video = recorded ? path.resolve(recorded.file) : fallback && path.resolve(options.out, fallback);
     return {
-      video: video ? path.resolve(options.out, video) : undefined,
+      video,
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
