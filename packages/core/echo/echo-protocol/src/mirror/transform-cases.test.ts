@@ -149,3 +149,57 @@ describe('transform edge cases', () => {
     });
   }
 });
+
+/** Both orders of two concurrent op lists, which TP1 requires to agree. */
+const bothOrders = (base: unknown, left: Op[], right: Op[]) => {
+  const [leftPrime, rightPrime] = transformLists(left, right, true);
+  return {
+    leftThenRight: applyOps(applyOps(base, left, { strict: true }).root, rightPrime, { strict: true }).root,
+    rightThenLeft: applyOps(applyOps(base, right, { strict: true }).root, leftPrime, { strict: true }).root,
+  };
+};
+
+/** Automerge keeps a write over a concurrent delete of what it writes, and loses edits inside a deleted value. */
+describe('a write beats a concurrent delete', () => {
+  test('of a map key', () => {
+    const base = freezeValue({ map: { key: 'old', other: 1 } });
+    const { leftThenRight, rightThenLeft } = bothOrders(
+      base,
+      [{ type: 'put', path: ['map', 'key'], value: 'new' }],
+      [{ type: 'del', path: ['map', 'key'] }],
+    );
+    expect(leftThenRight).toEqual({ map: { key: 'new', other: 1 } });
+    expect(rightThenLeft).toEqual(leftThenRight);
+  });
+
+  test('of a list element, where the removed range closes up around it', () => {
+    const base = freezeValue({ list: ['a', 'b', 'c', 'd'] });
+    const { leftThenRight, rightThenLeft } = bothOrders(
+      base,
+      [
+        { type: 'put', path: ['list', 1], value: 'B' },
+        { type: 'put', path: ['list', 2], value: 'C' },
+      ],
+      [{ type: 'remove', path: ['list', 0], count: 3 }],
+    );
+    expect(leftThenRight).toEqual({ list: ['B', 'C', 'd'] });
+    expect(rightThenLeft).toEqual(leftThenRight);
+  });
+
+  test('but not an edit inside the deleted value', () => {
+    const base = freezeValue({ map: { key: { title: 'old' } }, list: [{ title: 'one' }, { title: 'two' }] });
+    const { leftThenRight, rightThenLeft } = bothOrders(
+      base,
+      [
+        { type: 'put', path: ['map', 'key', 'title'], value: 'lost' },
+        { type: 'splice', path: ['list', 0, 'title'], index: 3, remove: 0, insert: '!' },
+      ],
+      [
+        { type: 'del', path: ['map', 'key'] },
+        { type: 'remove', path: ['list', 0], count: 1 },
+      ],
+    );
+    expect(leftThenRight).toEqual({ map: {}, list: [{ title: 'two' }] });
+    expect(rightThenLeft).toEqual(leftThenRight);
+  });
+});

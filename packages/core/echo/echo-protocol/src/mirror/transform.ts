@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Op, type Path, type SpliceOp } from './ops.ts';
+import { type Op, type Path, type PutOp, type RemoveOp, type SpliceOp } from './ops.ts';
 
 /**
  * Transforms `a` so that it applies after `b`, where both were made against the same state.
  *
  * `aFirst` says whether `a` precedes `b` in the worker's order. It decides ties: of two inserts at
  * the same position the earlier one lands first, and of two writes to the same path the later one
- * wins. The worker transforms a stale batch with `aFirst = false` against the entries it missed;
+ * wins. A write beats a concurrent delete of the same map key or list element in either order, as in
+ * Automerge. The worker transforms a stale batch with `aFirst = false` against the entries it missed;
  * a tab transforms incoming entries with `aFirst = true` against its unconfirmed edits. Using one
  * function on both sides is what makes the two converge.
  *
@@ -83,14 +84,21 @@ const overWrite = (a: Op, b: Op, aFirst: boolean): Op[] => {
   if (isStrictPrefix(b.path, a.path)) {
     return [];
   }
+  if (a.type === 'remove' && b.type === 'put') {
+    return removeAroundWrite(a, b);
+  }
   if (!samePath(a.path, b.path)) {
     return [a];
   }
   switch (a.type) {
     case 'put':
     case 'del':
-      if (a.type === 'del' && b.type === 'del') {
+      if (a.type === 'del') {
+        // A delete only removes what its writer saw, so it loses to a concurrent write.
         return [];
+      }
+      if (b.type === 'del') {
+        return [a];
       }
       // The later write wins: `a` survives only when it comes after `b`.
       return aFirst ? [] : [a];
@@ -148,7 +156,10 @@ const overListOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
   const map = (position: number) => (position <= at ? position : position >= at + removed ? position - removed : at);
   if (!onList) {
     if (index >= at && index < at + removed) {
-      return [];
+      // A write to the element itself keeps it, where the removed range closed up; edits inside it are lost.
+      return a.type === 'put' && a.path.length === depth + 1
+        ? [{ type: 'insert', path: [...listPath, at], values: [a.value] }]
+        : [];
     }
     return [withSegment(a, depth, index >= at + removed ? index - removed : index)];
   }
@@ -161,6 +172,26 @@ const overListOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
     return count > 0 ? [{ ...a, path: [...listPath, start], count }] : [];
   }
   return [a];
+};
+
+/** A remove spares the list element a concurrent write set, which Automerge keeps. */
+const removeAroundWrite = (a: RemoveOp, b: PutOp): Op[] => {
+  const listPath = a.path.slice(0, -1);
+  // A put whose parent is the remove's list writes one of its elements.
+  if (!samePath(listPath, b.path.slice(0, -1))) {
+    return [a];
+  }
+  const written = Number(b.path.at(-1));
+  const at = Number(a.path.at(-1));
+  if (written < at || written >= at + a.count) {
+    return [a];
+  }
+  const before = written - at;
+  const after = a.count - before - 1;
+  return [
+    ...(before > 0 ? [{ ...a, count: before }] : []),
+    ...(after > 0 ? [{ ...a, path: [...listPath, at + 1], count: after }] : []),
+  ];
 };
 
 /** `b` edited a text in place; only another edit to the same text needs rebasing. */
