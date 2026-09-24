@@ -36,7 +36,23 @@ export namespace QueryPlan {
     | OrderStep
     | LimitStep
     | SkipStep
-    | AggregateStep;
+    | AggregateStep
+    | SqlStep;
+
+  /**
+   * A contiguous run of steps compiled into a single SQLite statement over the index tables.
+   * Emitted by `SqlPlanCompiler` in place of the steps it stands for, so the compiled path runs a
+   * plan like any other rather than a separate execution mode.
+   */
+  export type SqlStep = {
+    _tag: 'SqlStep';
+    /** Statement text with placeholders. */
+    sql: string;
+    /** Values bound to the statement's placeholders, in order. */
+    params: readonly unknown[];
+    /** The steps the statement stands for, kept so traces and scope analysis still see them. */
+    steps: readonly Step[];
+  };
 
   /**
    * Clear the current working set.

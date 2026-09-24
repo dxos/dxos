@@ -116,23 +116,6 @@ export const getCorePlugins = ({
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
       // the user only if the entry point raises it — React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
-      onReset: ({ target }) =>
-        Effect.sync(() => {
-          localStorage.clear();
-          if (target === 'deviceInvitation') {
-            // Carry a pending invitation code across the reset so the join can complete.
-            const url = new URL('/', window.location.origin);
-            url.searchParams.set(
-              'deviceInvitationCode',
-              new URLSearchParams(window.location.search).get('deviceInvitationCode') ?? '',
-            );
-            window.location.assign(url);
-          } else if (target === 'recoverIdentity') {
-            window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-          } else {
-            window.location.pathname = '/';
-          }
-        }),
     }),
     // Core because it owns the connector machinery itself, not any one integration: it fires
     // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the

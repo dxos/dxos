@@ -24,7 +24,6 @@ import * as Person from './Person.ts';
 import * as Pipeline from './Pipeline.ts';
 import * as Provider from './Provider.ts';
 import * as PullRequest from './PullRequest.ts';
-import * as Question from './Question.ts';
 import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
 import * as Task from './Task.ts';
@@ -73,7 +72,6 @@ export {
   Pipeline,
   Provider,
   PullRequest,
-  Question,
   RemoteSession,
   Repo,
   Task,
