@@ -35,10 +35,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);
   const activeId = activeCompanion && Attention.getLinkedVariant(activeCompanion.id);
-  const [internalValue, setInternalValue] = useState(activeId);
+  const [selectedVariant, setSelectedVariant] = useState(activeId);
 
   useEffect(() => {
-    setInternalValue(activeId);
+    setSelectedVariant(activeId);
   }, [activeId]);
 
   const handleTabClick = useCallback(
@@ -50,7 +50,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           complementarySidebarState: state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
         }));
       } else {
-        setInternalValue(nextValue);
+        setSelectedVariant(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
         void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
@@ -71,7 +71,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
-      <Tabs.Root classNames='contents' orientation='vertical' value={internalValue} keepMounted>
+      <Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
           data-tauri-drag-region
           style={iconSize(5)}
@@ -94,7 +94,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 data-value={Attention.getLinkedVariant(companion.id)}
                 {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
                 variant={
-                  activeId === Attention.getLinkedVariant(companion.id)
+                  selectedVariant === Attention.getLinkedVariant(companion.id)
                     ? state.complementarySidebarState === 'expanded'
                       ? 'primary'
                       : 'ghost'
@@ -131,7 +131,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               mounted={isDeckCompanionMounted({
                 mount: companion.properties.mount,
                 variant: Attention.getLinkedVariant(companion.id),
-                selectedVariant: activeId,
+                selectedVariant,
                 sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
               })}
             />
