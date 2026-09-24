@@ -20,6 +20,8 @@ import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { Account, ClientCapabilities } from '#types';
 
+import { filterSpaceInvitations } from '../inbox/index.ts';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read the client through its atom so the extension establishes a reactive dependency:
@@ -60,6 +62,12 @@ export default Capability.makeModule(
           const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
           const hub = hasHub([client]);
+          // Same filter as the inbox monitor, so the badge matches what the Invitations article lists.
+          const pendingInvitations = filterSpaceInvitations(
+            get(CreateAtom.fromObservable(client.halo.inbox.notices)),
+            get(CreateAtom.fromObservable(client.halo.contacts)),
+            (get(CreateAtom.fromObservable(client.spaces)) ?? []).map((space) => space.key),
+          );
 
           return [
             AppGraphNode.make({
@@ -75,6 +83,7 @@ export default Capability.makeModule(
                 hue: identity?.data?.hue,
                 emoji: identity?.data?.emoji,
                 status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
+                badge: pendingInvitations.length > 0,
               },
             }),
           ];

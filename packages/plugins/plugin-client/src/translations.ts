@@ -27,7 +27,7 @@ const pluginTranslations = [
         'contacts.label': 'Contacts',
         'contacts.description': 'People you share at least one space with.',
         'contacts-search.placeholder': 'Search contacts…',
-        'space-invitations.label': 'Space invitations',
+        'space-invitations.label': 'Invitations',
         'space-invitations.description': 'Spaces your contacts have added you to. Join to open one on this device.',
         'space-invitation-toast.title': 'You’ve been added to a space',
         'space-invitation-toast.description': 'A contact invited you to join a space.',
