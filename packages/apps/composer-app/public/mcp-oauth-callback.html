@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Signing in…</title>
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        display: grid;
+        place-items: center;
+        height: 100vh;
+        margin: 0;
+        color: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="message">Finishing sign-in…</p>
+    <script>
+      // Redirect target of an MCP server's OAuth authorization (see plugin-assistant `useMcpServerAuth`).
+      // A static page rather than an app route: booting Composer in the popup would open a second
+      // client on the same profile just to hand one code back.
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const result = {
+          code: params.get('code') ?? undefined,
+          state: params.get('state') ?? undefined,
+          error: params.get('error_description') ?? params.get('error') ?? undefined,
+        };
+        // Same-origin only, and unlike `window.opener` it survives a cross-origin-opener-policy on the
+        // authorization server's pages severing the opener.
+        const channel = new BroadcastChannel('dxos.mcp-oauth');
+        channel.postMessage(result);
+        channel.close();
+        document.getElementById('message').textContent = result.error
+          ? `Sign-in failed: ${result.error}`
+          : 'Signed in. You can close this window.';
+        if (!result.error) {
+          window.close();
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -16,7 +16,6 @@ import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
@@ -47,7 +46,7 @@ export type RunProps<R = never> = {
   /**
    * Space-level MCP servers to connect alongside skill-defined ones.
    */
-  mcpServers?: readonly McpServer.McpServer[];
+  mcpServers?: readonly McpToolkit.Options[];
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -308,18 +307,13 @@ export class Session extends Resource {
 
 const connectMcpServers = (
   skills: readonly Skill.Skill[],
-  spaceMcpServers: readonly McpServer.McpServer[] = [],
+  spaceServers: readonly McpToolkit.Options[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
   const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.Options[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
-    url,
-    protocol,
-    apiKey,
-  }));
   const allServers = [...skillServers, ...spaceServers];
   if (allServers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
@@ -348,6 +342,7 @@ const connectMcpServers = (
               url: error.url,
               protocol: error.protocol,
               message: error.message,
+              unauthorized: error.unauthorized,
             });
           }),
         ),
