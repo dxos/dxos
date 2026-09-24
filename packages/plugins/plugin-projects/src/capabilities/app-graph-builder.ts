@@ -282,59 +282,6 @@ export const createProjectTasksExtension = () =>
   });
 
 /**
- * A "Task" companion on every project row: the slot the ledger's selected task opens into, so reading
- * a task keeps the project in front of the reader rather than navigating over it. One fixed slot —
- * which task it shows is the ledger's selection, read by the surface.
- */
-export const createProjectTaskCompanionExtension = () =>
-  AppGraphBuilder.createExtension({
-    id: 'projectTaskCompanion',
-    relation: AppNode.companion,
-    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
-    connector: () =>
-      Effect.succeed([
-        AppNode.makeCompanion({
-          variant: 'task',
-          label: ['task-companion.label', { ns: meta.profile.key }],
-          icon: 'ph--check-circle--regular',
-          data: 'task',
-          position: Position.first,
-        }),
-      ]),
-  });
-
-/**
- * Every task in the project's set as a hidden child of the project node, so `…/project/<id>/<taskId>`
- * resolves and a row can open the task as its own plank. Hidden because the ledger is the Tasks tab,
- * not the nav tree — the nodes exist to be addressed, never listed.
- *
- * The node's data is the `Task` object itself, so it picks up the standard object companions and the
- * `TaskArticle` surface matches it like any other object.
- */
-export const createProjectTasksExtension = () =>
-  AppGraphBuilder.createExtension({
-    id: 'projectTasks',
-    url: PROJECT_URL,
-    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
-    connector: (project, get) => {
-      const db = Obj.getDatabase(project);
-      const taskSet = project.taskSet && get(project.taskSet.atom);
-      if (!db || !taskSet) {
-        return Effect.succeed([]);
-      }
-
-      // Membership is the parent edge (the set's `tasks` array only orders it), matching how
-      // `TaskSetArticle` reads the same rows.
-      const tasks = get(db.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).atom);
-      return Effect.succeed(
-        tasks
-          .map((task) => AppNode.makeObject({ get, db, object: task, disposition: 'hidden' }))
-          .filter((node): node is NonNullable<typeof node> => node !== null),
-      );
-    },
-  });
-
-/**
  * Start a chat in project scope, on the project's navtree row. The `ProjectArticle` toolbar owns its
  * own create-chat button rather than sharing this one — the two surfaces are expected to diverge as
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
