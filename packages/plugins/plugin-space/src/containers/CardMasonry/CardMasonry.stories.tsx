@@ -22,7 +22,7 @@ import { Organization, Person, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { CardStack } from './CardStack.tsx';
+import { CardMasonry } from './CardMasonry.tsx';
 
 const OWNER_TITLE = 'Ship the launch';
 
@@ -48,14 +48,14 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <CardStack objects={owner.artifacts ?? []} />;
+  return <CardMasonry objects={owner.artifacts ?? []} />;
 };
 
-/** Nothing to show: the stack renders no region at all, rather than an empty bordered one. */
-const EmptyStory = () => <CardStack objects={[]} />;
+/** Nothing to show: the grid renders no region at all, rather than an empty bordered one. */
+const EmptyStory = () => <CardMasonry objects={[]} />;
 
 const meta = {
-  title: 'plugins/plugin-space/containers/CardStack',
+  title: 'plugins/plugin-space/containers/CardMasonry',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -93,7 +93,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // One card per ref, labelled from each type's own annotations — the stack is type-agnostic.
+    // One card per ref, labelled from each type's own annotations — the grid is type-agnostic.
     await expect(canvas.findByText('Acme', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Alice Ashe', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Send the contract', undefined, { timeout: 10_000 })).resolves.toBeTruthy();

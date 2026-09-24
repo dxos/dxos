@@ -494,21 +494,23 @@ export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subje
 };
 
 /**
- * Role token for the `cardStack` role: several objects, one under another, each as a card.
+ * Role token for the `cardMasonry` role: several objects laid out as cards.
  *
  * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
  * surface deriving them from a subject, which is what separates this from {@link Related}: the
- * caller already knows what belongs in the stack and only wants it rendered.
+ * caller already knows what belongs in the grid and only wants it rendered.
  */
-export const CardStack: Role.Role<CardStackData> = Role.make('org.dxos.role.cardStack');
+export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
 
-/** Surface data for the card-stack role. */
-export type CardStackData = {
-  /** What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
+/** Surface data for the card-masonry role. */
+export type CardMasonryData = {
+  /**
+   * What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
    * link to, and resolving them is the surface's job, so a cold load fills in rather than reading
-   * empty. */
+   * empty.
+   */
   objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-  /** The plank the stack renders in, so a card's actions resolve against the right node. */
+  /** The plank the grid renders in, so a card's actions resolve against the right node. */
   attendableId?: string;
 };
 

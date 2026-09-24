@@ -15,8 +15,6 @@ import { meta } from '#meta';
 
 export type ObjectCardProps = {
   data: Entity.Unknown;
-  /** Fill the container rather than taking the card's own width — for a stack, not a masonry column. */
-  fullWidth?: boolean;
   classNames?: string;
 };
 
@@ -25,9 +23,9 @@ export type ObjectCardProps = {
  * type's own `CardContent` surface, and the object's graph actions in the header menu.
  *
  * Nothing here is type-specific, and the props are the masonry tile signature, so the same card
- * renders a related object, a record's reference or an item in a `CardStack`.
+ * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
-export const ObjectCard = ({ data: subject, fullWidth, classNames }: ObjectCardProps) => {
+export const ObjectCard = ({ data: subject, classNames }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
@@ -38,7 +36,7 @@ export const ObjectCard = ({ data: subject, fullWidth, classNames }: ObjectCardP
   const menuItems = useObjectMenuItems(subject, pivotId);
 
   return (
-    <Card.Root ref={cardRef} fullWidth={fullWidth} classNames={classNames}>
+    <Card.Root ref={cardRef} classNames={classNames}>
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={subject}>

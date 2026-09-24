@@ -10,4 +10,4 @@ A task list's toolbar gains a status selector: a menu of checkboxes, one per sta
 
 Arrow keys move through a task list without selecting, and `Enter` opens the focused row. Selecting a task opens its detail, so following focus opened the detail of every row a reader passed on the way to the one they wanted.
 
-A `cardStack` surface renders a list of objects as cards, one under another — `plugin-space` implements it, and a host supplies what belongs in the stack rather than the surface deriving it from a subject. A task's companion uses it to show the task's artifacts beneath its editor.
+A `cardMasonry` surface renders a list of objects as cards — `plugin-space` implements it, and a host supplies what belongs in the grid rather than the surface deriving it from a subject. A task's companion uses it to show the task's artifacts beneath its editor. Cards also sit a step above the surface behind them (`--color-card-surface` moves to the raised level), so an unbordered card is legible against the plank it is on.

@@ -362,15 +362,15 @@ export const TaskDetail: Story = {
     // The detail panel renders the same title as an editable field, so the form is what is asserted
     // rather than a second copy of the row's text.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // What the task produced, under its editor: the card stack plugin-space contributes. Scoped to
-    // the stack rather than the canvas — the ledger row carries a chip with the same text, which
-    // would pass this assertion with no stack rendered at all.
-    const stack = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardStack"]');
-    await waitFor(() => expect(stack()).toBeTruthy(), { timeout: 10_000 });
+    // What the task produced, under its editor: the card grid plugin-space contributes. Scoped to
+    // the grid rather than the canvas — the ledger row carries a chip with the same text, which
+    // would pass this assertion with no grid rendered at all.
+    const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
+    await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(
-      within(stack()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
+      within(cards()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
     ).resolves.not.toHaveLength(0);
   },
 };

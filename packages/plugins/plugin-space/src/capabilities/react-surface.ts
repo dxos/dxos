@@ -15,7 +15,7 @@ import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import {
-  CardStack,
+  CardMasonry,
   CollectionArticle,
   CollectionSection,
   CreateSpaceDialog,
@@ -258,9 +258,9 @@ export default Capability.makeModule(
       // Role-only: one generic stack serves every host, since the host supplies the objects rather
       // than the surface deriving them from a subject it would have to match on.
       Surface.create({
-        id: 'cardStack',
-        filter: Surface.makeFilter(AppSurface.CardStack),
-        component: CardStack,
+        id: 'cardMasonry',
+        filter: Surface.makeFilter(AppSurface.CardMasonry),
+        component: CardMasonry,
         props: ({ data: { objects } }) => ({ objects }),
       }),
       Surface.create({

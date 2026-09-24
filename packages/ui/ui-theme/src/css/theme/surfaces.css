@@ -93,13 +93,15 @@
   --color-attention-surface: var(--dx-surface-base);
   --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
 
-  /* Cards sit on the canvas's own level and dialogs one above it: each a step darker than the
-     level its name suggests, so the ladder's top stays for popups and explicit elevations. */
-  --color-card-surface: var(--dx-surface-base);
-
   /**
    * Level: raised
    */
+
+  /* A card reads as a card by being a step above what it sits on. It shared the base level with the
+     plank behind it, which left an unbordered card invisible — the fill said nothing and only the
+     shadow separated it. Level with a modal: both are "one above the page", and the ladder's top
+     stays for popups and explicit elevations. */
+  --color-card-surface: var(--dx-surface-raised);
 
   --color-modal-surface: var(--dx-surface-raised);
 

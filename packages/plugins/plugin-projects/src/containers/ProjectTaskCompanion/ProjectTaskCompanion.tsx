@@ -60,8 +60,9 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
         role={role}
         limit={1}
       />
-      {/* TODO(burdon): CardMasonry */}
-      <Surface.Surface type={AppSurface.CardStack} data={{ objects: artifacts ?? [], attendableId }} limit={1} />
+      {/* What the task produced, as cards. `plugin-space` renders the grid; nothing shows for a task
+          with no artifacts, so the article keeps the whole companion until there are some. */}
+      <Surface.Surface type={AppSurface.CardMasonry} data={{ objects: artifacts ?? [], attendableId }} limit={1} />
     </Flex>
   );
 };
