@@ -161,11 +161,16 @@ type MultilineTextProps = {
   cy: number;
   text: string;
   weight: Scene.Weight;
+  /** Wrap to this width (scene px), as `Diagnostics` assumes a box label does; unbounded when absent. */
+  width?: number;
   className?: string;
 };
 
-const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) => {
-  const lines = text.split('\n');
+const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineTextProps) => {
+  const lines = wrapLines(
+    text,
+    width === undefined ? Infinity : Math.max(4, Math.floor(width / (FONT_SIZE[weight] * CHAR_EM))),
+  );
   const lineH = LINE_H[weight];
   return (
     <text
@@ -251,7 +256,14 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         >
           {shape}
           {element.text && (
-            <MultilineText cx={mid.x} cy={mid.y} text={element.text} weight={weight} className='stroke-none' />
+            <MultilineText
+              cx={mid.x}
+              cy={mid.y}
+              text={element.text}
+              weight={weight}
+              width={rect.w}
+              className='stroke-none'
+            />
           )}
         </g>
       );

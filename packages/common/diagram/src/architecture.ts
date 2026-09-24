@@ -72,7 +72,9 @@ export type Rule = {
 
 const HOW_TO_READ =
   'The input is an architecture diagram: nodes are components, groups are layers or packages, and an edge ' +
-  '`from → to` means `from` depends on, calls or owns `to`. When `layout` is present it shows the page as drawn.';
+  '`from → to` means `from` depends on, calls or owns `to`. An `inheritance` or `implements` edge points from ' +
+  'the implementation to its abstraction, which by convention sits above it, so it is never a back-dependency. ' +
+  'When `layout` is present it shows the page as drawn.';
 
 const rule = (id: string, key: string, description: string, question: string, criteria: Rule['criteria']): Rule => ({
   id,

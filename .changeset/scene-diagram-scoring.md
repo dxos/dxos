@@ -22,3 +22,10 @@ evaluation, and a scorer that cannot judge reports an `error` that `Score.overal
 (positions in grid cells), `View.ascii` (a character-grid drawing) and `View.rows` (boxes in reading
 order, which way each arrow runs, and which arrows cross). `Architecture.Content` takes an optional
 `layout` so a judge can be given one.
+
+`Aesthetics` judges how a diagram reads as drawn: arrows running with the flow, readable labels, arrows
+that can be traced, entry points facing their callers, balanced space and a clean grid. It judges from
+the layout text, in one batched call like `Architecture`. Flowcharts read `..|>` as implements (dashed
+line, hollow triangle) and `-.->` as creates (dashed arrow), using the existing markers.
+`Architecture.Content` carries each edge's kind, and `View.rows` names each arrow's marker and line style.
+Group frames now get a tint per group, and nodes a solid fill.

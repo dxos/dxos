@@ -34,7 +34,9 @@ export const RULES: readonly Architecture.Rule[] = [
     'arrowsFollowFlow',
     'Arrows run with the main direction of the diagram, inside groups as well as between them.',
     'Do the arrows run with the main direction of the diagram (down in a top-to-bottom drawing, right in a ' +
-      'left-to-right one), inside groups as well as between them, with at most a few pointing back against it?',
+      'left-to-right one), inside groups as well as between them, with at most a few pointing back against it? ' +
+      'Arrows with a hollow triangle head (inheritance, implementation) point to the abstraction above by ' +
+      'convention and do not count against the flow.',
     {
       true: 'Nearly every arrow runs with the flow; a reader follows dependencies in one direction.',
       false: 'Many arrows, or whole chains inside a group, run up or back against the flow.',

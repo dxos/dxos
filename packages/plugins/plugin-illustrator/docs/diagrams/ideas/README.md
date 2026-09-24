@@ -91,3 +91,31 @@ direction, grouping and crossings, and not for rules about content.
 moon run plugin-illustrator:eval-layout-views -- --questions /abs/questions.json <diagrams…>   # for the reference grader
 moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json <diagrams…>     # needs TYPESAFE_API_KEY
 ```
+
+## Seven rounds on two diagrams
+
+`process` and `compute` went through seven rounds each. Every round was scored two ways:
+- Jev, from the text layout, with no caption, averaged over three calls.
+- Sonnet, from the rendered PNG, one independent grader per image.
+
+Rules is the mean of the six architecture rules. Aesthetics is the mean of the six `Aesthetics` rules. Layout objective is the engine's own constraint and cost scores.
+
+| `process` round                                       | Jev rules | Sonnet rules | dependency-direction (Jev / Sonnet) | Jev aesthetics | Layout objective |
+| ----------------------------------------------------- | --------- | ------------ | ----------------------------------- | -------------- | ---------------- |
+| 0 first draft                                         | 0.43      | 0.36         | 0.09 / 0.25                         | 0.32           | 0.55             |
+| 1 revised (this folder)                               | 0.50      | 0.42         | 0.16 / 0.60                         | 0.60           | 0.66             |
+| 2 `Manager` interface, live collections as stores     | 0.52      | 0.48         | 0.18 / 0.50                         | 0.39           | 0.57             |
+| 3 same content, `--layering down`                     | 0.53      | 0.38         | 0.40 / 0.75                         | 0.52           | 0.53             |
+| 4 EDGE control as a queue over the `Control` interface | 0.54      | 0.55         | 0.41 / 0.75                         | 0.46           | 0.60             |
+| 5 relation kinds (`..\|>`, `-.->`, `o-->`, `--{`)     | 0.45      | 0.52         | 0.18 / 0.55                         | 0.38           | 0.60             |
+| 6 round 5 with short node names                       | 0.47      | 0.45         | 0.19 / 0.50                         | 0.40           | 0.53             |
+
+`compute` stayed between 0.44 and 0.48 for Jev in every round. Sonnet's scores dipped (0.63 at round 0, 0.46 at round 4) and recovered to 0.60 at round 6.
+
+What the rounds showed:
+- **The caption was doing the work.** With the title dropped, the gains from the first revision mostly vanish. The judge had been reading my conclusions in the caption rather than the diagram.
+- **Layout moves the architecture score.** In round 3 the content is identical to round 2 and only the layering changed, so no arrow inside a group points up. That alone doubled Jev's dependency-direction score for `process` (0.18 → 0.40), and Sonnet's rose from 0.50 to 0.75. The engine picks `up` layering whenever it wins on the objective, and the objective has no term for arrows running against the flow.
+- **Relation kinds changed the ranking.** Drawing `implements` with the UML convention ranks the interface above its implementation. That pulls `Manager interface` to the top of its group, so the plain spawn arrows run up into it. Both graders marked round 5 down. Telling the rules that triangle-headed arrows point to the abstraction by convention recovered only part of it.
+- **Jev can't see what the text view doesn't state.** Crossings became readable once `View.rows` listed them. A label running out of its box stayed invisible: Sonnet's readable-labels went 0.08 → 0.85 when round 6 shortened the names, and Jev's stayed at 0.43–0.45. The renderer now wraps box labels to the box width, which is what `Diagnostics` already assumed.
+- **On the aesthetic rules Jev tracks Sonnet only moderately:** r 0.45, mean difference 0.16, over rounds 4–6 of both diagrams.
+- **Some low scores are the code, not the drawing.** Labelling the uncapped live-handle table and fiber cache honestly moves `bounded-live-state` down under both graders.
