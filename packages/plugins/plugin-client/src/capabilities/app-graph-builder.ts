@@ -198,19 +198,32 @@ export default Capability.makeModule(
       id: 'accountSpaceInvitations',
       url: { key: Account.SpaceInvitations, kind: 'singleton', path: [] },
       match: GraphNodeMatcher.whenId(Account.workspacePath),
-      connector: () =>
-        Effect.succeed([
-          AppGraphNode.make({
-            id: Account.SpaceInvitations,
-            data: Account.path(Account.SpaceInvitations),
-            type: meta.profile.key,
-            properties: {
-              label: ['space-invitations.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-simple--regular',
-              testId: 'clientPlugin.spaceInvitations',
-            },
-          }),
-        ]),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          const [client] = get(clientAtom);
+          const pending = client
+            ? filterSpaceInvitations(
+                get(CreateAtom.fromObservable(client.halo.inbox.notices)),
+                get(CreateAtom.fromObservable(client.halo.contacts)),
+                (get(CreateAtom.fromObservable(client.spaces)) ?? []).map((space) => space.key),
+              ).length
+            : 0;
+
+          return [
+            AppGraphNode.make({
+              id: Account.SpaceInvitations,
+              data: Account.path(Account.SpaceInvitations),
+              type: meta.profile.key,
+              properties: {
+                label: ['space-invitations.label', { ns: meta.profile.key }],
+                icon: 'ph--envelope-simple--regular',
+                testId: 'clientPlugin.spaceInvitations',
+                // The tree renders any number, zero included, so only a pending count is set.
+                ...(pending > 0 && { count: pending }),
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
     });
 
     const accountInvitations = yield* AppGraphBuilder.createExtension({
