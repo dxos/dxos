@@ -34,6 +34,7 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
+import { setSpanTags } from '../tracing/index.ts';
 
 /**
  * The one document type the stress test manipulates.
@@ -125,6 +126,8 @@ export class ClientReplicant {
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
     this.#config = { edgeUrl, agents, partitions };
+    // The span dashboard pins the EDGE it charts, as the CI report pins `ciEdge`.
+    setSpanTags({ edgeUrl });
     // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
     // plain socket and send `Host: localhost`. A run without partitions needs no proxy, so dial
@@ -353,6 +356,9 @@ export class ClientReplicant {
    *
    * Both are measured here rather than by the caller, so neither carries the RPC round trip or the
    * cost of spawning the peer.
+   *
+   * Do not rename or remove the span: its start is "accept" on the PostHog dashboard "EDGE nightly join
+   * latency (spans)", which measures each joiner from here to its `CollectionSynchronizer.syncPeer` end.
    */
   @trace.span()
   async joinSpace({

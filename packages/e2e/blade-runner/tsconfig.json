@@ -20,6 +20,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/esbuild-plugins"
     },
     {
@@ -93,6 +96,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     }
   ]
 }

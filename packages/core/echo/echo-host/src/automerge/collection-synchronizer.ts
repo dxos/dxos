@@ -284,6 +284,7 @@ export class CollectionSynchronizer extends Resource {
 
   /**
    * Opens the span for a (collection, peer) pair that just diverged; a pair already diverging keeps its span.
+   * Its name and attributes are queried by a PostHog dashboard, see {@link SYNC_SPAN_METHOD}.
    */
   private _startSyncSpan(
     collectionId: string,
@@ -550,4 +551,9 @@ const isValidDocumentId = (documentId: DocumentId) => {
   return typeof documentId === 'string' && !documentId.includes(':');
 };
 
+/**
+ * The PostHog dashboard "EDGE nightly join latency (spans)" is built from this span. Its queries read the span name,
+ * the `ctx.*` attributes set in `_startSyncSpan`, and the {@link SyncSpanTrigger} and {@link SyncSpanOutcome}
+ * values, so do not change any of them without updating the dashboard.
+ */
 const SYNC_SPAN_METHOD = 'syncPeer';
