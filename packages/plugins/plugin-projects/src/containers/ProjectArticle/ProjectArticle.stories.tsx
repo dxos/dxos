@@ -47,6 +47,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import { ProjectTaskCompanion } from '../ProjectTaskCompanion/index.ts';
 import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
@@ -56,6 +57,7 @@ const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
+const TASK_ARTIFACT_TITLES = ['Release Checklist', 'Changelog Draft', 'Migration Plan'];
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 
@@ -108,6 +110,10 @@ const createProject = (space: Space, storyGeneration: number) => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
+
+  // What working the task produced, which the task companion lists under the detail.
+  Task.addArtifact(task, artifact);
+  TASK_ARTIFACT_TITLES.forEach((name) => Task.addArtifact(task, space.db.add(Text.make({ name, content: name }))));
 
   // The third item is what promotion leaves behind: a link to the task in the project's set.
   Obj.update(outline.content.target, (text) => {
@@ -227,6 +233,34 @@ const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
             />
           </TestGrid.Panel>
         )}
+      </TestGrid.Stack>
+    </TestGrid.Root>
+  );
+};
+
+/**
+ * The deck's wide layout: the project plank with its `~task` companion beside it. The companion reads
+ * the ledger's selection itself, so the story only mounts it next to the article.
+ */
+const CompanionStory = ({ role, attendableId }: StoryArgs) => {
+  const [space] = useSpaces();
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const project = projects.find((entry) => entry.name === PROJECT_NAME);
+  if (!space?.db || !project) {
+    return <Loading data={{ db: !!space?.db, project: !!project }} />;
+  }
+
+  return (
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel>
+          <AttendableContainer id={attendableId} classNames='contents'>
+            <ProjectArticle role={role} subject={project} attendableId={attendableId} />
+          </AttendableContainer>
+        </TestGrid.Panel>
+        <TestGrid.Panel>
+          <ProjectTaskCompanion role={role} attendableId={attendableId} project={project} />
+        </TestGrid.Panel>
       </TestGrid.Stack>
     </TestGrid.Root>
   );
@@ -357,6 +391,23 @@ export const TaskDetail: Story = {
     // The detail panel renders the same title as an editable field, so the form is what is asserted
     // rather than a second copy of the row's text.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/** The selected task in the project's companion, with the artifacts it produced as mini cards under it. */
+export const TaskCompanion: Story = {
+  ...Default,
+  render: CompanionStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await userEvent.click(await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 }));
+    // Scoped to the pane: the ledger row also chips the task's artifacts by name.
+    const pane = within(await canvas.findByTestId('projectsPlugin.taskArtifacts', undefined, { timeout: 10_000 }));
+    for (const title of [ARTIFACT_TITLE, ...TASK_ARTIFACT_TITLES]) {
+      await findPainted(pane, title);
+    }
   },
 };
 

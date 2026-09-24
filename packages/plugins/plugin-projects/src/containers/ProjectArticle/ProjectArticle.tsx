@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -26,12 +26,11 @@ import { useSpace } from '@dxos/react-client/echo';
 import { Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard, ProjectPipeline } from '#components';
+import { ObjectGallery, ProjectPipeline } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation, ProjectView } from '#types';
 
@@ -578,52 +577,3 @@ const useToolbarActions = ({
     ],
   );
 };
-
-type ObjectTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
-
-type ObjectGalleryProps = {
-  refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-  onOpen: (object: Obj.Unknown) => void;
-  onDelete: (object: Obj.Unknown) => void;
-};
-
-/**
- * A project's linked objects (its artifacts) as clickable cards. Unresolved refs are omitted until
- * their target loads.
- */
-const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
-  // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty (the refs come off a snapshot of the
-  // project, which carries no resolver, so `.target` is undefined there even once loaded).
-  // `ref.atom` yields the live entity and tracks loading without tracking mutations — a rename
-  // re-renders just its card, since `ObjectCard` subscribes itself.
-  const objectsAtom = useMemo(
-    () => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter((object): object is Obj.Unknown => !!object)),
-    [refs],
-  );
-  const objects = useAtomValue(objectsAtom);
-  const items = useMemo<ObjectTileData[]>(
-    () => objects.map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [objects, onOpen, onDelete],
-  );
-
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
-    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
-    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
-    // headings and nothing else.
-    <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
-    </Masonry.Root>
-  );
-};
-
-const ObjectTile = memo(({ data }: { data: ObjectTileData | undefined; index: number }) =>
-  data ? <ObjectCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
-);
-
-ObjectTile.displayName = 'ObjectTile';

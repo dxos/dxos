@@ -16,6 +16,8 @@ export type ObjectCardProps = {
   object: Obj.Unknown;
   onClick?: () => void;
   onDelete?: () => void;
+  /** Header only (icon and label): a mini card for a narrow pane, where a body preview would crowd the list. */
+  compact?: boolean;
 };
 
 /**
@@ -24,7 +26,7 @@ export type ObjectCardProps = {
  * delegates to the object's own `CardContent` surface, so a document previews as a document.
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCardProps) => {
+export const ObjectCard = ({ object: objectProp, onClick, onDelete, compact }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
@@ -50,6 +52,8 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   return (
     <Card.Root
       fullWidth
+      density={compact ? 'sm' : undefined}
+      gutter={compact ? 'md' : undefined}
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
@@ -72,7 +76,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+      {!compact && <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />}
     </Card.Root>
   );
 };
