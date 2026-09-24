@@ -38,6 +38,7 @@ import { trace } from '@dxos/tracing';
 
 import {
   AutomergeHost,
+  type AutomergeHostProps,
   type AutomergeReplicator,
   type CreateDocOptions,
   type DocumentLease,
@@ -130,6 +131,9 @@ export type EchoHostProps = {
    * @default false
    */
   useSubduction?: boolean;
+
+  /** Residency policy for loaded documents; see {@link AutomergeHostProps}. */
+  residency?: AutomergeHostProps['residency'];
 };
 
 /**
@@ -219,6 +223,7 @@ export class EchoHost extends Resource {
     queryExecutor,
     assignQueuePositions = false,
     useSubduction,
+    residency,
   }: EchoHostProps) {
     super();
 
@@ -229,6 +234,7 @@ export class EchoHost extends Resource {
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
       useSubduction,
+      residency,
     });
 
     this._runtime = runtime;

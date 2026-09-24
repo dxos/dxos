@@ -1178,16 +1178,16 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
 /**
  * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
  *
- * `objectSnapshot` strips `@meta` from document rows (it exists there only so the entity-meta index
- * can lift the convergence key out), so those predicates cannot be evaluated in SQL and the plan
- * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
- * sees both, so this declines the plan wholesale rather than by scope.
+ * Document rows written to `objectSnapshot` before it kept `@meta` have none, and such a row stays
+ * until its document changes, so those predicates cannot be evaluated in SQL and the plan has to
+ * take the in-memory path instead. Queue rows always kept their meta, but a space-scoped query sees
+ * both, so this declines the plan wholesale rather than by scope.
  */
 /**
  * Whether the compiler declines this plan, leaving it for the in-memory executor.
  *
- * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
- * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
+ * Two reasons would need the store read before the statement is built: older document rows in
+ * `objectSnapshot` have no `@meta`, and a `metaVersion` semver range has to be resolved to the versions
  * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
  */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>

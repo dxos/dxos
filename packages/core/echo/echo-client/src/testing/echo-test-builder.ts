@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal';
 
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
-import { EchoHost, type QueryExecutorMode } from '@dxos/echo-host';
+import { EchoHost, type EchoHostProps, type QueryExecutorMode } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -45,6 +45,8 @@ type PeerOptions = {
   storagePath?: string;
   /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `memory`. */
   queryExecutor?: QueryExecutorMode;
+  /** Host residency policy for loaded documents. */
+  residency?: EchoHostProps['residency'];
 };
 
 export class EchoTestBuilder extends Resource {
@@ -89,6 +91,7 @@ export class EchoTestPeer extends Resource {
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
+  private readonly _residency?: EchoHostProps['residency'];
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -124,9 +127,10 @@ export class EchoTestPeer extends Resource {
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor, residency }: PeerOptions = {}) {
     super();
     this._queryExecutor = queryExecutor;
+    this._residency = residency;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -164,6 +168,7 @@ export class EchoTestPeer extends Resource {
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
       queryExecutor: this._queryExecutor,
+      residency: this._residency,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();

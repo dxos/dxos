@@ -56,8 +56,11 @@ export type AutomergeDataSourceOptions = {
  * Data source that fetches objects from AutomergeHost.
  * Iterates all documents from SqliteHeadsStore and tracks document heads as cursors to detect changes.
  */
+/** The name this source's index cursors are stored under. */
+export const AUTOMERGE_SOURCE_NAME = 'automerge';
+
 export class AutomergeDataSource implements IndexDataSource {
-  readonly sourceName = 'automerge';
+  readonly sourceName = AUTOMERGE_SOURCE_NAME;
 
   readonly #automergeHost: AutomergeHost;
   readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;

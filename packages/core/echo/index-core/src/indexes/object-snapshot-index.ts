@@ -138,14 +138,11 @@ export class ObjectSnapshotIndex implements Index {
           isPartialBlock({ object }) && existing !== undefined
             ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
             : object.data;
-        // Document objects carry `@meta` only so the entity-meta index can extract the
-        // convergence key, and this store is what the full-text index is built from — so
-        // keeping it would let a search match on foreign keys and identity strings the
-        // visible content never contains. Queue blocks always carried meta in their snapshot
-        // (clients hydrate from it), so theirs stays.
-        const stored = object.documentId
-          ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-          : merged;
+        // A document object's snapshot keeps `@meta`, so a query can be answered from it without
+        // loading the document (the full-text index built from this store skips `@` keys). It is
+        // written even when empty: rows from before snapshots kept it have none, and a reader
+        // tells the two apart by it.
+        const stored = object.documentId ? { ...merged, [ATTR_META]: merged[ATTR_META] ?? {} } : merged;
         return { recordId, snapshot: JSON.stringify(stored) };
       });
 

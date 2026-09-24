@@ -17,7 +17,7 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import {
   type EntityMeta,
@@ -35,6 +35,7 @@ import { type QueryService } from '@dxos/protocols/rpc';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge/index.ts';
+import { AUTOMERGE_SOURCE_NAME, headsCodec } from '../db-host/automerge-data-source.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
 import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
@@ -1597,6 +1598,11 @@ export class QueryExecutor extends Resource {
             // Traverse from child to parent using the parent reference in the document.
             const refs = workingSet
               .map((item) => {
+                // A document object answered from its snapshot.
+                if (!item.doc && item.data && item.documentId) {
+                  const parent = QueryItem.getParent(item);
+                  return parent ? { ref: parent, spaceId: item.spaceId } : null;
+                }
                 if (!item.doc) {
                   return null; // TODO(dmaretskyi): Queue items not supported here.
                 }
@@ -2055,11 +2061,13 @@ export class QueryExecutor extends Resource {
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly EntityMeta[]): Promise<(QueryItem | null)[]> {
     const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    const documentSnapshots = await this._loadCurrentDocumentSnapshots(metas);
     return await Promise.all(
       metas.map(async (meta) => {
-        // Branch 1: Document-backed object.
+        // Branch 1: Document-backed object, from its snapshot when that is current.
         if (meta.documentId) {
-          return this._loadFromAutomerge(meta);
+          const snapshot = documentSnapshots.get(meta.recordId);
+          return snapshot ? QueryExecutor._itemFromDocumentSnapshot(meta, snapshot) : this._loadFromAutomerge(meta);
         }
 
         // Branch 2: Queue-backed object.
@@ -2070,6 +2078,64 @@ export class QueryExecutor extends Resource {
         return null;
       }),
     );
+  }
+
+  /**
+   * Snapshots of the document-backed objects in `metas` that describe their document as it is now,
+   * so answering from them loads no document (and no Subduction tree with it). A snapshot is current
+   * when the heads its document was indexed at are the heads the host holds, which for a document
+   * loaded here are its in-memory heads; the index lags a document it has not caught up with yet.
+   * A snapshot without `@meta` was written before snapshots kept it, so it may be missing the meta.
+   */
+  private async _loadCurrentDocumentSnapshots(metas: readonly EntityMeta[]): Promise<Map<number, Obj.JSON>> {
+    const loaded = new Set(this._automergeHost.loadedDocumentIds);
+    const candidates = metas.filter((meta) => meta.documentId && !loaded.has(meta.documentId as DocumentId));
+    if (candidates.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this._runInRuntime(
+      this._indexEngine.queryDocumentSnapshots(
+        candidates.map((meta) => meta.recordId),
+        AUTOMERGE_SOURCE_NAME,
+      ),
+    );
+    const documentIds = [...new Set(candidates.map((meta) => meta.documentId as DocumentId))];
+    const heads = await this._automergeHost.getHeads(documentIds);
+    const currentCursor = new Map(
+      documentIds.map((documentId, index) => {
+        const documentHeads = heads[index];
+        return [documentId, documentHeads ? headsCodec.encode(documentHeads) : undefined];
+      }),
+    );
+    const documentOf = new Map(candidates.map((meta) => [meta.recordId, meta.documentId as DocumentId]));
+
+    const current = new Map<number, Obj.JSON>();
+    for (const { recordId, snapshot, cursor } of rows) {
+      const documentId = documentOf.get(recordId);
+      const expected = documentId && currentCursor.get(documentId);
+      if (expected !== undefined && cursor === expected && ATTR_META in snapshot) {
+        current.set(recordId, snapshot);
+      }
+    }
+    return current;
+  }
+
+  private static _itemFromDocumentSnapshot(meta: EntityMeta, snapshot: Obj.JSON): QueryItem {
+    return {
+      objectId: meta.objectId,
+      documentId: meta.documentId as DocumentId,
+      spaceId: meta.spaceId,
+      queueId: null,
+      queueNamespace: null,
+      doc: null,
+      data: snapshot,
+      // Selected from the index, so its dependencies resolve from the index too.
+      meta,
+      rank: 1,
+      createdAt: meta.createdAt,
+      updatedAt: meta.updatedAt,
+    };
   }
 
   private async _loadQueueSnapshotMap(metas: readonly EntityMeta[]): Promise<Map<number, unknown>> {
@@ -2334,7 +2400,7 @@ export class QueryExecutor extends Resource {
    * dependency loads once per `execQuery` run.
    */
   private _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
-    const fromDocument = Boolean(item.doc || item.data || !item.meta);
+    const fromDocument = Boolean(item.doc || !item.meta);
     const key = compositeKey(item.spaceId, dxn, fromDocument ? 'document' : 'index');
     let loaded = this.#dependencyCache.get(key);
     if (!loaded) {

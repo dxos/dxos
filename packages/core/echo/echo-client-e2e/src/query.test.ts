@@ -488,6 +488,50 @@ describe('Query', () => {
     });
   });
 
+  describe('document objects answered from the index', () => {
+    const setup = async () => {
+      const peer = await builder.createPeer({ residency: { evictionDelay: 0, minResidentDocuments: 0 } });
+      const db = await peer.createDatabase();
+      const objects = range(5).map((value) => db.add(Obj.make(TestSchema.Expando, { value })));
+      Obj.update(objects[4], (obj) => Obj.getMeta(obj).keys.push({ id: 'snapshot-key', source: 'example.com' }));
+      await db.flush({ indexes: true });
+      const host = peer.host.automergeHost;
+      await host.drainEvictions();
+
+      const documentIds = new Set<string>(objects.flatMap((obj) => getObjectCore(obj).docHandle?.documentId ?? []));
+      const loads: string[] = [];
+      const loadDoc = host.loadDoc.bind(host);
+      host.loadDoc = (ctx, documentId, options) => {
+        if (typeof documentId === 'string' && documentIds.has(documentId)) {
+          loads.push(documentId);
+        }
+        return loadDoc(ctx, documentId, options);
+      };
+      return { db, objects, loads };
+    };
+
+    test('a query over indexed documents the host has unloaded loads none of them', async () => {
+      const { db, objects, loads } = await setup();
+
+      expect(await db.query(Filter.type(TestSchema.Expando, { value: 3 })).run()).toEqual([objects[3]]);
+      expect(
+        await db.query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'snapshot-key', source: 'example.com' }])).run(),
+      ).toEqual([objects[4]]);
+      expect(loads).toEqual([]);
+    });
+
+    test('a write the index has not caught up with is still matched', async () => {
+      const { db, objects } = await setup();
+
+      Obj.update(objects[1], (obj) => {
+        obj.value = 42;
+      });
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Expando, { value: 42 })).run()).toEqual([objects[1]]);
+    });
+  });
+
   describe('aggregate', () => {
     test('groups by a single property, with per-group counts', async () => {
       const { db } = await builder.createDatabase();

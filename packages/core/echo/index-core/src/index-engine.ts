@@ -7,6 +7,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
+import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
@@ -33,7 +34,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes/index.ts';
-import { isUnauthorizedFunctionError } from './utils.ts';
+import { chunkArray, isUnauthorizedFunctionError } from './utils.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -246,6 +247,37 @@ export class IndexEngine {
    */
   querySnapshotsJSON(recordIds: number[]) {
     return this.#objectSnapshotIndex.querySnapshotsJSON(recordIds);
+  }
+
+  /**
+   * Snapshots of document-backed objects, each with the cursor the snapshot store recorded for its
+   * document when `sourceName` last indexed it (the document's heads, for automerge), so the caller
+   * can tell a snapshot of the document as stored from one the index has not caught up with.
+   */
+  queryDocumentSnapshots(
+    recordIds: readonly number[],
+    sourceName: string,
+  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON; cursor: string | null }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const results: { recordId: number; snapshot: Obj.JSON; cursor: string | null }[] = [];
+      for (const chunk of chunkArray(recordIds)) {
+        const rows = yield* this.#sql<{ recordId: number; snapshot: string; cursor: string | null }>`
+          SELECT s.recordId, s.snapshot, c.cursor
+          FROM objectSnapshot AS s
+          JOIN objectMeta AS m ON m.recordId = s.recordId
+          LEFT JOIN indexCursor AS c
+            ON c.indexName = ${INDEX_NAMES.objectSnapshot}
+            AND c.spaceId = m.spaceId
+            AND c.sourceName = ${sourceName}
+            AND c.resourceId = m.documentId
+          WHERE s.recordId IN ${this.#sql.in(chunk)}
+        `;
+        for (const row of rows) {
+          results.push({ recordId: row.recordId, snapshot: JSON.parse(row.snapshot), cursor: row.cursor });
+        }
+      }
+      return results;
+    });
   }
 
   /**

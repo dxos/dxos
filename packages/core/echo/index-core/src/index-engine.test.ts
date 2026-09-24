@@ -10,7 +10,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
@@ -549,6 +549,27 @@ describe('IndexEngine', () => {
         const query = { spaceId: null, includeAllQueues: false, queues: null };
         expect(yield* engine.queryText({ ...query, query: 'Delta' })).toHaveLength(1);
         expect(yield* engine.queryText({ ...query, query: 'Alpha' })).toHaveLength(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'full-text search does not match foreign keys in a document object meta',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        const object = makeObject(spaceId, 'doc-1', 'Visible title');
+        object.data[ATTR_META] = { keys: [{ source: 'example.com', id: 'zq7xforeignkey' }] };
+        dataSource.push([object]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        yield* engine.updateSecondaryIndexes(Context.default());
+
+        const query = { spaceId: null, includeAllQueues: false, queues: null };
+        expect(yield* engine.queryText({ ...query, query: 'Visible' })).toHaveLength(1);
+        // Trigram MATCH, and the LIKE fallback a term under three characters takes.
+        expect(yield* engine.queryText({ ...query, query: 'zq7xforeignkey' })).toHaveLength(0);
+        expect(yield* engine.queryText({ ...query, query: 'q7' })).toHaveLength(0);
+        expect(yield* engine.queryText({ ...query, query: 'example' })).toHaveLength(0);
       }, Effect.provide(TestLayer)),
     );
 
