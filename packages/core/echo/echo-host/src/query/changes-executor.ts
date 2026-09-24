@@ -206,7 +206,7 @@ const groupKeyOf = (item: ChangeItem, aggregates: readonly QueryAST.GroupAggrega
     if (aggregate.kind === 'group') {
       key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) => item.record[property]);
     } else if (aggregate.kind === 'time') {
-      key[aggregate.name] = GroupBy.truncateTimeProperty(item.record[aggregate.property], aggregate.unit);
+      key[aggregate.name] = GroupBy.truncateTime(item.record[aggregate.property], aggregate.unit);
     }
   }
   return key;

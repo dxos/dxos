@@ -1071,7 +1071,7 @@ export class SqlPlanCompiler {
   }
 
   /**
-   * `value` floored to a multiple of `size`, as `GroupBy.truncateTimestamp` computes it, so times
+   * `value` floored to a multiple of `size`, as `GroupBy.truncateTime` computes it, so times
    * before 1970 land in the same bucket on both executors; `null` stays `null`.
    */
   #floorTo(value: Fragment, size: number): Fragment {

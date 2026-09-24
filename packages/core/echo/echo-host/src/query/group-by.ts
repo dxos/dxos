@@ -36,13 +36,16 @@ const DAY_MS = 86_400_000;
 export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 export const GroupBy = Object.freeze({
-  /** The start of the UTC hour or day `timestamp` falls in, in unix ms, or `null` when unknown. */
-  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day'): number | null => {
-    if (timestamp == null) {
+  /**
+   * The start of the UTC hour or day a unix-ms `value` falls in, or `null` when it is not a finite
+   * number: the key of a `timestamp` or `time` aggregate.
+   */
+  truncateTime: (value: unknown, unit: 'hour' | 'day'): number | null => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
       return null;
     }
     const size = unit === 'hour' ? HOUR_MS : DAY_MS;
-    return Math.floor(timestamp / size) * size;
+    return Math.floor(value / size) * size;
   },
 
   /**
@@ -180,10 +183,6 @@ export const GroupBy = Object.freeze({
       (total, value) => (typeof value === 'number' && Number.isFinite(value) ? total + value : total),
       0,
     ),
-
-  /** The key component of a `time` aggregate: a unix-ms property truncated to its hour or day. */
-  truncateTimeProperty: (value: unknown, unit: 'hour' | 'day'): number | null =>
-    typeof value === 'number' && Number.isFinite(value) ? GroupBy.truncateTimestamp(value, unit) : null,
 
   /**
    * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
