@@ -16,7 +16,13 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import {
+  type AppSurface,
+  useAppGraph,
+  useDetailNavigation,
+  useProgressMonitor,
+  useShowItem,
+} from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder, formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -288,27 +294,25 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
+  // The reading gesture the task ledger and the calendar share: the row becomes the list's selection
+  // and its detail opens beside it — the `message` companion where the viewport has room for one,
+  // the `message` rung of the mailbox's chain otherwise. `MessageArticle` renders the whole thread
+  // either way; the conversation node lives under this mailbox view.
+  const openDetail = useDetailNavigation({
+    contextId: id,
+    getPath: (messageId) => getFeedObjectPath(id, messageId),
+    level: 'message',
+    companion: 'message',
+  });
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
-      const message = messages.find((m) => m.id === messageId);
-      if (!message || !db) {
+      if (!db || !messages.some((message) => message.id === messageId)) {
         return;
       }
-      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
-      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
-      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
-      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
-      // keeps whatever is already there.
-      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
-      void invokePromise(LayoutOperation.Open, {
-        subject: [getFeedObjectPath(id, message.id)],
-        ...(newPlank ? {} : { root: id, level: 'message' }),
-        pivotId: id,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
+
+      openDetail(messageId, { modified: newPlank });
     },
-    [db, id, messages, invokePromise],
+    [db, messages, openDetail],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });

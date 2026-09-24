@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
@@ -28,9 +28,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // so there is no second database to reconcile against and no service to override.
       const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
-      // The space id names the database, so the target has to live in it: one from another space
-      // would take the reference there while the object persists here, and a detached one would
-      // take it nowhere at all — either way the two halves of the write come apart.
+      // The space id names the database, so the target has to live in it.
       if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
         return yield* Effect.fail(
           new SpaceOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),
@@ -40,13 +38,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // The union's two branches: a live entity passes through, a description is instantiated.
       const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
-      // An instantiated draft is detached, and the branch of `CollectionModel.add` that files into
+      // An instantiated draft is detached, and the branch of `ContainerModel.add` that files into
       // a collection only pushes a ref — so without this the object is never persisted and that
       // ref dangles. A live entity arrives already in a database.
       if (!Obj.getDatabase(object)) {
         yield* Database.add(object);
       }
-      yield* CollectionModel.add({ object, target });
+      yield* ContainerModel.add({ object, target });
 
       return {
         id: Obj.getURI(object),

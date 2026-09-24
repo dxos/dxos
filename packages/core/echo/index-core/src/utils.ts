@@ -9,6 +9,13 @@ import { invariant } from '@dxos/invariant';
 export type EntityPropPath = string[];
 
 /**
+ * A property path with array-index segments removed, the form `reverseRef.propPathNormalized`
+ * stores: `['items', '0', 'assignee']` and `['items', 'assignee']` name the same property.
+ */
+export const normalizePropPath = (path: readonly string[]): EntityPropPath =>
+  path.filter((segment) => !/^[0-9]+$/.test(segment));
+
+/**
  * Bound variables one statement may carry (`SQLITE_LIMIT_VARIABLE_NUMBER`).
  *
  * Sized for Durable Object SQLite, which is what production indexes against and which caps this at

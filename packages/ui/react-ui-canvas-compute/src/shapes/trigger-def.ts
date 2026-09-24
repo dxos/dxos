@@ -20,7 +20,8 @@ import { TriggerComponent } from './Trigger.tsx';
 // Kept out of `Trigger.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-const TriggerShapeSchema = ComputeShape.mapFields(
+/** The struct behind `TriggerShape`, for hosts that compose their own union (the scene engine). */
+export const TriggerShapeSchema = ComputeShape.mapFields(
   Struct.assign({
     type: Schema.Literal('trigger'),
     functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)),

@@ -21,9 +21,9 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
     /** Values for the union of provider fields, keyed by field name. */
     params: Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /**
      * Timestamp of the last run; persisted metadata, hidden from forms.
      * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.

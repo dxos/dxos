@@ -30,8 +30,8 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
     outline: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
       .annotate({ description: 'Post outline and/or instructions.' })
-      .pipe(Annotation.SetParent.set(true)),
-    content: Ref.Ref(Markdown.Document).pipe(Annotation.SetParent.set(true), Annotation.FormInputAnnotation.set(false)),
+      .pipe(Annotation.SetParent.set()),
+    content: Ref.Ref(Markdown.Document).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
@@ -69,7 +69,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     instructions: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
       .annotate({ description: 'Publication instructions.' })
-      .pipe(Annotation.SetParent.set(true)),
+      .pipe(Annotation.SetParent.set()),
     posts: Schema.Array(Ref.Ref(Post)).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),

@@ -28,7 +28,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Owned body: `SetParent` cascades it with the document. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     history: History.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -162,7 +162,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 <p className='text-sm text-description'>
                   {publication}
                   {externalLinks.map((link, index) => (
-                    <React.Fragment key={link.label}>
+                    <Fragment key={link.label}>
                       {(publication || index > 0) && ' · '}
                       <a
                         href={link.href}
@@ -172,7 +172,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                       >
                         {link.label}
                       </a>
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                 </p>
               )}
