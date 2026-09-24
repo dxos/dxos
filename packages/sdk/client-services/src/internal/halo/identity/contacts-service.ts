@@ -7,6 +7,8 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { type MemberInfo, createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
@@ -19,12 +21,13 @@ import {
   ContactSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ContactsService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Readiness from '../../Readiness.ts';
-import { type SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Readiness from '../../../Readiness.ts';
+import { type SpaceManager, SpaceManagerService } from '../../echo/space/index.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(
@@ -120,4 +123,23 @@ export const ContactsServiceLayer = Layer.effect(
       readiness.initialized.wait().then(() => dataSpaceManager),
     );
   }),
+);
+
+export const ContactsServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      IdentityContract.ManagerService,
+      SpaceManagerService,
+      SpacesContract.ManagerService,
+      Readiness.StackReadinessService,
+    ],
+    provides: [ContactsService.Tag],
+  },
+  () => ContactsServiceLayer,
+);
+
+export const ContactsServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [ContactsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(ContactsService.Rpcs, ContactsService.Tag),
 );

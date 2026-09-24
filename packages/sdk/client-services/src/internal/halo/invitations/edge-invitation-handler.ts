@@ -35,7 +35,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { trace } from '@dxos/tracing';
 
-import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import { type InvitationProtocol } from '../../../contracts/invitation-protocol.ts';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state.ts';
 import { tryAcquireBeforeContextDisposed } from './utils.ts';
 

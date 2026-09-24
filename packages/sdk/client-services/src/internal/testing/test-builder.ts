@@ -52,20 +52,20 @@ import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import { SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../echo/spaces/index.ts';
+import { type EdgeAgentManager, EdgeAgentManagerService } from '../halo/agents/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
-} from '../identity/identity-recovery-manager.ts';
-import { type CreateIdentityOptions } from '../identity/index.ts';
+} from '../halo/identity/identity-recovery-manager.ts';
+import { type CreateIdentityOptions } from '../halo/identity/index.ts';
 import {
   InvitationsHandler,
   InvitationsHandlerService,
   InvitationsManager,
   SpaceInvitationProtocol,
-} from '../invitations/index.ts';
+} from '../halo/invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../kernel/metadata/index.ts';
 import { valueEncoding } from '../kernel/pipeline/index.ts';
 import { type ServiceContextRuntimeProps, layerClientServices } from '../services/index.ts';

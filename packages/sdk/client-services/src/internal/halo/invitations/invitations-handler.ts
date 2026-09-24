@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
@@ -44,7 +45,8 @@ import { type ExtensionContext, type TeleportExtension, type TeleportProps } fro
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import { type InvitationProtocol } from '../../../contracts/invitation-protocol.ts';
+import { type Options } from '../interface.ts';
 import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler.ts';
 import { InvitationGuestExtension } from './invitation-guest-extenstion.ts';
 import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension.ts';
@@ -632,4 +634,10 @@ export const InvitationsHandlerLayer = (
       const edgeClient = yield* Effect.serviceOption(EdgeHttpClientService);
       return new InvitationsHandler(networkManager, Option.getOrUndefined(edgeClient), options.connectionProps);
     }),
+  );
+
+export const InvitationsHandlerSpec = (options: Pick<Options, 'invitationConnectionDefaultProps'>) =>
+  LayerSpec.make(
+    { affinity: 'application', requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
+    () => InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps }),
   );

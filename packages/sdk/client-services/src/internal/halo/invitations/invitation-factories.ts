@@ -5,16 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { KeyringApiService } from '@dxos/keyring';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
-import * as InvitationsContract from '../../contracts/invitations.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import { type InvitationProtocol } from '../../../contracts/invitation-protocol.ts';
+import * as InvitationsContract from '../../../contracts/invitations.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
 import { DeviceInvitationProtocol } from './device-invitation-protocol.ts';
 import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 
@@ -71,4 +72,22 @@ export const InvitationFactoriesLayer: Layer.Layer<
       return factory(invitation);
     });
   }),
+);
+
+/** Eager: it provides no tag, it registers the invitation factories. */
+export const InvitationFactoriesSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      InvitationsContract.ManagerService,
+      IdentityContract.ManagerService,
+      IdentityContract.LifecycleService,
+      KeyringApiService,
+      SpacesContract.ManagerService,
+      SpacesContract.SigningContextProviderService,
+    ],
+    provides: [],
+    eager: true,
+  },
+  () => InvitationFactoriesLayer,
 );

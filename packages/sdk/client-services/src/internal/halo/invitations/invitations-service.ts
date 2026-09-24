@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -19,9 +21,10 @@ import {
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { InvitationsService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
-import * as InvitationsContract from '../../contracts/invitations.ts';
+import * as InvitationsContract from '../../../contracts/invitations.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -185,4 +188,14 @@ export const InvitationsServiceLayer = Layer.effect(
     InvitationsContract.ManagerService,
     (invitationsManager) => new InvitationsServiceImpl(invitationsManager),
   ),
+);
+
+export const InvitationsServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [InvitationsContract.ManagerService], provides: [InvitationsService.Tag] },
+  () => InvitationsServiceLayer,
+);
+
+export const InvitationsServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [InvitationsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(InvitationsService.Rpcs, InvitationsService.Tag),
 );

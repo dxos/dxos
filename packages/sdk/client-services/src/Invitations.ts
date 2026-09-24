@@ -4,4 +4,4 @@
 
 // @import-as-namespace
 
-export * from './internal/invitations/index.ts';
+export * from './internal/halo/invitations/index.ts';

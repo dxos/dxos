@@ -8,6 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
@@ -28,12 +30,13 @@ import {
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Events from '../../Events.ts';
-import { type Identity } from '../../Identity.ts';
-import * as SqliteStorage from '../../SqliteStorage.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Events from '../../../Events.ts';
+import { type Identity } from '../../../Identity.ts';
+import * as SqliteStorage from '../../../SqliteStorage.ts';
 import { type CreateIdentityOptions } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
@@ -259,4 +262,26 @@ export const IdentityServiceLayer = Layer.effect(
     );
     return service;
   }),
+);
+
+export const IdentityServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      Hook.Controller,
+      IdentityContract.ManagerService,
+      IdentityContract.LifecycleService,
+      EdgeIdentityRecoveryManagerService,
+      KeyringApiService,
+      SpacesContract.ManagerService,
+      SqlClient.SqlClient,
+    ],
+    provides: [IdentityService.Tag],
+  },
+  () => IdentityServiceLayer,
+);
+
+export const IdentityServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [IdentityService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(IdentityService.Rpcs, IdentityService.Tag),
 );

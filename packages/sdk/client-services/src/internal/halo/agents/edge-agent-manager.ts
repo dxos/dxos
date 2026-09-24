@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
@@ -23,11 +24,12 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Events from '../../Events.ts';
-import { type Identity } from '../../Identity.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Events from '../../../Events.ts';
+import { type Identity } from '../../../Identity.ts';
 import { type IdentityProvider } from '../identity/index.ts';
+import { type Options } from '../interface.ts';
 
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
@@ -247,4 +249,14 @@ export const EdgeAgentManagerLayer = (
       );
       return edgeAgentManager;
     }),
+  );
+
+export const EdgeAgentManagerSpec = (options: Pick<Options, 'edgeFeatures'>) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [Hook.Controller, SpacesContract.ManagerService, IdentityContract.ProviderService],
+      provides: [EdgeAgentManagerService],
+    },
+    () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),
   );

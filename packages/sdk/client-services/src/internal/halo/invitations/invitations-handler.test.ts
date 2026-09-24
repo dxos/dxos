@@ -18,8 +18,8 @@ import {
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
-import { TestBuilder, type TestPeer } from '../testing/index.ts';
+import { type InvitationProtocol } from '../../../contracts/invitation-protocol.ts';
+import { TestBuilder, type TestPeer } from '../../testing/index.ts';
 import { InvitationsHandler } from './invitations-handler.ts';
 import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 

@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { synchronized } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Context } from '@dxos/context';
 import {
   credentialPayload,
@@ -43,8 +44,8 @@ import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import { type Identity } from '../../Identity.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import { type Identity } from '../../../Identity.ts';
 import { type JoinIdentityProps } from './identity-manager.ts';
 
 /**
@@ -367,3 +368,12 @@ export const EdgeIdentityRecoveryManagerLayer = (): Layer.Layer<
       );
     }),
   );
+
+export const EdgeIdentityRecoverySpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [KeyringApiService, IdentityContract.ManagerService],
+    provides: [EdgeIdentityRecoveryManagerService],
+  },
+  () => EdgeIdentityRecoveryManagerLayer(),
+);

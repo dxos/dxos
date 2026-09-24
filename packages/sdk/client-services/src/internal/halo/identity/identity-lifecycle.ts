@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Context } from '@dxos/context';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as Events from '../../Events.ts';
-import { type Identity } from '../../Identity.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as Events from '../../../Events.ts';
+import { type Identity } from '../../../Identity.ts';
 import { type CreateIdentityOptions, type JoinIdentityProps } from './identity-manager.ts';
 import { EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
@@ -100,3 +101,12 @@ const createIdentityLifecycle = ({
     },
   };
 };
+
+export const IdentityLifecycleSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Hook.Controller, IdentityContract.ManagerService, EdgeIdentityRecoveryManagerService],
+    provides: [IdentityContract.LifecycleService],
+  },
+  () => IdentityLifecycleLayer,
+);

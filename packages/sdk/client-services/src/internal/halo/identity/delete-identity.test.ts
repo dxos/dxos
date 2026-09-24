@@ -14,8 +14,8 @@ import { failedInvariant } from '@dxos/invariant';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import * as SqliteStorage from '../../SqliteStorage.ts';
-import { type ServiceContext, createServiceContext } from '../testing/index.ts';
+import * as SqliteStorage from '../../../SqliteStorage.ts';
+import { type ServiceContext, createServiceContext } from '../../testing/index.ts';
 import { IdentityServiceImpl } from './identity-service.ts';
 
 /** Every table {@link wipeSqliteStorage} clears, grouped by the subsystem that owns it. */

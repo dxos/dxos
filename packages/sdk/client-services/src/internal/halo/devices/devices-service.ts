@@ -8,6 +8,8 @@ import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -23,8 +25,9 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { DevicesService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
-import * as IdentityContract from '../../contracts/identity.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(
@@ -130,4 +133,14 @@ export const DevicesServiceLayer = Layer.effect(
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
     return new DevicesServiceImpl(identityManager, edgeConnection);
   }),
+);
+
+export const DevicesServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [IdentityContract.ManagerService], provides: [DevicesService.Tag] },
+  () => DevicesServiceLayer,
+);
+
+export const DevicesServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [DevicesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(DevicesService.Rpcs, DevicesService.Tag),
 );

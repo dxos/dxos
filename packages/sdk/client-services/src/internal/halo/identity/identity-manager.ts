@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import platform from 'platform';
 
 import { Event } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import {
   CredentialGenerator,
@@ -55,13 +56,14 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
-import * as Auth from '../../Auth.ts';
-import * as IdentityContract from '../../contracts/identity.ts';
-import { openCredentialsDocument } from '../../CredentialsDocument.ts';
-import * as Events from '../../Events.ts';
-import { Identity } from '../../Identity.ts';
-import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../echo/space/index.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
+import * as Auth from '../../../Auth.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import { openCredentialsDocument } from '../../../CredentialsDocument.ts';
+import * as Events from '../../../Events.ts';
+import { Identity } from '../../../Identity.ts';
+import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../../echo/space/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../../kernel/metadata/index.ts';
+import { type Options } from '../interface.ts';
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -634,3 +636,39 @@ export const IdentityManagerLayer = (
       return identityManager;
     }),
   );
+
+export const IdentityManagerSpec = (options: Options) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [Hook.Controller, IMetadataStoreService, KeyringApiService, HypercoreStoreService, SpaceManagerService],
+      provides: [IdentityContract.ManagerService],
+    },
+    () =>
+      IdentityManagerLayer({
+        devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
+        devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
+        edgeFeatures: options.edgeFeatures,
+        automergeCredentials: options.automergeCredentials,
+      }),
+  );
+
+/**
+ * Provides the identity provider from the resolved manager.
+ */
+export const identityProviderLayer = Layer.effect(
+  IdentityContract.ProviderService,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityContract.ManagerService;
+    return identityProviderFromManager(identityManager);
+  }),
+);
+
+export const IdentityProviderSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [IdentityContract.ManagerService],
+    provides: [IdentityContract.ProviderService],
+  },
+  () => identityProviderLayer,
+);

@@ -3,7 +3,7 @@
 //
 
 export * from './device-invitation-protocol.ts';
-export type * from '../../contracts/invitation-protocol.ts';
+export type * from '../../../contracts/invitation-protocol.ts';
 export * from './invitation-factories.ts';
 export * from './invitations-handler.ts';
 export * from './invitations-service.ts';

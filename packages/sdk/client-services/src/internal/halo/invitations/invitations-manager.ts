@@ -12,6 +12,7 @@ import {
   CancellableInvitation,
   INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { EffectEx, Hook } from '@dxos/effect';
@@ -31,10 +32,10 @@ import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/creden
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import type { InvitationProtocol } from '../../contracts/invitation-protocol.ts';
-import * as InvitationsContract from '../../contracts/invitations.ts';
-import * as Events from '../../Events.ts';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../kernel/metadata/index.ts';
+import type { InvitationProtocol } from '../../../contracts/invitation-protocol.ts';
+import * as InvitationsContract from '../../../contracts/invitations.ts';
+import * as Events from '../../../Events.ts';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../../kernel/metadata/index.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**
@@ -424,3 +425,12 @@ export const InvitationsManagerLayer = (): Layer.Layer<
       return invitationsManager;
     }),
   );
+
+export const InvitationsManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Hook.Controller, InvitationsHandlerService, IMetadataStoreService],
+    provides: [InvitationsContract.ManagerService],
+  },
+  () => InvitationsManagerLayer(),
+);

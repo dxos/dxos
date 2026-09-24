@@ -11,8 +11,8 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 
 import * as IdentityContract from '../../contracts/identity.ts';
 import { type DataSpaceManagerRuntimeProps } from '../echo/spaces/index.ts';
-import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
-import { type InvitationConnectionProps } from '../invitations/index.ts';
+import { type IdentityManagerProps, identityProviderFromManager } from '../halo/identity/index.ts';
+import { type InvitationConnectionProps } from '../halo/invitations/index.ts';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,

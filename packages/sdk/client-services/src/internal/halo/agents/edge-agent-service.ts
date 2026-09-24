@@ -7,6 +7,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
@@ -21,8 +23,9 @@ import {
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeAgentService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
-import * as Readiness from '../../Readiness.ts';
+import * as Readiness from '../../../Readiness.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
@@ -97,4 +100,18 @@ export const EdgeAgentServiceLayer: Layer.Layer<
     const edgeAgentManager = yield* EdgeAgentManagerService;
     return new EdgeAgentServiceImpl(() => readiness.initialized.wait().then(() => edgeAgentManager), edgeConnection);
   }),
+);
+
+export const EdgeAgentServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [EdgeAgentManagerService, Readiness.StackReadinessService],
+    provides: [EdgeAgentService.Tag],
+  },
+  () => EdgeAgentServiceLayer,
+);
+
+export const EdgeAgentServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [EdgeAgentService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
 );
