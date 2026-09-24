@@ -107,6 +107,16 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
+    "./StagedUpload": {
+      "source": "./src/operations/StagedUpload.ts",
+      "types": "./dist/types/src/operations/StagedUpload.d.ts",
+      "import": "./dist/lib/StagedUpload.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -126,6 +136,12 @@
       ],
       "Settings": [
         "dist/types/src/types/Settings.d.ts"
+      ],
+      "StagedUpload": [
+        "dist/types/src/operations/StagedUpload.d.ts"
+      ],
+      "skills": [
+        "dist/types/src/skills/index.d.ts"
       ]
     }
   },

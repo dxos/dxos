@@ -10,6 +10,7 @@ import path from 'node:path';
 import * as Project from '@dxos/compute/Project';
 import { Blob, Database, Filter, Query, Ref, Type } from '@dxos/echo';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
+import { FileSkill } from '@dxos/plugin-file/skills';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -58,13 +59,11 @@ const REMOTE = !McpTarget.isLocal(TARGET);
 const GRADED = McpTarget.mode(TARGET) !== 'token';
 
 /**
- * Whether to run the direct-upload stage.
- *
- * Deployed targets only. The in-process host has no blob service behind it and defaults to inline
- * storage, so there is no signed URL to `curl` and nothing the stage could measure — running it
- * locally would score the absence of a backend rather than the flow.
+ * Whether to run the direct-upload stage. Every graded target: a deployed worker mints an EDGE-signed
+ * URL, and the in-process host stages on a loopback listener the way `dx mcp serve` does
+ * (`@dxos/mcp-server/LocalUpload`), so both put the bytes on a path the model never touches.
  */
-const UPLOAD_STAGE = GRADED && REMOTE;
+const UPLOAD_STAGE = GRADED;
 
 /**
  * The calls the latency report is built from.
@@ -180,6 +179,14 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
 /** The operation the upload stage exists to exercise. */
 const CREATE_FROM_UPLOAD = 'org.dxos.operation.file.createFromUpload';
 
+/** Ids of the objects filed on a task's `artifacts`, read outside the agent. */
+const readArtifactIds = (title: string) =>
+  Effect.gen(function* () {
+    const task = yield* findObject(Task.Task, (candidate) => candidate.title === title);
+    const objects = yield* Effect.forEach(task?.artifacts ?? [], (ref) => Database.load(ref));
+    return objects.map((object) => object.id);
+  });
+
 /**
  * Every tool call of a turn with its arguments.
  *
@@ -236,6 +243,8 @@ type Staged = {
   started: boolean;
   /** `undefined` when the stage did not run — see {@link UPLOAD_STAGE}. */
   uploaded?: boolean;
+  /** `undefined` when the upload stage did not run. */
+  attached?: boolean;
 };
 
 const NOTHING_STAGED: Staged = {
@@ -303,6 +312,11 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
             'into a File object whose blob holds exactly those bytes, compared byte for byte.',
           score: Effect.succeed(staged.uploaded),
         }),
+        Scorer.make({
+          name: 'upload-attached-to-task',
+          description: 'The uploaded file is recorded on the named task as an artifact, and on no other task.',
+          score: Effect.succeed(staged.attached === true),
+        }),
       ]),
   Scorer.database({
     name: 'ledger-intact',
@@ -317,7 +331,7 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
 const SCORERS = GRADED
-  ? scorers({ ...NOTHING_STAGED, ...(UPLOAD_STAGE ? { uploaded: false } : {}) })
+  ? scorers({ ...NOTHING_STAGED, ...(UPLOAD_STAGE ? { uploaded: false, attached: false } : {}) })
   : remoteScorers(false);
 
 /**
@@ -345,8 +359,11 @@ const localTask = () =>
   runClaudeEval(
     {
       target: TARGET,
-      skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
-      plugins: [ProjectsPlugin.make(), TasksPlugin.make(), FilePlugin.make()],
+      skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }, FileSkill],
+      // Locally the harness answers `file.createFromUpload` from its own stage, and FilePlugin's
+      // handler for the same operation (EDGE adoption) would compete with it.
+      plugins: [ProjectsPlugin.make(), TasksPlugin.make(), ...(REMOTE ? [FilePlugin.make()] : [])],
+      localUploads: true,
       types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet, File.File, Blob.Blob],
       // The server's own tools, plus `curl` for the upload stage only — see the header comment for
       // why the no-shell rule has this one exception and why it cannot launder the other stages.
@@ -431,6 +448,7 @@ const localTask = () =>
       // as a tool argument. The fixture is planted on the agent's disk rather than described to it,
       // so the only way through is `createUpload` -> shell transfer -> `createFromUpload`.
       let uploaded: boolean | undefined;
+      let attached: boolean | undefined;
       let uploadTurn: Turn | undefined;
       if (UPLOAD_STAGE) {
         const fixture = uploadFixture();
@@ -439,7 +457,8 @@ const localTask = () =>
           `The file ./${UPLOAD_NAME} in your working directory is a ${UPLOAD_BYTES}-byte screenshot. ` +
             `Add it to space ${spaceId} as a file named "${UPLOAD_NAME}". It is far too large to pass ` +
             'as a tool argument, so upload it directly: get an upload URL, transfer the bytes with ' +
-            'curl, then create the file object from the upload id.',
+            `curl, then create the file object from the upload id. Then attach the new file to the task ` +
+            `titled "${ROTATE}" as an artifact.`,
         );
         uploadTurn = upload;
         const stored = await query(readUploadedFile);
@@ -456,9 +475,16 @@ const localTask = () =>
           // and the service stored what it received, which no amount of model narration produces.
           stored?.size === UPLOAD_BYTES &&
           sameBytes(stored.bytes, fixture) &&
-          // External, not inline — an inline blob would mean the bytes came back through the model
-          // after all, which is the exact failure this whole path exists to prevent.
-          stored.external === true;
+          // Against EDGE, external rather than inline — an inline blob there would mean the bytes came
+          // back through the model after all. The in-process host has no blob service and stores
+          // inline, so there the operation check above is what excludes the base64 route.
+          stored.external === REMOTE;
+        const file = await query(findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME));
+        const [onRotate, onBackfill] = await Promise.all([
+          query(readArtifactIds(ROTATE)),
+          query(readArtifactIds(BACKFILL)),
+        ]);
+        attached = file != null && onRotate.includes(file.id) && !onBackfill.includes(file.id);
       }
 
       // After the turns, so the probe's own connection is not competing with the agent's for the
@@ -467,7 +493,9 @@ const localTask = () =>
       const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
       const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
 
-      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started, uploaded }, report));
+      const scores = await score(
+        scorers({ scaffolded, listed, readOnly, completed, started, uploaded, attached }, report),
+      );
       return {
         scores,
         latency: report,

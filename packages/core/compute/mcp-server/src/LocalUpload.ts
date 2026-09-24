@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
@@ -9,14 +11,9 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'node:http';
 
-import * as Operation from '@dxos/compute/Operation';
-import { Blob, Database, Ref } from '@dxos/echo';
-import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { McpServer } from '@dxos/mcp-server';
-import * as FileLimits from '@dxos/plugin-file/FileLimits';
-import * as FileOperation from '@dxos/plugin-file/FileOperation';
-import { File } from '@dxos/types';
+
+import { ToolFailure, failure } from './internal/failure.ts';
 
 /** Matches EDGE's `createUpload`: minutes, since the credential rides in a URL and lands in logs. */
 const URL_TTL_MS = 10 * 60 * 1000;
@@ -38,14 +35,14 @@ export type StagedUpload = {
 };
 
 /**
- * Loopback twin of EDGE's signed upload URL, for `dx mcp serve`.
+ * Loopback twin of EDGE's signed upload URL, for a host that shares a machine with its caller
+ * (`dx mcp serve`, the eval harness's in-process server).
  *
- * The stdio server shares a machine with its caller, so a local file never needs to cross the
- * conversation: the caller `curl`s it to a port on `127.0.0.1` and names the upload by id. Each URL
+ * The caller `curl`s a local file to a port on `127.0.0.1` and names the upload by id. Each URL
  * carries a random token checked in constant time, because loopback is reachable by every process
  * (and every browser tab) on the machine, not only by the agent that asked for it.
  */
-export class LocalUploadStage {
+export class Stage {
   readonly #uploads = new Map<string, PendingUpload>();
   #server?: Promise<{ server: Server; origin: string }>;
 
@@ -191,7 +188,7 @@ export const CreateUpload = Tool.make('createUpload', {
       }),
     ),
   }),
-  failure: McpServer.ToolFailure,
+  failure: ToolFailure,
   success: Schema.Struct({
     uploadId: Schema.String.annotate({
       description: 'Pass this to org.dxos.operation.file.createFromUpload once the upload succeeds.',
@@ -210,58 +207,17 @@ export const CreateUpload = Tool.make('createUpload', {
 
 export const UploadToolkit = Toolkit.make(CreateUpload);
 
-export const uploadHandlers = (stage: LocalUploadStage) =>
+/** Binds {@link CreateUpload} to one stage. */
+export const handlers = (stage: Stage) =>
   UploadToolkit.of({
     createUpload: ({ name, size }) =>
       Effect.gen(function* () {
         if (size !== undefined && size > MAX_UPLOAD_BYTES) {
           return yield* Effect.fail(
-            McpServer.failure('invalid_request', `File is ${size} bytes; the per-upload limit is ${MAX_UPLOAD_BYTES}.`),
+            failure('invalid_request', `File is ${size} bytes; the per-upload limit is ${MAX_UPLOAD_BYTES}.`),
           );
         }
         return yield* Effect.promise(() => stage.mint(name));
       }),
   });
 
-/** Raised when the named upload was never received, was already consumed, or has expired. */
-export class UploadNotFoundError extends BaseError.extend('UploadNotFoundError') {
-  constructor(readonly uploadId: string) {
-    super({ message: `No completed upload ${uploadId}. Run the upload command before creating the file.` });
-  }
-}
-
-/** Raised when the bytes that arrived are not of a type Composer stores. */
-export class UnsupportedUploadTypeError extends BaseError.extend('UnsupportedUploadTypeError') {
-  constructor(readonly type: string) {
-    super({ message: `Uploaded content has an unsupported type: ${type}` });
-  }
-}
-
-/**
- * `file.createFromUpload` against the loopback stage. Replaces plugin-file's handler here, which
- * adopts from EDGE's staging area — a store this host's uploads never reach. The bytes go to the
- * client's default blob backend (EDGE when configured), exactly as a UI upload's would.
- */
-export const createFromUploadHandler = (stage: LocalUploadStage) =>
-  FileOperation.CreateFromUpload.pipe(
-    Operation.withHandler(
-      Effect.fnUntraced(function* ({ uploadId, name }) {
-        const staged = stage.take(uploadId);
-        if (!staged) {
-          return yield* Effect.fail(new UploadNotFoundError(uploadId));
-        }
-        if (!FileLimits.isAcceptedMimeType(staged.type)) {
-          return yield* Effect.fail(new UnsupportedUploadTypeError(staged.type));
-        }
-
-        const blob = yield* Blob.fromBytes(staged.bytes, { type: staged.type });
-        const object = File.make({ name: name ?? staged.name, data: Ref.make(blob) });
-        // The blob first: `SetParent` on `File.data` cascades deletion, so the child must exist
-        // before the parent references it.
-        yield* Database.add(blob);
-        yield* Database.add(object);
-        yield* Database.flush();
-        return { object };
-      }),
-    ),
-  );

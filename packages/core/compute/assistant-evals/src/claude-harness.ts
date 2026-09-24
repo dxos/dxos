@@ -11,24 +11,29 @@ import path from 'node:path';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Database, Tag, type Type } from '@dxos/echo';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
+import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -85,6 +90,13 @@ export type ClaudeHarnessOptions = {
    * workers (see {@link McpTarget}). Defaults to `DX_EVAL_MCP_TARGET`, and to `local` without it.
    */
   target?: McpTarget.Target;
+  /**
+   * Serve `createUpload` from the in-process host, staging uploads on a loopback listener the way
+   * `dx mcp serve` does, and answer `file.createFromUpload` from that stage. Ignored for a deployed
+   * target, which has its own. The scenario must not also load FilePlugin, whose handler for the
+   * same operation adopts from EDGE instead.
+   */
+  localUploads?: boolean;
   /** Fills the space before the agent starts. */
   seed?: (context: {
     spaceId: SpaceId;
@@ -399,6 +411,27 @@ const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
   return calls;
 };
 
+const stagedUploadMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.stagedUpload'), name: 'Staged upload' });
+
+/** Contributes `file.createFromUpload` over a loopback stage, in place of FilePlugin's EDGE adoption. */
+const stagedUploadPlugin = (uploads: LocalUpload.Stage): Plugin.Plugin =>
+  Plugin.make(
+    Plugin.define(stagedUploadMeta).pipe(
+      Plugin.addModule({
+        id: 'staged-upload-handler',
+        activatesOn: ActivationEvents.Startup,
+        provides: [Capabilities.OperationHandler],
+        activate: () =>
+          Effect.succeed([
+            Capability.contribute(
+              Capabilities.OperationHandler,
+              OperationHandlerSet.make(StagedUpload.createFromUploadHandler((uploadId) => uploads.take(uploadId))),
+            ),
+          ]),
+      }),
+    ),
+  )();
+
 const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
@@ -439,6 +472,7 @@ export const runClaudeEval = async <T>(
 
   // A throwaway tree, so a prompt that goes wrong cannot touch the checkout the eval runs from.
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-eval-'));
+  const uploads = options.localUploads && remoteUrl == null ? new LocalUpload.Stage() : undefined;
   const app = await createComposerTestApp({
     plugins: [
       ClientPlugin.make({
@@ -452,6 +486,7 @@ export const runClaudeEval = async <T>(
       RoutinePlugin.make(),
       InboxPlugin.make(),
       SpacePlugin.make({}),
+      ...(uploads ? [stagedUploadPlugin(uploads)] : []),
       ...(options.plugins ?? []),
     ],
   });
@@ -516,6 +551,7 @@ export const runClaudeEval = async <T>(
                 spaceIds: [spaceId],
                 context: () => context,
                 registry: () => registry,
+                uploads,
               }).pipe(Scope.provide(scope)),
             );
 
@@ -566,6 +602,7 @@ export const runClaudeEval = async <T>(
     }
   } finally {
     await agent?.close();
+    await uploads?.close();
     await app.dispose();
     fs.rmSync(workdir, { recursive: true, force: true });
     await run.finish();

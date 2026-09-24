@@ -19,6 +19,9 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
+import { FileSkill } from '@dxos/plugin-file/skills';
+import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
@@ -27,7 +30,6 @@ import { analyticsStdio } from './analytics.ts';
 import { handshakeAttribution } from './legacy-initialize-analytics.ts';
 import { makeLocalServer } from './local-server.ts';
 import { SpaceToolkit, spaceHandlers } from './space-tools.ts';
-import { LocalUploadStage, UploadToolkit, createFromUploadHandler, uploadHandlers } from './upload-tools.ts';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol.ts';
 
 /**
@@ -95,8 +97,13 @@ export const serve = Command.make(
     yield* manager.activate(AppActivationEvents.AssistantStart);
     yield* manager.activate(ProjectsEvents.Start);
 
-    const uploads = new LocalUploadStage();
-    const server = yield* makeLocalServer({ overrides: [createFromUploadHandler(uploads)] });
+    const uploads = new LocalUpload.Stage();
+    const server = yield* makeLocalServer({
+      // FilePlugin is not activated here (it is mostly UI), so its skill is served directly — without
+      // it no skill owns `file.createFromUpload` and the operation is invisible to the caller.
+      skills: [FileSkill],
+      overrides: [StagedUpload.createFromUploadHandler((uploadId) => uploads.take(uploadId))],
+    });
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
@@ -117,7 +124,9 @@ export const serve = Command.make(
 
     const staticToolkits = Layer.mergeAll(
       McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server)))),
-      McpServer.toolkit(UploadToolkit).pipe(Layer.provide(UploadToolkit.toLayer(uploadHandlers(uploads)))),
+      McpServer.toolkit(LocalUpload.UploadToolkit).pipe(
+        Layer.provide(LocalUpload.UploadToolkit.toLayer(LocalUpload.handlers(uploads))),
+      ),
     );
 
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
