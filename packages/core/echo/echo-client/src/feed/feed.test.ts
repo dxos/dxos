@@ -432,6 +432,50 @@ describe('Feed', () => {
       await expect(db.flush()).rejects.toThrow('alice refused');
     });
 
+    test('flushes and new writes do not resend ahead of the backoff while an append keeps failing', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let inserts = 0;
+      const storageFailure = new EchoClientError({
+        message: 'Failed to execute statement',
+        cause: new RangeError('Bad value'),
+      });
+      db._setFeedService(
+        await makeFeedClient({
+          ...peer.host.feedService,
+          'FeedService.insertIntoFeed': () => {
+            inserts++;
+            return Effect.fail(storageFailure);
+          },
+        }),
+      );
+
+      const feed = db.add(Feed.make({ name: 'failing' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'alice' }), { to: feed });
+
+      // Mirrors a save tracker that flushes on every save-state change and writes in between.
+      const flushErrors: unknown[] = [];
+      for (let flush = 0; flush < 2; flush++) {
+        db.add(Obj.make(TestSchema.Person, { name: `person-${flush}` }), { to: feed });
+        flushErrors.push(
+          await db.flush().then(
+            () => undefined,
+            (error: unknown) => error,
+          ),
+        );
+      }
+
+      // The first send, then one scheduled retry per flush: 1s and 2s into the backoff.
+      expect(inserts).toBeLessThanOrEqual(3);
+      expect(flushErrors.map((error) => error instanceof Error && error.message)).toEqual([
+        'Failed to execute statement',
+        'Failed to execute statement',
+      ]);
+    });
+
     test('a failed append does not retry an object deleted while it was in flight', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();

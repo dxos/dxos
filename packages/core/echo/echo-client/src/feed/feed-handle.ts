@@ -196,10 +196,12 @@ export class FeedHandle {
   #subscriptionGeneration = 0;
 
   /**
-   * A retry is scheduled; only the scheduled task clears it, so at most one retry is outstanding.
-   * Not a handle: `scheduleTask` cancels itself when the context disposes.
+   * Settles once the scheduled retry has sent; only that task clears it, so at most one retry is
+   * outstanding and nothing else sends a dirty core ahead of the backoff.
    */
-  #appendRetryPending = false;
+  #appendRetry: Promise<void> | null = null;
+  /** Set by {@link dispose}, whose drain is the last chance to send and so ignores the backoff. */
+  #disposing = false;
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
   /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
   #endpointClosed: Error | null = null;
@@ -462,17 +464,26 @@ export class FeedHandle {
       return;
     }
 
-    if (this.#appendRetryPending || this._ctx.disposed) {
+    if (this.#appendRetry || this._ctx.disposed) {
       return;
     }
     const delay = this.#appendRetryDelay;
     this.#appendRetryDelay = Math.min(this.#appendRetryDelay * 2, APPEND_RETRY_MAX_DELAY);
-    this.#appendRetryPending = true;
+    const retry = Promise.withResolvers<void>();
+    this.#appendRetry = retry.promise;
+    // Releases flushes waiting on a retry that disposal cancelled.
+    const clearDispose = this._ctx.onDispose(() => retry.resolve());
     scheduleTask(
       this._ctx,
-      () => {
-        this.#appendRetryPending = false;
-        this.#appendScheduler.trigger();
+      async () => {
+        clearDispose();
+        // Cleared first, so a failure of this send can schedule the next retry.
+        this.#appendRetry = null;
+        try {
+          await this.#appendScheduler.runBlocking();
+        } finally {
+          retry.resolve();
+        }
       },
       delay,
     );
@@ -484,7 +495,8 @@ export class FeedHandle {
    * {@link waitForPendingWrites}.
    */
   async #flushDirty(): Promise<void> {
-    if (this.#dirtyCores.size === 0) {
+    // The scheduled retry sends every dirty core, so sending sooner would defeat the backoff.
+    if (this.#dirtyCores.size === 0 || (this.#appendRetry && !this.#disposing)) {
       return;
     }
     if (this.#endpointClosed) {
@@ -520,11 +532,17 @@ export class FeedHandle {
    * through polling — the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
    *
+   * While an append is failing, a drain waits for the scheduled retry rather than sending ahead of
+   * the backoff, and throws if that retry fails too.
+   *
    * Throws if writes are still unsent after {@link FLUSH_ATTEMPTS} drains, or at once when the endpoint is closed.
    */
   async waitForPendingWrites(): Promise<void> {
     for (let attempt = 1; ; attempt++) {
-      if (this.#dirtyCores.size > 0) {
+      const retry = this.#disposing ? null : this.#appendRetry;
+      if (retry) {
+        await retry;
+      } else if (this.#dirtyCores.size > 0) {
         await this.#appendScheduler.runBlocking();
       }
       await Promise.allSettled([...this.#inFlight]);
@@ -534,10 +552,12 @@ export class FeedHandle {
       if (this.#endpointClosed) {
         throw this.#endpointClosed;
       }
-      if (attempt >= FLUSH_ATTEMPTS) {
+      if (retry || attempt >= FLUSH_ATTEMPTS) {
         throw this._error ?? new Error('Feed writes could not be sent.');
       }
-      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+      if (!this.#appendRetry) {
+        await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+      }
     }
   }
 
@@ -803,6 +823,7 @@ export class FeedHandle {
   async dispose() {
     // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
     // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still live.
+    this.#disposing = true;
     const unsent = await this.waitForPendingWrites().then(
       () => undefined,
       (err: unknown) => err,
