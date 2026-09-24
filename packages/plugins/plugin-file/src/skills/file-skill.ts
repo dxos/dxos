@@ -11,13 +11,15 @@ import { FileOperation } from '#types';
 
 export const SKILL_KEY = 'org.dxos.skill.file';
 
+const operations = [FileOperation.Read, FileOperation.CreateFromSource, FileOperation.CreateFromUpload];
+
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
     name: 'File',
     description: 'Read the contents of files (images, videos, PDFs), and add new files to a space.',
     tools: Skill.toolDefinitions({
-      operations: [FileOperation.Read, FileOperation.CreateFromSource, FileOperation.CreateFromUpload],
+      operations,
     }),
     instructions: Template.make({
       source: trim`
@@ -48,11 +50,17 @@ const make = () =>
       `,
     }),
     agentCanEnable: true,
+    // Projected by the MCP hosts (`dx mcp serve`, EDGE's worker), so `file.createFromUpload` — the
+    // other half of their `createUpload` tool — is discoverable and invocable there.
+    mcpPrompt: true,
   });
 
 const skill: Skill.Definition = {
   key: SKILL_KEY,
   make,
+  // Carried on the definition so a host that serves it over MCP can map its tool ids back to
+  // operations without the plugin being activated.
+  operations,
 };
 
 export default skill;

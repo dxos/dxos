@@ -34,12 +34,15 @@ export const EdgeBackend = Capability.lazyModule(
   },
   () => import('./edge-backend.ts'),
 );
+// Browser-only: it serves the UI's upload action, and a headless host (EDGE's operation-service)
+// has no operation invoker, so activating it there fails the plugin and with it every file backend.
 export const FileUploader = Capability.lazyModule(
   'FileUploader',
   {
     requires: [Capabilities.OperationInvoker],
     provides: [AppCapabilities.FileUploader],
     activatesOn: FileEvents.Start,
+    environments: [],
   },
   () => import('./file-uploader.ts'),
 );

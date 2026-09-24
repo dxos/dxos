@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 //
 // Copyright 2026 DXOS.org
 //
@@ -8,8 +8,8 @@
 // RESOLUTION.md, delete intermediate staging/group files, and print a summary.
 //
 // Usage:
-//   node finalize.mjs [--slug=<slug>] [--dir=<path to review store>] [--force]
-//   node finalize.mjs --all [--force]
+//   bun finalize.ts [--slug=<slug>] [--dir=<path to review store>] [--force]
+//   bun finalize.ts --all [--force]
 //
 // With neither --slug/--dir/--all, the most recently modified non-finalized
 // review is used. `--force` re-finalizes an already-finalized run. `--all` walks
@@ -26,9 +26,12 @@ import {
   diagnosticKey,
   parseDiagnostics,
   renderDiagnostic,
-} from '../lib/diagnostics.mjs';
-import { repoRoot } from '../lib/git.mjs';
-import { parseResolution, renderResolution, RESOLUTION_FILE } from '../lib/resolution.mjs';
+  type Diagnostic,
+  type IssuedDiagnostic,
+  type Severity,
+} from '../lib/diagnostics.ts';
+import { repoRoot } from '../lib/git.ts';
+import { parseResolution, renderResolution, RESOLUTION_FILE, type ResolutionStatus } from '../lib/resolution.ts';
 import {
   assertSafeSlug,
   GROUPS_MANIFEST,
@@ -36,10 +39,71 @@ import {
   readReview,
   renderFrontmatter,
   reviewIdFromStore,
-} from '../lib/store.mjs';
+  type FrontmatterInput,
+} from '../lib/store.ts';
 
 const STAGING_FILE = 'STAGING.md';
 const INTERMEDIATES = [STAGING_FILE, GROUPS_MANIFEST, 'groups'];
+
+/** A review's frontmatter data before it is narrowed to specific fields; may come straight off
+ * disk (already string-only) or from a freshly built stub (still raw JS scalars). */
+type ReviewLike = { data: Record<string, unknown>; body: string };
+
+const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+const asStringArray = (value: unknown): string[] | undefined => (Array.isArray(value) ? value.map(String) : undefined);
+
+/** Narrow a parsed-JSON value to a plain object record, or null if it isn't one. */
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+  // Validated non-null, non-array object above — safe to treat as a string-keyed record.
+  const record: Record<string, unknown> = {};
+  for (const [key, entryValue] of Object.entries(value)) {
+    record[key] = entryValue;
+  }
+  return record;
+};
+
+/** Coerce a frontmatter data value (of unknown provenance) into a value `renderFrontmatter` accepts. */
+const toFrontmatterValue = (value: unknown): FrontmatterInput[string] => {
+  if (value == null) {
+    return value;
+  }
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(String);
+  }
+  return String(value);
+};
+
+const toFrontmatterInput = (data: Record<string, unknown>): FrontmatterInput => {
+  const result: FrontmatterInput = {};
+  for (const [key, value] of Object.entries(data)) {
+    result[key] = toFrontmatterValue(value);
+  }
+  return result;
+};
+
+/** The only fields finalize reads off a `groups.json` entry: the rule it stamps onto its diagnostics. */
+type ManifestRuleInfo = { ruleId?: string; severity?: Severity };
+
+const isSeverity = (value: unknown): value is Severity => value === 'error' || value === 'warn';
+
+/** Read one `groups.json` entry's rule info, tolerating an unrecognized/malformed shape. */
+const manifestRuleInfo = (value: unknown): ManifestRuleInfo | undefined => {
+  const record = asRecord(value);
+  if (!record) {
+    return undefined;
+  }
+  return {
+    ruleId: asString(record.ruleId),
+    severity: isSeverity(record.severity) ? record.severity : undefined,
+  };
+};
 
 const { values } = parseArgs({
   options: {
@@ -96,7 +160,7 @@ const resolveStoreDirs = () => {
 };
 
 /** Minimal REVIEW.md when a store only has groups/STAGING (orphan fragment run). */
-const ensureReviewStub = (storeDir, slug) => {
+const ensureReviewStub = (storeDir: string, slug: string): ReviewLike | null => {
   const reviewPath = join(storeDir, 'REVIEW.md');
   if (existsSync(reviewPath)) {
     return readReview(reviewPath);
@@ -114,7 +178,9 @@ const ensureReviewStub = (storeDir, slug) => {
   return { data, body: '' };
 };
 
-const finalizeStore = (storeDir) => {
+type FinalizeResult = { skipped: boolean; issues?: number };
+
+const finalizeStore = (storeDir: string): FinalizeResult => {
   const slug = basename(storeDir);
   const reviewPath = join(storeDir, 'REVIEW.md');
   const review = ensureReviewStub(storeDir, slug);
@@ -129,7 +195,9 @@ const finalizeStore = (storeDir) => {
   // Prefer group fragments (fresh run). After intermediates are pruned, --force
   // re-reads the already-stamped REVIEW.md body so ids/statuses can be refreshed.
   const manifestPath = join(storeDir, GROUPS_MANIFEST);
-  const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
+  const manifest: Record<string, unknown> = existsSync(manifestPath)
+    ? (asRecord(JSON.parse(readFileSync(manifestPath, 'utf8'))) ?? {})
+    : {};
   const groupsDir = join(storeDir, 'groups');
   const groupFiles = existsSync(groupsDir)
     ? readdirSync(groupsDir)
@@ -137,13 +205,13 @@ const finalizeStore = (storeDir) => {
         .sort()
     : [];
 
-  const diagnostics = [];
+  const diagnostics: Diagnostic[] = [];
   let fromGroups = false;
   if (groupFiles.length > 0) {
     fromGroups = true;
     for (const name of groupFiles) {
       const nn = name.replace(/\.md$/, '');
-      const rule = manifest[nn];
+      const rule = manifestRuleInfo(manifest[nn]);
       const parsed = parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8'), `groups/${name}`);
       for (const diagnostic of parsed) {
         // Rule severity + id win; fall back to the parsed value only for a manifest-less run.
@@ -164,8 +232,8 @@ const finalizeStore = (storeDir) => {
   }
 
   // Dedupe identical diagnostics, then sort by file/line for a stable report.
-  const seen = new Set();
-  const merged = [];
+  const seen = new Set<string>();
+  const merged: Diagnostic[] = [];
   for (const diagnostic of diagnostics) {
     const key = diagnosticKey(diagnostic);
     if (!seen.has(key)) {
@@ -175,13 +243,11 @@ const finalizeStore = (storeDir) => {
   }
   merged.sort(compareDiagnostics);
 
-  const reviewId = reviewIdFromStore(slug, review.data.commit);
+  const reviewId = reviewIdFromStore(slug, asString(review.data.commit));
   // Fresh from groups → assign ids; REVIEW re-read → keep existing ids.
-  const numbered = fromGroups
+  const numbered: IssuedDiagnostic[] = fromGroups
     ? assignIssueIds(merged, reviewId)
-    : merged.map((diagnostic, index) =>
-        diagnostic.id != null ? diagnostic : { ...diagnostic, id: `${reviewId}-${index + 1}` },
-      );
+    : merged.map((diagnostic, index) => ({ ...diagnostic, id: diagnostic.id ?? `${reviewId}-${index + 1}` }));
 
   const counts = { error: 0, warn: 0 };
   for (const diagnostic of numbered) {
@@ -190,31 +256,32 @@ const finalizeStore = (storeDir) => {
 
   const groupCount = fromGroups ? groupFiles.length : Number(review.data.groups) || 0;
   const appliedRuleIds = [
-    ...new Set(numbered.map((diagnostic) => diagnostic.ruleId).filter((id) => id && id !== 'unknown')),
+    ...new Set(
+      numbered.map((diagnostic) => diagnostic.ruleId).filter((id): id is string => Boolean(id) && id !== 'unknown'),
+    ),
   ].sort();
 
   // Preserve agent-updated statuses on --force; new issues default to unresolved.
   const resolutionPath = join(storeDir, RESOLUTION_FILE);
-  let priorStatuses = null;
+  let priorStatuses: Map<string, ResolutionStatus> | null = null;
   if (existsSync(resolutionPath)) {
     try {
       priorStatuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
     } catch (error) {
       // A corrupt RESOLUTION.md must not abort finalize, but surface it —
       // silently resetting every issue to unresolved would hide lost statuses.
-      console.error(
-        `warning: ${slug}/${RESOLUTION_FILE} unparseable (${error.message}); statuses reset to unresolved.`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`warning: ${slug}/${RESOLUTION_FILE} unparseable (${message}); statuses reset to unresolved.`);
       priorStatuses = null;
     }
   }
 
   const frontmatter = renderFrontmatter({
-    ...review.data,
+    ...toFrontmatterInput(review.data),
     isFinalized: true,
     reviewId,
     groups: groupCount,
-    rules: appliedRuleIds.length > 0 ? appliedRuleIds : review.data.rules,
+    rules: appliedRuleIds.length > 0 ? appliedRuleIds : asStringArray(review.data.rules),
   });
   const bodyBlocks =
     numbered.length === 0

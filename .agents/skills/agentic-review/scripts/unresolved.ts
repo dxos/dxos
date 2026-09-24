@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 //
 // Copyright 2026 DXOS.org
 //
@@ -7,7 +7,7 @@
 // `.agents/reviews/`. Agents flip statuses in each run's RESOLUTION.md.
 //
 // Usage:
-//   node unresolved.mjs [--path=<substr|glob>] [--rule=<rule-id>]
+//   bun unresolved.ts [--path=<substr|glob>] [--rule=<rule-id>]
 //
 // `--path` matches if the issue file contains the substring (case-sensitive), or
 // — when the value includes `*`/`?` — if it matches as a glob against the file
@@ -17,10 +17,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { parseDiagnostics, renderDiagnostic } from '../lib/diagnostics.mjs';
-import { repoRoot } from '../lib/git.mjs';
-import { parseResolution, RESOLUTION_FILE } from '../lib/resolution.mjs';
-import { REVIEWS_DIR, readReview } from '../lib/store.mjs';
+import { parseDiagnostics, renderDiagnostic } from '../lib/diagnostics.ts';
+import { repoRoot } from '../lib/git.ts';
+import { parseResolution, RESOLUTION_FILE } from '../lib/resolution.ts';
+import { REVIEWS_DIR, readReview } from '../lib/store.ts';
 
 const { values } = parseArgs({
   options: {
@@ -37,7 +37,7 @@ if (!existsSync(reviewsPath)) {
 }
 
 /** Convert a minimal glob (`*`, `**`, `?`) to a anchored RegExp. */
-const globToRegExp = (pattern) => {
+const globToRegExp = (pattern: string): RegExp => {
   let source = '';
   for (let index = 0; index < pattern.length; index++) {
     const char = pattern[index];
@@ -57,8 +57,11 @@ const globToRegExp = (pattern) => {
   return new RegExp(`^${source}$`);
 };
 
+/** Message of a caught value, whether or not it is an `Error`. */
+const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
 /** True when `file` satisfies the optional `--path` filter. */
-const pathMatches = (file, filter) => {
+const pathMatches = (file: string, filter: string | undefined): boolean => {
   if (!filter) {
     return true;
   }
@@ -91,7 +94,7 @@ for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b
   try {
     statuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
   } catch (error) {
-    console.error(`${entry.name}/${RESOLUTION_FILE}: ${error.message}`);
+    console.error(`${entry.name}/${RESOLUTION_FILE}: ${messageOf(error)}`);
     process.exitCode = 1;
     continue;
   }
@@ -100,7 +103,7 @@ for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b
   try {
     diagnostics = parseDiagnostics(review.body, `${entry.name}/REVIEW.md`);
   } catch (error) {
-    console.error(`${entry.name}/REVIEW.md: ${error.message}`);
+    console.error(`${entry.name}/REVIEW.md: ${messageOf(error)}`);
     process.exitCode = 1;
     continue;
   }

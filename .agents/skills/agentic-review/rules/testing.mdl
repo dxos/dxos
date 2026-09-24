@@ -1,0 +1,133 @@
+---
+id: org.dxos.review.testing
+name: TestingRules
+version: 0.1.0
+---
+
+Testing conventions mined from a year of human review comments on `dxos/dxos`,
+clustered into candidate rules in
+`.agents/projects/architecture-rules/dataset/CANDIDATES.md`. Each `rule` block
+below is discovered by the agentic-review harness, matched against the files
+its globs select, and applied by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule reuse-shared-test-layer: Build tests on the project's shared test layer, not a hand-rolled mock
+  A hand-rolled mock, stub, or bespoke `Layer.mergeAll` stack duplicates setup
+  a shared test layer, database fixture, or faker utility already provides —
+  and the two drift the moment one is updated and the other isn't. Flag a test
+  file that builds its own in-memory mock/stub for a service, database, or
+  peer when a sibling test already gets one from a shared layer or a
+  package's `testing/` module (e.g. `AssistantTestLayer`); a custom `Layer`
+  stack duplicating one that exists; hand-rolled fixture data where a shared
+  faker/random utility already exists. Do not flag the first test in a
+  package establishing a genuinely new shared layer, or a trivial one-line
+  helper whose body is a single call to the real API — inlining that call is
+  correct, not a violation (that failure is `no-trivial-wrappers-over-official-apis`).
+  Fix: import the existing shared layer/helper/fixture and delete the local
+  duplicate.
+  Source: 19 review comments across 12 PRs, e.g. https://github.com/dxos/dxos/pull/10711#discussion_r2914097609.
+  scope: repo
+  files:
+    - packages/**/*.test.ts
+    - packages/**/*.test.tsx
+  unit: file
+  context: similar
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule test-real-scenario-not-narrower-proxy: A test claiming end-to-end coverage must drive the real production path
+  A test that stands in for an end-to-end path, an agent's own tool use, a
+  distributed property, or a new integration point earns nothing if it drives
+  a scripted stand-in, a single narrower case, or a parallel test-only
+  implementation instead of the real production code. Flag a test harness
+  that performs the agent's action on its behalf instead of letting the agent
+  invoke the tool; an e2e-labeled test built on a bespoke test-only layer that
+  reimplements production logic; a redundant lower-fidelity unit test kept
+  alongside an e2e test that already covers the same behavior; a feature with
+  two code paths (e.g. streaming/non-streaming) tested on only one; a new
+  query/integration source tested only through an internal helper instead of
+  the public API. Do not flag a genuine unit test of a pure function with no
+  cross-cutting flow to exercise, or a lower-fidelity test covering a case the
+  e2e test does not.
+  Source: 9 review comments across 9 PRs, e.g. https://github.com/dxos/dxos/pull/10934#discussion_r3050615600.
+  scope: repo
+  files:
+    - packages/**/*.test.ts
+    - packages/**/*.test.tsx
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule test-asserts-real-behavior: A test must run and assert the real outcome, never be disabled or check only wiring
+  `test.only`/`describe.only` left in committed code silently skips the rest
+  of the suite; commented-out assertions leave a test verifying nothing; a
+  test whose only assertion is that a check exists and is wired up, rather
+  than the behavior the check is meant to catch, passes even when that
+  behavior is broken. Flag `.only` on a test/describe block outside a clearly
+  marked local-debugging commit; assertions commented out or missing on the
+  result under test; a test asserting presence/association only rather than
+  the actual behavior. Fix: remove `.only`, restore the real assertions, and
+  assert on the actual behavior, not just that something ran.
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/10237#discussion_r2568313158.
+  scope: repo
+  files:
+    - packages/**/*.test.ts
+    - packages/**/*.test.tsx
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule isolate-benchmark-setup-and-flaky-tests: Move one-time setup out of the measured block; isolate flaky tests, never downgrade to reporting-only
+  Lazily memoizing setup inside a benchmark's measured function folds
+  first-call init cost into the number being reported, and marking a flaky
+  test reporting-only instead of isolating its resource hides a real
+  isolation bug behind a green build. This is the non-sleep half of test
+  isolation; waiting on sleeps/timeouts instead of a real signal is already
+  covered by `no-sleep-in-test`. Flag setup code lazily memoized inside a
+  measured `bench`/loop body instead of a `beforeEach`/`beforeAll` hook; a
+  flaky test whose fix is `reporting-only`/soft-fail annotation rather than
+  giving it its own isolated resource (e.g. a separate process). Do not flag
+  a test whose shared-resource use is already isolated by construction (one
+  fixture per test file, a fresh temp dir per run).
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/13199#discussion_r4044891766.
+  scope: repo
+  files:
+    - packages/**/*.bench.ts
+    - packages/**/*.test.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

@@ -13,13 +13,13 @@ const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
  * Strip a trailing ` # comment` from an unquoted scalar. A `#` without leading
  * whitespace is kept, so values like `a#b` survive.
  */
-const stripComment = (value) => {
+const stripComment = (value: string): string => {
   const match = value.match(/\s+#.*$/);
-  return match ? value.slice(0, match.index) : value;
+  return match?.index != null ? value.slice(0, match.index) : value;
 };
 
 /** Unwrap matching single/double quotes; otherwise return the trimmed input. */
-export const unquote = (value) => {
+export const unquote = (value: string): string => {
   const trimmed = value.trim();
   if (trimmed.length >= 2 && (trimmed[0] === '"' || trimmed[0] === "'") && trimmed.at(-1) === trimmed[0]) {
     return trimmed.slice(1, -1);
@@ -28,26 +28,27 @@ export const unquote = (value) => {
 };
 
 /** Parse an inline flow sequence `[a, b, "c"]` into an array of scalars. */
-const parseInlineArray = (value) =>
+const parseInlineArray = (value: string): string[] =>
   value
     .slice(1, -1)
     .split(',')
     .map((item) => unquote(item.trim()))
     .filter((item) => item.length > 0);
 
-/**
- * Parse a leading `---` frontmatter block plus the markdown body.
- *
- * @param {string} text
- * @returns {{ data: Record<string, string|string[]>, body: string }}
- */
-export const parseFrontmatter = (text) => {
+/** Frontmatter data: each key is a scalar or a list of scalars. */
+export type FrontmatterData = Record<string, string | string[]>;
+
+/** A parsed frontmatter document: its data block and the markdown body that follows. */
+export type ParsedFrontmatter = { data: FrontmatterData; body: string };
+
+/** Parse a leading `---` frontmatter block plus the markdown body. */
+export const parseFrontmatter = (text: string): ParsedFrontmatter => {
   const match = text.match(FRONTMATTER_RE);
   if (!match) {
     throw new Error('missing YAML frontmatter (expected a leading `---` block)');
   }
   const [, front, body] = match;
-  const data = {};
+  const data: FrontmatterData = {};
   const lines = front.split(/\r?\n/);
 
   for (let index = 0; index < lines.length; index++) {

@@ -55,16 +55,120 @@ rule obj-update-push: Append inside Obj.update with push, not spread
   severity: warn
 ```
 
+```mdl
+rule schema-field-uses-platform-reference-mechanism: A field naming another entity uses Ref, a relation, foreignKeys, or an annotation — never a duplicate ad hoc field
+  This covers schema-field design; `operations-take-refs-not-ids` already
+  covers the narrower case of an operation's own input fields. When a type's
+  field represents an existing domain entity, an external system's id, or a
+  well-known piece of schema metadata, it should use the platform's own
+  mechanism for it instead of inlining a duplicate ad hoc field or overloading
+  a generic key/value slot — the duplicate drifts from the canonical field the
+  moment either one is edited alone. Flag a new type field duplicating fields
+  already on a canonical shared type instead of referencing it; a custom
+  external-id field instead of `meta.foreignKeys`; a well-known metadata key
+  stuffed into a generic `meta.key` slot instead of its own annotation; a
+  low-level DXN passed around instead of a typed `Ref` to the owning object.
+  Do not flag a field with genuinely no existing canonical counterpart yet, or
+  an id crossing a real serialization boundary where a lightweight string is
+  the established wire shape.
+  Source: 8 review comments across 6 PRs, e.g. https://github.com/dxos/dxos/pull/11018#discussion_r3103390875.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule query-capability-extends-filter-query-dsl: A new querying/ordering/reference capability extends Filter/Query, not a parallel ad hoc mechanism
+  This specializes `one-mechanism-per-concern` with ECHO's own Filter/Query
+  DSL boundary, which a repo-wide architecture rule can't know without ECHO
+  domain context: when ECHO needs a new capability for querying, ordering, or
+  reference conversion, it belongs on the existing `Filter`/`Query` API and
+  its typed helpers, not as a standalone type, a bespoke scope-specific
+  option, or hand-rolled sort/parsing logic living beside it. Flag a new
+  standalone type or option living beside `Filter`/`Query` instead of folded
+  into it; a local reimplementation of sort/ordering or reference-conversion
+  logic that a shared `Order`/DXN helper already provides. Do not flag a
+  genuinely new query primitive with no existing analog to extend. Fix: fold
+  the capability into `Filter`/`Query`, and call the existing typed helper
+  instead of hand-rolling it.
+  Source: 4 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/12615#discussion_r3790898660.
+  scope: repo
+  files:
+    - packages/core/echo/**/*.ts
+    - packages/sdk/**/*.ts
+  unit: file
+  context: similar
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule schema-persists-source-not-derived-duplicate: Persist the canonical source only; derive the rest, and keep one identifier field per referenceable thing
+  This covers persisted-schema duplication; mirroring an ECHO query's live
+  results into a separate UI signal instead of subscribing directly is
+  already covered by `write-through-the-live-object` ("derive, don't sync").
+  When a derived representation — an AST parsed from a grammar string, for
+  instance — is always computable from a source the schema already stores,
+  persisting both independently gives the two a chance to disagree, and two
+  fields that both claim to identify the same thing leave no single answer to
+  "what is this thing's id". Flag a schema/type persisting both a canonical
+  field and its independently-derived form; two fields on the same type that
+  both claim to identify the same referenceable thing. Do not flag a derived
+  value cached behind a memoized getter that recomputes from the single
+  source when it changes. Fix: make the source the only persisted field and
+  compute the derived form from it; keep one designated id field.
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/9897#discussion_r2411539688.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule parent-ref-backs-parent-pointer: Setting a child's parent pointer must be backed by an actual ref or annotation on the parent
+  This is adjacent to `inline-obj-parent`, which covers *when* to set the
+  parent pointer at make time; this covers the parent side needing a matching
+  reference. Setting an object's parent pointer with no corresponding
+  reference (or annotation) added on the parent leaves a dangling one-way
+  edge — the child claims a parent that holds nothing pointing back at it, so
+  any traversal or cascade that walks from the parent misses the child
+  entirely. Flag code that sets a child's parent pointer with no
+  corresponding ref/annotation added on the parent side in the same change.
+  Do not flag a purely computed/derived parent-child edge that the codebase
+  has deliberately chosen not to back with a stored ref, stated as such. Fix:
+  add the ref or annotation on the parent alongside the parent-edge write, or
+  enforce it as an invariant in the setter.
+  Source: 2 review comments across 1 PR, e.g. https://github.com/dxos/dxos/pull/12675#discussion_r3816670221.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  grep: Obj\.setParent|Obj\.Parent
+  unit: file
+  context: diff
+  system-one: on
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl
 ext rule
   uri: org.dxos.mdl.rule@1.0
-  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
   inline-prose: true
   fields:
-    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
-    grep?:      Prose             # optional regex pre-filter over file contents
-    severity?:  warn | error      # defaults to warn
-    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
 ```

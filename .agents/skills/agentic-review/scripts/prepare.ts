@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 //
 // Copyright 2026 DXOS.org
 //
@@ -8,7 +8,7 @@
 // group for subagents, and write the review store.
 //
 // Usage:
-//   node prepare.mjs [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
+//   bun prepare.ts [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
 //                    [--slug=<slug>] [--pr-only]
 //
 // Default: no prior finalized review → every rule scans the whole project; a
@@ -26,7 +26,7 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { discoverRules, groupRuleMatches, listRepoFiles, matchRuleFiles } from '../lib/discover.mjs';
+import { discoverRules, groupRuleMatches, listRepoFiles, matchRuleFiles, type RuleMatch } from '../lib/discover.ts';
 import {
   changedFiles,
   commitTimestamp,
@@ -38,7 +38,7 @@ import {
   mainMergeBase,
   repoRoot,
   shortSha,
-} from '../lib/git.mjs';
+} from '../lib/git.ts';
 import {
   assertSafeSlug,
   FULL_BASE,
@@ -48,7 +48,11 @@ import {
   renderFrontmatter,
   reviewSlug,
   ruleIdsFromReviewDir,
-} from '../lib/store.mjs';
+  type GroupsManifest,
+} from '../lib/store.ts';
+
+/** A rule match extended with the scope this run resolved for it. */
+type ScopedRuleMatch = RuleMatch & { scope: 'full' | 'delta' };
 
 const { values } = parseArgs({
   options: {
@@ -87,10 +91,15 @@ if (existsSync(storeDir)) {
  * newest such commit (for incremental diffs) and the union of rule ids those
  * runs covered (so a brand-new rule still gets a full-project first pass).
  */
-const scanPriorReviews = () => {
+/** Frontmatter's `commit` field is a single scalar in practice; reject the (unused) list form. */
+const asCommit = (value: string | string[] | undefined): string | null => (typeof value === 'string' ? value : null);
+
+type PriorReviewScan = { newest: { commit: string; timestamp: number } | null; seenRuleIds: Set<string> };
+
+const scanPriorReviews = (): PriorReviewScan => {
   const reviewsPath = join(root, REVIEWS_DIR);
-  let newest = null;
-  const seenRuleIds = new Set();
+  let newest: PriorReviewScan['newest'] = null;
+  const seenRuleIds = new Set<string>();
   if (!existsSync(reviewsPath)) {
     return { newest, seenRuleIds };
   }
@@ -100,7 +109,7 @@ const scanPriorReviews = () => {
     }
     const dir = join(reviewsPath, entry.name);
     const review = readReview(join(dir, 'REVIEW.md'));
-    const commit = review?.data?.commit;
+    const commit = asCommit(review?.data?.commit);
     if (!review || String(review.data.isFinalized) !== 'true' || !commit) {
       continue;
     }
@@ -132,7 +141,7 @@ const scanPriorReviews = () => {
 };
 
 /** Diff base for incremental / `--pr-only` runs. */
-const resolveDiffBase = (priorCommit) => {
+const resolveDiffBase = (priorCommit: string | null): string => {
   if (values.base) {
     return values.base;
   }
@@ -149,8 +158,8 @@ const { newest: prior, seenRuleIds } = scanPriorReviews();
 const priorCommit = prior?.commit ?? null;
 const projectFiles = listRepoFiles();
 
-let base;
-let changed = null;
+let base: string;
+let changed: Set<string> | null = null;
 if (prOnly) {
   base = resolveDiffBase(priorCommit);
   changed = new Set([...changedFiles(base)].filter((path) => projectFiles.has(path)));
@@ -163,7 +172,7 @@ if (prOnly) {
 }
 
 const rules = discoverRules(root);
-const ruleMatches = [];
+const ruleMatches: ScopedRuleMatch[] = [];
 for (const rule of rules) {
   const isNewRule = !seenRuleIds.has(rule.id);
   const useFull = !prOnly && (base === FULL_BASE || isNewRule);
@@ -208,7 +217,7 @@ const staging = [
   'reviews its files against the rule and appends diagnostics to the named fragment.',
   '',
 ];
-const manifest = {};
+const manifest: GroupsManifest = {};
 const appliedRuleIds = [...new Set(groups.map((group) => group.rule.id))].sort();
 for (const group of groups) {
   const nn = String(group.n).padStart(2, '0');
@@ -216,7 +225,9 @@ for (const group of groups) {
     ruleId: group.rule.id,
     severity: group.rule.severity,
     title: group.rule.title,
-    scope: group.scope,
+    scope: group.scope ?? 'delta',
+    // The System One checker reads the file list from here rather than parsing STAGING.md.
+    files: group.files,
   };
   const scopeLine =
     group.scope === 'full'
@@ -229,6 +240,15 @@ for (const group of groups) {
     '',
     scopeLine,
     '',
+    ...(group.rule.unit === 'pr'
+      ? ['**Unit:** the change set as a whole — judge what the listed files add or leave behind together.', '']
+      : []),
+    ...(group.rule.context.length > 0
+      ? [
+          `**Context the rule needs beside each file:** ${group.rule.context.map((kind) => `\`${kind}\``).join(', ')}.`,
+          '',
+        ]
+      : []),
     '**Rule instructions:**',
     '',
     group.rule.instructions,
@@ -258,7 +278,7 @@ const reviewFrontmatter = renderFrontmatter({
 });
 writeFileSync(join(storeDir, 'REVIEW.md'), `${reviewFrontmatter}\n<!-- diagnostics merged here at finalize -->\n`);
 
-const rel = (path) => path.slice(root.length + 1);
+const rel = (path: string): string => path.slice(root.length + 1);
 console.log(`STAGING: ${rel(join(storeDir, 'STAGING.md'))}`);
 console.log(`REVIEW:  ${rel(join(storeDir, 'REVIEW.md'))}`);
 console.log(`base:    ${base}`);

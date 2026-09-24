@@ -117,12 +117,12 @@ Column is optional.
 - **Finalize** rewrites each diagnostic as
   `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\``and writes`RESOLUTION.md` bullets
 (`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>`,
-all seeded unresolved). `unresolved.mjs` re-prints open issues across all runs
+all seeded unresolved). `unresolved.ts` re-prints open issues across all runs
 (`--path`/`--rule`).
 
 ## Workflow (three steps)
 
-### Step 1 — prepare (`prepare.mjs`)
+### Step 1 — prepare (`prepare.ts`)
 
 1. Discover all `rule` blocks across the repo's `.mdl` files (walk repo, honor
    `.gitignore`; non-rule blocks and descriptor documents are skipped).
@@ -164,7 +164,7 @@ model. Each subagent is handed: its group number, the rule (title + instructions
 Subagents report **only** violations of their assigned rule — no general review,
 no style opinions outside the rule. If clean, the fragment stays empty.
 
-### Step 3 — finalize (`finalize.mjs`)
+### Step 3 — finalize (`finalize.ts`)
 
 1. Parse every `groups/NN.md`, validating diagnostic headers (a malformed one
    fails the run); collect them, stamping each with its group's rule-fixed
@@ -184,10 +184,10 @@ only.
 `.agents/skills/agentic-review/` (name TBD — avoids the built-in `/review` and
 `/code-review`). Contains:
 
-- `SKILL.md` — the workflow the harness follows: run `prepare.mjs`, read the
+- `SKILL.md` — the workflow the harness follows: run `prepare.ts`, read the
   group count, spawn that many **Sonnet** Task subagents with the per-group
-  brief, wait, then run `finalize.mjs`. Includes the subagent prompt template.
-- `scripts/prepare.mjs`, `scripts/finalize.mjs`, and a shared `lib/` (mdl parser,
+  brief, wait, then run `finalize.ts`. Includes the subagent prompt template.
+- `scripts/prepare.ts`, `scripts/finalize.ts`, and a shared `lib/` (mdl parser,
   git helpers, diagnostic parser).
 - Example rules seeded from existing `CLAUDE.md` non-negotiables (no-sleep-in-test,
   no-casts, no-compat-shims, private-new-packages, workspace-deps).
@@ -208,7 +208,7 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 
 1. ~~**Skill name.**~~ **Resolved: `agentic-review`** (avoids built-in `/review`,
    `/code-review`).
-2. ~~**Trigger priority.**~~ **Resolved: manual/local flow first.** `finalize.mjs`
+2. ~~**Trigger priority.**~~ **Resolved: manual/local flow first.** `finalize.ts`
    writes `REVIEW.md` only; PR-comment posting is Phase 3.
 3. ~~**Severity authority.**~~ **Resolved: rule-fixed** for determinism — subagents
    do not adjust severity.
@@ -238,7 +238,7 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
   one full pass. `--pr-only` keeps diff-only (newest HEAD-ancestor review, else
   merge-base with `origin/main` / `main`, else HEAD).
 - Grouping favors few rules per group over few files (focus over packing).
-- Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
+- Scripts are dependency-free TypeScript run with Bun (originally Node ESM `.mjs`) — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
 - Finalize keeps only `REVIEW.md` + `RESOLUTION.md`; staging/group intermediates
