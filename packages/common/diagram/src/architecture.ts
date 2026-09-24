@@ -17,9 +17,12 @@ import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 import type * as Mermaid from './mermaid.ts';
 import type * as Score from './score.ts';
 
-/** What a diagram says, stripped of geometry: the input every rule is judged against. */
+/** What a diagram says, plus optionally how it is drawn: the input every rule is judged against. */
 export const Content = Schema.Struct({
   title: Schema.optional(Schema.String),
+  layout: Schema.optional(Schema.String).annotate({
+    description: 'A text rendering of the drawn page (`View`), so placement can be judged as a reader sees it.',
+  }),
   groups: Schema.Array(Schema.Struct({ id: Schema.String, label: Schema.String })),
   nodes: Schema.Array(
     Schema.Struct({ id: Schema.String, label: Schema.String, group: Schema.optional(Schema.String) }),
@@ -34,9 +37,13 @@ export const Content = Schema.Struct({
 });
 export type Content = Schema.Schema.Type<typeof Content>;
 
-/** The content of a parsed mermaid graph. */
-export const contentOf = (graph: Mermaid.MermaidGraph, title?: string): Content => ({
+/** The content of a parsed mermaid graph, with an optional caption and text rendering of its layout. */
+export const contentOf = (
+  graph: Mermaid.MermaidGraph,
+  { title, layout }: { title?: string; layout?: string } = {},
+): Content => ({
   ...(title ? { title } : {}),
+  ...(layout ? { layout } : {}),
   groups: graph.groups.map(({ id, label }) => ({ id, label })),
   nodes: graph.nodes.map(({ id, label, group }) => ({ id, label, ...(group ? { group } : {}) })),
   edges: graph.edges.map(({ from, to, label }) => ({ from, to, ...(label ? { label } : {}) })),
@@ -55,7 +62,7 @@ export type Rule = {
 
 const HOW_TO_READ =
   'The input is an architecture diagram: nodes are components, groups are layers or packages, and an edge ' +
-  '`from → to` means `from` depends on, calls or owns `to`.';
+  '`from → to` means `from` depends on, calls or owns `to`. When `layout` is present it shows the page as drawn.';
 
 const rule = (id: string, key: string, description: string, question: string, criteria: Rule['criteria']): Rule => ({
   id,

@@ -47,6 +47,18 @@ tasks:
       cache: false
       runInCI: false
 
+  eval-layout-views:
+    # Compares System One reading each `View` rendering with a reference that saw the image; needs TYPESAFE_API_KEY.
+    command: vite-node scripts/eval-layout-views.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
   check-module-structure:
     # The plugin now generates node/workerd capability barrels, so the headless entry must stay
     # UI-free: fail if React ever becomes reachable from it under either condition.

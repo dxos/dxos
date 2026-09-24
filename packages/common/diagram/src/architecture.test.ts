@@ -45,12 +45,14 @@ const stubModel = (probability: number, calls: { count: number; questions: strin
   );
 
 describe('architecture', () => {
-  test('content keeps groups, nodes and edges but no geometry', ({ expect }) => {
-    const content = contentOf(parse(SOURCE), 'Toy');
+  test('content keeps groups, nodes and edges, and a layout only when given one', ({ expect }) => {
+    const content = contentOf(parse(SOURCE), { title: 'Toy' });
     expect(content.title).toBe('Toy');
     expect(content.groups.map(({ id }) => id)).toEqual(['app', 'core']);
     expect(content.nodes.find(({ id }) => id === 'Db')?.group).toBe('core');
     expect(content.edges).toContainEqual({ from: 'Db', to: 'Store', label: 'writes' });
+    expect(content.layout).toBeUndefined();
+    expect(contentOf(parse(SOURCE), { layout: 'row 1 (top): "Db"' }).layout).toBe('row 1 (top): "Db"');
   });
 
   test('every rule is answered by one batched call', ({ expect }) => {

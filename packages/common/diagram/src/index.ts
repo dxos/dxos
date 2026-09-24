@@ -20,3 +20,4 @@ export * as UmlEngine from './uml-engine.ts';
 export * as UmlGrid from './uml-grid.ts';
 export * as UmlRules from './uml-rules.ts';
 export * as UmlSearch from './uml-search.ts';
+export * as View from './view.ts';

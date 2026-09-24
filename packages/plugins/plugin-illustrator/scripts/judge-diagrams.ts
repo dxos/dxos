@@ -54,7 +54,7 @@ const judgeFile = (path: string) =>
     const subject = {
       objects,
       report: Diagnostics.analyze(objects),
-      content: Architecture.contentOf(graph, titleOf(source)),
+      content: Architecture.contentOf(graph, { title: titleOf(source) }),
     };
     const scores = yield* Score.evaluate(SOURCES, subject);
     return { name: basename(path, '.mmd'), graph, scores };
