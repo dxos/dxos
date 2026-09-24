@@ -8,7 +8,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { ConfigService, resolveTelemetryTag } from '@dxos/config';
+import { ConfigService } from '@dxos/config';
 import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostService,
@@ -16,13 +16,7 @@ import {
   MeshEchoReplicatorLayer,
   MeshEchoReplicatorService,
 } from '@dxos/echo-host';
-import {
-  EdgeClient,
-  EdgeConnectionService,
-  EdgeHttpClient,
-  EdgeHttpClientService,
-  createStubEdgeIdentity,
-} from '@dxos/edge-client';
+import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { Hook } from '@dxos/effect';
 import {
   HypercoreFactoryLayer,
@@ -32,13 +26,8 @@ import {
   HypercoreStoreService,
 } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyringLayer } from '@dxos/keyring';
-import {
-  EdgeSignalManager,
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  SignalManagerService,
-} from '@dxos/messaging';
-import { SwarmNetworkManagerService, createIceProvider, createRtcTransportFactory } from '@dxos/network-manager';
+import { SignalManagerService } from '@dxos/messaging';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import {
   ContactsService,
@@ -50,7 +39,6 @@ import {
   IdentityService,
   InvitationsService,
   LoggingService,
-  NetworkService,
   QueryService,
   SpacesService,
   SystemService,
@@ -84,19 +72,17 @@ import {
   InvitationsServiceLayer,
 } from '../invitations/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
+import * as Mesh from '../mesh/index.ts';
 import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
-import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
-import { TransportFactoryService } from './client-platform.ts';
 import {
   CrossDeviceSpaceSynchronizerLayer,
   CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer.ts';
 import { FeedSyncerLayer, FeedSyncerService } from './feed-syncer.ts';
-import { NetworkLifecycleLayer, SwarmNetworkManagerLayer } from './network-lifecycle.ts';
 import {
   type ServiceStackServices,
   StorageMigrationService,
@@ -116,24 +102,6 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
   !!options.edgeFeatures?.subductionReplicator && !!options.edgeAvailable;
 
 /**
- * The client stack as a list of {@link LayerSpec.LayerSpec}s for a `LayerStack` to aggregate: each
- * spec declares the tags it needs and the tags it provides, so build order — and which specs are
- * built at all — follows from the graph rather than from a hand-written `provideMerge` chain.
- *
- * Two conventions carry the behaviour the chain used to encode:
- *
- * - A spec whose point is a side effect provides no tag for anyone to request (a lifecycle
- *   subscription, an rpc registration, a replicator attaching itself to the echo host), so it is
- *   `eager`.
- * - Anything conditional is conditional *within* a spec: a spec that needs the edge requires the
- *   edge tags, which the embedder supplies ambiently only with an endpoint configured, and an
- *   unsatisfied requirement prunes the spec. Option-driven choices (p2p replication, subduction)
- *   are made inside the spec body.
- *
- * The embedder supplies {@link ConfigService}, {@link Hook.Controller}, the SQL services, the
- * platform inputs and — when configured — the edge clients as the stack's ambient services.
- */
-/**
  * The client stack as {@link LayerSpec.LayerSpec}s for a `LayerStack` to aggregate: each spec
  * declares the tags it needs and the tags it provides, so build order — and which specs are built at
  * all — follows from the graph rather than from a hand-written `provideMerge` chain.
@@ -151,84 +119,6 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
  * The embedder supplies {@link ConfigService}, {@link Hook.Controller}, the SQL services, the
  * platform inputs and — when configured — the edge clients as the stack's ambient services.
  */
-
-//
-// Platform inputs. These were a layer the embedder provided beneath the stack; as specs the edge
-// clients are conditional like any other spec rather than an ambient service that may or may not be
-// there, which is what lets the stack declare its ambient requirements as tags.
-//
-
-/** Only included with a configured endpoint, so the tags exist exactly when the clients do. */
-export const EdgeClientsSpec = LayerSpec.make(
-  { affinity: 'application', requires: [ConfigService], provides: [EdgeConnectionService, EdgeHttpClientService] },
-  () =>
-    Layer.unwrap(
-      Effect.gen(function* () {
-        const config = yield* ConfigService;
-        const endpoint = config.get('runtime.services.edge.url')!;
-        const clientTag = resolveTelemetryTag(config);
-        return Layer.mergeAll(
-          // Dialing is driven by `NetworkingEnabled` rather than open, so boot RPCs are not competing
-          // with the outbound connection.
-          Layer.sync(
-            EdgeConnectionService,
-            () => new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag, deferConnect: true }),
-          ),
-          Layer.sync(EdgeHttpClientService, () => new EdgeHttpClient(endpoint, { clientTag })),
-        );
-      }),
-    ),
-);
-
-export const SignalManagerSpec = (options: ServiceStackServices) => {
-  const signalManager = options.signalManager;
-  if (signalManager) {
-    return LayerSpec.make({ affinity: 'application', requires: [], provides: [SignalManagerService] }, () =>
-      Layer.succeed(SignalManagerService, signalManager),
-    );
-  }
-  // Edge is the only real signaling transport; without it there is no cross-process signaling, so
-  // the spec takes the edge connection exactly when one will exist.
-  const edgeSignaling = !!options.edgeFeatures?.signaling && !!options.edgeAvailable;
-  return LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: edgeSignaling ? [EdgeConnectionService] : [],
-      provides: [SignalManagerService],
-    },
-    () =>
-      edgeSignaling
-        ? Layer.effect(
-            SignalManagerService,
-            Effect.map(EdgeConnectionService, (edgeConnection) => new EdgeSignalManager({ edgeConnection })),
-          )
-        : Layer.sync(SignalManagerService, () => new MemorySignalManager(new MemorySignalManagerContext())),
-  );
-};
-
-export const TransportFactorySpec = (options: ServiceStackServices) => {
-  const transportFactory = options.transportFactory;
-  if (transportFactory) {
-    return LayerSpec.make({ affinity: 'application', requires: [], provides: [TransportFactoryService] }, () =>
-      Layer.succeed(TransportFactoryService, transportFactory),
-    );
-  }
-  return LayerSpec.make(
-    { affinity: 'application', requires: [ConfigService], provides: [TransportFactoryService] },
-    () =>
-      Layer.effect(
-        TransportFactoryService,
-        Effect.gen(function* () {
-          const config = yield* ConfigService;
-          const iceProviders = config.get('runtime.services.iceProviders');
-          return createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            iceProviders && createIceProvider(iceProviders),
-          );
-        }),
-      ),
-  );
-};
 
 //
 // Storage.
@@ -295,27 +185,6 @@ export const StackReadinessSpec = LayerSpec.make(
   { affinity: 'application', requires: [Hook.Controller], provides: [Readiness.StackReadinessService] },
   () => Readiness.StackReadinessLayer,
 );
-
-export const SwarmNetworkManagerSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [SignalManagerService, TransportFactoryService],
-      provides: [SwarmNetworkManagerService],
-    },
-    () => SwarmNetworkManagerLayer({ connectionLog: options.connectionLog }),
-  );
-
-export const NetworkLifecycleSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [Hook.Controller, SwarmNetworkManagerService, IdentityContract.ManagerService, SignalManagerService],
-      provides: [],
-      eager: true,
-    },
-    () => NetworkLifecycleLayer({ autoConnect: options.autoConnect }),
-  );
 
 //
 // Identity and spaces.
@@ -634,20 +503,6 @@ export const SpacesServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SpacesService.Rpcs, SpacesService.Tag),
 );
 
-export const NetworkServiceSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [SwarmNetworkManagerService, SignalManagerService],
-    provides: [NetworkService.Tag],
-  },
-  () => NetworkServiceLayer,
-);
-
-export const NetworkServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [NetworkService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(NetworkService.Rpcs, NetworkService.Tag),
-);
-
 export const EdgeAgentServiceSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -748,9 +603,7 @@ export const DevtoolsHostRegistrationSpec = LayerSpec.make(
  * Every spec the client stack is built from, with the option-driven ones applied.
  */
 export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.LayerSpec[] => [
-  ...(options.edgeAvailable ? [EdgeClientsSpec] : []),
-  SignalManagerSpec(options),
-  TransportFactorySpec(options),
+  ...Mesh.specs({ ...options, edgeSignaling: !!options.edgeFeatures?.signaling }),
 
   SqliteStorageSpec,
   HypercoreStorageDirectorySpec,
@@ -762,8 +615,6 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   StorageLifecycleSpec,
 
   StackReadinessSpec,
-  SwarmNetworkManagerSpec(options),
-  NetworkLifecycleSpec(options),
 
   SpaceManagerSpec(options),
   IdentityManagerSpec(options),
@@ -796,8 +647,6 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   DevicesServiceRegistrationSpec,
   SpacesServiceSpec,
   SpacesServiceRegistrationSpec,
-  NetworkServiceSpec,
-  NetworkServiceRegistrationSpec,
   EdgeAgentServiceSpec,
   EdgeAgentServiceRegistrationSpec,
   DataServiceSpec,

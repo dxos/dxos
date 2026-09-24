@@ -7,6 +7,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
@@ -24,6 +26,7 @@ import {
   type QueryRequest,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { NetworkService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
   'constructor'(
@@ -161,4 +164,24 @@ export const NetworkServiceLayer: Layer.Layer<
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
     return new NetworkServiceImpl(networkManager, signalManager, edgeConnection);
   }),
+);
+
+/**
+ * Spec constructing the {@link NetworkService} handlers.
+ */
+export const NetworkServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [SwarmNetworkManagerService, SignalManagerService],
+    provides: [NetworkService.Tag],
+  },
+  () => NetworkServiceLayer,
+);
+
+/**
+ * Spec registering them with the router. Eager: a registration provides no tag.
+ */
+export const NetworkServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [NetworkService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(NetworkService.Rpcs, NetworkService.Tag),
 );

@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Mutex } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import {
@@ -25,20 +26,16 @@ import { SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-m
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { TransportFactoryService } from './client-platform.ts';
-
-export type SwarmNetworkManagerLayerOptions = {
-  /** @default true */
-  connectionLog?: boolean;
-};
+import { type Options, TransportFactoryService } from './interface.ts';
 
 /**
  * Constructs the swarm network manager over the ambient signal manager and transport factory.
  */
 export const SwarmNetworkManagerLayer = (
-  options: SwarmNetworkManagerLayerOptions = {},
+  options: Pick<Options, 'connectionLog'> = {},
 ): Layer.Layer<SwarmNetworkManagerService, never, SignalManagerService | TransportFactoryService> =>
   Layer.effect(
     SwarmNetworkManagerService,
@@ -57,18 +54,13 @@ export const SwarmNetworkManagerLayer = (
     }),
   );
 
-export type NetworkLifecycleLayerOptions = {
-  /** Emit `NetworkingEnabled` as soon as the stack is open; otherwise the embedder emits it. */
-  autoConnect?: boolean;
-};
-
 /**
  * Binds the current identity to edge, signaling, and swarm networking, and drives their lifecycle:
  * opens them once the identity is loaded, starts the edge dial when networking is enabled, and
  * closes them when the layer is destroyed.
  */
 export const NetworkLifecycleLayer = (
-  options: NetworkLifecycleLayerOptions = {},
+  options: Pick<Options, 'autoConnect'> = {},
 ): Layer.Layer<never, never, Hook.Controller | SwarmNetworkManagerService | SignalManagerService> =>
   Layer.effectDiscard(
     Effect.gen(function* () {
@@ -172,3 +164,30 @@ const createEdgeIdentity = async (params?: {
     [], // TODO(dmaretskyi): Service access credentials.
   );
 };
+
+/**
+ * Spec constructing the swarm network manager.
+ */
+export const SwarmNetworkManagerSpec = (options: Pick<Options, 'connectionLog'>) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [SignalManagerService, TransportFactoryService],
+      provides: [SwarmNetworkManagerService],
+    },
+    () => SwarmNetworkManagerLayer({ connectionLog: options.connectionLog }),
+  );
+
+/**
+ * Spec driving the network lifecycle. Eager: it provides no tag, it subscribes to identity.
+ */
+export const NetworkLifecycleSpec = (options: Pick<Options, 'autoConnect'>) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [Hook.Controller, SwarmNetworkManagerService, IdentityContract.ManagerService, SignalManagerService],
+      provides: [],
+      eager: true,
+    },
+    () => NetworkLifecycleLayer({ autoConnect: options.autoConnect }),
+  );

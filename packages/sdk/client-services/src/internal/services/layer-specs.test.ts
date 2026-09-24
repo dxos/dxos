@@ -29,7 +29,7 @@ import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
-import { TransportFactoryService } from './client-platform.ts';
+import { TransportFactoryService } from '../mesh/index.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 
 describe('clientServiceSpecs', () => {
