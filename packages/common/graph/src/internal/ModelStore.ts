@@ -15,14 +15,8 @@ export const modelStore = (
   hooks: GraphBuilder.StoreHooks,
 ): GraphBuilder.Store<GraphBuilder.ModelNode, GraphBuilder.ModelNodeArg, GraphBuilder.Model> => {
   const nodes = Atom.family<string, Atom.Atom<Option.Option<GraphBuilder.ModelNode>>>((id) =>
-    Atom.make((get) => Option.fromUndefinedOr(get(model.nodeAtom(id)))).pipe(
-      // Nothing subscribes to these, so they must cut off themselves; see `Store.node`.
-      Atom.setLazy(false),
-      Atom.withEquality(
-        (a: Option.Option<GraphBuilder.ModelNode>, b: Option.Option<GraphBuilder.ModelNode>) =>
-          Option.getOrUndefined(a) === Option.getOrUndefined(b),
-      ),
-    ),
+    // Non-lazy: nothing subscribes to these, and only a recompute lets the model's node atom cut off.
+    Atom.make((get) => Option.fromUndefinedOr(get(model.nodeAtom(id)))).pipe(Atom.setLazy(false)),
   );
 
   const addEdge = (edge: GraphBuilder.Edge): void => {

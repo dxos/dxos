@@ -49,9 +49,11 @@ export class ConnectorTracker<A> {
 
   readonly #connector = Atom.family((key: string) =>
     Atom.make((get) => {
-      // Runs when an input invalidates the atom, before anything recomputes it.
+      const value = this.#options.read(get, key);
+      // Runs when an input invalidates the atom, before anything recomputes it. Registered after the
+      // read, so a read that throws leaves nothing that the atom's removal could mark dirty again.
       get.addFinalizer(() => this.#invalidated(key));
-      return this.#options.read(get, key);
+      return value;
     }),
   );
 
@@ -64,13 +66,18 @@ export class ConnectorTracker<A> {
     return this.#dirty;
   }
 
-  /** Starts tracking `key`, dirty until its first read. */
-  track(key: string): void {
+  /** Starts tracking `key`, dirty until its first read; false once disposed. */
+  track(key: string): boolean {
     if (!this.#holder.current) {
-      return;
+      return false;
     }
     this.#live[anchorOf(key)].add(key);
     this.#invalidated(key);
+    return true;
+  }
+
+  tracks(key: string): boolean {
+    return this.#live[anchorOf(key)].has(key);
   }
 
   untrack(key: string): void {
@@ -113,7 +120,7 @@ export class ConnectorTracker<A> {
   }
 
   #invalidated(key: string): void {
-    if (this.#dirty.has(key) || !this.#live[anchorOf(key)].has(key)) {
+    if (this.#dirty.has(key) || !this.tracks(key)) {
       return;
     }
     this.#dirty.add(key);

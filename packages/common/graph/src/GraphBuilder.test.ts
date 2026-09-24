@@ -377,6 +377,89 @@ describe('GraphBuilder', () => {
     expect(inputRuns).to.equal(before);
   });
 
+  test('a connector whose read throws is abandoned, not re-read', async () => {
+    const { builder, children } = setup();
+    let reads = 0;
+    GraphBuilder.addExtension(builder, {
+      id: 'broken',
+      // Throws outside the per-extension catch, where the builder filters extensions by relation.
+      get relation(): string {
+        reads++;
+        throw new Error('broken');
+      },
+      connector: connector([{ id: 'a' }]),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    await nextTask(10);
+    await GraphBuilder.flush(builder);
+
+    expect(reads).to.equal(1);
+  });
+
+  test('a node that returns is expanded afresh', async () => {
+    const { registry, builder, children } = setup({
+      unchanged: (prev, next) => JSON.stringify(prev) === JSON.stringify(next),
+    });
+    const present = Atom.make(true).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) =>
+              id === GraphNode.RootId ? [{ id: 'a', nodes: get(present) ? [{ id: 'b' }] : [] }] : [{ id: 'x' }],
+          }),
+        ),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/a/b');
+    await GraphBuilder.flush(builder);
+    expect(children('root/a/b')).to.deep.equal(['root/a/b/x']);
+
+    // The inline `b` is removed with its edges, then emitted again and re-expanded.
+    registry.set(present, false);
+    await GraphBuilder.flush(builder);
+    registry.set(present, true);
+    await GraphBuilder.flush(builder);
+    children('root/a/b');
+    await GraphBuilder.flush(builder);
+
+    expect(children('root/a/b')).to.deep.equal(['root/a/b/x']);
+  });
+
+  test('an update read before its node was removed in the same flush is dropped', async () => {
+    const { registry, builder, model, children } = setup();
+    const moved = Atom.make(false).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) =>
+              id === GraphNode.RootId ? (get(moved) ? [] : [{ id: 'a' }]) : get(moved) ? [{ id: 'y' }] : [],
+          }),
+        ),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/a');
+    await GraphBuilder.flush(builder);
+
+    // One write drops `a` from the root and gives `a` a child: `a`'s update must not land under it.
+    registry.set(moved, true);
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/a')).to.be.undefined;
+    expect(model.findNode('root/a/y')).to.be.undefined;
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;
@@ -482,7 +565,7 @@ describe('GraphBuilder', () => {
     expect(model.findNode('root/a')?.properties?.tag).to.equal('tagged');
   });
 
-  test('destroy releases the expansion subscriptions', async () => {
+  test('destroy releases the tracked expansions', async () => {
     const { registry, builder, children } = setup();
     const state = Atom.make(['a']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {

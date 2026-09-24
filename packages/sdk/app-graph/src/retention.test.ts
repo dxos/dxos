@@ -150,7 +150,7 @@ describe('retention', () => {
 
     const after = counts(harness);
     // Nothing here is mounted any more, yet every visited workspace's items are still in the model,
-    // and still hold an expansion subscription. This is what release is for.
+    // and are still tracked as expanded. This is what release is for.
     expect(after.modelNodes - before.modelNodes).to.equal(WORKSPACES * CHILDREN);
     expect(after.expansions - before.expansions).to.equal(WORKSPACES);
   });

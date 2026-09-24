@@ -414,7 +414,12 @@ export class GraphBuilder<
       }
 
       const apply = () =>
-        updates.forEach(({ key, nodes }) => contain({ key }, () => this._applyConnectorUpdate(key, nodes)));
+        updates.forEach(({ key, nodes }) => {
+          // An earlier update in this batch may have removed the key's node.
+          if (this._tracker.tracks(key)) {
+            contain({ key }, () => this._applyConnectorUpdate(key, nodes));
+          }
+        });
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
       spend(budget, () => (this._store.batch ? this._store.batch(apply) : apply()));
     }
@@ -549,7 +554,9 @@ export class GraphBuilder<
 
   _expandRelation(id: string, relation: string): void {
     const key = primaryKey(id, relation);
-    this._tracker.track(key);
+    if (!this._tracker.track(key)) {
+      return;
+    }
     const forNode = this._expansions.get(id) ?? new Set<string>();
     forNode.add(key);
     this._expansions.set(id, forNode);
@@ -576,7 +583,11 @@ export class GraphBuilder<
 
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
-      this._expansions.get(id)?.forEach((key) => this._tracker.untrack(key));
+      // The store detached the node's edges, so what its connectors last wrote is gone too.
+      this._expansions.get(id)?.forEach((key) => {
+        this._tracker.untrack(key);
+        this._flushed.delete(key);
+      });
       this._expansions.delete(id);
     }
   }
@@ -624,9 +635,6 @@ export type ModelProps<Meta = unknown> = Pick<
  * {@link ModelGraphBuilder.children} reads them back in that order.
  */
 export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, ModelNodeArg, string, Meta, Model> {
-  /** Relations already expanded, so a repeated read does not track the same connectors twice. */
-  readonly #expanded = new Set<string>();
-
   /** Memoized {@link ModelGraphBuilder.children} views, so subscribers of a relation share one atom. */
   readonly #children = Atom.family<string, Atom.Atom<ModelNode[]>>((key) => {
     const [id, relation] = primaryParts(key);
@@ -662,29 +670,11 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
    */
   children(id: string, relation = 'child'): Atom.Atom<ModelNode[]> {
     const key = primaryKey(id, relation);
-    if (!this.#expanded.has(key)) {
-      this.#expanded.add(key);
+    if (!this._expansions.get(id)?.has(key)) {
       this._onExpand(id, relation);
     }
 
     return this.#children(key);
-  }
-
-  override _onReleaseRelation(target: { id: string; relation: string }): void {
-    super._onReleaseRelation(target);
-    // Forget the expansion mark too, or the next read hits the #expanded guard and never re-subscribes.
-    this.#expanded.delete(primaryKey(target.id, target.relation));
-  }
-
-  override _onRemoveNodes(ids: readonly string[]): void {
-    super._onRemoveNodes(ids);
-    // A node that returns must expand again, so drop its expansion marks along with its subscriptions.
-    const removed = new Set(ids);
-    for (const key of this.#expanded) {
-      if (removed.has(primaryParts(key)[0])) {
-        this.#expanded.delete(key);
-      }
-    }
   }
 }
 
@@ -733,7 +723,7 @@ export const flush = async (builder: Any): Promise<void> => {
 };
 
 /**
- * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the
+ * Unloads the nodes and everything the builder remembers about them: tracked expansions and the
  * per-connector diff state. The nodes leave the store outright rather than being tombstoned, so reading a released relation again re-expands it from its connectors.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
