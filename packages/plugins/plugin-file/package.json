@@ -114,8 +114,8 @@
       "import": "./dist/lib/skills.mjs"
     },
     "./StagedUpload": {
-      "source": "./src/operations/StagedUpload.ts",
-      "types": "./dist/types/src/operations/StagedUpload.d.ts",
+      "source": "./src/StagedUpload.ts",
+      "types": "./dist/types/src/StagedUpload.d.ts",
       "import": "./dist/lib/StagedUpload.mjs"
     }
   },
@@ -138,7 +138,7 @@
         "dist/types/src/types/Settings.d.ts"
       ],
       "StagedUpload": [
-        "dist/types/src/operations/StagedUpload.d.ts"
+        "dist/types/src/StagedUpload.d.ts"
       ],
       "skills": [
         "dist/types/src/skills/index.d.ts"

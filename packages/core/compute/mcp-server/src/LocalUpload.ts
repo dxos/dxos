@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
+// A standalone entrypoint, not a barrel namespace: it binds `node:http`, which the workerd hosts
+// importing `@dxos/mcp-server` must never pull in.
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';

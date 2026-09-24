@@ -12,7 +12,7 @@ import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { UnsupportedUploadTypeError, UploadNotFoundError } from './create-from-upload.ts';
+import { UnsupportedUploadTypeError, UploadNotFoundError } from './operations/create-from-upload.ts';
 
 /** Bytes a local host received on its own upload listener, keyed by the id it minted. */
 export type Upload = {
