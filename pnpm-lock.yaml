@@ -7328,9 +7328,6 @@ importers:
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -7352,9 +7349,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/observability':
-        specifier: workspace:*
-        version: link:../../sdk/observability
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
