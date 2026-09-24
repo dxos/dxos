@@ -14,7 +14,7 @@
 //
 // Options: --base=<ref> (diff base for context; default the review's base, or the merge-base
 // with origin/main for a full-project review), --threshold=0.8, --uncertain=0.15, --lift=0.15,
-// --need=0.35,
+// --need=0.35, --chunk=15 (files per follow-up batch),
 // --rounds=2, --model=jev-latest, --concurrency=16, --dry-run (plan and price, no API calls),
 // --json (probe mode: print raw verdicts).
 //
@@ -59,6 +59,7 @@ const { values } = parseArgs({
     'concurrency': { type: 'string', default: '16' },
     'dry-run': { type: 'boolean', default: false },
     'json': { type: 'boolean', default: false },
+    'chunk': { type: 'string', default: '15' },
   },
 });
 
@@ -71,6 +72,7 @@ const settings = {
   need: Number(values.need),
   rounds: Number.parseInt(values.rounds, 10),
 };
+const chunkSize = Math.max(1, Number.parseInt(values.chunk, 10) || 15);
 const log = (message) => console.error(`system-one: ${message}`);
 const client = values['dry-run']
   ? null
@@ -222,9 +224,10 @@ if (values.file?.length) {
         const header = `# ${verdict.rule.severity.toUpperCase()} \`${verdict.file}:${diagnosticLine(verdict, { base })}\``;
         appendFileSync(join(store, 'groups', `${nn}.md`), `\n${header}\n\n${diagnosticBody(verdict)}\n`);
       } else if (status === 'uncertain' || status === 'unanswered') {
-        const entry = uncertain.get(nn) ?? { ruleId: verdict.rule.id, files: [] };
-        entry.files.push(`${verdict.file} (p=${verdict.probability?.toFixed(2) ?? 'n/a'})`);
-        uncertain.set(nn, entry);
+        // Keyed by rule, not group: a follow-up reviewer judges one rule over files from many groups.
+        const entry = uncertain.get(verdict.rule.id) ?? { nn, files: [] };
+        entry.files.push(`\`${verdict.file}\` (p=${verdict.probability?.toFixed(2) ?? 'n/a'})`);
+        uncertain.set(verdict.rule.id, entry);
       }
     }
     writeFileSync(
@@ -240,6 +243,21 @@ if (values.file?.length) {
       )}\n`,
     );
   }
+  // Uncertain pairs regrouped into fresh batches per rule, each pointed at one of that rule's
+  // fragments: finalize merges every fragment and stamps severity by rule, so any of them will do.
+  const followUps = [...uncertain].flatMap(([ruleId, { nn, files }]) => {
+    const batches = [];
+    for (let start = 0; start < files.length; start += chunkSize) {
+      batches.push({ ruleId, nn, files: files.slice(start, start + chunkSize) });
+    }
+    return batches;
+  });
+  const skippedByRule = new Map();
+  for (const { nn, ruleId, reason } of skipped) {
+    const entry = skippedByRule.get(ruleId) ?? { reason, groups: [] };
+    entry.groups.push(nn);
+    skippedByRule.set(ruleId, entry);
+  }
   const report = [
     `# System One pass — ${relative(root, store)}`,
     '',
@@ -254,14 +272,14 @@ if (values.file?.length) {
     '',
     '## Still needs an agentic reviewer',
     '',
-    'Spawn subagents for these only; every other group is already judged.',
+    `Spawn one subagent per line below (${followUps.length + skipped.length} in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.`,
     '',
-    ...skipped.map(
-      ({ nn, ruleId, files, reason }) => `- Group ${nn} \`${ruleId}\` (${reason}): ${files.length} files, all`,
+    ...[...skippedByRule].map(
+      ([ruleId, { reason, groups }]) =>
+        `- \`${ruleId}\` (${reason}): review groups ${groups.join(', ')} as staged in STAGING.md`,
     ),
-    ...[...uncertain.entries()].map(
-      ([nn, { ruleId, files }]) =>
-        `- Group ${nn} \`${ruleId}\` (uncertain): ${files.map((file) => `\`${file}\``).join(', ')}`,
+    ...followUps.map(
+      ({ ruleId, nn, files }) => `- \`${ruleId}\` (uncertain) → append to \`groups/${nn}.md\`: ${files.join(', ')}`,
     ),
     ...result.oversized.map(
       ({ ruleId, file }) => `- \`${ruleId}\` on \`${file}\`: question too large beside its state`,

@@ -26,6 +26,11 @@ const { values } = parseArgs({ options: { out: { type: 'string', default: 'CALIB
 const here = dirname(fileURLToPath(import.meta.url));
 const THRESHOLDS = [0.5, 0.7, 0.8];
 const TRIAGE_BOUNDS = [0.15, 0.2, 0.3, 0.4];
+const RELATIVE = [
+  [0.15, 0.1],
+  [0.15, 0.15],
+  [0.15, 0.2],
+];
 
 // Cluster sections carry their example comment URLs; a rule's `Source:` line names one of them.
 const clusterExamples = [];
@@ -92,6 +97,12 @@ await Promise.all(
   }),
 );
 
+const median = (list) => {
+  const sorted = [...list].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+};
+const ratio = (part, whole) => (whole ? part / whole : NaN);
 const mean = (list) => (list.length ? list.reduce((sum, value) => sum + value, 0) / list.length : NaN);
 const rate = (list, threshold) => (list.length ? list.filter((value) => value >= threshold).length / list.length : NaN);
 const pct = (value) => (Number.isNaN(value) ? 'n/a' : `${Math.round(value * 100)}%`);
@@ -121,6 +132,16 @@ const report = [
   '| ----------- | ------------------------- | ------------------------------------- |',
   ...TRIAGE_BOUNDS.map((bound) => `| ${bound} | ${pct(rate(all.own, bound))} | ${pct(rate(all.other, bound))} |`),
   '',
+  "A flat bound treats every rule alike, but subjective rules score middling on almost any code. Raising each rule's bound to its own median plus a lift routes less and keeps more:",
+  '',
+  '| Floor | Lift over the rule median | Own hunks kept for review | Other pairs sent to review needlessly |',
+  '| ----- | ------------------------- | ------------------------- | ------------------------------------- |',
+  ...RELATIVE.map(([floor, lift]) => {
+    const kept = (list) => (row) =>
+      list(row).filter((value) => value >= Math.max(floor, median([...row.own, ...row.other]) + lift));
+    return `| ${floor} | ${lift} | ${pct(ratio(rows.flatMap(kept((row) => row.own)).length, all.own.length))} | ${pct(ratio(rows.flatMap(kept((row) => row.other)).length, all.other.length))} |`;
+  }),
+  '',
   '## Per rule, by separation',
   '',
   '| Rule | Own hunks | Mean p own | Mean p other | Separation | Own ≥ 0.7 | Other ≥ 0.7 |',
@@ -136,4 +157,4 @@ writeFileSync(
   join(here, values.out.replace(/\.md$/, '.json')),
   `${JSON.stringify(Object.fromEntries(rows.map(({ rule, own, other }) => [rule.id, { own, other }])), null, 1)}\n`,
 );
-console.log(report.slice(0, 20).join('\n'));
+console.log(report.slice(0, 32).join('\n'));
