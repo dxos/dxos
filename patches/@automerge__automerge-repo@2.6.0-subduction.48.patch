@@ -1,5 +1,5 @@
 diff --git a/dist/Document.js b/dist/Document.js
-index 8b7451d670660b1ff9376e22f7e4548c4d6056b8..50be34a6f6c239b100dc8d5ceba562fc1ad5a98a 100644
+index 8b7451d670660b1ff9376e22f7e4548c4d6056b8..92f99e5609ac7b0262c5f00861f84e217cca3b5e 100644
 --- a/dist/Document.js
 +++ b/dist/Document.js
 @@ -75,6 +75,11 @@ export class Document {
@@ -15,7 +15,7 @@ index 8b7451d670660b1ff9376e22f7e4548c4d6056b8..50be34a6f6c239b100dc8d5ceba562fc
  }
  function arrayEqual(a, b) {
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22feeef8906b 100644
+index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..96267d936299e84aff8c46af92b1a4ebbdeddfbd 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -26,8 +26,12 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
  import type { AnyDocumentId, AutomergeUrl, DocumentId, PeerId, UrlHeads } from "./types.js";
  import { AbortOptions } from "./helpers/abortable.js";
  import { type Subduction } from "@automerge/automerge-subduction/slim";
-@@ -39,6 +40,11 @@ export declare class Repo extends EventEmitter<RepoEvents> {
-     constructor({ storage, network, peerId, sharePolicy, shareConfig, isEphemeral, enableRemoteHeadsGossiping, denylist, saveDebounceRate, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, }?: RepoConfig);
+@@ -36,9 +37,14 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+     /** maps peer id to to persistence information (storageId, isEphemeral), access by collection synchronizer  */
+     /** @hidden */
+     peerMetadataByPeerId: Record<PeerId, PeerMetadata>;
+-    constructor({ storage, network, peerId, sharePolicy, shareConfig, isEphemeral, enableRemoteHeadsGossiping, denylist, saveDebounceRate, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, }?: RepoConfig);
++    constructor({ storage, network, peerId, sharePolicy, shareConfig, isEphemeral, enableRemoteHeadsGossiping, denylist, saveDebounceRate, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionMaxResidentTrees, subductionBlobInterceptor, }?: RepoConfig);
      /** Returns all the handles we have cached. */
      get handles(): Record<DocumentId, DocHandle<any>>;
 +    /**
@@ -38,7 +42,19 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
      /** Returns a list of all connected peer ids */
      get peers(): PeerId[];
      /** Returns the local peer id */
-@@ -345,6 +351,8 @@ export interface RepoEvents {
+@@ -274,6 +280,11 @@ export interface RepoConfig {
+      * handles many parallel deletes well; lower it to reduce burst load.
+      */
+     subductionCompactionDeleteConcurrency?: number;
++    /**
++     * DXOS patch: cap on the sedimentrees Subduction keeps loaded; the rest reload from storage on
++     * demand. Omitted uses Subduction's default (1024).
++     */
++    subductionMaxResidentTrees?: number;
+     /**
+      * Optional interceptor for transforming incoming and outgoing blobs (e.g.,
+      * for E2EE).
+@@ -345,6 +356,8 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -48,10 +64,27 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..97cb7fe9a148b1c8e5f51a5c4ff5b9fc80a9c4fd 100644
+index adfddd9b3926510604274217c42f97f104e119a3..e797fa000bdbe2dece5ec82d9d31c963af4717b3 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
-@@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
+@@ -57,7 +57,7 @@ export class Repo extends EventEmitter {
+     #subductionEphemeralCount = 0;
+     #idFactory;
+     #peerId;
+-    constructor({ storage, network = [], peerId = randomPeerId(), sharePolicy, shareConfig, isEphemeral = storage === undefined, enableRemoteHeadsGossiping = false, denylist = [], saveDebounceRate = 100, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, } = {}) {
++    constructor({ storage, network = [], peerId = randomPeerId(), sharePolicy, shareConfig, isEphemeral = storage === undefined, enableRemoteHeadsGossiping = false, denylist = [], saveDebounceRate = 100, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionMaxResidentTrees, subductionBlobInterceptor, } = {}) {
+         super();
+         this.#peerId = peerId;
+         this.#remoteHeadsGossipingEnabled = enableRemoteHeadsGossiping;
+@@ -118,6 +118,7 @@ export class Repo extends EventEmitter {
+             policy: subductionPolicy,
+             timeouts: subductionTimeouts,
+             compactionDeleteConcurrency: subductionCompactionDeleteConcurrency,
++            maxResidentTrees: subductionMaxResidentTrees,
+             blobInterceptor: subductionBlobInterceptor,
+             onRemoteHeadsChanged: (documentId, storageId, heads, timestamp) => {
+                 const handle = this.#queries[documentId]?.handle;
+@@ -157,6 +158,18 @@ export class Repo extends EventEmitter {
              onConnectionChanged: connected => {
                  this.emit("subduction-connection", { connected });
              },
@@ -70,7 +103,7 @@ index adfddd9b3926510604274217c42f97f104e119a3..97cb7fe9a148b1c8e5f51a5c4ff5b9fc
          });
          this.#subductionSource = subductionSource;
          this.#sources.set("subduction", subductionSource);
-@@ -377,6 +389,14 @@ export class Repo extends EventEmitter {
+@@ -377,6 +390,14 @@ export class Repo extends EventEmitter {
          }
          return result;
      }
@@ -85,7 +118,7 @@ index adfddd9b3926510604274217c42f97f104e119a3..97cb7fe9a148b1c8e5f51a5c4ff5b9fc
      /** Returns a list of all connected peer ids */
      get peers() {
          return this.synchronizer.peers;
-@@ -492,6 +512,12 @@ export class Repo extends EventEmitter {
+@@ -492,6 +513,12 @@ export class Repo extends EventEmitter {
      // ability to not create a doc handle if we abort while loading. Once the DocHandle
      // was running the abort signal didn't have much effect
      _options) {
@@ -483,7 +516,7 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
      };
      /** Send a tagged frame over the adapter. */
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c4b3a41ac 100644
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..42f81172527cd3863c52cb23d90b73644ffb7b27 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -529,12 +562,19 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      policy?: Policy;
      /**
       * What priority this source should have w.r.t to other sources
-@@ -123,12 +146,13 @@ export interface SubductionSourceOptions {
+@@ -118,17 +141,20 @@ export interface SubductionSourceOptions {
+      * pass. Defaults to {@link DEFAULT_COMPACTION_DELETE_CONCURRENCY}.
+      */
+     compactionDeleteConcurrency?: number;
++    /** DXOS patch: forwarded to Subduction's `maxResidentTrees`; omitted uses its default. */
++    maxResidentTrees?: number;
+     blobInterceptor?: BlobInterceptor;
+ }
  export declare class SubductionSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
 -    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority, policy, timeouts, compactionDeleteConcurrency, maxResidentTrees, blobInterceptor, }: SubductionSourceOptions);
      /** True if any connection manager has an established connection. */
      isConnected(): boolean;
      getSubduction(): Promise<Subduction>;
@@ -546,7 +586,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e97549889 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..6de1c5895436dd599d5c58afa7407f3dab216fd9 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -582,11 +622,18 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
      #shuttingDown = false;
      priority;
 -    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, maxResidentTrees, blobInterceptor, }) {
          this.#blobInterceptor = blobInterceptor;
          this.#onConnectionChanged = onConnectionChanged;
          this.priority = priority;
-@@ -133,12 +148,23 @@ export class SubductionSource {
+@@ -127,18 +142,30 @@ export class SubductionSource {
+             onRemoteHeads,
+             onEphemeral,
+             ...defaultTimeoutOption,
++            ...(maxResidentTrees !== undefined ? { maxResidentTrees } : {}),
+         }));
+         // ── Connection managers ─────────────────────────────────────────
+         // Endpoints own *where* their socket lives (in-thread, Worker, ...);
          // the shared manager owns the reconnect/backoff loop. Plain URL
          // strings are shorthand for in-thread endpoints.
          this.#websocketEndpoints = websocketEndpoints.map(endpoint => typeof endpoint === "string" ? new WebSocketEndpoint(endpoint) : endpoint);
@@ -612,7 +659,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -147,6 +173,15 @@ export class SubductionSource {
+@@ -147,6 +174,15 @@ export class SubductionSource {
              mgr.onChange(() => {
                  this.#scheduleRecompute();
                  this.#notifyConnectionChange();
@@ -628,7 +675,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              });
          }
          this.#storage.on("commit-saved", (sid, commitId, blob) => {
-@@ -163,6 +198,7 @@ export class SubductionSource {
+@@ -163,6 +199,7 @@ export class SubductionSource {
          });
          // ── Sync scheduler ────────────────────────────────────────────────
          this.#scheduler = new SyncScheduler({
@@ -636,7 +683,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              subduction: this.#subduction,
              log: this.#log,
              onSyncDataReceived: async (sedimentreeId, subduction) => {
-@@ -394,7 +430,9 @@ export class SubductionSource {
+@@ -394,7 +431,9 @@ export class SubductionSource {
              transformRetryScheduled: false,
          });
          query.sourcePending("subduction");
@@ -647,7 +694,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
          throttledSave();
          // Subscribe to ephemeral messages for this sedimentree
          void (async () => {
-@@ -424,10 +462,17 @@ export class SubductionSource {
+@@ -424,10 +463,17 @@ export class SubductionSource {
                      this.#storage.listFragmentIds(sid),
                  ]);
                  for (const c of commitIds) {
@@ -667,7 +714,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
                  }
                  if (entry.persistedCommitHashes.size > 0 ||
                      entry.persistedFragmentHashes.size > 0) {
-@@ -457,7 +502,21 @@ export class SubductionSource {
+@@ -457,7 +503,21 @@ export class SubductionSource {
          })();
          this.#scheduleRecompute(this.#entries.get(sidStr));
      }
@@ -690,7 +737,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,13 +648,18 @@ export class SubductionSource {
+@@ -589,13 +649,18 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -711,7 +758,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              entry.lastSyncGeneration !== this.#connectionGeneration());
      }
      #recomputeEntry(entry) {
-@@ -647,12 +711,27 @@ export class SubductionSource {
+@@ -647,12 +712,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -740,7 +787,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,7 +741,28 @@ export class SubductionSource {
+@@ -662,7 +742,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -770,7 +817,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              const results = peerResultMap.entries();
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
-@@ -702,6 +802,7 @@ export class SubductionSource {
+@@ -702,6 +803,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -778,7 +825,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +810,10 @@ export class SubductionSource {
+@@ -709,6 +811,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -789,7 +836,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -1026,7 +1131,10 @@ export class SubductionSource {
+@@ -1026,7 +1132,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -801,3 +848,24 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
+diff --git a/dist/subduction/storage.js b/dist/subduction/storage.js
+index 37f9cc727f7ab1d24118879efadc4bb44f90e827..cd16b010938fccf22be693573f3db419dbf875d9 100644
+--- a/dist/subduction/storage.js
++++ b/dist/subduction/storage.js
+@@ -539,6 +539,16 @@ export class SubductionStorageBridge {
+         }
+         finally {
+             this.decrementPending(sid);
++            // DXOS patch: Subduction passes these handles by value, so JS owns them; listeners read
++            // them synchronously during the emits above, and nothing keeps them after.
++            for (const { commitId, signedCommit } of commits) {
++                commitId.free();
++                signedCommit.free();
++            }
++            for (const { fragmentHead, signedFragment } of fragments) {
++                fragmentHead.free();
++                signedFragment.free();
++            }
+         }
+     }
+     // ==================== Remote heads (last-known sync state) ====================

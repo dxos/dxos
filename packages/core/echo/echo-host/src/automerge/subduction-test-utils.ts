@@ -160,6 +160,7 @@ export type ConnectedRepoOptions = {
   /** Per-connection transport gates, keyed by index into `connections`; overrides `connectionStateProvider`. */
   connectionStateProviderByConnection?: Record<number, TestConnectionStateProvider>;
   subductionTimeouts?: NonNullable<ConstructorParameters<typeof Repo>[0]>['subductionTimeouts'];
+  subductionMaxResidentTrees?: number;
 };
 
 export const createRepoTopology = async <Peers extends string[], Peer extends string = Peers[number]>(args: {
@@ -205,6 +206,7 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
         ...(subductionPolicy ? { subductionPolicy } : {}),
         ...(signer ? { signer } : {}),
         ...(args.options?.subductionTimeouts ? { subductionTimeouts: args.options.subductionTimeouts } : {}),
+        subductionMaxResidentTrees: args.options?.subductionMaxResidentTrees,
         subductionAdapters: network.map((adapter) => ({
           adapter,
           serviceName: SUBDUCTION_SERVICE_NAME,

@@ -96,6 +96,8 @@ export type AutomergeHostProps = {
     evictionDelay?: number;
     /** How many released documents stay resident regardless of age. */
     minResidentDocuments?: number;
+    /** How many Subduction trees stay loaded; the least recently used reload from storage. */
+    maxResidentTrees?: number;
   };
 };
 
@@ -214,6 +216,12 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
 const EVICT_IDLE_DELAY = 30_000;
 
 /**
+ * Subduction trees kept loaded; its own default (1,024) exceeds a typical profile's document count,
+ * so every tree the host touched would stay in wasm memory.
+ */
+const MAX_RESIDENT_TREES = 128;
+
+/**
  * Abstracts over the AutomergeRepo.
  *
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
@@ -327,6 +335,7 @@ export class AutomergeHost extends Resource {
 
   private _signer: MemorySigner | undefined = undefined;
   private readonly _useSubduction: boolean;
+  private readonly _maxResidentTrees: number;
 
   /** Subduction Ed25519 PeerId hex → automerge-repo PeerId, populated from `subduction-peer-bound`. */
   private readonly _subductionPeerIdHexToRepoPeerId = new Map<string, PeerId>();
@@ -353,6 +362,7 @@ export class AutomergeHost extends Resource {
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;
+    this._maxResidentTrees = residency?.maxResidentTrees ?? MAX_RESIDENT_TREES;
     this._storage = new SqliteStorageAdapter({
       runtime,
       callbacks: {
@@ -413,6 +423,7 @@ export class AutomergeHost extends Resource {
         storage: this._storage,
         network: [],
         signer: this._signer,
+        subductionMaxResidentTrees: this._maxResidentTrees,
         subductionAdapters: [
           {
             adapter: this._echoNetworkAdapter,

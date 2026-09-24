@@ -97,6 +97,23 @@ describe('AutomergeRepo with Subduction', () => {
         .toEqual(text);
     });
 
+    test('documents sync when more trees exist than stay resident', async () => {
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology({ subductionMaxResidentTrees: 2 });
+      const [host, client] = repos;
+      await connectAdapters(adapters, { repoPairs });
+
+      const handles = Array.from({ length: 8 }, (_, index) => host.create<{ index: number }>({ index }));
+      await waitForSubductionSave(repos);
+
+      for (const [index, handle] of handles.entries()) {
+        await expect
+          .poll(async () => (await client.find<{ index: number }>(handle.url)).doc()?.index, {
+            timeout: SYNC_WINDOW_MS,
+          })
+          .toEqual(index);
+      }
+    });
+
     test('share config does not gate subduction replication', async () => {
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         shareConfig: {
