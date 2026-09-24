@@ -34,11 +34,14 @@ export const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
 /**
  * Window for an assertion that waits on subduction doing its work.
  *
- * Every such wait is now event-driven and lands in well under 500 ms locally, and the slowest test
- * in the suite is 2.5 s including teardown — so this is roughly a 10x margin, which absorbs CI
- * contention without letting a genuinely stuck sync sit around burning the job's clock.
+ * Every such wait is event-driven or polled, so this is a ceiling on how long a stuck sync takes to
+ * report, never time the suite spends when healthy — a passing wait returns as soon as its condition
+ * holds. It was 5 s, which is only ~2x the slowest test in the suite (2.5 s including teardown), and
+ * CI blew through it three times in one day on a loaded shard: the failures landed at 5.17-5.22 s,
+ * i.e. exactly this budget rather than the thing under test. 15 s restores real headroom while still
+ * failing well inside the job.
  */
-export const SYNC_WINDOW_MS = 5_000;
+export const SYNC_WINDOW_MS = 15_000;
 
 /**
  * Window for the handful of negative tests whose subject is that NOTHING happens — no transport at
