@@ -167,7 +167,7 @@ const spanStart = (params: ManualSpanParams): Context | null => {
 };
 
 export type SpanEndOptions = {
-  /** Attributes only known when the span ends, such as its outcome; namespaced under `ctx.` like start attributes. */
+  /** Namespaced under `ctx.`, like start attributes. */
   attributes?: Record<string, any>;
 };
 
@@ -185,7 +185,7 @@ const spanEnd = (id: string, { attributes }: SpanEndOptions = {}) => {
   }
 
   const timestamps = manualSpanTimestamps.get(id);
-  // Released even without `performance.measure`, since `spanStart` refuses an id that is still recorded.
+  // Freed unconditionally: `spanStart` refuses an id that is still recorded.
   manualSpanTimestamps.delete(id);
   if (timestamps && typeof globalThis?.performance?.measure === 'function') {
     performance.measure(timestamps.name, { start: timestamps.startTs, end: performance.now() });

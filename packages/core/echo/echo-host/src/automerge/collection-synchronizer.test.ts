@@ -385,7 +385,7 @@ describe('CollectionSynchronizer', () => {
     });
   });
 
-  // The `syncPeer` span feeds the sync-latency dashboard, so when it opens and how it ends is its contract.
+  // The `syncPeer` span feeds a PostHog dashboard, so when it opens and how it ends is its contract.
   describe('sync span', () => {
     const peerId = 'peer1' as PeerId;
     let savedBackend: TracingBackend;

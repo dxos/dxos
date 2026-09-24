@@ -292,7 +292,7 @@ export class InvitationsHandler {
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
     // The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334)
-    // reads this span's name, duration and `ctx.*` attributes, so do not change them without updating it.
+    // queries this span's name and attributes: update it when changing them.
     const guestSpanId = `invitation-guest-${invitation.invitationId}`;
     // Reassign ctx to the child context returned by spanStart so downstream calls
     // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
@@ -330,7 +330,6 @@ export class InvitationsHandler {
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // A delegated invitation races EDGE against member devices, so its type cannot say which one admitted the guest.
     let admittedBy: 'edge' | 'peer' | undefined;
-    // Ends with the flow, however it ends; the last state it reached says how.
     ctx.onDispose(() =>
       _trace.spanEnd(guestSpanId, {
         attributes: {

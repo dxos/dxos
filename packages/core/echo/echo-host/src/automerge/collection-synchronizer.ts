@@ -44,18 +44,11 @@ export class CollectionSynchronizer extends Resource {
 
   private readonly _connectedPeers = new Set<PeerId>();
 
-  /**
-   * Ids of the sync spans in flight, by collection and then peer: at most one per pair, from divergence until
-   * fully synced.
-   */
+  /** Open sync span ids, by collection then peer. */
   private readonly _syncSpans = new Map<string, Map<PeerId, string>>();
 
-  /**
-   * Keeps span ids unique across synchronizers in one process, since the manual span registry is global.
-   */
+  /** The manual span registry is global, so ids must differ across synchronizers and across a pair's spans. */
   private readonly _spanIdPrefix = `collection-sync-${PublicKey.random().toHex()}`;
-
-  /** Numbers the sync spans, so each span a pair opens over time has its own id. */
   private _syncSpanCount = 0;
 
   public readonly peerCollectionStateUpdated = new Event<{
@@ -286,17 +279,14 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
-  /**
-   * Opens the span for a (collection, peer) pair that just diverged; a pair already diverging keeps its span.
-   * Its name and attributes are queried by a PostHog dashboard, see {@link SYNC_SPAN_METHOD}.
-   */
+  /** Opens a span when a (collection, peer) pair diverges; see {@link SYNC_SPAN_METHOD} for its dashboard. */
   private _startSyncSpan(
     collectionId: string,
     peerId: PeerId,
     trigger: SyncSpanTrigger,
     diff: CollectionStateDiff,
   ): void {
-    // Nothing would end a span for a pair that is not syncing, so the peer and collection must still be live.
+    // Nothing would end a span for a closed synchronizer, a gone peer or an inactive collection.
     if (
       !this.isOpen ||
       !this._connectedPeers.has(peerId) ||
@@ -433,14 +423,10 @@ export type CollectionStateDiff = {
   different: DocumentId[];
 };
 
-/**
- * What exposed a divergence: the pair's first comparison, a later change to the peer's state, or a later local change.
- */
+/** What exposed a divergence: the pair's first comparison, a peer change, or a local change. */
 type SyncSpanTrigger = 'initial' | 'remote' | 'local';
 
-/**
- * How a sync span ended: the pair converged, the peer disconnected, or the collection or synchronizer closed.
- */
+/** `closed` covers both a cleared collection and a closed synchronizer. */
 type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
@@ -559,8 +545,7 @@ const isValidDocumentId = (documentId: DocumentId) => {
 };
 
 /**
- * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) is
- * built from this span. Its queries read the span name, the `ctx.*` attributes set in `_startSyncSpan`, and the
- * {@link SyncSpanTrigger} and {@link SyncSpanOutcome} values, so do not change any of them without updating it.
+ * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) queries
+ * this name, the attributes set in `_startSyncSpan` and the trigger and outcome values: update it when changing them.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';

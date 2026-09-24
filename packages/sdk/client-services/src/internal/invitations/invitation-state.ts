@@ -75,10 +75,7 @@ export const createGuardedInvitationState = (
   };
 };
 
-/**
- * How an invitation flow ended, from the last state it reached: a terminal state names itself, and a flow disposed
- * before reaching one was closed.
- */
+/** How a flow ended, from its last state; a flow disposed before a terminal state is `closed`. */
 export const getInvitationOutcome = (state: Invitation_State): string =>
   isNonTerminalState(state) ? 'closed' : Invitation_State[state].toLowerCase();
 
