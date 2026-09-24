@@ -750,11 +750,20 @@ export class RepoProxy extends Resource {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
       // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
       if (addIds.length > 0 || removeIds.length > 0) {
+        // A handle already holding the document (a resubscribe) lets the host send what it lacks.
+        const addHeads: Record<string, string[]> = {};
+        for (const documentId of addIds) {
+          const heads = this._handles[documentId]?._getHostHeads();
+          if (heads?.length) {
+            addHeads[documentId] = [...heads];
+          }
+        }
         await runServiceCall(
           this._runtime,
           this._dataService['DataService.updateSubscription']({
             subscriptionId: this._subscriptionId,
             addIds,
+            addHeads,
             removeIds,
           }),
           { timeout: RPC_TIMEOUT },

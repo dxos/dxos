@@ -42,6 +42,8 @@ export type DocumentsSynchronizerProps = {
 interface DocSyncState {
   /** Heads the client holds as of the last send; unset until the initial send. */
   lastSentHead?: Heads;
+  /** Heads the client reported holding when it subscribed; the initial send starts from them if it can. */
+  clientHeads?: Heads;
   /**
    * Held only until the document is loaded for its initial send. Nothing pins the document after
    * that: the host's residency policy decides, and each send re-leases it for the duration of a read.
@@ -101,14 +103,20 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  async addDocuments(documentIds: DocumentId[]): Promise<void> {
+  /**
+   * @param clientHeads Heads the client already holds, by document; a document whose heads this host
+   *   has gets an incremental first update instead of a full copy (a client resubscribing to a new
+   *   worker holds most of what it subscribes to).
+   */
+  async addDocuments(documentIds: DocumentId[], clientHeads?: Readonly<Record<string, Heads>>): Promise<void> {
     for (const documentId of documentIds) {
       if (this._syncStates.has(documentId) || this._lifecycleState === LifecycleState.CLOSED) {
         continue;
       }
       log('loading document', { documentId });
       const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
-      const syncState: DocSyncState = { initialLease: lease };
+      const heads = clientHeads?.[documentId];
+      const syncState: DocSyncState = { initialLease: lease, clientHeads: heads?.length ? heads : undefined };
       this._syncStates.set(documentId, syncState);
       // Background disk probe so the client can distinguish
       // "not on disk, waiting for network" from "still loading".
@@ -299,6 +307,10 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     const doc = lease.doc();
+    if (!syncState.lastSentHead && syncState.clientHeads && A.hasHeads(doc, syncState.clientHeads)) {
+      syncState.lastSentHead = syncState.clientHeads;
+    }
+    syncState.clientHeads = undefined;
     const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
     if (mutation.length === 0) {
       return;

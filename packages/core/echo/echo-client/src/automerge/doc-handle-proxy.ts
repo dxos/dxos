@@ -388,6 +388,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Heads the host is known to hold: those of the last confirmed send or host update.
+   * @internal
+   */
+  _getHostHeads(): A.Heads {
+    return this._lastSentHeads;
+  }
+
+  /**
    * Confirm that the last write was successful.
    * @internal
    */

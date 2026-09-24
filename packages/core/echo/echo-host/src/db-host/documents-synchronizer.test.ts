@@ -165,6 +165,74 @@ describe('DocumentsSynchronizer', () => {
     expect(host.leasedDocsCount).to.equal(0);
   });
 
+  test('a client resubscribing with heads it holds gets only what it lacks', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    using created = await host.createDoc<{ count: number; body: string }>({
+      count: 0,
+      body: Array.from({ length: 2_000 }, (_, index) => (index * 7919).toString(36)).join(' '),
+    });
+    const documentId = created.documentId;
+
+    const client = new TestClient<{ count: number; body: string }>();
+    const first = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client.receive });
+    await openAndClose(first);
+    await first.addDocuments([documentId]);
+    await asyncTimeout(client.loaded(documentId), 1_000);
+    const held = A.getHeads(client.doc(documentId));
+    await first.close();
+
+    created.change((doc: { count: number }) => {
+      doc.count = 1;
+    });
+    const payloads: Uint8Array[] = [];
+    const received = new Trigger();
+    const second = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        payloads.push(...(batch.updates ?? []).flatMap(({ mutation }) => (mutation ? [mutation] : [])));
+        client.receive(batch);
+        received.wake();
+      },
+    });
+    await openAndClose(second);
+    await second.addDocuments([documentId], { [documentId]: held });
+    await asyncTimeout(received.wait(), 1_000);
+
+    expect(payloads[0].byteLength).to.be.lessThan(A.save(created.doc()).byteLength / 4);
+    expect(client.doc(documentId).count).to.equal(1);
+    expect(A.getHeads(client.doc(documentId))).to.deep.equal(A.getHeads(created.doc()));
+  });
+
+  test('a client resubscribing with heads the host lacks gets the whole document', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    using created = await host.createDoc<{ text: string }>({ text: 'hello' });
+    const documentId = created.documentId;
+    const elsewhere = A.change(A.clone(created.doc()), (doc) => {
+      doc.text = 'unsent';
+    });
+
+    const payloads: Uint8Array[] = [];
+    const received = new Trigger();
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        payloads.push(...(batch.updates ?? []).flatMap(({ mutation }) => (mutation ? [mutation] : [])));
+        received.wake();
+      },
+    });
+    await openAndClose(synchronizer);
+    await synchronizer.addDocuments([documentId], { [documentId]: A.getHeads(elsewhere) });
+    await asyncTimeout(received.wait(), 1_000);
+
+    expect(A.getHeads(A.load(payloads[0]))).to.deep.equal(A.getHeads(created.doc()));
+  });
+
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
     const { runtime, dispose } = createTestSqliteRuntime();

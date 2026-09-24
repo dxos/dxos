@@ -34,6 +34,12 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    */
   addIds: Schema.optional(mutableArray(Schema.String)),
   /**
+   * Heads the client already holds for some of `addIds`, keyed by document id. When the host's
+   * document contains them, its first update to the client is incremental rather than the whole
+   * document.
+   */
+  addHeads: Schema.optional(Schema.Record(Schema.String, mutableArray(Schema.String))),
+  /**
    * Automerge document ids to unsubscribe from.
    */
   removeIds: Schema.optional(mutableArray(Schema.String)),
