@@ -87,7 +87,6 @@ class MockIndexDataSource implements IndexDataSource {
   }
 }
 
-/** Reports one document plus, when asked, its whole history; goes quiet once its cursor is seen. */
 class ActivityMockDataSource implements IndexDataSource {
   readonly sourceName = 'activity-mock-source';
 
@@ -473,11 +472,9 @@ describe('IndexEngine', () => {
       yield* indexAll;
       expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
 
-      // Garbage collection drops the document's cursors but leaves its activity.
       yield* engine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] });
       expect(yield* engine.queryActivity({ spaceId })).toHaveLength(1);
 
-      // Replicated again, the document's whole history replaces its rows instead of adding to them.
       yield* indexAll;
       expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
     }, Effect.provide(TestLayer)),

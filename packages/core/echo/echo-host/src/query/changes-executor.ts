@@ -10,25 +10,24 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type Context } from '@dxos/context';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type IndexEngine } from '@dxos/index-core';
+import { invariant } from '@dxos/invariant';
 import { EID, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/rpc';
 
 import type { AutomergeHost } from '../automerge/index.ts';
+import { type ChangeRecord, toChangeRecord } from '../db-host/change-record.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { type QueryPlan } from './plan.ts';
 
-/**
- * One row of a `Filter.changes` working set: a replayed change, or an activity index bucket standing
- * for `weight` changes.
- */
+/** A replayed change, or an hourly activity bucket standing for its `changes`. */
+type ChangeRow =
+  | { kind: 'change'; change: ChangeRecord }
+  | { kind: 'bucket'; hour: number; changes: number; ops: number };
+
 export type ChangeItem = {
   spaceId: SpaceId;
-  /**
-   * The `Change.Change` fields of a replayed change; only `source`, `time` (the hour's start) and `ops`
-   * (the bucket's total) for a bucket, which the planner routes only to aggregates reading nothing else.
-   */
-  record: Readonly<Record<string, string | number>>;
+  row: ChangeRow;
   weight: number;
   groupKey?: GroupKeyValue;
   aggregates?: GroupAggregates;
@@ -42,10 +41,6 @@ export type ChangesExecutorDeps = {
   runInRuntime: <T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>) => Promise<T>;
 };
 
-/**
- * Runs a plan starting with a `ChangesSelector` select. The planner (`_routeChanges`) guarantees
- * only ordering, paging and aggregation follow it.
- */
 export const executeChangesPlan = async (
   ctx: Context,
   plan: QueryPlan.Plan,
@@ -63,7 +58,6 @@ export const executeChangesPlan = async (
   return workingSet;
 };
 
-/** Results shipped for a `Filter.changes` query: plain records, or collapsed groups. */
 export const changeResults = (items: readonly ChangeItem[]): QueryService.QueryResult[] =>
   items.map((item): QueryService.QueryResult => {
     if (item.collapsed !== undefined && item.groupKey !== undefined) {
@@ -77,10 +71,11 @@ export const changeResults = (items: readonly ChangeItem[]): QueryService.QueryR
         aggregates: JSON.stringify(item.aggregates ?? {}),
       };
     }
-    return { id: String(item.record.key), spaceId: item.spaceId, rank: 1, recordJson: JSON.stringify(item.record) };
+    invariant(item.row.kind === 'change', 'Only a replayed change ships as a record.');
+    const { change } = item.row;
+    return { id: change.key, spaceId: item.spaceId, rank: 1, recordJson: JSON.stringify(change) };
   });
 
-/** Serialized form of a result set, compared across runs to detect a change. */
 export const serializeChangeResults = (items: readonly ChangeItem[]): string =>
   JSON.stringify(changeResults(items).map(({ id, groupCount, aggregates }) => [id, groupCount, aggregates]));
 
@@ -97,19 +92,17 @@ const selectChanges = async (
     for (const spaceId of spaceIds) {
       const documentIds = documents?.filter((document) => document.spaceId === spaceId).map((doc) => doc.documentId);
       const rows = await deps.runInRuntime(deps.indexEngine.queryActivity({ spaceId, documentIds }));
-      for (const row of rows) {
-        items.push({ spaceId, record: { source: 'document', time: row.hour, ops: row.ops }, weight: row.changes });
+      for (const { hour, changes, ops } of rows) {
+        items.push({ spaceId, row: { kind: 'bucket', hour, changes, ops }, weight: changes });
       }
     }
     return items;
   }
 
   for (const { spaceId, documentId } of documents ?? []) {
-    // Merged branch changes reappear in the main document under the same hashes.
     if (deps.spaceStateManager.isBranchDocument(documentId)) {
       continue;
     }
-    // Local storage only, as the object executor loads: a collected document must not wait on the network.
     using lease = await deps.automergeHost.loadDoc<Record<string, unknown>>(ctx, documentId, {
       fetchFromNetwork: false,
     });
@@ -117,30 +110,15 @@ const selectChanges = async (
       continue;
     }
     for (const meta of A.getChangesMetaSince(lease.doc(), [])) {
-      // A change with no clock has no time to report; the activity index skips it too.
-      if (meta.time > 0) {
-        items.push({
-          spaceId,
-          record: {
-            key: meta.hash,
-            source: 'document',
-            time: meta.time * 1000,
-            actor: meta.actor,
-            seq: meta.seq,
-            ops: meta.maxOp - meta.startOp + 1,
-          },
-          weight: 1,
-        });
+      const change = toChangeRecord(meta);
+      if (change) {
+        items.push({ spaceId, row: { kind: 'change', change }, weight: 1 });
       }
     }
   }
   return items.sort(compareNatural);
 };
 
-/**
- * The documents holding `targets` within the scoped spaces; a target the index does not know (never
- * synced, collected, or in another space) has none.
- */
 const resolveDocuments = async (
   targets: readonly EID.EID[],
   spaceIds: readonly SpaceId[],
@@ -184,11 +162,8 @@ const execStep = (step: QueryPlan.Step, workingSet: ChangeItem[]): ChangeItem[] 
     case 'AggregateStep': {
       const withKeys = workingSet.map((item) => ({ ...item, groupKey: groupKeyOf(item, step.aggregates) }));
       const partitioned = GroupBy.partitionByGroupKey(withKeys, getGroupKey);
-      const stamped = GroupBy.withGroupAggregates(
-        partitioned,
-        getGroupKey,
-        step.aggregates,
-        (item, property) => item.record[property],
+      const stamped = GroupBy.withGroupAggregates(partitioned, getGroupKey, step.aggregates, (item, property) =>
+        fieldOf(item.row, property),
       );
       return GroupBy.collapseGroups(stamped, getGroupKey);
     }
@@ -197,24 +172,34 @@ const execStep = (step: QueryPlan.Step, workingSet: ChangeItem[]): ChangeItem[] 
   }
 };
 
-// Only called on a grouped working set, where every item has a key.
-const getGroupKey = (item: ChangeItem): string => GroupBy.serializeGroupKey(item.groupKey!);
+const getGroupKey = (item: ChangeItem): string => {
+  invariant(item.groupKey, 'Grouped steps run only after an aggregate keyed every item.');
+  return GroupBy.serializeGroupKey(item.groupKey);
+};
+
+/** The row's `Change.Change` fields; a bucket has only `source`, `time` and `ops`, all the planner lets it read. */
+const fieldsOf = (row: ChangeRow): Readonly<Record<string, unknown>> =>
+  row.kind === 'change' ? row.change : { source: 'document', time: row.hour, ops: row.ops };
+
+const fieldOf = (row: ChangeRow, property: string): unknown => fieldsOf(row)[property];
 
 const groupKeyOf = (item: ChangeItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
   const key: GroupKeyValue = {};
   for (const aggregate of aggregates) {
     if (aggregate.kind === 'group') {
-      key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) => item.record[property]);
+      key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+        fieldOf(item.row, property),
+      );
     } else if (aggregate.kind === 'time') {
-      key[aggregate.name] = GroupBy.truncateTime(item.record[aggregate.property], aggregate.unit);
+      key[aggregate.name] = GroupBy.truncateTime(fieldOf(item.row, aggregate.property), aggregate.unit);
     }
   }
   return key;
 };
 
-/** Chronological, with the key breaking ties so the order is stable across runs. */
 const compareNatural = (a: ChangeItem, b: ChangeItem): number =>
-  Number(a.record.time) - Number(b.record.time) || String(a.record.key ?? '').localeCompare(String(b.record.key ?? ''));
+  Number(fieldOf(a.row, 'time')) - Number(fieldOf(b.row, 'time')) ||
+  String(fieldOf(a.row, 'key') ?? '').localeCompare(String(fieldOf(b.row, 'key') ?? ''));
 
 const compareMultiOrder = (a: ChangeItem, b: ChangeItem, orders: readonly QueryAST.Order[]): number => {
   for (const order of orders) {
@@ -231,6 +216,7 @@ const compareMultiOrder = (a: ChangeItem, b: ChangeItem, orders: readonly QueryA
   return 0;
 };
 
-/** After aggregation a property order names a group field (a key or an aggregate); before, a change field. */
 const propertyOf = (item: ChangeItem, property: string) =>
-  item.aggregates && property in item.aggregates ? item.aggregates[property] : (item.record[property] ?? null);
+  item.aggregates && property in item.aggregates
+    ? item.aggregates[property]
+    : GroupBy.coerceKeyComponent(fieldOf(item.row, property));

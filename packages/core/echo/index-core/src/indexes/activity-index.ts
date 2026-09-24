@@ -43,12 +43,8 @@ export class ActivityIndex {
     this.#sql = sql;
   }
 
-  /**
-   * Applies any migrations this database has not recorded yet.
-   */
   migrate = Effect.fn('ActivityIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
       Effect.provideService(SqlClient.SqlClient, this.#sql),

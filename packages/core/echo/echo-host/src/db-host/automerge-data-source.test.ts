@@ -342,7 +342,6 @@ describe('AutomergeDataSource', () => {
     const firstResult = await EffectEx.runAndForwardErrors(
       dataSource.getChangedObjects(Context.default(), [], { activity: true }),
     );
-    // No cursor yet: the whole history, replacing whatever was recorded.
     expect(firstResult.activity).toEqual([expect.objectContaining({ documentId: handle.documentId, full: true })]);
     const firstChanges = firstResult.activity![0].changes;
     expect(firstChanges.length).toBeGreaterThan(0);
@@ -352,15 +351,11 @@ describe('AutomergeDataSource', () => {
     }
     const firstCursor = firstResult.cursors[0];
 
-    // A DocumentLease never hands out the raw DocHandle, so there is no fork-and-merge available
-    // through it; nothing else touches the document between the two calls, so a plain change
-    // back-dated to an old device's clock produces the same history a genuinely late replica would.
-    // A numeric field keeps the change to a single scalar put — a string field is spliced
-    // character-by-character in this Automerge build and would not exercise `ops === 1`.
     const OLD_MS = Date.now() - 30 * 24 * 3_600_000;
     const OLD_S = Math.floor(OLD_MS / 1000);
     handle.change(
       (doc: DatabaseDirectory) => {
+        // A string field is spliced character-by-character in this Automerge build and would not exercise `ops === 1`.
         doc.objects!['obj-1'].data.count = 42;
       },
       { time: OLD_S },
@@ -427,7 +422,6 @@ describe('AutomergeDataSource', () => {
       doc.branches = { 'obj-1': { feature: { members: { 'obj-1': branch.url } } } };
     });
     await host.flush(Context.default());
-    // An object pass reads the root first, as it does within one indexing pass.
     await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     const second = await EffectEx.runAndForwardErrors(
       dataSource.getChangedObjects(Context.default(), toCursors(first), { activity: true }),

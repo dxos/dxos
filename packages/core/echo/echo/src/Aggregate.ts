@@ -115,7 +115,6 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
 export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
   new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
 
-/** Keys of `T` whose values are numbers. */
 export type NumericKeys<T> = { [K in keyof T & string]: T[K] extends number | null | undefined ? K : never }[keyof T &
   string];
 

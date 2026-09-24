@@ -377,7 +377,6 @@ describe('Query', () => {
     });
   });
 
-  // The SQL executor declines change queries and `sum`/`time` aggregates; both modes must answer them.
   describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
     const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
     const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
@@ -444,7 +443,6 @@ describe('Query', () => {
       });
       await db.flush({ indexes: true });
 
-      // Grouping by actor is something only a replay answers.
       const [indexed, replayed] = await Promise.all([
         db
           .query(

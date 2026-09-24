@@ -108,7 +108,6 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
-  /** True for a document registered in any loaded space root's branch registry. */
   isBranchDocument(documentId: DocumentId): boolean {
     for (const root of this._roots.values()) {
       const doc = root.doc();

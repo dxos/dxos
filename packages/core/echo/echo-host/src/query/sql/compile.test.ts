@@ -420,7 +420,6 @@ describe('SqlPlanCompiler', () => {
           .aggregate({ hour: Aggregate.time('due', 'hour'), priority: Aggregate.sum('priority'), n: Aggregate.count() })
           .from(scope),
       );
-      // t2 sits under the deleted project; a due before 1970 floors to the hour before; a string due has no hour.
       const groups = rows
         .map((row) => ({ ...JSON.parse(row.groupKey ?? '{}'), ...JSON.parse(row.aggregates ?? '{}') }))
         .sort((a, b) => (a.hour ?? Infinity) - (b.hour ?? Infinity));

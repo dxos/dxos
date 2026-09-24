@@ -571,7 +571,6 @@ export class IndexQuerySource implements QuerySource {
       };
     }
 
-    // A change record is complete as sent: nothing to load, and it never becomes a live object.
     if (result.recordJson !== undefined) {
       return {
         id: result.id,

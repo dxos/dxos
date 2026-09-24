@@ -403,7 +403,6 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
-    // Change history lives in the host's documents and index; the tab holds neither.
     if (queryContainsChanges(query)) {
       return false;
     }

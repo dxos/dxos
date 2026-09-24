@@ -640,7 +640,6 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
-  /** Results of a `Filter.changes` plan, which carries change records instead of objects. */
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
@@ -698,15 +697,6 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  /** The path this host asked for; a plan the compiler declines still reports `sql` and runs in memory. */
-  get mode(): QueryExecutorMode {
-    return this.#mode;
-  }
-
-  /**
-   * Whether the plan runs as one compiled statement, which reads the snapshot store directly and so
-   * needs it filled. Known from construction, so a caller can gate the first execution on indexing.
-   */
   get compiled(): boolean {
     return this._plan.steps.some((step) => step._tag === 'SqlStep');
   }
@@ -782,7 +772,7 @@ export class QueryExecutor extends Resource {
     log('exec query', {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
-      mode: this.mode,
+      mode: this.#mode,
     });
 
     // Subquery results can change between reactive runs, so resolved `in-query` sets must not

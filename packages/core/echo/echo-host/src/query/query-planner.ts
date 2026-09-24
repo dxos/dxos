@@ -106,7 +106,6 @@ export class QueryPlanner {
     return plan;
   }
 
-  /** A changes filter must be a select's whole filter: it selects records no object predicate applies to. */
   private _validateChangesFilters(query: QueryAST.Query): void {
     QueryAST.visit(query, (node) => {
       if (
@@ -121,11 +120,6 @@ export class QueryPlanner {
     });
   }
 
-  /**
-   * Validates a `Filter.changes` plan and picks its source. The activity index answers a query that
-   * only counts changes and sums their ops per hour or day; any other shape replays the targets'
-   * documents, which is refused space-wide since it would load every document in the space.
-   */
   private _routeChanges(plan: QueryPlan.Plan, query: QueryAST.Query): QueryPlan.Plan {
     const fail = (message: string): never => {
       throw new QueryError({ message, context: { query: Query.pretty(Query.fromAst(query)) } });
@@ -167,20 +161,7 @@ export class QueryPlanner {
       }
     }
 
-    const aggregateIndex = rest.findIndex((step) => step._tag === 'AggregateStep');
-    const aggregate = rest[aggregateIndex];
-    const indexAnswers =
-      aggregate?._tag === 'AggregateStep' &&
-      rest
-        .slice(0, aggregateIndex)
-        .every((step) => step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural')) &&
-      aggregate.aggregates.every(
-        (entry) =>
-          entry.kind === 'count' ||
-          (entry.kind === 'sum' && entry.property === 'ops') ||
-          (entry.kind === 'time' && entry.property === 'time') ||
-          (entry.kind === 'group' && entry.properties.length === 1 && entry.properties[0] === 'source'),
-      );
+    const indexAnswers = activityIndexAnswers(rest);
     if (!indexAnswers && select.selector.targets === undefined) {
       return fail(
         "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
@@ -504,8 +485,6 @@ export class QueryPlanner {
         ]);
       }
 
-      // Changes — selects change records instead of objects, so no deleted handling follows;
-      // `_routeChanges` validates what does.
       case 'changes': {
         if (context.selectionInverted) {
           throw queryTooComplexError(context.originalQuery);
@@ -1595,16 +1574,26 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   }
 };
 
-/**
- * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
- * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
- * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
- * filter's `props` — the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
- * case (above) is always `type: 'object'`, so this must recurse into `props` to find it.
- *
- * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
- * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
- */
+/** Whether hourly activity buckets answer the steps after a changes select as individual changes would. */
+const activityIndexAnswers = (steps: readonly QueryPlan.Step[]): boolean => {
+  const aggregateIndex = steps.findIndex((step) => step._tag === 'AggregateStep');
+  const aggregate = steps[aggregateIndex];
+  return (
+    aggregate?._tag === 'AggregateStep' &&
+    steps.slice(0, aggregateIndex).every(isNaturalOrderStep) &&
+    aggregate.aggregates.every(readsOnlyBucketFields)
+  );
+};
+
+const isNaturalOrderStep = (step: QueryPlan.Step): boolean =>
+  step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural');
+
+const readsOnlyBucketFields = (aggregate: QueryAST.GroupAggregate): boolean =>
+  aggregate.kind === 'count' ||
+  (aggregate.kind === 'sum' && aggregate.property === 'ops') ||
+  (aggregate.kind === 'time' && aggregate.property === 'time') ||
+  (aggregate.kind === 'group' && aggregate.properties.length === 1 && aggregate.properties[0] === 'source');
+
 const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'changes':
@@ -1619,10 +1608,6 @@ const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
   }
 };
 
-/**
- * True when any filter in the query selects changes (`Filter.changes`). Such a query is planned
- * and answered only by the host.
- */
 export const queryContainsChanges = (query: QueryAST.Query): boolean => {
   let found = false;
   QueryAST.visit(query, (node) => {
@@ -1633,6 +1618,16 @@ export const queryContainsChanges = (query: QueryAST.Query): boolean => {
   return found;
 };
 
+/**
+ * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
+ * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+ * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
+ * filter's `props` — the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
+ * case (above) is always `type: 'object'`, so this must recurse into `props` to find it.
+ *
+ * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
+ * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
+ */
 export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'in-query':

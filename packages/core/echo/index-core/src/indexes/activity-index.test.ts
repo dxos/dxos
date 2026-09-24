@@ -65,7 +65,6 @@ describe('ActivityIndex', () => {
       yield* index.record([history]);
       expect(yield* index.query({ spaceId })).toEqual([{ documentId: 'a', hour: HOUR, changes: 1, ops: 1 }]);
 
-      // A branch document is discarded with a full entry carrying no changes.
       yield* index.record([{ spaceId, documentId: 'a', full: true, changes: [] }]);
       expect(yield* index.query({ spaceId })).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),

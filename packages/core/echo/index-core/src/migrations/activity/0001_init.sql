@@ -1,8 +1,4 @@
 --
--- Activity: how many Automerge changes (and ops) each document received per UTC hour.
---
--- Rows outlive their document: garbage collection does not undo edits that happened.
---
 -- Immutable: recorded in `activity_migrations` and never re-run.
 --
 CREATE TABLE IF NOT EXISTS activity (

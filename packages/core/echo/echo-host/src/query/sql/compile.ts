@@ -1041,7 +1041,6 @@ export class SqlPlanCompiler {
     }
   }
 
-  /** The start of the UTC hour or day a system timestamp falls in, as unix ms. */
   #truncatedTimestamp(aggregate: QueryAST.GroupAggregate & { kind: 'timestamp' }): Fragment {
     const sql = this.#sql;
     const column = aggregate.field === 'updatedAt' ? sql`m.updatedAt` : sql`m.createdAt`;
@@ -1065,15 +1064,10 @@ export class SqlPlanCompiler {
     return sql.csv(columns);
   }
 
-  /** The start of the UTC hour or day a unix-ms property falls in, or `null` when it is not a number. */
   #truncatedProperty(aggregate: QueryAST.GroupAggregate & { kind: 'time' }): Fragment {
     return this.#floorTo(this.#numericProperty(aggregate.property), aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
   }
 
-  /**
-   * `value` floored to a multiple of `size`, as `GroupBy.truncateTime` computes it, so times
-   * before 1970 land in the same bucket on both executors; `null` stays `null`.
-   */
   #floorTo(value: Fragment, size: number): Fragment {
     const sql = this.#sql;
     // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
@@ -1081,7 +1075,6 @@ export class SqlPlanCompiler {
     return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
   }
 
-  /** A numeric property, or `null` for anything else (`id` included), as `GroupBy.sum` reads it. */
   #numericProperty(property: string): Fragment {
     const sql = this.#sql;
     if (property === 'id') {
@@ -1193,8 +1186,7 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
 /**
  * Whether the compiler declines this plan, leaving it for the in-memory executor.
  *
- * A `Filter.changes` plan runs on its own executor, since changes are not stored in SQLite. The
- * other two reasons would need the store read before the statement is built: `objectSnapshot` drops
+ * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
  * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
  * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
  */
@@ -1203,7 +1195,6 @@ export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanS
   planReadsObjectMeta(plan, planSubquery) ||
   collectMetaVersionFilters(plan, planSubquery).length > 0;
 
-/** A `Filter.changes` plan runs on its own executor over change records, not object rows. */
 const planSelectsChanges = (plan: QueryPlan.Plan): boolean =>
   plan.steps.some((step) => step._tag === 'SelectStep' && step.selector._tag === 'ChangesSelector');
 

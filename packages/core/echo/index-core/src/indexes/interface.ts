@@ -61,9 +61,6 @@ export interface IndexerObject {
   updatedAt: number;
 }
 
-/**
- * One Automerge change as the activity index counts it.
- */
 export interface ChangeSummary {
   /** Author's clock, unix ms. */
   time: number;

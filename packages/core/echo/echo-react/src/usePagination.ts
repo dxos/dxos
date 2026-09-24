@@ -39,10 +39,6 @@ export type PaginationResult<T> = {
 /** Reactive snapshot handed to React by `useSyncExternalStore`; a fresh object only on real change. */
 type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean };
 
-/**
- * The element type a paginated query yields: the plain record for an aggregate or change query
- * (branded with {@link Query.RecordResult}), otherwise the query's entity type. Mirrors `useQuery`'s overloads.
- */
 type PaginationElement<Q extends Query.Any> =
   Query.Type<Q> extends Query.RecordResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
 

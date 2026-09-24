@@ -2391,7 +2391,6 @@ describe('QueryPlanner', () => {
       expect(selectorOf(history)).toMatchObject({ source: 'replay' });
       expect(selectorOf(byActor)).toMatchObject({ source: 'replay' });
       expect(selectorOf(limitedFirst)).toMatchObject({ source: 'replay' });
-      // The limit stays a step of its own rather than moving into the select.
       expect(plan(history).steps.at(-1)).toMatchObject({ _tag: 'LimitStep', limit: 10 });
     });
 

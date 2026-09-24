@@ -18,6 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
+import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
 
@@ -47,15 +48,14 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
   return cursor !== headsCodec.encode(currentHeads);
 };
 
+export type AutomergeDataSourceOptions = {
+  isBranchDocument?: (documentId: DocumentId) => boolean;
+};
+
 /**
  * Data source that fetches objects from AutomergeHost.
  * Iterates all documents from SqliteHeadsStore and tracks document heads as cursors to detect changes.
  */
-export type AutomergeDataSourceOptions = {
-  /** True for a document that must not contribute change summaries (see {@link AutomergeDataSource.#branchDocumentIds}). */
-  isBranchDocument?: (documentId: DocumentId) => boolean;
-};
-
 export class AutomergeDataSource implements IndexDataSource {
   readonly sourceName = 'automerge';
 
@@ -142,13 +142,8 @@ export class AutomergeDataSource implements IndexDataSource {
       // Load changed documents and extract objects.
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
-      // Per document until the loop ends: a branch document may precede its root in this batch,
-      // and a document whose extraction fails must not leave its changes behind to be recounted
-      // when the cursor that was never written brings it back.
       const pendingActivity = new Map<DocumentId, DocumentActivity>();
-      // Branch documents first seen in this batch: rows already recorded for them (from a pass that ran
-      // before their root's registry was read) are discarded.
-      const newBranches: DocumentActivity[] = [];
+      const branchDiscards = new Map<DocumentId, DocumentActivity>();
       const extractObjects = opts?.objects !== false;
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
@@ -171,20 +166,14 @@ export class AutomergeDataSource implements IndexDataSource {
             continue;
           }
 
-          // A space root's branch registry names every branch document the space must replicate;
-          // caching membership here lets a later pass recognize the branch document itself even
-          // before this data source has loaded it directly. Only the activity pass records it, or an
-          // object pass reading the root first would leave nothing new for activity to discard.
-          if (opts?.activity && doc.branches) {
+          if (doc.branches) {
             for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
               if (!isValidAutomergeUrl(url)) {
                 continue;
               }
               const branchId = interpretAsDocumentId(url);
-              if (!this.#branchDocumentIds.has(branchId)) {
-                this.#branchDocumentIds.add(branchId);
-                newBranches.push({ spaceId, documentId: branchId, full: true, changes: [] });
-              }
+              this.#branchDocumentIds.add(branchId);
+              branchDiscards.set(branchId, { spaceId, documentId: branchId, full: true, changes: [] });
             }
           }
 
@@ -223,13 +212,11 @@ export class AutomergeDataSource implements IndexDataSource {
             pendingActivity.set(documentId, {
               spaceId,
               documentId,
-              // Without a cursor the summary walks the whole history, so it replaces what was recorded
-              // (a document garbage-collected and replicated again would otherwise count twice).
               full: existingCursor === undefined,
-              changes: changesMeta
-                // A change with no clock (time 0) has no hour to land in.
-                .filter((meta) => meta.time > 0)
-                .map((meta) => ({ time: meta.time * 1000, ops: meta.maxOp - meta.startOp + 1 })),
+              changes: changesMeta.flatMap((meta) => {
+                const change = toChangeRecord(meta);
+                return change ? [{ time: change.time, ops: change.ops }] : [];
+              }),
             });
           }
         } catch (error) {
@@ -240,10 +227,12 @@ export class AutomergeDataSource implements IndexDataSource {
       if (!opts?.activity) {
         return { objects, cursors: updatedCursors };
       }
-      const activity: DocumentActivity[] = [...newBranches];
+      const activity: DocumentActivity[] = [...branchDiscards.values()];
       for (const [documentId, entry] of pendingActivity) {
+        if (branchDiscards.has(documentId)) {
+          continue;
+        }
         const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
-        // A branch document records nothing and discards anything a pass recorded before it was known.
         activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
       }
       return { objects, cursors: updatedCursors, activity };
@@ -257,8 +246,7 @@ export class AutomergeDataSource implements IndexDataSource {
  *
  * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`),
  * and `A.getChangesMetaSince` for both the max timestamp (second-level precision) and the change
- * metadata — one call serves both, since computing it twice would double the cost for the same
- * result.
+ * metadata.
  * Returns `changedObjectIds: null` when all objects should be indexed (new document).
  */
 const inspectDocChanges = (
@@ -270,16 +258,12 @@ const inspectDocChanges = (
     // On first indexing we don't have a prior cursor so we can't isolate per-object
     // change timestamps.  Fall back to the current wall-clock time so that freshly
     // indexed objects sort "recent" in `Order.updated` queries.
-    //
-    // The change summary still wants every change the document carries, so it walks from no
-    // heads at all — the intended first-sight backfill.
     const changesMeta = opts.changes ? A.getChangesMetaSince(doc, []) : [];
     return { changedObjectIds: null, updatedAt: Date.now(), changesMeta };
   }
 
   const oldHeads = headsCodec.decode(existingCursor);
 
-  // The object diff is the expensive part and only an object extraction reads it.
   const changedObjectIds = new Set<string>();
   if (opts.objects) {
     for (const patch of A.diff(doc, oldHeads, A.getHeads(doc))) {

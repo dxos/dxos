@@ -10,5 +10,4 @@ export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
 };
 
-/** Own history table per store, since many stores share the client database. */
 export const MIGRATIONS_TABLE = 'activity_migrations';

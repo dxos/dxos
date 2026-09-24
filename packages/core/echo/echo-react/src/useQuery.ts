@@ -11,8 +11,6 @@ const EMPTY_ARRAY: never[] = [];
 const noop = () => {};
 
 interface UseQueryFn {
-  // Aggregate rows and changes are plain records branded with `Query.RecordResult`; return them
-  // as-is, never wrapped in `Entity.Entity` (they are not entities).
   <R extends Query.RecordResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
   <R extends Query.RecordResult>(resource: Database.Queryable | undefined, filter: Filter.Filter<R>): R[];
 
