@@ -143,3 +143,33 @@ export const Generate = Operation.make({
   }),
   services: [Capability.Service, Database.Service],
 });
+
+export const Score = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.score'),
+    name: 'Score Drawing',
+    description:
+      'Grades the drawing as laid out, on one 0–1 scale (1 is good): each layout constraint (pass 1 / fail 0) and cost ' +
+      'term (crossings, overlapping arrows, overlapping labels, bends, length, gaps, compactness), their overall score, ' +
+      'and the diagnostics behind them. Call after Generate to decide what to change before regenerating.',
+    icon: 'ph--gauge--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to score.' }),
+  }),
+  output: Schema.Struct({
+    overall: Schema.optional(Schema.Number).annotate({
+      description: 'The worst constraint gating the mean of the cost scores; absent when nothing could be scored.',
+    }),
+    scores: Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        kind: Schema.String,
+        score: Schema.Number,
+        detail: Schema.optional(Schema.String),
+      }),
+    ),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic),
+  }),
+  services: [Capability.Service, Database.Service],
+});
