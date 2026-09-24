@@ -141,19 +141,30 @@ const encodableInvitation = (
   observable: CancellableInvitationObservable,
 ): Effect.Effect<ClientInvitation, InvitationError> => {
   const isEncodable = (invitation: ClientInvitation) =>
-    invitation.authMethod !== ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY ||
-    !!invitation.guestKeypair?.privateKey ||
-    TERMINAL_STATES.has(invitation.state);
+    invitation.authMethod !== ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY || !!invitation.guestKeypair?.privateKey;
+
+  /** Settles once the invitation is encodable, or fails once it has ended without becoming so. */
+  const settle = (invitation: ClientInvitation): Effect.Effect<ClientInvitation, InvitationError> | undefined => {
+    if (isEncodable(invitation)) {
+      return Effect.succeed(invitation);
+    }
+    if (TERMINAL_STATES.has(invitation.state)) {
+      return Effect.fail(new InvitationError({ context: { reason: 'invitation ended before it became shareable' } }));
+    }
+    return undefined;
+  };
 
   return Effect.callback<ClientInvitation, InvitationError>((resume) => {
-    if (isEncodable(observable.get())) {
-      resume(Effect.succeed(observable.get()));
+    const initial = settle(observable.get());
+    if (initial) {
+      resume(initial);
       return;
     }
     const subscription = observable.subscribe(
       (invitation: ClientInvitation) => {
-        if (isEncodable(invitation)) {
-          resume(Effect.succeed(invitation));
+        const result = settle(invitation);
+        if (result) {
+          resume(result);
         }
       },
       // Never the pending value: without its keypair the code connects and then fails to authenticate.

@@ -331,7 +331,8 @@ const loginWithComposer = (client: Client, composerUrl: string) =>
         try: () =>
           CliLogin.createAuthorizeUrl(
             composerUrl || process.env.DX_COMPOSER_URL || DEFAULT_COMPOSER_URL,
-            `${server.origin}${CliLogin.CALLBACK_PATH}`,
+            // The literal address the server binds, so a host resolving `localhost` to `::1` still reaches it.
+            `http://127.0.0.1:${server.port}${CliLogin.CALLBACK_PATH}`,
             state,
           ),
         catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),

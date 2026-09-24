@@ -123,6 +123,15 @@ export const startLocalCallbackServer = (
 
           const request = yield* HttpServerRequest.HttpServerRequest;
           const params = parseUrl(request.url).searchParams;
+          const captured: Record<string, string> = {};
+          for (const [key, value] of params.entries()) {
+            captured[key] = value;
+          }
+          // Before the error branch too: an unexpected `?error=` must not end the wait either.
+          if (accept && !accept(captured)) {
+            return HttpServerResponse.text('Not the expected callback.', { status: 400 });
+          }
+
           const error = params.get('error');
           if (error) {
             yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
@@ -136,13 +145,6 @@ export const startLocalCallbackServer = (
             );
           }
 
-          const captured: Record<string, string> = {};
-          for (const [key, value] of params.entries()) {
-            captured[key] = value;
-          }
-          if (accept && !accept(captured)) {
-            return HttpServerResponse.text('Not the expected callback.', { status: 400 });
-          }
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);
           return HttpServerResponse.text(`<html><body><h1>${successMessage}</h1></body></html>`, {

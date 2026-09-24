@@ -223,7 +223,19 @@ const detectType = (bytes: Uint8Array, declared: string | undefined): string => 
   if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP') {
     return 'image/webp';
   }
-  return declared && declared !== 'application/x-www-form-urlencoded' ? declared : 'application/octet-stream';
+  if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(4, 8)) === 'ftyp') {
+    return String.fromCharCode(...bytes.slice(8, 12)) === 'qt  ' ? 'video/quicktime' : 'video/mp4';
+  }
+  if (declared && declared !== 'application/x-www-form-urlencoded') {
+    return declared;
+  }
+  // Logs, CSV, Markdown and JSON have no signature; strict UTF-8 tells them from arbitrary binary.
+  try {
+    new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return 'text/plain';
+  } catch {
+    return 'application/octet-stream';
+  }
 };
 
 /**
