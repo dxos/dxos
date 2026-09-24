@@ -91,8 +91,8 @@ const installDocument = (
   vi.stubGlobal('document', {
     visibilityState: options.visibility ?? 'visible',
     ...(options.api !== false && {
-      startViewTransition: (callback: UpdateCallback) => {
-        fake.callbacks.push(callback);
+      startViewTransition: ({ update }: { update: UpdateCallback }) => {
+        fake.callbacks.push(update);
         return {};
       },
     }),
