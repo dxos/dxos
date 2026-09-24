@@ -78,6 +78,17 @@ describe('buildMailboxSelection', () => {
     });
   });
 
+  test('a tag term alone selects the tag members', () => {
+    const tagged = EntityId.deterministic('tagged-message');
+    const selection = buildMailboxSelection('#work', buildTagged('#work'), {
+      resolveTagIds: (tagUri) => (tagUri === 'tag:work' ? [tagged] : undefined),
+    });
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'object', id: [tagged] }],
+    });
+  });
+
   test('an unresolvable tag term is dropped from the text selection', () => {
     const selection = buildMailboxSelection('#work invoice', buildTagged('#work invoice'));
     expect(selection.ast).toMatchObject({
@@ -285,6 +296,22 @@ describe('buildThreadSemiJoin (results)', () => {
 
       const filter = Filter.and(Filter.tag('tag:work'), Filter.text('alpha', { type: 'full-text' }));
       const viewFilter = buildMailboxSelection('#work alpha', filter, { resolveTagIds: () => [a1.id] });
+      expect(await runSemiJoin(fixture, viewFilter)).toEqual(ids(a1));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
+  test('a tag term alone returns only the tagged thread', async () => {
+    const fixture = await setup();
+    try {
+      // Feed messages carry no `meta.tags`; membership comes from the mailbox's TagIndex, so the tag
+      // must resolve to ids — a bare `Filter.tag` would match nothing here.
+      const a1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const b1 = message('two', '2020-01-02T00:00:00.000Z', 'thread-b');
+      await append(fixture, [a1, b1]);
+
+      const viewFilter = buildMailboxSelection('#work', buildTagged('#work'), { resolveTagIds: () => [a1.id] });
       expect(await runSemiJoin(fixture, viewFilter)).toEqual(ids(a1));
     } finally {
       await fixture.builder.close();

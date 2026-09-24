@@ -56,7 +56,9 @@ export default Capability.makeModule(
               return repo ? referenceUrl(repo, number) : undefined;
             },
           }),
-          ViewPlugin.define(() => ({ destroy: mirrored.stop })),
+          // Held per mounted view: the provider's result can be mounted in several editors or none,
+          // so each view acquires its own hold rather than all of them releasing one subscription.
+          ViewPlugin.define(() => ({ destroy: mirrored.acquire() })),
         ];
       },
     ]);
@@ -96,25 +98,44 @@ const owningProject = (object: Obj.Unknown): Project.Project | undefined => {
 /**
  * The repositories this space mirrors, as `owner/name`. Read synchronously from a decoration pass,
  * where a fresh `runSync()` would answer with whatever the tab has loaded so far; the subscription
- * brings the set to the complete answer and keeps it there for as long as the editor lives.
+ * brings the set to the complete answer and keeps it there while any editor holds it.
  */
 const watchMirroredRepos = (db: Database.Database) => {
   const names = new Set<string>();
-  const stop = db.query(Query.select(Filter.type(TaskSet.TaskSet))).subscribe(
-    (result) => {
-      names.clear();
-      for (const name of result.results.filter(isMirrored).map(repoName)) {
-        if (name) {
-          names.add(name);
-        }
-      }
-    },
-    { fire: true },
-  );
+  let holds = 0;
+  let stop: (() => void) | undefined;
   return {
     /** The one mirrored repository, or undefined when there is none or more than one. */
     single: () => (names.size === 1 ? [...names][0] : undefined),
-    stop,
+    /** Starts watching on the first hold; the returned release is safe to call more than once. */
+    acquire: (): (() => void) => {
+      if (holds++ === 0) {
+        stop = db.query(Query.select(Filter.type(TaskSet.TaskSet))).subscribe(
+          (result) => {
+            names.clear();
+            for (const name of result.results.filter(isMirrored).map(repoName)) {
+              if (name) {
+                names.add(name);
+              }
+            }
+          },
+          { fire: true },
+        );
+      }
+
+      let released = false;
+      return () => {
+        if (released) {
+          return;
+        }
+        released = true;
+        if (--holds === 0) {
+          stop?.();
+          stop = undefined;
+          names.clear();
+        }
+      };
+    },
   };
 };
 

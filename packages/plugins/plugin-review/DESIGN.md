@@ -94,7 +94,7 @@ ancestry, so merges in either direction are CRDT-well-defined.
 Each invariant names its enforcing test. An invariant without a test is not an invariant.
 
 - **I-1 One branch per author.** `Branch.suggestion(doc, parent, creator)` is find-or-create keyed by
-  creator. — `branch.test.ts`
+  creator. — `Branch.test.ts`
 - **I-2 An own suggestion branch is always `main + that author's suggestions`.** Main's progress never
   reads as the author's deletions. Enforced on every Suggesting entry: unedited stale branch ⇒ retire
   and re-fork at current heads; edited stale branch ⇒ `syncBranch` (main folded in) and the anchor
@@ -109,7 +109,7 @@ Each invariant names its enforcing test. An invariant without a test is not an i
   current diff (not a snapshot), and return an undo splice. Pure insertions are acceptable
   (containment fallback in hunk matching). — `diff.test.ts`, `accept-change.test.ts`
 - **I-6 Empty branches archive themselves**; the timeline never accumulates spent suggestion
-  branches. — `branch.test.ts`
+  branches. — `Branch.test.ts`
 - **I-7 Snapshots are detached.** Checkpoint/fork/base views render historical content read-only from
   `contentAt`, never by binding the live doc to old heads. — `model.test.ts`, lifecycle table
 

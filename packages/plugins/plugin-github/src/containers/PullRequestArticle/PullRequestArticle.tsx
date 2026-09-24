@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Field, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
@@ -29,6 +29,7 @@ import {
 import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
+import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
@@ -85,12 +86,16 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const [comment, setComment] = useState('');
   // Set when the composer was opened from a diff line; the comment then goes on that line.
   const [lineTarget, setLineTarget] = useState<{ target: DiffLineTarget; commit: string }>();
+  // The diff line's own button, which the composer is positioned at: the anchor is a DOM node
+  // CodeMirror owns, so it is held in a ref rather than state and never re-renders the article.
+  const lineAnchorRef = useRef<HTMLElement | null>(null);
 
   const handleLineComment = useCallback(
-    (target: DiffLineTarget) => {
+    (target: DiffLineTarget, anchor: HTMLElement) => {
       if (!walkthrough) {
         return;
       }
+      lineAnchorRef.current = anchor;
       // The commit travels with the target: a regeneration between opening the composer and posting
       // would otherwise pair the NEW commit with line numbers read from the old diff, which GitHub
       // either rejects or anchors to the wrong line.
@@ -100,9 +105,17 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     [walkthrough],
   );
 
+  /** The toolbar's composer is about the pull request, so it drops whatever line was targeted. */
+  const handleToggleComposer = useCallback(() => {
+    setLineTarget(undefined);
+    lineAnchorRef.current = null;
+    setComposing((value) => value === false || lineTarget !== undefined);
+  }, [lineTarget]);
+
   const handleCloseComposer = useCallback(() => {
     setComposing(false);
     setLineTarget(undefined);
+    lineAnchorRef.current = null;
   }, []);
 
   const pullRequestRef = useMemo(() => Ref.make(pullRequest), [pullRequest]);
@@ -259,7 +272,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             disposition: 'toolbar',
             testId: 'pull-request.toolbar.comment',
           },
-          () => setComposing((value) => !value),
+          () => handleToggleComposer(),
         )
         .separator()
         .action(
@@ -299,20 +312,17 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           () => void handleCopyLink(),
         )
         .build(),
-    [busy, generating, walkthrough, pullRequest.url, state, handleApprove, handleGenerate, handleCopyLink],
-  );
-
-  // Cmd/Ctrl+Enter submits the composer, matching GitHub's own comment form.
-  const handleComposerKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        if (!busy && comment.trim()) {
-          void handleComment();
-        }
-      }
-    },
-    [busy, comment, handleComment],
+    [
+      busy,
+      generating,
+      walkthrough,
+      pullRequest.url,
+      state,
+      handleApprove,
+      handleGenerate,
+      handleCopyLink,
+      handleToggleComposer,
+    ],
   );
 
   const extensions = useMemo(
@@ -330,6 +340,14 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   // The body is replaced wholesale on regeneration, so the editor is rebuilt rather than patched.
   const { parentRef } = useTextEditor({ initialValue: body ?? '', extensions }, [extensions, body]);
 
+  const composerProps = {
+    value: comment,
+    busy,
+    onValueChange: setComment,
+    onSubmit: () => void handleComment(),
+    onCancel: handleCloseComposer,
+  };
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild classNames='dx-expand'>
@@ -346,36 +364,22 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             </span>
           )}
           <span className='dx-tag' data-hue={status ? ciHue[status.ci] : 'neutral'}>
-            {t(status ? `ci-status.${status.ci}` : 'ci-status.unknown')}
+            {t(status ? `ci-status.${status.ci}.label` : 'ci-status.unknown.label')}
             {status && status.checks.total > 0 && ` ${status.checks.passed}/${status.checks.total}`}
           </span>
           <span className='truncate'>{pullRequest.title}</span>
         </div>
-        {composing && (
+        {composing && !lineTarget && (
           <div className='flex flex-col gap-2 px-4 py-2 border-b border-separator'>
-            {lineTarget && (
-              <span className='text-sm text-description'>
-                {t('comment-line.label', { file: lineTarget.target.file, line: lineTarget.target.line })}
-              </span>
-            )}
-            <Field.Root>
-              <Field.Textarea
-                autoFocus
-                rows={4}
-                placeholder={t('comment-placeholder.label')}
-                value={comment}
-                onChange={(event) => setComment(event.target.value)}
-                onKeyDown={handleComposerKeyDown}
-              />
-            </Field.Root>
-            <div className='flex justify-end gap-2'>
-              <Button onClick={handleCloseComposer}>{t('comment-cancel.label')}</Button>
-              <Button variant='primary' disabled={busy || !comment.trim()} onClick={() => void handleComment()}>
-                {t('comment-submit.label')}
-              </Button>
-            </div>
+            <CommentComposer {...composerProps} />
           </div>
         )}
+        <LineCommentPopover
+          {...composerProps}
+          open={composing && !!lineTarget}
+          anchorRef={lineAnchorRef}
+          target={lineTarget?.target}
+        />
         {walkthrough ? (
           <div ref={parentRef} className='dx-fill overflow-auto' />
         ) : (

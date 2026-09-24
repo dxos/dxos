@@ -112,7 +112,7 @@ const generateSuggestions = (items: { label: string; typename: string }[]) =>
       log.warn('generate-home-suggestions: LLM call failed', { err });
       return Effect.succeed<string[]>([]);
     }),
-    Effect.provide(AiService.model(MODEL)),
+    Effect.provide(AiService.languageModel(MODEL)),
   );
 
 export default handler;

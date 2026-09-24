@@ -98,6 +98,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/util": "workspace:*",

@@ -120,6 +120,11 @@ export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.f
 export const hasEntityId = refInternal.Ref.hasEntityId;
 
 /**
+ * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.
+ */
+export type LoadOptions = refInternal.LoadOptions;
+
+/**
  * The URI a reference property points at, or `undefined` when the node is not a reference.
  *
  * A reference declares its target twice: as a typed annotation on the declaration and as the JSON

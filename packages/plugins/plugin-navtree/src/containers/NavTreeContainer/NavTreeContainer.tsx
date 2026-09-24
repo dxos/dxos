@@ -19,7 +19,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -27,7 +27,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
+import { filterItems, getParent, getRearrangeIndex, resolveDropKind } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -45,6 +45,44 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   return AppGraph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
     filterItems(node, disposition),
   );
+};
+
+/** What a row opens. A section node groups rows without standing for anything itself. */
+const hasSubject = (node: AppGraphNode.Node) => !!node.data;
+
+const isSelectable = (node: AppGraphNode.Node) => hasSubject(node) && (node.properties.selectable ?? true);
+
+const resolveDrop = (
+  graph: AppGraph.ReadableGraph,
+  { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
+): {
+  operation: 'rearrange' | DropKind;
+  /** What the drop leaves behind, which the indicator shows: `link` when the item ends up only listed. */
+  kind: DropKind;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+} => {
+  const sourceNode = source.item as NavTreeNode.NavTreeItemGraphNode;
+  const targetNode = target.item as NavTreeNode.NavTreeItemGraphNode;
+  const sourceParent = getParent(graph, sourceNode, source.path);
+  if (source.path.slice(0, -1).join() === target.path.slice(0, -1).join() && instruction.type !== 'make-child') {
+    const reorders = sourceParent?.properties.onRearrange && sourceParent.properties.canDrop?.(source);
+    return reorders
+      ? { operation: 'rearrange', kind: 'move', sourceParent, destination: sourceParent }
+      : { operation: 'reject', kind: 'reject', sourceParent, destination: sourceParent };
+  }
+
+  const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
+  const operation = destination?.properties.canDrop?.(source)
+    ? resolveDropKind({ source: sourceNode, sourceParent, destination })
+    : 'reject';
+  if (operation === 'reject') {
+    return { operation, kind: 'reject', sourceParent, destination };
+  }
+  const isLink =
+    destination?.properties.isLink?.(sourceNode, operation === 'move' ? sourceParent : undefined) ??
+    operation === 'link';
+  return { operation, kind: isLink ? 'link' : 'move', sourceParent, destination };
 };
 
 export type NavTreeContainerProps = {
@@ -126,20 +164,24 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [invokePromise, graph],
     );
 
-    const blockInstruction = useCallback(
-      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) => {
-        return target.item.properties.blockInstruction?.(source, instruction) ?? false;
-      },
-      [],
+    const canDrop = useCallback(
+      ({ source, target }: { source: TreeData; target: TreeData }) =>
+        !!target.item.properties.canDrop?.(source) ||
+        !!getParent(graph, target.item, target.path)?.properties.canDrop?.(source),
+      [graph],
     );
 
-    const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-      return target.item.properties.canDrop?.(source) ?? false;
-    }, []);
+    const getDropKind = useCallback(
+      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }): DropKind => {
+        if (target.item.properties.blockInstruction?.(source, instruction)) {
+          return 'reject';
+        }
+        return resolveDrop(graph, { source, target, instruction }).kind;
+      },
+      [graph],
+    );
 
-    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
-      return item.properties.selectable ?? true;
-    }, []);
+    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => isSelectable(item), []);
 
     const handleSelect = useCallback(
       ({
@@ -155,7 +197,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         shift: boolean;
         keyboard?: boolean;
       }) => {
-        if (!node.data) {
+        if (!isSelectable(node)) {
           return;
         }
 
@@ -167,8 +209,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
-        // A click leaves focus on the row, so the arrows keep walking the tree; Enter is the reader
-        // committing to the item, so focus goes on into its content and they can type at once.
         const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {
@@ -218,44 +258,34 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
-            const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
-            const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
-            const operation =
-              sameParent && instruction.type !== 'make-child'
-                ? 'rearrange'
-                : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
-            const sourceParent = getParent(graph, sourceNode, sourcePath);
-            const targetParent = getParent(graph, targetNode, targetPath);
+            const { operation, sourceParent, destination } = resolveDrop(graph, {
+              source: source.data as TreeData,
+              target: target.data as TreeData,
+              instruction,
+            });
             const sourceItems = getItems(graph, sourceParent);
-            const targetItems = getItems(graph, targetParent);
+            const targetItems = getItems(graph, getParent(graph, targetNode, targetPath));
             const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
-            const migrationIndex =
-              instruction.type === 'make-child'
-                ? undefined
-                : instruction.type === 'reorder-below'
-                  ? targetIndex + 1
-                  : targetIndex;
+            const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
+            const migrationIndex = instruction.type === 'make-child' ? undefined : insertIndex;
             switch (operation) {
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
-                arrayMove(nextItems, sourceIndex, targetIndex);
-                void sourceNode.properties.onRearrange?.(nextItems);
+                arrayMove(nextItems, sourceIndex, getRearrangeIndex(sourceIndex, insertIndex));
+                void sourceParent?.properties.onRearrange?.(nextItems);
                 break;
               }
-              case 'copy': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                void target?.properties.onCopy?.(sourceNode, migrationIndex);
-                break;
-              }
-              case 'transfer': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                if (!target?.properties.onTransferStart || target?.id === sourceParent?.id) {
-                  break;
+              case 'move': {
+                if (destination) {
+                  void sourceParent?.properties.onMoveOut?.(sourceNode, destination);
+                  void destination.properties.onMoveIn?.(sourceNode, migrationIndex);
                 }
-                void target?.properties.onTransferStart(sourceNode, migrationIndex);
-                void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+                break;
+              }
+              case 'link': {
+                void destination?.properties.onLink?.(sourceNode, migrationIndex);
                 break;
               }
             }
@@ -302,9 +332,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         model,
         popoverAnchorId,
         renderItemEnd: NavTreeItemEnd,
-        blockInstruction,
         canDrop,
         canSelect,
+        getDropKind,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
@@ -314,9 +344,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [
         model,
         popoverAnchorId,
-        blockInstruction,
         canDrop,
         canSelect,
+        getDropKind,
         handleBack,
         handleOpenChange,
         handleSelect,

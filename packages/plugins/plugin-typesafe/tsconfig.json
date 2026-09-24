@@ -25,7 +25,13 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/compute"
@@ -37,13 +43,22 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../experimental/ai-typesafe"
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-connector"

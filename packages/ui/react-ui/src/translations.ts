@@ -35,6 +35,7 @@ export const translations = [
         'system-button.upload.label': 'Upload',
         'system-button.download.label': 'Download',
         'system-button.clipboard.label': 'Copy',
+        'system-button.copied.label': 'Copied',
 
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',

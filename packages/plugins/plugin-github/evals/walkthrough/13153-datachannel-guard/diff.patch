@@ -1,0 +1,55 @@
+diff --git a/.changeset/rtc-data-channel-blob-disposal.md b/.changeset/rtc-data-channel-blob-disposal.md
+new file mode 100644
+index 00000000..88dc6961
+--- /dev/null
++++ b/.changeset/rtc-data-channel-blob-disposal.md
+@@ -0,0 +1,5 @@
++---
++'@dxos/network-manager': patch
++---
++
++Drop an inbound WebRTC frame whose `Blob` is still being read when the data channel is disposed, instead of throwing on the torn-down stream.
+diff --git a/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.test.ts b/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.test.ts
+index fc34b848..407b460b 100644
+--- a/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.test.ts
++++ b/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.test.ts
+@@ -78,6 +78,22 @@ describe('bindDataChannel', () => {
+     dispose();
+   });
+ 
++  test('drops a blob still being read when the channel is disposed', async () => {
++    const { channel, stream } = setup({ readyState: 'open' });
++    const dispose = bindDataChannel(channel as any, stream, handlers());
++
++    // `Blob.arrayBuffer` is the one await on the inbound path; disposal during it leaves nothing
++    // to push to, and pushing anyway threw.
++    let release: (value: ArrayBuffer) => void;
++    const blob = { arrayBuffer: () => new Promise<ArrayBuffer>((resolve) => (release = resolve)) };
++    Object.setPrototypeOf(blob, Blob.prototype);
++    const delivered = channel.onmessage!({ data: blob } as any) as unknown as Promise<void>;
++
++    dispose();
++    release!(new Uint8Array([1, 2, 3]).buffer);
++    await expect(delivered).resolves.toBeUndefined();
++  });
++
+   test('sends what the wire-protocol stream writes', async () => {
+     const sent: string[] = [];
+     const { channel, stream } = setup({ readyState: 'open', onSend: (chunk) => sent.push(chunk.toString()) });
+diff --git a/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.ts b/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.ts
+index 252bd0b5..1d9c578e 100644
+--- a/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.ts
++++ b/packages/core/mesh/network-manager/src/transport/webrtc/rtc-data-channel.ts
+@@ -119,7 +119,12 @@ export const bindDataChannel = (
+       if (data instanceof ArrayBuffer) {
+         data = Buffer.from(data);
+       } else if (data instanceof Blob) {
++        // The only await on this path, so re-read the binding after it: disposal in the meantime
++        // leaves nothing to push to.
+         data = Buffer.from(await data.arrayBuffer());
++        if (!duplex) {
++          return;
++        }
+       }
+       duplex.push(data);
+     },

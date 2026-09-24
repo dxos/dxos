@@ -15,8 +15,8 @@ import {
   Avatar,
   type AvatarContentProps,
   Button,
-  Clipboard,
   IconButton,
+  SystemIconButton,
   type ThemedClassName,
   Tooltip,
   useThemeContext,
@@ -183,7 +183,7 @@ export const InvitationListItemImpl = ({
               <span>{t('open-share-panel.label')}</span>
             </Button>
           </Tooltip.Trigger>
-          <Clipboard.IconButton variant='ghost' value={invitationUrl} />
+          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />

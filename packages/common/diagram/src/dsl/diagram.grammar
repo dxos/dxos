@@ -1,0 +1,137 @@
+//
+// Copyright 2026 DXOS.org
+//
+// Lezer grammar for the diagram DSL — the text form of `src/scene.ts`.
+// Generate: lezer-generator --typeScript src/dsl/diagram.grammar -o src/dsl/gen/diagram.ts
+//
+// Brace-delimited and whitespace-insensitive, so an element's positional geometry
+// (`0,0 100x50`) stays on one line without the newline carrying meaning. Attribute names and
+// values are plain `name` tokens rather than keywords: the grammar accepts any `name=value`
+// and `lint.ts` rejects the ones the schema does not define, which is what lets an unknown
+// attribute report itself instead of failing the parse three tokens later.
+//
+
+@top Document { statement* }
+
+@skip { space | Comment }
+
+statement {
+  ObjectDecl |
+  ElementsDecl |
+  MoveStmt |
+  RemoveObjectStmt |
+  RemoveElementsStmt
+}
+
+// object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
+ObjectDecl { kw<"object"> Id ObjectAttr* Body }
+
+// elements <objectId> { … } — adds to an existing object.
+ElementsDecl { kw<"elements"> Id Body }
+
+MoveStmt { kw<"move"> Id Origin }
+
+RemoveObjectStmt { kw<"remove"> kw<"object"> Id }
+
+// remove elements <objectId> <elementId>+
+RemoveElementsStmt { kw<"remove"> kw<"elements"> Id Id+ }
+
+ObjectAttr { Origin | Attribute }
+Origin { "@" Point }
+
+Body { "{" Element* "}" }
+
+Element {
+  BoxElement |
+  CircleElement |
+  PathElement |
+  ArcElement |
+  TextElement |
+  ArrowElement |
+  PortalElement
+}
+
+BoxElement    { BoxKind Id Point Size Label? Attribute* }
+CircleElement { kw<"circle"> Id Point Number Label? Attribute* }
+PathElement   { PathKind Id Point Point+ Attribute* }
+ArcElement    { kw<"arc"> Id Point Number Range Attribute* }
+TextElement   { kw<"text"> Id Point Label Attribute* }
+ArrowElement  { kw<"arrow"> Id Connection Label? Attribute* }
+PortalElement { kw<"portal"> Id Point Size Label? Attribute* }
+
+BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> }
+PathKind { kw<"line"> | kw<"curve"> }
+
+// Both ends are written. `from`/`to` are independently optional in the schema, and `_` is how an
+// absent one is spelled — writing the omission rather than leaving a hole keeps the trailing end
+// distinguishable from the attributes that follow it, which an optional operand is not.
+Connection { Endpoint "->" Endpoint }
+Endpoint { Point | Ref | Unbound }
+Unbound { kw<"_"> }
+
+// `element`, `object/element`, either with `#port` — the spelling `Scene.formatRef` emits.
+// Quoted when an id in it cannot lex bare (a dialect may produce `1st/box` from a numeric node id).
+Ref { name | String }
+
+// Every attribute is `name=value`, with no bare flags: after `->` a bare word would otherwise be
+// ambiguous between a ref endpoint and a flag, which LR(1) cannot settle, and `closed=true` is
+// the only case that wanted one.
+Attribute { AttrName "=" AttrValue }
+AttrName  { name }
+AttrValue { Number | String | Word }
+
+// `head=triangle`, `head=arrow` and `tail=circle` are schema literals that are also element-kind
+// keywords, and a reserved word no longer lexes as a plain name. Listing every reserved word —
+// not just the three that collide today — keeps this correct when the schema gains another.
+Word {
+  name |
+  kw<"object"> | kw<"elements"> | kw<"move"> | kw<"remove"> |
+  kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> |
+  kw<"circle"> | kw<"line"> | kw<"curve"> | kw<"arc"> |
+  kw<"text"> | kw<"arrow"> | kw<"portal">
+}
+
+Id    { name | String }
+Label { String }
+Point { Number "," Number }
+Range { Number ".." Number }
+
+Number { number }
+Size   { size }
+
+// Keyword specialization: the statement and element-kind words drive the structure, so they
+// must not lex as ids. An id that collides is written quoted (the printer does it).
+kw<term> { @specialize[@name={term}]<name, term> }
+
+@tokens {
+  nameStart { $[a-zA-Z_] }
+  nameChar  { $[a-zA-Z0-9_\-] }
+
+  // One token covers plain ids and refs: `#` is both the port separator and the comment
+  // character, and longest-match is what makes `A/box#left` a ref while ` # note` is a
+  // comment. A comment therefore needs whitespace in front of it.
+  name { nameStart nameChar* ("/" nameStart nameChar*)? ("#" nameStart nameChar*)? }
+
+  digits { @digit+ }
+  // The exponent is accepted because the printer emits `String(value)`, which switches to
+  // exponent notation outside roughly 1e-7..1e21 — without it, printing such a scene would
+  // produce text this grammar rejects.
+  exponent { $[eE] $[+\-]? digits }
+  decimal { "-"? digits ("." digits)? exponent? }
+  number { decimal }
+  // `100x50`, longer than the `100` a bare number would match, so the tokenizer prefers it.
+  size { decimal "x" decimal }
+
+  String { '"' (!["\\] | "\\" _)* '"' }
+
+  Comment { "#" ![\n]* }
+
+  space { $[ \t\r\n]+ }
+
+  "@" "->" ".." "{" "}" "=" ","
+
+  @precedence { size, number }
+  @precedence { name, Comment }
+}
+
+@detectDelim

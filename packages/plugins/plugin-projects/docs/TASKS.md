@@ -984,3 +984,51 @@ the hierarchical list, which is #12787.
       `MarkdownView` now, so a URL in a description is a link. `#nnn` there is
       still inert: that decoration is a CodeMirror extension and this path is
       react-markdown (tracked with the `#nnn` item above).
+
+### Tracked 2026-09-23 (user) — task surfaces
+
+Design: [TASK-DETAIL.md](TASK-DETAIL.md) — the master-detail items below follow
+plugin-inbox's mailbox/message precedent (a level chain of planks, not a
+companion).
+
+- [ ] **Stored ECHO object for a pull request, with an article** — a durable PR
+      type (alongside `Repo`/`Project.repo`) so a pull request is a first-class
+      object a project's work can reference, plus the article that renders it.
+      Today `#nnn` is only a markdown decoration resolving to a GitHub URL;
+      nothing in the space holds the PR's title, state, branch or checks.
+- [x] **Filter tasks from a project** — the free-text `Field.Input` is now a
+      `QueryEditor` filter row (`TaskFilter`, modelled on plugin-inbox's
+      `MailboxFilter`), rendered in BOTH roles: the standalone article's
+      `Panel.Toolbar` and, as a `Toolbar.Root` of its own, the section the
+      project's Tasks tab embeds — which had no filter at all. `util/task-filter.ts`
+      evaluates the parsed filter against each task in memory (free text over
+      title/description, `#tag` over `meta.tags`, and typed terms like
+      `status:started` over the task's own fields), keeping every ancestor of a
+      match so the tree never restructures under the reader. In memory rather
+      than as a query for exactly that reason. Tests in `task-filter.test.ts`.
+- [ ] **Sort tasks from a project** — the filter has no sort beside it yet; the
+      list keeps the set's canonical array order.
+- [x] **Level chain for task detail** — `DeckAnnotation` on `TaskSet`
+      (`taskSet → task`) and a `task` rung on `Project`, so a row opened from
+      either host reuses one plank rather than stacking one per click.
+- [x] **Hidden graph children per task** — a `taskSetTasks` connector in
+      plugin-tasks (hidden `Task` nodes under a `TaskSet` node) and a matching
+      one in plugin-projects under `PROJECT_URL`, plus a `paths.ts` helper, so a
+      task is addressable by path from either host.
+- [x] **`TaskArticle`** — the detail container, on
+      `AppSurface.object(Article, Task.Task)`. Its body is `TaskList.Edit` itself
+      (a `TaskList.Root` of one task, held selected) rather than a schema form,
+      so editing is the same gesture wherever a task is opened and the
+      description keeps its live markdown extensions. Still to grow into:
+      assignee, dependencies, sub-tasks, history, delegation.
+- [x] **Row opens the detail** — `TaskSetArticle` rows invoke
+      `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
+      meta-click opens its own plank; arrow keys read down the list through
+      `useArticleKeyboardNavigation`.
+- [ ] **Retire the `TaskList.Edit` strip** — it is `createOnly` in
+      `TaskSetArticle` now (the article is the editor, so a selected row no
+      longer turns the add row into one), which was forced: once a click both
+      selects and opens, an editing strip left no way to type a new task. What
+      remains is removing it, which needs creation somewhere else — an inline new
+      row in the list, or a toolbar action that creates the task and opens its
+      plank (plugin-inbox's draft pattern).

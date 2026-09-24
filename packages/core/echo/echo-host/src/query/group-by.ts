@@ -62,6 +62,13 @@ const zoneOffset = (timestamp: number, timeZone: string): number => {
   return Date.UTC(year, month - 1, day, hour, minute, second) - Math.floor(timestamp / 1000) * 1000;
 };
 
+/**
+ * Code-unit order, the collation SQLite's `BINARY` applies. Both executors order strings through
+ * this so a compiled plan and an in-memory one return the same rows — under `limit` the collation
+ * decides which rows are cut, not just their order.
+ */
+export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 export const GroupBy = Object.freeze({
   /**
    * The start of the hour or calendar day `timestamp` falls in, in unix ms, or `null` when unknown.
@@ -201,7 +208,7 @@ export const GroupBy = Object.freeze({
       return -1;
     }
     if (typeof a === 'string' && typeof b === 'string') {
-      return a.localeCompare(b);
+      return compareCodeUnits(a, b);
     }
     if (typeof a === 'number' && typeof b === 'number') {
       return a - b;
@@ -209,7 +216,7 @@ export const GroupBy = Object.freeze({
     if (typeof a === 'boolean' && typeof b === 'boolean') {
       return a === b ? 0 : a ? 1 : -1;
     }
-    return String(a).localeCompare(String(b));
+    return compareCodeUnits(String(a), String(b));
   },
 
   /**

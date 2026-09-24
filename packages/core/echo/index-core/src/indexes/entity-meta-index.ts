@@ -19,8 +19,9 @@ import {
 } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
+import { localEntityId } from '../entity-ids.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+import { chunkArray, chunkSizeForBoundVariables } from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
 import type { Index } from './interface.ts';
 
@@ -74,9 +75,19 @@ export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readon
       const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
       const forms = _typeUriEquivalents(normalized);
       const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
-      return hasNoVersion
-        ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
-        : exactMatch;
+      if (!hasNoVersion) {
+        return exactMatch;
+      }
+      // A range bounds the seek on `(spaceId, typeDXN)`; `= OR LIKE` alone makes SQLite scan the
+      // space partition. `;` is the code point after `:`, so the range covers the bare form and
+      // every `form:<version>`; the exact predicate stays as the residual because the range also
+      // admits `form` followed by a code point below `:`.
+      return sql.or(
+        forms.map(
+          (form) =>
+            sql`(typeDXN >= ${form} AND typeDXN < ${form + ';'} AND (typeDXN = ${form} OR typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'))`,
+        ),
+      );
     }),
   );
 
@@ -132,7 +143,7 @@ export interface QueueRef {
  * Builds a SQL condition for filtering by space and queue source.
  * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
  */
-const buildSourceCondition = (
+export const buildSourceCondition = (
   sql: SqlClient.SqlClient,
   spaceIds: readonly string[],
   includeAllQueues: boolean,
@@ -168,9 +179,6 @@ const buildSourceCondition = (
 
   return sql.or(conditions);
 };
-
-// SQLite caps bound variables (conventionally 999); chunk well below it, matching the FTS index.
-const QUERY_CHUNK_SIZE = 500;
 
 /**
  * Window over a queue-scoped read: which rows, in what order, and how many.
@@ -218,7 +226,7 @@ export interface NaturalQueueWindow {
  * Empty when there is no window, so the unwindowed query keeps its previous shape (and its
  * unspecified row order).
  */
-const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
+export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
     return sql``;
   }
@@ -273,12 +281,12 @@ export class EntityMetaIndex implements Index {
           return [];
         }
         const sql = this.#sql;
-        // Chunked to stay under SQLite's bound-variable limit — an initial index of a fresh
-        // clone can present thousands of keys in one batch, and a thrown query here would skip
-        // detection for the whole batch with no retry.
+        // Chunked against the bound-variable budget — an initial index of a fresh clone can
+        // present thousands of keys in one batch, and a thrown query here would skip convergence
+        // detection for the whole batch with no retry. Distinct keys so a repeated one cannot
+        // straddle two chunks and duplicate its row.
         const results: EntityMeta[] = [];
-        for (let offset = 0; offset < convergenceKeys.length; offset += QUERY_CHUNK_SIZE) {
-          const chunk = convergenceKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
+        for (const chunk of chunkArray([...new Set(convergenceKeys)])) {
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('convergenceKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
           results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
@@ -392,11 +400,15 @@ export class EntityMetaIndex implements Index {
         }
         const sql = this.#sql;
         const column = endpoint === 'source' ? 'source' : 'target';
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
-          column,
-          anchorDxns,
-        )}`;
-        return rows.map((row) => ({
+        // A relation carries one value in this column and the anchors are distinct, so chunks
+        // partition the matches and the results concatenate without duplicates.
+        const results: EntityMeta[] = [];
+        for (const chunk of chunkArray([...new Set(anchorDxns)])) {
+          const rows =
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(column, chunk)}`;
+          results.push(...rows);
+        }
+        return results.map((row) => ({
           ...row,
           deleted: !!row.deleted,
         }));
@@ -426,15 +438,18 @@ export class EntityMetaIndex implements Index {
               source: string | null;
               target: string | null;
               parent: string | null;
+              parentId: string | null;
+              sourceId: string | null;
+              targetId: string | null;
               convergenceKey: string | null;
             };
             let existing: readonly ExistingRow[];
             if (documentId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
             } else if (queueId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
             } else {
               // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
               existing = [];
@@ -483,6 +498,10 @@ export class EntityMetaIndex implements Index {
                 : null;
             // Parent (nullable).
             const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+            // Bare local ids of the dependencies, the columns the query compiler joins through.
+            const parentId = preserveBody ? priorRow.parentId : localEntityId(parent, spaceId);
+            const sourceId = preserveBody ? priorRow.sourceId : localEntityId(source, spaceId);
+            const targetId = preserveBody ? priorRow.targetId : localEntityId(target, spaceId);
             // Convergence key (nullable) — from the meta section of the serialized object. The meta
             // arrives as raw replicated JSON, so anything but a string is treated as no key.
             const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)?.convergenceKey;
@@ -512,6 +531,9 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
+                    parentId = ${parentId},
+                    sourceId = ${sourceId},
+                    targetId = ${targetId},
                     convergenceKey = ${convergenceKey},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null}
@@ -521,12 +543,13 @@ export class EntityMetaIndex implements Index {
               yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
-                    createdAt, updatedAt, queuePosition
+                    entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
+                    convergenceKey, version, createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${convergenceKey}, ${version},
+                    ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
+                    ${convergenceKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;
@@ -615,8 +638,7 @@ export class EntityMetaIndex implements Index {
           rows.forEach((row) => recordIds.add(row.recordId));
         }
 
-        // Two bound variables per object; keep chunks under the SQLite limit.
-        for (const chunk of chunkArray(query.objects, Math.floor(SQL_CHUNK_SIZE / 2))) {
+        for (const chunk of chunkArray(query.objects, chunkSizeForBoundVariables(2))) {
           const conditions = chunk.map(
             (object) => sql`(documentId = ${object.documentId} AND objectId = ${object.objectId})`,
           );
@@ -655,12 +677,21 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)}`;
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        // Both lists bind one variable per element, so each chunk takes half the budget; the ids
+        // are distinct, so a row matches exactly one pair of chunks and the results concatenate
+        // without duplicates.
+        const chunkSize = chunkSizeForBoundVariables(2);
+        const results: EntityMeta[] = [];
+        for (const spaceIdChunk of chunkArray([...new Set(query.spaceIds)], chunkSize)) {
+          for (const objectIdChunk of chunkArray([...new Set(query.objectIds)], chunkSize)) {
+            const rows =
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIdChunk)} AND ${sql.in('objectId', objectIdChunk)}`;
+            for (const row of rows) {
+              results.push({ ...row, deleted: !!row.deleted });
+            }
+          }
+        }
+        return results;
       }),
   );
 
@@ -756,15 +787,23 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        const parentDzns = query.parentIds.map((id) => EID.make({ entityId: id }));
-        const parentDxns = parentDzns;
-        const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
+        // Each parent id binds twice (as a DXN and as a queue id) and each space id once, so a
+        // third of the budget per list keeps the statement whole.
+        const chunkSize = chunkSizeForBoundVariables(3);
+        // A row can match one chunk by `parent` and another by `queueId`, so it is deduplicated.
+        const byRecordId = new Map<number, EntityMeta>();
+        for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
+          for (const parentIds of chunkArray(query.parentIds, chunkSize)) {
+            const parentDxns = parentIds.map((id) => EID.make({ entityId: id }));
+            const rows =
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
+            for (const row of rows) {
+              byRecordId.set(row.recordId, { ...row, deleted: !!row.deleted });
+            }
+          }
+        }
 
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        return [...byRecordId.values()];
       }),
   );
 }

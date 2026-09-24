@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
@@ -43,7 +43,7 @@ export default SandboxOperation.DownloadFile.pipe(
       }
 
       const fileObj = yield* File.fromBytes(bytes, { name: fileName, type });
-      yield* CollectionModel.add({ object: fileObj });
+      yield* ContainerModel.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };
     }, Effect.provide(FetchHttpClient.layer)),

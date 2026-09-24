@@ -658,6 +658,36 @@ test QA-9: The guided tours
       expect: it runs from "Sharing" to "Feedback" as before
 ```
 
+```mdl
+test QA-10: Invite a known contact to a second space
+  desc: |
+    A host who already shares a space with someone (and so has them as a contact) invites that same
+    person into a DIFFERENT space directly from the contact picker, skipping the invitation-code
+    exchange — as opposed to QA-8's fresh, code-based invitation.
+  actors: human
+  status: unverified        # 2026-09-24, written from composer-e2e/src/playwright/contacts.spec.ts
+  automated:
+    - composer-e2e:contacts.spec.ts#Contacts › host adds a known contact to a second space
+  given:
+    - host: a booted app with an identity, one space shared with the guest (so the guest is a contact), and a second space the host owns
+    - guest: a SECOND browser profile, already a member of the first space
+  steps:
+    - name: Open the second space's members panel
+      do: On the host, switch to the second space and open its share/members panel.
+      expect: the contact picker is available (the host is Owner of this space)
+    - name: Pick the known contact
+      do: Open the contact picker and select the guest.
+      expect: the guest appears selected; the picker stays open
+    - name: Add and get the join link
+      do: Click Add.
+      expect: a join-URL field appears, carrying a `?spaceKey=` link to the second space
+    - name: Guest follows the link
+      do: On the guest, navigate to the join URL.
+      expect: the guest lands in the second space, with no invitation-code or auth-code exchange
+  then:
+    - the guest is a member of the second space, reached purely from the host's contact picker
+```
+
 ## Suites
 
 ```mdl
@@ -681,7 +711,7 @@ suite multi-peer: Journeys that need a second browser profile
     every member needs a profile the other suites do not: a second TAB shares storage and would
     pass these without replicating anything.
   tags: [nightly]
-  tests: [QA-7, QA-8]
+  tests: [QA-7, QA-8, QA-10]
 ```
 
 ```mdl
