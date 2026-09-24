@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { execFileSync } from 'node:child_process';
 import { afterEach, describe, test } from 'vitest';
 
 import { Stage } from './LocalUpload.ts';
@@ -29,6 +30,16 @@ describe('LocalUpload', () => {
 
     expect((await upload(new TextEncoder().encode('id,name\n1,Rotate\n'))).staged?.type).toBe('text/plain');
     expect((await upload(new Uint8Array([0xff, 0xfe, 0x00, 0xc3]))).staged?.type).toBe('application/octet-stream');
+  });
+
+  test('quotes the file name in the returned command', async ({ expect }) => {
+    const name = "it's a $HOME `id`.png";
+    const { command, url } = await stage.mint(name);
+    // The same words the shell would hand curl, echoed one per line instead of uploaded.
+    const words = execFileSync('sh', ['-c', command.replace('curl --fail-with-body -T', "printf '%s\\n'")], {
+      encoding: 'utf8',
+    });
+    expect(words.trimEnd().split('\n')).toEqual([`./${name}`, url]);
   });
 
   test('refuses a URL without its signature', async ({ expect }) => {

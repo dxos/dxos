@@ -56,6 +56,8 @@ export type StagedUpload = {
  */
 export class Stage {
   readonly #uploads = new Map<string, PendingUpload>();
+  /** Bytes of bodies still streaming, so concurrent PUTs cannot together overrun {@link MAX_STAGED_BYTES}. */
+  #inflightBytes = 0;
   #server?: Promise<{ server: Server; origin: string }>;
 
   /** Reserves an upload slot and returns where to `PUT` its bytes. */
@@ -78,7 +80,7 @@ export class Stage {
       method: 'PUT' as const,
       expiresAt: new Date(expiresAt).toISOString(),
       maxBytes: MAX_UPLOAD_BYTES,
-      command: `curl --fail-with-body -T ${name ? `./${name}` : './FILE'} '${url.toString()}'`,
+      command: `curl --fail-with-body -T ${shellQuote(`./${name ?? 'FILE'}`)} ${shellQuote(url.toString())}`,
     };
   }
 
@@ -166,19 +168,25 @@ export class Stage {
     if (pending.received) {
       return reject(request, response, 409, 'Upload already received.');
     }
-    const limit = Math.min(MAX_UPLOAD_BYTES, MAX_STAGED_BYTES - this.#stagedBytes());
+    const limit = Math.min(MAX_UPLOAD_BYTES, MAX_STAGED_BYTES - this.#stagedBytes() - this.#inflightBytes);
     if (Number(request.headers['content-length'] ?? 0) > limit) {
       return reject(request, response, 413, `Upload exceeds the ${limit}-byte limit.`);
     }
 
     const chunks: Buffer[] = [];
     let size = 0;
-    for await (const chunk of request) {
-      size += chunk.length;
-      if (size > limit) {
-        return reject(request, response, 413, `Upload exceeds the ${limit}-byte limit.`);
+    try {
+      // Not destroyed on an early return, so `reject` can still drain the body and answer 413.
+      for await (const chunk of request.iterator({ destroyOnReturn: false })) {
+        size += chunk.length;
+        this.#inflightBytes += chunk.length;
+        if (size > MAX_UPLOAD_BYTES || this.#stagedBytes() + this.#inflightBytes > MAX_STAGED_BYTES) {
+          return reject(request, response, 413, `Upload exceeds the ${limit}-byte limit.`);
+        }
+        chunks.push(chunk);
       }
-      chunks.push(chunk);
+    } finally {
+      this.#inflightBytes -= size;
     }
     // Re-checked after the body: a second PUT on the same URL may have landed while this one streamed.
     if (pending.received) {
@@ -192,6 +200,9 @@ export class Stage {
     respond(response, 200, JSON.stringify({ uploadId: match[1], size, type }));
   }
 }
+
+/** Single-quotes a word for a POSIX shell, so a file name with spaces, quotes or `$` stays one argument. */
+const shellQuote = (word: string) => `'${word.replaceAll("'", `'\\''`)}'`;
 
 /** Answers without reading the body, draining it so the client sees the status rather than a reset. */
 const reject = (request: IncomingMessage, response: ServerResponse, status: number, body: string) => {
