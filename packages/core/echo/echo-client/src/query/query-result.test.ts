@@ -74,6 +74,32 @@ describe('QueryResultImpl', () => {
     }
   });
 
+  test('releasing a subscription twice does not stop the query under another subscriber', async ({ expect }) => {
+    const builder = new EchoTestBuilder();
+    await builder.open();
+    try {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db = await peer.createDatabase();
+      // Both reads hit the one cached result, as two components on the same query do.
+      const result = db.query(Filter.type(TestSchema.Person));
+      expect(db.query(Filter.type(TestSchema.Person))).toBe(result);
+
+      const unsubscribeFirst = result.subscribe();
+      unsubscribeFirst();
+      unsubscribeFirst();
+
+      const unsubscribeSecond = result.subscribe();
+      try {
+        expect(() => result.results).not.toThrow();
+      } finally {
+        unsubscribeSecond();
+      }
+      expect(() => result.results).toThrow(/at least 1 subscriber/);
+    } finally {
+      await builder.close();
+    }
+  });
+
   test('objects the tab has not loaded arrive from the index and complete the result', async ({ expect }) => {
     const tmpPath = createTmpPath();
     const builder = new EchoTestBuilder();

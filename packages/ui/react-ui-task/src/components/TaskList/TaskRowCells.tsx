@@ -2,15 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
-import { Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { statusIcon, statusTextStyle } from './status-icons.ts';
+import {
+  UNSET_ICON,
+  estimateTextStyle,
+  priorityIcon,
+  priorityTextStyle,
+  statusIcon,
+  statusTextStyle,
+} from './status-icons.ts';
+import { useTaskListContext } from './TaskListContext.ts';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -23,15 +32,15 @@ import { statusIcon, statusTextStyle } from './status-icons.ts';
  */
 
 export type TaskStatusControlProps = {
-  task: Task.Task;
-  /** Absent for a readonly list, which renders the glyph without the control. */
-  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  classNames?: string;
   /**
    * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
    * only when it knows something the task does not, e.g. that the session behind it has stopped.
    */
   active?: boolean;
-  classNames?: string;
+  task: Task.Task;
+  /** Absent for a readonly list, which renders the glyph without the control. */
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 };
 
 /** The status glyph, which is also the control that completes the task. */
@@ -68,7 +77,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // own width and stops lining up with the editable list's.
     return (
       <IconBlock square aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
-        <Icon icon={icon} classNames={iconClassNames} size={4} />
+        <Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
       </IconBlock>
     );
@@ -129,10 +138,10 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
 TaskOrdinal.displayName = 'TaskList.Ordinal';
 
 export type TaskCheckboxProps = {
+  classNames?: string;
   task: Task.Task;
   checked: boolean;
   onCheckedChange: (task: Task.Task) => void;
-  classNames?: string;
 };
 
 /**
@@ -161,3 +170,106 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 };
 
 TaskCheckbox.displayName = 'TaskList.Checkbox';
+
+/**
+ * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
+ * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
+ * setting an estimate never depends on discovering a hover affordance, and falling back to
+ * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
+ * reads as two empty controls rather than a dash beside a dot.
+ */
+export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
+  const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const estimate = task.estimate;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+
+  if (!onTaskUpdate) {
+    return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
+  }
+
+  return (
+    <>
+      <IconBlock>
+        {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
+        <ActionMenu
+          deferUntilOpen
+          actions={() =>
+            [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+              createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+                label: title,
+                checked: (estimate ?? 'none') === id,
+              }),
+            )
+          }
+        >
+          <Button
+            variant='ghost'
+            data-testid='taskList.item.estimate'
+            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+            onClick={(event: MouseEvent) => event.stopPropagation()}
+          >
+            {label}
+          </Button>
+        </ActionMenu>
+      </IconBlock>
+    </>
+  );
+};
+
+TaskEstimateControl.displayName = 'TaskList.EstimateControl';
+
+/**
+ * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
+ * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
+ * — it is a different kind of statement from "how much", and a filled mark carries that.
+ *
+ * The glyph is also the control: it opens a menu to set the level. It renders on every row —
+ * including one with no priority, which shows a dot — so setting a priority never depends on
+ * discovering a hover affordance.
+ */
+export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
+  const { t } = useTranslation(translationKey);
+  const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const priority = task.priority ?? undefined;
+  const icon = priorityIcon(priority);
+  const styles = priorityTextStyle(priority);
+
+  if (!onTaskUpdate) {
+    // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
+    // in the same column its neighbours use, so the list reads as one column and not a ragged one.
+    return (
+      <IconBlock square>
+        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
+      </IconBlock>
+    );
+  }
+
+  return (
+    <IconBlock>
+      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
+      <ActionMenu
+        deferUntilOpen
+        actions={() =>
+          [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+              label: t(`priority-${id}.label`),
+              icon: optionIcon,
+              iconClassNames: priorityTextStyle(id),
+              checked: priority === id,
+            }),
+          )
+        }
+      >
+        <IconButton
+          variant='ghost'
+          icon={icon}
+          iconOnly
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          iconClassNames={styles}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
+  );
+};

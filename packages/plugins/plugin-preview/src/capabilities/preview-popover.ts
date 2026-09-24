@@ -99,12 +99,26 @@ export default Capability.makeModule(
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
       const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { space }));
-      if (!result) {
-        return;
-      }
       // A newer activation (open or close) arrived while the lookup was in flight; bail
       // out so we don't clobber the latest state.
       if (sequence !== activationSequence) {
+        return;
+      }
+
+      if (!result) {
+        // A link a resolver claims but cannot answer (a private repository, an object that is gone) is
+        // still a chip the reader hovered, so it opens a card that says so rather than nothing at all.
+        if (kind === 'card' && PreviewCapabilities.isPreviewLink(resolvers, eid)) {
+          await invokePromise(LayoutOperation.UpdatePopover, {
+            subjectRef: eid,
+            state: true,
+            variant: 'virtual',
+            anchor: trigger,
+            kind,
+            title: titleProp ?? PreviewCapabilities.linkLabel(resolvers, eid) ?? (label || eid),
+            ...(side && { side }),
+          });
+        }
         return;
       }
 

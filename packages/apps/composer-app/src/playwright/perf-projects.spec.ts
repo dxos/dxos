@@ -13,14 +13,17 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  detachAll,
   installProbes,
   launchInstrumentedBrowser,
   publishPosthogBatch,
   readProcessFootprint,
+  startAllocationSampling,
   startProfiling,
   startScreencast,
   startTracing,
   sumAppFootprint,
+  takeMemorySnapshot,
   trackNetwork,
   writePosthogBatch,
   writeRunReport,
@@ -29,6 +32,7 @@ import {
 import { INITIAL_URL } from './harness-helpers.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 import { describeReplication, waitForReplication } from './perf/replication.ts';
+import { PERF_PORT } from './perf/server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -88,6 +92,35 @@ const SETTLE_MS = 20_000;
  * stage exists to remove. Overridable for a run against a slow or local backend.
  */
 const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
+
+/** Moved off the shared e2e port by `DX_PERF_PORT`, which the config serves on too. */
+const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
+
+/**
+ * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, `idle` for
+ * the settled app before the fixture exists, or `end` for the app {@link END_SETTLE_MS} after the
+ * last stage. Off by default — a snapshot of a loaded tab takes minutes and writes hundreds of
+ * megabytes.
+ */
+const SNAPSHOTS = new Set(
+  (process.env.DX_PERF_SNAPSHOTS ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean),
+);
+
+/**
+ * Sample allocations from the start of the fixture to the end of `await-replication`
+ * (`DX_PERF_ALLOC_SAMPLE=1`), written to `allocations/` beside the snapshots: the write burst that
+ * sets the flow's peak footprint, attributed to the code that allocated it.
+ */
+const ALLOC_SAMPLE = process.env.DX_PERF_ALLOC_SAMPLE === '1';
+
+/**
+ * Wait before the `end` snapshot: twice the app registry's 5 s idle TTL, so atoms nothing reads any
+ * more have been dropped and what remains is what the app retains.
+ */
+const END_SETTLE_MS = 10_000;
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -183,8 +216,10 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
-      instruments: mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler',
+      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}`,
+      ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
     };
+    const snapshotDir = path.join(artifactDir, 'snapshots');
 
     const runner = new StageRunner({
       flow: FLOW,
@@ -199,6 +234,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       // Both modes: a reviewer reading a regression wants to see the stage it is in, and one
       // capture per stage outside the measured window costs nothing the run can feel.
       screenshotDir: path.join(artifactDir, 'stages'),
+      snapshotStages: SNAPSHOTS,
+      snapshotDir,
     });
 
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
@@ -214,7 +251,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
 
     await runner.stage('boot', async () => {
-      await page.goto(`${INITIAL_URL}/?profiler=1`, { timeout: 120_000 });
+      await page.goto(`${BASE_URL}/?profiler=1`, { timeout: 120_000 });
       await waitForReady(page);
     });
 
@@ -254,6 +291,30 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     }
 
     await page.waitForTimeout(SETTLE_MS);
+
+    // A snapshot outside every stage, on its own sessions so the runner's stay untouched.
+    const snapshotCheckpoint = async (checkpoint: string) => {
+      const checkpointTargets = await attachAll(debugPort);
+      try {
+        const snapshot = await takeMemorySnapshot({
+          browserCdp,
+          targets: checkpointTargets,
+          dir: path.join(snapshotDir, checkpoint),
+        });
+        log.info('checkpoint snapshot', { checkpoint, dir: snapshot.dir, realms: snapshot.realms.length });
+      } finally {
+        detachAll(checkpointTargets);
+      }
+    };
+
+    // Outside every stage, like the fixture: the settled app with no data in it, the floor the
+    // end-of-flow snapshot is read against.
+    if (SNAPSHOTS.has('idle')) {
+      await snapshotCheckpoint('idle');
+    }
+
+    const allocationTargets = ALLOC_SAMPLE ? await attachAll(debugPort) : [];
+    const allocations = ALLOC_SAMPLE ? await startAllocationSampling(allocationTargets) : undefined;
 
     // Fixture generation is deliberately OUTSIDE any stage: it is setup, and its cost is not a
     // number anyone reads.
@@ -300,6 +361,11 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       }
       log.info('replication settled', { ...result.final, outcome: result.outcome, summary: described });
     });
+
+    if (allocations) {
+      await allocations.stop(path.join(artifactDir, 'allocations'));
+      detachAll(allocationTargets);
+    }
 
     await runner.stage('open-space', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {
@@ -411,6 +477,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     }
 
     runner.dispose();
+
+    // After the rows are written, so the wait and the snapshot touch no measured stage.
+    if (SNAPSHOTS.has('end')) {
+      await page.waitForTimeout(END_SETTLE_MS);
+      await snapshotCheckpoint('end');
+    }
 
     for (const row of rows) {
       log.info('stage', {

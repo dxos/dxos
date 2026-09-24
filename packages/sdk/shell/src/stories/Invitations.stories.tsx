@@ -15,7 +15,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';
+import { ButtonGroup, IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -242,12 +242,7 @@ type Story = StoryObj<typeof meta>;
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default: Story = {
   render: () => {
-    return (
-      // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
-      <Clipboard.Provider>
-        <Invitations />
-      </Clipboard.Provider>
-    );
+    return <Invitations />;
   },
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
   tags: ['test'],

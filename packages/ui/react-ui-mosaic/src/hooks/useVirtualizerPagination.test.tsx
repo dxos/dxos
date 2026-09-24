@@ -142,4 +142,49 @@ describe('useVirtualizerPagination', () => {
 
     expect(result.current.leadingSpace).toBe(0);
   });
+
+  test('does not read a filter that keeps a contiguous run of rows as an eviction', () => {
+    // Filtering a mailbox by a tag can leave rows that were already contiguous in the old list
+    // (e.g. rows 2 and 3 of 8). Positionally that is indistinguishable from a window that slid past
+    // its first two rows -- but a window anchored at the live head has evicted nothing, so reading
+    // it as a slide grew the spacer by the dropped rows' height and left blank space above the list.
+    const items = makeItems([0, 1, 2, 3, 4, 5, 6, 7]);
+    const pagination: VirtualizerPaginationController = { atHead: true };
+
+    const { result, rerender } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items } },
+    );
+
+    act(() => {
+      result.current.onChange(makeUnscrolledVirtualizer(8));
+    });
+    rerender({ items: items.slice(2, 4) });
+
+    expect(result.current.leadingSpace).toBe(0);
+  });
+
+  test('stays at the top when rows arrive above an unscrolled window at the head', () => {
+    // Clearing a filter restores rows above the ones already shown. The reader was at the top of the
+    // live head, so the restored rows belong in view -- scrolling to keep the old first row in place
+    // would hide them above the viewport.
+    const items = makeItems([0, 1, 2, 3, 4, 5, 6, 7]);
+    const pagination: VirtualizerPaginationController = { atHead: true };
+
+    const { result, rerender } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items: items.slice(2, 4) } },
+    );
+
+    const virtualizer = makeUnscrolledVirtualizer(2);
+    act(() => {
+      result.current.onChange(virtualizer);
+    });
+    // The incoming render measures all eight rows, uniform height, before the layout effect runs.
+    virtualizer.measurementsCache = makeUnscrolledVirtualizer(8).measurementsCache;
+    rerender({ items });
+
+    expect(virtualizer.scrollToOffset).not.toHaveBeenCalled();
+    expect(result.current.leadingSpace).toBe(0);
+  });
 });

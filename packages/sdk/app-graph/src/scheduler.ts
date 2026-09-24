@@ -3,7 +3,10 @@
 //
 
 // CF Workers / Node fallback: there is no main thread to yield to.
-// scheduleTask runs the callback on the next microtask; yieldOrContinue is a microtask hop.
+// scheduleTask runs the callback on the next microtask; yieldOrContinue is a microtask hop; update
+// flushes have no frame budget.
+
+import type * as GraphBuilder from '@dxos/graph/GraphBuilder';
 
 type ScheduleOptions = { strategy?: 'smooth' | 'interactive' | 'idle'; signal?: AbortSignal };
 
@@ -15,3 +18,5 @@ export const scheduleTask = async <T>(callback: () => T | Promise<T>, _options?:
 export const yieldOrContinue = async (_priority: 'smooth' | 'interactive' | 'idle'): Promise<void> => {
   await Promise.resolve();
 };
+
+export const frameBudget: GraphBuilder.FrameBudget | undefined = undefined;

@@ -1656,7 +1656,7 @@ pnpmfileChecksum: sha256-HfdXnQ57lkGOnGDIqwvpKXC8RFCIbD00oMkDJI7W7aQ=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.48':
-    hash: 3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb
+    hash: 69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67
     path: patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
   '@automerge/automerge-subduction@0.17.2':
     hash: ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7
@@ -2077,7 +2077,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2156,7 +2156,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -2190,6 +2190,12 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.9
+      '@dxos/agent-code-mode':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-code-mode
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -3224,22 +3230,58 @@ importers:
 
   packages/common/diagram:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.9.7
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dagrejs/dagre':
         specifier: 'catalog:'
         version: 3.1.1
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@lezer/common':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
+      '@lezer/lr':
+        specifier: ^1.4.10
+        version: 1.4.10
       elkjs:
         specifier: 'catalog:'
         version: 0.12.0
     devDependencies:
+      '@lezer/generator':
+        specifier: 'catalog:'
+        version: 1.8.0
+      '@uiw/codemirror-theme-vscode':
+        specifier: 'catalog:'
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.1)(@codemirror/view@6.43.9)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
 
   packages/common/display-name:
     devDependencies:
@@ -3445,6 +3487,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../errors
@@ -3800,12 +3845,6 @@ importers:
 
   packages/common/storybook-utils:
     dependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../effect
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -5522,7 +5561,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5725,7 +5764,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -5850,7 +5889,7 @@ importers:
     dependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -7120,9 +7159,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -7240,7 +7276,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.6.0-subduction.48
@@ -7508,18 +7544,6 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/experimental/ai-typesafe:
-    dependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
-      effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
 
   packages/experimental/discord-bot:
     dependencies:
@@ -8641,6 +8665,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8653,6 +8680,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -9394,6 +9424,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
@@ -11535,9 +11568,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -12128,9 +12158,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -12161,9 +12188,9 @@ importers:
 
   packages/plugins/plugin-labeler:
     dependencies:
-      '@dxos/ai-typesafe':
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -13202,9 +13229,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -13796,9 +13820,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -16703,6 +16724,9 @@ importers:
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -16748,6 +16772,9 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -17738,33 +17765,48 @@ importers:
 
   packages/plugins/plugin-typesafe:
     dependencies:
-      '@dxos/ai-typesafe':
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -18650,7 +18692,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -18892,7 +18934,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -19162,7 +19204,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+        version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -20753,6 +20795,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
@@ -20811,6 +20856,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -20829,6 +20877,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 4.0.0-rc.117
+        version: 4.0.0-rc.117
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21101,6 +21152,9 @@ importers:
 
   packages/ui/react-ui-canvas:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.1
@@ -21113,6 +21167,9 @@ importers:
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -21144,9 +21201,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -21262,9 +21325,18 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -21377,9 +21449,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -21608,9 +21677,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -21895,9 +21961,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui':
         specifier: workspace:*
         version: link:../ui
@@ -22247,9 +22310,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22405,9 +22465,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22604,9 +22661,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -22827,9 +22881,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22942,9 +22993,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -23232,9 +23280,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -23307,6 +23352,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -43701,13 +43749,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.48':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)
+      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=3236499a9d09e58a6d4a0329e1ce73083468623955e7bc20fedfb549da125dbb)':
+  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)':
     dependencies:
       '@automerge/automerge': 3.5.0
       '@automerge/automerge-subduction': 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -66329,7 +66377,7 @@ snapshots:
 
   vite@7.3.5(@types/node@22.10.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0):
     dependencies:
-      esbuild: 0.28.0
+      esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.5)
       picomatch: 4.0.5
       postcss: 8.5.12

@@ -66,7 +66,7 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('com.anthropic.model.claude-opus-5.default').pipe(
+  AiService.languageModel('com.anthropic.model.claude-opus-5.default').pipe(
     Layer.provideMerge(AiServiceTestingPreset('direct')),
   ),
 );
