@@ -3792,6 +3792,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
         version: 0.2.1
