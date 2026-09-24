@@ -5,9 +5,11 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import React, { Fragment, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective } from '@dxos/diagram';
+import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective, Score } from '@dxos/diagram';
 import { BASIC } from '@dxos/diagram/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -23,11 +25,10 @@ import { SceneView } from './SceneView.tsx';
 
 /**
  * Test:
- * 1. The right panel grades the scene with `@dxos/diagram`'s `Diagnostics` and default `Objective` — the
- *    measurements the layout engines pick their candidates by.
- * 2. Drag a node onto another: `node-overlap` appears, the constraint turns red and the cost jumps.
- * 3. Drag nodes so two links cross: `crossings` rises and its weighted term follows; Δ is against the
- *    scene as first loaded.
+ * 1. The right panel lists one 0–1 score per scorer (1 is good), tagged by kind: the default `Objective`'s
+ *    constraints (pass 1, fail 0) and cost terms (weighted cost through `Score.fromCost`).
+ * 2. Drag a node onto another: `no-hard-defects` drops to 0, and so does the overall score.
+ * 3. Drag nodes so two links cross: the `crossings` score falls; Δ is against the scene as first loaded.
  * 4. Click a diagnostic to select the elements it names on the canvas.
  */
 
@@ -107,27 +108,55 @@ const fromMermaid = async (source: string): Promise<Seed> => {
 
 type Graded = {
   converted: ReturnType<typeof toDiagramObjects>;
-  report: Diagnostics.Report;
-  evaluation: Objective.Evaluation;
+  layout: Objective.Layout;
 };
 
 const grade = (scene: Scene): Graded => {
   const converted = toDiagramObjects(scene, defaultNodeRegistry);
-  const report = Diagnostics.analyze(converted.objects);
-  const evaluation = Objective.evaluate(Objective.DEFAULT, { objects: converted.objects, report });
-  return { converted, report, evaluation };
+  return { converted, layout: { objects: converted.objects, report: Diagnostics.analyze(converted.objects) } };
 };
+
+/** The engine's own evaluation on the same 0–1 scale, for reference. */
+const engineScore = ({ violations, terms }: Objective.Evaluation): number =>
+  Score.overall([
+    { kind: 'constraint', score: violations.length ? 0 : 1 },
+    ...terms.map(({ weighted }) => ({ kind: 'cost', score: Score.fromCost(weighted) })),
+  ]);
+
+const DEFAULT_SCORERS = Score.fromObjective(Objective.DEFAULT);
 
 const format = (value: number) =>
   Number.isFinite(value) ? (Number.isInteger(value) ? `${value}` : value.toFixed(2)) : '—';
 
+const scoreColor = (score: number) =>
+  score >= 0.75 ? 'text-emerald-600' : score >= 0.4 ? 'text-amber-600' : 'text-rose-500';
+
+const barColor = (score: number) => (score >= 0.75 ? 'bg-emerald-600' : score >= 0.4 ? 'bg-amber-600' : 'bg-rose-500');
+
+const KIND_STYLE: Record<string, string> = {
+  constraint: 'border-violet-500/50 text-violet-500',
+  cost: 'border-sky-500/50 text-sky-500',
+};
+
+const KindPill = ({ kind }: { kind: string }) => (
+  <span
+    className={mx(
+      'px-1.5 rounded-full border text-[10px] leading-4 uppercase tracking-wide',
+      KIND_STYLE[kind] ?? 'border-separator text-description',
+    )}
+  >
+    {kind}
+  </span>
+);
+
+/** Change in a 0–1 score; higher is better. */
 const Delta = ({ value }: { value: number }) =>
   Math.abs(value) < 0.005 ? (
     <span className='text-subdued'>·</span>
   ) : (
-    <span className={value > 0 ? 'text-rose-500' : 'text-emerald-600'}>
+    <span className={value > 0 ? 'text-emerald-600' : 'text-rose-500'}>
       {value > 0 ? '+' : '−'}
-      {format(Math.abs(value))}
+      {Math.abs(value).toFixed(2)}
     </span>
   );
 
@@ -143,23 +172,47 @@ type ScorecardProps = {
   root: SceneId;
   atoms: SceneViewAtoms;
   engine?: Objective.Evaluation;
+  /** Every judge of the layout, of any kind; defaults to the objective's constraints and cost terms. */
+  scorers?: readonly Score.Scorer[];
 };
 
 /** Live grading of the scene the editor shows: re-derived from the store on every change. */
-const Scorecard = ({ store, root, atoms, engine }: ScorecardProps) => {
+const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: ScorecardProps) => {
   const registry = useContext(RegistryContext);
   const scene = useAtomValue(store.scene(root));
   const graded = useMemo(() => (scene ? grade(scene) : undefined), [scene]);
-  // Captured once per mount, so Δ reads against the scene as it was first loaded.
-  const [baseline] = useState(graded);
-  if (!graded) {
+  const [scores, setScores] = useState<readonly Score.Scored[]>();
+  // The first scores, so Δ reads against the scene as it was first loaded.
+  const [baseline, setBaseline] = useState<readonly Score.Scored[]>();
+  useEffect(() => {
+    if (!graded) {
+      return;
+    }
+    // A scorer may resolve late; a newer scene interrupts the run for the one it replaces.
+    const fiber = Effect.runFork(
+      Score.evaluate(scorers, graded.layout).pipe(
+        Effect.tap((next) =>
+          Effect.sync(() => {
+            setScores(next);
+            setBaseline((previous) => previous ?? next);
+          }),
+        ),
+      ),
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [graded, scorers]);
+  if (!graded || !scores) {
     return null;
   }
 
-  const { converted, report, evaluation } = graded;
+  const { converted, layout } = graded;
+  const { report } = layout;
+  const total = Score.overall(scores);
+  const baselineTotal = baseline && Score.overall(baseline);
   const errors = Diagnostics.errors(report);
   const warnings = report.diagnostics.filter(({ severity }) => severity === 'warning');
-  const baselineTerm = (id: string) => baseline?.evaluation.terms.find((term) => term.id === id);
   const select = (refs: readonly string[]) =>
     registry.set(atoms.selection, new Set(diagnosticElements(converted, refs)));
 
@@ -168,64 +221,43 @@ const Scorecard = ({ store, root, atoms, engine }: ScorecardProps) => {
       className='flex flex-col gap-4 p-3 overflow-y-auto text-sm border-l border-separator'
       data-testid='scene-view.scorecard'
     >
-      <Section title='Cost'>
+      <Section title='Score'>
         <div className='flex items-baseline gap-2'>
-          <span
-            className={mx('text-3xl font-mono', evaluation.violations.length ? 'text-rose-500' : 'text-emerald-600')}
-            data-testid='scene-view.scorecard.cost'
-          >
-            {evaluation.cost.toFixed(2)}
+          <span className={mx('text-3xl font-mono', scoreColor(total))} data-testid='scene-view.scorecard.score'>
+            {total.toFixed(2)}
           </span>
-          {baseline && <Delta value={evaluation.cost - baseline.evaluation.cost} />}
+          {baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
         </div>
         <div className='text-xs text-description'>
-          {evaluation.violations.length
-            ? `Constraint violations: ${evaluation.violations.length} — the objective would reject this layout.`
-            : 'Every constraint holds; lower cost is better.'}
-          {engine && ` Engine layout (its own routes): ${engine.cost.toFixed(2)}.`}
+          0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
+          {engine && ` Engine layout (its own routes): ${engineScore(engine).toFixed(2)}.`}
         </div>
       </Section>
 
-      <Section title='Constraints'>
-        {Objective.DEFAULT.constraints.map(({ id, description }) => {
-          const count = evaluation.violations.filter(({ constraint }) => constraint === id).length;
+      <Section title='Scores'>
+        {scores.map(({ id, kind, description, score, detail }) => {
+          const previous = baseline?.find((entry) => entry.id === id);
           return (
-            <div key={id} className='flex gap-2' title={description}>
-              <span className={count ? 'text-rose-500' : 'text-emerald-600'}>{count ? '✕' : '✓'}</span>
-              <span className='font-mono'>{id}</span>
-              {count > 0 && <span className='text-rose-500'>{count}</span>}
+            <div
+              key={id}
+              className='grid grid-cols-[5.5rem_1fr_3rem_2.5rem] items-center gap-2 text-xs'
+              title={[description, detail].filter(Boolean).join('\n')}
+              data-testid={`scene-view.scorecard.${id}`}
+            >
+              <span>
+                <KindPill kind={kind} />
+              </span>
+              <span className='flex flex-col gap-0.5 min-w-0'>
+                <span className='font-mono truncate'>{id}</span>
+                <span className='h-1 rounded-full bg-separator overflow-hidden'>
+                  <span className={mx('block h-full', barColor(score))} style={{ width: `${score * 100}%` }} />
+                </span>
+              </span>
+              <span className={mx('font-mono text-end', scoreColor(score))}>{score.toFixed(2)}</span>
+              <span className='font-mono text-end'>{previous && <Delta value={score - previous.score} />}</span>
             </div>
           );
         })}
-      </Section>
-
-      <Section title='Cost terms'>
-        <table className='font-mono text-xs'>
-          <thead className='text-description'>
-            <tr>
-              <th className='text-start font-normal'>term</th>
-              <th className='text-end font-normal'>value</th>
-              <th className='text-end font-normal'>×w</th>
-              <th className='text-end font-normal'>cost</th>
-              <th className='text-end font-normal'>Δ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {evaluation.terms.map(({ id, value, weighted }) => {
-              const term = Objective.DEFAULT.costs.find((cost) => cost.id === id);
-              const previous = baselineTerm(id);
-              return (
-                <tr key={id} title={term?.description}>
-                  <td>{id}</td>
-                  <td className='text-end'>{format(value)}</td>
-                  <td className='text-end text-description'>{term?.weight}</td>
-                  <td className='text-end'>{weighted.toFixed(2)}</td>
-                  <td className='text-end'>{previous && <Delta value={weighted - previous.weighted} />}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </Section>
 
       <Section title='Metrics'>

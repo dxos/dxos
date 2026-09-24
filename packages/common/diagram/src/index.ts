@@ -11,6 +11,7 @@ export * as Mermaid from './mermaid.ts';
 export * as MermaidEngine from './mermaid-engine.ts';
 export * as Objective from './objective.ts';
 export * as Scene from './scene.ts';
+export * as Score from './score.ts';
 export * from './svg-handler.ts';
 export * as Ui from './ui.ts';
 export * as Uml from './uml.ts';
