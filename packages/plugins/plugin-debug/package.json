@@ -235,6 +235,7 @@
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-sandbox": "workspace:*",
+    "@dxos/plugin-support": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",

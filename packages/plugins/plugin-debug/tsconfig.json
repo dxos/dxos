@@ -203,6 +203,9 @@
       "path": "../plugin-status-bar"
     },
     {
+      "path": "../plugin-support"
+    },
+    {
       "path": "../plugin-tasks"
     },
     {
