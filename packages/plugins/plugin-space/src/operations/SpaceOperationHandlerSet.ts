@@ -3,6 +3,7 @@
 //
 
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
@@ -31,6 +32,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.GetShareLink.pipe(Operation.lazyHandler(() => import('./get-share-link.ts'))),
   SpaceOperation.ImportSpace.pipe(Operation.lazyHandler(() => import('./import-space.ts'))),
   SpaceOperation.Join.pipe(Operation.lazyHandler(() => import('./join.ts'))),
+  SpaceInvitationOperation.JoinBySpaceKey.pipe(Operation.lazyHandler(() => import('./join-by-space-key.ts'))),
   SpaceOperation.MergeDuplicates.pipe(Operation.lazyHandler(() => import('./merge-duplicates.ts'))),
   SpaceOperation.Migrate.pipe(Operation.lazyHandler(() => import('./migrate.ts'))),
   SpaceOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),

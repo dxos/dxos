@@ -7,3 +7,4 @@ export * as CollectionOperation from './CollectionOperation.ts';
 export * as LayoutOperation from './LayoutOperation.ts';
 export * as NavigationOperation from './NavigationOperation.ts';
 export * as SettingsOperation from './SettingsOperation.ts';
+export * as SpaceInvitationOperation from './SpaceInvitationOperation.ts';
