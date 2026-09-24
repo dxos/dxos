@@ -4,7 +4,8 @@ name: HarnessScripts
 version: 0.1.0
 ---
 
-A self-review rule: the agentic-review harness reviews its own Node ESM scripts.
+A self-review rule: the agentic-review harness reviews its own scripts, TypeScript run
+directly with Bun.
 This closes the gap where the harness could not review its own diff (the
 non-negotiable rules scope to `packages/**`).
 
@@ -18,17 +19,18 @@ non-negotiable rules scope to `packages/**`).
 
 ```mdl
 rule harness-script-hygiene: Harness scripts stay dependency-free and honest
-  Review the agentic-review harness's own `.mjs` scripts for tooling hygiene, not
-  TypeScript type rules (these are plain Node ESM). Flag: a `catch` that swallows
-  an error so a real failure passes silently (as opposed to a deliberate,
-  commented best-effort skip); dead or unreachable code and unused
-  bindings/exports; comments that restate what the code does instead of the
-  constraint behind it (why); and any new runtime dependency import beyond
-  `node:*` builtins, since these scripts must run standalone under pnpm. Do not
-  flag deliberate, clearly-commented tolerations (e.g. best-effort git calls).
+  Review the agentic-review harness's own TypeScript for tooling hygiene. These
+  files run directly under Bun with no build and no package of their own. Flag:
+  a `catch` that swallows an error so a real failure passes silently (as opposed
+  to a deliberate, commented best-effort skip); dead or unreachable code and
+  unused bindings/exports; comments that restate what the code does instead of
+  the constraint behind it (why); a cast to silence the type checker; and any
+  new runtime dependency import beyond `node:*` builtins and `bun:*`, since there
+  is no package to install it into. Do not flag deliberate, clearly-commented
+  tolerations (e.g. best-effort git calls).
   scope: repo
   files:
-    - .agents/skills/agentic-review/**/*.mjs
+    - .agents/skills/agentic-review/**/*.ts
   severity: warn
 ```
 

@@ -43,14 +43,20 @@ and a full-project trial over three or four packages before it lands as
 
 ## Dataset layout
 
+Scripts run with Bun. Only the scripts and the results are committed; the intermediates are
+regenerated and ignored.
+
 ```text
 .agents/projects/architecture-rules/dataset/
-  scrape.mjs        # dependency-free scraper (GITHUB_TOKEN), idempotent
-  comments.jsonl    # one human review comment per line, with diff_hunk
-  prs.jsonl         # PR number → title, author, merged, base
-  chunks/NN.jsonl   # mechanically filtered comments, ≤ 40 per chunk
-  classified/NN.jsonl  # one classification per comment, written per chunk
-  CANDIDATES.md     # clustered candidate rules, counts, example links
+  scrape.ts         # every human review comment with its diff hunk (GITHUB_TOKEN), idempotent
+  chunk.ts          # filter and split into classifier-sized chunks
+  calibrate.ts      # score each rule against the hunks it was mined from (TYPESAFE_API_KEY)
+  clusters/*.md     # committed: candidate rules clustered per category group
+  CANDIDATES.md     # committed: the ranked candidates and seed check
+  CALIBRATION.md    # committed: calibration report
+  comments.jsonl, prs.jsonl, chunks/, summary.md          # ignored: scrape.ts and chunk.ts output
+  classified/, principles.jsonl                           # ignored: the Sonnet classification pass
+  CALIBRATION.json                                        # ignored: raw scores, for --from-json
 ```
 
 ## Open questions
@@ -62,7 +68,7 @@ and a full-project trial over three or four packages before it lands as
 ## Rule fields for context and unit
 
 A rule declares what a checker must show beside the code, because a checker that is not agentic
-cannot go and look. Four optional fields, parsed by `lib/mdl.mjs`:
+cannot go and look. Four optional fields, parsed by `lib/mdl.ts`:
 
 - `unit: file | pr` (default `file`). `file` gives one verdict per matched file. `pr` gives one
   verdict for the whole change set, for rules about what a change leaves behind (an old path
@@ -90,13 +96,13 @@ cannot go and look. Four optional fields, parsed by `lib/mdl.mjs`:
 
 ## The System One checker
 
-`scripts/system-one.mjs` applies the rules with TypeSafe System One (`jev`), a decision model:
+`scripts/system-one.ts` applies the rules with TypeSafe System One (`jev`), a decision model:
 it takes a state and a map of typed questions and returns calibrated answers, charging for input
 tokens only ($0.042 per million). It does not generate text or call tools, which decides the
 design.
 
 - **Context is fetched, not explored.** The rule's `context` field names what to show; fetchers
-  in `lib/system-one/fetchers.mjs` cut each kind to what the rule needs, because the vendor's
+  in `lib/system-one/fetchers.ts` cut each kind to what the rule needs, because the vendor's
   own guidance is that unrelated state costs accuracy. Rules are grouped by declared context, so
   each state carries only its rules' kinds.
 - **The model asks for more with a choice.** Round one asks every rule a second question beside

@@ -2,7 +2,7 @@
 
 A full pass over the four most recent squash merges on `main` when this was written
 (`a66b79b9~4..a66b79b9`, which includes the `client-services` restructure), prepared with
-`prepare.mjs --pr-only` and filled with `system-one.mjs` at the defaults. Run on 2026-09-24.
+`prepare.ts --pr-only` and filled with `system-one.ts` at the defaults. Run on 2026-09-24.
 
 ## Scale and cost
 
@@ -20,7 +20,7 @@ A full pass over the four most recent squash merges on `main` when this was writ
 | Dismissed as clean                       | 13,121      | 19927                       |
 
 681 files and 92 rules took part. The measured ratio was 3.14 to 3.19 characters per billed
-token, against the three the planner assumes. `finalize.mjs` merged the fragments unchanged and
+token, against the three the planner assumes. `finalize.ts` merged the fragments unchanged and
 stamped each diagnostic with its rule's severity.
 
 In the first run, the context round moved 2,566 verdicts up and 3,253 down, so what the model asks
@@ -74,5 +74,5 @@ Sixteen reported violations, sampled at random from the first run and read again
 ## Not yet done
 
 The key ran out of credits (`402 billing_error`) after these runs. Once credits are added, the
-next steps are a re-run of `dataset/calibrate.mjs` with context fetched for the context-dependent
+next steps are a re-run of `dataset/calibrate.ts` with context fetched for the context-dependent
 rules, and a comparison of the uncertain band against a subagent review of the same groups.

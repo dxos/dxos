@@ -8,7 +8,7 @@ description: >-
   the agentic review, list unresolved review issues, review a branch/PR against
   the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
   built-in bug/quality passes use `/code-review` instead.
-  A cheaper first pass with TypeSafe System One (`scripts/system-one.mjs`)
+  A cheaper first pass with TypeSafe System One (`scripts/system-one.ts`)
   judges most groups and routes only uncertain ones to subagents.
 ---
 
@@ -23,16 +23,18 @@ over a bounded set of files, so the reviewer stays cheap and on-task.
 **`--pr-only`:** diff-only against the last review or merge-base with main.
 **Claude drives the loop**: prepare → spawn subagents → finalize.
 
-The scripts are dependency-free Node ESM and can also be run by hand.
+The scripts are TypeScript run directly with Bun (`bun <script>.ts`, no build step), import
+nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
+`bun test ./.agents/skills/agentic-review`.
 
 ## Layout
 
 ```text
 .agents/skills/agentic-review/
-  scripts/prepare.mjs      # discover rules, resolve base, group, write the store
-  scripts/finalize.mjs     # merge fragments → REVIEW.md + RESOLUTION.md
-  scripts/unresolved.mjs   # re-print unresolved issues across all runs
-  scripts/system-one.mjs   # cheap first pass with TypeSafe System One; routes the rest onward
+  scripts/prepare.ts      # discover rules, resolve base, group, write the store
+  scripts/finalize.ts     # merge fragments → REVIEW.md + RESOLUTION.md
+  scripts/unresolved.ts   # re-print unresolved issues across all runs
+  scripts/system-one.ts   # cheap first pass with TypeSafe System One; routes the rest onward
   lib/system-one/          # budget, source segmentation, context fetchers, questions, checker
   lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, store
   rules/                   # seed rules (repo-wide non-negotiables)
@@ -54,9 +56,9 @@ only `REVIEW.md` + `RESOLUTION.md` and deletes the intermediates.
 ### 1. Prepare
 
 ```sh
-node .agents/skills/agentic-review/scripts/prepare.mjs
+bun .agents/skills/agentic-review/scripts/prepare.ts
 # PR / diff-only (previous default):
-node .agents/skills/agentic-review/scripts/prepare.mjs --pr-only
+bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
 ```
 
 It prints the STAGING.md / REVIEW.md paths, the resolved base (`full` or a
@@ -99,16 +101,16 @@ Give each subagent its group number and the store path. Prompt template:
 
 ### 2b. Or: a System One pass first
 
-`scripts/system-one.mjs` answers the same groups with TypeSafe System One, a
+`scripts/system-one.ts` answers the same groups with TypeSafe System One, a
 decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
 shown. Needs `TYPESAFE_API_KEY`.
 
 ```sh
-node .agents/skills/agentic-review/scripts/prepare.mjs --pr-only
-node .agents/skills/agentic-review/scripts/system-one.mjs --dry-run   # plan and price only
-node .agents/skills/agentic-review/scripts/system-one.mjs             # fill the newest prepared store
+bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
+bun .agents/skills/agentic-review/scripts/system-one.ts --dry-run   # plan and price only
+bun .agents/skills/agentic-review/scripts/system-one.ts             # fill the newest prepared store
 ```
 
 How it works:
@@ -137,7 +139,7 @@ How it works:
   a bad key or no credits) stops the run at once, since every request would fail
   alike.
 - **Probe mode** judges named files without a store:
-  `system-one.mjs --file=<path> [--rule=<id>]`, printing each verdict, its
+  `system-one.ts --file=<path> [--rule=<id>]`, printing each verdict, its
   location and any context the model asked for.
 
 Calibration against the hunks the mined rules cite is in
@@ -150,8 +152,8 @@ only when that context is fetched.
 After all subagents finish:
 
 ```sh
-node .agents/skills/agentic-review/scripts/finalize.mjs --slug=<slug>
-node .agents/skills/agentic-review/scripts/finalize.mjs --all --force   # re-stamp existing runs
+bun .agents/skills/agentic-review/scripts/finalize.ts --slug=<slug>
+bun .agents/skills/agentic-review/scripts/finalize.ts --all --force   # re-stamp existing runs
 ```
 
 (With no `--slug`/`--dir`/`--all`, it finalizes the most recently modified pending
@@ -181,7 +183,7 @@ Each run gets a `RESOLUTION.md` ledger — one bullet per issue:
 
 ```text
 - e8ad2af114-1 - unresolved - no-casts - packages/foo/bar.ts:42:7
-- e8ad2af114-2 - resolved - harness-script-hygiene - .agents/skills/…/store.mjs:99
+- e8ad2af114-2 - resolved - harness-script-hygiene - .agents/skills/…/store.ts:99
 - e8ad2af114-3 - ignored - no-sleep-in-test - packages/foo/x.test.ts:12
 ```
 
@@ -196,10 +198,10 @@ Re-print every unresolved issue across **all** finalized runs (not just the
 latest):
 
 ```sh
-node .agents/skills/agentic-review/scripts/unresolved.mjs
-node .agents/skills/agentic-review/scripts/unresolved.mjs --path=packages/core/echo
-node .agents/skills/agentic-review/scripts/unresolved.mjs --rule=no-casts
-node .agents/skills/agentic-review/scripts/unresolved.mjs --path='**/foo.ts' --rule=no-sleep-in-test
+bun .agents/skills/agentic-review/scripts/unresolved.ts
+bun .agents/skills/agentic-review/scripts/unresolved.ts --path=packages/core/echo
+bun .agents/skills/agentic-review/scripts/unresolved.ts --rule=no-casts
+bun .agents/skills/agentic-review/scripts/unresolved.ts --path='**/foo.ts' --rule=no-sleep-in-test
 ```
 
 `--path` is a substring match, or a glob when it contains `*`/`?`. `--rule` is an
@@ -234,7 +236,7 @@ rule no-sleep-in-test: No sleep in tests
   globs hit. Values are literal (no YAML quoting) — write `grep: @dxos/`, not
   `grep: "@dxos/"`.
 - **`severity`** — `warn` | `error` (default `warn`), authoritative from the rule
-  (deterministic). `finalize.mjs` stamps every diagnostic in a group with the
+  (deterministic). `finalize.ts` stamps every diagnostic in a group with the
   rule's severity from the run manifest, so a subagent's header cannot change it.
 - **`unit`** — `file` (default) judges each matched file on its own; `pr` judges
   the change set once, for rules about what a change adds or leaves behind across
@@ -263,7 +265,7 @@ definition.
   rule (absent from prior runs' `rules:` / `groups.json`) still gets a one-time
   full-project pass. Pass `--pr-only` for the old diff-only behaviour (last
   review or merge-base with `origin/main`).
-- **Issue tracking** lives in `RESOLUTION.md` per run; `unresolved.mjs` aggregates
+- **Issue tracking** lives in `RESOLUTION.md` per run; `unresolved.ts` aggregates
   open items. Prefer flipping status over deleting diagnostics from REVIEW.md.
-- **PR-comment posting** from `finalize.mjs` is a later phase; today finalize
+- **PR-comment posting** from `finalize.ts` is a later phase; today finalize
   writes `REVIEW.md` + `RESOLUTION.md` only.

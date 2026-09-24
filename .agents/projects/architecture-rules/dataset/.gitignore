@@ -1,1 +1,10 @@
 *.log
+# Intermediates the scripts regenerate: scrape.ts → comments/prs, chunk.ts → chunks + summary,
+# the classification pass → classified + principles, calibrate.ts → CALIBRATION.json.
+comments.jsonl
+prs.jsonl
+chunks/
+classified/
+principles.jsonl
+summary.md
+CALIBRATION.json
