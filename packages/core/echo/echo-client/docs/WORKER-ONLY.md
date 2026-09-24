@@ -343,26 +343,36 @@ Time for a tab to show every object after a worker restart, in Node over the in-
 | From the index       | 200     | 104 ms           | 0                           |
 | From the worker copy | 200     | 619 ms           | 200                         |
 
-What stops "load only to mutate" from holding in production:
+None of the following blocks a rollout. Index reads do depend on mirror tabs, so as built they ship
+with worker-only ECHO or after it.
 
-1. **Sync binds to loaded documents.** Subduction sources are bound to handles; after eviction,
-   inbound data is stored but not applied and the heads store is not updated. Until collection sync
-   lands, a document that receives remote changes is loaded to apply them, and the indexer loads
-   each changed document to index it. The index copy removes loads for reading, not for changes.
-2. **Queries load their results in the worker.** On this branch `QueryExecutor` reads each
-   document-backed result from Automerge (`_loadFromAutomerge`), so a query in a tab reading from
-   the index still makes the worker load all ten result documents briefly. [#13288](https://github.com/dxos/dxos/pull/13288) on main answers
-   queries from SQL without loading documents. The two together should let a nav-tree query load
-   nothing, but they have not run together.
-3. **Index lag.** A tab reading from the index sees a remote edit one index pass after the worker's
-   copy does, so the nav tree shows a remote rename that much later.
-4. **The push re-reads every followed document after every pass.** It should read only the
-   documents the pass changed.
-5. **Existing indexes lack `@heads` and `@stored`.** They need a reindex; until then every document
+Work before rollout:
+
+1. **The push re-reads every followed document after every index pass.** A pass runs after saves,
+   so while anyone types, a nav tree of 1,000 objects costs 2,000 SQLite reads per pass. The pass
+   knows which documents it changed and should push only those.
+2. **Existing indexes lack `@heads` and `@stored`.** They need a reindex. Until then every document
    falls back to live, which is safe but saves nothing.
-6. **Per-object fields are a stand-in.** A per-document snapshot table would serve the space root
-   and inline objects too, without storing `@stored` beside every object.
-7. **A tab never returns to the index after editing a document** until it reloads.
+3. **Per-object fields are a stand-in.** A column, or a per-document snapshot table, is the
+   production shape. The table would also serve the space root and inline objects.
+
+Limits on what it saves:
+
+1. **A document that changes remotely still loads.** When a peer changes a document the worker has
+   evicted, the collection-sync diff leases it until it syncs (`_leaseUntilSettled`), and the save
+   reindexes it, so the index copy follows. Collection sync that works without loading would leave
+   only the load for indexing.
+2. **Queries load their results in the worker on this branch.** `QueryExecutor` reads each
+   document-backed result from Automerge (`_loadFromAutomerge`), so a query in a tab reading from
+   the index still makes the worker load all ten result documents briefly.
+   [#13288](https://github.com/dxos/dxos/pull/13288) on main answers queries from SQL without
+   loading documents. The two have not run together.
+3. **The space root and inline objects stay live.** Objects get their own document by default, so
+   this is one document per space plus whatever is inlined.
+4. **A tab keeps a document live after editing it** until it reloads.
+5. **Index lag.** An edit in another tab reaches a tab reading from the index in 51 ms median and
+   84 ms at most, in Node. Pushing from the worker's copy while it is loaded would remove most of
+   that.
 
 ## Blockers
 
