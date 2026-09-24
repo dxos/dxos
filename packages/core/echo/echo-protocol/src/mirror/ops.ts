@@ -64,18 +64,22 @@ export const isContainer = (value: unknown): value is Container => {
  * Deep-copies containers and freezes them, keeping leaves by reference. Already-frozen containers
  * are shared, so a snapshot can be stored inside another without copying.
  */
-export const freezeValue = <T>(value: T): T => {
+export const freezeValue = <T>(value: T): T => freezeAt(value, []);
+
+/** Refuses `undefined` and array holes, as Automerge does when a document is created from a value. */
+const freezeAt = <T>(value: T, path: readonly (string | number)[]): T => {
+  if (value === undefined) {
+    throw new RangeError(`Cannot store undefined at /${path.join('/')}`);
+  }
   if (!isContainer(value) || Object.isFrozen(value)) {
     return value;
   }
   if (Array.isArray(value)) {
-    return Object.freeze(value.map((entry) => freezeValue(entry))) as T;
+    return Object.freeze(Array.from(value, (entry, index) => freezeAt(entry, [...path, index]))) as T;
   }
   const copy: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value)) {
-    if (entry !== undefined) {
-      copy[key] = freezeValue(entry);
-    }
+    copy[key] = freezeAt(entry, [...path, key]);
   }
   return Object.freeze(copy) as T;
 };

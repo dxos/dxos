@@ -13,8 +13,7 @@ real worker boundary or run in a browser yet.
    every fuzz run, including runs that restart the worker through the real client and service. A
    code review found 13 defects in the code around the transforms, among them lost and duplicated
    edits after restarts. The transforms themselves held. Every defect now has a fix and a regression
-   test, except two in the recording draft, which are in progress (see
-   [Review findings](#review-findings)).
+   test (see [Review findings](#review-findings)).
 2. **ECHO runs on mirrors.** In mirror mode, 577 of the 608 existing echo-client tests pass, plus 7
    tests marked as expected failures that still fail. The ones that fail are the
    areas this design changes on purpose: branches, edit history, heads read in the same tick as a
@@ -149,9 +148,11 @@ The database layer talks to a `ClientRepo` and `ClientDocHandle` (`automerge/cli
 EDGE keeps the first and tabs switch to the second.
 
 - **`MirrorDocHandle`.** `doc()` returns a frozen JSON snapshot with structural sharing. `change(fn)`
-  runs `fn` against a recording draft that accepts the mutations ECHO's database layer makes
-  (assignment, deletion, `push`, `pop`, `shift`, `unshift`, `splice`, `insertAt`, `deleteAt`). Text
-  edits go through `DocOps.splice` or `updateText`. Change events carry Automerge-shaped patches.
+  runs `fn` against a recording draft that behaves as an Automerge change callback's draft does: the
+  same mutations and refusals, and drafts that keep their container through list edits. It refuses
+  a few values Automerge stores lossily (nested `Map`, `Set`, functions, typed arrays) and
+  Automerge's counter types, which the op model lacks. Text edits go through `DocOps.splice` or
+  `updateText`. Change events carry Automerge-shaped patches.
   `changeAt` works only at the current confirmed heads with nothing pending; `update` is not
   supported.
 - **Heads.** `heads` are the last confirmed ones; unconfirmed edits do not move them. `pendingOps`,
@@ -267,24 +268,24 @@ Two reviews ran against the spike: one tried to break the code, one checked ever
 document. The transforms held under 40 targeted cases, 20,000 random pairs of up to 12 ops and
 40,000 single-op pairs in strict mode. The defects were in the code around them.
 
-| #   | Defect                                                                                                                             | Fix                                                                                        | Test                                                                   |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                    | `automerge-ops.test.ts`, including a 2,000-diff differential run       |
-| F2  | A failed save left an entry that was never sent, and the resent batch was applied twice                                            | Hold entries until a save succeeds; record dedupe at commit; apply a batch whole or not    | `mirror-repo.test.ts`: a failed save                                   |
-| F3  | A document re-followed under the same epoch restarted its numbering, orphaning tabs                                                | An epoch per numbering; `since()` refuses versions it never produced; re-check in delivery | `mirror-mode.test.ts`: reconnecting to the same worker; orphan test    |
-| F4  | A `resync` or same-epoch `stale` never settled the batch in flight, losing every later edit                                        | The `caughtUp` answer settles it                                                           | `mirror-repo.test.ts`: a batch sent again after catching up            |
-| F5  | A worker restart through the real client applied edits twice                                                                       | One catch-up per document, no batches while it is open, known state read at send time      | `mirror-mode.test.ts`: restart tests and the restart fuzz              |
-| F6  | The draft accepted writes Automerge refuses, and the worker retried the batch forever                                              | A terminal `rejected` status; a draft that refuses what Automerge refuses is in progress   | `mirror-repo.test.ts`: a refused batch                                 |
-| F7  | `db.flush()` resolved over a failed `createDocument`                                                                               | Retry failed creations in `flushCreations`, then throw                                     | `mirror-repo.test.ts`: a refused creation                              |
-| F8  | A document still being fetched stalled every flush for 30 s                                                                        | Flush waits only for pending edits and created documents                                   | `mirror-repo.test.ts`: a document still fetching                       |
-| F9  | `waitUntilHeadsReplicated` hung once the root moved past the heads                                                                 | Catch up with the worker instead of testing ancestry                                       | `mirror-repo.test.ts`                                                  |
-| F10 | Unconfirmed objects reported `versioned: true`                                                                                     | False while the object has unconfirmed ops                                                 | `mirror-repo.test.ts`                                                  |
-| F11 | A nested draft held across a list edit wrote into a different object                                                               | In progress: resolve drafts by container identity                                          | In progress                                                            |
-| F12 | Reconnect was not wired for mirror clients, and a dropped stream never resubscribed                                                | Services carry the mirror service; resubscribe with backoff                                | `mirror-mode.test.ts` restart tests; `mirror-repo.test.ts` stream test |
-| F13 | Absorbed changes were sent before they were saved                                                                                  | Save before sending, on every path                                                         | `mirror-repo.test.ts`: only saved changes                              |
-| F14 | The entry window was never trimmed for documents that only get remote changes                                                      | Trim on every send                                                                         | Code review                                                            |
-| F15 | `MirrorCursors.create` minted cursors for stale positions after waiting                                                            | Move positions through changes that arrive during the wait                                 | `mirror-cursors.test.ts`                                               |
-| F16 | Smaller issues: cursor paths, a `RawString` text update, a retry kept after release, a leaked document, unhandled probe rejections | Fixed where they touch correctness; the rest are listed under blockers                     | `mirror-cursors.test.ts`                                               |
+| #   | Defect                                                                                                                             | Fix                                                                                             | Test                                                                    |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                         | `automerge-ops.test.ts`, including a 2,000-diff differential run        |
+| F2  | A failed save left an entry that was never sent, and the resent batch was applied twice                                            | Hold entries until a save succeeds; record dedupe at commit; apply a batch whole or not         | `mirror-repo.test.ts`: a failed save                                    |
+| F3  | A document re-followed under the same epoch restarted its numbering, orphaning tabs                                                | An epoch per numbering; `since()` refuses versions it never produced; re-check in delivery      | `mirror-mode.test.ts`: reconnecting to the same worker; orphan test     |
+| F4  | A `resync` or same-epoch `stale` never settled the batch in flight, losing every later edit                                        | The `caughtUp` answer settles it                                                                | `mirror-repo.test.ts`: a batch sent again after catching up             |
+| F5  | A worker restart through the real client applied edits twice                                                                       | One catch-up per document, no batches while it is open, known state read at send time           | `mirror-mode.test.ts`: restart tests and the restart fuzz               |
+| F6  | The draft accepted writes Automerge refuses, and the worker retried the batch forever                                              | The draft refuses what Automerge refuses; `rejected` ends anything else the worker cannot apply | `recorder.test.ts`: 34 refusals; `mirror-repo.test.ts`: a refused batch |
+| F7  | `db.flush()` resolved over a failed `createDocument`                                                                               | Retry failed creations in `flushCreations`, then throw                                          | `mirror-repo.test.ts`: a refused creation                               |
+| F8  | A document still being fetched stalled every flush for 30 s                                                                        | Flush waits only for pending edits and created documents                                        | `mirror-repo.test.ts`: a document still fetching                        |
+| F9  | `waitUntilHeadsReplicated` hung once the root moved past the heads                                                                 | Catch up with the worker instead of testing ancestry                                            | `mirror-repo.test.ts`                                                   |
+| F10 | Unconfirmed objects reported `versioned: true`                                                                                     | False while the object has unconfirmed ops                                                      | `mirror-repo.test.ts`                                                   |
+| F11 | A nested draft held across a list edit wrote into a different object                                                               | Drafts keep their container through list edits and detach when it is removed or replaced        | `recorder.test.ts`: 29 cases against `A.change` and a held-draft fuzz   |
+| F12 | Reconnect was not wired for mirror clients, and a dropped stream never resubscribed                                                | Services carry the mirror service; resubscribe with backoff                                     | `mirror-mode.test.ts` restart tests; `mirror-repo.test.ts` stream test  |
+| F13 | Absorbed changes were sent before they were saved                                                                                  | Save before sending, on every path                                                              | `mirror-repo.test.ts`: only saved changes                               |
+| F14 | The entry window was never trimmed for documents that only get remote changes                                                      | Trim on every send                                                                              | Code review                                                             |
+| F15 | `MirrorCursors.create` minted cursors for stale positions after waiting                                                            | Move positions through changes that arrive during the wait                                      | `mirror-cursors.test.ts`                                                |
+| F16 | Smaller issues: cursor paths, a `RawString` text update, a retry kept after release, a leaked document, unhandled probe rejections | Fixed where they touch correctness; the rest are listed under blockers                          | `mirror-cursors.test.ts`                                                |
 
 ## Migration
 
