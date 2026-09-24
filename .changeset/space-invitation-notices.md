@@ -3,7 +3,4 @@
 '@dxos/plugin-client': minor
 ---
 
-A host who adds a known contact to a space now sends them a signed invitation notice through EDGE.
-`client.halo.inbox` exposes `notices`, `send` and `ack`; notices are verified (issuer, subject,
-expiry, duplicates) before they surface, and acknowledging on one device clears them on all. Composer
-shows a toast with a Join action and a Space invitations article, for senders in the contact book.
+Adding a known contact to a space now sends them a signed invitation notice through `client.halo.inbox` (`notices`, `send`, `ack`), which Composer shows as a Join toast, a Space invitations article and a badge on the account avatar; the contact picker is single-select beside a role select, `Form.FieldSet` gains `appearance='section'` for titled blocks inside a settings panel, and `Combobox` popovers no longer shrink below their minimum width.
