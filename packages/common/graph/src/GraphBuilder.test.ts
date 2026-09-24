@@ -551,6 +551,25 @@ describe('GraphBuilder', () => {
     expect(registry.getNodes().has(input)).to.be.false;
   });
 
+  test('a relation released in part diffs its next expansion against the outputs that stayed', async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => get(state).map((id) => ({ id }))),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    // Releasing `a` tears the root's relation down while its edge to `b` stays.
+    GraphBuilder.release(builder, ['root/a']);
+    registry.set(state, ['c']);
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
+  });
+
   test("a throwing extension recovers when a sibling extension's input changes", async () => {
     const { registry, builder, children } = setup();
     const broken = Atom.make(true).pipe(Atom.keepAlive);
@@ -1055,7 +1074,7 @@ describe('model-based', () => {
   type Command =
     | { kind: 'set'; source: number; value: number; batch: boolean }
     | { kind: 'expand'; pick: number; relation: (typeof RELATIONS)[number] }
-    | { kind: 'release'; pick: number; relation: (typeof RELATIONS)[number] }
+    | { kind: 'release'; pick: number }
     | { kind: 'toggle' }
     | { kind: 'settle' }
     | { kind: 'advance'; ms: number };
@@ -1081,11 +1100,7 @@ describe('model-based', () => {
     },
     {
       weight: 1,
-      arbitrary: fc.record({
-        kind: fc.constant('release' as const),
-        pick: fc.nat(),
-        relation: fc.constantFrom(...RELATIONS),
-      }),
+      arbitrary: fc.record({ kind: fc.constant('release' as const), pick: fc.nat() }),
     },
     { weight: 1, arbitrary: fc.record({ kind: fc.constant('toggle' as const) }) },
     { weight: 3, arbitrary: fc.record({ kind: fc.constant('settle' as const) }) },
@@ -1191,6 +1206,9 @@ describe('model-based', () => {
         for (const key of builder._flushed.keys()) {
           expect(builder._tracker.tracks(key), `flushed key ${key} is tracked`).to.be.true;
         }
+        for (const id of builder._detached.keys()) {
+          expect(model.findNode(id), `detached node ${id}`).not.to.be.undefined;
+        }
         expect(logged, 'warnings and errors').to.deep.equal([]);
       };
 
@@ -1218,13 +1236,10 @@ describe('model-based', () => {
             break;
           }
           case 'release': {
-            // A relation's whole output, as retention releases a level at a time: releasing part of one
-            // tears the relation down while the rest of its edges stay.
-            const candidates = nodes().filter((id) => model.outgoing(id, step.relation).length > 0);
+            const candidates = nodes().filter((id) => id !== GraphNode.RootId);
             if (candidates.length > 0) {
               const id = candidates[step.pick % candidates.length];
-              const targets = model.outgoing(id, step.relation).map((edge) => edge.target);
-              GraphBuilder.release(builder, [...targets, ...targets.flatMap((target) => model.descendants(target))]);
+              GraphBuilder.release(builder, [id, ...model.descendants(id)]);
             }
             break;
           }
@@ -1287,7 +1302,7 @@ describe('model-based', () => {
         run,
       ),
       // Seeded, so CI replays the same cases; FC_RUNS and FC_SEED widen the search locally.
-      { numRuns: Number(process.env.FC_RUNS ?? 300), seed: Number(process.env.FC_SEED ?? 1) },
+      { numRuns: Number(process.env.FC_RUNS ?? 1000), seed: Number(process.env.FC_SEED ?? 1) },
     );
   });
 });

@@ -261,6 +261,11 @@ export class GraphBuilder<
   readonly _tracker: ConnectorTracker<ConnectorEntry<Arg>[]>;
   /** What each connector key last wrote into the store; a key without an entry has never flushed. */
   readonly _flushed = new Map<string, Flushed<Arg>>();
+  /**
+   * By node, what each relation torn down by {@link release} wrote and still holds in the store; its next
+   * expansion diffs against it, or the outputs that stayed would never be removed.
+   */
+  readonly _detached = new Map<string, Map<string, Flushed<Arg>>>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
   /** Whether a flush of updates to connectors already in the store is queued. */
@@ -337,7 +342,7 @@ export class GraphBuilder<
   /** Apply a set of node changes for a single connector key. */
   _applyConnectorUpdate(key: string, nodes: Arg[]): void {
     const { id, relation } = relationFromConnectorKey(key);
-    const previous = this._flushed.get(key);
+    const previous = this._flushed.get(key) ?? this._detached.get(id)?.get(key);
     const ids = nodes.map((node) => node.id);
     const inline = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
 
@@ -367,6 +372,11 @@ export class GraphBuilder<
     }
     // Last, so a store write that throws leaves the previous state to diff against.
     this._flushed.set(key, { ids, args: nodes, inline });
+    const detached = this._detached.get(id);
+    detached?.delete(key);
+    if (detached?.size === 0) {
+      this._detached.delete(id);
+    }
   }
 
   /**
@@ -580,6 +590,23 @@ export class GraphBuilder<
     this._forget(primaryKey(id, relation));
   }
 
+  /** Keeps what `key` wrote that survives `released`, for its next expansion to diff against. */
+  _detach(key: string, released: ReadonlySet<string>): void {
+    const { id } = relationFromConnectorKey(key);
+    const flushed = this._flushed.get(key);
+    if (!flushed || released.has(id)) {
+      return;
+    }
+    const kept = (nodeId: string) => !released.has(nodeId);
+    const forNode = this._detached.get(id) ?? new Map<string, Flushed<Arg>>();
+    forNode.set(key, {
+      ids: flushed.ids.filter(kept),
+      args: flushed.args.filter((arg) => kept(arg.id)),
+      inline: flushed.inline.filter(kept),
+    });
+    this._detached.set(id, forNode);
+  }
+
   _onRemoveNode(id: string): void {
     this._onRemoveNodes([id]);
   }
@@ -588,6 +615,7 @@ export class GraphBuilder<
     for (const id of ids) {
       // The store detached the node's edges, so what its connectors last wrote is gone too.
       [...(this._expansions.get(id) ?? [])].forEach((key) => this._forget(key));
+      this._detached.delete(id);
     }
   }
 
@@ -734,7 +762,9 @@ export const flush = async (builder: Any): Promise<void> => {
 
 /**
  * Unloads the nodes and everything the builder remembers about them: tracked expansions and the
- * per-connector diff state. The nodes leave the store outright rather than being tombstoned, so reading a released relation again re-expands it from its connectors.
+ * per-connector diff state. The nodes leave the store outright rather than being tombstoned. A relation
+ * that loses any of its outputs is torn down too, and its next read re-expands it from its connectors,
+ * diffing against the outputs that stayed.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
@@ -744,6 +774,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
   for (const state of [...builder._connectorStates()]) {
     if (Retention.tornDown(released, state)) {
+      builder._detach(state.key, released);
       builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
@@ -779,6 +810,7 @@ export const setRetention = <B extends Any>(
 export const destroy = (builder: Any): void => {
   builder._expansions.clear();
   builder._flushed.clear();
+  builder._detached.clear();
   builder._tracker.dispose();
   builder._store.dispose?.();
 };
