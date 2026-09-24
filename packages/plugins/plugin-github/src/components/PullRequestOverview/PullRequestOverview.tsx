@@ -73,6 +73,10 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
+      // The default renderer leaves a table unruled, which reads as run-on text in a before/after grid.
+      table: ({ children }) => <table className='my-2 border-collapse'>{children}</table>,
+      th: ({ children }) => <th className='px-2 py-1 border border-separator text-start'>{children}</th>,
+      td: ({ children }) => <td className='px-2 py-1 border border-separator'>{children}</td>,
       a: ({ children, href, node: _node, ...props }) => {
         const artifact = href ? parseArtifactLink(href) : undefined;
         if (artifact) {

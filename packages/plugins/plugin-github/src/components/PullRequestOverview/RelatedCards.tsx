@@ -26,7 +26,10 @@ export const RelatedCards = ({ artifacts, claudeCode, previewUrl, url, baseBranc
   const sessionId = claudeCode?.sessionUrl?.split('/').at(-1);
 
   return (
-    <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3' data-testid='pull-request.related'>
+    <div
+      className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start gap-3'
+      data-testid='pull-request.related'
+    >
       {artifacts.map((artifact) => (
         <ArtifactCard key={artifact.url} artifact={artifact} />
       ))}
@@ -80,7 +83,8 @@ const ArtifactCard = ({ artifact }: { artifact: ArtifactLink }) => {
       </Card.Row>
       {artifact.kind !== 'file' && (
         <Card.Body>
-          <ArtifactMedia artifact={artifact} classNames='aspect-video' />
+          {/* `col-span-3` spans the card's gutters, as `Card.Poster` does; the body is `display: contents`. */}
+          <ArtifactMedia artifact={artifact} classNames='col-span-3 aspect-video max-h-[200px] object-cover' />
         </Card.Body>
       )}
     </Card.Root>
