@@ -50,6 +50,9 @@ const make = () =>
       `,
     }),
     agentCanEnable: true,
+    // Projected by the MCP hosts (`dx mcp serve`, EDGE's worker), so `file.createFromUpload` — the
+    // other half of their `createUpload` tool — is discoverable and invocable there.
+    mcpPrompt: true,
   });
 
 const skill: Skill.Definition = {
