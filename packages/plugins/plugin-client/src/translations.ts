@@ -33,7 +33,7 @@ const pluginTranslations = [
         'space-invitation-toast.description': 'A contact invited you to join a space.',
         'join-space-invitation.label': 'Join',
         'dismiss-space-invitation.label': 'Dismiss',
-        'contact-picker-add.label': 'Add',
+        'contact-picker-add.label': 'Add member',
         'contact-picker-empty.message':
           'You have no contacts yet — people appear here once you share a space with them.',
         'role-editor.label': 'Editor',

@@ -9,12 +9,12 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Button, Field, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Field, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 
-const ROLES = [SpaceMember_Role.EDITOR, SpaceMember_Role.READER, SpaceMember_Role.ADMIN] as const;
+const ROLES = [SpaceMember_Role.READER, SpaceMember_Role.EDITOR, SpaceMember_Role.ADMIN] as const;
 
 type AdmitRole = (typeof ROLES)[number];
 
@@ -31,7 +31,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const contacts = useContacts();
   const members = useMembers(space.key);
   const identity = useIdentity();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string>();
   const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
   const [joinUrl, setJoinUrl] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -50,11 +50,15 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const canAdmit = selfRole === SpaceMember_Role.OWNER || selfRole === SpaceMember_Role.ADMIN;
 
   const handleAdd = async () => {
+    if (!selected) {
+      return;
+    }
+
     setPending(true);
     try {
-      const result = await onAdd(selected, role);
+      const result = await onAdd([selected], role);
       setJoinUrl(result.joinUrl);
-      setSelected(result.failed.map((failure) => failure.key));
+      setSelected(result.failed[0]?.key);
     } catch (err) {
       // Selection is kept so the user can retry.
       log.catch(err);
@@ -69,17 +73,17 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
 
   return (
     <div role='group' className='flex flex-col gap-2'>
-      <ContactPicker
-        contacts={contacts}
-        excludeKeys={memberKeys}
-        value={selected}
-        onChange={(keys) => {
-          setSelected(keys);
-          setJoinUrl(undefined);
-        }}
-        disabled={!canAdmit}
-      />
-      <div className='flex gap-2'>
+      <div className='flex items-center gap-2'>
+        <ContactPicker
+          contacts={contacts}
+          excludeKeys={memberKeys}
+          value={selected}
+          onChange={(key) => {
+            setSelected(key);
+            setJoinUrl(undefined);
+          }}
+          disabled={!canAdmit}
+        />
         <Select.Root
           value={String(role)}
           onValueChange={(value) =>
@@ -99,13 +103,13 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <Button
-          disabled={!canAdmit || pending || selected.length === 0}
+        <SystemIconButton.Add
+          iconOnly
+          label={t('contact-picker-add.label')}
+          disabled={!canAdmit || pending || !selected}
           onClick={handleAdd}
           data-testid='contactPicker.add'
-        >
-          {t('contact-picker-add.label')}
-        </Button>
+        />
       </div>
       {joinUrl && (
         <div className='flex gap-2'>
