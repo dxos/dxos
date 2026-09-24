@@ -14,7 +14,7 @@ import {
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
-import { type IMetadataStore } from '../metadata/index.ts';
+import { type IMetadataStore } from '../kernel/metadata/index.ts';
 
 const toBufResponse = (metadata: EchoMetadata): SubscribeToMetadataResponse =>
   buf.create(SubscribeToMetadataResponseSchema, { metadata });

@@ -31,8 +31,8 @@ import {
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Identity } from './Identity.ts';
-import { MetadataStore } from './internal/metadata/index.ts';
-import { valueEncoding } from './internal/pipeline/index.ts';
+import { MetadataStore } from './internal/kernel/metadata/index.ts';
+import { valueEncoding } from './internal/kernel/pipeline/index.ts';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from './internal/space/index.ts';
 
 const createStores = () => {

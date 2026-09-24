@@ -34,7 +34,7 @@ import { trace } from '@dxos/tracing';
 import type { InvitationProtocol } from '../../contracts/invitation-protocol.ts';
 import * as InvitationsContract from '../../contracts/invitations.ts';
 import * as Events from '../../Events.ts';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../kernel/metadata/index.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**

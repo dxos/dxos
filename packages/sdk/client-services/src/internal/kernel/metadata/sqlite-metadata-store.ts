@@ -12,6 +12,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -33,7 +34,7 @@ import {
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../../migrations/metadata/index.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../../../migrations/metadata/index.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store.ts';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
@@ -403,3 +404,11 @@ export const SqliteMetadataStoreLayer = (): Layer.Layer<IMetadataStoreService, n
       return store;
     }),
   );
+
+/**
+ * Spec constructing the SQLite metadata store.
+ */
+export const MetadataStoreSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [IMetadataStoreService] },
+  () => SqliteMetadataStoreLayer(),
+);

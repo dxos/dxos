@@ -12,6 +12,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { RuntimeProvider } from '@dxos/effect';
 import { HypercoreStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
@@ -495,6 +496,26 @@ export const HypercoreStorageDirectoryLayer = (
       return storage.createDirectory(options.sub ?? 'feeds');
     }),
   );
+
+/**
+ * Spec constructing the SQLite-backed hypercore storage.
+ */
+export const SqliteStorageSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqliteStorageService] },
+  () => SqliteStorageLayer(),
+);
+
+/**
+ * Spec providing the hypercore feeds root directory.
+ */
+export const HypercoreStorageDirectorySpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [SqliteStorageService],
+    provides: [HypercoreStorageDirectoryService],
+  },
+  () => HypercoreStorageDirectoryLayer(),
+);
 
 /**
  * Deletes every row the stack persists, so the next open starts from an empty database.

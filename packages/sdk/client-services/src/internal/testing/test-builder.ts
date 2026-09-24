@@ -64,8 +64,8 @@ import {
   InvitationsManager,
   SpaceInvitationProtocol,
 } from '../invitations/index.ts';
-import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
-import { valueEncoding } from '../pipeline/index.ts';
+import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../kernel/metadata/index.ts';
+import { valueEncoding } from '../kernel/pipeline/index.ts';
 import { type ServiceContextRuntimeProps, layerClientServices } from '../services/index.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces/index.ts';

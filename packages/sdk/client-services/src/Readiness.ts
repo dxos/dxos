@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Trigger } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Hook } from '@dxos/effect';
 
 import * as Events from './Events.ts';
@@ -37,4 +38,12 @@ export const StackReadinessLayer: Layer.Layer<StackReadinessService, never, Hook
     );
     return { initialized };
   }),
+);
+
+/**
+ * Spec constructing the stack readiness gate.
+ */
+export const StackReadinessSpec = LayerSpec.make(
+  { affinity: 'application', requires: [Hook.Controller], provides: [StackReadinessService] },
+  () => StackReadinessLayer,
 );

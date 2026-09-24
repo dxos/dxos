@@ -45,8 +45,8 @@ import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
 import { EdgeFeedReplicator } from '../../Replication.ts';
-import { type IMetadataStore } from '../metadata/index.ts';
-import { createMappedFeedWriter } from '../pipeline/index.ts';
+import { type IMetadataStore } from '../kernel/metadata/index.ts';
+import { createMappedFeedWriter } from '../kernel/pipeline/index.ts';
 import { type Space } from '../space/index.ts';
 import { AutomergeSpaceState } from './automerge-space-state.ts';
 import { type SigningContext } from './data-space-manager.ts';

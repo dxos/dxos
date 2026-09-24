@@ -22,7 +22,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { EdgeFeedReplicator } from '../../Replication.ts';
-import { valueEncoding } from '../pipeline/index.ts';
+import { valueEncoding } from '../kernel/pipeline/index.ts';
 
 describe('EdgeFeedReplicator', () => {
   test('requests metadata after connection is open', async () => {

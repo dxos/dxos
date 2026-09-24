@@ -92,7 +92,7 @@ import * as SpacesContract from '../../contracts/spaces.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
 import {
   AuthStatus,
   CredentialServerExtension,

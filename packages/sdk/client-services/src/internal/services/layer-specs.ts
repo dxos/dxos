@@ -18,14 +18,8 @@ import {
 } from '@dxos/echo-host';
 import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { Hook } from '@dxos/effect';
-import {
-  HypercoreFactoryLayer,
-  HypercoreFactoryService,
-  HypercoreStorageDirectoryService,
-  HypercoreStoreLayer,
-  HypercoreStoreService,
-} from '@dxos/feed-store';
-import { KeyringApiService, SqliteKeyringLayer } from '@dxos/keyring';
+import { HypercoreStoreService } from '@dxos/feed-store';
+import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
@@ -50,7 +44,6 @@ import * as IdentityContract from '../../contracts/identity.ts';
 import * as InvitationsContract from '../../contracts/invitations.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
-import * as SqliteStorage from '../../SqliteStorage.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
@@ -71,10 +64,10 @@ import {
   InvitationsManagerLayer,
   InvitationsServiceLayer,
 } from '../invitations/index.ts';
+import * as Kernel from '../kernel/index.ts';
+import { IMetadataStoreService } from '../kernel/metadata/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
 import * as Mesh from '../mesh/index.ts';
-import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
-import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
@@ -85,12 +78,9 @@ import {
 import { FeedSyncerLayer, FeedSyncerService } from './feed-syncer.ts';
 import {
   type ServiceStackServices,
-  StorageMigrationService,
   echoHostLayer,
   identityProviderLayer,
   registerReplicator,
-  storageLifecycleLayer,
-  storageMigrationLayer,
 } from './service-stack.ts';
 
 /**
@@ -119,72 +109,6 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
  * The embedder supplies {@link ConfigService}, {@link Hook.Controller}, the SQL services, the
  * platform inputs and — when configured — the edge clients as the stack's ambient services.
  */
-
-//
-// Storage.
-//
-
-export const SqliteStorageSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqliteStorage.SqliteStorageService] },
-  () => SqliteStorage.SqliteStorageLayer(),
-);
-
-export const HypercoreStorageDirectorySpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [SqliteStorage.SqliteStorageService],
-    provides: [HypercoreStorageDirectoryService],
-  },
-  () => SqliteStorage.HypercoreStorageDirectoryLayer(),
-);
-
-export const KeyringSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [KeyringApiService] },
-  () => SqliteKeyringLayer(),
-);
-
-export const MetadataStoreSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [IMetadataStoreService] },
-  () => SqliteMetadataStoreLayer(),
-);
-
-export const HypercoreFactorySpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [KeyringApiService, HypercoreStorageDirectoryService],
-    provides: [HypercoreFactoryService],
-  },
-  () => HypercoreFactoryLayer({ hypercore: { valueEncoding, stats: true } }),
-);
-
-export const HypercoreStoreSpec = LayerSpec.make(
-  { affinity: 'application', requires: [HypercoreFactoryService], provides: [HypercoreStoreService] },
-  () => HypercoreStoreLayer(),
-);
-
-export const StorageMigrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [StorageMigrationService] },
-  () => storageMigrationLayer,
-);
-
-export const StorageLifecycleSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [SqlClient.SqlClient, StorageMigrationService, IMetadataStoreService, Hook.Controller],
-    provides: [],
-    eager: true,
-  },
-  () => storageLifecycleLayer,
-);
-
-//
-// Network.
-//
-
-export const StackReadinessSpec = LayerSpec.make(
-  { affinity: 'application', requires: [Hook.Controller], provides: [Readiness.StackReadinessService] },
-  () => Readiness.StackReadinessLayer,
-);
 
 //
 // Identity and spaces.
@@ -603,18 +527,8 @@ export const DevtoolsHostRegistrationSpec = LayerSpec.make(
  * Every spec the client stack is built from, with the option-driven ones applied.
  */
 export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.LayerSpec[] => [
+  ...Kernel.specs(),
   ...Mesh.specs({ ...options, edgeSignaling: !!options.edgeFeatures?.signaling }),
-
-  SqliteStorageSpec,
-  HypercoreStorageDirectorySpec,
-  KeyringSpec,
-  MetadataStoreSpec,
-  HypercoreFactorySpec,
-  HypercoreStoreSpec,
-  StorageMigrationSpec,
-  StorageLifecycleSpec,
-
-  StackReadinessSpec,
 
   SpaceManagerSpec(options),
   IdentityManagerSpec(options),

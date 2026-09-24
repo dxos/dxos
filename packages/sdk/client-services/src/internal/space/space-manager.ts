@@ -26,7 +26,7 @@ import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import * as Events from '../../Events.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
 import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
 import { Space } from './space.ts';
