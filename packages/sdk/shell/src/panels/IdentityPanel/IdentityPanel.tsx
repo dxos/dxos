@@ -126,41 +126,35 @@ const IdentityHeading = ({
           />
         </Field.Root>
 
-        <Toolbar.Root classNames='justify-center pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />
-          <HuePicker
-            value={hue}
-            onChange={setHue}
-            onReset={() => setHue(undefined)}
-            classNames='h-(--dx-rail-action)'
-            rootVariant='toolbar-button'
-          />
-          <SystemIconButton.Clipboard
-            iconOnly
-            classNames='h-(--dx-rail-action)'
-            data-testid='update-profile-form-copy-key'
-            label={t('copy-self-did.label')}
-            value={identity.did}
-          />
-          {onManageCredentials && (
+        <div className='flex justify-center'>
+          <Toolbar.Root classNames='w-fit'>
+            <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} />
+            <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
+            <SystemIconButton.Clipboard
+              iconOnly
+              data-testid='update-profile-form-copy-key'
+              label={t('copy-self-did.label')}
+              value={identity.did}
+            />
+            {onManageCredentials && (
+              <Toolbar.IconButton
+                icon='ph--identification-card--regular'
+                label={t('manage-credentials.label')}
+                iconOnly
+                tooltipSide='bottom'
+                onClick={onManageCredentials}
+              />
+            )}
             <Toolbar.IconButton
-              icon='ph--identification-card--regular'
-              label={t('manage-credentials.label')}
+              icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+              label={t(isConnected ? 'disconnect.label' : 'connect.label')}
               iconOnly
               tooltipSide='bottom'
-              classNames='h-(--dx-rail-action)'
-              onClick={onManageCredentials}
+              classNames={!isConnected && 'text-error-text'}
+              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
             />
-          )}
-          <Toolbar.IconButton
-            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
-            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
-            iconOnly
-            tooltipSide='bottom'
-            classNames={['h-(--dx-rail-action)', !isConnected && 'text-error-text']}
-            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
-          />
-        </Toolbar.Root>
+          </Toolbar.Root>
+        </div>
       </Avatar.Root>
     </Heading>
   );
