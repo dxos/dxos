@@ -27,6 +27,10 @@ export type NavigationHandlerOptions = {
   invitationUrlHandler?: boolean;
 };
 
+/**
+ * NavigationHandler for space invitation URL params.
+ * Handles ?spaceInvitationCode=X → join space via invitation.
+ */
 export const NavigationHandler = AppCapability.navigationHandler(
   Effect.fnUntraced(function* ({
     invitationProp = 'spaceInvitationCode',

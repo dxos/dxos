@@ -6,7 +6,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ## 2026-09-17 — plugin-typesafe + plugin-labeler (new plugins)
 
-- `AppCapability.layerSpec(loader, { name })` takes a NAME, not `provides` — unlike the other makers (`plugin-assistant/src/capabilities/index.ts`).
+- `AppCapability.layerSpec(body, { name })` (and `lazyLayerSpec(loader, { name })`) takes a NAME, not `provides` — unlike the other makers (`plugin-assistant/src/capabilities/agent-service.ts`).
 - A service whose method must run without the caller providing its dependency: capture `yield* Effect.context<Dep>()` in the `Layer.effect` body and `Effect.provide(context)` inside the method; `Effect.Effect.Success<typeof Tag>` does NOT exist in v4.
 - Resolve a provider API key per call via `Credential.getApiKeyValue({ service })` + `Effect.catchCause` → typed error; its error channel is `never`, so absence arrives as a DEFECT, not a failure.
 - Contribute an inbox toolbar button with `InboxCapabilities.MailboxAction` and a cascade pass with `InboxCapabilities.MailboxProcessor`, both gated `activatesOn: InboxEvents.Start` (`plugin-crm/src/capabilities/index.ts` is the reference); neither requires touching plugin-inbox.
@@ -492,8 +492,8 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### TS2883 (d.ts can't name @dxos/compute types): annotate the export, no fake imports
 
-- PREFERRED fix (supersedes the fake-import trick below): drop `Capability.makeModule(...)` and annotate the export — `const activate: () => Effect.Effect<Capability.Capability<typeof AppCapabilities.X>, never, Capability.Service> = Effect.fnUntraced(...); export default activate;` with the comment `// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).` Annotations are copied verbatim into the d.ts; inferred types are expanded (which is what drags in unnameable compute types). Explicit type args on `makeModule<...>()` do NOT help.
-- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>` (array when the module contributes several). `makeModule` is an inference-only identity helper — safe to drop when annotating.
+- PREFERRED fix (supersedes the fake-import trick below): annotate the activate function a lazy body default-exports — `const activate: () => Effect.Effect<Capability.Capability<typeof AppCapabilities.X>, never, Capability.Service> = Effect.fnUntraced(...); export default activate;` with the comment `// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).` Annotations are copied verbatim into the d.ts; inferred types are expanded (which is what drags in unnameable compute types).
+- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>` (array when the module contributes several).
 - Name the module activation fn `activate` (it is consumed as `Plugin.addModule({ activate })`), or `blueprintDefinition` for blueprint modules.
 - Fake imports remain ONLY where annotation is impractical: huge inferred schema types (`types/*.ts` with echo `View`/`QueryAST`), deep Effect pipelines (plugin-inbox Google `Credential` files, functions-runtime), and ambient-augmentation imports (plugin-support Tooltip react-floater/type-fest — different mechanism).
 - For hard cases, transcribe the exact type from the previously emitted `dist/types/**/*.d.ts` instead of guessing.

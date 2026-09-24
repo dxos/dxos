@@ -43,6 +43,11 @@ const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
  */
 const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
 
+/**
+ * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
+ * section under each space's `content` group, with a branch node per Publication whose children are
+ * that Publication's Posts.
+ */
 export const BloggerAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([

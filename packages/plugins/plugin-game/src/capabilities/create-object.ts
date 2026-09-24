@@ -17,8 +17,6 @@ import { Game, GameCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-// Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
-// collects its input.
 export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
@@ -77,6 +75,8 @@ export const CreateObject = SpaceCapability.createObject(
     });
   }),
   {
+    // Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
+    // collects its input.
     environments: [],
   },
 );

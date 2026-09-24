@@ -13,6 +13,11 @@ import { AtprotoEvents } from '#types';
 
 import * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
+/**
+ * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the
+ * user's repo via the Edge proxy. Stories/tests override {@link AtprotoCapabilities.RepoLayer} with a
+ * factory returning the in-memory mock.
+ */
 export const RepoLayer = Capability.makeModule(
   'RepoLayer',
   {

@@ -33,6 +33,16 @@ const focusWindow = async (): Promise<void> => {
   await window.setFocus();
 };
 
+/**
+ * Owns the one connection to the device plugin and keeps it showing the active space.
+ *
+ * Headless on purpose: the keys must stay live whether or not the dashboard panel is on screen, and
+ * the device accepts a single client — so this is the only thing that opens a bridge, and surfaces
+ * read {@link StreamDeckCapabilities.BridgeStatus} rather than connecting themselves.
+ *
+ * The space itself is projected by `plugin-space`'s dashboard capability; this only maps those facts
+ * onto Stream Deck geometry and pushes them.
+ */
 export const BridgeDriver = Capability.makeModule(
   'BridgeDriver',
   {

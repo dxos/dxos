@@ -30,9 +30,6 @@ export { HistoryGraph } from './history-graph.ts';
 export { Schema } from './schema.ts';
 export { SkillDefinition } from './skill-definition.ts';
 export { Markdown } from './markdown-extension.ts';
-// Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
-// the history companion for markdown documents. Browser-only: the binding it contributes is
-// `useMarkdownEditorBinding`, a React hook that mounts the version toolbar and suggestion overlays.
 export { MarkdownBinding } from './markdown-binding.ts';
 export { OperationHandler } from './operation-handler.ts';
 export { ReactSurface } from './react-surface.ts';

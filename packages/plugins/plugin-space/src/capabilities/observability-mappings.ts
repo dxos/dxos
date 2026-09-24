@@ -19,6 +19,11 @@ type ObservabilityMappingsOptions = {
   observability?: boolean;
 };
 
+/**
+ * The events a space operation's invocation stands for, registered rather than emitted: the verbs
+ * are invoked on headless hosts that have no telemetry plugin, and a handler that sends its own
+ * event would bind them to one.
+ */
 export const ObservabilityMappings = AppCapability.observabilityMappings(
   Effect.fnUntraced(function* ({ observability }: ObservabilityMappingsOptions) {
     // Contributed even when the host opts out, so the capability the listener requires always

@@ -13,6 +13,11 @@ import { createKvsStore } from '@dxos/effect';
 import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
 
+/**
+ * Contributes the Settings atom both under the plugin-scoped capability (so
+ * other plugins can read it) and under `AppCapabilities.Settings` (so the
+ * standard settings panel surfaces it).
+ */
 export const CrxSettings = AppCapability.settings(
   () =>
     Effect.sync(() => {

@@ -63,6 +63,10 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/**
+ * Contributes a single `ConnectorSpec.Connector` entry that wires Slack's auth, discovery,
+ * materialization and sync to the `'slack.com'` source.
+ */
 export const Connector = Capability.makeModule(
   'SlackConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

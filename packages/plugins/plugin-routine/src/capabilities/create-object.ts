@@ -17,8 +17,6 @@ import { RoutineOperation } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-// The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
-// module cannot be evaluated without React.
 export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
@@ -36,6 +34,8 @@ export const CreateObject = SpaceCapability.createObject(
     });
   }),
   {
+    // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
+    // module cannot be evaluated without React.
     environments: [],
   },
 );

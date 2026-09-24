@@ -62,6 +62,12 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/**
+ * Contributes a single `ConnectorSpec.Connector` entry that wires Trello's discovery,
+ * target materialization, sync operation, and token-created hook to the
+ * `'trello.com'` source. plugin-connector routes connections to connectors
+ * by `connectorId`.
+ */
 export const Connector = Capability.makeModule(
   'TrelloConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

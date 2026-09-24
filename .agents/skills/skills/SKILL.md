@@ -73,9 +73,8 @@ plugin-my-domain/
 │   │       ├── update.ts
 │   │       └── index.ts
 │   └── capabilities/
-│       └── skill-definition/
-│           ├── index.ts          # Lazy export
-│           └── skill-definition.ts  # Contributes to AppCapabilities.SkillDefinition
+│       ├── index.ts              # Barrel: re-exports each module
+│       └── skill-definition.ts   # Defines SkillDefinition, contributing to AppCapabilities.SkillDefinition
 ```
 
 ### Where skills are registered (Composer)
@@ -83,18 +82,17 @@ plugin-my-domain/
 1. **Capability module** — contributes the skill to the app:
 
 ```ts
-// capabilities/skill-definition/skill-definition.ts
+// capabilities/skill-definition.ts (the barrel re-exports it)
 import * as Effect from 'effect/Effect';
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { MarkdownSkill } from '../../skills';
+import { MarkdownSkill } from '../skills';
 
-const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
+export const SkillDefinition = AppCapability.skillDefinition(() =>
   Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, MarkdownSkill)]),
 );
-
-export default skillDefinition;
 ```
 
 2. **Plugin** — registers the capability module:

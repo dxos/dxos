@@ -53,6 +53,13 @@ export const listen = (
     ),
   );
 
+/**
+ * Sends the observability event a successful invocation stands for, for operations that registered
+ * one via {@link AppCapabilities.ObservabilityMapping}.
+ *
+ * The listener owns telemetry so a portable verb (`space.addObject`, run equally on a headless
+ * host) need not bind itself to this plugin's `SendEvent`.
+ */
 export const InvocationListener = Capability.makeModule(
   'InvocationListener',
   {

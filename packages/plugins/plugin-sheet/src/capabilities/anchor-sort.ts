@@ -12,8 +12,6 @@ import { Relation, Type } from '@dxos/echo';
 import { Sheet, SheetUtil } from '#types';
 import { SheetEvents } from '#types';
 
-// Ordering-only: registers the sort comparator once the app graph exists; the body reads
-// nothing else.
 export const AnchorSort = AppCapability.anchorSort(
   () =>
     Effect.succeed(
@@ -32,6 +30,8 @@ export const AnchorSort = AppCapability.anchorSort(
       }),
     ),
   {
+    // Ordering-only: registers the sort comparator once the app graph exists; the body reads
+    // nothing else.
     requires: [AppCapabilities.AppGraph],
     activatesOn: SheetEvents.Start,
   },

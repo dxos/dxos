@@ -13,6 +13,22 @@ import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+/**
+ * Syncs plugin capability contributions into `client.graph.registry`.
+ *
+ * Watches two capability atoms and imperatively adds entities to the
+ * hypergraph registry when they change:
+ * - {@link AppCapabilities.SkillDefinition} → instantiates each skill via `def.make()`.
+ * - {@link Capabilities.OperationHandler} → serializes each handler via `Operation.serialize`.
+ *
+ * Skill DB copies (stored in a space when a skill is "enabled") are treated as
+ * user forks and are not overwritten. The registry is always used as the source of truth
+ * for skill instructions at request time — see `formatSystemPrompt` in `@dxos/assistant`.
+ *
+ * Note: the plugin framework does not yet expose a teardown hook for capability
+ * modules (see the TODO in process-manager-capability.ts), so the subscriptions
+ * are not explicitly cancelled. They are effectively scoped to the client's lifetime.
+ */
 export const RegistrySync = Capability.makeModule(
   'RegistrySync',
   {

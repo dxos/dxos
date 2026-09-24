@@ -13,6 +13,12 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Blog } from '#types';
 
+// `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
+// for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
+// "create object" menu needs to navigate to the new object, so both entries below construct the
+// object directly and file it via `SpaceOperation.AddObject` instead, matching every other plugin's
+// `create-object.ts` (e.g. `plugin-gallery`, `plugin-tasks`). The in-publication "+ Post" path
+// (which does use `AddPost`) is wired separately in Tasks 7/9.
 export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return [

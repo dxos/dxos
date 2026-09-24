@@ -11,9 +11,7 @@ import { translations } from '#translations';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export { RoutineAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
-export { Commands } from './commands.ts';
-// The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
-// module cannot be evaluated without React.
+export const Commands = AppCapability.lazyCommands(() => import('./commands.ts'));
 export { CreateObject } from './create-object.ts';
 export { LayerSpecs } from './layer-specs.ts';
 export { OperationHandler } from './operation-handler.ts';

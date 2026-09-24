@@ -12,6 +12,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { FactsCompanion } from '#containers';
 import { BrainSurface } from '#types';
 
+/** React surfaces contributed by plugin-brain — the per-space facts panel. */
 export const ReactSurface = AppCapability.surface(
   () =>
     Effect.succeed(

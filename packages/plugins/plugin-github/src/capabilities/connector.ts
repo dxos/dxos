@@ -56,6 +56,18 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/**
+ * Contributes a single `ConnectorSpec.Connector` entry that wires GitHub's two operations,
+ * its target materializer, and the token-created hook to the `'github.com'`
+ * source. plugin-connector routes by `connectorId`.
+ *
+ * Sync targets are repositories, not organizations — orgs and their members
+ * are auto-pulled as a side effect of syncing any repo they own.
+ *
+ * `scopes` is intentionally empty: this is a GitHub *App* (not a classic
+ * OAuth App), so permissions are declared in the App's settings on github.com
+ * and OAuth scope strings are ignored on the user-authorization flow.
+ */
 export const Connector = Capability.makeModule(
   'GitHubConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

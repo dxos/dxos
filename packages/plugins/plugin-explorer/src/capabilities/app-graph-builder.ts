@@ -14,6 +14,10 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
+/**
+ * Offers a "Neighborhood" companion on any ECHO object. The matched node is passed through as the
+ * companion's `companionTo` (the active node), which the surface renders as an ego-centric graph.
+ */
 export const ExplorerAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([

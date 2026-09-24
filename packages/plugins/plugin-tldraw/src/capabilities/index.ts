@@ -10,7 +10,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-// Browser-only: the variant supplies the React article/card components that render a drawing.
 export { DrawingVariant } from './drawing-variant.ts';
 
 export const PluginAsset = AppCapability.pluginAsset({

@@ -17,7 +17,7 @@ export * from './app-graph-builder/index.ts';
 export * from './settings-sync/index.ts';
 export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
-export { Commands } from './commands.ts';
+export const Commands = AppCapability.lazyCommands(() => import('./commands.ts'));
 export { CreateObject } from './create-object.ts';
 export { Dashboard } from './dashboard.ts';
 export { IdentityCreated } from './identity-created.ts';
@@ -29,12 +29,8 @@ export { ReactSurface } from './react-surface.ts';
 export { Repair } from './repair.ts';
 export { Schema } from './schema.ts';
 export { SpaceSettings } from './settings.ts';
-// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
-// headless host registers.
 export { SpacesAvailable } from './spaces-available.ts';
 export { SkillDefinition } from './skill-definition.ts';
-// Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
-// the app-graph builder, `SpacesAvailable` — is itself browser-only.
 export { SpaceState } from './state.ts';
 export { ObservabilityMappings } from './observability-mappings.ts';
 export { UndoMappings } from './undo-mappings.ts';

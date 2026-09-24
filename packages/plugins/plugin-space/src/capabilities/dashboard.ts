@@ -19,6 +19,7 @@ import { SpaceCapabilities } from '#types';
 /** Enough favorites for any peripheral we drive; each device takes the prefix it can show. */
 const MAX_SHORTCUTS = 16;
 
+/** Projects the active space for peripheral displays, and owns the queries behind that projection. */
 export const Dashboard = Capability.makeModule(
   'Dashboard',
   {

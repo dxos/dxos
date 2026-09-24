@@ -26,6 +26,11 @@ const atprotoCredentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typ
   onSubmit: ({ values }) => Effect.succeed({ kind: 'oauth', loginHint: values.handle.trim() }),
 };
 
+/**
+ * The generic "Atmosphere" atproto connector: connects an atproto account (credential-only, no sync
+ * targets) and is the connector the OAuth account-recovery flow routes its Connection to. Owned by
+ * this plugin so the atproto connection capability lives with the rest of the atproto integration.
+ */
 export const AtprotoConnector = Capability.makeModule(
   'AtprotoConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

@@ -51,7 +51,6 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
 };
 
 /** Contributes the default feed-backed channel provider. */
-
 export const ChannelBackendFeed = Capability.makeModule(
   'ChannelBackendFeed',
   {

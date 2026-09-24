@@ -375,7 +375,7 @@ export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuil
  * Adds a module to a plugin builder. Supports both pipeline and direct call styles.
  *
  * Accepts either:
- * - A spec-carrying module ({@link Capability.lazyModule} / {@link Capability.inlineModule}):
+ * - A spec-carrying module ({@link Capability.makeModule} / {@link Capability.makeLazyModule}):
  *   requires/provides/activatesOn/props all come from the module's own spec (declared where
  *   it is authored), so the call needs only an optional id override.
  * - An inline authoring record (or a function receiving plugin options): declares

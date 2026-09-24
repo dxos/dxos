@@ -131,6 +131,31 @@ describe('dx-plugin gen', () => {
     );
   });
 
+  it('keeps the barrel alias of a module sliced out of a file it shares with a stub', () => {
+    withPlugin(
+      {
+        'package.json': PACKAGE_JSON,
+        'src/capabilities/index.ts': [
+          "export { HeadlessModule as Headless, SurfaceModule as Surface } from './modules';",
+          '',
+        ].join('\n'),
+        'src/capabilities/modules.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          "export const HeadlessModule = Capability.makeLazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          "export const SurfaceModule = Capability.makeLazyModule('Surface', { environments: [] }, () => import('./surface'));",
+          '',
+        ].join('\n'),
+      },
+      (dir) => {
+        generate(dir);
+        const node = read(dir, 'node');
+        expect(node).toContain('export { HeadlessModule as Headless };');
+        expect(node).toContain('export const Surface = undefined;');
+      },
+    );
+  });
+
   it('follows a maker pair to the defaults const they share', () => {
     withPlugin(
       {

@@ -10,8 +10,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-// Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
-// collects its input.
 export { CreateObject } from './create-object.ts';
 export { ReactSurface } from './react-surface.ts';
 export { Schema } from './schema.ts';

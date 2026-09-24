@@ -45,6 +45,11 @@ const makeStore = (
   },
 });
 
+/**
+ * Binds every settings surface the app already has — each plugin's settings atom, the enabled
+ * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
+ * the settings space, so they follow the identity across devices with per-key device pins.
+ */
 export const SettingsSync = Capability.makeModule(
   'SettingsSync',
   {

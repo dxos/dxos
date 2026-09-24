@@ -19,6 +19,9 @@ import { commentSync } from '../extensions/index.ts';
 export const Markdown = Capability.makeModule(
   'MarkdownExtension',
   {
+    // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
+    // provider callbacks read it and it is contributed by this plugin's own idle-gated module, which
+    // markdown start can otherwise precede.
     requires: [CommentCapabilities.State],
     provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
     activatesOn: MarkdownEvents.Start,

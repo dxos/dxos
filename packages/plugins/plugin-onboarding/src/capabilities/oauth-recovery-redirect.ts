@@ -141,6 +141,21 @@ const finalize = Effect.fnUntraced(function* (params: RedirectParams) {
   );
 });
 
+/**
+ * Startup module that finalizes redirect-flow OAuth-recovery callbacks.
+ *
+ * atproto/bsky nullifies `window.opener`, so the register / recovery flows cannot relay their
+ * result back via `postMessage`. Instead kms-service redirects to `/redirect/oauth-recovery`: in
+ * the browser that reloads the app fresh and the params are read off the location here (rewriting
+ * the URL to `/`); on desktop the shell cancels that navigation and relays the URL as an event
+ * instead. Either way a daemon fiber waits for the client + operation invoker and completes the
+ * flow from the params plus the `localStorage` snapshot the initiating operation persisted:
+ *
+ * - register: create the local identity (if needed), complete OAuth registration, then redeem the
+ *   stashed invitation code with the provider-verified email to mint the hub Account.
+ * - recovery: redeem the one-time recovery proof via `IdentityService.recoverIdentity` to admit
+ *   this device into HALO.
+ */
 export const OAuthRecoveryRedirect = Capability.makeModule(
   'OAuthRecoveryRedirect',
   { provides: [] },

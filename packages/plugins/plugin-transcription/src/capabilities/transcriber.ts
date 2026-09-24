@@ -15,6 +15,11 @@ import { TranscriptionEvents } from '#types';
 
 import { TranscriptionManagerImpl } from '../transcription-manager.ts';
 
+/**
+ * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it
+ * via DI. The low-level construction lives in `@dxos/react-ui-transcription`; this module is the
+ * provision seam.
+ */
 export const Transcriber = Capability.makeModule(
   'Transcriber',
   {

@@ -15,6 +15,7 @@ import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle } from '#c
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
+/** React surfaces contributed by plugin-projects — the Project detail article. */
 export const ReactSurface = AppCapability.surface(
   () =>
     Effect.succeed(

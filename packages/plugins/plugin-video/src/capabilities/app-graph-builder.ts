@@ -20,6 +20,11 @@ import { meta } from '#meta';
 // item is invoked.
 import { Video } from '#types';
 
+/**
+ * Contributes the video operations to a Video object's app-graph node, so they appear in the
+ * article's menu: fetch the transcript from captions, transcribe via the EDGE worker, and create the
+ * AI summary. These are explicit alternatives to the on-demand generation the surfaces run.
+ */
 export const VideoAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the

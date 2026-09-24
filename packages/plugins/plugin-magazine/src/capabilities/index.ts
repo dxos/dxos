@@ -13,9 +13,6 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export { MagazineAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
 export { RoutineTemplates } from './routine-templates.ts';
 export { Schema } from './schema.ts';
-// Startup rather than the default dependency-mode gate: the consumers read the capability set
-// (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
-// and a Post would stay unreadable — no reading companion, no extraction.
 export { TextContent } from './text-content.ts';
 export { SkillDefinition } from './skill-definition.ts';
 export { CreateObject } from './create-object.ts';

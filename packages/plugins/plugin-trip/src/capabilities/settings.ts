@@ -21,6 +21,11 @@ import {
 } from '../operations/extractor/config.ts';
 import { Settings } from '../types/Settings.ts';
 
+/**
+ * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and bridges the
+ * configured `tripGapDays` to the headless extractor: the extractor only receives a `db`, so it
+ * reads the gap from a process-level holder that this module keeps in sync with the settings atom.
+ */
 export const TripSettings = AppCapability.settings(
   Effect.fnUntraced(function* () {
     const settingsAtom = createKvsStore({

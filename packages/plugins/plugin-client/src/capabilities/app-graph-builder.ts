@@ -22,8 +22,6 @@ import { ClientOperation } from '#operations';
 import { Account, ClientCapabilities } from '#types';
 import { ClientEvents } from '#types';
 
-// Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
-// and a pre-init throw is not re-evaluated when initialization lands).
 export const ClientAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read the client through its atom so the extension establishes a reactive dependency:
@@ -226,6 +224,8 @@ export const ClientAppGraphBuilder = AppCapability.appGraphBuilder(
     ]);
   }),
   {
+    // Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
+    // and a pre-init throw is not re-evaluated when initialization lands).
     activatesOn: ClientEvents.Initialized,
   },
 );

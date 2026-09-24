@@ -14,6 +14,18 @@ import { BrainOperation } from '#types';
 
 import { settingsAtom } from './settings.ts';
 
+/**
+ * Contributes fact analysis as a feed processor rather than a toolbar menu item.
+ *
+ * This is what makes the missing-`FactStore` case structurally impossible instead of merely handled:
+ * the pass and the layer it needs are contributed by the same plugin, so a deployment without brain
+ * has no `analyze` processor to run rather than one that dies resolving a service nobody provided.
+ * The uniform precondition gate in plugin-inbox stays as the backstop for anything else.
+ *
+ * Analysis settings (model/provider/strict) are read live from the atom registry at invoke time and
+ * OVERRIDE the cascade's run options, so a story or local setup can retarget analysis (e.g. to Ollama)
+ * without a rebuild — the reason the menu item read them this way too.
+ */
 export const MailboxProcessor = Capability.makeModule(
   'MailboxProcessor',
   {

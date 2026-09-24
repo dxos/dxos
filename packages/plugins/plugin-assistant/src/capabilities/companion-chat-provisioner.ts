@@ -27,6 +27,10 @@ import { ASSISTANT_COMPANION_VARIANT } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 import { AssistantEvents } from '#types';
 
+/**
+ * Non-React capability that watches deck companion state and provisions transient chats
+ * for active planks when the assistant companion is selected.
+ */
 export const CompanionChatProvisioner = Capability.makeModule(
   'CompanionChatProvisioner',
   {

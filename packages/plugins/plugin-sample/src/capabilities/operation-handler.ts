@@ -16,6 +16,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { SampleOperationHandlerSet } from '#operations';
 
+// When the module doesn't need to access other capabilities or perform setup,
+// use `Effect.succeed` directly instead of `Effect.fnUntraced(function* () { ... })`.
 export const OperationHandler = AppCapability.operationHandler(
   () => Effect.succeed(Capability.contribute(Capabilities.OperationHandler, SampleOperationHandlerSet)),
   {

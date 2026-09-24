@@ -16,7 +16,6 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { ScriptCapabilities } from '#types';
-import { ScriptEvents } from '#types';
 
 import { Compiler } from '../compiler/index.ts';
 import { CompilerError } from './errors.ts';
@@ -24,53 +23,45 @@ import { CompilerError } from './errors.ts';
 // TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';
 const DECLARATION_EXTS = ['.d.ts', '.d.mts'];
-const NO_TYPES = true;
+const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 
-export const ScriptCompiler = Capability.makeModule(
-  'Compiler',
-  {
-    provides: [ScriptCapabilities.Compiler],
-    // Genuine runtime event: the compiler is only loaded on demand (`hooks/useCompiler.ts`), not at startup.
-    activatesOn: ScriptEvents.SetupCompiler,
-  },
-  () =>
-    Effect.gen(function* () {
-      yield* Effect.tryPromise({
-        try: () => initializeBundler({ wasmUrl }),
-        catch: (error) => new CompilerError({ message: 'Failed to initialize bundler.', cause: error }),
-      });
+export default () =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise({
+      try: () => initializeBundler({ wasmUrl }),
+      catch: (error) => new CompilerError({ message: 'Failed to initialize bundler.', cause: error }),
+    });
 
-      const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
+    const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
 
-      const compiler = new Compiler({
-        target: ts.ScriptTarget.ES2022,
-        lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
-        skipLibCheck: true,
-        moduleResolution: ts.ModuleResolutionKind.Bundler,
-        allowImportingTsExtensions: true,
-        noEmit: true,
-        strict: true,
-        esModuleInterop: true,
-        paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
-      });
+    const compiler = new Compiler({
+      target: ts.ScriptTarget.ES2022,
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+      skipLibCheck: true,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      allowImportingTsExtensions: true,
+      noEmit: true,
+      strict: true,
+      esModuleInterop: true,
+      paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
+    });
 
-      yield* Effect.tryPromise({
-        try: () =>
-          compiler.initialize(trim`
+    yield* Effect.tryPromise({
+      try: () =>
+        compiler.initialize(trim`
         declare module 'https://*';
         ${NO_TYPES ? '' : 'declare module "*";'}
       `),
-        catch: (error) => new CompilerError({ message: 'Failed to initialize compiler.', cause: error }),
-      });
-      if (!NO_TYPES) {
-        for (const mod of runtimeModules) {
-          compiler.setFile(`/src/${mod.filename}`, mod.content);
-        }
+      catch: (error) => new CompilerError({ message: 'Failed to initialize compiler.', cause: error }),
+    });
+    if (!NO_TYPES) {
+      for (const mod of runtimeModules) {
+        compiler.setFile(`/src/${mod.filename}`, mod.content);
       }
+    }
 
-      return Capability.contribute(ScriptCapabilities.Compiler, compiler);
-    }),
-);
+    return Capability.contribute(ScriptCapabilities.Compiler, compiler);
+  });
 
 const fetchRuntimeModules = Effect.fnUntraced(function* () {
   // { key, size, contentType }

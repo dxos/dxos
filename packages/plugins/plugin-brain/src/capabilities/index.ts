@@ -6,6 +6,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { BrainCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -22,7 +23,10 @@ export { SkillDefinition } from './skill-definition.ts';
 // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
 // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
 // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export { BrainFactStore as FactStore } from './fact-store.ts';
+export const FactStore = AppCapability.lazyLayerSpec(() => import('./fact-store.ts'), {
+  name: 'FactStore',
+  provides: [BrainCapabilities.FactStoreRegistry],
+});
 export { ReactSurface } from './react-surface.ts';
 export { Settings } from './settings.ts';
 export { MailboxProcessor } from './mailbox-processor.ts';

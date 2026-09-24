@@ -6,11 +6,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { translations } from '#translations';
 
-// Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
-// `LayoutOperation` actions, which mean nothing without an app shell.
 export { ProjectsAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
-// Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
-// template and collects its name.
 export { CreateObject } from './create-object.ts';
 export { NavigationTargetResolver } from './navigation-target-resolver.ts';
 export { OperationHandler } from './operation-handler.ts';

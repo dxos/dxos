@@ -14,8 +14,6 @@ import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '#types';
 
-// Ordering-only: registers the sort comparator once the app graph exists (mirrors the
-// AppGraphReady ordering the event-mode module used previously); the body reads nothing.
 export const AnchorSort = AppCapability.anchorSort(
   () =>
     Effect.succeed(
@@ -40,6 +38,8 @@ export const AnchorSort = AppCapability.anchorSort(
       }),
     ),
   {
+    // Ordering-only: registers the sort comparator once the app graph exists (mirrors the
+    // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
     requires: [AppCapabilities.AppGraph],
   },
 );

@@ -24,7 +24,6 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
  * OLLAMA_ORIGINS="*" ollama serve
  * ```
  */
-
 export const LocalModelResolver = Capability.makeModule(
   'LocalModelResolver',
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },

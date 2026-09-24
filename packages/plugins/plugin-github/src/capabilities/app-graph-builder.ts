@@ -16,8 +16,10 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { IMPORT_PULL_REQUEST_DIALOG, meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-// Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
-// nothing without an app shell.
+/**
+ * Contributes "Import pull request" to the root, so the commands dialog carries it: a reviewer who
+ * has a link in hand should not have to sync a repository to read the change.
+ */
 export const GithubAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
@@ -44,6 +46,8 @@ export const GithubAppGraphBuilder = AppCapability.appGraphBuilder(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
   {
+    // Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
+    // nothing without an app shell.
     environments: [],
   },
 );

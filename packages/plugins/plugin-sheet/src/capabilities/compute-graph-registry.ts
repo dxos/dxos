@@ -13,6 +13,12 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SheetCapabilities } from '#types';
 
+/**
+ * Builds the per-space compute graph registry by adapting the shared
+ * {@link Capabilities.ProcessManagerRuntime} into a
+ * {@link FunctionsRuntimeProvider} that resolves {@link Operation.Service}
+ * from the space's service layer.
+ */
 export const ComputeGraphRegistry = Capability.makeModule(
   'ComputeGraphRegistry',
   {

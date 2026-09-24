@@ -32,6 +32,11 @@ const CustomTokenForm = Schema.Struct({
   }),
 });
 
+/**
+ * Built-in {@link ConnectorSpec.Connector} entries: just the manual-token connector.
+ * Service-specific connectors (atproto/Atmosphere in `@dxos/plugin-atproto`, Bluesky, Trello,
+ * GitHub, …) live in their own plugins and contribute from their own dependency-mode modules.
+ */
 export const BuiltinConnectors = Capability.makeModule(
   'BuiltinConnectors',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

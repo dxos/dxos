@@ -47,33 +47,26 @@ but widens the NSID to `string`, making the compile-time check vacuous; prefer t
 
 ## Authoring a module
 
-A module is a body plus a declaration of what it `requires` and `provides`.
+A module is a body plus a declaration of what it `requires` and `provides`. A body yields its
+declared requirements:
 
 ```ts
-// Code-split (the common case) — the chunk loads when the module activates.
-export const Coordinator = Capability.lazyModule(
+// Eager (the default) — the body ships in the chunk the plugin already loads on enable.
+export const Coordinator = Capability.makeModule(
   'ConnectorCoordinator',
   { requires: [ClientCapabilities.Client], provides: [ConnectorCoordinator] },
-  () => import('./connector-coordinator'),
-);
-
-// Eager — body defined inline, no separate chunk.
-export const Extractor = Capability.inlineModule(
-  'SummarizeExtractor',
-  { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed(Capability.contribute(InboxCapabilities.ObjectExtractor, extractor)),
-);
-```
-
-The body is written with `Capability.makeModule` and yields its declared requirements:
-
-```ts
-export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client; // declared in `requires`
-    const coordinator = new Coordinator(client);
-    return Capability.contribute(ConnectorCoordinator, coordinator);
+    return Capability.contribute(ConnectorCoordinator, new Coordinator(client));
   }),
+);
+
+// Lazy — its own chunk, fetched when the module activates. For a body whose dependencies the
+// plugin's chunk should not carry; the loaded file default-exports the activate function.
+export const Extractor = Capability.makeLazyModule(
+  'SummarizeExtractor',
+  { provides: [InboxCapabilities.ObjectExtractor] },
+  () => import('./summarize-extractor'),
 );
 ```
 
@@ -84,13 +77,12 @@ contribute a declared `provides` is also a type error.
 `@dxos/app-toolkit` ships them for the common capabilities:
 
 ```ts
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  requires: [SomeCapabilities.Thing],
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(activate, { requires: [SomeCapabilities.Thing] });
+export const ReactSurface = AppCapability.lazySurface(() => import('./react-surface'));
 ```
 
-Build your own with `Capability.moduleMaker(name, tag)`.
+Build your own pair with `Capability.moduleMaker(name, tag, defaults)` and
+`Capability.lazyModuleMaker(name, tag, defaults)`, sharing one defaults const.
 
 ---
 
@@ -210,11 +202,7 @@ A module activates in one of two modes, normalized onto `PluginModule.activation
   fires.
 
 ```ts
-Capability.lazyModule(
-  'OnSpaceCreated',
-  { activatesOn: SpaceEvents.SpaceCreated, provides: [] },
-  () => import('./on-space-created'),
-);
+Capability.makeModule('OnSpaceCreated', { activatesOn: SpaceEvents.SpaceCreated, provides: [] }, onSpaceCreated);
 ```
 
 Surviving events are runtime occurrences only — `ActivationEvents.Startup`, `SpacesReady`,

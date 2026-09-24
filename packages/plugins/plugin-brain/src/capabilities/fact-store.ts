@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { invariant } from '@dxos/invariant';
 import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
@@ -76,32 +75,27 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
   return { forSpace, layerFor, subscribe };
 };
 
-// No `export * from './fact-store.ts'` here: that barrel re-export made the module a static import of
-// the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
-// pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
-// `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export const BrainFactStore = AppCapability.layerSpec(
-  Effect.fnUntraced(function* () {
-    const registry = makeFactStoreRegistry();
-    const factStoreSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [],
-        provides: [FactStore],
-      },
-      (context) => {
-        invariant(context.space, 'space context required for FactStore layer');
-        return registry.layerFor(context.space);
-      },
-    );
+/**
+ * Contributes a single shared {@link FactStoreRegistry} plus a space-affinity {@link LayerSpec} that
+ * provides `FactStore` to operations. Both close over the SAME registry, so the operation-injected
+ * store and the capability-read store resolve to the same per-space instance.
+ */
+export default Effect.fnUntraced(function* () {
+  const registry = makeFactStoreRegistry();
+  const factStoreSpec = LayerSpec.make(
+    {
+      affinity: 'space',
+      requires: [],
+      provides: [FactStore],
+    },
+    (context) => {
+      invariant(context.space, 'space context required for FactStore layer');
+      return registry.layerFor(context.space);
+    },
+  );
 
-    return [
-      Capability.contribute(BrainCapabilities.FactStoreRegistry, registry),
-      Capability.contribute(Capabilities.LayerSpec, factStoreSpec),
-    ];
-  }),
-  {
-    name: 'FactStore',
-    provides: [BrainCapabilities.FactStoreRegistry],
-  },
-);
+  return [
+    Capability.contribute(BrainCapabilities.FactStoreRegistry, registry),
+    Capability.contribute(Capabilities.LayerSpec, factStoreSpec),
+  ];
+});

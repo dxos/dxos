@@ -10,8 +10,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-// Narrower than the `appGraphBuilder` family default: its nodes invoke
-// `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
 export { TasksAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
 export { CreateObject } from './create-object.ts';
 export { OperationHandler } from './operation-handler.ts';

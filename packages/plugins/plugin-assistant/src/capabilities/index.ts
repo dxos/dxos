@@ -17,15 +17,11 @@ export { AssistantAiService as AiService } from './ai-service.ts';
 export { Connector } from './connector.ts';
 export { AssistantAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
 export { AutomationTemplates } from './automation-templates.ts';
-export { Schema } from './schema-defs.ts';
+export const Schema = AppCapability.lazySchema(() => import('./schema-defs.ts'));
 export { SubjectContext } from './subject-context.ts';
 export { SkillDefinition } from './skill-definition.ts';
 export { CompanionChatProvisioner } from './companion-chat-provisioner.ts';
 export { CreateObject } from './create-object.ts';
-// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
-// require once during startup, so a resolver contributed in a later round is invisible to it.
-// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
-//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
 export { EdgeModelResolver } from './edge-model-resolver.ts';
 export { LocalModelResolver } from './local-model-resolver.ts';
 export { MarkdownExtension } from './markdown-extension.ts';

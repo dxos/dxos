@@ -118,6 +118,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
   readOnly: () => true,
 };
 
+/** Contributes the read-only ATProto channel backend. */
 export const ChannelBackend = Capability.makeModule(
   'BlueskyChannelBackend',
   { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },

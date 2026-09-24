@@ -15,6 +15,11 @@ import { MapCapabilities } from '#types';
 
 import { Settings } from '../types/Settings.ts';
 
+/**
+ * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and exposes the
+ * settings atom as `MapCapabilities.Settings` so containers (e.g. `MapArticle`) can read configured
+ * API keys to select tile providers.
+ */
 export const MapSettings = AppCapability.settings(
   () =>
     Effect.sync(() => {

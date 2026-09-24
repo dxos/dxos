@@ -176,6 +176,14 @@ const normalizeRoles = (messages: readonly Message.Message[]): Message.Message[]
       : { ...message, sender: { ...message.sender, role: 'user' as const } },
   );
 
+/**
+ * Default AgentRunner: one-shot LLM call per scheduled turn — loads the thread, builds a prompt
+ * from the message history, generates a reply via `LanguageModel.generateText`, and appends the
+ * response as an assistant message on the same thread. Edit tools (`editAnchoredRange`,
+ * `updateDocument`) are wired per turn based on whether the thread has an anchored range; splicing
+ * uses Automerge-diff `updateText` so anchors on other threads stay valid. Storybook stub paths
+ * contribute their own `AgentRunner` earlier in plugin order to short-circuit this module.
+ */
 export const AgentRunner = Capability.makeModule(
   'AgentRunner',
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },

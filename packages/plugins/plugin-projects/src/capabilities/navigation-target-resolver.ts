@@ -15,6 +15,14 @@ import { Position } from '@dxos/util';
 
 import { getProjectChatPath } from '../paths.ts';
 
+/**
+ * Places a project's chats on that project's Chats branch. Without this a project chat resolves
+ * only to the assistant's Chats section, whose connector queries unparented chats — so the path
+ * names a node that does not exist and opening it leaves a blank pane.
+ *
+ * `Position.first`: the branch is where the tree actually shows the chat, so it outranks both the
+ * type section's answer and the generic database subtree.
+ */
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   Effect.fnUntraced(function* () {
     return Capability.contribute(AppCapabilities.NavigationTargetResolver, (query) =>

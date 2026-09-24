@@ -31,6 +31,11 @@ import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } 
  */
 const RECONCILE_INTERVAL = Duration.seconds(10);
 
+/**
+ * Publishes per-space replication backlog — automerge documents and ECHO feed blocks combined into a
+ * single monitor per space — into the {@link AppCapabilities.ProgressRegistry}. Subscribes to the
+ * combined sync-state stream and drops a space's monitor once it catches up.
+ */
 export const SpaceReplicationProgress = Capability.makeModule(
   'SpaceReplicationProgress',
   {

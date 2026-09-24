@@ -13,6 +13,7 @@ import { ProjectOperation } from '#types';
 
 export const TaskAction = Capability.makeModule(
   'TaskAction',
+  // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
   { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(TasksCapabilities.TaskAction, [

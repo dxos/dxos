@@ -10,11 +10,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-// RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
-// (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
-// any of them while the driver mounts trips the missing-capability invariant.
-// Exception to the headless `appGraphBuilder` default: this builder's node renders a `<Mic/>`
-// companion inline, so its module is genuinely browser-bound.
 export { TranscriptionAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.tsx';
 export { TranscriptionEntityLookup as EntityLookup } from './entity-lookup.ts';
 export { MarkdownExtension } from './markdown-extension.ts';

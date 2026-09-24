@@ -25,6 +25,10 @@ export type NavigationHandlerOptions = {
   invitationUrlHandler?: boolean;
 };
 
+/**
+ * NavigationHandler for auth-related URL params.
+ * Handles login tokens and device invitation codes.
+ */
 export const NavigationHandler = AppCapability.navigationHandler(
   Effect.fnUntraced(function* ({
     invitationProp = 'deviceInvitationCode',

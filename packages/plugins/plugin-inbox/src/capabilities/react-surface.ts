@@ -36,6 +36,7 @@ import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx'
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
 
+/** A single non-draft message or a non-empty conversation (thread) of them. */
 export const ReactSurface = AppCapability.surface(
   () =>
     Effect.succeed(

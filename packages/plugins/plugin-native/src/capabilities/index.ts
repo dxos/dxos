@@ -11,10 +11,6 @@ import { translations } from '#translations';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export { NativeSettings } from './settings.ts';
-// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
-// require once during startup, so the sidecar resolver contributed in a later round is invisible to
-// it and every `built-in` model fails to resolve. Activation stays cheap — it builds the manager and
-// a lazy layer; the sidecar process spawns on first use, not here.
 export { NativeOllama as Ollama } from './ollama.ts';
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

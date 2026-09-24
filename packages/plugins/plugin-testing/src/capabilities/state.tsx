@@ -21,6 +21,7 @@ const defaultState: StorybookCapabilities.LayoutStateProps = {
 
 export const State = Capability.makeModule(
   'State',
+  // Shell state read by `Layout` on its first render — same class as the deck's `DeckState`.
   { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
   Effect.fnUntraced(function* (props?: { initialState?: Partial<StorybookCapabilities.LayoutStateProps> }) {
     const { initialState } = props ?? {};

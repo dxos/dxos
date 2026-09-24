@@ -10,8 +10,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-// Ordering-only: registers the sort comparator once the app graph exists; the body reads
-// nothing else.
 export { AnchorSort } from './anchor-sort.ts';
 export { CommentConfig } from './comment-config.ts';
 export { ComputeGraphRegistry } from './compute-graph-registry.ts';

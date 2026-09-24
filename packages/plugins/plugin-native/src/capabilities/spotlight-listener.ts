@@ -18,6 +18,9 @@ type SpotlightInvokePayload = {
   payload?: unknown;
 };
 
+/**
+ * Listens for spotlight:invoke events from the popover window and dispatches the corresponding operation.
+ */
 export const SpotlightListener = Capability.makeModule(
   'SpotlightListener',
   { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },

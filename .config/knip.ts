@@ -379,7 +379,7 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
   // as `src/index.ts` -> `./functions` -> `./edge-function`.
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
-  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
+  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.makeLazyModule(..., () => import('./Debug.tsx'))` —
   // an extensioned dynamic import, which knip's traversal does not follow.
   'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
 };

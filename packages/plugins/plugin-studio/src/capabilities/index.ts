@@ -19,7 +19,6 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-// A cross-plugin contribution rides the consuming plugin's start event.
 export { ProjectTemplates } from './project-templates.ts';
 export { ReactSurface } from './react-surface.ts';
 export { SkillDefinition } from './skill-definition.ts';

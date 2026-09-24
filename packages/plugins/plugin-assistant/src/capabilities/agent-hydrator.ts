@@ -13,6 +13,12 @@ import { log } from '@dxos/log';
 
 import { AssistantEvents } from '#types';
 
+//
+// Capability Module
+//
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
+//
+
 export const AgentHydrator = Capability.makeModule(
   'AgentHydrator',
   {

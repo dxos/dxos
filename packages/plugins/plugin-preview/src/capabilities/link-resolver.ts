@@ -12,9 +12,13 @@ import { PreviewCapabilities } from '#types';
 
 import { PreviewEvents } from '../events.ts';
 
-// Browser-only with the popover it serves: the resolver loads objects for a card no headless host renders.
+/**
+ * The ECHO resolver: an anchor whose eid parses as an entity URI is loaded from the space. Other
+ * refs — `dxn:` type URIs, web URLs — are another resolver's.
+ */
 export const LinkResolver = Capability.makeModule(
   'LinkResolver',
+  // Browser-only with the popover it serves: the resolver loads objects for a card no headless host renders.
   { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
   () =>
     Effect.succeed(

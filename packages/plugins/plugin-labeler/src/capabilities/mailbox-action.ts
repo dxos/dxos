@@ -11,8 +11,10 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 
 import { LabelerOperation } from '#types';
 
+/** The mailbox toolbar entry that runs the labeller over the whole inbox. */
 export const MailboxAction = Capability.makeModule(
   'MailboxAction',
+  // Rides the inbox feature it contributes to: the button is unreachable until a mailbox renders.
   { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(InboxCapabilities.MailboxAction, {

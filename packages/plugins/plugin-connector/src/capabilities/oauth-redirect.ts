@@ -44,6 +44,17 @@ const readRedirectTokens = (): { accessTokenId: string; accessToken: string } | 
   return tokens;
 };
 
+/**
+ * Startup module that finalizes redirect-flow OAuth callbacks.
+ *
+ * Captures `accessTokenId` and `accessToken` from `/redirect/oauth?…` and rewrites
+ * `window.location` to `/` synchronously, so the deck's URL handler doesn't try to interpret the
+ * redirect path. On desktop nothing navigates there — the shell hosts the auth page and relays the
+ * callback URL as an event instead — so the same tokens arrive on a stream.
+ * `ConnectorCoordination.ConnectorCoordinator` is a declared dependency, so it is already active by
+ * the time this module runs; the finalize work still runs on a daemon fiber so Startup completes
+ * immediately and the rest of the boot sequence isn't blocked.
+ */
 export const OAuthRedirect = Capability.makeModule(
   'OAuthRedirect',
   {

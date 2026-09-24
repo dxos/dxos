@@ -18,7 +18,6 @@ import { Calendar, InboxCapabilities, Mailbox } from '#types';
  * Contributes the mail/calendar skills, resolving each provider's tools inside `make` so a provider
  * plugin activating after plugin-inbox is still seen.
  */
-
 export const SkillDefinition = AppCapability.skillDefinition(
   () =>
     Effect.gen(function* () {

@@ -16,6 +16,10 @@ import { PresenterOperation } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
+/**
+ * Contributes the present shortcut (Shift+Cmd+P) to the markdown editor so presentation
+ * can be toggled while editing without relying on the global navtree keyboard context.
+ */
 export const MarkdownExtension = Capability.makeModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },

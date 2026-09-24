@@ -16,6 +16,18 @@ import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
 
+/**
+ * Projects remote (edge-runtime) `status.update` trace events into the {@link AppCapabilities.ProgressRegistry}
+ * (DX-1125). Subscribes to the aggregate {@link Process.Monitor.subscribeToTraceMessages}, whose remote
+ * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
+ *
+ * Only edge-runtime messages are projected here: local progress already flows through the
+ * `plugin-progress` trace sink, and both write the same progress keys — projecting local messages
+ * twice would let two writers clobber each other's registry handles.
+ *
+ * Cancel on this path always routes to {@link RemoteProcessManager} (edge) — local terminate is
+ * handled by the `plugin-progress` sink, which never sees these messages.
+ */
 export const TraceProgress = Capability.makeModule(
   'TraceProgress',
   {

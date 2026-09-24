@@ -16,8 +16,6 @@ export { CreateObject } from './create-object.ts';
 export { EdgeBackend } from './edge-backend.ts';
 export { FileUploader } from './file-uploader.ts';
 export { InlineBackend } from './inline-backend.ts';
-// Browser-only: the `image` editor extension mounts a React tree into the CodeMirror widget via
-// `react-dom/client`.
 export { Markdown } from './markdown-extension.ts';
 export { OperationHandler } from './operation-handler.ts';
 export { ReactSurface } from './react-surface.ts';

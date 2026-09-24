@@ -12,8 +12,6 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export { Schema } from './schema.ts';
 export { SkillDefinition } from './skill-definition.ts';
-// Browser-only: the variant descriptor carries the `card`/`article` React components the game
-// host renders, so the module cannot load without a DOM.
 export { GameVariant } from './game-variant.ts';
 export { OperationHandler } from './operation-handler.ts';
 export const PluginAsset = AppCapability.pluginAsset({

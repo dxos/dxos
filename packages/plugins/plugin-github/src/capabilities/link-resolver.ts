@@ -21,6 +21,11 @@ import { type GitHubLink, githubLinkIcon, parseGitHubLink } from '../extensions/
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 
+/**
+ * Resolves a GitHub repository, pull-request or issue URL to an in-memory `Repo`, `PullRequest` or
+ * `Issue` for the preview popover. The object comes from the contributed `LinkSource` when a host provides one and
+ * from the GitHub API otherwise; either way it is built, not stored — a preview is not a sync.
+ */
 export const LinkResolver = Capability.makeModule(
   'LinkResolver',
   { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },

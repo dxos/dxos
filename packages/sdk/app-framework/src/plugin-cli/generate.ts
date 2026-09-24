@@ -205,7 +205,12 @@ const renderBarrel = ({ env, genDir, barrelPath, included: allIncluded, stubbed 
     lines.push(rewriteRelativeSpecifiers(local.text, path.dirname(local.sourceFile), genDir), '');
   }
   for (const member of included) {
-    lines.push(rewriteRelativeSpecifiers(member.statementText, path.dirname(member.sourceFile), genDir), '');
+    lines.push(rewriteRelativeSpecifiers(member.statementText, path.dirname(member.sourceFile), genDir));
+    // The sliced statement declares the file's own name; the plugin reads the barrel's.
+    if (member.exportedName !== member.name) {
+      lines.push(`export { ${member.name} as ${member.exportedName} };`);
+    }
+    lines.push('');
   }
   const byFile = new Map<string, BarrelMember[]>();
   for (const member of reexported) {

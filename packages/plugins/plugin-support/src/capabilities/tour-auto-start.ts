@@ -16,6 +16,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { HelpCapabilities, HelpOperation } from '#types';
 
+/** Runs a matching `auto` tour the first time the reader attends something it applies to. */
 export const TourAutoStart = Capability.makeModule(
   'TourAutoStart',
   {

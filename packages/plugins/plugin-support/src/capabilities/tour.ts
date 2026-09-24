@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
-import * as TourModule from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
@@ -19,7 +18,7 @@ export const SupportTour = Capability.makeModule(
   {
     provides: [AppCapabilities.Tour],
     environments: [],
-    props: (options: { helpSteps?: () => Promise<TourModule.Step[]> }) => options.helpSteps,
+    props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
   },
   Effect.fnUntraced(function* (helpSteps?: () => Promise<Tour.Step[]>) {
     if (!helpSteps) {

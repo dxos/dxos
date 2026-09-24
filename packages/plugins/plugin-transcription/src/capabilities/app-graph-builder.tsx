@@ -22,11 +22,6 @@ const whenDictatable = GraphNodeMatcher.whenAll(
   GraphNodeMatcher.whenAny(...Dictatable.types.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
 );
 
-// RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
-// (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
-// any of them while the driver mounts trips the missing-capability invariant.
-// Exception to the headless `appGraphBuilder` default: this builder's node renders a `<Mic/>`
-// companion inline, so its module is genuinely browser-bound.
 export const TranscriptionAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
@@ -58,6 +53,8 @@ export const TranscriptionAppGraphBuilder = AppCapability.appGraphBuilder(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
   {
+    // Exception to the headless `appGraphBuilder` default: this builder's node renders a `<Mic/>`
+    // companion inline, so its module is genuinely browser-bound.
     environments: [],
   },
 );

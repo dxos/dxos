@@ -21,12 +21,13 @@ import { ANTHROPIC_SOURCE, DEEPSEEK_SOURCE } from '../constants.ts';
 /** Host stripped by {@link EdgeAiHttpClient}; only the request path reaches EDGE. */
 const EDGE_SENTINEL_URL = 'http://edge.internal';
 
-// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
-// require once during startup, so a resolver contributed in a later round is invisible to it.
-// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
-//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
 export const EdgeModelResolver = Capability.makeModule(
   'EdgeModelResolver',
+  // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+  // require once during startup, so a resolver contributed in a later round is invisible to it.
+  // TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
+  //   provider client bindings; needs the AI service to read resolvers per request, not snapshot
+  //   them, and this module on `makeLazyModule` so the bindings leave the plugin chunk.
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;

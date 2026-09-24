@@ -14,6 +14,7 @@ import { CallsCapabilities } from '#types';
 
 const CLOUDFLARE_TRANSPORT_KIND = 'org.dxos.call.transport.cloudflare';
 
+/** Built-in Cloudflare {@link CallsCapabilities.CallTransportProvider} over `CallManager`. */
 export const CallTransport = Capability.makeModule(
   'CallTransport',
   {

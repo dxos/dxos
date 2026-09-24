@@ -11,6 +11,13 @@ import { meta } from '#meta';
 import { DebugOperation } from '#types';
 import { DebugEvents } from '#types';
 
+/**
+ * Contributes this plugin's editor commands to the markdown slash menu.
+ *
+ * One group per contributing plugin, so several debug commands share a single "Debug" heading
+ * rather than each growing its own. The entry names an operation rather than a callback: the same
+ * command is then reachable from a skill, the debug port, or a QA flow.
+ */
 export const MarkdownMenu = Capability.makeModule(
   'MarkdownMenu',
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },

@@ -5,7 +5,7 @@
 // Plugin definition — the main entry point for the plugin.
 // `Plugin.define(meta)` creates a plugin builder with the plugin's identity.
 // `.pipe()` chains module registrations. Each `Plugin.addModule()` call registers a
-// capability module (authored via an `AppCapability.*` maker or `Capability.lazyModule`)
+// capability module (authored via an `AppCapability.*` maker or `Capability.makeModule`)
 // that activates at the appropriate lifecycle event.
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 

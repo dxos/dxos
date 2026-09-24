@@ -13,6 +13,9 @@ import { Position } from '@dxos/util';
 
 import { DefaultSettings } from '#containers';
 
+// `DefaultSettings` is registered with `position: Position.last` so a
+// plugin-specific surface (matching by prefix) always wins under the settings
+// article's `limit={1}` dispatch.
 export const ReactSurface = AppCapability.surface(
   () =>
     Effect.succeed(

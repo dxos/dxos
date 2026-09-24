@@ -11,6 +11,10 @@ import { meta } from '#meta';
 import { MeetingCapabilities, Settings } from '#types';
 import { MeetingEvents } from '#types';
 
+// Meeting has no user-configurable settings, so it does NOT contribute
+// `AppCapabilities.Settings` (an empty schema renders a blank settings article).
+// The store is retained only to fire the settings activation event that gates
+// `CallExtension`.
 export const MeetingSettings = Capability.makeModule(
   'MeetingSettings',
   { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },

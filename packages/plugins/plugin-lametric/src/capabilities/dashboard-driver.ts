@@ -22,13 +22,20 @@ import { Pusher } from './pusher.ts';
 /** Matches the settings default; used when the stored value predates the field. */
 const DEFAULT_MIN_INTERVAL_MS = 5_000;
 
-// Headless: the display has to stay live with no surface rendered, so this is gated on spaces being
-// ready rather than on the plugin's own UI appearing.
+/**
+ * Keeps the device showing the active space.
+ *
+ * Headless, like the Stream Deck driver: the display must stay live whether or not a panel is on
+ * screen. It costs nothing when the device is unconfigured — no transport is built, so no request is
+ * ever made, which is the common case since most users have no LaMetric.
+ */
 export const DashboardDriver = Capability.makeModule(
   'DashboardDriver',
   {
     requires: [Capabilities.AtomRegistry, SpaceCapabilities.Dashboard, LaMetricCapabilities.SettingsAtom],
     provides: [LaMetricCapabilities.PushStatus],
+    // Headless: the display has to stay live with no surface rendered, so this is gated on spaces being
+    // ready rather than on the plugin's own UI appearing.
     activatesOn: ClientEvents.SpacesAvailable,
   },
   Effect.fnUntraced(function* () {

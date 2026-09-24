@@ -94,6 +94,15 @@ export const shouldDeferNavigationHandlers = (): boolean => {
   return !isTauri() && !isSafari() && !import.meta.env.DEV && canRedirectToScheme();
 };
 
+/**
+ * When running in a web browser (not Tauri) with native redirect enabled,
+ * tries to open the native app via custom scheme. Defers NavigationHandlers
+ * to prevent the web app from consuming one-time tokens before the native app.
+ *
+ * If the app opens: shows dialog with "Open here" callback that dispatches handlers.
+ * If the app doesn't open: dispatches handlers immediately.
+ * In Safari: universal links handle this natively, so the check is skipped.
+ */
 export const CheckAppScheme = Capability.makeModule(
   'CheckAppScheme',
   {

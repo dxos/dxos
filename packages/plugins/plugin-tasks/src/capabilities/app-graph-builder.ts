@@ -16,8 +16,6 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#types';
 
-// Narrower than the `appGraphBuilder` family default: its nodes invoke
-// `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
 export const TasksAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -46,6 +44,8 @@ export const TasksAppGraphBuilder = AppCapability.appGraphBuilder(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
   {
+    // Narrower than the `appGraphBuilder` family default: its nodes invoke
+    // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
     environments: [],
   },
 );

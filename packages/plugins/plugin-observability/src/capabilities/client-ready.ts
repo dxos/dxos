@@ -11,6 +11,9 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
+// The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
+// once, at Startup, by the `observability` module) rather than re-created here — a capability is a
+// singleton and two independent contributions would trigger `DuplicateProviderError`.
 export const ClientReady = Capability.makeModule(
   'ClientReady',
   {

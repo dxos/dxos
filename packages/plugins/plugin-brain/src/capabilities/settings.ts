@@ -24,6 +24,7 @@ export const settingsAtom = createKvsStore({
   defaultValue: (): BrainSettings.Settings => ({}),
 });
 
+/** Owns the fact-analysis settings and registers them in the settings UI. */
 export const Settings = AppCapability.settings(
   () =>
     Effect.succeed([

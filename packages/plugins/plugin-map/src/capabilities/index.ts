@@ -14,8 +14,6 @@ export { MapAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
 export { Schema } from './schema.ts';
 export { SkillDefinition } from './skill-definition.ts';
 export { CreateObject } from './create-object.ts';
-// Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
-// `useMemo`/`useQuery`/`useObject` in its own body.
 export { MarkerProvider } from './marker-provider.tsx';
 export { OperationHandler } from './operation-handler.ts';
 export { ReactSurface } from './react-surface.ts';

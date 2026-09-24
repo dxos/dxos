@@ -31,8 +31,6 @@ export const SkillDefinition = Capability.makeModule(
   skillDefinition,
 );
 export { CreateObject } from './create-object.ts';
-// Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
-// `useMemo`/`useObject`/`useObjects` in its own body.
 export { MarkerProvider } from './marker-provider.tsx';
 export { OperationHandler } from './operation-handler.ts';
 export { ReactSurface } from './react-surface.ts';

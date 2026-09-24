@@ -20,6 +20,7 @@ import { KEY_BINDING } from '#meta';
 
 export const Keyboard = Capability.makeModule(
   'Keyboard',
+  // Listens on `document`, which node and workerd lack.
   { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [], environments: [] },
   Effect.fnUntraced(function* () {
     const { graph } = yield* AppCapabilities.AppGraph;

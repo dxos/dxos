@@ -12,11 +12,18 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 
 import { CrmOperation } from '#types';
 
+/**
+ * Mailbox-scoped menu entries that are NOT feed passes. The cursored CRM pipeline moved to a
+ * contributed processor (`mailbox-processor.ts`); what remains here is space-wide and belongs in a
+ * menu, not a cascade.
+ */
 export const MailboxAction = Capability.makeModule(
   'MailboxAction',
   {
     requires: [ClientCapabilities.Client],
     provides: [InboxCapabilities.MailboxAction],
+    // Rides the inbox feature it contributes to, exactly as the plugin-brain sibling does — the
+    // action is unreachable until a mailbox renders.
     activatesOn: InboxEvents.Start,
   },
   Effect.fnUntraced(function* () {

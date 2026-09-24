@@ -19,8 +19,6 @@ import { ChannelBackend, ThreadCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-// `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
-// cannot load without React — browser only.
 export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
@@ -45,6 +43,8 @@ export const CreateObject = SpaceCapability.createObject(
     });
   }),
   {
+    // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
+    // cannot load without React — browser only.
     environments: [],
   },
 );

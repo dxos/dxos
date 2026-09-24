@@ -55,7 +55,7 @@ it as studio (decision 3).
   op's single `Database.add`, exactly like `instructions` / `taskSet`. `Obj.setParent` requires the
   parent to hold a ref to the child — the `artifacts` push satisfies it.
 - Only the Lightbox for now (decision 4): the default instructions brief and no extra skills.
-- Wired as `Capability.lazyModule('ProjectTemplates', { provides: [ProjectCapabilities.Template],
+- Wired as `Capability.makeLazyModule('ProjectTemplates', { provides: [ProjectCapabilities.Template],
 activatesOn: ProjectsEvents.Start })` — a cross-plugin contribution rides the consuming plugin's
   start event. plugin-studio gains `dependsOn: ['org.dxos.plugin.projects']` and a
   `@dxos/plugin-projects` workspace dep (`/ProjectCapabilities`, `/templates`, `/ProjectsEvents`).

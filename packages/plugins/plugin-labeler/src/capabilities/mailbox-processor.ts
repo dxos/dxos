@@ -11,6 +11,13 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 
 import { LabelerOperation } from '#types';
 
+/**
+ * The labelling pass in the mailbox cascade.
+ *
+ * After `contacts`, because a sender with a Person record is the user's own correspondent and the
+ * questions read better once that is known; the pass is otherwise independent — it asks about each
+ * message on its own and writes only tags.
+ */
 export const MailboxProcessor = Capability.makeModule(
   'MailboxProcessor',
   { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },

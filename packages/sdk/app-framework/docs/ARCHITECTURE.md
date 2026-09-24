@@ -115,7 +115,7 @@ exactly once.
 flowchart TB
   subgraph authoring["Authoring (compile time)"]
     A1["Capability.make / makeSingleton<br/>defines a Tag"]
-    A2["Capability.lazyModule / inlineModule<br/>or an AppCapability maker<br/>→ Capability.Module"]
+    A2["Capability.makeModule / makeLazyModule<br/>or an AppCapability maker<br/>→ Capability.Module"]
     A3["Plugin.define(meta).pipe(<br/>Plugin.addModule(...), Plugin.make)<br/>→ Plugin"]
     A1 --> A2 --> A3
   end

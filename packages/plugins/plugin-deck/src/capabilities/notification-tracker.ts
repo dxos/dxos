@@ -28,6 +28,14 @@ const NOTIFY_TOAST_DURATION = 5_000;
 const ERROR_TOAST_DURATION = 10_000;
 const UNDO_TOAST_DURATION = 10_000;
 
+/**
+ * The single producer of toasts driven by operation invocations:
+ * - Per-invoke notifications ride the process monitor: each invocation spawns a process carrying the
+ *   caller's `notify` config on its params; this tracker watches process state transitions and toasts
+ *   on start / success / failure.
+ * - Undo toasts come from the history tracker's `undoable` stream (it owns the undo registry lookup);
+ *   the toast action triggers `historyTracker.undoPromise()`.
+ */
 export const NotificationTracker = Capability.makeModule(
   'NotificationTracker',
   {

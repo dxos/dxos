@@ -7,8 +7,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 
 export { ClientAccountCache as AccountCache } from './account-cache.ts';
-// Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
-// and a pre-init throw is not re-evaluated when initialization lands).
 export { ClientAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
 // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
 // browser command set omits (`account`, `profile`).

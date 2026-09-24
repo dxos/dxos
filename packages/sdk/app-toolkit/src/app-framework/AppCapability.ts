@@ -26,19 +26,19 @@ type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleM
 type LazyMaker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.lazyModuleMaker<C>>;
 
 //
-// Lazy module makers (loader-based bodies).
+// Module maker pairs: the eager maker takes the activate function, its `lazy` pairing a loader for it.
 //
 
+const appGraphBuilderDefaults = {
+  activatesOn: ActivationEvents.Idle,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing app-graph node builders. Gated by default on the host's idle event
  * rather than the contributing plugin's own start: a builder is what puts a plugin's items in
  * the navtree, so gating it on the plugin's own start (fired when its surface renders) is a
  * deadlock — the item never appears, so it can never be opened. Declare `activatesOn` to override.
  */
-const appGraphBuilderDefaults = {
-  activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
@@ -51,6 +51,12 @@ export const lazyAppGraphBuilder: LazyMaker<typeof AppCapabilities.AppGraphBuild
   appGraphBuilderDefaults,
 );
 
+// Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
+// is the post-ready gate the doc on `settings` rules out.
+const settingsDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing settings. Ungated by default because settings VALUES are read
  * app-wide through the strict `useAtomCapability` hook — including from components that mount
@@ -58,14 +64,7 @@ export const lazyAppGraphBuilder: LazyMaker<typeof AppCapabilities.AppGraphBuild
  * `requires` on boot modules — where a post-ready gate trips the missing-capability invariant.
  * A plugin whose settings are read only from its own deferred surfaces declares
  * `activatesOn: ActivationEvents.Idle` to keep them off the startup pass.
- *
- * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
- * is precisely the post-ready gate this paragraph rules out.
  */
-const settingsDefaults = {
-  activatesOn: ActivationEvents.Startup,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
@@ -78,16 +77,16 @@ export const lazySettings: LazyMaker<typeof AppCapabilities.Settings> = Capabili
   settingsDefaults,
 );
 
+const skillDefinitionDefaults = {
+  activatesOn: AppActivationEvents.AssistantStart,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing skill definitions. Gated by default on the assistant plugin's start
  * event — a skill belongs to the assistant feature regardless of which plugin contributes it
  * (skills register into a shared registry whose consumers are reactive); declare `activatesOn`
  * to override.
  */
-const skillDefinitionDefaults = {
-  activatesOn: AppActivationEvents.AssistantStart,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
@@ -100,6 +99,12 @@ export const lazySkillDefinition: LazyMaker<typeof AppCapabilities.SkillDefiniti
   skillDefinitionDefaults,
 );
 
+// Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
+// would leave the registry incomplete for the boot-path invocations the doc on `operationHandler` names.
+const operationHandlerDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing operation handlers. Handler sets register eagerly by default: a
  * keyed set is a definition→loader map with a thin closure (definitions carry no
@@ -108,14 +113,7 @@ export const lazySkillDefinition: LazyMaker<typeof AppCapabilities.SkillDefiniti
  * A feature plugin whose operations cannot be invoked before the app is interactive declares
  * `activatesOn: ActivationEvents.Idle` to register in that wave instead of on the startup pass;
  * the boot path (deck, layout, space, client) invokes operations during startup and stays eager.
- *
- * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
- * would leave the registry incomplete for exactly those boot-path invocations.
  */
-const operationHandlerDefaults = {
-  activatesOn: ActivationEvents.Startup,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
@@ -128,6 +126,10 @@ export const lazyOperationHandler: LazyMaker<typeof Capabilities.OperationHandle
   operationHandlerDefaults,
 );
 
+const layerSpecDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.
  *
@@ -141,10 +143,6 @@ export const lazyOperationHandler: LazyMaker<typeof Capabilities.OperationHandle
  * startup pass, and they must all be there together. Multi requires never gate, so getting this
  * wrong does not fail loudly at the contribution site — it surfaces hops away as a missing service.
  */
-const layerSpecDefaults = {
-  activatesOn: ActivationEvents.Startup,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
@@ -157,8 +155,8 @@ export const lazyLayerSpec: LazyMaker<typeof Capabilities.LayerSpec> = Capabilit
   layerSpecDefaults,
 );
 
-/** Module maker contributing undo operation mappings. */
 const undoMappingsDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
+/** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
@@ -180,7 +178,6 @@ export const observabilityMappings: Maker<typeof AppCapabilities.ObservabilityMa
 export const lazyObservabilityMappings: LazyMaker<typeof AppCapabilities.ObservabilityMapping> =
   Capability$.lazyModuleMaker('ObservabilityMappings', AppCapabilities.ObservabilityMapping);
 
-/** Module maker contributing a React context. */
 // A context provider has to wrap the tree on the FIRST render, and shell components read what it
 // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
 // missing-capability invariant rather than merely rendering late.
@@ -188,6 +185,7 @@ const reactContextDefaults = {
   activatesOn: ActivationEvents.Startup,
   environments: [],
 } satisfies Capability$.MakerDefaults;
+/** Module maker contributing a React context. */
 export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$.moduleMaker(
   'ReactContext',
   Capabilities.ReactContext,
@@ -200,12 +198,12 @@ export const lazyReactContext: LazyMaker<typeof Capabilities.ReactContext> = Cap
   reactContextDefaults,
 );
 
-/** Module maker contributing a React root. */
 // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
 const reactRootDefaults = {
   activatesOn: ActivationEvents.Startup,
   environments: [],
 } satisfies Capability$.MakerDefaults;
+/** Module maker contributing a React root. */
 export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.moduleMaker(
   'ReactRoot',
   Capabilities.ReactRoot,
@@ -218,15 +216,15 @@ export const lazyReactRoot: LazyMaker<typeof Capabilities.ReactRoot> = Capabilit
   reactRootDefaults,
 );
 
+const navigationResolverDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 /**
  * Module maker contributing navigation target resolvers. On the startup pass: URL restore runs as
  * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
  * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.
  */
-const navigationResolverDefaults = {
-  activatesOn: ActivationEvents.Startup,
-  environments: ['node', 'workerd'],
-} satisfies Capability$.MakerDefaults;
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
@@ -240,12 +238,12 @@ export const lazyNavigationResolver: LazyMaker<typeof AppCapabilities.Navigation
     navigationResolverDefaults,
   );
 
-/** Module maker contributing a navigation handler. On the startup pass for the same reason as
- * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
 const navigationHandlerDefaults = {
   activatesOn: ActivationEvents.Startup,
   environments: [],
 } satisfies Capability$.MakerDefaults;
+/** Module maker contributing a navigation handler. On the startup pass for the same reason as
+ * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
@@ -323,8 +321,8 @@ export const lazySurface = <
 ): Capability$.Module<Options> =>
   lazySurfaceMaker(loader, { ...surfaceOptions(options), environments: options?.environments ?? [] });
 
-/** Module maker contributing a comment configuration. */
 const commentConfigDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
+/** Module maker contributing a comment configuration. */
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
@@ -337,8 +335,8 @@ export const lazyCommentConfig: LazyMaker<typeof AppCapabilities.CommentConfig> 
   commentConfigDefaults,
 );
 
-/** Module maker contributing a text content extractor. */
 const textContentDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
+/** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
@@ -351,9 +349,9 @@ export const lazyTextContent: LazyMaker<typeof AppCapabilities.TextContent> = Ca
   textContentDefaults,
 );
 
-/** Module maker contributing an anchor sort comparator. */
 // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
 const anchorSortDefaults = { environments: [] } satisfies Capability$.MakerDefaults;
+/** Module maker contributing an anchor sort comparator. */
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
@@ -367,7 +365,8 @@ export const lazyAnchorSort: LazyMaker<typeof AppCapabilities.AnchorSort> = Capa
 );
 
 //
-// Inline module makers (value-based bodies).
+// Value makers: the contribution is built from the value passed in. `schema` and `commands` also have a
+// `lazy` pairing that loads the value.
 //
 
 /** Module contributing translations. */
@@ -391,8 +390,10 @@ export const schema = (
   types: ReadonlyArray<Type.AnyEntity>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) =>
-  Capability$.makeModule(options?.name ?? 'schema', schemaSpec(options?.environments ?? ['node', 'workerd']), () =>
-    Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
+  Capability$.makeModule(
+    options?.name ?? 'schema',
+    { provides: [AppCapabilities.Schema], environments: options?.environments ?? ['node', 'workerd'] },
+    () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
 
 /**
@@ -405,17 +406,12 @@ export const lazySchema = (
 ) =>
   Capability$.makeLazyModule<readonly [typeof AppCapabilities.Schema]>(
     options?.name ?? 'schema',
-    schemaSpec(options?.environments ?? ['node', 'workerd']),
+    { provides: [AppCapabilities.Schema], environments: options?.environments ?? ['node', 'workerd'] },
     () =>
       loader().then(({ default: values }) => ({
         default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
       })),
   );
-
-// The default is spelled at each export rather than here: the barrel generator reads a maker's
-// `environments` literal from the export's own initializer.
-const schemaSpec = (environments: readonly Capability$.Environment[]) =>
-  ({ provides: [AppCapabilities.Schema], environments }) as const;
 
 /** Module contributing guided tours. */
 export const tour = (
@@ -457,15 +453,6 @@ export const pluginAsset = (
 };
 
 /**
- * Module contributing CLI commands.
- *
- * Gated on demand rather than startup: the `dx` binary fires the event as part of its boot, so the
- * commands are there by the time it reads them, while a browser host — the devtools terminal —
- * pays for a plugin's command graph only once someone opens a terminal. Contributing at startup
- * instead would drag every command-bearing plugin onto the app's critical path to serve a panel
- * most sessions never open.
- */
-/**
  * Module contributing space templates.
  *
  * Loader-only, so the content a template writes stays in its own chunk rather than the plugin
@@ -488,13 +475,26 @@ export const lazySpaceTemplates = (
       })),
   );
 
+/**
+ * Module contributing CLI commands.
+ *
+ * Gated on demand rather than startup: the `dx` binary fires the event as part of its boot, so the
+ * commands are there by the time it reads them, while a browser host — the devtools terminal —
+ * pays for a plugin's command graph only once someone opens a terminal. Contributing at startup
+ * instead would drag every command-bearing plugin onto the app's critical path to serve a panel
+ * most sessions never open.
+ */
 export const commands = (
   values: ReadonlyArray<Capabilities.AnyCommand>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) =>
   Capability$.makeModule(
     options?.name ?? 'cli-commands',
-    commandsSpec(options?.environments ?? ['node', 'workerd']),
+    {
+      activatesOn: ActivationEvents.CommandsRequested,
+      provides: [Capabilities.Command],
+      environments: options?.environments ?? ['node', 'workerd'],
+    },
     () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
   );
 
@@ -509,12 +509,13 @@ export const lazyCommands = (
 ) =>
   Capability$.makeLazyModule<readonly [typeof Capabilities.Command]>(
     options?.name ?? 'cli-commands',
-    commandsSpec(options?.environments ?? ['node', 'workerd']),
+    {
+      activatesOn: ActivationEvents.CommandsRequested,
+      provides: [Capabilities.Command],
+      environments: options?.environments ?? ['node', 'workerd'],
+    },
     () =>
       loader().then(({ default: commands }) => ({
         default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
       })),
   );
-
-const commandsSpec = (environments: readonly Capability$.Environment[]) =>
-  ({ activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command], environments }) as const;

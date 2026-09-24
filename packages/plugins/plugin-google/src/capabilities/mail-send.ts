@@ -11,6 +11,7 @@ import { GoogleOperation } from '#types';
 
 import { GMAIL_CONNECTOR_ID } from '../constants.ts';
 
+/** Routes a draft whose mailbox is bound to a Gmail connection to this provider's send operation. */
 export const MailSend = Capability.makeModule(
   'GoogleMailSend',
   { provides: [InboxCapabilities.MailSendOperation] },

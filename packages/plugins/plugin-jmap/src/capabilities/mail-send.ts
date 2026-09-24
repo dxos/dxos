@@ -11,6 +11,7 @@ import { JmapOperation } from '#types';
 
 import { JMAP_MAIL_CONNECTOR_ID } from '../constants.ts';
 
+/** Routes a draft whose mailbox is bound to a JMAP connection to this provider's send operation. */
 export const MailSend = Capability.makeModule(
   'JmapMailSend',
   { provides: [InboxCapabilities.MailSendOperation] },

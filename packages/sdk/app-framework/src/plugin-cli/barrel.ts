@@ -129,7 +129,7 @@ const resolveEnvironments = (
 
 /**
  * Reads the `environments: ['...']` literal from whichever argument of the maker call is an
- * object literal carrying it — covers maker options bags, `lazyModule`/`inlineModule` specs, and
+ * object literal carrying it — covers maker options bags, `makeModule`/`makeLazyModule` specs, and
  * the value-based helpers' options. A computed (non-literal) value is a hard error: the generator
  * is the only consumer and would silently mis-classify the module.
  */
