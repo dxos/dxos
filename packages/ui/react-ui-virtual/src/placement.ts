@@ -200,32 +200,23 @@ export class Placement {
     this.#measured.set(id, extent);
   }
 
-  /**
-   * The model changed. `prepended` rows arrived before the anchor and shift its index; any other
-   * insert or removal above it is found by looking the anchor's row up by id.
-   */
+  /** The model changed length. `prepended` rows arrived before the anchor and shift its index. */
   setCount(count: number, { prepended = 0 }: { prepended?: number } = {}): void {
     this.#count = count;
-    const index = this.#anchor.index + prepended;
-    this.#anchor = { ...this.#anchor, index: this.#locate(this.#anchor.id, index) };
-  }
-
-  /** The index of the row `id`, searching out from `near`; `near` when the row is gone. */
-  #locate(id: string, near: number): number {
-    if (!id || this.#getId(near) === id) {
-      return near;
+    if (prepended) {
+      this.#anchor = { ...this.#anchor, index: this.#anchor.index + prepended };
     }
 
-    for (let distance = 1; distance < this.#count; distance++) {
-      if (near - distance >= 0 && this.#getId(near - distance) === id) {
-        return near - distance;
+    // A model that shrank below the anchor leaves it past the last row, where it would mount nothing:
+    // the last row takes over, placed where the rows before it end.
+    if (count && this.#anchor.index >= count) {
+      const index = count - 1;
+      let start = 0;
+      for (let row = 0; row < index; row++) {
+        start += this.extentOf(row);
       }
-      if (near + distance < this.#count && this.#getId(near + distance) === id) {
-        return near + distance;
-      }
+      this.#anchor = { id: this.#getId(index), index, start };
     }
-
-    return near;
   }
 
   /**

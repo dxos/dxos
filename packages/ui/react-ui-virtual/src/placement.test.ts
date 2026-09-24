@@ -129,8 +129,8 @@ describe('placement', () => {
     expect([0, 1, 2, 3].map((step) => placement.positionOf(placement.anchor.index + step))).to.deep.eq(positions);
   });
 
-  test('rows inserted or removed above the anchor move nothing at or after it', () => {
-    const ids = Array.from({ length: 100 }, (_, index) => `row-${index}`);
+  test('a model that shrinks below the anchor still mounts its rows', () => {
+    const ids = Array.from({ length: 1_000 }, (_, index) => `row-${index}`);
     const placement = new Placement({
       count: ids.length,
       getId: (index) => ids[index],
@@ -138,19 +138,14 @@ describe('placement', () => {
       viewport: VIEWPORT,
       overscan: 2,
     });
-    placement.scrollTo(2_000);
-    const anchor = placement.anchor;
-    const position = placement.positionOf(anchor.index);
+    placement.scrollTo(50_000);
 
-    ids.splice(5, 0, 'opened-0', 'opened-1', 'opened-2');
+    ids.splice(10);
     placement.setCount(ids.length);
-    expect(placement.anchor.index).to.eq(anchor.index + 3);
-    expect(placement.positionOf(placement.anchor.index)).to.eq(position);
-
-    ids.splice(5, 4);
-    placement.setCount(ids.length);
-    expect(placement.anchor.index).to.eq(anchor.index - 1);
-    expect(placement.positionOf(placement.anchor.index)).to.eq(position);
+    const { first, last, sizerExtent } = placement.layout();
+    expect(first).to.be.at.most(last);
+    expect(last).to.eq(9);
+    expect(sizerExtent).to.eq(1_000);
   });
 
   test('appending moves nothing at all', () => {

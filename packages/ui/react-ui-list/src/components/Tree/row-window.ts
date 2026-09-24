@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useLayoutEffect, useState } from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useState } from 'react';
 
 import { type Label } from '@dxos/react-ui';
 
@@ -77,17 +77,29 @@ export const findScrollParent = (element: HTMLElement | null): HTMLElement | nul
  *
  * Held as state rather than read into a ref, because the answer is only knowable after the tree is
  * in the document and the virtualizer has to re-run once it is. `undefined` until then, which the
- * tree renders as no rows rather than all of them; resolved before paint, so that frame never shows.
+ * tree renders as no rows rather than all of them; a scroller the tree finds itself is resolved
+ * before paint, so that frame never shows.
  */
 export const useScroller = (
   treeRef: RefObject<HTMLElement | null>,
   scrollerRef: RefObject<HTMLElement | null> | undefined,
   enabled: boolean,
 ): HTMLElement | null | undefined => {
-  const [scroller, setScroller] = useState<HTMLElement | null | undefined>(undefined);
+  const [scroller, setScroller] = useState<HTMLElement | null | undefined>(enabled ? undefined : null);
 
+  // Before paint when the tree finds its own scroller; a consumer's ref is attached only after this
+  // tree's layout effects have run, so that one is read once the commit is done.
   useLayoutEffect(() => {
-    setScroller(enabled ? (scrollerRef?.current ?? findScrollParent(treeRef.current)) : null);
+    if (!enabled) {
+      setScroller(null);
+    } else if (!scrollerRef) {
+      setScroller(findScrollParent(treeRef.current));
+    }
+  }, [enabled, scrollerRef, treeRef]);
+  useEffect(() => {
+    if (enabled && scrollerRef) {
+      setScroller(scrollerRef.current ?? findScrollParent(treeRef.current));
+    }
   }, [enabled, scrollerRef, treeRef]);
 
   return scroller;

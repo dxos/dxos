@@ -123,16 +123,14 @@ export const ProcessTree = React.memo(
 
       const renderIcon = useMemo(() => makeIconRenderer(), []);
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
-      const viewportRef = useRef<HTMLDivElement>(null);
 
       return (
         <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
-          <ScrollArea.Viewport ref={viewportRef}>
+          <ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
               virtualize
-              scrollerRef={viewportRef}
               density='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'

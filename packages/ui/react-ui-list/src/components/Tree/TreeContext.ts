@@ -145,8 +145,6 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
-  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
-  focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
@@ -156,8 +154,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   mountedRef: MutableRefObject<boolean>;
   /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
   windowed: boolean;
-  /** Takes DOM focus for a row that {@link focusNode} is waiting on, once the row is in the document. */
-  claimFocus: (id: string, row: HTMLElement) => void;
+  /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */
+  claimFocus: (value: string, row: HTMLElement) => void;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
