@@ -31,23 +31,24 @@ const install = ({ hostId, feedMs, position }) => {
     root.innerHTML = `
       <style>
         :host { all: initial; }
-        .feed { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; align-items: flex-end;
-          gap: 8px; max-width: min(560px, 45vw); font: 500 14px/1.35 ui-sans-serif, system-ui, sans-serif; }
-        .entry { display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; border-radius: 10px; color: #fff;
-          background: rgba(17,17,17,0.9); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-          transition: opacity 400ms ease; max-width: 100%; }
+        .feed { position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end;
+          gap: 4px; font: 400 11px/14px ui-sans-serif, system-ui, sans-serif; }
+        /* Fixed width and height: a feed that reflows with its content draws the eye away from the demo. */
+        .entry { box-sizing: border-box; width: 240px; height: 36px; display: flex; gap: 6px; align-items: center;
+          padding: 0 8px; border-radius: 6px; color: #fff; background: rgba(17,17,17,0.55);
+          backdrop-filter: blur(4px); transition: opacity 400ms ease; }
         .entry.fade { opacity: 0; }
-        .badge { flex: none; padding: 2px 7px; border-radius: 6px; font: 700 11px/1.5 ui-monospace, SFMono-Regular, monospace;
-          letter-spacing: 0.5px; text-transform: uppercase; color: #111; }
-        .body { min-width: 0; }
-        .label { overflow-wrap: anywhere; }
-        .detail { margin-top: 3px; font: 12px/1.4 ui-monospace, SFMono-Regular, monospace; opacity: 0.75;
-          white-space: pre-wrap; overflow-wrap: anywhere; max-height: 5.6em; overflow: hidden; }
-        .status { flex: none; font-weight: 700; }
+        .badge { flex: none; width: 34px; text-align: center; padding: 1px 0; border-radius: 3px;
+          font: 600 8px/12px ui-monospace, SFMono-Regular, monospace; letter-spacing: 0.4px; text-transform: uppercase;
+          color: #111; }
+        .body { flex: 1; min-width: 0; }
+        .label, .detail { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .detail { font: 10px/13px ui-monospace, SFMono-Regular, monospace; opacity: 0.65; }
+        .status { flex: none; font-size: 11px; }
         .click { background: #7dd3fc; } .key { background: #fcd34d; } .type { background: #fcd34d; }
         .op { background: #c4b5fd; } .eval { background: #86efac; } .nav { background: #e5e7eb; } .drag { background: #7dd3fc; }
         .error { background: #fca5a5; }
-        .keys { font: 700 20px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: 2px; }
+        .keys { font-family: ui-monospace, SFMono-Regular, monospace; letter-spacing: 1px; }
         .cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; margin: -3px 0 0 -3px;
           transition: transform 280ms cubic-bezier(.3,.7,.4,1); filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
         .ripple { position: fixed; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
@@ -107,7 +108,7 @@ const install = ({ hostId, feedMs, position }) => {
         }
         entry.append(badge, body);
         feed.appendChild(entry);
-        while (feed.children.length > 5) {
+        while (feed.children.length > 4) {
           feed.firstElementChild.remove();
         }
         setTimeout(() => entry.classList.add('fade'), feedMs);
@@ -126,11 +127,15 @@ const install = ({ hostId, feedMs, position }) => {
         if (!ok) {
           entry.querySelector('.badge').classList.add('error');
         }
+        // The error replaces the detail line rather than adding one, so every entry keeps its height.
         if (note) {
-          const line = document.createElement('div');
-          line.className = 'detail';
+          let line = entry.querySelector('.detail');
+          if (!line) {
+            line = document.createElement('div');
+            line.className = 'detail';
+            entry.querySelector('.body').appendChild(line);
+          }
           line.textContent = note;
-          entry.querySelector('.body').appendChild(line);
         }
       },
     };
