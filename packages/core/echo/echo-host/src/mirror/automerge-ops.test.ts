@@ -98,8 +98,11 @@ describe('patchesToOps', () => {
 });
 
 describe('DocumentSequencer.submit', () => {
-  test('writes nothing of a batch that does not fit and still returns the absorbed entry', () => {
-    let doc = A.from<{ log: string; list: string[] }>({ log: '', list: ['a'] });
+  type Doc = { log: string; list: string[]; map: Record<string, unknown> };
+
+  /** A document with one change the sequencer has not absorbed yet, as from a network merge. */
+  const setup = () => {
+    let doc = A.from<Doc>({ log: '', list: ['a'], map: {} });
     const target: SequencedDocument = {
       doc: () => doc,
       change: (callback, options) => {
@@ -107,29 +110,87 @@ describe('DocumentSequencer.submit', () => {
       },
     };
     const sequencer = new DocumentSequencer(A.getHeads(doc));
-    // A change the sequencer has not absorbed yet, as from a network merge.
     doc = A.change(doc, (draft) => {
       A.insertAt(draft.list, 1, 'remote');
     });
+    return { sequencer, target, doc: () => doc };
+  };
+
+  const append = (index: number, text: string): Mirror.Op => ({
+    type: 'splice',
+    path: ['log'],
+    index,
+    remove: 0,
+    insert: text,
+  });
+
+  test('writes the changes before one that does not fit and none after', () => {
+    const { sequencer, target, doc } = setup();
     const batch: Mirror.Batch = {
       batchId: 'batch',
       baseVersion: 0,
-      ops: [
-        { type: 'splice', path: ['log'], index: 0, remove: 0, insert: 'X' },
-        { type: 'put', path: ['list', 5], value: 'out of range' },
+      changes: [
+        [append(0, 'X')],
+        [append(1, 'Y'), { type: 'put', path: ['list', 5], value: 'out of range' }],
+        [append(1, 'Z')],
       ],
     };
 
-    const first = sequencer.submit(target, 'tab', batch);
-    expect(first.type).toBe('rejected');
-    expect(first.entries.map((entry) => entry.version)).toEqual([1]);
-    expect(doc.log).toBe('');
+    const result = sequencer.submit(target, 'tab', batch);
+    expect(result.type === 'applied' && result.refused?.index).toBe(1);
+    expect(result.entries.map((entry) => entry.origin)).toEqual([
+      undefined,
+      { clientId: 'tab', batchId: 'batch', refusedAt: 1 },
+    ]);
+    expect(result.entries[1].ops).toEqual([append(0, 'X')]);
+    expect(doc().log).toBe('X');
+    // Recorded in the change message, so a restarted worker can tell where the batch stopped.
+    expect(DocumentSequencer.findBatch(doc(), 'batch')).toEqual({ clientId: 'tab', batchId: 'batch', refusedAt: 1 });
+    expect(DocumentSequencer.recover(doc(), [...result.entries[0].heads])?.[0].origin).toEqual({
+      clientId: 'tab',
+      batchId: 'batch',
+      refusedAt: 1,
+    });
+  });
 
-    // Resending cannot apply it either, and nothing is absorbed twice.
-    const second = sequencer.submit(target, 'tab', batch);
-    expect(second.type).toBe('rejected');
-    expect(second.entries).toEqual([]);
-    expect(doc.log).toBe('');
-    expect(sequencer.version).toBe(1);
+  test('refuses a change holding a value Automerge refuses', () => {
+    const { sequencer, target, doc } = setup();
+    const result = sequencer.submit(target, 'tab', {
+      batchId: 'batch',
+      baseVersion: 0,
+      changes: [[append(0, 'X'), { type: 'put', path: ['map', 'key'], value: new Map() }]],
+    });
+    expect(result.type === 'applied' && result.refused?.error.message).toMatch(/unknown object/);
+    expect(result.entries.at(-1)?.origin).toEqual({ clientId: 'tab', batchId: 'batch', refusedAt: 0 });
+    expect(result.entries.at(-1)?.ops).toEqual([]);
+    // Nothing was written, so no change carries the batch.
+    expect(doc().log).toBe('');
+    expect(DocumentSequencer.findBatch(doc(), 'batch')).toBeUndefined();
+  });
+
+  test('refuses a change holding a malformed op whole', () => {
+    const { sequencer, target, doc } = setup();
+    const result = sequencer.submit(target, 'tab', {
+      batchId: 'batch',
+      baseVersion: 0,
+      changes: [[append(0, 'X')], [append(1, 'Y'), { type: 'unknown', path: ['log'] }], [append(1, 'Z')]],
+    });
+    expect(result.type === 'applied' && result.refused?.index).toBe(1);
+    expect(doc().log).toBe('X');
+    expect(DocumentSequencer.findBatch(doc(), 'batch')).toEqual({ clientId: 'tab', batchId: 'batch', refusedAt: 1 });
+  });
+
+  test('writes every change of a batch that fits as one Automerge change', () => {
+    const { sequencer, target, doc } = setup();
+    const heads = A.getHeads(doc());
+    const result = sequencer.submit(target, 'tab', {
+      batchId: 'batch',
+      baseVersion: 0,
+      changes: [[append(0, 'X')], [], [append(1, 'Y')]],
+    });
+    expect(result.type === 'applied' && result.refused).toBeUndefined();
+    expect(result.entries.at(-1)?.origin).toEqual({ clientId: 'tab', batchId: 'batch' });
+    expect(doc().log).toBe('XY');
+    expect(A.getChangesMetaSince(doc(), heads)).toHaveLength(1);
   });
 });

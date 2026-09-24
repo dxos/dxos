@@ -46,26 +46,35 @@ real worker boundary or run in a browser yet.
 
 ## What the spike shows
 
-| Question                                                         | How it was tested                                                                                                                                                                          | Result                                                                                                                 |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Do the transforms converge pairwise?                             | 30,000 random op-list pairs on nested documents, plus 19 named edge cases from the review                                                                                                  | All converge; 10,874 pairs dropped or split an op                                                                      |
-| Do tabs and a worker converge on nested documents?               | 3,000 sessions of 400 random steps with 2 to 4 tabs and a remote writer, over maps, lists of maps and text inside lists                                                                    | Every tab matched the worker at the end of every session (109,846 entries); 32,792 stale batches rebased by the worker |
-| Does it hold against real Automerge, a remote peer and restarts? | 1,500 sessions with an Automerge worker, a peer editing its own replica and 3,343 abrupt restarts, modeled at the sequencer level                                                          | Every tab and the peer match the worker; 67,806 appended markers each appear exactly once                              |
-| Does it hold through the real client and service?                | 500 sessions of three mirror tabs with 1,801 worker restarts through `EchoTestPeer.restartHost`, with batches in flight and edits made while the worker was down                           | Every tab and the new worker's document converge; 13,924 edits, each in the list and the text exactly once             |
-| Do the failure paths the review found hold now?                  | One regression test each: a failed save, a refused batch, a resync, an orphaned delivery, a refused creation, a document still fetching, a dropped stream, reconnecting to the same worker | See [Review findings](#review-findings)                                                                                |
-| Does ECHO run without Automerge in the tab?                      | The echo-client suite with `DX_ECHO_MIRROR=1`                                                                                                                                              | 577 of 608 pass, plus 7 expected failures; about 520 of them run through mirror clients                                |
-| Can comments and presence keep synchronous cursor reads?         | A worker-minted cursor read synchronously through an unconfirmed edit, remote edits, and a list insert that moves its text                                                                 | Positions correct; the text's path follows list edits; a replaced text leaves the cursor unresolved                    |
-| Do replica clients and mirror tabs coexist?                      | A replica client writes, a mirror tab reads and writes back; one tab mixes mirrors with a replica                                                                                          | Both directions converge                                                                                               |
-| Does an unmodified Automerge editor plugin run on a mirror?      | `@automerge/automerge-codemirror` 0.2.0 with its `@automerge/automerge` import pointed at a small shim, two tabs, 40 random concurrent edits                                               | Both editors and both mirrors converge                                                                                 |
+| Question                                                         | How it was tested                                                                                                                                                                           | Result                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Do the transforms converge pairwise?                             | 30,000 random op-list pairs on nested documents under both conflict rules, plus 19 named edge cases from the review and 3 for a write against a delete                                      | All converge; 10,842 pairs dropped or split an op                                                                                                                                                                      |
+| Do tabs and a worker converge on nested documents?               | 3,000 sessions of 400 random steps with 2 to 4 tabs and a remote writer, over maps, lists of maps and text inside lists                                                                     | Every tab matched the worker at the end of every session (115,582 entries); 34,875 stale batches rebased by the worker                                                                                                 |
+| Does it hold against real Automerge, a remote peer and restarts? | 2,000 sessions with an Automerge worker, a peer editing its own replica and 4,470 abrupt restarts, modeled at the sequencer level                                                           | Every tab and the peer's document match the worker; 84,038 appended markers each appear exactly once                                                                                                                   |
+| Does a refused change stay contained?                            | In the two fuzzes above, about one change in 30 holds an op no document fits, which the worker refuses                                                                                      | Protocol: 14,277 refusals, each reported once by its tab, plus 6,301 later changes that only made sense on top of one; tabs still converge. Automerge: 6,220 refused markers are gone and reported, the rest land once |
+| Does it hold through the real client and service?                | 500 sessions of three mirror tabs with 1,801 worker restarts through `EchoTestPeer.restartHost`, with batches in flight and edits made while the worker was down                            | Every tab and the new worker's document converge; 13,924 edits, each in the list and the text exactly once                                                                                                             |
+| Do the failure paths the review found hold now?                  | One regression test each: a failed save, a refused change, a resync, an orphaned delivery, a refused creation, a document still fetching, a dropped stream, reconnecting to the same worker | See [Review findings](#review-findings)                                                                                                                                                                                |
+| Does ECHO run without Automerge in the tab?                      | The echo-client suite with `DX_ECHO_MIRROR=1`                                                                                                                                               | 577 of 608 pass, plus 7 expected failures; about 520 of them run through mirror clients                                                                                                                                |
+| Can comments and presence keep synchronous cursor reads?         | A worker-minted cursor read synchronously through an unconfirmed edit, remote edits, and a list insert that moves its text                                                                  | Positions correct; the text's path follows list edits; a replaced text leaves the cursor unresolved                                                                                                                    |
+| Do replica clients and mirror tabs coexist?                      | A replica client writes, a mirror tab reads and writes back; one tab mixes mirrors with a replica                                                                                           | Both directions converge                                                                                                                                                                                               |
+| Does an unmodified Automerge editor plugin run on a mirror?      | `@automerge/automerge-codemirror` 0.2.0 with its `@automerge/automerge` import pointed at a small shim, two tabs, 40 random concurrent edits                                                | Both editors and both mirrors converge                                                                                                                                                                                 |
 
 The protocol fuzz reproduces with `MIRROR_FUZZ_SEEDS=30000` and the Automerge fuzz with
-`MIRROR_FUZZ_SEEDS=1500`; CI runs a tenth of the first and 120 sessions of the second. The restart
+`MIRROR_FUZZ_SEEDS=2000`; CI runs a tenth of the first and 120 sessions of the second. The Automerge
+fuzz fixes actor ids and change times per seed, so a failing seed replays exactly. The restart
 fuzz through the client runs 3 sessions in CI and `MIRROR_FUZZ_SEEDS` sessions when set.
 
-The sequencer-level restart fuzz found one weak spot. In 5 of the 1,730 recoveries that acknowledged
+The sequencer-level restart fuzz found one weak spot. In 8 of the 2,161 recoveries that acknowledged
 an in-flight batch, the batch resolved differently against history rebuilt from Automerge than
 against the dead worker's entries. The tab rebuilt its visible state from the confirmed one, and every
 tab still converged. A small persisted op log in the worker would remove the case.
+
+The same fuzz found an Automerge issue, not a mirror one. After `A.merge`, Automerge 3.5.0 can leave
+a document's cached view out of step with the document itself: `A.load(A.save(doc))` differs, while
+`A.diff` over the same heads is correct. A replay of the recorded steps through Automerge calls alone
+reproduces it, and so does the fuzz from before the per-change work, in 1 of 2,000 sessions. The
+worker builds snapshots from that cached view, and replica-mode ECHO reads the same view, so both
+could show the drift. It needs a minimal repro and an upstream report.
 
 ## Memory
 
@@ -168,7 +177,12 @@ EDGE keeps the first and tabs switch to the second.
   and moves the positions through what arrives meanwhile.
 - **Flush.** `db.flush()` resolves once every earlier edit is confirmed, every document the tab
   created is back from the worker, and the heads are in the tab. It rejects if a submit or a creation
-  fails. A document still being fetched does not hold it up.
+  fails, or if the worker refuses an edit. A document still being fetched does not hold it up.
+- **Refused edits.** The worker writes each `change()` call whole or refuses it, which only happens
+  when the tab's view and the worker's document disagree, so it means a bug. The tab takes the
+  change back and reports it: the handle's `refused` event, then `db.editsRejected` with the refused
+  ops, and a waiting flush rejects with `EditsRejectedError`. The repo logs each refusal and the
+  worker logs the Automerge error.
 - **`catchUp(documentId)`.** Resolves once the tab holds everything the worker's copy has now.
   `waitUntilHeadsReplicated` uses it, since a mirror cannot test whether heads are ancestors of its
   own.
@@ -178,17 +192,17 @@ EDGE keeps the first and tabs switch to the second.
 
 `MirrorService` (`protocols/src/MirrorService.ts`), a separate RPC group:
 
-| RPC                                                 | Purpose                                                                                   |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `subscribe(subscriptionId, clientId, spaceId)`      | Stream of document events                                                                 |
-| `updateSubscription(add, remove)`                   | Follow documents; `add` carries `{ epoch, version, heads, inflight }` when catching up    |
-| `submit(batches)`                                   | Apply batches; `applied` once saved and on the stream, or `resync`, `stale` or `rejected` |
-| `resolveCursors(documentId, path, heads, cursors)`  | Positions of Automerge cursors as of `heads`                                              |
-| `createCursors(documentId, path, heads, positions)` | Cursors for positions as of `heads`                                                       |
+| RPC                                                 | Purpose                                                                                  |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `subscribe(subscriptionId, clientId, spaceId)`      | Stream of document events                                                                |
+| `updateSubscription(add, remove)`                   | Follow documents; `add` carries `{ epoch, version, heads, inflight }` when catching up   |
+| `submit(batches)`                                   | Apply batches of changes; `applied` once saved and on the stream, or `resync` or `stale` |
+| `resolveCursors(documentId, path, heads, cursors)`  | Positions of Automerge cursors as of `heads`                                             |
+| `createCursors(documentId, path, heads, positions)` | Cursors for positions as of `heads`                                                      |
 
-Events: `snapshot` (says whether it contains the tab's in-flight batch), `entry`, `recovered` (for a
-tab that knew another epoch), `caughtUp` (ends the answer to a tab that knew this epoch),
-`requesting` and `unavailable`.
+Events: `snapshot` (says whether it contains the tab's in-flight batch, and which change of it the
+worker refused), `entry`, `recovered` (for a tab that knew another epoch), `caughtUp` (ends the
+answer to a tab that knew this epoch), `requesting` and `unavailable`.
 
 Rules the review showed are needed:
 
@@ -200,8 +214,14 @@ Rules the review showed are needed:
 - **The worker sends nothing before it is saved.** Entries wait in the document's queue until a save
   succeeds; a failed save keeps them for the next attempt. Batch dedupe is recorded when the change
   is committed.
-- **A batch that cannot apply is rejected whole.** The worker writes nothing of it and the tab drops
-  it; flush reports the loss.
+- **Each `change()` call is written whole or refused.** A batch carries one list of ops per change.
+  The worker writes them in order as one Automerge change and stops at the first that does not fit.
+  The entry's `origin.refusedAt` names that change, and so does the change message, for a worker
+  that restarts. The tab takes the refused change back, rebases the later changes as if it had never
+  been made, and sends them again. A later change that only made sense on top of it is refused too.
+- **Only the worker decides whether a change fits.** The tab shows the ops of each change that fit
+  its view and sends the whole change. Taking a change back undoes exactly the ops the tab applied,
+  and the later changes win a write-or-delete tie against the undo, since they were made after it.
 - **A stream that ends without the tab closing it is replaced** after a backoff, and every document
   is caught up again.
 
@@ -212,7 +232,7 @@ export, migrations, change times for `meta.updatedAt`.
 
 - **`DocumentSequencer`** (`echo-host/src/mirror`) orders every write to a document into entries.
   Each tab batch is transformed over the entries its tab had not seen and written as one Automerge
-  change, with the batch id in the change message. Changes that arrive another way (network merges,
+  change, up to the first change that does not fit, with the batch id in the change message. Changes that arrive another way (network merges,
   replica clients) become entries through `A.diff`. After a restart, `recover` rebuilds the entries
   after a tab's confirmed heads from change metadata, so the tab recognizes its applied batch.
 - **`MirrorServiceImpl`** serializes work per document, saves before it sends, ignores a batch it
@@ -222,8 +242,9 @@ export, migrations, change times for `meta.updatedAt`.
 ### Shared
 
 `Mirror` in echo-protocol: the op model (`put`, `del`, `insert`, `remove`, `splice` addressed by
-path), `applyOps`, `transformOp` and `transformLists`, `MirrorClientState` (the tab's confirmed
-state, one batch in flight and a buffer) and `MirrorSequencer`. Text splices transform as in ot.js,
+path, grouped into one `Change` per `change()` call), `applyOps`, `invertOps`, `transformOp`,
+`transformLists` and `transformChanges`, `MirrorClientState` (the tab's confirmed state, one batch in
+flight and a buffer) and `MirrorSequencer`. Text splices transform as in ot.js,
 the operational-transformation library CodeMirror's collaboration model follows. Map and list ops
 transform by path, as in ShareDB's json0 type.
 
@@ -234,11 +255,15 @@ transform by path, as in ShareDB's json0 type.
    are synchronous today, and some run during render.
 3. Minting a cursor is asynchronous; reading one stays synchronous after the first resolution.
 4. `changeAt` against older heads goes away in the tab.
-5. Between tabs of one worker, the later arrival wins a conflict on the same key, including a delete
-   against an update. Automerge picks by op counter, breaks ties by actor id, and keeps an update
-   over a concurrent delete. Changes from other devices still merge by Automerge's rules, and
-   concurrent text edits and list inserts merge in both.
+5. Between tabs of one worker, the later arrival wins when two writes hit the same key. Automerge
+   picks by op counter and breaks ties by actor id. A write beats a concurrent delete of the same
+   map key or list element, and an edit inside a deleted value is lost, both as in Automerge.
+   Changes from other devices still merge by Automerge's rules, and concurrent text edits and list
+   inserts merge in both.
 6. Code written against the Automerge API asks for a replica of the documents it works on.
+7. An edit the worker refuses disappears from the tab. Apps should listen to `db.editsRejected` and
+   tell the user. A replica has no such case: Automerge refuses a bad write inside `change()`, and
+   the mirror's draft refuses the same writes there too.
 
 ## Blockers
 
@@ -253,6 +278,7 @@ Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week
 | Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                 | M    |
 | Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                              | M    |
 | Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                               | M    |
+| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                  | S    |
 | Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc                                                    | M    |
 | A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save | S    |
 | `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                 | S    |
@@ -261,7 +287,7 @@ Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The spike adds about
-4,300 lines of production code and 1,800 lines of tests.
+5,000 lines of production code and 3,000 lines of tests.
 
 ## Review findings
 
@@ -269,24 +295,24 @@ Two reviews ran against the spike: one tried to break the code, one checked ever
 document. The transforms held under 40 targeted cases, 20,000 random pairs of up to 12 ops and
 40,000 single-op pairs in strict mode. The defects were in the code around them.
 
-| #   | Defect                                                                                                                             | Fix                                                                                             | Test                                                                    |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                         | `automerge-ops.test.ts`, including a 2,000-diff differential run        |
-| F2  | A failed save left an entry that was never sent, and the resent batch was applied twice                                            | Hold entries until a save succeeds; record dedupe at commit; apply a batch whole or not         | `mirror-repo.test.ts`: a failed save                                    |
-| F3  | A document re-followed under the same epoch restarted its numbering, orphaning tabs                                                | An epoch per numbering; `since()` refuses versions it never produced; re-check in delivery      | `mirror-mode.test.ts`: reconnecting to the same worker; orphan test     |
-| F4  | A `resync` or same-epoch `stale` never settled the batch in flight, losing every later edit                                        | The `caughtUp` answer settles it                                                                | `mirror-repo.test.ts`: a batch sent again after catching up             |
-| F5  | A worker restart through the real client applied edits twice                                                                       | One catch-up per document, no batches while it is open, known state read at send time           | `mirror-mode.test.ts`: restart tests and the restart fuzz               |
-| F6  | The draft accepted writes Automerge refuses, and the worker retried the batch forever                                              | The draft refuses what Automerge refuses; `rejected` ends anything else the worker cannot apply | `recorder.test.ts`: 34 refusals; `mirror-repo.test.ts`: a refused batch |
-| F7  | `db.flush()` resolved over a failed `createDocument`                                                                               | Retry failed creations in `flushCreations`, then throw                                          | `mirror-repo.test.ts`: a refused creation                               |
-| F8  | A document still being fetched stalled every flush for 30 s                                                                        | Flush waits only for pending edits and created documents                                        | `mirror-repo.test.ts`: a document still fetching                        |
-| F9  | `waitUntilHeadsReplicated` hung once the root moved past the heads                                                                 | Catch up with the worker instead of testing ancestry                                            | `mirror-repo.test.ts`                                                   |
-| F10 | Unconfirmed objects reported `versioned: true`                                                                                     | False while the object has unconfirmed ops                                                      | `mirror-repo.test.ts`                                                   |
-| F11 | A nested draft held across a list edit wrote into a different object                                                               | Drafts keep their container through list edits and detach when it is removed or replaced        | `recorder.test.ts`: 29 cases against `A.change` and a held-draft fuzz   |
-| F12 | Reconnect was not wired for mirror clients, and a dropped stream never resubscribed                                                | Services carry the mirror service; resubscribe with backoff                                     | `mirror-mode.test.ts` restart tests; `mirror-repo.test.ts` stream test  |
-| F13 | Absorbed changes were sent before they were saved                                                                                  | Save before sending, on every path                                                              | `mirror-repo.test.ts`: only saved changes                               |
-| F14 | The entry window was never trimmed for documents that only get remote changes                                                      | Trim on every send                                                                              | Code review                                                             |
-| F15 | `MirrorCursors.create` minted cursors for stale positions after waiting                                                            | Move positions through changes that arrive during the wait                                      | `mirror-cursors.test.ts`                                                |
-| F16 | Smaller issues: cursor paths, a `RawString` text update, a retry kept after release, a leaked document, unhandled probe rejections | Fixed where they touch correctness; the rest are listed under blockers                          | `mirror-cursors.test.ts`                                                |
+| #   | Defect                                                                                                                             | Fix                                                                                        | Test                                                                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                    | `automerge-ops.test.ts`, including a 2,000-diff differential run         |
+| F2  | A failed save left an entry that was never sent, and the resent batch was applied twice                                            | Hold entries until a save succeeds; record dedupe at commit; apply a batch whole or not    | `mirror-repo.test.ts`: a failed save                                     |
+| F3  | A document re-followed under the same epoch restarted its numbering, orphaning tabs                                                | An epoch per numbering; `since()` refuses versions it never produced; re-check in delivery | `mirror-mode.test.ts`: reconnecting to the same worker; orphan test      |
+| F4  | A `resync` or same-epoch `stale` never settled the batch in flight, losing every later edit                                        | The `caughtUp` answer settles it                                                           | `mirror-repo.test.ts`: a batch sent again after catching up              |
+| F5  | A worker restart through the real client applied edits twice                                                                       | One catch-up per document, no batches while it is open, known state read at send time      | `mirror-mode.test.ts`: restart tests and the restart fuzz                |
+| F6  | The draft accepted writes Automerge refuses, and the worker retried the batch forever                                              | The draft refuses what Automerge refuses; the worker refuses only a change it cannot apply | `recorder.test.ts`: 34 refusals; `mirror-repo.test.ts`: a refused change |
+| F7  | `db.flush()` resolved over a failed `createDocument`                                                                               | Retry failed creations in `flushCreations`, then throw                                     | `mirror-repo.test.ts`: a refused creation                                |
+| F8  | A document still being fetched stalled every flush for 30 s                                                                        | Flush waits only for pending edits and created documents                                   | `mirror-repo.test.ts`: a document still fetching                         |
+| F9  | `waitUntilHeadsReplicated` hung once the root moved past the heads                                                                 | Catch up with the worker instead of testing ancestry                                       | `mirror-repo.test.ts`                                                    |
+| F10 | Unconfirmed objects reported `versioned: true`                                                                                     | False while the object has unconfirmed ops                                                 | `mirror-repo.test.ts`                                                    |
+| F11 | A nested draft held across a list edit wrote into a different object                                                               | Drafts keep their container through list edits and detach when it is removed or replaced   | `recorder.test.ts`: 29 cases against `A.change` and a held-draft fuzz    |
+| F12 | Reconnect was not wired for mirror clients, and a dropped stream never resubscribed                                                | Services carry the mirror service; resubscribe with backoff                                | `mirror-mode.test.ts` restart tests; `mirror-repo.test.ts` stream test   |
+| F13 | Absorbed changes were sent before they were saved                                                                                  | Save before sending, on every path                                                         | `mirror-repo.test.ts`: only saved changes                                |
+| F14 | The entry window was never trimmed for documents that only get remote changes                                                      | Trim on every send                                                                         | Code review                                                              |
+| F15 | `MirrorCursors.create` minted cursors for stale positions after waiting                                                            | Move positions through changes that arrive during the wait                                 | `mirror-cursors.test.ts`                                                 |
+| F16 | Smaller issues: cursor paths, a `RawString` text update, a retry kept after release, a leaked document, unhandled probe rejections | Fixed where they touch correctness; the rest are listed under blockers                     | `mirror-cursors.test.ts`                                                 |
 
 ## Migration
 
@@ -303,8 +329,8 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 
 ## Open questions
 
-1. Is last-writer-wins by arrival acceptable between tabs of one worker, including a delete beating
-   a concurrent update?
+1. Is last-writer-wins by arrival acceptable for two writes to one key between tabs of one worker?
+   Automerge picks by op counter, so the two can choose different winners.
 2. Should recovery persist an op log in the worker, or is the rebuild path enough?
 3. Should HOST mode keep a second in-process replica, or use the mirror over the in-process bridge?
 4. Which documents get replicas: only those code asks for explicitly, or every document an

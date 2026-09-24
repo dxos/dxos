@@ -43,6 +43,7 @@ import {
   type ChangeEvent,
   type ClientDocHandle,
   type ClientRepo,
+  type EditsRejectedEvent,
   RepoProxy,
   type SaveStateChangedEvent,
   toDocumentId,
@@ -174,6 +175,9 @@ export class EntityManager implements IDatabaseBinding {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  /** Edits the host refused, which only a JSON mirror sees; a replica applies its edits locally. */
+  readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
+
   /** Fires when the database has finished loading its initial space root document. */
   readonly opened = new Trigger();
 
@@ -249,6 +253,8 @@ export class EntityManager implements IDatabaseBinding {
       ? new MirrorRepo(options.mirrorService, this._dataService, this._runtime, this._spaceId)
       : new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
+    this.editsRejected =
+      this._repoProxy instanceof MirrorRepo ? this._repoProxy.editsRejected : new Event<EditsRejectedEvent>();
   }
 
   get spaceId(): SpaceId {

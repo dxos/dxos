@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Op, applyOps, freezeValue } from './ops.ts';
+import { InvalidOpError, type Op, applyOps, freezeValue } from './ops.ts';
 import { type Batch, type Entry, MirrorClientState, MirrorSequencer, mirrorEquals } from './protocol.ts';
 import { createRandom, initialDocument, randomOp } from './testing.ts';
 import { transformLists, transformOp } from './transform.ts';
@@ -65,7 +65,8 @@ describe('transformOp', () => {
         return op ? [...ops, op] : ops;
       }, []);
       const aFirst = random.chance(0.5);
-      const [aPrime, bPrime] = transformLists(as, bs, aFirst);
+      const rule = random.pick(['write-wins', 'later-wins'] as const);
+      const [aPrime, bPrime] = transformLists(as, bs, aFirst, rule);
       if (aPrime.length !== as.length || bPrime.length !== bs.length) {
         reshaped++;
       }
@@ -76,7 +77,7 @@ describe('transformOp', () => {
       const viaA = applyOps(applyOps(base, as, { strict: true }).root, bPrime, { strict: true }).root;
       if (!mirrorEquals(viaA, viaB)) {
         throw new Error(
-          `seed ${seed} diverged\nbase ${JSON.stringify(base)}\nA ${JSON.stringify(as)}\nB ${JSON.stringify(bs)}\naFirst ${aFirst}\nviaA ${JSON.stringify(viaA)}\nviaB ${JSON.stringify(viaB)}`,
+          `seed ${seed} diverged\nbase ${JSON.stringify(base)}\nA ${JSON.stringify(as)}\nB ${JSON.stringify(bs)}\naFirst ${aFirst} ${rule}\nviaA ${JSON.stringify(viaA)}\nviaB ${JSON.stringify(viaB)}`,
         );
       }
       checked++;
@@ -90,15 +91,24 @@ describe('transformOp', () => {
   });
 });
 
+/** An op no document ever fits, so the worker refuses the change that holds it. */
+const poison = (id: string): Op => ({ type: 'put', path: ['\u2620', 'x'], value: id });
+
+const poisonIds = (changes: readonly (readonly Op[])[]) =>
+  changes.flat().flatMap((op) => (op.type === 'put' && op.path[0] === '\u2620' ? [String(op.value)] : []));
+
 /**
  * Tabs and a remote writer against one sequencer over plain JSON. Every tab's visible state must
- * match the worker's at quiescence, whatever order messages were delivered in.
+ * match the worker's at quiescence, whatever order messages were delivered in. Some changes hold an
+ * op that does not fit, which the worker refuses: each must be reported by its tab exactly once.
  */
 describe('MirrorClientState with MirrorSequencer', () => {
   test('tabs and a remote writer converge', () => {
     let totalEntries = 0;
     let staleBatches = 0;
     let concurrentReceives = 0;
+    let refusals = 0;
+    let lost = 0;
     const sessions = Math.max(1, Math.floor(Number(process.env.MIRROR_FUZZ_SEEDS ?? 3000) / 10));
     for (let seed = 1; seed <= sessions; seed++) {
       const random = createRandom(seed);
@@ -111,17 +121,38 @@ describe('MirrorClientState with MirrorSequencer', () => {
       const outbox = new Map<string, Batch[]>();
       const delivered = new Map<string, number>(tabs.map((tab) => [tab.clientId, 0]));
       const entries: Entry[] = [];
+      const poisoned = new Set<string>();
+      const reported: string[] = [];
       let batchCounter = 0;
 
-      const rebase = (batch: Batch): Op[] => {
+      /** Writes a batch as the worker does: change by change, stopping at the first that does not fit. */
+      const write = (clientId: string, batch: Batch) => {
         if (batch.baseVersion < sequencer.version) {
           staleBatches++;
         }
-        const ops = sequencer.rebase(batch);
-        if (!ops) {
+        const changes = sequencer.rebase(batch);
+        if (!changes) {
           throw new Error(`seed ${seed}: batch ${batch.batchId} is outside the window`);
         }
-        return ops;
+        let refusedAt: number | undefined;
+        for (const [index, change] of changes.entries()) {
+          try {
+            worker = applyOps(worker, change, { strict: true }).root;
+          } catch (err) {
+            if (!(err instanceof InvalidOpError) || poisonIds([change]).length === 0) {
+              throw new Error(`seed ${seed}: batch ${batch.batchId} change ${index} did not fit: ${String(err)}`);
+            }
+            refusedAt = index;
+            break;
+          }
+        }
+        entries.push(
+          sequencer.append({
+            ops: changes.slice(0, refusedAt).flat(),
+            heads: [],
+            origin: { clientId, batchId: batch.batchId, ...(refusedAt === undefined ? {} : { refusedAt }) },
+          }),
+        );
       };
       const deliveredCount = (tab: MirrorClientState) => delivered.get(tab.clientId) ?? 0;
 
@@ -131,7 +162,11 @@ describe('MirrorClientState with MirrorSequencer', () => {
           if (tab.hasPending && entries[next].origin?.clientId !== tab.clientId) {
             concurrentReceives++;
           }
-          tab.receive(entries[next]);
+          const { refused } = tab.receive(entries[next]);
+          const ids = poisonIds(refused);
+          reported.push(...ids);
+          refusals += ids.length;
+          lost += refused.length - ids.length;
           delivered.set(tab.clientId, next + 1);
         }
       };
@@ -142,7 +177,11 @@ describe('MirrorClientState with MirrorSequencer', () => {
           case 0:
           case 1: {
             const op = randomOp(random, tab.current, tab.clientId);
-            if (op) {
+            if (random.chance(0.03)) {
+              const id = `${seed}:${step}`;
+              poisoned.add(id);
+              tab.applyLocal([...(op ? [op] : []), poison(id)]);
+            } else if (op) {
               tab.applyLocal([op]);
             }
             break;
@@ -158,11 +197,7 @@ describe('MirrorClientState with MirrorSequencer', () => {
             const queue = outbox.get(tab.clientId) ?? [];
             const batch = queue.shift();
             if (batch) {
-              const ops = rebase(batch);
-              worker = applyOps(worker, ops, { strict: true }).root;
-              entries.push(
-                sequencer.append({ ops, heads: [], origin: { clientId: tab.clientId, batchId: batch.batchId } }),
-              );
+              write(tab.clientId, batch);
             }
             break;
           }
@@ -189,11 +224,7 @@ describe('MirrorClientState with MirrorSequencer', () => {
           }
           const queue = outbox.get(tab.clientId) ?? [];
           for (let batch = queue.shift(); batch; batch = queue.shift()) {
-            const ops = rebase(batch);
-            worker = applyOps(worker, ops, { strict: true }).root;
-            entries.push(
-              sequencer.append({ ops, heads: [], origin: { clientId: tab.clientId, batchId: batch.batchId } }),
-            );
+            write(tab.clientId, batch);
           }
           const batch = tab.takeBatch(`b${batchCounter++}`);
           if (batch) {
@@ -210,10 +241,12 @@ describe('MirrorClientState with MirrorSequencer', () => {
           );
         }
       }
+      expect(reported.toSorted()).toEqual([...poisoned].toSorted());
       totalEntries += entries.length;
     }
-    console.log({ totalEntries, staleBatches, concurrentReceives });
+    console.log({ totalEntries, staleBatches, concurrentReceives, refusals, lost });
     expect(totalEntries).toBeGreaterThan(10_000);
+    expect(refusals).toBeGreaterThan(sessions);
     // Most of the value is in batches the worker had to transform and entries tabs had to rebase over.
     expect(staleBatches).toBeGreaterThan(2_000);
     expect(concurrentReceives).toBeGreaterThan(2_000);

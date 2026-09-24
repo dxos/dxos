@@ -2,30 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Op, type Path, type PutOp, type RemoveOp, type SpliceOp } from './ops.ts';
+import { type Change, type Op, type Path, type PutOp, type RemoveOp, type SpliceOp } from './ops.ts';
+
+/**
+ * How a write and a delete of the same map key or list element resolve. Concurrent writers follow
+ * Automerge, where the write wins in either order. Taking back a refused change lets the later
+ * changes win, since they were made on top of it.
+ */
+export type ConflictRule = 'write-wins' | 'later-wins';
 
 /**
  * Transforms `a` so that it applies after `b`, where both were made against the same state.
  *
  * `aFirst` says whether `a` precedes `b` in the worker's order. It decides ties: of two inserts at
  * the same position the earlier one lands first, and of two writes to the same path the later one
- * wins. A write beats a concurrent delete of the same map key or list element in either order, as in
- * Automerge. The worker transforms a stale batch with `aFirst = false` against the entries it missed;
- * a tab transforms incoming entries with `aFirst = true` against its unconfirmed edits. Using one
- * function on both sides is what makes the two converge.
+ * wins. `rule` decides a write against a delete. The worker transforms a stale batch with
+ * `aFirst = false` against the entries it missed; a tab transforms incoming entries with
+ * `aFirst = true` against its unconfirmed edits. Using one function on both sides is what makes the
+ * two converge.
  *
  * Returns zero ops when `a` no longer has a target, and two when `b` split the range `a` removes.
  */
-export const transformOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
+export const transformOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule = 'write-wins'): Op[] => {
   switch (b.type) {
     case 'splice':
       return overSplice(a, b, aFirst);
     case 'put':
     case 'del':
-      return overWrite(a, b, aFirst);
+      return overWrite(a, b, aFirst, rule);
     case 'insert':
     case 'remove':
-      return overListOp(a, b, aFirst);
+      return overListOp(a, b, aFirst, rule);
   }
 };
 
@@ -33,14 +40,19 @@ export const transformOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
  * Transforms two op lists made against the same state: returns `as` rebased onto `bs` and `bs`
  * rebased onto `as`. Applying `bs` then the first result equals applying `as` then the second.
  */
-export const transformLists = (as: readonly Op[], bs: readonly Op[], aFirst: boolean): [Op[], Op[]] => {
+export const transformLists = (
+  as: readonly Op[],
+  bs: readonly Op[],
+  aFirst: boolean,
+  rule: ConflictRule = 'write-wins',
+): [Op[], Op[]] => {
   let bCurrent: Op[] = bs.slice();
   const aOut: Op[] = [];
   for (const a of as) {
     let aCurrent: Op[] = [a];
     const bNext: Op[] = [];
     for (const b of bCurrent) {
-      const [aTransformed, bTransformed] = transformSmall(aCurrent, [b], aFirst);
+      const [aTransformed, bTransformed] = transformSmall(aCurrent, [b], aFirst, rule);
       aCurrent = aTransformed;
       bNext.push(...bTransformed);
     }
@@ -50,21 +62,41 @@ export const transformLists = (as: readonly Op[], bs: readonly Op[], aFirst: boo
   return [aOut, bCurrent];
 };
 
+/**
+ * {@link transformLists} for a list of changes, keeping each change's ops together, since the worker
+ * writes or refuses a change as a unit. A change can come out empty.
+ */
+export const transformChanges = (
+  changes: readonly Change[],
+  ops: readonly Op[],
+  aFirst: boolean,
+  rule: ConflictRule = 'write-wins',
+): [Op[][], Op[]] => {
+  const rebased: Op[][] = [];
+  let past: Op[] = ops.slice();
+  for (const change of changes) {
+    const [changePrime, pastPrime] = transformLists(change, past, aFirst, rule);
+    rebased.push(changePrime);
+    past = pastPrime;
+  }
+  return [rebased, past];
+};
+
 /** Recursive form of {@link transformLists} for the one- and two-op lists a split produces. */
-const transformSmall = (as: Op[], bs: Op[], aFirst: boolean): [Op[], Op[]] => {
+const transformSmall = (as: Op[], bs: Op[], aFirst: boolean, rule: ConflictRule): [Op[], Op[]] => {
   if (as.length === 0 || bs.length === 0) {
     return [as, bs];
   }
   if (as.length === 1 && bs.length === 1) {
-    return [transformOp(as[0], bs[0], aFirst), transformOp(bs[0], as[0], !aFirst)];
+    return [transformOp(as[0], bs[0], aFirst, rule), transformOp(bs[0], as[0], !aFirst, rule)];
   }
   if (as.length > 1) {
-    const [head, bs1] = transformSmall([as[0]], bs, aFirst);
-    const [rest, bs2] = transformSmall(as.slice(1), bs1, aFirst);
+    const [head, bs1] = transformSmall([as[0]], bs, aFirst, rule);
+    const [rest, bs2] = transformSmall(as.slice(1), bs1, aFirst, rule);
     return [[...head, ...rest], bs2];
   }
-  const [as1, head] = transformSmall(as, [bs[0]], aFirst);
-  const [as2, rest] = transformSmall(as1, bs.slice(1), aFirst);
+  const [as1, head] = transformSmall(as, [bs[0]], aFirst, rule);
+  const [as2, rest] = transformSmall(as1, bs.slice(1), aFirst, rule);
   return [as2, [...head, ...rest]];
 };
 
@@ -80,12 +112,12 @@ const withSegment = (op: Op, depth: number, index: number): Op => ({
 });
 
 /** `b` replaced or deleted the value at its path, so anything `a` does inside it has no target. */
-const overWrite = (a: Op, b: Op, aFirst: boolean): Op[] => {
+const overWrite = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => {
   if (isStrictPrefix(b.path, a.path)) {
     return [];
   }
   if (a.type === 'remove' && b.type === 'put') {
-    return removeAroundWrite(a, b);
+    return rule === 'later-wins' && !aFirst ? [a] : removeAroundWrite(a, b);
   }
   if (!samePath(a.path, b.path)) {
     return [a];
@@ -93,12 +125,12 @@ const overWrite = (a: Op, b: Op, aFirst: boolean): Op[] => {
   switch (a.type) {
     case 'put':
     case 'del':
-      if (a.type === 'del') {
-        // A delete only removes what its writer saw, so it loses to a concurrent write.
+      if (a.type === 'del' && b.type === 'del') {
         return [];
       }
-      if (b.type === 'del') {
-        return [a];
+      if (rule === 'write-wins' && a.type !== b.type) {
+        // A delete only removes what its writer saw, so it loses to a concurrent write.
+        return a.type === 'put' ? [a] : [];
       }
       // The later write wins: `a` survives only when it comes after `b`.
       return aFirst ? [] : [a];
@@ -113,7 +145,7 @@ const overWrite = (a: Op, b: Op, aFirst: boolean): Op[] => {
 };
 
 /** `b` inserted into or removed from a list; shift or drop whatever `a` addresses in it. */
-const overListOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
+const overListOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => {
   if (b.type !== 'insert' && b.type !== 'remove') {
     return [a];
   }
@@ -157,7 +189,7 @@ const overListOp = (a: Op, b: Op, aFirst: boolean): Op[] => {
   if (!onList) {
     if (index >= at && index < at + removed) {
       // A write to the element itself keeps it, where the removed range closed up; edits inside it are lost.
-      return a.type === 'put' && a.path.length === depth + 1
+      return a.type === 'put' && a.path.length === depth + 1 && (rule === 'write-wins' || !aFirst)
         ? [{ type: 'insert', path: [...listPath, at], values: [a.value] }]
         : [];
     }

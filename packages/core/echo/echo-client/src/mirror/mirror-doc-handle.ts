@@ -47,6 +47,9 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   /** Fires when an entry skips versions; resubscribing from this tab's version fills the gap. */
   readonly gap = new Event<void>();
 
+  /** Fires with this tab's changes the worker refused, before the {@link confirmed} that settles them. */
+  readonly refused = new Event<Mirror.Change[]>();
+
   readonly #clientId: string;
   readonly #onDelete: () => void;
   readonly #ready = new Trigger();
@@ -57,8 +60,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   #client?: Mirror.MirrorClientState<T>;
   /** State before the worker's first snapshot: the initial value of a document being created. */
   #local: T;
-  /** Edits made before the worker's first snapshot. */
-  #early: Mirror.Op[] = [];
+  /** Changes made before the worker's first snapshot. */
+  #early: Mirror.Op[][] = [];
   #deleted = false;
   /** Created by this tab, so flush waits for the worker's first snapshot of it. */
   readonly #created: boolean;
@@ -92,7 +95,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   /** Edits not yet confirmed, relative to the confirmed state, in order. */
   get pendingOps(): Mirror.Op[] {
-    return [...this.#early, ...(this.#client?.pendingOps ?? [])];
+    return [...this.#early.flat(), ...(this.#client?.pendingOps ?? [])];
   }
 
   get hasPending(): boolean {
@@ -147,7 +150,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
       patches = this.#client.applyLocal(recorder.ops);
     } else {
       ({ root: this.#local, patches } = Mirror.applyOps(this.#local, recorder.ops));
-      this.#early.push(...recorder.ops);
+      this.#early.push([...recorder.ops]);
     }
     const after = this.doc();
     this.emit('change', {
@@ -261,16 +264,26 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     const value = Mirror.freezeValue(event.value as T);
     this.#epoch = event.epoch;
     let patches: Mirror.MirrorPatch[];
+    let refused: Mirror.Change[] = [];
     if (this.#client) {
-      patches = this.#client.reset(value, event.version, event.heads, event.applied ?? false);
+      ({ patches, refused } = this.#client.reset(
+        value,
+        event.version,
+        event.heads,
+        event.applied ?? false,
+        event.refusedAt,
+      ));
     } else {
       this.#client = new Mirror.MirrorClientState<T>(this.#clientId, value, event.version, event.heads);
-      this.#client.applyLocal(this.#early);
+      for (const change of this.#early) {
+        this.#client.applyLocal(change);
+      }
       this.#early = [];
       patches = topLevelPuts(this.#client.current);
     }
     this.#wakeReady();
     this.#emitHostChange(before, patches);
+    this.#emitRefused(refused);
     this.confirmed.emit();
   }
 
@@ -284,7 +297,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
       return;
     }
     const before = this.doc();
-    const { patches, acknowledged } = this.#client.receive({
+    const { patches, acknowledged, refused } = this.#client.receive({
       version: event.entry.version,
       ops: event.entry.ops.filter(Mirror.isOp),
       heads: event.entry.heads,
@@ -293,6 +306,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (patches.length > 0) {
       this.#emitHostChange(before, patches);
     }
+    this.#emitRefused(refused);
     if (acknowledged || !this.#client.hasPending) {
       this.confirmed.emit();
     }
@@ -304,7 +318,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
       return;
     }
     const before = this.doc();
-    const { patches } = this.#client.recover(
+    const { patches, refused } = this.#client.recover(
       event.entries.map((entry) => ({
         ops: entry.ops.filter(Mirror.isOp),
         heads: entry.heads,
@@ -317,17 +331,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (patches.length > 0) {
       this.#emitHostChange(before, patches);
     }
-    this.confirmed.emit();
-  }
-
-  /** Discards the batch in flight once the worker has refused it for good. */
-  _drop(batchId: string): void {
-    if (!this.#client || this.#client.inflight?.batchId !== batchId) {
-      return;
-    }
-    const before = this.doc();
-    const patches = this.#client.drop();
-    this.#emitHostChange(before, patches);
+    this.#emitRefused(refused);
     this.confirmed.emit();
   }
 
@@ -346,6 +350,12 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     }
     this.#client.requeue();
     this.confirmed.emit();
+  }
+
+  #emitRefused(refused: readonly Mirror.Change[]): void {
+    if (refused.length > 0) {
+      this.refused.emit([...refused]);
+    }
   }
 
   #emitHostChange(before: AutomergeDoc<T>, patches: Mirror.MirrorPatch[]): void {

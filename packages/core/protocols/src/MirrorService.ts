@@ -18,7 +18,15 @@ import { mutableArray } from './service-schemas.ts';
 
 const Heads = mutableArray(Schema.String);
 
-export const Origin = Schema.Struct({ clientId: Schema.String, batchId: Schema.String });
+export const Origin = Schema.Struct({
+  clientId: Schema.String,
+  batchId: Schema.String,
+  /**
+   * Set when the worker refused this change of the batch, counted from zero: it wrote the changes
+   * before it and none after, and the tab sends the later ones again.
+   */
+  refusedAt: Schema.optional(Schema.Number),
+});
 
 export const Entry = Schema.Struct({
   version: Schema.Number,
@@ -45,6 +53,8 @@ export const SnapshotEvent = Schema.Struct({
   value: Schema.Unknown,
   /** Whether `value` contains the in-flight batch the resubscribing tab named in `Known.inflight`. */
   applied: Schema.optional(Schema.Boolean),
+  /** Set with `applied` when the worker refused a change of that batch; as in `Origin`. */
+  refusedAt: Schema.optional(Schema.Number),
 });
 
 /** The next step of a document's history, in the worker's order. */
@@ -138,7 +148,8 @@ export const SubmitRequest = Schema.Struct({
       epoch: Schema.String,
       batchId: Schema.String,
       baseVersion: Schema.Number,
-      ops: mutableArray(Schema.Unknown),
+      /** The ops of each `change()` call, in order; the worker writes each whole or refuses it. */
+      changes: mutableArray(mutableArray(Schema.Unknown)),
     }),
   ),
 });
@@ -148,14 +159,13 @@ export const SubmitResult = Schema.Struct({
   documentId: Schema.String,
   batchId: Schema.String,
   /**
-   * `applied`: saved, and its entry is on the subscription stream.
+   * `applied`: saved, and its entry is on the subscription stream. The entry's `origin.refusedAt` says
+   * whether the worker refused one of its changes.
    * `resync`: based on history the worker no longer holds, and not applied.
    * `stale`: not applied: sent to another worker's epoch, or before the subscription followed the document.
    * On `resync` and `stale` the tab resubscribes, and the answer settles the batch.
-   * `rejected`: does not fit the document or holds a value Automerge refuses; nothing of it was written,
-   * and resending cannot help, so the tab drops it.
    */
-  status: Schema.Literals(['applied', 'resync', 'stale', 'rejected']),
+  status: Schema.Literals(['applied', 'resync', 'stale']),
 });
 
 export const SubmitResponse = Schema.Struct({ results: mutableArray(SubmitResult) });

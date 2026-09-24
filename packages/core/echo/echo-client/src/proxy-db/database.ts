@@ -54,7 +54,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { SaveStateChangedEvent } from '../automerge/index.ts';
+import type { EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
 import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
@@ -74,6 +74,12 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the data being saved to disk.
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /**
+   * Edits the host refused: they are no longer visible and will never be saved. A refusal means a
+   * bug, so an app should tell the user their last edits were lost.
+   */
+  readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
 
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
@@ -288,6 +294,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
+
   private readonly _hypergraph: HypergraphImpl;
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
@@ -333,6 +341,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+    this.editsRejected = this._entityManager.editsRejected;
 
     // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it

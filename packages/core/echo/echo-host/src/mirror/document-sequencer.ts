@@ -5,6 +5,7 @@
 import { next as A, type Heads } from '@automerge/automerge';
 
 import { Mirror } from '@dxos/echo-protocol';
+import { log } from '@dxos/log';
 
 import { applyOpsToDraft, decodeBatchMessage, diffToOps, encodeBatchMessage } from './automerge-ops.ts';
 
@@ -14,12 +15,17 @@ export interface SequencedDocument {
   change(callback: A.ChangeFn<unknown>, options: A.ChangeOptions<unknown>): void;
 }
 
+/** A batch as it arrives over the wire, before its ops are checked. */
+export type IncomingBatch = Omit<Mirror.Batch, 'changes'> & { readonly changes: readonly (readonly unknown[])[] };
+
 export type SubmitResult =
-  | { type: 'applied'; entries: Mirror.Entry[] }
+  /**
+   * The batch's entry is the last of `entries`. `refused` is set when one of its changes did not fit
+   * the document or held a value Automerge refuses: the changes before it were written, none after.
+   */
+  | { type: 'applied'; entries: Mirror.Entry[]; refused?: { index: number; error: Error } }
   /** The batch is older than the retained window; the tab must resubscribe from its heads. */
-  | { type: 'resync'; entries: Mirror.Entry[] }
-  /** The batch does not fit the document or holds a value Automerge refuses; nothing of it was written. */
-  | { type: 'rejected'; entries: Mirror.Entry[]; error: Error };
+  | { type: 'resync'; entries: Mirror.Entry[] };
 
 /** An entry rebuilt from Automerge history, numbered by the receiving tab. */
 export type RecoveredEntry = Omit<Mirror.Entry, 'version'>;
@@ -73,45 +79,54 @@ export class DocumentSequencer {
   }
 
   /**
-   * Applies a tab's batch. Returns every entry it produced, including one absorbing changes that
+   * Applies a tab's batch, writing its changes in order as one Automerge change and stopping at the
+   * first that does not fit. Returns every entry it produced, including one absorbing changes that
    * arrived since the last entry, which the caller must send whatever the outcome.
    */
-  submit(target: SequencedDocument, clientId: string, batch: Mirror.Batch): SubmitResult {
+  submit(target: SequencedDocument, clientId: string, batch: IncomingBatch): SubmitResult {
     const entries: Mirror.Entry[] = [];
     const absorbed = this.absorb(target.doc());
     if (absorbed) {
       entries.push(absorbed);
     }
 
-    const ops = this.#sequencer.rebase(batch);
-    if (!ops) {
+    // A change holding a malformed op is refused whole, like one that does not fit.
+    const malformed = batch.changes.findIndex((change) => !change.every(Mirror.isOp));
+    const checked = batch.changes.slice(0, malformed === -1 ? undefined : malformed);
+    const changes = this.#sequencer.rebase({ ...batch, changes: checked.map((change) => change.filter(Mirror.isOp)) });
+    if (!changes) {
       return { type: 'resync', entries };
     }
 
-    if (ops.length > 0) {
-      try {
-        // Automerge rolls a change back when its callback throws, so a batch lands whole or not at all.
-        target.change(
-          (draft) => {
-            const skipped = applyOpsToDraft(draft, ops);
-            if (skipped > 0) {
-              throw new Error(`Batch ${batch.batchId} had ${skipped} ops that did not fit the document`);
-            }
-          },
-          { message: encodeBatchMessage(clientId, batch.batchId) },
-        );
-      } catch (err) {
-        return { type: 'rejected', entries, error: err instanceof Error ? err : new Error(String(err)) };
-      }
-    }
+    const { written, error } = writeChanges(target, changes, (count) =>
+      encodeBatchMessage(clientId, batch.batchId, count < batch.changes.length ? count : undefined),
+    );
+    const refused =
+      written < changes.length && error
+        ? { index: written, error }
+        : malformed === -1
+          ? undefined
+          : { index: malformed, error: new Error(`Change ${malformed} holds a malformed op`) };
     this.#heads = A.getHeads(target.doc());
-    entries.push(this.#sequencer.append({ ops, heads: this.#heads, origin: { clientId, batchId: batch.batchId } }));
-    return { type: 'applied', entries };
+    entries.push(
+      this.#sequencer.append({
+        ops: changes.slice(0, written).flat(),
+        heads: this.#heads,
+        origin: { clientId, batchId: batch.batchId, ...(refused ? { refusedAt: refused.index } : {}) },
+      }),
+    );
+    return { type: 'applied', entries, ...(refused ? { refused } : {}) };
   }
 
-  /** Whether any change in the document's history was written for the batch. Reads all change metadata. */
-  static containsBatch(doc: A.Doc<unknown>, batchId: string): boolean {
-    return A.getChangesMetaSince(doc, []).some((change) => decodeBatchMessage(change.message)?.batchId === batchId);
+  /** The origin recorded for the batch, or undefined when no change was written for it. Reads all change metadata. */
+  static findBatch(doc: A.Doc<unknown>, batchId: string): Mirror.Origin | undefined {
+    for (const change of A.getChangesMetaSince(doc, [])) {
+      const origin = decodeBatchMessage(change.message);
+      if (origin?.batchId === batchId) {
+        return origin;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -135,3 +150,64 @@ export class DocumentSequencer {
     return entries;
   }
 }
+
+/** A change of a batch that did not fit the document or held a value Automerge refuses. */
+class RefusedChange extends Error {
+  constructor(
+    readonly index: number,
+    reason: unknown,
+  ) {
+    super(`Change ${index} was refused: ${reason instanceof Error ? reason.message : String(reason)}`, {
+      cause: reason,
+    });
+  }
+}
+
+/**
+ * Writes the leading changes that fit as one Automerge change. Automerge rolls a change back when its
+ * callback throws, so a refused change is retried without, until a prefix fits. Returns how many
+ * changes were written and why the next one was refused.
+ */
+const writeChanges = (
+  target: SequencedDocument,
+  changes: readonly Mirror.Change[],
+  message: (written: number) => string,
+): { written: number; error?: Error } => {
+  let count = changes.length;
+  let error: Error | undefined;
+  while (changes.slice(0, count).some((change) => change.length > 0)) {
+    const heads = A.getHeads(target.doc());
+    try {
+      target.change(
+        (draft) => {
+          for (let index = 0; index < count; index++) {
+            let skipped: number;
+            try {
+              skipped = applyOpsToDraft(draft, changes[index]);
+            } catch (err) {
+              throw new RefusedChange(index, err);
+            }
+            if (skipped > 0) {
+              throw new RefusedChange(index, `${skipped} ops did not fit the document`);
+            }
+          }
+        },
+        { message: message(count) },
+      );
+      break;
+    } catch (err) {
+      if (err instanceof RefusedChange) {
+        error = err;
+        count = err.index;
+        continue;
+      }
+      if (A.equals(A.getHeads(target.doc()), heads)) {
+        throw err;
+      }
+      // A change listener threw after Automerge committed: the changes are written.
+      log.catch(err);
+      break;
+    }
+  }
+  return { written: count, ...(error ? { error } : {}) };
+};

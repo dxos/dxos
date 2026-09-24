@@ -8,14 +8,17 @@ import { Mirror } from '@dxos/echo-protocol';
 
 /**
  * Change message a batch is written with, so a restarted worker can tell which batches it already
- * applied. Ids are random per tab session, so they never collide across devices.
+ * applied, and which change of one it refused. Ids are random per tab session, so they never collide
+ * across devices.
  */
-export type BatchMessage = { mirror: { clientId: string; batchId: string } };
+export type BatchMessage = { mirror: Mirror.Origin };
 
-export const encodeBatchMessage = (clientId: string, batchId: string): string =>
-  JSON.stringify({ mirror: { clientId, batchId } } satisfies BatchMessage);
+export const encodeBatchMessage = (clientId: string, batchId: string, refusedAt?: number): string =>
+  JSON.stringify({
+    mirror: { clientId, batchId, ...(refusedAt === undefined ? {} : { refusedAt }) },
+  } satisfies BatchMessage);
 
-export const decodeBatchMessage = (message: string | null | undefined): BatchMessage['mirror'] | undefined => {
+export const decodeBatchMessage = (message: string | null | undefined): Mirror.Origin | undefined => {
   if (!message || !message.startsWith('{"mirror"')) {
     return undefined;
   }
@@ -32,7 +35,9 @@ export const decodeBatchMessage = (message: string | null | undefined): BatchMes
       typeof parsed.mirror.clientId === 'string' &&
       typeof parsed.mirror.batchId === 'string'
     ) {
-      return { clientId: parsed.mirror.clientId, batchId: parsed.mirror.batchId };
+      const { clientId, batchId } = parsed.mirror;
+      const refusedAt = 'refusedAt' in parsed.mirror ? parsed.mirror.refusedAt : undefined;
+      return { clientId, batchId, ...(typeof refusedAt === 'number' ? { refusedAt } : {}) };
     }
   } catch {
     return undefined;

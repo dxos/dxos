@@ -22,6 +22,20 @@ export class DocumentUnavailableError extends BaseError.extend(
 }
 
 /**
+ * The worker refused edits this tab made: they did not fit its copy of the document or held a value
+ * Automerge refuses, so they will never be saved. A refusal means the mirror and the document
+ * disagree, which is a bug.
+ */
+export class EditsRejectedError extends BaseError.extend(
+  'EditsRejectedError',
+  'Edits were refused and will not be saved.',
+) {
+  constructor(context: { documentId: string; changes: number }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
  * The repo proxy is no longer able to reach the host: the client is closing or has closed, so the
  * document can never be produced. Expected during teardown — work started while the proxy was open
  * routinely lands after it, and callers that can abandon quietly should.

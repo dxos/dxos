@@ -8,6 +8,7 @@ import type { EventEmitter } from 'eventemitter3';
 
 import type { Event } from '@dxos/async';
 import type { Context } from '@dxos/context';
+import type { Mirror } from '@dxos/echo-protocol';
 import type { DataService, MirrorService } from '@dxos/protocols/rpc';
 
 import type * as Doc from './Doc.ts';
@@ -65,6 +66,16 @@ export interface ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T
 
 export type SaveStateChangedEvent = {
   unsavedDocuments: DocumentId[];
+};
+
+/**
+ * Edits of one document the host refused: they are no longer visible and will never be saved. Only
+ * a JSON mirror can see this, when its view and the host's document disagree, which is a bug.
+ */
+export type EditsRejectedEvent = {
+  documentId: DocumentId;
+  /** The ops of each refused `change()` call, kept for diagnostics. */
+  changes: readonly Mirror.Change[];
 };
 
 export interface ClientRepo {

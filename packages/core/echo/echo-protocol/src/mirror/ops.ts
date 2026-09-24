@@ -15,6 +15,9 @@ export type Path = readonly (string | number)[];
  */
 export type Op = PutOp | DelOp | InsertOp | RemoveOp | SpliceOp;
 
+/** The ops of one `change()` call: the unit the worker writes whole or refuses. */
+export type Change = readonly Op[];
+
 /** Sets a map key or replaces a list element. A string value becomes a new text object. */
 export type PutOp = { readonly type: 'put'; readonly path: Path; readonly value: unknown };
 
@@ -237,6 +240,67 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
           return fail(`${op.type} on a map`);
       }
     }
+  }
+};
+
+/**
+ * Ops that undo `ops`, to apply to the state they produce from `root`. An op that does not fit
+ * changed nothing, so it has no inverse.
+ */
+export const invertOps = (root: unknown, ops: readonly Op[]): Op[] => {
+  const inverses: Op[][] = [];
+  let current = root;
+  for (const op of ops) {
+    const inverse = invertOp(current, op);
+    const next = applyOp(current, op, {});
+    if (inverse && next) {
+      inverses.push(inverse);
+      current = next.root;
+    }
+  }
+  return inverses.reverse().flat();
+};
+
+/** The ops that undo `op`, read from the state it applies to. */
+const invertOp = (root: unknown, op: Op): Op[] | undefined => {
+  if (op.type === 'splice') {
+    const text = getAt(root, op.path);
+    return typeof text === 'string'
+      ? [
+          {
+            type: 'splice',
+            path: op.path,
+            index: op.index,
+            remove: op.insert.length,
+            insert: text.slice(op.index, op.index + op.remove),
+          },
+        ]
+      : undefined;
+  }
+  const parent = getAt(root, op.path.slice(0, -1));
+  const key = op.path[op.path.length - 1];
+  if (!isContainer(parent)) {
+    return undefined;
+  }
+  if (!Array.isArray(parent)) {
+    const mapKey = String(key);
+    if (op.type !== 'put' && op.type !== 'del') {
+      return undefined;
+    }
+    return mapKey in parent
+      ? [{ type: 'put', path: op.path, value: parent[mapKey] }]
+      : [{ type: 'del', path: op.path }];
+  }
+  const index = Number(key);
+  switch (op.type) {
+    case 'put':
+      return [{ type: 'put', path: op.path, value: parent[index] }];
+    case 'insert':
+      return op.values.length > 0 ? [{ type: 'remove', path: op.path, count: op.values.length }] : [];
+    case 'remove':
+      return [{ type: 'insert', path: op.path, values: parent.slice(index, index + op.count) }];
+    case 'del':
+      return undefined;
   }
 };
 

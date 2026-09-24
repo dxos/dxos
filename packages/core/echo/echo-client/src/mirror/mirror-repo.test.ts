@@ -21,7 +21,9 @@ import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, type MirrorService, QueryService } from '@dxos/protocols/rpc';
 
+import { type EditsRejectedEvent } from '../automerge/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
+import { EditsRejectedError } from '../errors.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
 import { MirrorRepo } from './mirror-repo.ts';
@@ -130,41 +132,90 @@ describe('mirror repo and worker', () => {
     }
   });
 
-  test('a batch the worker refuses is dropped, flush says so, and later edits still land', async () => {
+  test('the worker refusing the middle change of a batch drops only it, reports it and fails the flush', async () => {
     const {
       tabs: [tab],
     } = await openTabs(1);
-    const obj = tab.add(Obj.make(TestSchema.Expando, { title: 'before', list: ['a'] }));
+    const obj = tab.add(Obj.make(TestSchema.Expando, { first: 'a', second: 'b', third: 'c', list: ['x'] }));
     await tab.flush();
+    const rejected: EditsRejectedEvent[] = [];
+    tab.editsRejected.on((event) => rejected.push(event));
 
-    // The first batch is corrupted in transit, so it no longer fits the document.
-    let corrupt = true;
+    // The change that writes `second` is corrupted in transit, so it no longer fits the document.
+    let corrupted: { index: number; changes: number } | undefined;
     interceptSubmit((request, submit) => {
-      if (!corrupt) {
+      const batch = request.batches.find((batch) => batch.documentId === documentOf(obj));
+      const index = batch?.changes.findIndex((change) => JSON.stringify(change).includes('"second"')) ?? -1;
+      if (corrupted || !batch || index === -1) {
         return submit(request);
       }
-      corrupt = false;
+      corrupted = { index, changes: batch.changes.length };
+      const bad = { type: 'put', path: ['objects', obj.id, 'data', 'list', 7], value: 'x' };
       return submit({
         ...request,
-        batches: request.batches.map((batch) => ({
-          ...batch,
-          ops: [...batch.ops, { type: 'put', path: ['objects', obj.id, 'data', 'list', 7], value: 'x' }],
-        })),
+        batches: request.batches.map((candidate) =>
+          candidate === batch
+            ? { ...batch, changes: batch.changes.map((change, at) => (at === index ? [...change, bad] : change)) }
+            : candidate,
+        ),
       });
     });
 
+    // Three `change()` calls before the next submit, so they travel in one batch.
     Obj.update(obj, (obj) => {
-      obj.title = 'lost';
+      obj.first = 'A';
     });
-    await expect(tab.flush()).rejects.toThrow(/rejected/);
-    expect(obj.title).toBe('before');
-    expect(await hostData(obj)).toEqual(expect.objectContaining({ title: 'before' }));
+    Obj.update(obj, (obj) => {
+      obj.second = 'B';
+    });
+    Obj.update(obj, (obj) => {
+      obj.third = 'C';
+    });
+    await expect(tab.flush()).rejects.toThrow(EditsRejectedError);
+    expect(corrupted).toEqual({ index: 1, changes: 3 });
+    expect(rejected).toEqual([{ documentId: documentOf(obj), changes: [expect.any(Array)] }]);
+    expect(JSON.stringify(rejected[0].changes)).toContain('"second"');
+
+    // The change after the refused one is sent again and lands.
+    await tab.flush();
+    expect(obj.second).toBe('b');
+    expect(await hostData(obj)).toEqual(expect.objectContaining({ first: 'A', second: 'b', third: 'C' }));
 
     Obj.update(obj, (obj) => {
-      obj.title = 'after';
+      obj.second = 'after';
     });
     await tab.flush();
-    expect(await hostData(obj)).toEqual(expect.objectContaining({ title: 'after' }));
+    expect(await hostData(obj)).toEqual(expect.objectContaining({ second: 'after' }));
+  });
+
+  test('a write in one tab beats a concurrent delete in another, as Automerge merges them', async () => {
+    const {
+      tabs: [tabA, tabB],
+    } = await openTabs(2);
+    const inA = tabA.add(
+      Obj.make(TestSchema.Expando, { title: 'old', tags: ['a', 'b', 'c'], nested: { key: { deep: 'x' } } }),
+    );
+    await tabA.flush();
+    const [inB] = await tabB.query(Filter.id(inA.id)).run();
+
+    Obj.update(inA, (inA) => {
+      delete inA.title;
+      inA.tags.splice(1, 1);
+      delete inA.nested.key;
+    });
+    Obj.update(inB, (inB) => {
+      inB.title = 'new';
+      inB.tags[1] = 'B';
+      inB.nested.key.deep = 'edited inside';
+    });
+    await Promise.all([tabA.flush(), tabB.flush()]);
+
+    // What `A.merge` of the same two edits gives, in either order.
+    const merged = { title: 'new', tags: ['a', 'B', 'c'], nested: {} };
+    expect(await hostData(inA)).toEqual(expect.objectContaining(merged));
+    for (const obj of [inA, inB]) {
+      await expect.poll(() => ({ title: obj.title, tags: [...obj.tags], nested: { ...obj.nested } })).toEqual(merged);
+    }
   });
 
   test('a batch the worker would not apply is sent again once the tab has caught up', async () => {

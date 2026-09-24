@@ -12,11 +12,16 @@ import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type MirrorService } from '@dxos/protocols/rpc';
 
-import { type ClientDocHandle, type ClientRepo, type SaveStateChangedEvent } from '../automerge/client-handle.ts';
+import {
+  type ClientDocHandle,
+  type ClientRepo,
+  type EditsRejectedEvent,
+  type SaveStateChangedEvent,
+} from '../automerge/client-handle.ts';
 import { type DocHandleProxy } from '../automerge/doc-handle-proxy.ts';
 import { toDocumentId } from '../automerge/document-id.ts';
 import { RepoProxy } from '../automerge/repo-proxy.ts';
-import { RepoClosedError } from '../errors.ts';
+import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
 
@@ -79,6 +84,9 @@ export class MirrorRepo extends Resource implements ClientRepo {
   #resubscribeAttempts = 0;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
+  /** Edits the worker refused; each one is also logged, and fails a flush waiting for it. */
+  readonly editsRejected = new Event<EditsRejectedEvent>();
 
   constructor(
     private _mirrorService: MirrorService.Client,
@@ -383,6 +391,16 @@ export class MirrorRepo extends Resource implements ClientRepo {
         this.#catchUp(handle.documentId);
       }
     });
+    handle.refused.on((changes) => {
+      const documentId = handle.documentId;
+      if (!documentId) {
+        return;
+      }
+      log.warn('mirror edits refused', { documentId, changes: changes.length });
+      this.editsRejected.emit({ documentId, changes });
+      // Goes out before the confirmation that follows, which would otherwise let a waiting flush resolve.
+      this.#failed.emit(new EditsRejectedError({ documentId, changes: changes.length }));
+    });
     handle.confirmed.on(() => {
       // One batch per document is in flight; the next can go once this one is confirmed.
       this.#submitJob?.trigger();
@@ -529,7 +547,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
           epoch: next.epoch,
           batchId: next.batch.batchId,
           baseVersion: next.batch.baseVersion,
-          ops: [...next.batch.ops],
+          changes: next.batch.changes.map((change) => [...change]),
         });
       }
     }
@@ -556,13 +574,8 @@ export class MirrorRepo extends Resource implements ClientRepo {
     if (!current()) {
       return;
     }
-    for (const { documentId, batchId, status } of results) {
-      if (status === 'rejected') {
-        // Resending cannot help; the edit is lost, as with a change a replica refuses. The failure goes
-        // out before the drop, whose confirmation would otherwise let a waiting flush resolve.
-        this.#failed.emit(new Error(`The worker rejected an edit of document ${documentId}`));
-        this.#handles[documentId]?._drop(batchId);
-      } else if (status !== 'applied') {
+    for (const { documentId, status } of results) {
+      if (status !== 'applied') {
         // Not applied by this worker; its answer to a resubscription settles the batch.
         this.#catchUp(documentId);
       }

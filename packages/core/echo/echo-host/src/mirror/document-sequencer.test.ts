@@ -10,6 +10,12 @@ import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
 import { applyOpsToDraft, toMirror } from './automerge-ops.ts';
 import { DocumentSequencer, type SequencedDocument } from './document-sequencer.ts';
 
+/** Actor ids fixed per seed, so a failing seed replays exactly: Automerge orders concurrent inserts by actor. */
+const createActors = (seed: number) => {
+  let count = 0;
+  return () => `${seed.toString(16).padStart(16, '0')}${(count++).toString(16).padStart(16, '0')}`;
+};
+
 /**
  * A worker holding the real Automerge document. Writes land in `doc` at once but become visible to
  * tabs only when saved, as the host broadcasts only durable changes; a restart reverts to the last
@@ -29,28 +35,34 @@ class TestWorker {
   readonly target: SequencedDocument = {
     doc: () => this.doc,
     change: (callback, options) => {
-      this.doc = A.change(this.doc, options, callback);
+      // A fixed time keeps change hashes, and so the order of heads, the same from run to run.
+      this.doc = A.change(this.doc, { ...options, time: 0 }, callback);
     },
   };
 
-  constructor(initial: Record<string, unknown>) {
-    this.doc = A.from(structuredClone(initial));
-    this.saved = A.clone(this.doc);
+  constructor(
+    initial: Record<string, unknown>,
+    readonly nextActor: () => string,
+  ) {
+    this.doc = A.change(A.init({ actor: nextActor() }), { time: 0 }, (doc) => {
+      Object.assign(doc, structuredClone(initial));
+    });
+    this.saved = A.clone(this.doc, nextActor());
     this.sequencer = new DocumentSequencer(A.getHeads(this.doc));
   }
 
   submit(clientId: string, batch: Mirror.Batch): 'applied' | 'resync' {
     const result = this.sequencer.submit(this.target, clientId, batch);
     this.#unsaved.push(...result.entries);
-    if (result.type === 'rejected') {
+    if (result.type === 'applied' && result.refused && !batch.changes[result.refused.index].some(isPoison)) {
       // The transforms and the document disagree, which is the property under test.
-      throw result.error;
+      throw result.refused.error;
     }
     return result.type;
   }
 
   merge(remote: A.Doc<Record<string, unknown>>): void {
-    this.doc = A.merge(this.doc, A.clone(remote));
+    this.doc = A.merge(this.doc, A.clone(remote, this.nextActor()));
     const entry = this.sequencer.absorb(this.doc);
     if (entry) {
       this.#unsaved.push(entry);
@@ -59,14 +71,14 @@ class TestWorker {
 
   save(): void {
     // Automerge documents are linear: a later change invalidates this reference, so keep a copy.
-    this.saved = A.clone(this.doc);
+    this.saved = A.clone(this.doc, this.nextActor());
     this.log.push(...this.#unsaved);
     this.durableVersion = this.log.at(-1)?.version ?? this.durableVersion;
     this.#unsaved = [];
   }
 
   restart(): void {
-    this.doc = A.clone(this.saved);
+    this.doc = A.clone(this.saved, this.nextActor());
     this.sequencer = new DocumentSequencer(A.getHeads(this.doc));
     this.epoch++;
     this.log = [];
@@ -89,18 +101,29 @@ const LOG_PATH = ['log'];
 
 const isProtected = (op: Mirror.Op) => op.path.length > 0 && op.path[0] === 'log';
 
+/** An op no document fits, so the worker refuses the change that holds it. */
+const POISON: Mirror.Op = { type: 'put', path: ['\u2620', 'x'], value: 1 };
+
+const isPoison = (op: Mirror.Op) => op.path[0] === '\u2620';
+
+/** The markers a list of changes appends to the log. */
+const markersIn = (changes: readonly Mirror.Change[]) =>
+  changes.flat().flatMap((op) => (op.type === 'splice' && isProtected(op) && op.insert.length > 0 ? [op.insert] : []));
+
 describe('DocumentSequencer over Automerge', () => {
   test('tabs, a remote peer and worker restarts converge with every edit applied once', () => {
-    const totals = { entries: 0, restarts: 0, recoveredAcks: 0, rebuilt: 0, resyncs: 0, markers: 0 };
+    const totals = { entries: 0, restarts: 0, recoveredAcks: 0, rebuilt: 0, resyncs: 0, markers: 0, refused: 0 };
 
     const seeds = Number(process.env.MIRROR_FUZZ_SEEDS ?? 120);
     for (let seed = 1; seed <= seeds; seed++) {
       const random = MirrorTesting.createRandom(seed);
       const initial = { ...MirrorTesting.initialDocument(), log: '' };
-      const worker = new TestWorker(initial);
-      let remote = A.clone(worker.doc);
+      const worker = new TestWorker(initial, createActors(seed));
+      let remote = A.clone(worker.doc, worker.nextActor());
       let remoteAppends = 0;
       const markers: string[] = [];
+      const poisoned = new Set<string>();
+      const reported: string[] = [];
       let batchCounter = 0;
 
       const tabs: Tab[] = Array.from({ length: 2 + random.int(2) }, (_, index) => ({
@@ -117,7 +140,8 @@ describe('DocumentSequencer over Automerge', () => {
           throw new Error(`seed ${seed}: ${tab.state.clientId} confirmed history the worker never saved`);
         }
         const hadInflight = tab.state.inflight?.batchId;
-        const { rebuilt } = tab.state.recover(entries, worker.durableVersion, A.getHeads(worker.saved));
+        const { rebuilt, refused } = tab.state.recover(entries, worker.durableVersion, A.getHeads(worker.saved));
+        reported.push(...markersIn(refused));
         if (hadInflight && entries.some((entry) => entry.origin?.batchId === hadInflight)) {
           totals.recoveredAcks++;
         }
@@ -136,7 +160,7 @@ describe('DocumentSequencer over Automerge', () => {
         }
         const entry = worker.log[tab.delivered];
         if (entry) {
-          tab.state.receive(entry);
+          reported.push(...markersIn(tab.state.receive(entry).refused));
           tab.delivered++;
         }
       };
@@ -164,7 +188,13 @@ describe('DocumentSequencer over Automerge', () => {
           markers.push(marker);
           const text = Mirror.getAt(tab.state.current, LOG_PATH);
           const index = typeof text === 'string' ? text.length : 0;
-          tab.state.applyLocal([{ type: 'splice', path: LOG_PATH, index, remove: 0, insert: marker }]);
+          const append: Mirror.Op = { type: 'splice', path: LOG_PATH, index, remove: 0, insert: marker };
+          if (random.chance(0.1)) {
+            poisoned.add(marker);
+            tab.state.applyLocal([append, POISON]);
+          } else {
+            tab.state.applyLocal([append]);
+          }
         } else if (roll < 9) {
           if (tab.epoch === worker.epoch) {
             const batch = tab.state.takeBatch(`${tab.state.clientId}-${batchCounter++}`);
@@ -182,14 +212,14 @@ describe('DocumentSequencer over Automerge', () => {
           if (random.chance(0.5)) {
             const op = MirrorTesting.randomOp(random, toMirror(remote), 'R');
             if (op && !isProtected(op)) {
-              remote = A.change(remote, (draft) => {
+              remote = A.change(remote, { time: 0 }, (draft) => {
                 applyOpsToDraft(draft, [op]);
               });
             }
           } else {
             const marker = `|remote:${remoteAppends++}|`;
             markers.push(marker);
-            remote = A.change(remote, (draft) => {
+            remote = A.change(remote, { time: 0 }, (draft) => {
               const text = Mirror.getAt(draft, LOG_PATH);
               A.splice(draft, [...LOG_PATH], typeof text === 'string' ? text.length : 0, 0, marker);
             });
@@ -198,7 +228,7 @@ describe('DocumentSequencer over Automerge', () => {
           if (random.chance(0.5)) {
             worker.merge(remote);
           } else {
-            remote = A.merge(remote, A.clone(worker.saved));
+            remote = A.merge(remote, A.clone(worker.saved, worker.nextActor()));
           }
         } else if (random.chance(0.15)) {
           worker.restart();
@@ -227,7 +257,7 @@ describe('DocumentSequencer over Automerge', () => {
         }
         worker.save();
       }
-      remote = A.merge(remote, A.clone(worker.saved));
+      remote = A.merge(remote, A.clone(worker.saved, worker.nextActor()));
 
       const expected = toMirror(worker.doc);
       for (const tab of tabs) {
@@ -238,17 +268,27 @@ describe('DocumentSequencer over Automerge', () => {
           );
         }
       }
-      expect(Mirror.mirrorEquals(toMirror(remote), expected)).toBe(true);
+      // The replica's document, not its cached view: Automerge 3.5.0 can leave that view out of step
+      // with the document after `A.merge`, with no mirror code involved.
+      const remoteState = toMirror(A.load(A.save(remote)));
+      if (!Mirror.mirrorEquals(remoteState, expected)) {
+        throw new Error(
+          `seed ${seed}: the remote peer diverged\n${JSON.stringify(remoteState)}\n${JSON.stringify(expected)}`,
+        );
+      }
 
+      // A marker the worker refused is gone and was reported; every other one landed exactly once.
+      expect(reported.toSorted()).toEqual([...poisoned].toSorted());
       const log = Mirror.getAt(expected, LOG_PATH);
       expect(typeof log).toBe('string');
       for (const marker of markers) {
         const occurrences = String(log).split(marker).length - 1;
-        if (occurrences !== 1) {
+        if (occurrences !== (poisoned.has(marker) ? 0 : 1)) {
           throw new Error(`seed ${seed}: ${marker} appears ${occurrences} times in ${String(log)}`);
         }
       }
       totals.markers += markers.length;
+      totals.refused += poisoned.size;
       totals.entries += worker.sequencer.version;
     }
 
@@ -256,5 +296,6 @@ describe('DocumentSequencer over Automerge', () => {
     expect(totals.restarts).toBeGreaterThan(seeds / 4);
     expect(totals.recoveredAcks).toBeGreaterThan(0);
     expect(totals.markers).toBeGreaterThan(seeds * 15);
+    expect(totals.refused).toBeGreaterThan(seeds);
   });
 });

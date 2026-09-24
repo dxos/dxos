@@ -136,7 +136,6 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
             if (!hosted || batch.epoch !== hosted.epoch || !hosted.subscribers.has(subscription)) {
               return { documentId, batchId: batch.batchId, status: 'stale' as const };
             }
-            const ops = batch.ops.filter(Mirror.isOp);
             const status = await this.#enqueue(hosted, async () => {
               if (this.#documents.get(documentId) !== hosted) {
                 // Dropped while queued: its numbering is gone, and the tab's catch-up settles the batch.
@@ -151,7 +150,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
                 hosted.sequencer.submit(lease, subscription.clientId, {
                   batchId: batch.batchId,
                   baseVersion: batch.baseVersion,
-                  ops,
+                  changes: batch.changes,
                 }),
               );
               if (!result) {
@@ -160,8 +159,15 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
               hosted.unsent.push(...result.entries);
               if (result.type === 'applied') {
                 rememberBatch(hosted.applied, batch.batchId);
-              } else if (result.type === 'rejected') {
-                log.warn('mirror batch rejected', { documentId, batchId: batch.batchId, error: result.error });
+              }
+              if (result.type === 'applied' && result.refused) {
+                // A refusal means the tab's mirror and the document disagree, which is a bug to fix.
+                log.error('mirror change refused', {
+                  documentId,
+                  batchId: batch.batchId,
+                  change: result.refused.index,
+                  error: result.refused.error,
+                });
               }
               await this.#publish(hosted);
               return result.type;
@@ -334,6 +340,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
           }
           log.warn('tab confirmed history this worker does not hold; sending a snapshot', { documentId });
         }
+        const inflight = known?.inflight ? DocumentSequencer.findBatch(lease.doc(), known.inflight) : undefined;
         return [
           {
             type: 'snapshot',
@@ -342,7 +349,8 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
             version: sequencer.version,
             heads: [...sequencer.heads],
             value: toMirror(lease.doc()),
-            ...(known?.inflight ? { applied: DocumentSequencer.containsBatch(lease.doc(), known.inflight) } : {}),
+            ...(known?.inflight ? { applied: inflight !== undefined } : {}),
+            ...(inflight?.refusedAt === undefined ? {} : { refusedAt: inflight.refusedAt }),
           },
         ];
       });
