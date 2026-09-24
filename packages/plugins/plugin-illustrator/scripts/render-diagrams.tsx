@@ -39,6 +39,12 @@ const STYLE = `
   .stroke-neutral-800 { stroke: #262626; }
   svg { --surface-bg: #ffffff; }
   .text-neutral-400 { color: #a3a3a3; }
+  .text-sky-500 { color: #0ea5e9; }
+  .text-emerald-500 { color: #10b981; }
+  .text-amber-500 { color: #f59e0b; }
+  .text-violet-500 { color: #8b5cf6; }
+  .text-orange-500 { color: #f97316; }
+  .text-rose-500 { color: #f43f5e; }
   .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;
 

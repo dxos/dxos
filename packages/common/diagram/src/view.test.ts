@@ -107,6 +107,26 @@ describe('view', () => {
     ]);
   });
 
+  test("rows names an arrow's markers and line style", ({ expect }) => {
+    const [a, b] = SCENE;
+    const implementsArrow: Scene.WorldObject = {
+      id: 'ba',
+      elements: [
+        {
+          kind: 'arrow',
+          id: 'ba',
+          start: { x: 256, y: 32 },
+          end: { x: 128, y: 32 },
+          head: 'triangle',
+          stroke: 'dashed',
+        },
+      ],
+    };
+    expect(rows([a, b, implementsArrow])).toContain(
+      'arrow "Beta" → "Alpha" (dashed, hollow triangle head) runs left, row 1 to row 1',
+    );
+  });
+
   test('rows reads boxes top to bottom and says which way each arrow runs', ({ expect }) => {
     expect(rows(SCENE).split('\n')).toEqual([
       'row 1 (top), left to right: "Alpha", "Beta"',

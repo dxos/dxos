@@ -7,7 +7,8 @@
 // architecture rules (`Architecture.RULES`) judged by System One in one batched decision call per
 // diagram. Needs `TYPESAFE_API_KEY`; without it the architecture rows report an error and the rest
 // still print.
-// Flags: `--layout` adds the drawn page (`View.ascii` + `View.rows`) to the judge's input, `--no-title` drops
+// Flags: `--layout` adds the drawn page (`View.ascii` + `View.rows`) to the judge's input and grades the
+// `Aesthetics` rules from it, `--no-title` drops
 // the caption so only the diagram is judged, `--runs N` averages the architecture scores over N calls, and
 // `--json out.json` writes the scores, and `--layering down` restricts the layerings the engine chooses among.
 // Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd …` (vite-node; bun cannot load elkjs).
@@ -22,7 +23,17 @@ import { basename, resolve } from 'node:path';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
-import { Architecture, Diagnostics, Mermaid, MermaidEngine, Objective, type Scene, Score, View } from '@dxos/diagram';
+import {
+  Aesthetics,
+  Architecture,
+  Diagnostics,
+  Mermaid,
+  MermaidEngine,
+  Objective,
+  type Scene,
+  Score,
+  View,
+} from '@dxos/diagram';
 import { EffectEx } from '@dxos/effect';
 
 const MODEL = 'ai.typesafe.model.jev.latest';
@@ -93,7 +104,9 @@ const judgeFile = (path: string) =>
     const [layoutScores, ...architectureRuns] = yield* Effect.all(
       [
         Score.evaluate(Score.fromObjective(Objective.DEFAULT), subject),
-        ...Array.from({ length: OPTIONS.runs }, () => Score.evaluate([Architecture.judge()], subject)),
+        ...Array.from({ length: OPTIONS.runs }, () =>
+          Score.evaluate(OPTIONS.layout ? [Architecture.judge(), Aesthetics.judge()] : [Architecture.judge()], subject),
+        ),
       ],
       { concurrency: 'unbounded' },
     );

@@ -32,6 +32,11 @@ export const Content = Schema.Struct({
       from: Schema.String,
       to: Schema.String,
       label: Schema.optional(Schema.String),
+      kind: Schema.optional(Schema.String).annotate({
+        description:
+          'Absent for a plain dependency; otherwise `inheritance`, `implements`, `hasMany`, `contains` (from owns ' +
+          'to) or `creates`.',
+      }),
     }).annotate({ description: '`from` depends on, calls or owns `to`.' }),
   ),
 });
@@ -46,7 +51,12 @@ export const contentOf = (
   ...(layout ? { layout } : {}),
   groups: graph.groups.map(({ id, label }) => ({ id, label })),
   nodes: graph.nodes.map(({ id, label, group }) => ({ id, label, ...(group ? { group } : {}) })),
-  edges: graph.edges.map(({ from, to, label }) => ({ from, to, ...(label ? { label } : {}) })),
+  edges: graph.edges.map(({ from, to, label, kind }) => ({
+    from,
+    to,
+    ...(label ? { label } : {}),
+    ...(kind !== 'reference' ? { kind } : {}),
+  })),
 });
 
 export type Rule = {
@@ -158,14 +168,15 @@ export const definition = (rules: readonly Rule[] = RULES) =>
 /**
  * Every rule as a score, from one `DecisionModel` call: the probability that the diagram follows the
  * rule. A failed call scores every rule as an error rather than as 0, so an outage never reads as a
- * bad diagram.
+ * bad diagram. `kind` labels the scores, so another rule set (e.g. `Aesthetics`) can share the judge.
  */
 export const judge = (
   rules: readonly Rule[] = RULES,
+  kind: Score.Kind = 'architecture',
 ): Score.Batch<{ readonly content: Content }, DecisionModel.DecisionModel> => {
   const decisions = definition(rules);
   return {
-    entries: rules.map(({ id, description }) => ({ id, kind: 'architecture', description })),
+    entries: rules.map(({ id, description }) => ({ id, kind, description })),
     evaluate: ({ content }) =>
       DecisionModel.decide(decisions, { input: content }).pipe(
         Effect.map(({ answers }) =>

@@ -15,7 +15,15 @@ type Point = Scene.Point;
 type Rect = { x: number; y: number; w: number; h: number };
 
 export type Box = { ref: string; label?: string; rect: Rect; frame: boolean };
-export type Path = { ref: string; points: Point[]; label?: string; from?: Box; to?: Box };
+export type Path = {
+  ref: string;
+  points: Point[];
+  label?: string;
+  from?: Box;
+  to?: Box;
+  /** The arrow's end markers and line style, when not a plain solid arrow. */
+  style?: Pick<Scene.Arrow, 'head' | 'tail' | 'stroke'>;
+};
 
 export type Drawing = { boxes: Box[]; paths: Path[]; bounds: Rect };
 
@@ -64,7 +72,17 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
         const ref = `${object.id}/${element.id}`;
         const head = [place(object, element.start), place(object, element.end)];
         const existing = lines.get(ref);
-        lines.set(ref, { ref, points: existing ? [...existing.points.slice(0, -1), ...head] : head });
+        const { head: headMarker, tail, stroke } = element;
+        const style = {
+          ...(headMarker && headMarker !== 'arrow' ? { head: headMarker } : {}),
+          ...(tail && tail !== 'none' ? { tail } : {}),
+          ...(stroke && stroke !== 'solid' ? { stroke } : {}),
+        };
+        lines.set(ref, {
+          ref,
+          points: existing ? [...existing.points.slice(0, -1), ...head] : head,
+          ...(Object.keys(style).length ? { style } : {}),
+        });
       }
     }
   }
@@ -138,6 +156,23 @@ export const coordinates = (objects: readonly Scene.WorldObject[], cell = 32): s
   return lines.join('\n');
 };
 
+const HEADS: Record<string, string> = {
+  triangle: 'hollow triangle head',
+  crowsfoot: "crow's foot head",
+  none: 'no head',
+};
+const TAILS: Record<string, string> = { circle: 'dot at the start' };
+
+/** A path's markers in words, e.g. "dashed, hollow triangle head", or undefined for a plain arrow. */
+const describe = (style?: Path['style']) => {
+  const parts = [
+    style?.stroke,
+    style?.head ? HEADS[style.head] : undefined,
+    style?.tail ? TAILS[style.tail] : undefined,
+  ].filter(Boolean);
+  return parts.length ? parts.join(', ') : undefined;
+};
+
 /**
  * The drawing in words, as a reader scans it: boxes row by row from the top, left to right, then each
  * arrow with the way it runs across the page and the rows it spans.
@@ -174,8 +209,9 @@ export const rows = (objects: readonly Scene.WorldObject[]): string => {
     const way = [vertical, horizontal].filter(Boolean).join(' and ') || 'in place';
     const span = path.from && path.to ? `, row ${rowOf.get(path.from)} to row ${rowOf.get(path.to)}` : '';
     const bends = path.points.length > 2 ? `, ${path.points.length - 2} bends` : '';
+    const drawn = describe(path.style);
     lines.push(
-      `arrow ${name(path.from)} → ${name(path.to)}${path.label ? ` labelled "${path.label}"` : ''} runs ${way}${span}${bends}`,
+      `arrow ${name(path.from)} → ${name(path.to)}${drawn ? ` (${drawn})` : ''}${path.label ? ` labelled "${path.label}"` : ''} runs ${way}${span}${bends}`,
     );
   }
   // A crossing is the one thing a reader sees at a glance that no row or direction implies, so it is stated.

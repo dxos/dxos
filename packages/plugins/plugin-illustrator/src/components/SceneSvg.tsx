@@ -82,7 +82,21 @@ const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corner
 };
 
 /** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
-const colorClass = (color?: Scene.Color) => (color === 'grey' ? 'text-neutral-400 dark:text-neutral-500' : undefined);
+/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
+const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
+  'grey': 'text-neutral-400 dark:text-neutral-500',
+  'light-blue': 'text-sky-500',
+  'light-green': 'text-emerald-500',
+  'yellow': 'text-amber-500',
+  'light-violet': 'text-violet-500',
+  'orange': 'text-orange-500',
+  'light-red': 'text-rose-500',
+};
+
+const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+
+/** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
+const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
 
 type Resolved = {
   viewBox: string;
@@ -194,22 +208,30 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'triangle': {
       const rect = rectOf(object, element);
       const mid = center(rect);
-      const fill = element.fill === 'solid' ? 'fill-neutral-100 dark:fill-neutral-800' : 'fill-transparent';
+      const tinted = element.fill === 'solid' && element.color !== undefined && element.color !== 'grey';
+      const fill = tinted
+        ? undefined
+        : element.fill === 'solid'
+          ? 'fill-neutral-100 dark:fill-neutral-800'
+          : 'fill-transparent';
+      const style = tinted ? TINT : undefined;
       const shape =
         element.kind === 'ellipse' ? (
-          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} />
+          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} style={style} />
         ) : element.kind === 'diamond' ? (
           <polygon
             points={`${mid.x},${rect.y} ${rect.x + rect.w},${mid.y} ${mid.x},${rect.y + rect.h} ${rect.x},${mid.y}`}
             className={fill}
+            style={style}
           />
         ) : element.kind === 'triangle' ? (
           <polygon
             points={`${mid.x},${rect.y} ${rect.x + rect.w},${rect.y + rect.h} ${rect.x},${rect.y + rect.h}`}
             className={fill}
+            style={style}
           />
         ) : element.corners === 'top' || element.corners === 'bottom' ? (
-          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} />
+          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
         ) : (
           <rect
             x={rect.x}
@@ -218,6 +240,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
             height={rect.h}
             rx={element.corners === 'none' ? 0 : RADIUS}
             className={fill}
+            style={style}
           />
         );
       return (

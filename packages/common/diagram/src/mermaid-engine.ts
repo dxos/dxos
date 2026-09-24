@@ -257,7 +257,7 @@ const compactGroups = (
 type ElkEdge = { id: string; sources: string[]; targets: string[] };
 
 /**
- * Edges for ELK's layering. Inheritance points at the abstraction, which ranks ABOVE its
+ * Edges for ELK's layering. Inheritance and implementation point at the abstraction, which ranks ABOVE its
  * subtypes — so those edges are reversed, as `relationRanks` does for class diagrams; has-many
  * and containment already flow owner-above-owned. In `columns`, the root lays out groups without
  * seeing inside them (`SEPARATE_CHILDREN`), so every edge is lifted to its endpoints' root-level
@@ -270,7 +270,7 @@ const layeringEdges = (graph: MermaidGraph, arrangement: Arrangement, layering: 
   const betweenGroups = (edge: MermaidEdge) =>
     groupOf.has(edge.from) && groupOf.has(edge.to) && groupOf.get(edge.from) !== groupOf.get(edge.to);
   const oriented = graph.edges.flatMap((edge) => {
-    if (edge.kind === 'inheritance') {
+    if (edge.kind === 'inheritance' || edge.kind === 'implements') {
       return [{ from: edge.to, to: edge.from }];
     }
     if (edge.kind !== 'reference' || layering === 'down' || betweenGroups(edge)) {
@@ -603,6 +603,16 @@ type EmitOptions = {
   route?: Router;
 };
 
+/** Group tints in declaration order; a renderer fills a frame with a light wash of its color. */
+const GROUP_COLORS: readonly Scene.Color[] = [
+  'light-blue',
+  'light-green',
+  'yellow',
+  'light-violet',
+  'orange',
+  'light-red',
+];
+
 /**
  * Scene commands for a placement: one world object per subgraph frame (painted first) and per
  * node, plus an `edges` object of connectors.
@@ -617,7 +627,7 @@ const emit = (
   const at = (rect: Rect): Scene.Point => ({ x: origin.x + rect.x * scale, y: origin.y + rect.y * scale });
   const commands: Scene.Command[] = [];
 
-  for (const group of graph.groups) {
+  for (const [index, group] of graph.groups.entries()) {
     const frame = frames.get(group.id);
     if (!frame) {
       continue;
@@ -629,7 +639,17 @@ const emit = (
         origin: at(frame),
         scale,
         elements: [
-          { kind: 'rect', id: 'frame', x: 0, y: 0, w: frame.w, h: frame.h, stroke: 'dashed', color: 'grey' },
+          {
+            kind: 'rect',
+            id: 'frame',
+            x: 0,
+            y: 0,
+            w: frame.w,
+            h: frame.h,
+            stroke: 'dashed',
+            fill: 'solid',
+            color: GROUP_COLORS[index % GROUP_COLORS.length],
+          },
           // The label sits in the frame's top band rather than centered, where members would cover it.
           ...(group.label.trim()
             ? [
@@ -661,7 +681,8 @@ const emit = (
         origin: at(rect),
         scale,
         ...(node.ref ? { ref: node.ref } : {}),
-        elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: cell.w, h: cell.h, text: node.label }],
+        // Solid so a node reads as a card against its group's tint rather than showing the wash through.
+        elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: cell.w, h: cell.h, text: node.label, fill: 'solid' }],
       },
     });
   }
@@ -754,15 +775,21 @@ const emit = (
       terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
       terminals.set(edge.to, [...(terminals.get(edge.to) ?? []), { point: points[points.length - 1], role: 'entry' }]);
       const id = `${edge.from}-${edge.to}-${index}`;
+      const style = markers(edge.kind);
       if (points.length > 2) {
-        elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1) });
+        elements.push({
+          kind: 'line',
+          id: `${id}-path`,
+          points: points.slice(0, -1),
+          ...(style.stroke ? { stroke: style.stroke } : {}),
+        });
       }
       elements.push({
         kind: 'arrow',
         id,
         start: points[points.length - 2],
         end: points[points.length - 1],
-        ...markers(edge.kind),
+        ...style,
       });
       if (edge.label) {
         const head = points[Math.floor(points.length / 2) - 1];

@@ -52,6 +52,10 @@ describe('architecture', () => {
     expect(content.nodes.find(({ id }) => id === 'Db')?.group).toBe('core');
     expect(content.edges).toContainEqual({ from: 'Db', to: 'Store', label: 'writes' });
     expect(content.layout).toBeUndefined();
+    expect(contentOf(parse('flowchart TB\n  B ..|> A\n  B --> C')).edges).toEqual([
+      { from: 'B', to: 'A', kind: 'implements' },
+      { from: 'B', to: 'C' },
+    ]);
     expect(contentOf(parse(SOURCE), { layout: 'row 1 (top): "Db"' }).layout).toBe('row 1 (top): "Db"');
   });
 
