@@ -18,6 +18,7 @@ export const Create = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.create'),
     name: 'Create Drawing',
+    description: 'Creates an empty drawing in the space and returns it; pass it to Generate, Draw or Edit.',
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
@@ -146,7 +147,7 @@ export const Generate = Operation.make({
 
 export const Score = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.illustrator.score'),
+    key: DXN.make('org.dxos.operation.illustrator.analyze'),
     name: 'Score Drawing',
     description:
       'Grades the drawing as laid out, on one 0–1 scale (1 is good): each layout constraint (pass 1 / fail 0) and cost ' +
