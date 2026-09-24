@@ -254,10 +254,18 @@ const center = async (selector) => {
  * Drops everything recorded so far. Captions already issued are dropped too, since their times would
  * point into footage that no longer exists.
  */
-const cut = () => {
+const NO_CUT = { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+
+const cut = async () => {
   if (!recorder) {
-    return { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+    return NO_CUT;
   }
+  // The banner is page DOM, so it would outlive the timeline entry it belongs to; the page is repainted
+  // before the cut so the frame the recorder keeps does not carry it either.
+  await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID).catch(() => {});
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // The repainted frame reaches the recorder over CDP a beat after the paint itself.
+  await page.waitForTimeout(150);
   started = recorder.cut();
   timeline.length = 0;
   return { cut: true };
@@ -272,6 +280,11 @@ const handlers = {
     // Only the first navigation boots the app; a later `goto` is part of the demo.
     if (!booted && options.boot !== 'keep') {
       booted = true;
+      if (!recorder) {
+        // Waiting minutes for a ready screen buys nothing when the footage cannot be dropped anyway.
+        await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
+        return { ...result, boot: NO_CUT };
+      }
       const ready = await page
         .locator(options.ready)
         .first()
@@ -281,7 +294,7 @@ const handlers = {
       if (ready) {
         // A plank mounts seconds before its content has filled in, more on a fresh profile.
         await page.waitForTimeout(options.settle);
-        result.boot = cut();
+        result.boot = await cut();
       } else {
         result.boot = { cut: false, reason: `no ${options.ready} within ${options['ready-timeout']}ms` };
       }
@@ -289,7 +302,7 @@ const handlers = {
     await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
     return result;
   },
-  cut: async () => cut(),
+  cut: () => cut(),
   click: async (command) => {
     const target = locator(command).first();
     await pointAt(target, command, 'click');

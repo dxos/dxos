@@ -51,8 +51,13 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   await page.screencast.start({
     size,
     quality,
-    onFrame: ({ data }) => {
-      const ms = Date.now() - started;
+    onFrame: ({ data, timestamp }) => {
+      // Dated by when the browser presented it, not when it arrived: a frame painted before a `cut` can be
+      // delivered after it, and would otherwise carry discarded footage into the new recording.
+      const ms = (Number.isFinite(timestamp) ? timestamp : Date.now()) - started;
+      if (ms < 0) {
+        return;
+      }
       const last = frames.at(-1);
       if (last && ms - last.ms < minGap) {
         writeFileSync(last.file, data);
