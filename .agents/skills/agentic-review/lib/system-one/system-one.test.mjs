@@ -145,7 +145,7 @@ describe('questions', () => {
     title: 'R',
     unit: 'file',
     question: null,
-    instructions: 'Flag x.\nSource: 3 comments, e.g. https://x',
+    instructions: 'Flag x.\nSource: 3 comments, e.g.\nhttps://x',
   };
 
   test('drops the provenance line from the rule text', () => {
