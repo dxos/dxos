@@ -15,7 +15,6 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
-import { Question } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -87,12 +86,6 @@ export const translations: Resource[] = [
         'rename-object.label': 'Rename agent',
         'delete-object.label': 'Delete agent',
         'object-deleted.label': 'Agent deleted',
-      },
-      [Type.getTypename(Question.Question)]: {
-        'typename.label': 'Question',
-        'typename.label_zero': 'Questions',
-        'typename.label_one': 'Question',
-        'typename.label_other': 'Questions',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
@@ -170,10 +163,6 @@ export const translations: Resource[] = [
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
         'integration-prompt.scopes': 'Permissions needed:',
 
-        'question-card.label': 'Question',
-        'question-answer.label': 'Your answer',
-        'question-answer.placeholder': 'Type an answer…',
-        'question-submit.label': 'Answer',
         'question-actions.label': 'Question actions',
         'question-failed.message': 'That answer could not be saved. Try again.',
         'question-stranded.message': 'Answer saved, but the assistant could not be resumed.',

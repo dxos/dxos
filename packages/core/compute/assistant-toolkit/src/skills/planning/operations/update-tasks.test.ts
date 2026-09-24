@@ -102,7 +102,7 @@ describe('UpdateTasks', () => {
         // A plain chat is its own session object.
         expect(subTask.assignee?.subject?.target?.id).toEqual(chat.id);
         // One log line per edit: the assignment rides the status change rather than adding an entry.
-        expect(subTask.history?.map(({ description }) => description)).toEqual([
+        expect((subTask.history ?? []).filter(Task.isChangeEntry).map(({ description }) => description)).toEqual([
           'Status changed from todo to started. Assigned to an agent.',
         ]);
       },
