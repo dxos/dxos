@@ -2208,6 +2208,9 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
