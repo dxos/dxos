@@ -13,7 +13,9 @@ import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
-import { ClientCapabilities } from '#types';
+import { ClientCapabilities, CliLogin } from '#types';
+
+import { CLI_LOGIN_DIALOG } from '../../constants.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -49,6 +51,23 @@ export default Capability.makeModule(
         // unopened identity service — stripping first would destroy a one-time credential that the
         // onboarding manager (which re-reads `location.search` on `ClientEvents.Initialized`) is
         // still able to redeem.
+        // Independent of the identity params below: approving a CLI needs an identity already here.
+        const cliCallback = CliLogin.parseCallback(url.searchParams.get(CliLogin.CALLBACK_PARAM));
+        const cliState = url.searchParams.get(CliLogin.STATE_PARAM);
+        if (cliCallback && CliLogin.isValidState(cliState)) {
+          log('cli login request received via navigation');
+          // Handlers dispatch before the client initializes, and the dialog reads the identity.
+          yield* Effect.promise(() => client.waitUntilInitialized());
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+            subject: CLI_LOGIN_DIALOG,
+            blockAlign: 'start',
+            type: 'alert',
+            props: { callback: cliCallback.href, state: cliState },
+          });
+          removeQueryParam(CliLogin.CALLBACK_PARAM);
+          removeQueryParam(CliLogin.STATE_PARAM);
+        }
+
         if (token && tokenType === 'login') {
           log('login token received via navigation');
           yield* Operation.invoke(ClientOperation.RedeemToken, { token });

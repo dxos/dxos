@@ -78,7 +78,9 @@ export const startLocalCallbackServer = (
   { successMessage = 'Authentication successful! You can close this window.' }: LocalCallbackServerOptions = {},
 ): Effect.Effect<LocalCallbackServer, Error> =>
   Effect.gen(function* () {
-    const port = yield* Effect.promise(() => getPort({ random: true }));
+    // Probed on IPv4 loopback only: with no host, get-port-please also tries every other interface
+    // and fails outright on machines without IPv6.
+    const port = yield* Effect.promise(() => getPort({ random: true, host: '127.0.0.1' }));
     const origin = `http://localhost:${port}`;
     const received = yield* Ref.make(false);
     const outcome = yield* Ref.make<Option.Option<CallbackOutcome>>(Option.none());
@@ -141,10 +143,12 @@ export const startLocalCallbackServer = (
     const verbose = yield* Effect.serviceOption(CommandConfig).pipe(
       Effect.map(Option.match({ onNone: () => false, onSome: (config) => config.verbose })),
     );
+    // Loopback only, like the probe above: the callback carries a credential, so nothing off this
+    // machine should reach it, and Bun's dual-stack default fails to bind without IPv6.
     const serverLayer = HttpRouter.serve(routes, {
       disableLogger: !verbose,
       disableListenLog: !verbose,
-    }).pipe(Layer.provide(BunHttpServer.layer({ port })));
+    }).pipe(Layer.provide(BunHttpServer.layer({ port, hostname: '127.0.0.1' })));
     const scope = yield* Scope.make();
     yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 

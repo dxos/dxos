@@ -40,7 +40,12 @@ export type LocalServer = {
  * the client's own hypergraph registry rather than one hydrated from an RPC
  * (`McpServer.hydrateRegistry`).
  */
-export const makeLocalServer = Effect.fn(function* () {
+export const makeLocalServer = Effect.fn(function* (
+  options: {
+    /** Handlers that take precedence over the capability-contributed ones for the same key. */
+    readonly overrides?: readonly Operation.WithHandler<Operation.Definition.Any>[];
+  } = {},
+) {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
   // Captured so an invocation can erase its own requirements: the tool handlers this host backs
@@ -52,6 +57,8 @@ export const makeLocalServer = Effect.fn(function* () {
   // The project and task verbs arrive as capabilities like every other, because `serve` activates
   // both plugins; `operationHandlers` brings the rest the CLI curates for chat.
   const handlerSet = OperationHandlerSet.merge(
+    // First, because the merge keeps the first registration of a key.
+    OperationHandlerSet.make(...(options.overrides ?? [])),
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
   );

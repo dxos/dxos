@@ -204,6 +204,30 @@ export const TaskRestorePoint = Schema.Struct({
 export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
 
 /**
+ * Records an object the task produced — a file, a document, a sheet — on `Task.artifacts`. Its own
+ * verb because membership is compared by entity id, so adding the same object twice is a no-op,
+ * which a generic patch of the ref array cannot promise.
+ */
+export const AddArtifact = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.addArtifact'),
+    name: 'Add Task Artifact',
+    description:
+      'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
+      'the task produced. Adding the same object twice is a no-op.',
+    icon: 'ph--paperclip--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    object: Ref.Ref(Obj.Unknown).annotate({ description: 'The object to attach, e.g. the File from an upload.' }),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
  * `tasks` array is a separate membership record, so a generic delete leaves the whole subtree's
  * entries dangling behind it.
