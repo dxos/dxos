@@ -771,8 +771,11 @@ export class QueryExecutor extends Resource {
     const previous = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
     // Omit objects whose strong deps cannot be resolved from local state so they never reach the
-    // client, where hydration would fail or stall on them. A `SqlStep` resolved them in SQL.
-    const workingSet = this.mode === 'sql' ? rawWorkingSet : await this._filterUnresolvableStrongDeps(rawWorkingSet);
+    // client, where hydration would fail or stall on them. Keyed on the plan rather than the mode,
+    // because a plan the compiler declined runs step by step even under `sql` and is not filtered by
+    // the statement.
+    const compiled = this._plan.steps.some((step) => step._tag === 'SqlStep');
+    const workingSet = compiled ? rawWorkingSet : await this._filterUnresolvableStrongDeps(rawWorkingSet);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
@@ -2536,7 +2539,10 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
       a.result?.queueNamespace === b.result?.queueNamespace &&
       a.result?.groupKey === b.result?.groupKey &&
       a.result?.groupCount === b.result?.groupCount &&
-      a.result?.aggregates === b.result?.aggregates
+      a.result?.aggregates === b.result?.aggregates &&
+      a.result?.rank === b.result?.rank &&
+      // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
+      a.result?.documentJson === b.result?.documentJson
     );
   }
   return (
