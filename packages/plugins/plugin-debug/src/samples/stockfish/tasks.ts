@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EntityId } from '@dxos/echo/Key';
 import { Actor, Task, TaskSet } from '@dxos/types';
 
 import { daysAgo } from './util.ts';
@@ -241,7 +242,14 @@ const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] }
       assignee: seed.assignee,
       parentTask: parent ? Ref.make(parent) : undefined,
       // Task carries no due date; its dates are activity-log lines, so that is where they go.
-      history: [{ date: daysAgo(0), event: 'created' as const, description: 'Filed from the chess MCP template.' }],
+      history: [
+        {
+          id: EntityId.random(),
+          date: daysAgo(0),
+          event: 'created' as const,
+          description: 'Filed from the chess MCP template.',
+        },
+      ],
     });
     tasks.push(task);
     if (parent === tasks[0]) {

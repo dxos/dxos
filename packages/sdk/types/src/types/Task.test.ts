@@ -7,9 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { EntityId } from '@dxos/echo/Key';
 
 import * as Milestone from './Milestone.ts';
 import * as Task from './Task.ts';
+
+/** A task's change entries — the ones that carry a `description`. */
+const changes = (task: Task.Task): Task.ChangeEntry[] => (task.history ?? []).filter(Task.isChangeEntry);
 
 /**
  * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,
@@ -193,7 +197,7 @@ describe('completion', () => {
       expect(unreviewed.status).toEqual('done');
 
       // The log records the transition that happened, not the one that was asked for.
-      expect(reviewed.history?.at(-1)?.description).toEqual('Status changed from started to review.');
+      expect(changes(reviewed).at(-1)?.description).toEqual('Status changed from started to review.');
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -324,7 +328,7 @@ describe('mutations', () => {
 
       expect(task.assignee).toBeUndefined();
       expect(task.estimate).toBeUndefined();
-      expect(task.history?.map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
+      expect(changes(task).map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -338,7 +342,7 @@ describe('mutations', () => {
 
       // No prior status, so the note states the value rather than inventing a transition.
       expect(task.history?.[0].event).toEqual('updated');
-      expect(task.history?.[0].description).toEqual('Status set to started.');
+      expect(changes(task)[0]?.description).toEqual('Status set to started.');
       expect(task.history?.[0].date).toEqual('2026-08-01T10:00:00.000Z');
     }).pipe(Effect.provide(testLayer())),
   );
@@ -351,7 +355,14 @@ describe('history', () => {
         Task.make({
           title: 'Draft launch email',
           status: 'todo',
-          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+          history: [
+            {
+              id: EntityId.random(),
+              date: '2026-08-01T09:00:00.000Z',
+              event: 'created',
+              description: 'Task created.',
+            },
+          ],
         }),
       );
       yield* Database.flush();
@@ -361,6 +372,7 @@ describe('history', () => {
       Obj.update(task, (task) => {
         task.history ??= [];
         task.history.push({
+          id: EntityId.random(),
           date: '2026-08-02T10:30:00.000Z',
           actor: { name: 'Scout', role: 'assistant' },
           event: 'updated',
@@ -371,7 +383,7 @@ describe('history', () => {
 
       expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
       expect(task.history?.[1].actor?.name).toEqual('Scout');
-      expect(task.history?.[1].description).toEqual('Status changed from todo to done.');
+      expect(changes(task)[1]?.description).toEqual('Status changed from todo to done.');
       // The actor is optional: something the system did on its own has none.
       expect(task.history?.[0].actor).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
@@ -391,3 +403,80 @@ const seedTree = () =>
     yield* Database.flush();
     return { root, child, grandchild, sibling };
   });
+
+describe('legacy history', () => {
+  it.effect('loads change entries logged before entries carried ids', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Draft launch email',
+          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+        }),
+      );
+      yield* Database.flush();
+
+      Task.setStatus(task, 'started');
+      yield* Database.flush();
+
+      expect(changes(task).map(({ event }) => event)).toEqual(['created', 'updated']);
+      expect(changes(task)[0].id).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('questions', () => {
+  it.effect('pairs an answer with the question it names', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy', status: 'started' }));
+      yield* Database.flush();
+
+      const question = Task.ask(task, {
+        text: '  What is our refund window?  ',
+        context: 'The policy needs a number.',
+        options: [{ title: '30 days' }, { title: '60 days', description: 'Matches the competition.' }],
+      });
+      expect(Task.getPendingQuestions(task.history).map(({ id }) => id)).toEqual([question.id]);
+      expect(question.text).toEqual('What is our refund window?');
+
+      const answer = Task.answer(task, question.id, ' 60 days ', { actor: { name: 'Rich' } });
+      yield* Database.flush();
+
+      expect(answer?.questionId).toEqual(question.id);
+      expect(answer?.answer).toEqual('60 days');
+      expect(task.history?.map((entry) => entry.event)).toEqual(['question', 'answer']);
+      expect(Task.getPendingQuestions(task.history)).toHaveLength(0);
+      expect(Task.getQuestions(task.history)[0].answer?.id).toEqual(answer?.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('takes an actor the task already holds as its assignee', () =>
+    Effect.gen(function* () {
+      const agent = { role: 'assistant' as const, name: 'Scout' };
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy', assignee: agent }));
+      yield* Database.flush();
+
+      // The same record as the assignee: ECHO refuses to own one record twice, so the log keeps a copy.
+      Task.ask(task, { text: 'Which one?', actor: task.assignee });
+      Task.setStatus(task, 'blocked', { actor: task.assignee });
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.actor?.name)).toEqual(['Scout', 'Scout']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('refuses a blank, unknown or second answer, writing nothing', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy' }));
+      yield* Database.flush();
+
+      const question = Task.ask(task, { text: 'Which one?' });
+      expect(Task.answer(task, question.id, '   ')).toBeUndefined();
+      expect(Task.answer(task, EntityId.random(), 'Either')).toBeUndefined();
+      expect(Task.answer(task, question.id, 'The first')).toBeDefined();
+      expect(Task.answer(task, question.id, 'The second')).toBeUndefined();
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.event)).toEqual(['question', 'answer']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});

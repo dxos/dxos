@@ -422,7 +422,7 @@ feat F-9: Pull Request Review
 
   req F-9.3:
     when: the space holds a walkthrough of the open pull request
-    then: the article renders its prose and diff chunks, and the toolbar action regenerates rather than generates
+    then: the article's Walkthrough tab renders its prose and diff chunks, and the toolbar action regenerates rather than generates
 
   req F-9.4: A Walkthrough opened by id resolves to the same article, through the pull request it narrates.
 
@@ -431,6 +431,12 @@ feat F-9: Pull Request Review
       request page
     then: ImportPullRequestFromSnapshot files that pull request in the active space, and the
       extension's auto-open setting opens it in the deck
+
+  req F-9.6: The article opens on an Overview tab showing the pull request's live description as markdown, with the harness's Claude Code footer and CI's Composer preview block taken out of the prose.
+
+  req F-9.7: A link into the agent-artifacts R2 bucket renders as a pill that previews its image or video in place, and each such artifact, the Composer preview, the Claude Code session and the branches are listed as related cards.
+
+  req F-9.8: The Overview lists every check run on the head commit, failures first, with its outcome, duration and a link to the provider's logs.
 ```
 
 ## Acceptance

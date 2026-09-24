@@ -2208,6 +2208,9 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
@@ -4116,9 +4119,15 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
@@ -4638,6 +4647,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -7711,6 +7723,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../../core/compute/mcp-client
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11121,6 +11136,9 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11151,6 +11169,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-markdown
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -17883,6 +17904,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui':
         specifier: workspace:*
         version: link:../../ui/ui

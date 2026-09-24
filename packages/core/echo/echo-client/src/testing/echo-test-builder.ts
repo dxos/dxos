@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal';
 
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
-import { EchoHost } from '@dxos/echo-host';
+import { EchoHost, type QueryExecutorMode } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -43,6 +43,8 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
+  /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `memory`. */
+  queryExecutor?: QueryExecutorMode;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -86,6 +88,7 @@ export class EchoTestPeer extends Resource {
   private readonly _registry: Entity.Unknown[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
+  private readonly _queryExecutor?: QueryExecutorMode;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -121,8 +124,9 @@ export class EchoTestPeer extends Resource {
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor }: PeerOptions = {}) {
     super();
+    this._queryExecutor = queryExecutor;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -159,6 +163,7 @@ export class EchoTestPeer extends Resource {
     this._echoHost = new EchoHost({
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
+      queryExecutor: this._queryExecutor,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();

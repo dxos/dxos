@@ -13,6 +13,7 @@ import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 
+import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
 import {
   type TaskDropIntent,
   type TaskPlacement,
@@ -68,11 +69,14 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
+  /** Render the questions in each task's history under its title. */
+  showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
+  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
   renderTrailing?: ColumnRenderer<TaskNode>;
@@ -93,11 +97,13 @@ export const TaskTreeNode = ({
   translationKey,
   showDescription = false,
   descriptionComponents,
+  showQuestions = false,
   onCollapseToggle,
   onTaskCheck,
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
+  onQuestionAnswer,
 }: TaskTreeNodeProps) => {
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
@@ -167,12 +173,25 @@ export const TaskTreeNode = ({
           translationKey,
           showDescription,
           descriptionComponents,
+          showQuestions,
           onTaskCheck,
           onTaskUpdate,
+          onQuestionAnswer,
         }}
       />
     ),
-    [showGutter, ordinals, checked, translationKey, showDescription, descriptionComponents, onTaskCheck, onTaskUpdate],
+    [
+      showGutter,
+      ordinals,
+      checked,
+      translationKey,
+      showDescription,
+      descriptionComponents,
+      showQuestions,
+      onTaskCheck,
+      onTaskUpdate,
+      onQuestionAnswer,
+    ],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -329,8 +348,10 @@ const TaskTreeHeading = ({
   translationKey,
   showDescription,
   descriptionComponents,
+  showQuestions,
   onTaskCheck,
   onTaskUpdate,
+  onQuestionAnswer,
 }: {
   node: TaskNode;
   showGutter: boolean;
@@ -339,8 +360,10 @@ const TaskTreeHeading = ({
   translationKey: string;
   showDescription: boolean;
   descriptionComponents?: TaskDescriptionProps['components'];
+  showQuestions: boolean;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }) => {
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
@@ -355,6 +378,8 @@ const TaskTreeHeading = ({
   }
 
   const description = showDescription ? current.description?.trim() || undefined : undefined;
+  // Read off the snapshot, so an answer given anywhere else lands in the row as it is written.
+  const questions = showQuestions ? Task.getQuestions(current.history) : [];
 
   return (
     // Cells, not a container: they are direct children of the tree row's subgrid and take the
@@ -394,12 +419,17 @@ const TaskTreeHeading = ({
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
-      {description && (
-        <TaskDescription
-          content={description}
-          components={descriptionComponents}
-          classNames='col-[title/chips-end] row-start-2 pb-1'
-        />
+      {(description || questions.length > 0) && (
+        <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
+          {description && <TaskDescription content={description} components={descriptionComponents} />}
+          {questions.map((thread) => (
+            <TaskQuestion
+              key={thread.question.id}
+              thread={thread}
+              onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
+            />
+          ))}
+        </div>
       )}
     </>
   );
