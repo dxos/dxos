@@ -3,15 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
+import { AppAnnotation } from '../echo/index.ts';
 import * as ContainerModel from './ContainerModel.ts';
 
 describe('containing', () => {
@@ -92,6 +95,31 @@ describe('add', () => {
 const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
   Schema.Struct({ name: Schema.String }).pipe(CollectionItemAnnotation.set(true)),
 );
+
+describe('add at the space root', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('the root collection it creates is persisted, so the object resolves its parent', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Item, SpaceProperties] });
+    const properties = db.add(Obj.make(SpaceProperties, {}));
+    const item = db.add(Obj.make(Item, { name: 'alice' }));
+    await ContainerModel.add({ object: item }).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
+    await db.flush();
+
+    const rootRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined);
+    const root = rootRef?.target;
+    expect(root && Obj.getDatabase(root)).toBe(db);
+    expect(Obj.getParent(item)?.id).toBe(root?.id);
+  });
+});
 
 describe('ownership', () => {
   let builder: EchoTestBuilder;
