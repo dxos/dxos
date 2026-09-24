@@ -115,6 +115,78 @@ rule workspace-deps: In-repo deps use the workspace protocol
   severity: error
 ```
 
+```mdl
+rule bounded-live-state: Every collection of live entities has an explicit upper bound
+  State that grows with use must have a hard cap, enforced where the entity is
+  admitted: a maximum number of processes a manager may have live, of objects a
+  database or space accepts, of entries a registry, index, queue or cache holds.
+  A collection that only ever grows is a slow-motion outage — an Automerge
+  document or a persisted map has no size alarm, a query over it gets slower with
+  every entry, and a client that has accumulated a year of history hits the
+  wall in a way no test ever did. The cap is a named constant with a doc
+  comment saying what it protects, and exceeding it is a typed error the caller
+  sees (a domain error, a rejected operation), never silent truncation.
+  `MAX_OBJECT_DIAGNOSTICS` in `packages/core/echo/echo-client/src/hypergraph.ts`
+  and `MAX_TRACKED_INVOCATIONS` in
+  `packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts`
+  are the canonical shape.
+  Flag: a `register`/`add`/`spawn`/`put`/`insert`/`push` path that appends to a
+  persisted or long-lived map, array, table or queue with no check against a
+  maximum before the write; a cap that exists but is unnamed (a bare number
+  inline) or undocumented; and a cap enforced only on read (a `slice`/`limit`
+  on the list side) while the write side stays unbounded. Report it on the line
+  of the write, and name the collection and what grows it.
+  Do not flag: a collection whose membership is already bounded by construction
+  (one entry per space, one per configured plugin, a fixed enum of keys); one
+  whose entries are removed on the same path that adds them so its size is a
+  function of concurrency, not history; a primitive that documents its own
+  bound; user-authored ECHO content, whose size is the user's to decide; or
+  in-memory state scoped to a single call.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  grep: \.set\(|\.push\(|\.add\(|db\.add\(|INSERT INTO
+  severity: error
+```
+
+```mdl
+rule collect-dead-entities: Terminated entries are retained up to a cap and then collected
+  Keeping a record of an entity that has finished — a terminated process, a
+  completed invocation, a settled request, a closed connection — is legitimate:
+  a list of processes should show what ran and how it ended. But the retention
+  must be bounded and automatic. There is a named cap on how many dead entries
+  (or how old, when age is the natural measure) the collection keeps, and
+  crossing it evicts the oldest on the same path that adds the new one, or from
+  a timer or sweep that already runs for the collection's owner. Collection
+  never depends on a client remembering to delete, on an operator running a
+  script, or on a future "cleanup task" — the entries outlive all three. The
+  `invocations` and `errors` rings in
+  `packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts`
+  (`[...invocations, invocation].slice(-MAX_TRACKED_INVOCATIONS)`) are the
+  canonical shape: the eviction is one expression on the write path.
+  Flag: a status field, `completedAt`, `terminated`, `done` or equivalent whose
+  entries are written into a persisted or long-lived collection but never
+  removed by any code path; removal that exists only as an explicit
+  `delete`/`unregister`/`remove` API with no automatic trigger; a cap on live
+  entries (see `bounded-live-state`) that counts dead entries against it, so a
+  manager that has finished many processes can no longer start one; and a
+  retention constant with no comment saying why that number. Report it on the
+  line that transitions the entry to its terminal state, or the write that
+  persists it there, and say what accumulates.
+  Do not flag: entries removed synchronously on termination (nothing dead is
+  retained, so there is nothing to collect); a store whose backend enforces
+  expiry natively, or rows an existing scheduled sweep already prunes — cite
+  the sweep; or an audit log that is deliberately append-only and lives in a
+  store sized for it, when the file says so.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  grep: completedAt|terminated|Terminated|status: '(done|completed|failed)'|_tag: '(Done|Completed|Failed)'
+  severity: error
+```
+
 ## Appendix
 
 ```mdl
