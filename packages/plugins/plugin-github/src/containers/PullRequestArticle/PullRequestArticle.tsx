@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Button, Panel, Tabs, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Tabs, Toolbar, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
@@ -32,7 +32,7 @@ import {
 import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
-import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
+import { CommentComposer, LineCommentPopover } from '../../components/index.ts';
 import { PullRequestOverview } from '../../components/PullRequestOverview/index.ts';
 import { githubConnection } from '../../operations/pull-request.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
@@ -233,6 +233,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       { pullRequest: pullRequestRef, force: walkthrough !== undefined },
       { spaceId },
     );
+
     setGenerating(false);
     if (error) {
       log.warn('walkthrough generation failed', { error });
@@ -246,6 +247,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     if (!pullRequest.url) {
       return;
     }
+
     try {
       await navigator.clipboard.writeText(pullRequest.url);
     } catch (error) {
@@ -433,10 +435,12 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
         <Panel.Content classNames='flex flex-col'>
-          <div className='flex flex-wrap items-center gap-2 px-4 py-2 border-b border-separator text-sm'>
-            <span className='text-description whitespace-nowrap'>
+          <Toolbar.Root>
+            <span className='dx-tag'>
               {pullRequest.owner}/{pullRequest.repo}#{pullRequest.number}
             </span>
+            <span className='truncate'>{pullRequest.title}</span>
+            <Toolbar.Separator />
             {state && (
               <span className='dx-tag' data-hue={stateHue[state]}>
                 {state}
@@ -446,13 +450,14 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
               {t(status ? `ci-status.${status.ci}.label` : 'ci-status.unknown.label')}
               {status && status.checks.total > 0 && ` ${status.checks.passed}/${status.checks.total}`}
             </span>
-            <span className='truncate'>{pullRequest.title}</span>
-          </div>
+          </Toolbar.Root>
+
           {composing && !lineTarget && (
-            <div className='flex flex-col gap-2 px-4 py-2 border-b border-separator'>
+            <div className='flex flex-col gap-2 p-3 border-b border-separator'>
               <CommentComposer {...composerProps} />
             </div>
           )}
+
           <LineCommentPopover
             {...composerProps}
             open={composing && !!lineTarget}

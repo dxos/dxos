@@ -151,6 +151,11 @@
       "types": "./dist/types/src/operations/SettingsOperation.d.ts",
       "import": "./dist/lib/operations/SettingsOperation.mjs"
     },
+    "./SpaceInvitationOperation": {
+      "source": "./src/operations/SpaceInvitationOperation.ts",
+      "types": "./dist/types/src/operations/SpaceInvitationOperation.d.ts",
+      "import": "./dist/lib/operations/SpaceInvitationOperation.mjs"
+    },
     "./Translations": {
       "source": "./src/app/Translations.ts",
       "types": "./dist/types/src/app/Translations.d.ts",

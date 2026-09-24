@@ -115,7 +115,7 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
           </IconBlock>
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
-          <span className={mx('min-w-0', cells?.description)}>{entryText(entry)}</span>
+          <span className={mx('min-w-0 pe-2', cells?.description)}>{entryText(entry)}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
           <span className={mx('whitespace-nowrap tabular-nums text-right', cells?.date)}>
