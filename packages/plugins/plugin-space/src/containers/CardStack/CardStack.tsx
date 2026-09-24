@@ -13,9 +13,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { ObjectCard } from '#components';
 
-export type CardStackProps = Pick<AppSurface.CardStackData, 'objects'> & {
-  classNames?: string;
-};
+export type CardStackProps = Pick<AppSurface.CardStackData, 'objects'>;
 
 /**
  * Several objects, one under another, each as a card.
@@ -29,7 +27,7 @@ export type CardStackProps = Pick<AppSurface.CardStackData, 'objects'> & {
  * own content, and a `Panel.Root` here would claim a second toolbar row in a plank that already has
  * one. It scrolls itself, so a host can bound it without the cards deciding its height.
  */
-export const CardStack = ({ objects: refs, classNames }: CardStackProps) => {
+export const CardStack = ({ objects: refs }: CardStackProps) => {
   // Resolved reactively rather than through `ref.target`: on a cold load the targets are not in
   // memory yet, and a synchronous read would leave the stack permanently empty. `ref.atom` tracks
   // loading without tracking mutations — a rename re-renders only its card, which subscribes itself.
@@ -43,7 +41,7 @@ export const CardStack = ({ objects: refs, classNames }: CardStackProps) => {
   }
 
   return (
-    <ScrollArea.Root orientation='vertical' padding data-testid='cardStack' classNames={classNames}>
+    <ScrollArea.Root padding centered data-testid='cardStack'>
       <ScrollArea.Viewport>
         <Flex column gap='sm' classNames='py-trim-md'>
           {objects.map((object) => (

@@ -12,7 +12,7 @@ import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { TaskStatusFilter } from './TaskStatusFilter.tsx';
+import { ALL_STATUSES, TaskStatusFilter } from './TaskStatusFilter.tsx';
 
 export type TaskFilterProps = {
   db?: Database.Database;
@@ -56,7 +56,9 @@ export const TaskFilter = ({
       <IconButton
         icon='ph--x--regular'
         iconOnly
-        disabled={value.length === 0}
+        // Live while either term is set, since clearing resets both: a reader who only hid a status
+        // would otherwise have no way to undo the one filter they had applied.
+        disabled={value.length === 0 && statuses.length === ALL_STATUSES.length}
         label={t('filter-clear.label')}
         data-testid='tasks.filter.clear'
         onClick={onClear}

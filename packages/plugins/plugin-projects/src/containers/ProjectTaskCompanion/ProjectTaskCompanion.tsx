@@ -53,25 +53,15 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
   }
 
   return (
-    // The article takes the room; the stack sits under it, sized by its cards and scrolling within
-    // its own half once there are more than the companion can show.
-    <Flex column grow classNames='min-h-0'>
-      <Flex grow column classNames='min-h-0'>
-        <Surface.Surface
-          type={AppSurface.Article}
-          data={{ subject: task, attendableId: `${attendableId}/task` }}
-          limit={1}
-          role={role}
-        />
-      </Flex>
-      {/* What the task produced, as cards. `plugin-space` renders the stack; nothing shows for a
-          task with no artifacts, so the article keeps the whole companion until there are some. */}
+    <Flex column grow>
       <Surface.Surface
-        type={AppSurface.CardStack}
-        data={{ objects: artifacts ?? [], attendableId }}
+        type={AppSurface.Article}
+        data={{ subject: task, attendableId: `${attendableId}/task` }}
+        role={role}
         limit={1}
-        classNames='max-h-[50%] border-t border-separator'
       />
+      {/* TODO(burdon): CardMasonry */}
+      <Surface.Surface type={AppSurface.CardStack} data={{ objects: artifacts ?? [], attendableId }} limit={1} />
     </Flex>
   );
 };

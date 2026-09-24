@@ -294,6 +294,15 @@ export const StatusFilter: Story = {
     await waitFor(() => expect(canvas.queryByText('Cup the samples')).toBeNull(), { timeout: 10_000 });
     // Its own status is still shown — a sibling in it stays.
     await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Clear is live on a hidden status alone, not only on typed text: it resets both terms, so with
+    // it disabled a reader who had hidden a status could not undo the one filter they had set.
+    await userEvent.keyboard('{Escape}');
+    const clear = canvasElement.querySelector<HTMLButtonElement>('[data-testid="tasks.filter.clear"]')!;
+    await waitFor(() => expect(clear.disabled).toBe(false), { timeout: 10_000 });
+    await userEvent.click(clear);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 

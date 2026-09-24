@@ -261,10 +261,7 @@ export default Capability.makeModule(
         id: 'cardStack',
         filter: Surface.makeFilter(AppSurface.CardStack),
         component: CardStack,
-        // `classNames` rides through: a host bounds the stack's height against its own layout, and
-        // the classes land on the stack itself rather than a wrapper, so an empty stack renders nothing
-        // at all instead of a bordered gap.
-        props: ({ data: { objects }, classNames }) => ({ objects, classNames }),
+        props: ({ data: { objects } }) => ({ objects }),
       }),
       Surface.create({
         id: 'collectionSection',
