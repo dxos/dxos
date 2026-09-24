@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
-import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client/internal';
+import { type ClientDocHandle, type ClientRepo, ObjectCore, migrateDocument } from '@dxos/echo-client/internal';
 import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
 import * as Type from '@dxos/echo/Type';
@@ -35,7 +35,7 @@ await migration.apply(); // Will create new epoch.
 
 // TODO(dmaretskyi): We no longer need to hook into ECHO internals, with the changes to echo APIs.
 export class MigrationBuilder {
-  private readonly _repo: RepoProxy;
+  private readonly _repo: ClientRepo;
   private readonly _rootDoc: Doc<DatabaseDirectory>;
 
   // echoUri -> automergeUrl
@@ -43,7 +43,7 @@ export class MigrationBuilder {
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
 
-  private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
+  private _newRoot?: ClientDocHandle<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
     this._repo = this._space.internal.db._repo;
@@ -54,7 +54,7 @@ export class MigrationBuilder {
 
   async findObject(id: string): Promise<EntityStructure | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
-    const docHandle = documentId && this._repo.find(documentId);
+    const docHandle = documentId && this._repo.find<DatabaseDirectory>(documentId);
     if (!docHandle) {
       return undefined;
     }
@@ -181,9 +181,9 @@ export class MigrationBuilder {
     });
   }
 
-  private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<DatabaseDirectory> | undefined> {
+  private async _findObjectContainingHandle(id: string): Promise<ClientDocHandle<DatabaseDirectory> | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
-    const docHandle = documentId && this._repo.find(documentId);
+    const docHandle = documentId && this._repo.find<DatabaseDirectory>(documentId);
     if (!docHandle) {
       return undefined;
     }
