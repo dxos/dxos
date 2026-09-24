@@ -48,7 +48,7 @@ import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts'
 import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler.ts';
 import { InvitationGuestExtension } from './invitation-guest-extenstion.ts';
 import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension.ts';
-import { createGuardedInvitationState } from './invitation-state.ts';
+import { createGuardedInvitationState, getInvitationOutcome } from './invitation-state.ts';
 import { InvitationTopology } from './invitation-topology.ts';
 
 const metrics = _trace.metrics;
@@ -291,6 +291,8 @@ export class InvitationsHandler {
     });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
+    // The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334)
+    // reads this span's name, duration and `ctx.*` attributes, so do not change them without updating it.
     const guestSpanId = `invitation-guest-${invitation.invitationId}`;
     // Reassign ctx to the child context returned by spanStart so downstream calls
     // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
@@ -310,6 +312,8 @@ export class InvitationsHandler {
         attributes: {
           'ctx.dxos.invitation.id': invitation.invitationId,
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+          'ctx.dxos.invitation.type': Invitation_Type[invitation.type],
+          ...(invitation.spaceId ? { 'ctx.spaceId': invitation.spaceId } : {}),
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {
@@ -317,7 +321,6 @@ export class InvitationsHandler {
         void invitationCtx.dispose();
       });
     }
-    ctx.onDispose(() => _trace.spanEnd(guestSpanId));
 
     if (deviceProfile) {
       invariant(invitation.kind === Invitation_Kind.DEVICE, 'deviceProfile provided for non-device invitation');
@@ -325,6 +328,16 @@ export class InvitationsHandler {
 
     const triedPeersIds = new ComplexSet(PublicKey.hash);
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    let admittedBy: 'edge' | 'swarm' | undefined;
+    // Ends with the flow, however it ends; the last state it reached says how.
+    ctx.onDispose(() =>
+      _trace.spanEnd(guestSpanId, {
+        attributes: {
+          outcome: getInvitationOutcome(guardedState.current.state),
+          ...(admittedBy ? { 'dxos.invitation.method': admittedBy } : {}),
+        },
+      }),
+    );
 
     const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
       const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
@@ -439,6 +452,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
               });
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
+              admittedBy = 'swarm';
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
@@ -479,6 +493,7 @@ export class InvitationsHandler {
         const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
+        admittedBy = 'edge';
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
       },
     });

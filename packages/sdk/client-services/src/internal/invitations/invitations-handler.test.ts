@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -16,6 +16,7 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
+import { type StartSpanOptions, TRACE_PROCESSOR, type TracingBackend } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
@@ -261,6 +262,60 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       });
     });
 
+    describe('guest span', () => {
+      let savedBackend: TracingBackend;
+      let spans: RecordedSpan[];
+
+      beforeEach(() => {
+        savedBackend = TRACE_PROCESSOR.tracingBackend;
+        spans = [];
+        TRACE_PROCESSOR.tracingBackend = createRecordingBackend(spans);
+        // Installing a backend replays the spans earlier tests buffered; only this test's own are under test.
+        spans.length = 0;
+      });
+
+      afterEach(() => {
+        TRACE_PROCESSOR.tracingBackend = savedBackend;
+      });
+
+      const guestSpans = () => spans.filter((span) => span.options.name === 'InvitationsHandler.acceptInvitation');
+
+      test('ends with the outcome and the path that admitted the guest', async ({ expect }) => {
+        const host = await createPeer();
+        const invitation = await createInvitation(host);
+        await hostInvitation(host, invitation);
+
+        const guest = await createPeer(host.spaceKey);
+        await performAuth(guest, invitation);
+        await waitForCondition({ condition: () => guest.ctx.disposed });
+
+        const [span, ...rest] = guestSpans();
+        expect(rest).toEqual([]);
+        expect(span.options.attributes).toMatchObject({
+          'ctx.dxos.invitation.kind': 'SPACE',
+          'ctx.dxos.invitation.type': 'DELEGATED',
+          'ctx.spaceId': invitation.spaceId,
+        });
+        expect(span.ended).toBe(true);
+        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'success', 'ctx.dxos.invitation.method': 'swarm' });
+      });
+
+      test('ends as timed out once a flow that timed out is disposed', async ({ expect }) => {
+        const host = await createPeer();
+        const invitation = await createInvitation(host, { timeout: 100 });
+        await hostInvitation(host, invitation);
+
+        const guest = await createPeer(host.spaceKey);
+        await acceptInvitation(guest, invitation);
+        await guest.sink.waitFor(Invitation_State.TIMEOUT);
+        // A timed-out flow stays open until its caller gives up on it.
+        expect(guestSpans()[0].ended).toBe(false);
+        await guest.ctx.dispose();
+
+        expect(guestSpans()[0].endAttributes).toEqual({ 'ctx.outcome': 'timeout' });
+      });
+    });
+
     const createPeer = async (spaceKey: PublicKey | null = null): Promise<PeerSetup> => {
       const peer = testBuilder.createPeer();
       await peer.createIdentity();
@@ -388,3 +443,24 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
   },
 );
+
+type RecordedSpan = {
+  options: StartSpanOptions;
+  ended: boolean;
+  endAttributes?: Record<string, any>;
+};
+
+const createRecordingBackend = (spans: RecordedSpan[]): TracingBackend => ({
+  startSpan: (options) => {
+    const span: RecordedSpan = { options, ended: false };
+    spans.push(span);
+    return {
+      end: () => {
+        span.ended = true;
+      },
+      setAttributes: (attributes) => {
+        span.endAttributes = { ...span.endAttributes, ...attributes };
+      },
+    };
+  },
+});
