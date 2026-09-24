@@ -13,7 +13,7 @@ import { describe, test } from 'node:test';
 
 import { loadRules } from '../mdl.mjs';
 import { estimateTokens, packQuestions, REQUEST_BUDGET, STATE_PLUS_QUESTION_BUDGET } from './budget.mjs';
-import { classify, runReview, uncertainBounds } from './checker.mjs';
+import { classify, followUpBatches, runReview, uncertainBounds } from './checker.mjs';
 import { parseImports } from './fetchers.mjs';
 import { contextQuestion, ruleText, verdictQuestion } from './questions.mjs';
 import { exportedNames, identifierWords, MAX_SEGMENTS, segmentLines, truncateText, windowLines } from './source.mjs';
@@ -201,6 +201,18 @@ describe('uncertain bounds', () => {
   });
 });
 
+describe('follow-ups', () => {
+  test("regroup one rule's leftover files into batches pointed at one of its fragments", () => {
+    const files = Array.from({ length: 7 }, (_, index) => `f${index}.ts`);
+    const batches = followUpBatches(new Map([['r', { nn: '04', files }]]), 3);
+    assert.deepEqual(
+      batches.map((batch) => batch.files.length),
+      [3, 3, 1],
+    );
+    assert.ok(batches.every((batch) => batch.nn === '04' && batch.ruleId === 'r'));
+  });
+});
+
 describe('two rounds', () => {
   const file = '.agents/skills/agentic-review/lib/frontmatter.mjs';
   const rule = {
@@ -253,6 +265,40 @@ describe('two rounds', () => {
     assert.deepEqual(verdict.kinds, ['siblings']);
     assert.equal(classify(verdict, settings), 'violation');
     assert.ok(verdict.where.start > 1);
+  });
+
+  test("routes a failed request's pairs onward as unanswered, and stops on an account failure", async () => {
+    const failing = {
+      evaluate: async () => {
+        throw new Error('System One answered 400: bad question');
+      },
+    };
+    const { verdicts, stats } = await runReview({
+      client: failing,
+      root: process.cwd(),
+      base: null,
+      fileTargets: [{ file, rules: [rule] }],
+      prTargets: [],
+      settings,
+    });
+    assert.equal(stats.failedRequests, 1);
+    assert.equal(classify(verdicts[0], settings), 'unanswered');
+    const broke = {
+      evaluate: async () => {
+        throw Object.assign(new Error('System One answered 402: no credits'), { fatal: true });
+      },
+    };
+    await assert.rejects(
+      runReview({
+        client: broke,
+        root: process.cwd(),
+        base: null,
+        fileTargets: [{ file, rules: [rule] }],
+        prTargets: [],
+        settings,
+      }),
+      /402/,
+    );
   });
 
   test('asks nothing more of a clean verdict', async () => {

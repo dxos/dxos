@@ -23,7 +23,7 @@ import {
 } from './budget.mjs';
 import { fetchContext } from './fetchers.mjs';
 import { contextQuestion, locationQuestion, verdictQuestion } from './questions.mjs';
-import { numberLines, segmentLines, truncateText, windowLines } from './source.mjs';
+import { numberLines, segmentLines, windowLines } from './source.mjs';
 
 /** Published input price, USD per million tokens (output is free). */
 export const PRICE_PER_MILLION = 0.042;
@@ -217,7 +217,7 @@ const readAnswers = (request, answers, round) => {
   const byRule = new Map();
   for (const entry of request.entries) {
     const answer = answers[entry.id];
-    if (!answer) {
+    if (!answer && entry.kind !== 'verdict') {
       continue;
     }
     const verdict = byRule.get(entry.rule) ?? {
@@ -225,12 +225,12 @@ const readAnswers = (request, answers, round) => {
       round,
       kinds: request.state.context ? Object.keys(request.state.context) : [],
     };
-    if (entry.kind === 'verdict' && answer.type === 'noul') {
+    if (entry.kind === 'verdict' && answer?.type === 'noul') {
       verdict.probability = answer.noul;
-    } else if (entry.kind === 'where' && answer.type === 'choice') {
+    } else if (entry.kind === 'where' && answer?.type === 'choice') {
       const segment = request.segments.find((candidate) => candidate.id === answer.choice);
       verdict.where = segment ? { ...segment, confidence: answer.confidence } : undefined;
-    } else if (entry.kind === 'need' && answer.type === 'choice') {
+    } else if (entry.kind === 'need' && answer?.type === 'choice') {
       verdict.need = { kind: answer.choice, probability: answer.probabilities?.[answer.choice] ?? answer.confidence };
     }
     byRule.set(entry.rule, verdict);
@@ -292,7 +292,15 @@ const mergeLocations = (verdicts) => {
  * @param {(message: string) => void} [options.log]
  */
 export const runReview = async ({ client, root, base, fileTargets, prTargets, settings, log = () => {} }) => {
-  const stats = { requests: 0, estimatedTokens: 0, inputTokens: 0, estimatedForAnswered: 0, contextRetries: 0 };
+  const stats = {
+    requests: 0,
+    estimatedTokens: 0,
+    inputTokens: 0,
+    estimatedForAnswered: 0,
+    contextRetries: 0,
+    failedRequests: 0,
+    failures: [],
+  };
   const oversized = [];
 
   const execute = async (plan, round) => {
@@ -306,7 +314,20 @@ export const runReview = async ({ client, root, base, fileTargets, prTargets, se
     const results = await Promise.all(
       plan.requests.map(async (request) => {
         const questions = Object.fromEntries(request.entries.map((entry) => [entry.id, entry.question]));
-        const response = await client.evaluate(request.state, questions);
+        let response;
+        try {
+          response = await client.evaluate(request.state, questions);
+        } catch (error) {
+          // An account failure (key, credits) fails every request alike, so the run stops; any other
+          // failure costs only this request's pairs, which are routed onward as unanswered.
+          if (error.fatal) {
+            throw error;
+          }
+          stats.failedRequests++;
+          stats.failures.push(error.message);
+          log(`request failed, its ${request.entries.length} questions are unanswered: ${error.message}`);
+          return readAnswers(request, {}, round);
+        }
         stats.inputTokens += response.usage?.input_tokens ?? 0;
         stats.estimatedForAnswered += request.estimatedTokens;
         done++;
@@ -423,6 +444,23 @@ export const classify = (verdict, { threshold, uncertain }, bounds) => {
   const bound = bounds?.get(verdict.rule.id) ?? uncertain;
   return verdict.probability >= threshold ? 'violation' : verdict.probability >= bound ? 'uncertain' : 'clean';
 };
+
+/**
+ * Regroup the pairs left for an agentic reviewer into batches of one rule over at most `size`
+ * files, each pointed at one of that rule's fragments. Finalize merges every fragment and stamps
+ * severity by rule, so any fragment of the rule will do.
+ *
+ * @param {Map<string, { nn: string, files: string[] }>} byRule Rule id → a fragment and its files.
+ * @returns {Array<{ ruleId: string, nn: string, files: string[] }>}
+ */
+export const followUpBatches = (byRule, size) =>
+  [...byRule].flatMap(([ruleId, { nn, files }]) => {
+    const batches = [];
+    for (let start = 0; start < files.length; start += size) {
+      batches.push({ ruleId, nn, files: files.slice(start, start + size) });
+    }
+    return batches;
+  });
 
 /** Line a diagnostic points at: the located segment, or the first changed line of a `pr` file. */
 export const diagnosticLine = (verdict, { base }) => {

@@ -10,6 +10,7 @@
 // compares each rule's scores on its own hunks with its scores on the rest.
 //
 // Usage: NODE_USE_ENV_PROXY=1 node calibrate.mjs [--out=CALIBRATION.md]   (needs TYPESAFE_API_KEY)
+//        node calibrate.mjs --from-json                                  (rebuild from saved scores)
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -22,7 +23,13 @@ import { estimateTokens, packQuestions } from '../../../skills/agentic-review/li
 import { makeClient } from '../../../skills/agentic-review/lib/system-one/client.mjs';
 import { verdictQuestion } from '../../../skills/agentic-review/lib/system-one/questions.mjs';
 
-const { values } = parseArgs({ options: { out: { type: 'string', default: 'CALIBRATION.md' } } });
+const { values } = parseArgs({
+  options: {
+    'out': { type: 'string', default: 'CALIBRATION.md' },
+    // Rebuild the report from the scores a previous run saved, without calling the API.
+    'from-json': { type: 'boolean', default: false },
+  },
+});
 const here = dirname(fileURLToPath(import.meta.url));
 const THRESHOLDS = [0.5, 0.7, 0.8];
 const TRIAGE_BOUNDS = [0.15, 0.2, 0.3, 0.4];
@@ -73,29 +80,39 @@ for (const [ruleId, list] of positives) {
 const calibrated = rules.filter((rule) => positives.has(rule.id));
 console.error(`calibrate: ${calibrated.length} rules with cited hunks, ${hunks.size} distinct hunks`);
 
-const client = makeClient({ apiKey: process.env.TYPESAFE_API_KEY, concurrency: 8 });
+const jsonPath = join(here, values.out.replace(/\.md$/, '.json'));
 const scores = new Map(calibrated.map((rule) => [rule.id, { own: [], other: [] }]));
-let inputTokens = 0;
-await Promise.all(
-  [...hunks.values()].map(async ({ comment, rules: own }) => {
-    const state = { file: { path: comment.path, source: comment.diff_hunk } };
-    const entries = calibrated.map((rule, index) => ({ id: `r${index}`, question: verdictQuestion(rule), rule }));
-    const { batches } = packQuestions(estimateTokens(state), entries);
-    for (const batch of batches) {
-      const response = await client.evaluate(
-        state,
-        Object.fromEntries(batch.map((entry) => [entry.id, entry.question])),
-      );
-      inputTokens += response.usage?.input_tokens ?? 0;
-      for (const entry of batch) {
-        const probability = response.answers?.[entry.id]?.noul;
-        if (probability !== undefined) {
-          scores.get(entry.rule.id)[own.has(entry.rule.id) ? 'own' : 'other'].push(probability);
+let inputTokens = null;
+if (values['from-json']) {
+  for (const [ruleId, saved] of Object.entries(JSON.parse(readFileSync(jsonPath, 'utf8')))) {
+    if (scores.has(ruleId)) {
+      scores.set(ruleId, saved);
+    }
+  }
+} else {
+  const client = makeClient({ apiKey: process.env.TYPESAFE_API_KEY, concurrency: 8 });
+  inputTokens = 0;
+  await Promise.all(
+    [...hunks.values()].map(async ({ comment, rules: own }) => {
+      const state = { file: { path: comment.path, source: comment.diff_hunk } };
+      const entries = calibrated.map((rule, index) => ({ id: `r${index}`, question: verdictQuestion(rule), rule }));
+      const { batches } = packQuestions(estimateTokens(state), entries);
+      for (const batch of batches) {
+        const response = await client.evaluate(
+          state,
+          Object.fromEntries(batch.map((entry) => [entry.id, entry.question])),
+        );
+        inputTokens += response.usage?.input_tokens ?? 0;
+        for (const entry of batch) {
+          const probability = response.answers?.[entry.id]?.noul;
+          if (probability !== undefined) {
+            scores.get(entry.rule.id)[own.has(entry.rule.id) ? 'own' : 'other'].push(probability);
+          }
         }
       }
-    }
-  }),
-);
+    }),
+  );
+}
 
 const median = (list) => {
   const sorted = [...list].sort((left, right) => left - right);
@@ -115,7 +132,7 @@ const all = { own: rows.flatMap((row) => row.own), other: rows.flatMap((row) => 
 const report = [
   '# System One calibration',
   '',
-  `Each rule's verdict question was asked of every diff hunk cited by any rule: ${hunks.size} hunks, ${calibrated.length} rules, $${((inputTokens / 1_000_000) * 0.042).toFixed(3)} in input tokens.`,
+  `Each rule's verdict question was asked of every diff hunk cited by any rule: ${hunks.size} hunks, ${calibrated.length} rules${inputTokens === null ? ' (report rebuilt from the saved scores)' : `, $${((inputTokens / 1_000_000) * 0.042).toFixed(3)} in input tokens`}.`,
   "A rule's own hunks are the code its source reviewers flagged. Other rules' hunks are presumed clean for it, which overstates false positives wherever one hunk breaks two rules.",
   '',
   '| Threshold | Recall on own hunks | Flag rate on other hunks |',
@@ -154,7 +171,7 @@ const report = [
 ];
 writeFileSync(join(here, values.out), report.join('\n'));
 writeFileSync(
-  join(here, values.out.replace(/\.md$/, '.json')),
+  jsonPath,
   `${JSON.stringify(Object.fromEntries(rows.map(({ rule, own, other }) => [rule.id, { own, other }])), null, 1)}\n`,
 );
 console.log(report.slice(0, 32).join('\n'));

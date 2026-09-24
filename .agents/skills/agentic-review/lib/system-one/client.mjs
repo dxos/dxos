@@ -9,6 +9,9 @@ const DEFAULT_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 export const DEFAULT_MODEL = 'jev-latest';
 
 const RETRYABLE = new Set([429, 500, 502, 503, 504, 529]);
+
+/** Statuses that fail every request alike (bad key, no credits), so a run stops at the first. */
+const ACCOUNT_FAILURES = new Set([401, 402, 403]);
 const MAX_ATTEMPTS = 5;
 const REQUEST_TIMEOUT_MS = 60_000;
 
@@ -65,7 +68,9 @@ export const makeClient = ({ apiKey, endpoint = DEFAULT_ENDPOINT, model = DEFAUL
         }
         const body = await response.text();
         if (!RETRYABLE.has(response.status) || attempt >= MAX_ATTEMPTS) {
-          throw new Error(`System One answered ${response.status}: ${body.slice(0, 500)}`);
+          const error = new Error(`System One answered ${response.status}: ${body.slice(0, 500)}`);
+          error.fatal = ACCOUNT_FAILURES.has(response.status);
+          throw error;
         }
         const retryAfter = Number(response.headers.get('retry-after'));
         await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 1000 * 2 ** (attempt - 1));

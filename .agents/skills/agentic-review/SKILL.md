@@ -121,11 +121,21 @@ How it works:
   with that kind fetched, which is how a model that cannot explore asks for more,
   and locates every verdict worth reporting by choosing a segment of the file.
 - **Triage, not a final judge.** A verdict at or above `--threshold` (0.8) becomes
-  a diagnostic in `groups/NN.md`. One between `--uncertain` (0.15) and the
-  threshold is listed in `SYSTEM-ONE.md` under "Still needs an agentic reviewer",
-  beside the groups whose rule is `system-one: off`. **Spawn subagents only for
-  those groups and files**, then finalize as usual. Every verdict is kept in
-  `system-one.json`.
+  a diagnostic in `groups/NN.md`. One under the threshold but at or above both
+  `--uncertain` (0.15) and its rule's median across the run plus `--lift` (0.15)
+  is uncertain; subjective rules score middling on almost any file, and the
+  relative bound keeps them from flooding the follow-ups. `SYSTEM-ONE.md` lists
+  under "Still needs an agentic reviewer" the uncertain pairs regrouped into
+  batches of one rule each, beside the groups whose rule is `system-one: off`.
+  **Spawn one subagent per line there**, then finalize as usual. Every verdict is
+  kept in `system-one.json`.
+- **Scale.** A 202-file change against about a hundred rules took under four
+  minutes and $2.73, reported 312 violations and routed 13% of pairs onward
+  (`.agents/projects/architecture-rules/TRIAL.md`).
+- **Failures.** A request that fails leaves its pairs unanswered, and they are
+  listed for follow-up like uncertain ones. An account failure (401, 402, 403:
+  a bad key or no credits) stops the run at once, since every request would fail
+  alike.
 - **Probe mode** judges named files without a store:
   `system-one.mjs --file=<path> [--rule=<id>]`, printing each verdict, its
   location and any context the model asked for.

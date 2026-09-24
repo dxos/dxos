@@ -40,7 +40,7 @@ const { discoverRules, listRepoFiles, matchRuleFiles } = await import('../lib/di
 const { mainMergeBase, repoRoot } = await import('../lib/git.mjs');
 const { assertSafeSlug, FULL_BASE, GROUPS_MANIFEST, REVIEWS_DIR, readReview } = await import('../lib/store.mjs');
 const { makeClient, DEFAULT_MODEL } = await import('../lib/system-one/client.mjs');
-const { classify, DEFAULTS, diagnosticBody, diagnosticLine, runReview, uncertainBounds } =
+const { classify, DEFAULTS, diagnosticBody, diagnosticLine, followUpBatches, runReview, uncertainBounds } =
   await import('../lib/system-one/checker.mjs');
 
 const { values } = parseArgs({
@@ -126,6 +126,9 @@ const summarizeStats = (stats) =>
   [
     `requests: ${stats.requests}${stats.contextRetries ? ` (${stats.contextRetries} verdicts re-asked with context the model requested)` : ''}`,
     `estimated input tokens: ${stats.estimatedTokens}`,
+    ...(stats.failedRequests
+      ? [`failed requests: ${stats.failedRequests} (their pairs are listed as unanswered)`]
+      : []),
     ...(client
       ? [
           `billed input tokens: ${stats.inputTokens} (cost $${stats.costUsd.toFixed(4)})`,
@@ -226,7 +229,9 @@ if (values.file?.length) {
       } else if (status === 'uncertain' || status === 'unanswered') {
         // Keyed by rule, not group: a follow-up reviewer judges one rule over files from many groups.
         const entry = uncertain.get(verdict.rule.id) ?? { nn, files: [] };
-        entry.files.push(`\`${verdict.file}\` (p=${verdict.probability?.toFixed(2) ?? 'n/a'})`);
+        entry.files.push(
+          `\`${verdict.file}\` (${verdict.probability === undefined ? 'unanswered' : `p=${verdict.probability.toFixed(2)}`})`,
+        );
         uncertain.set(verdict.rule.id, entry);
       }
     }
@@ -243,15 +248,7 @@ if (values.file?.length) {
       )}\n`,
     );
   }
-  // Uncertain pairs regrouped into fresh batches per rule, each pointed at one of that rule's
-  // fragments: finalize merges every fragment and stamps severity by rule, so any of them will do.
-  const followUps = [...uncertain].flatMap(([ruleId, { nn, files }]) => {
-    const batches = [];
-    for (let start = 0; start < files.length; start += chunkSize) {
-      batches.push({ ruleId, nn, files: files.slice(start, start + chunkSize) });
-    }
-    return batches;
-  });
+  const followUps = followUpBatches(uncertain, chunkSize);
   const skippedByRule = new Map();
   for (const { nn, ruleId, reason } of skipped) {
     const entry = skippedByRule.get(ruleId) ?? { reason, groups: [] };
@@ -278,9 +275,7 @@ if (values.file?.length) {
       ([ruleId, { reason, groups }]) =>
         `- \`${ruleId}\` (${reason}): review groups ${groups.join(', ')} as staged in STAGING.md`,
     ),
-    ...followUps.map(
-      ({ ruleId, nn, files }) => `- \`${ruleId}\` (uncertain) → append to \`groups/${nn}.md\`: ${files.join(', ')}`,
-    ),
+    ...followUps.map(({ ruleId, nn, files }) => `- \`${ruleId}\` → append to \`groups/${nn}.md\`: ${files.join(', ')}`),
     ...result.oversized.map(
       ({ ruleId, file }) => `- \`${ruleId}\` on \`${file}\`: question too large beside its state`,
     ),

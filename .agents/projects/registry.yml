@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/architecture-rules/TASKS.md
     design: .agents/projects/architecture-rules/DESIGN.md
     prs: [13373]
-    resume: 'PR #13373 OPEN and green (bounded-state rules + the mined dataset). Phase 1 mining done: dataset/CANDIDATES.md ranks 24 candidate rules by distinct PRs and recommends a first batch of eight. NEXT: user confirms the batch, write .agents/skills/agentic-review/rules/architecture.mdl, trial it over three or four packages.'
+    resume: 'PR #13373 OPEN. 70 mined rules shipped as .mdl with unit/context fields; System One checker (scripts/system-one.mjs) built, calibrated (dataset/CALIBRATION.md) and trialled on 202 files (TRIAL.md: $2.73, 312 reported, 13% routed to subagents). TypeSafe key out of credits after the trial. NEXT: top up credits, calibrate context-dependent rules with context, compare the uncertain band against a subagent review.'
   - name: composer-e2e
     status: active
     user: dmytro

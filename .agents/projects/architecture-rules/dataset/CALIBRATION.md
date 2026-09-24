@@ -1,6 +1,6 @@
 # System One calibration
 
-Each rule's verdict question was asked of every diff hunk cited by any rule: 211 hunks, 62 rules, $0.190 in input tokens.
+Each rule's verdict question was asked of every diff hunk cited by any rule: 211 hunks, 62 rules (report rebuilt from the saved scores).
 A rule's own hunks are the code its source reviewers flagged. Other rules' hunks are presumed clean for it, which overstates false positives wherever one hunk breaks two rules.
 
 | Threshold | Recall on own hunks | Flag rate on other hunks |
@@ -19,6 +19,14 @@ Used as a first pass, a verdict under the lower bound is dismissed and everythin
 | 0.2         | 69%                       | 12%                                   |
 | 0.3         | 54%                       | 6%                                    |
 | 0.4         | 43%                       | 3%                                    |
+
+A flat bound treats every rule alike, but subjective rules score middling on almost any code. Raising each rule's bound to its own median plus a lift routes less and keeps more:
+
+| Floor | Lift over the rule median | Own hunks kept for review | Other pairs sent to review needlessly |
+| ----- | ------------------------- | ------------------------- | ------------------------------------- |
+| 0.15  | 0.1                       | 71%                       | 11%                                   |
+| 0.15  | 0.15                      | 64%                       | 8%                                    |
+| 0.15  | 0.2                       | 55%                       | 6%                                    |
 
 ## Per rule, by separation
 

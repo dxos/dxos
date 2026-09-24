@@ -115,3 +115,33 @@ design.
 - **Triage.** Calibration on the hunks the rules were mined from (`dataset/CALIBRATION.md`)
   shows high precision and modest recall, so the checker reports only verdicts at 0.8 or above
   and sends the band between 0.15 and 0.8 to agentic reviewers; below 0.15 is dismissed.
+
+## How the rules classify
+
+All 101 rules, the 70 mined here and the 31 that existed, after conversion. A rule may declare
+several kinds.
+
+| Context kind                   | Rules declaring it |
+| ------------------------------ | ------------------ |
+| `diff`                         | 30                 |
+| `imports`                      | 3                  |
+| `importers`                    | 6                  |
+| `siblings`                     | 13                 |
+| `package`                      | 3                  |
+| `public-api`                   | 3                  |
+| `similar`                      | 5                  |
+| `test`                         | 0                  |
+| `pr`                           | 3                  |
+| none: the file alone is enough | 52                 |
+
+Judged as a whole change set (`unit: pr`): `delete-dead-code-after-migration`, `refactor-must-preserve-behavior`, `catalog-is-dependency-source-of-truth`, `ci-and-tooling-avoid-duplicate-mechanisms`, `diff-scoped-to-pr-purpose`.
+
+Left to agentic reviewers only (`system-one: off`), because no fetcher can supply what they need:
+`delete-dead-code-after-migration`, `fix-root-cause-not-symptom`, `no-premature-abstraction`, `avoid-full-collection-scans`, `refactor-must-preserve-behavior`, `ci-and-tooling-avoid-duplicate-mechanisms`.
+
+No rule declares `test`, but it stays a kind: the model can still ask for it in round two. The 31
+older rules predate the field and declare nothing yet.
+
+The pattern matches the calibration: rules that need no context separate cleanly under System
+One, and the ones that need `similar`, `package` or `siblings` depend on those fetchers to be
+judged at all.
