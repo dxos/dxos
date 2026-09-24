@@ -16,9 +16,11 @@ import {
   chunkArray,
   chunkRows,
   countBoundVariables,
+  measuredVariableCost,
   mergeChunkedRows,
   planChunkPairs,
   planChunks,
+  readConsistently,
 } from '../utils.ts';
 import {
   type EntityMeta,
@@ -26,9 +28,7 @@ import {
   type SourceRef,
   buildTypeDxnCondition,
   sourceRefs,
-  sourceVariableCost,
   splitSourceRefs,
-  typeDxnVariableCost,
 } from './entity-meta-index.ts';
 import { type Index, type IndexerObject } from './interface.ts';
 import { extractIndexableText } from './text-extractor.ts';
@@ -41,24 +41,28 @@ type FtsStatement = { readonly types?: string[]; readonly sources?: SourceRef[] 
  * nothing: no type filter searches every type, and no sources search every space.
  */
 const planFtsStatements = (
+  sql: SqlClient.SqlClient,
   typeDxns: readonly string[] | undefined,
   sources: readonly SourceRef[],
+  includeAllQueues: boolean,
   budget: number,
 ): FtsStatement[] => {
+  const typeCost = measuredVariableCost(sql, (types: readonly string[]) => buildTypeDxnCondition(sql, types));
+  const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+    buildFtsSourceCondition(sql, chunk, includeAllQueues),
+  );
   if (typeDxns === undefined && sources.length === 0) {
     return [{}];
   }
   if (typeDxns === undefined) {
-    return planChunks(sources, sourceVariableCost, budget).map((chunk) => ({ sources: chunk }));
+    return planChunks(sources, sourceCost, budget).map((chunk) => ({ sources: chunk }));
   }
   if (sources.length === 0) {
-    return planChunks(typeDxns, typeDxnVariableCost, budget).map((chunk) => ({ types: chunk }));
+    return planChunks(typeDxns, typeCost, budget).map((chunk) => ({ types: chunk }));
   }
-  return planChunkPairs(
-    { items: typeDxns, costOf: typeDxnVariableCost },
-    { items: sources, costOf: sourceVariableCost },
-    budget,
-  ).map(([types, chunk]) => ({ types, sources: chunk }));
+  return planChunkPairs({ items: typeDxns, costOf: typeCost }, { items: sources, costOf: sourceCost }, budget).map(
+    ([types, chunk]) => ({ types, sources: chunk }),
+  );
 };
 
 /**
@@ -250,41 +254,47 @@ export class FtsIndex implements Index {
       const text = sql.and(textConditions);
       const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, text);
 
-      const results: (readonly FtsQueryResult[])[] = [];
-      for (const statement of planFtsStatements(typeDxns ?? undefined, sourceRefs(spaceId ?? [], queues), budget)) {
-        const conditions: Statement.Fragment[] = [text];
-        if (statement.sources) {
-          conditions.push(sql`(${buildFtsSourceCondition(sql, statement.sources, includeAllQueues)})`);
-        }
-        // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
-        if (statement.types) {
-          conditions.push(sql`(${buildTypeDxnCondition(sql, statement.types)})`);
-        }
+      const statements = planFtsStatements(
+        sql,
+        typeDxns ?? undefined,
+        sourceRefs(spaceId ?? [], queues),
+        includeAllQueues,
+        budget,
+      );
+      const results = yield* readConsistently(
+        sql,
+        statements.length,
+        Effect.forEach(statements, (statement) => {
+          const conditions: Statement.Fragment[] = [text];
+          if (statement.sources) {
+            conditions.push(sql`(${buildFtsSourceCondition(sql, statement.sources, includeAllQueues)})`);
+          }
+          // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
+          if (statement.types) {
+            conditions.push(sql`(${buildTypeDxnCondition(sql, statement.types)})`);
+          }
 
-        if (useBm25) {
-          // Use BM25 ranking for FTS5 MATCH queries.
-          // BM25 returns negative values, negate to get higher = better match.
-          // Note: bm25() requires the actual table name, not an alias.
-          results.push(
-            yield* sql<FtsQueryResult>`
+          if (useBm25) {
+            // Use BM25 ranking for FTS5 MATCH queries.
+            // BM25 returns negative values, negate to get higher = better match.
+            // Note: bm25() requires the actual table name, not an alias.
+            return sql<FtsQueryResult>`
               SELECT m.*, -bm25(ftsIndex) AS rank
               FROM ftsIndex AS f
               JOIN objectMeta AS m ON f.rowid = m.recordId
               WHERE ${sql.and(conditions)}
-            `,
-          );
-        } else {
+            `;
+          }
           // LIKE fallback - no ranking available, default to 1. A term below the trigram minimum
           // has no tokens to match, so this scans the stored text of every row instead.
-          const rows = yield* sql<EntityMeta>`
+          return sql<EntityMeta>`
             SELECT m.*
             FROM ftsIndex AS f
             JOIN objectMeta AS m ON f.rowid = m.recordId
             WHERE ${sql.and(conditions)}
-          `;
-          results.push(rows.map((row) => ({ ...row, rank: 1 })));
-        }
-      }
+          `.pipe(Effect.map((rows): FtsQueryResult[] => rows.map((row) => ({ ...row, rank: 1 }))));
+        }),
+      );
 
       // Best match first. bm25 scores one match expression against the whole table, whatever else
       // a statement filters on, so ranks from separate statements compare.

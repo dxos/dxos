@@ -30,7 +30,7 @@ const TYPE_COUNT = 16;
 
 const storedType = (index: number) => DXN.make(`com.example.type.t${index % TYPE_COUNT}`, '0.1.0');
 
-/** A type filter mixing versioned identifiers (one variable each) and versionless ones (two). */
+/** A type filter mixing versioned identifiers (one variable each) and versionless ones (four). */
 const typeFilter = (count: number) =>
   Array.from({ length: count }, (_, index) =>
     index % 2 === 0 ? DXN.make(`com.example.type.t${index}`, '0.1.0') : DXN.make(`com.example.type.t${index}`),
@@ -207,11 +207,12 @@ describe('chunked reads', () => {
       for (const typeCount of [1, 3, 5, 6, 7, 12, TYPE_COUNT]) {
         for (const window of WINDOWS) {
           const rows = yield* runBothWays(
+            // Narrow enough to stay under the statement cap at a limit of 10: a versionless type binds four.
             meta.queryTypes({
-              spaceIds,
+              spaceIds: spaceIds.slice(0, 6),
               typeDxns: typeFilter(typeCount),
               includeAllQueues: true,
-              queues: queues.slice(0, 5),
+              queues: queues.slice(0, 2),
               window,
             }),
           );

@@ -3,8 +3,10 @@
 //
 
 import * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
 import { invariant } from '@dxos/invariant';
@@ -95,6 +97,26 @@ export const MAX_CHUNKED_STATEMENTS = 64;
 /** Variables a fragment binds, measured by compiling it so the count cannot drift from the SQL. */
 export const countBoundVariables = (sql: SqlClient.SqlClient, fragment: Statement.Fragment): number =>
   sql`${fragment}`.compile()[1].length;
+
+/**
+ * Runs the statements of a read split across several in one transaction, so a write landing between
+ * two of them cannot make them disagree. One statement already reads one snapshot, and is left alone:
+ * node SQLite takes the write lock for any transaction.
+ */
+export const readConsistently = <A, E, R>(
+  sql: SqlClient.SqlClient,
+  statementCount: number,
+  read: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | SqlError.SqlError, R> => (statementCount > 1 ? sql.withTransaction(read) : read);
+
+/**
+ * What one item binds in a condition that ORs its items, measured by compiling the condition for that
+ * item alone. A cost re-derived from the builder's logic drifts the moment the builder changes.
+ */
+export const measuredVariableCost =
+  <T>(sql: SqlClient.SqlClient, build: (items: readonly T[]) => Statement.Fragment) =>
+  (item: T): number =>
+    countBoundVariables(sql, build([item]));
 
 /**
  * Splits `items` into consecutive chunks whose summed `costOf` fits `budget`, so a list too wide for

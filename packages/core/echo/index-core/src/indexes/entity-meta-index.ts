@@ -26,9 +26,11 @@ import {
   chunkArray,
   chunkSizeForBoundVariables,
   countBoundVariables,
+  measuredVariableCost,
   mergeChunkedRows,
   planChunkPairs,
   planChunks,
+  readConsistently,
 } from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
 import type { Index } from './interface.ts';
@@ -106,15 +108,6 @@ export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readon
     }),
   );
 
-/**
- * Variables {@link buildTypeDxnCondition} binds for one type identifier: one per stored form, twice
- * when versioned rows match by prefix. Derived from the same match, so the two cannot drift.
- */
-export const typeDxnVariableCost = (typeDXN: string): number => {
-  const { forms, hasNoVersion } = _typeDxnMatch(typeDXN);
-  return forms.length * (hasNoVersion ? 2 : 1);
-};
-
 export const EntityMeta = Schema.Struct({
   recordId: Schema.Number,
   objectId: EntityId,
@@ -171,10 +164,6 @@ export const sourceRefs = (
   spaceIds: readonly string[],
   queues: readonly QueueRef[] | null | undefined,
 ): SourceRef[] => [...spaceIds.map((spaceId) => ({ spaceId })), ...(queues ?? []).map((queue) => ({ queue }))];
-
-/** Variables one source binds in a source condition: a space one, a queue one per column it matches. */
-export const sourceVariableCost = (source: SourceRef): number =>
-  'spaceId' in source ? 1 : source.queue.spaceId !== undefined ? 2 : 1;
 
 /** Splits sources back into the space ids and queues a source condition is built from. */
 export const splitSourceRefs = (sources: readonly SourceRef[]): { spaceIds: string[]; queues: QueueRef[] } => ({
@@ -414,12 +403,19 @@ export class EntityMetaIndex implements Index {
         const includeAllQueues = query.includeAllQueues ?? false;
         const window = buildQueueWindow(sql, query.window);
         const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, window);
-        const results: (readonly EntityMeta[])[] = [];
-        for (const chunk of planChunks(sources, sourceVariableCost, budget)) {
-          results.push(
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${window}`,
-          );
-        }
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
+        const chunks = planChunks(sources, sourceCost, budget);
+        const results = yield* readConsistently(
+          sql,
+          chunks.length,
+          Effect.forEach(
+            chunks,
+            (chunk) =>
+              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${window}`,
+          ),
+        );
         return mergeChunkedRows(results, queueWindowMerge(query.window)).map(withDeletedFlag);
       }),
   );
@@ -451,55 +447,74 @@ export class EntityMetaIndex implements Index {
         const queueWindow = buildQueueWindow(sql, window);
         const budget = limit - countBoundVariables(sql, queueWindow);
         const merge = queueWindowMerge(window);
-        const results: (readonly EntityMeta[])[] = [];
-
+        const typeCost = measuredVariableCost(sql, (types: readonly string[]) => buildTypeDxnCondition(sql, types));
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
         if (!inverted) {
           // A row matching any type chunk of any source chunk matches the query, so the chunks union.
-          for (const [types, chunk] of planChunkPairs(
-            { items: typeDxns, costOf: typeDxnVariableCost },
-            { items: sources, costOf: sourceVariableCost },
+          const pairs = planChunkPairs(
+            { items: typeDxns, costOf: typeCost },
+            { items: sources, costOf: sourceCost },
             budget,
-          )) {
-            results.push(
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
-            );
-          }
+          );
+          const results = yield* readConsistently(
+            sql,
+            pairs.length,
+            Effect.forEach(
+              pairs,
+              ([types, chunk]) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
+            ),
+          );
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
         }
 
         // NOT over a union of type chunks is the intersection of their negations, so the negated
         // type list stays whole in each statement and only the sources are chunked.
-        const typeCost = typeDxns.reduce((sum, typeDXN) => sum + typeDxnVariableCost(typeDXN), 0);
-        const widestSource = sources.reduce((widest, source) => Math.max(widest, sourceVariableCost(source)), 0);
-        if (typeCost + widestSource <= budget) {
+        const negatedCost = typeDxns.reduce((sum, typeDXN) => sum + typeCost(typeDXN), 0);
+        const widestSource = sources.reduce((widest, source) => Math.max(widest, sourceCost(source)), 0);
+        if (negatedCost + widestSource <= budget) {
           const typeWhere = typeDxns.length > 0 ? sql` AND NOT ${buildTypeDxnCondition(sql, typeDxns)}` : sql``;
-          for (const chunk of planChunks(sources, sourceVariableCost, budget - typeCost)) {
-            results.push(
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
-            );
-          }
+          const chunks = planChunks(sources, sourceCost, budget - negatedCost);
+          const results = yield* readConsistently(
+            sql,
+            chunks.length,
+            Effect.forEach(
+              chunks,
+              (chunk) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
+            ),
+          );
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
         }
 
         // Too many types to negate in one statement: find the rows they match, then read the sources
-        // without those rows, each statement's limit leaving room for the ones it drops.
-        const excluded = new Set<number>();
-        for (const [types, chunk] of planChunkPairs(
-          { items: typeDxns, costOf: typeDxnVariableCost },
-          { items: sources, costOf: sourceVariableCost },
-          limit,
-        )) {
-          const rows = yield* sql<{
-            recordId: number;
-          }>`SELECT recordId FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
-          rows.forEach((row) => excluded.add(row.recordId));
-        }
-        const widenedWindow = buildQueueWindow(sql, widenQueueWindow(window, excluded.size));
-        for (const chunk of planChunks(sources, sourceVariableCost, limit - countBoundVariables(sql, widenedWindow))) {
-          const rows =
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${widenedWindow}`;
-          results.push(rows.filter((row) => !excluded.has(row.recordId)));
-        }
+        // without those rows, each statement's limit leaving room for the ones it drops. Always
+        // several statements, and a row written between the phases would escape the exclusion.
+        const results = yield* sql.withTransaction(
+          Effect.gen(function* () {
+            const excluded = new Set<number>();
+            for (const [types, chunk] of planChunkPairs(
+              { items: typeDxns, costOf: typeCost },
+              { items: sources, costOf: sourceCost },
+              limit,
+            )) {
+              const rows = yield* sql<{
+                recordId: number;
+              }>`SELECT recordId FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
+              rows.forEach((row) => excluded.add(row.recordId));
+            }
+            const widenedWindow = buildQueueWindow(sql, widenQueueWindow(window, excluded.size));
+            const chunks = planChunks(sources, sourceCost, limit - countBoundVariables(sql, widenedWindow));
+            const rows = yield* Effect.forEach(
+              chunks,
+              (chunk) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${widenedWindow}`,
+            );
+            return rows.map((chunkRows) => chunkRows.filter((row) => !excluded.has(row.recordId)));
+          }),
+        );
         return mergeChunkedRows(results, merge).map(withDeletedFlag);
       }),
   );
@@ -875,12 +890,19 @@ export class EntityMetaIndex implements Index {
 
         const timeFilter = timeConditions.length > 0 ? sql` AND ${sql.and(timeConditions)}` : sql``;
         const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, timeFilter);
-        const results: (readonly EntityMeta[])[] = [];
-        for (const chunk of planChunks(sources, sourceVariableCost, budget)) {
-          results.push(
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${timeFilter}`,
-          );
-        }
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
+        const chunks = planChunks(sources, sourceCost, budget);
+        const results = yield* readConsistently(
+          sql,
+          chunks.length,
+          Effect.forEach(
+            chunks,
+            (chunk) =>
+              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${timeFilter}`,
+          ),
+        );
         return mergeChunkedRows(results).map(withDeletedFlag);
       }),
   );
