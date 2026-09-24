@@ -291,6 +291,8 @@ export class InvitationsHandler {
     });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
+    // The end of this span is a joiner's admission on the PostHog dashboard "EDGE nightly join latency (spans)"
+    // (https://eu.posthog.com/project/126171/dashboard/973334), so do not rename it without updating the dashboard.
     const guestSpanId = `invitation-guest-${invitation.invitationId}`;
     // Reassign ctx to the child context returned by spanStart so downstream calls
     // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their

@@ -552,8 +552,8 @@ const isValidDocumentId = (documentId: DocumentId) => {
 };
 
 /**
- * The PostHog dashboard "EDGE nightly join latency (spans)" is built from this span. Its queries read the span name,
- * the `ctx.*` attributes set in `_startSyncSpan`, and the {@link SyncSpanTrigger} and {@link SyncSpanOutcome}
- * values, so do not change any of them without updating the dashboard.
+ * The PostHog dashboard "EDGE nightly join latency (spans)" (https://eu.posthog.com/project/126171/dashboard/973334) is built from this span. Its
+ * queries read the span name, the `ctx.*` attributes set in `_startSyncSpan`, and the {@link SyncSpanTrigger} and
+ * {@link SyncSpanOutcome} values, so do not change any of them without updating the dashboard.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';

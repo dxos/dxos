@@ -107,7 +107,7 @@ jobs:
 
       # The token also makes every replicant export its spans to PostHog (`startSpanExport`): the
       # `CollectionSynchronizer.syncPeer` spans feed the "EDGE nightly join latency (spans)" dashboard,
-      # the span-built twin of the one `Trend the join latency` feeds.
+      # the span-built twin of the one `Trend the join latency` feeds: https://eu.posthog.com/project/126171/dashboard/973334
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
         env:

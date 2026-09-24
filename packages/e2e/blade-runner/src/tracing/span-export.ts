@@ -20,7 +20,7 @@ const DEFAULT_POSTHOG_HOST = 'https://eu.i.posthog.com';
 
 /**
  * Service name the PostHog dashboard "EDGE nightly join latency (spans)" filters on; renaming it
- * empties the dashboard.
+ * empties the dashboard: https://eu.posthog.com/project/126171/dashboard/973334.
  */
 export const SPAN_SERVICE_NAME = 'blade-runner';
 

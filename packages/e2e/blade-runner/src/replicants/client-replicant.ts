@@ -132,8 +132,8 @@ export class ClientReplicant {
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
     this.#config = { edgeUrl, agents, partitions };
-    // The span dashboard pins the EDGE and the agent setup it charts, as the CI report pins `ciEdge`
-    // and `ciAgents`.
+    // The span dashboard filters on these tags, as the CI report pins `ciEdge` and `ciAgents`, so do not
+    // rename them without updating it.
     setSpanTags({ edgeUrl, agents: String(agents), ...spanTags });
     // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
@@ -366,7 +366,7 @@ export class ClientReplicant {
    *
    * Do not rename or remove the span or its `ctx.spaceId`: its start is "accept" on the PostHog dashboard
    * "EDGE nightly join latency (spans)", which measures each joiner from here to the end of its
-   * `CollectionSynchronizer.syncPeer` span for that space.
+   * `CollectionSynchronizer.syncPeer` span for that space: https://eu.posthog.com/project/126171/dashboard/973334.
    */
   @trace.span({ resultAttributes: ({ spaceId }) => ({ spaceId }) })
   async joinSpace({
