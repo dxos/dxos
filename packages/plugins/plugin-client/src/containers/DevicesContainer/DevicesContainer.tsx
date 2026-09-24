@@ -52,24 +52,20 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
             label={t('devices-verbose.label', { ns: meta.profile.key })}
             description={t('devices.description', { ns: meta.profile.key })}
           >
-            <Form.FieldSet>
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
-                <Listbox.Root>
-                  <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
-                    {devices.map((device: Identity.DeviceInfo) => (
-                      <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </div>
-              {createInvitationUrl && (
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
-                  <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-                </div>
-              )}
+            <Form.FieldSet appearance='section' label={t('devices.label', { ns: meta.profile.key })}>
+              <Listbox.Root>
+                <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
+                  {devices.map((device: Identity.DeviceInfo) => (
+                    <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
             </Form.FieldSet>
+            {createInvitationUrl && (
+              <Form.FieldSet appearance='section' label={t('add-device.label')}>
+                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+              </Form.FieldSet>
+            )}
           </Form.FieldSet>
           <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
             <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>

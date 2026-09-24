@@ -16,11 +16,11 @@ import { ContactPicker } from './ContactPicker.tsx';
 const { contacts } = createContactFixtures();
 
 const DefaultStory = ({ excludeKeys }: { excludeKeys?: string[] }) => {
-  const [value, setValue] = useState<string[]>([]);
+  const [value, setValue] = useState<string>();
   return (
     <>
       <ContactPicker contacts={contacts} excludeKeys={excludeKeys} value={value} onChange={setValue} />
-      <output data-testid='contact-picker.value'>{value.length}</output>
+      <output data-testid='contact-picker.value'>{value ?? ''}</output>
     </>
   );
 };
@@ -46,9 +46,12 @@ export const TestSelectAndExclude: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await expect(body.queryByText('Carol Chen')).toBeNull();
     await userEvent.click(await body.findByText('Alice Adams'));
-    await userEvent.click(await body.findByText('Bob Brown'));
-    await expect(canvas.getByTestId('contact-picker.value')).toHaveTextContent('2');
+    await expect(canvas.getByTestId('contact-picker.value')).toHaveTextContent(contactKeyHex(contacts[0]));
+    // Selecting closes the popover, so reopen it to search.
+    await userEvent.click(canvas.getByTestId('contact-picker.trigger'));
     await userEvent.type(body.getByPlaceholderText('Search contacts…'), 'bo');
-    await expect(body.queryByText('Alice Adams')).toBeNull();
+    // Only the list items: the trigger now shows the selected contact's name.
+    const items = body.getAllByTestId('contact-picker.item').map((item) => item.textContent);
+    await expect(items).toEqual(['Bob Brown']);
   },
 };

@@ -67,6 +67,16 @@ export const IdentityLifecycle = Capability.lazyModule(
   },
   () => import('./identity-lifecycle.ts'),
 );
+export const InboxMonitor = Capability.lazyModule(
+  'InboxMonitor',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker],
+    provides: [],
+    // Subscribes to `client.halo` and `client.spaces` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./inbox-monitor.ts'),
+);
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
