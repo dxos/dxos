@@ -15,7 +15,7 @@ import { Dashboard } from '@dxos/react-ui-dashboard';
 import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
 import { meta } from '#meta';
 
-import { dailyActivityQuery, toActivity } from './activity.ts';
+import { HOURLY_ACTIVITY_QUERY, toActivity } from './activity.ts';
 
 const STAT_IDS = ['objects', 'types', 'collections', 'members', 'active-days', 'plugins'] as const;
 
@@ -43,10 +43,9 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   const enabled = useAtomValue(manager.enabled);
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
-  const dailyQuery = useMemo(() => dailyActivityQuery(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
   const counts = useQuery(space?.db, SPACE_STATS_QUERY);
-  const days = useQuery(space?.db, dailyQuery);
-  const activity = useMemo(() => toActivity(days), [days]);
+  const hours = useQuery(space?.db, HOURLY_ACTIVITY_QUERY);
+  const activity = useMemo(() => toActivity(hours), [hours]);
 
   const values: Record<SpaceStatId, number> = {
     'objects': countObjects(counts),

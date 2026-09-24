@@ -81,7 +81,6 @@ const WorkingSetItem = Object.freeze({
           key[aggregate.name] = GroupBy.truncateTimeProperty(
             WorkingSetItem.getAggregateProperty(item, aggregate.property),
             aggregate.unit,
-            aggregate.timeZone,
           );
           break;
       }

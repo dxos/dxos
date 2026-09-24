@@ -1041,26 +1041,11 @@ export class SqlPlanCompiler {
     }
   }
 
-  /**
-   * The start of the hour or day a system timestamp falls in, as unix ms. Hours and UTC days are
-   * arithmetic; a day in a named zone is looked up in the boundaries `compilePlan` computed with
-   * `GroupBy.truncateTimestamp`, so both executors agree on daylight-saving days.
-   */
+  /** The start of the UTC hour or day a system timestamp falls in, as unix ms. */
   #truncatedTimestamp(aggregate: QueryAST.GroupAggregate & { kind: 'timestamp' }): Fragment {
     const sql = this.#sql;
     const column = aggregate.field === 'updatedAt' ? sql`m.updatedAt` : sql`m.createdAt`;
-    if (aggregate.unit === 'hour') {
-      return sql`CAST(${column} / ${HOUR_MS} AS INTEGER) * ${HOUR_MS}`;
-    }
-    if (!aggregate.timeZone || aggregate.timeZone === 'UTC') {
-      return sql`CAST(${column} / ${DAY_MS} AS INTEGER) * ${DAY_MS}`;
-    }
-    // Local day boundaries need the store's timestamp range, and bake it in, so
-    // `planDeclinedByCompiler` sends these plans to the in-memory executor before compilation starts.
-    throw new QueryError({
-      message: 'Day grouping in a named time zone is not compilable',
-      context: { timeZone: aggregate.timeZone },
-    });
+    return this.#floorTo(column, aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
   }
 
   /** The grouped working-set columns, with `groupOrd` (and optionally `ord`) replaced. */
@@ -1080,22 +1065,17 @@ export class SqlPlanCompiler {
     return sql.csv(columns);
   }
 
-  /**
-   * The start of the hour or UTC day a unix-ms property falls in, or `null` when it is not a number.
-   * Floored rather than truncated, as `GroupBy.truncateTimeProperty` is, so times before 1970 land
-   * in the same bucket on both executors.
-   */
+  /** The start of the UTC hour or day a unix-ms property falls in, or `null` when it is not a number. */
   #truncatedProperty(aggregate: QueryAST.GroupAggregate & { kind: 'time' }): Fragment {
+    return this.#floorTo(this.#numericProperty(aggregate.property), aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
+  }
+
+  /**
+   * `value` floored to a multiple of `size`, as `GroupBy.truncateTimestamp` computes it, so times
+   * before 1970 land in the same bucket on both executors; `null` stays `null`.
+   */
+  #floorTo(value: Fragment, size: number): Fragment {
     const sql = this.#sql;
-    if (aggregate.unit === 'day' && aggregate.timeZone && aggregate.timeZone !== 'UTC') {
-      // Declined by `planDeclinedByCompiler`, as a `timestamp` day in a named zone is.
-      throw new QueryError({
-        message: 'Day grouping in a named time zone is not compilable',
-        context: { timeZone: aggregate.timeZone },
-      });
-    }
-    const size = aggregate.unit === 'hour' ? HOUR_MS : DAY_MS;
-    const value = this.#numericProperty(aggregate.property);
     // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
     const floored = sql`(CAST(${value} AS INTEGER) - (${value} < CAST(${value} AS INTEGER)))`;
     return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
@@ -1187,40 +1167,6 @@ export const compilePlan = (
 
 const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
 
-/** IANA zones of every `timestamp` or `time` group key that truncates to a local day, sub-plans included. */
-const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
-  const zones = new Set<string>();
-  const visit = (plan: QueryPlan.Plan) => {
-    for (const step of plan.steps) {
-      switch (step._tag) {
-        case 'AggregateStep':
-          for (const aggregate of step.aggregates) {
-            if (
-              (aggregate.kind === 'timestamp' || aggregate.kind === 'time') &&
-              aggregate.unit === 'day' &&
-              aggregate.timeZone &&
-              aggregate.timeZone !== 'UTC'
-            ) {
-              zones.add(aggregate.timeZone);
-            }
-          }
-          break;
-        case 'UnionStep':
-          step.plans.forEach(visit);
-          break;
-        case 'SetDifferenceStep':
-          visit(step.source);
-          visit(step.exclude);
-          break;
-        default:
-          break;
-      }
-    }
-  };
-  visit(plan);
-  return zones;
-};
-
 /** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
 const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
   plan.steps.some((step) => {
@@ -1247,17 +1193,15 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
 /**
  * Whether the compiler declines this plan, leaving it for the in-memory executor.
  *
- * Three reasons, all of which would otherwise need the store read before the statement is built:
- * `objectSnapshot` drops `@meta` for document rows; a `metaVersion` semver range has to be resolved
- * to the versions actually present; and a named-zone day group needs the store's timestamp range to
- * place local day boundaries, which also goes stale as the store grows. Declining them keeps
- * compilation pure — steps in, SQL out — and the plan correct.
+ * A `Filter.changes` plan runs on its own executor, since changes are not stored in SQLite. The
+ * other two reasons would need the store read before the statement is built: `objectSnapshot` drops
+ * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
+ * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
  */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
   planSelectsChanges(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||
-  collectMetaVersionFilters(plan, planSubquery).length > 0 ||
-  collectDayTimeZones(plan).size > 0;
+  collectMetaVersionFilters(plan, planSubquery).length > 0;
 
 /** A `Filter.changes` plan runs on its own executor over change records, not object rows. */
 const planSelectsChanges = (plan: QueryPlan.Plan): boolean =>

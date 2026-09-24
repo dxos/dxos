@@ -26,41 +26,7 @@ export type GroupAggregates = Record<string, AggregateValue>;
  */
 const HOUR_MS = 3_600_000;
 
-const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
-
-/** Wall-clock fields of `timestamp` in `timeZone`, from a formatter cached per zone. */
-const wallClock = (timestamp: number, timeZone: string) => {
-  let format = dateTimeFormats.get(timeZone);
-  if (!format) {
-    format = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      hourCycle: 'h23',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-    });
-    dateTimeFormats.set(timeZone, format);
-  }
-  const parts = format.formatToParts(timestamp);
-  const field = (type: Intl.DateTimeFormatPartTypes): number => Number(parts.find((part) => part.type === type)?.value);
-  return {
-    year: field('year'),
-    month: field('month'),
-    day: field('day'),
-    hour: field('hour'),
-    minute: field('minute'),
-    second: field('second'),
-  };
-};
-
-/** How far `timeZone` is ahead of UTC at `timestamp`, in ms. */
-const zoneOffset = (timestamp: number, timeZone: string): number => {
-  const { year, month, day, hour, minute, second } = wallClock(timestamp, timeZone);
-  return Date.UTC(year, month - 1, day, hour, minute, second) - Math.floor(timestamp / 1000) * 1000;
-};
+const DAY_MS = 86_400_000;
 
 /**
  * Code-unit order, the collation SQLite's `BINARY` applies. Both executors order strings through
@@ -70,28 +36,13 @@ const zoneOffset = (timestamp: number, timeZone: string): number => {
 export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 export const GroupBy = Object.freeze({
-  /**
-   * The start of the hour or calendar day `timestamp` falls in, in unix ms, or `null` when unknown.
-   * Hours are UTC. Days follow `timeZone` (UTC when absent), so a day that starts or ends on a
-   * daylight-saving change still begins at that zone's local midnight.
-   */
-  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day', timeZone = 'UTC'): number | null => {
+  /** The start of the UTC hour or day `timestamp` falls in, in unix ms, or `null` when unknown. */
+  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day'): number | null => {
     if (timestamp == null) {
       return null;
     }
-    if (unit === 'hour') {
-      return Math.floor(timestamp / HOUR_MS) * HOUR_MS;
-    }
-    const { year, month, day } = wallClock(timestamp, timeZone);
-    const midnightAsUtc = Date.UTC(year, month - 1, day);
-    // The offset at local midnight can differ from the offset at `timestamp` across a DST change, so
-    // correct again unless the first candidate already falls on the day asked for. A zone that skips
-    // midnight (Santiago in September) has no 00:00, and its first candidate is the day's first instant.
-    const candidate = midnightAsUtc - zoneOffset(midnightAsUtc, timeZone);
-    const onDay = wallClock(candidate, timeZone);
-    return onDay.year === year && onDay.month === month && onDay.day === day
-      ? candidate
-      : midnightAsUtc - zoneOffset(candidate, timeZone);
+    const size = unit === 'hour' ? HOUR_MS : DAY_MS;
+    return Math.floor(timestamp / size) * size;
   },
 
   /**
@@ -231,8 +182,8 @@ export const GroupBy = Object.freeze({
     ),
 
   /** The key component of a `time` aggregate: a unix-ms property truncated to its hour or day. */
-  truncateTimeProperty: (value: unknown, unit: 'hour' | 'day', timeZone?: string): number | null =>
-    typeof value === 'number' && Number.isFinite(value) ? GroupBy.truncateTimestamp(value, unit, timeZone) : null,
+  truncateTimeProperty: (value: unknown, unit: 'hour' | 'day'): number | null =>
+    typeof value === 'number' && Number.isFinite(value) ? GroupBy.truncateTimestamp(value, unit) : null,
 
   /**
    * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing

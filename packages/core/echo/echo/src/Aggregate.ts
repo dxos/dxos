@@ -23,8 +23,8 @@ export type Spec =
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
   | { kind: 'count' }
   | { kind: 'type' }
-  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit; timeZone?: string }
-  | { kind: 'time'; property: string; unit: TimeUnit; timeZone?: string }
+  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit }
+  | { kind: 'time'; property: string; unit: TimeUnit }
   | { kind: 'sum'; property: string };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
@@ -137,52 +137,28 @@ export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: '
  */
 export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
 
-/** Time units a timestamp aggregate can group by. */
+/**
+ * Time units a timestamp aggregate can group by, both in UTC. To show local days, group by `hour` and
+ * roll the hours into the viewer's days; an hour straddles local midnight in a zone offset by a
+ * fraction of an hour (India, Newfoundland), so its members land on one side of it.
+ */
 export type TimeUnit = 'hour' | 'day';
 
-export type TimeUnitOptions = {
-  /** IANA time zone that day boundaries follow, e.g. the viewer's. Defaults to UTC. */
-  timeZone?: string;
-};
-
 /**
- * Group members by the hour or calendar day their system `updatedAt` falls in. The field carries the
- * start of that interval in unix ms, or `null` when the timestamp is unknown.
+ * Group members by the UTC hour or day their system `updatedAt` falls in. The field carries the start
+ * of that interval in unix ms, or `null` when the timestamp is unknown.
  */
-export const updated = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
-  new AggregateClass({
-    kind: 'timestamp',
-    field: 'updatedAt',
-    unit,
-    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
-  });
+export const updated = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'timestamp', field: 'updatedAt', unit });
 
 /** Like {@link updated}, over the system `createdAt` timestamp. */
-export const created = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
-  new AggregateClass({
-    kind: 'timestamp',
-    field: 'createdAt',
-    unit,
-    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
-  });
+export const created = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'timestamp', field: 'createdAt', unit });
 
 /**
- * Group members by the hour or calendar day a unix-ms property falls in, like {@link updated} over
- * a property instead of a system timestamp. The field carries the start of that interval in unix
- * ms, or `null` when the property is not a number.
- *
- * Over `Filter.changes()`, a space-wide query is answered from hourly UTC buckets, so days in a
- * time zone offset by a fraction of an hour (India, Newfoundland) take changes from the wrong side
- * of midnight.
+ * Group members by the UTC hour or day a unix-ms property falls in, like {@link updated} over a
+ * property instead of a system timestamp. The field carries the start of that interval in unix ms,
+ * or `null` when the property is not a number.
  */
-export const time = <T, K extends NumericKeys<T>>(
-  property: K,
-  unit: TimeUnit,
-  options?: TimeUnitOptions,
-): Aggregate<T, number | null> =>
-  new AggregateClass({
-    kind: 'time',
-    property,
-    unit,
-    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
-  });
+export const time = <T, K extends NumericKeys<T>>(property: K, unit: TimeUnit): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'time', property, unit });

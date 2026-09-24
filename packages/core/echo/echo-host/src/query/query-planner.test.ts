@@ -2367,7 +2367,7 @@ describe('QueryPlanner', () => {
 
     test('a space-wide count by day reads the activity index', () => {
       const query = Query.select(Filter.changes()).aggregate({
-        day: Aggregate.time('time', 'day', { timeZone: 'America/New_York' }),
+        day: Aggregate.time('time', 'day'),
         source: Aggregate.group('source'),
         changes: Aggregate.count(),
         ops: Aggregate.sum('ops'),

@@ -518,8 +518,8 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
  * - `type` partitions members by their type URI; the field carries the URI string.
- * - `timestamp` partitions members by the hour or calendar day a system timestamp falls in; the field
- *   carries the start of that interval in unix ms. Days are local to `timeZone` (UTC when absent).
+ * - `timestamp` partitions members by the UTC hour or day a system timestamp falls in; the field
+ *   carries the start of that interval in unix ms.
  * - `time` is `timestamp` over a unix-ms member `property` instead of a system timestamp.
  * - `sum` adds a numeric member `property`; non-numeric values count as 0.
  */
@@ -549,8 +549,6 @@ const GroupAggregateTimestamp_ = Schema.Struct({
   kind: Schema.Literal('timestamp'),
   field: Schema.Literals(['createdAt', 'updatedAt']),
   unit: Schema.Literals(['hour', 'day']),
-  /** IANA time zone that `day` boundaries follow. */
-  timeZone: Schema.optional(Schema.String),
 });
 
 const GroupAggregateTime_ = Schema.Struct({
@@ -558,8 +556,6 @@ const GroupAggregateTime_ = Schema.Struct({
   kind: Schema.Literal('time'),
   property: Schema.String,
   unit: Schema.Literals(['hour', 'day']),
-  /** IANA time zone that `day` boundaries follow. */
-  timeZone: Schema.optional(Schema.String),
 });
 const GroupAggregateSum_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('sum'), property: Schema.String });
 

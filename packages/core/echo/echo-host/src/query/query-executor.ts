@@ -198,13 +198,12 @@ const QueryItem = Object.freeze({
           key[aggregate.name] = QueryItem.getTypeUri(item);
           break;
         case 'timestamp':
-          key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit, aggregate.timeZone);
+          key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit);
           break;
         case 'time':
           key[aggregate.name] = GroupBy.truncateTimeProperty(
             QueryItem.getAggregateProperty(item, aggregate.property),
             aggregate.unit,
-            aggregate.timeZone,
           );
           break;
       }

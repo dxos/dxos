@@ -203,11 +203,7 @@ const groupKeyOf = (item: ChangeItem, aggregates: readonly QueryAST.GroupAggrega
     if (aggregate.kind === 'group') {
       key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) => item.record[property]);
     } else if (aggregate.kind === 'time') {
-      key[aggregate.name] = GroupBy.truncateTimeProperty(
-        item.record[aggregate.property],
-        aggregate.unit,
-        aggregate.timeZone,
-      );
+      key[aggregate.name] = GroupBy.truncateTimeProperty(item.record[aggregate.property], aggregate.unit);
     }
   }
   return key;

@@ -6,21 +6,33 @@ import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
 /**
- * Counts Automerge changes by the local day in `timeZone` they were made; one row per day. Deleted
- * objects keep their days, and every edit counts, not just the last one.
+ * Counts changes per UTC hour; {@link toActivity} rolls the hours into the viewer's days. Deleted
+ * objects keep their hours, and every edit counts, not just the last one.
  */
-export const dailyActivityQuery = (timeZone: string) =>
-  Query.select(Filter.changes()).aggregate({
-    day: Aggregate.time('time', 'day', { timeZone }),
-    count: Aggregate.count(),
-  });
+export const HOURLY_ACTIVITY_QUERY = Query.select(Filter.changes()).aggregate({
+  hour: Aggregate.time('time', 'hour'),
+  count: Aggregate.count(),
+});
 
-/** A row of {@link dailyActivityQuery}. */
-export type DayCount = {
-  readonly day: number | null;
+/** A row of {@link HOURLY_ACTIVITY_QUERY}. */
+export type HourCount = {
+  readonly hour: number | null;
   readonly count: number;
 };
 
-/** One calendar entry per day; a `null` day (no timestamp recorded) has no square and is dropped. */
-export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] =>
-  rows.flatMap(({ day, count }) => (day === null ? [] : [{ date: new Date(day), value: count }]));
+/**
+ * One calendar entry per local day, in the runtime's time zone. In a zone offset by a fraction of an
+ * hour (India, Newfoundland) the hour straddling midnight lands wholly on the day it starts in.
+ */
+export const toActivity = (rows: readonly HourCount[]): ActivityDatum[] => {
+  const days = new Map<number, number>();
+  for (const { hour, count } of rows) {
+    if (hour === null) {
+      continue;
+    }
+    const date = new Date(hour);
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    days.set(day, (days.get(day) ?? 0) + count);
+  }
+  return [...days].sort(([a], [b]) => a - b).map(([day, value]) => ({ date: new Date(day), value }));
+};

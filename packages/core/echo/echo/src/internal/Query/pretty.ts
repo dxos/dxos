@@ -192,13 +192,9 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
     case 'type':
       return '';
     case 'timestamp':
-      return aggregate.timeZone !== undefined
-        ? `${JSON.stringify(aggregate.unit)}, { timeZone: ${JSON.stringify(aggregate.timeZone)} }`
-        : JSON.stringify(aggregate.unit);
+      return JSON.stringify(aggregate.unit);
     case 'time':
-      return aggregate.timeZone !== undefined
-        ? `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}, { timeZone: ${JSON.stringify(aggregate.timeZone)} }`
-        : `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}`;
+      return `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}`;
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':

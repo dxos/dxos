@@ -410,32 +410,6 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // Placing local day boundaries needs the store's timestamp range, which would both make
-  // compilation impure and bake a range that goes stale as the store grows — so the compiler
-  // declines these and the in-memory executor, which recomputes them per run, answers instead.
-  it.effect('declines a day group in a named time zone', () =>
-    Effect.gen(function* () {
-      const fixture = yield* seed;
-      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
-      const planner = new QueryPlanner();
-      const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
-      const named = planner.createPlan(
-        Query.select(Filter.type(TASK))
-          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
-          .from(scope).ast,
-      );
-      expect(planDeclinedByCompiler(named, planSubquery)).toBe(true);
-
-      // UTC needs no boundary table, so it still compiles.
-      const utc = planner.createPlan(
-        Query.select(Filter.type(TASK))
-          .aggregate({ day: Aggregate.created('day'), items: Aggregate.items() })
-          .from(scope).ast,
-      );
-      expect(planDeclinedByCompiler(utc, planSubquery)).toBe(false);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   it.effect('sums a property and buckets a time property by floored hour', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -458,22 +432,12 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it('declines change queries and a time bucket by day in a named zone', () => {
+  it('declines change queries but compiles sums and time buckets', () => {
     const scope = [{ _tag: 'space' as const, spaceId: SpaceId.random() }];
     const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.from(scope).ast);
     expect(
       planDeclinedByCompiler(
         plan(Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), n: Aggregate.count() })),
-        planSubquery,
-      ),
-    ).toBe(true);
-    expect(
-      planDeclinedByCompiler(
-        plan(
-          Query.select(Filter.type(TASK)).aggregate({
-            day: Aggregate.time('due', 'day', { timeZone: 'Asia/Kolkata' }),
-          }),
-        ),
         planSubquery,
       ),
     ).toBe(true);
