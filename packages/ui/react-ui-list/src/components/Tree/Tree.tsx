@@ -471,8 +471,7 @@ export const Tree = <T extends { id: string } = any>({
       return;
     }
     // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
-    // forward one. `[tabindex]` picks the row over a windowed branch's wrapper, which carries the id
-    // for the window but never holds focus.
+    // forward one.
     const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"][tabindex]`);
     if (!row) {
       return;
@@ -506,9 +505,7 @@ export const Tree = <T extends { id: string } = any>({
       // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
       // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
       // following it selected the row the reader was about to act on: a delete briefly swapped the
-      // edit pane onto the doomed task before it vanished. The row is the element carrying
-      // `data-object-id` (the item, or a branch's control — a branch's `treeitem` is its wrapper,
-      // which never holds focus itself).
+      // edit pane onto the doomed task before it vanished.
       const active = document.activeElement;
       if (active && active !== document.body && active.closest('[data-object-id]') !== active) {
         return;
@@ -623,12 +620,10 @@ export const Tree = <T extends { id: string } = any>({
     ],
   );
 
-  // The rows the window would mount, or `undefined` when the tree renders whole.
   const units = useMemo(() => {
     const units = virtualize ? flattenRowUnits(root.children) : undefined;
     return units && dropAtEnd && draggable ? [...units, { kind: 'end' as const, key: END_UNIT_KEY }] : units;
   }, [virtualize, root.children, dropAtEnd, draggable]);
-  // Stable, so the windowed end strip does not re-register its drop target as the window scrolls.
   const endData = useMemo<TreeData>(
     () => ({ treeId, id: root.id, path: root.path, item: root.item }),
     [treeId, root.id, root.path, root.item],
@@ -714,7 +709,6 @@ const TreeWindow = ({
   units: RowUnit[];
   scroller: HTMLElement;
   focusedValue: string | null;
-  /** Payload of the end strip, when `units` ends with one. */
   endData: TreeData;
 }) => {
   const scrollerRef = useRef<HTMLElement | null>(scroller);
@@ -819,7 +813,6 @@ type TreeNodeRowProps = {
   node: TreeNodeEntry;
   /** Position in the mounted window, when the tree is windowed; the window measures rows by it. */
   windowIndex?: number;
-  /** Place among its siblings, when the tree is windowed and the DOM no longer shows it. */
   position?: RowPosition;
 };
 
@@ -838,8 +831,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position })
   return (
     <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
       {node.branch && windowIndex !== undefined ? (
-        // Windowed, the children are rows of the window's own, so the branch holds only its row. It
-        // is also the element the window measures, which a `display: contents` wrapper cannot be.
+        // The window measures this element, which a `display: contents` wrapper cannot be.
         <TreeView.Branch
           className='col-[tree-row] grid grid-cols-subgrid'
           data-index={windowIndex}

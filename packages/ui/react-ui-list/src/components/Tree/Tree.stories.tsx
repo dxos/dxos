@@ -28,7 +28,6 @@ const groupsTree = createTree(4, 4, { groups: true });
 const emptyTree = createTree(3, 1);
 // Flat and long, which is the shape `virtualize` is for.
 const longTree = createTree(120, 1);
-// Long and one level deep, so windowing has branches to flatten.
 const branchTree = createTree(30, 2);
 
 const DefaultStory = ({
@@ -51,7 +50,6 @@ const DefaultStory = ({
   selectionMode?: 'single' | 'multiple';
   /** Render a long list in a short scroller, windowed to what is in view. */
   virtualize?: boolean;
-  /** With `virtualize`, a list of branches rather than of leaves. */
   branches?: boolean;
 }) => {
   const rootTree = virtualize
@@ -503,10 +501,6 @@ export const TestWindowMountsAVisibleSlice: Story = {
   },
 };
 
-/**
- * A windowed tree flattens an open branch's children into rows of the window after their parent,
- * so a hierarchical list is windowed rather than rendered whole.
- */
 export const TestWindowFlattensOpenBranches: Story = {
   args: { virtualize: true, branches: true },
   play: async ({ canvasElement }) => {
@@ -515,18 +509,15 @@ export const TestWindowFlattensOpenBranches: Story = {
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
     const indices = () => rows().map((row) => Number(row.dataset.index));
 
-    // Thirty closed branches, windowed: every mounted row, branch or not, is one the window measures.
     await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
     await waitFor(async () => expect(rows().length).toBeLessThan(30), { timeout: 5_000 });
     await expect(indices().every((index) => Number.isInteger(index))).toBe(true);
 
-    // Opening the first branch mounts its children directly after it, one level down.
     const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
     await userEvent.click(toggle);
     await waitFor(async () => expect(rows()[1]?.getAttribute('aria-level')).toEqual('2'), { timeout: 5_000 });
     await expect(rows()[1].dataset.index).toEqual('1');
 
-    // A flat run no longer shows the hierarchy, so each row states its place among its siblings.
     await expect([rows()[0].getAttribute('aria-posinset'), rows()[0].getAttribute('aria-setsize')]).toEqual([
       '1',
       '30',
@@ -536,7 +527,6 @@ export const TestWindowFlattensOpenBranches: Story = {
       '30',
     ]);
 
-    // The scrollbar spans the children too: the last unit is the thirtieth branch, after 30 children.
     scroller.scrollTo({ top: scroller.scrollHeight });
     await waitFor(async () => expect(indices()[indices().length - 1]).toEqual(59), { timeout: 5_000 });
   },

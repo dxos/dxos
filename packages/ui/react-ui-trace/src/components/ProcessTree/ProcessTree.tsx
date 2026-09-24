@@ -131,7 +131,6 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
-              // One row per process the session has run, and finished ones stay listed.
               virtualize
               scrollerRef={viewportRef}
               density='sm'
