@@ -29,7 +29,7 @@ export type RowUnit =
  */
 export type RowPosition = { posinset: number; setsize: number };
 
-/** Key of the "append at the end" drop strip, namespaced like the header keys. */
+/** Key of the "append at the end" drop strip; reserved, so an item carrying it renders the tree whole. */
 export const END_UNIT_KEY = 'end:';
 
 /** Splices group wrappers out so the machine sees their children as direct children of the group's parent. */
@@ -42,6 +42,9 @@ export const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>
  */
 export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
 
+const indexSiblings = (entries: readonly TreeNodeEntry[] | undefined): Map<TreeNodeEntry, number> =>
+  new Map(spliceGroups([...(entries ?? [])]).map((entry, index) => [entry, index]));
+
 /**
  * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
  * cannot be windowed.
@@ -52,20 +55,24 @@ export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.
  * A repeated item id is the case it gives up on. The window keys a row's measured extent by the id
  * the row carries, so the same id twice would have each row read back the other's height — a row
  * measured, found to disagree and measured again, every commit. A tree that addresses one item at
- * two paths therefore renders whole.
+ * two paths, or whose item id matches a header's or the end strip's key, therefore renders whole.
  */
-const indexSiblings = (entries: readonly TreeNodeEntry[] | undefined): Map<TreeNodeEntry, number> =>
-  new Map(spliceGroups([...(entries ?? [])]).map((entry, index) => [entry, index]));
-
 export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
   const units: RowUnit[] = [];
-  const ids = new Set<string>();
+  // Every id the window will measure by, the non-row units' included: an item id matching one of
+  // them is as ambiguous as an item id repeated.
+  const ids = new Set<string>([END_UNIT_KEY]);
 
   // `siblings` indexes the collection's sibling list, which groups do not break up.
   const visit = (nodes: readonly TreeNodeEntry[] | undefined, siblings: Map<TreeNodeEntry, number>): boolean => {
     for (const node of nodes ?? []) {
       if (node.group) {
-        units.push({ kind: 'header', key: `header:${node.value}`, label: node.props.label });
+        const key = `header:${node.value}`;
+        if (ids.has(key)) {
+          return false;
+        }
+        ids.add(key);
+        units.push({ kind: 'header', key, label: node.props.label });
         if (!visit(node.children, siblings)) {
           return false;
         }
