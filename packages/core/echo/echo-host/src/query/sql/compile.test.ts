@@ -81,7 +81,7 @@ const seed = Effect.gen(function* () {
     doc(
       ids.t1,
       TASK,
-      { title: 'alpha', priority: 2, tags: ['a', 'b'], assignee: ref(ids.alice) },
+      { title: 'alpha', priority: 2, due: -1, tags: ['a', 'b'], assignee: ref(ids.alice) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.project }) },
     ),
     doc(
@@ -90,9 +90,10 @@ const seed = Effect.gen(function* () {
       { title: 'beta', priority: 1, tags: ['b'], assignee: ref(ids.bob) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.deletedProject }) },
     ),
-    doc(ids.t3, TASK, { title: 'gamma', priority: 3, tags: [], assignee: ref(ids.alice) }),
+    doc(ids.t3, TASK, { title: 'gamma', priority: 3, due: 3_600_001, tags: [], assignee: ref(ids.alice) }),
     doc(ids.t4, TASK, {
       title: 'delta',
+      due: 'soon',
       tags: ['a'],
       done: true,
       [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }] },
@@ -409,31 +410,51 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // Placing local day boundaries needs the store's timestamp range, which would both make
-  // compilation impure and bake a range that goes stale as the store grows — so the compiler
-  // declines these and the in-memory executor, which recomputes them per run, answers instead.
-  it.effect('declines a day group in a named time zone', () =>
+  it.effect('sums a property and buckets a time property by floored hour', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
-      const planner = new QueryPlanner();
-      const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
-      const named = planner.createPlan(
+      const { rows } = yield* run(
+        fixture,
         Query.select(Filter.type(TASK))
-          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
-          .from(scope).ast,
+          .aggregate({ hour: Aggregate.time('due', 'hour'), priority: Aggregate.sum('priority'), n: Aggregate.count() })
+          .from(scope),
       );
-      expect(planDeclinedByCompiler(named, planSubquery)).toBe(true);
-
-      // UTC needs no boundary table, so it still compiles.
-      const utc = planner.createPlan(
-        Query.select(Filter.type(TASK))
-          .aggregate({ day: Aggregate.created('day'), items: Aggregate.items() })
-          .from(scope).ast,
-      );
-      expect(planDeclinedByCompiler(utc, planSubquery)).toBe(false);
+      const groups = rows
+        .map((row) => ({ ...JSON.parse(row.groupKey ?? '{}'), ...JSON.parse(row.aggregates ?? '{}') }))
+        .sort((a, b) => (a.hour ?? Infinity) - (b.hour ?? Infinity));
+      expect(groups).toEqual([
+        { hour: -3_600_000, priority: 2, n: 1 },
+        { hour: 3_600_000, priority: 3, n: 1 },
+        { hour: null, priority: 0, n: 1 },
+      ]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it('declines change queries but compiles sums and time buckets', () => {
+    const scope = [{ _tag: 'space' as const, spaceId: SpaceId.random() }];
+    const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.from(scope).ast);
+    expect(
+      planDeclinedByCompiler(
+        plan(Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), n: Aggregate.count() })),
+        planSubquery,
+      ),
+    ).toBe(true);
+    expect(
+      planDeclinedByCompiler(
+        plan(
+          Query.select(Filter.type(TASK)).aggregate({
+            day: Aggregate.time('due', 'day'),
+            total: Aggregate.sum('estimate'),
+          }),
+        ),
+        planSubquery,
+      ),
+    ).toBe(false);
+    expect(
+      planDeclinedByCompiler(plan(Query.select(Filter.type(TASK)).aggregate({ n: Aggregate.count() })), planSubquery),
+    ).toBe(false);
+  });
 
   // Result field names come from the query author, so one that is not an identifier must still
   // compile: it used to throw here while the in-memory executor accepted it.

@@ -233,7 +233,9 @@ export class EchoHost extends Resource {
 
     this._runtime = runtime;
     this._spaceStateManager = new SpaceStateManager({ runtime });
-    this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
+    this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
+      isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+    });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
     this._feedDataSource = new FeedDataSource({

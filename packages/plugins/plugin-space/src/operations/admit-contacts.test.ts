@@ -11,7 +11,7 @@ import { createBuf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf'
 import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { admitContacts } from './admit-contacts.ts';
+import { admitContacts, sendInvitationNotices } from './admit-contacts.ts';
 
 describe('admitContacts', () => {
   test('admits every key with the role and reports failures without stopping', async () => {
@@ -55,5 +55,31 @@ describe('admitContacts', () => {
       unknownKey.toHex(),
     ]);
     expect(admitted.map((contact) => contact.profile?.displayName)).toEqual(['Alice', undefined]);
+  });
+});
+
+describe('sendInvitationNotices', () => {
+  test('sends one notice per admitted key and reports failures without throwing', async () => {
+    const spaceKey = PublicKey.random();
+    const [ok, bad] = [PublicKey.random(), PublicKey.random()].map((key) => key.toHex());
+    const requests: { recipient: string; spaceKey: string; role: number }[] = [];
+    const inbox = {
+      send: async (request: { recipientIdentityKey: PublicKey; spaceKey: PublicKey; role: number }) => {
+        requests.push({
+          recipient: request.recipientIdentityKey.toHex(),
+          spaceKey: request.spaceKey.toHex(),
+          role: request.role,
+        });
+        if (request.recipientIdentityKey.toHex() === bad) {
+          throw new Error('offline');
+        }
+      },
+    };
+    const result = await sendInvitationNotices(inbox, spaceKey, [ok, bad], SpaceMember_Role.EDITOR);
+    expect(result).toEqual({ sent: [ok], failed: [bad] });
+    expect(requests).toEqual([
+      { recipient: ok, spaceKey: spaceKey.toHex(), role: SpaceMember_Role.EDITOR },
+      { recipient: bad, spaceKey: spaceKey.toHex(), role: SpaceMember_Role.EDITOR },
+    ]);
   });
 });

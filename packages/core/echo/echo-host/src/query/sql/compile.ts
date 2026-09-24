@@ -986,7 +986,10 @@ export class SqlPlanCompiler {
         case 'group':
         case 'type':
         case 'timestamp':
+        case 'time':
           return sql`k.${sql.literal(keyColumn(aggregate.name))} AS ${name}`;
+        case 'sum':
+          return sql`TOTAL(${this.#numericProperty(aggregate.property)}) OVER (PARTITION BY k.groupKey) AS ${name}`;
         case 'count':
           return sql`COUNT(*) OVER (PARTITION BY k.groupKey) AS ${name}`;
         case 'max':
@@ -1031,31 +1034,17 @@ export class SqlPlanCompiler {
         return sql`CASE WHEN m.typeDXN = ${UNTYPED_INDEX_TYPE} THEN NULL ELSE m.typeDXN END`;
       case 'timestamp':
         return this.#truncatedTimestamp(aggregate);
+      case 'time':
+        return this.#truncatedProperty(aggregate);
       default:
         throw new QueryError({ message: 'Not a group key aggregate', context: { kind: aggregate.kind } });
     }
   }
 
-  /**
-   * The start of the hour or day a system timestamp falls in, as unix ms. Hours and UTC days are
-   * arithmetic; a day in a named zone is looked up in the boundaries `compilePlan` computed with
-   * `GroupBy.truncateTimestamp`, so both executors agree on daylight-saving days.
-   */
   #truncatedTimestamp(aggregate: QueryAST.GroupAggregate & { kind: 'timestamp' }): Fragment {
     const sql = this.#sql;
     const column = aggregate.field === 'updatedAt' ? sql`m.updatedAt` : sql`m.createdAt`;
-    if (aggregate.unit === 'hour') {
-      return sql`CAST(${column} / ${HOUR_MS} AS INTEGER) * ${HOUR_MS}`;
-    }
-    if (!aggregate.timeZone || aggregate.timeZone === 'UTC') {
-      return sql`CAST(${column} / ${DAY_MS} AS INTEGER) * ${DAY_MS}`;
-    }
-    // Local day boundaries need the store's timestamp range, and bake it in, so
-    // `planDeclinedByCompiler` sends these plans to the in-memory executor before compilation starts.
-    throw new QueryError({
-      message: 'Day grouping in a named time zone is not compilable',
-      context: { timeZone: aggregate.timeZone },
-    });
+    return this.#floorTo(column, aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
   }
 
   /** The grouped working-set columns, with `groupOrd` (and optionally `ord`) replaced. */
@@ -1073,6 +1062,26 @@ export class SqlPlanCompiler {
       ...shape.aggregateNames.map((name) => sql`${row}.${sql.literal(aggregateColumn(name))}`),
     ];
     return sql.csv(columns);
+  }
+
+  #truncatedProperty(aggregate: QueryAST.GroupAggregate & { kind: 'time' }): Fragment {
+    return this.#floorTo(this.#numericProperty(aggregate.property), aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
+  }
+
+  #floorTo(value: Fragment, size: number): Fragment {
+    const sql = this.#sql;
+    // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
+    const floored = sql`(CAST(${value} AS INTEGER) - (${value} < CAST(${value} AS INTEGER)))`;
+    return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
+  }
+
+  #numericProperty(property: string): Fragment {
+    const sql = this.#sql;
+    if (property === 'id') {
+      return sql`NULL`;
+    }
+    const at = jsonPathLiteral(sql, [property]);
+    return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('integer', 'real') THEN json_extract(d.snapshot, ${at}) END`;
   }
 
   /** A property coerced to the scalar domain (`null` for anything else); `id` is the entity id. */
@@ -1151,40 +1160,6 @@ export const compilePlan = (
 
 const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
 
-/** IANA zones of every `timestamp` group key that truncates to a local day, sub-plans included. */
-const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
-  const zones = new Set<string>();
-  const visit = (plan: QueryPlan.Plan) => {
-    for (const step of plan.steps) {
-      switch (step._tag) {
-        case 'AggregateStep':
-          for (const aggregate of step.aggregates) {
-            if (
-              aggregate.kind === 'timestamp' &&
-              aggregate.unit === 'day' &&
-              aggregate.timeZone &&
-              aggregate.timeZone !== 'UTC'
-            ) {
-              zones.add(aggregate.timeZone);
-            }
-          }
-          break;
-        case 'UnionStep':
-          step.plans.forEach(visit);
-          break;
-        case 'SetDifferenceStep':
-          visit(step.source);
-          visit(step.exclude);
-          break;
-        default:
-          break;
-      }
-    }
-  };
-  visit(plan);
-  return zones;
-};
-
 /** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
 const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
   plan.steps.some((step) => {
@@ -1211,16 +1186,17 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
 /**
  * Whether the compiler declines this plan, leaving it for the in-memory executor.
  *
- * Three reasons, all of which would otherwise need the store read before the statement is built:
- * `objectSnapshot` drops `@meta` for document rows; a `metaVersion` semver range has to be resolved
- * to the versions actually present; and a named-zone day group needs the store's timestamp range to
- * place local day boundaries, which also goes stale as the store grows. Declining them keeps
- * compilation pure — steps in, SQL out — and the plan correct.
+ * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
+ * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
+ * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
  */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
+  planSelectsChanges(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||
-  collectMetaVersionFilters(plan, planSubquery).length > 0 ||
-  collectDayTimeZones(plan).size > 0;
+  collectMetaVersionFilters(plan, planSubquery).length > 0;
+
+const planSelectsChanges = (plan: QueryPlan.Plan): boolean =>
+  plan.steps.some((step) => step._tag === 'SelectStep' && step.selector._tag === 'ChangesSelector');
 
 const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
   const readsMeta = (filter: QueryAST.Filter): boolean => {
