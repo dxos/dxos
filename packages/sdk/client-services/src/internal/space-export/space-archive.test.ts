@@ -51,6 +51,24 @@ describe('SpaceArchive', () => {
     });
   });
 
+  describe('extractSpaceArchive', () => {
+    test('skips a zero-byte document written by an older export', async () => {
+      const writer = new SpaceArchiveWriter();
+      await writer.open();
+      try {
+        await writer.begin({ spaceId: SpaceId.random() });
+        await writer.setCurrentRootUrl('automerge:root');
+        await writer.writeDocument('root', new Uint8Array([1, 2, 3]));
+        await writer.writeDocument('empty', new Uint8Array());
+
+        const extracted = await extractSpaceArchive(await writer.finish());
+        expect(Object.keys(extracted.documents)).toEqual(['root']);
+      } finally {
+        await writer.close();
+      }
+    });
+  });
+
   describe('Feed Archive', () => {
     test('writes and reads a single feed with blocks', async () => {
       const writer = new SpaceArchiveWriter();

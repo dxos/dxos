@@ -127,6 +127,8 @@ export const translations = [
         'import-space-dialog.title': 'Import space',
         'import-space-dialog.description': 'Importing from a backup will create a new space from the file.',
         'import-space-dialog.upload.label': 'Drag file here or click to browse',
+        'import-space-dialog.importing.label': 'Importing {{filename}}…',
+        'import-space-failed.title': 'Could not import space',
         'empty-space.message': 'No documents',
         'empty-tree.message': 'No spaces',
         'unnamed-space.label': 'New space',
