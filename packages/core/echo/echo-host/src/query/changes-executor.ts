@@ -109,7 +109,10 @@ const selectChanges = async (
     if (deps.spaceStateManager.isBranchDocument(documentId)) {
       continue;
     }
-    using lease = await deps.automergeHost.loadDoc<Record<string, unknown>>(ctx, documentId);
+    // Local storage only, as the object executor loads: a collected document must not wait on the network.
+    using lease = await deps.automergeHost.loadDoc<Record<string, unknown>>(ctx, documentId, {
+      fetchFromNetwork: false,
+    });
     if (!lease) {
       continue;
     }
