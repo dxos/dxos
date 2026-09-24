@@ -19,7 +19,34 @@ export const RULE_SUFFIX = '.mdl';
 
 const VALID_SEVERITIES = new Set(['warn', 'error']);
 const VALID_SCOPES = new Set(['dir', 'repo']);
-const RULE_KEYS = new Set(['files', 'grep', 'severity', 'scope']);
+const VALID_SYSTEM_ONE = new Set(['on', 'off']);
+const RULE_KEYS = new Set(['files', 'grep', 'severity', 'scope', 'unit', 'context', 'question', 'system-one']);
+const LIST_KEYS = new Set(['files', 'context']);
+
+/**
+ * What one verdict is about: `file` judges each matched file on its own, `pr` judges the whole
+ * change set once (a rule about what a change leaves behind cannot be seen one file at a time).
+ */
+export const UNITS = ['file', 'pr'];
+
+/**
+ * Material a checker adds beside the unit under review, by kind. Only the kinds a rule declares
+ * are fetched, because a System One model loses accuracy on state full of unrelated detail.
+ */
+export const CONTEXT_KINDS = {
+  'diff': "the file's changes against the review base",
+  'imports': 'export signatures of the in-repo modules the file imports',
+  'importers': 'the files that import this module, cut to the lines that use it',
+  'siblings': 'the other files in the same directory with their exported names',
+  'package': 'the owning package: name, workspace dependencies and layer',
+  'public-api': "the owning package's entry barrel and exports map",
+  'similar': 'exports elsewhere in the repo whose names overlap the ones this file exports',
+  'test': 'the colocated test for a source file, or the module under test for a test file',
+  'pr': 'commit messages and the changed-file list of the reviewed range',
+};
+
+/** Kinds that describe one file, which a `pr`-unit rule has no single file to attach to. */
+const FILE_ONLY_KINDS = new Set(['imports', 'importers', 'siblings', 'test', 'similar']);
 
 /** Extract the raw line arrays of every ```mdl fenced block in a document. */
 export const parseMdlBlocks = (text) => {
@@ -57,30 +84,33 @@ const dedent = (lines) => {
 
 /**
  * Parse a `rule` block body into fields + instructions. Recognized keys
- * (`files`, `grep`, `severity`, `scope`) are structured; every other non-empty
- * line is instruction prose.
+ * (`files`, `grep`, `severity`, `scope`, `unit`, `context`, `question`,
+ * `system-one`) are structured; every other non-empty line is instruction prose.
  */
 const parseRuleBody = (bodyLines) => {
   const lines = dedent(bodyLines);
   const fields = {};
-  let files = [];
+  const lists = { files: [], context: [] };
   const prose = [];
 
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index];
-    const keyMatch = line.match(/^([a-z]+)\s*:\s*(.*)$/);
+    const keyMatch = line.match(/^([a-z][a-z-]*)\s*:\s*(.*)$/);
     if (keyMatch && RULE_KEYS.has(keyMatch[1])) {
       const key = keyMatch[1];
       const value = keyMatch[2].trim();
-      if (key === 'files') {
+      if (LIST_KEYS.has(key)) {
+        const items = [];
         if (value) {
-          files = [value];
+          // `files` keeps a single inline glob whole (a glob may contain a comma); `context` is a list.
+          items.push(...(key === 'files' ? [value] : value.split(',').map((item) => item.trim())));
         } else {
           while (index + 1 < lines.length && /^\s*-\s+/.test(lines[index + 1])) {
-            files.push(lines[index + 1].replace(/^\s*-\s+/, '').trim());
+            items.push(lines[index + 1].replace(/^\s*-\s+/, '').trim());
             index++;
           }
         }
+        lists[key] = items.filter(Boolean);
       } else {
         fields[key] = value;
       }
@@ -90,10 +120,14 @@ const parseRuleBody = (bodyLines) => {
   }
 
   return {
-    files,
+    files: lists.files,
+    context: lists.context,
     grep: fields.grep ?? null,
     severity: fields.severity,
     scope: fields.scope,
+    unit: fields.unit,
+    question: fields.question ?? null,
+    systemOne: fields['system-one'],
     instructions: prose.join('\n').trim(),
   };
 };
@@ -103,7 +137,8 @@ const parseRuleBody = (bodyLines) => {
  *
  * @param {string} path Absolute path to the `.mdl` file.
  * @returns {Array<{ id, title, files: string[], grep: string|null,
- *   severity: 'warn'|'error', scope: 'dir'|'repo', dir: string, instructions: string, path: string }>}
+ *   severity: 'warn'|'error', scope: 'dir'|'repo', unit: 'file'|'pr', context: string[],
+ *   question: string|null, systemOne: boolean, dir: string, instructions: string, path: string }>}
  */
 export const loadRules = (path) => {
   const text = readFileSync(path, 'utf8');
@@ -123,7 +158,9 @@ export const loadRules = (path) => {
       throw new Error(`${path}: a \`rule\` block is missing its id (\`rule <id>: <title>\`)`);
     }
 
-    const { files, grep, severity, scope, instructions } = parseRuleBody(blockLines.slice(headerIndex + 1));
+    const { files, context, grep, severity, scope, unit, question, systemOne, instructions } = parseRuleBody(
+      blockLines.slice(headerIndex + 1),
+    );
     const where = `${path} (rule \`${header.id}\`)`;
     if (files.length === 0) {
       throw new Error(`${where}: must declare at least one \`files\` glob`);
@@ -136,6 +173,24 @@ export const loadRules = (path) => {
     if (!VALID_SCOPES.has(resolvedScope)) {
       throw new Error(`${where}: invalid scope ${JSON.stringify(resolvedScope)} (expected dir|repo)`);
     }
+    const resolvedUnit = unit ?? 'file';
+    if (!UNITS.includes(resolvedUnit)) {
+      throw new Error(`${where}: invalid unit ${JSON.stringify(resolvedUnit)} (expected ${UNITS.join('|')})`);
+    }
+    for (const kind of context) {
+      if (!(kind in CONTEXT_KINDS)) {
+        throw new Error(
+          `${where}: unknown context ${JSON.stringify(kind)} (expected one of ${Object.keys(CONTEXT_KINDS).join(', ')})`,
+        );
+      }
+      if (resolvedUnit === 'pr' && FILE_ONLY_KINDS.has(kind)) {
+        throw new Error(`${where}: context ${JSON.stringify(kind)} describes one file, but the rule's unit is \`pr\``);
+      }
+    }
+    const resolvedSystemOne = systemOne ?? 'on';
+    if (!VALID_SYSTEM_ONE.has(resolvedSystemOne)) {
+      throw new Error(`${where}: invalid system-one ${JSON.stringify(resolvedSystemOne)} (expected on|off)`);
+    }
     if (instructions.length === 0) {
       throw new Error(`${where}: rule instructions (prose) are empty`);
     }
@@ -147,6 +202,10 @@ export const loadRules = (path) => {
       grep,
       severity: resolvedSeverity,
       scope: resolvedScope,
+      unit: resolvedUnit,
+      context: [...new Set(context)],
+      question,
+      systemOne: resolvedSystemOne === 'on',
       dir,
       instructions,
       path,

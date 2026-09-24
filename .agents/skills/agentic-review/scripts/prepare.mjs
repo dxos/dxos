@@ -217,6 +217,8 @@ for (const group of groups) {
     severity: group.rule.severity,
     title: group.rule.title,
     scope: group.scope,
+    // The System One checker reads the file list from here rather than parsing STAGING.md.
+    files: group.files,
   };
   const scopeLine =
     group.scope === 'full'
@@ -229,6 +231,15 @@ for (const group of groups) {
     '',
     scopeLine,
     '',
+    ...(group.rule.unit === 'pr'
+      ? ['**Unit:** the change set as a whole — judge what the listed files add or leave behind together.', '']
+      : []),
+    ...(group.rule.context.length > 0
+      ? [
+          `**Context the rule needs beside each file:** ${group.rule.context.map((kind) => `\`${kind}\``).join(', ')}.`,
+          '',
+        ]
+      : []),
     '**Rule instructions:**',
     '',
     group.rule.instructions,

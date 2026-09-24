@@ -1,0 +1,266 @@
+#!/usr/bin/env node
+//
+// Copyright 2026 DXOS.org
+//
+
+// Review with TypeSafe System One instead of (or before) LLM subagents: a decision model that
+// answers typed questions about a state, far cheaper than an agent but unable to explore. Each
+// rule's `context` field says what to show beside the code; the model can ask for one more kind
+// of context in a second round when its first verdict is uncertain.
+//
+// Usage:
+//   node system-one.mjs [--slug=<slug> | --dir=<store>]   fill a prepared review's fragments
+//   node system-one.mjs --file=<path> [--file=…] [--rule=<id> …]   probe files, print verdicts
+//
+// Options: --base=<ref> (diff base for context; default the review's base, or the merge-base
+// with origin/main for a full-project review), --threshold=0.8, --uncertain=0.4, --need=0.35,
+// --rounds=2, --model=jev-latest, --concurrency=8, --dry-run (plan and price, no API calls),
+// --json (probe mode: print raw verdicts).
+//
+// Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, then writes
+// SYSTEM-ONE.md (what still needs an agentic reviewer) and system-one.json (every verdict), so
+// `finalize.mjs` runs unchanged afterwards.
+
+import { spawnSync } from 'node:child_process';
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { parseArgs } from 'node:util';
+
+// Node's fetch ignores HTTPS_PROXY unless told at startup, so re-exec once with it switched on.
+if (process.env.HTTPS_PROXY && !process.env.NODE_USE_ENV_PROXY) {
+  const child = spawnSync(process.execPath, ['--disable-warning=UNDICI-EHPA', ...process.argv.slice(1)], {
+    stdio: 'inherit',
+    env: { ...process.env, NODE_USE_ENV_PROXY: '1' },
+  });
+  process.exit(child.status ?? 1);
+}
+
+const { discoverRules, listRepoFiles, matchRuleFiles } = await import('../lib/discover.mjs');
+const { mainMergeBase, repoRoot } = await import('../lib/git.mjs');
+const { assertSafeSlug, FULL_BASE, GROUPS_MANIFEST, REVIEWS_DIR, readReview } = await import('../lib/store.mjs');
+const { makeClient, DEFAULT_MODEL } = await import('../lib/system-one/client.mjs');
+const { classify, DEFAULTS, diagnosticBody, diagnosticLine, runReview } = await import('../lib/system-one/checker.mjs');
+
+const { values } = parseArgs({
+  options: {
+    'slug': { type: 'string' },
+    'dir': { type: 'string' },
+    'file': { type: 'string', multiple: true },
+    'rule': { type: 'string', multiple: true },
+    'base': { type: 'string' },
+    'threshold': { type: 'string', default: String(DEFAULTS.threshold) },
+    'uncertain': { type: 'string', default: String(DEFAULTS.uncertain) },
+    'need': { type: 'string', default: String(DEFAULTS.need) },
+    'rounds': { type: 'string', default: '2' },
+    'model': { type: 'string', default: DEFAULT_MODEL },
+    'concurrency': { type: 'string', default: '8' },
+    'dry-run': { type: 'boolean', default: false },
+    'json': { type: 'boolean', default: false },
+  },
+});
+
+const root = repoRoot();
+const settings = {
+  threshold: Number(values.threshold),
+  uncertain: Number(values.uncertain),
+  need: Number(values.need),
+  rounds: Number.parseInt(values.rounds, 10),
+};
+const log = (message) => console.error(`system-one: ${message}`);
+const client = values['dry-run']
+  ? null
+  : makeClient({
+      apiKey: process.env.TYPESAFE_API_KEY,
+      model: values.model,
+      concurrency: Number.parseInt(values.concurrency, 10),
+    });
+const rulesById = new Map(discoverRules(root).map((rule) => [rule.id, rule]));
+
+/** A review with a prepared, not-yet-finalized store, as the default target. */
+const resolveStore = () => {
+  if (values.dir) {
+    return values.dir;
+  }
+  const reviews = join(root, REVIEWS_DIR);
+  if (values.slug) {
+    return join(reviews, assertSafeSlug(values.slug));
+  }
+  const pending = existsSync(reviews)
+    ? readdirSync(reviews, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && existsSync(join(reviews, entry.name, GROUPS_MANIFEST)))
+        .map((entry) => join(reviews, entry.name))
+        .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs)
+    : [];
+  if (pending.length === 0) {
+    throw new Error('no prepared review to fill: run prepare.mjs first, or pass --file to probe');
+  }
+  return pending[0];
+};
+
+/** Split rule/file pairs into per-file targets and per-rule change-set targets. */
+const buildTargets = (pairs) => {
+  const fileTargets = new Map();
+  const prTargets = new Map();
+  for (const { rule, file } of pairs) {
+    if (rule.unit === 'pr') {
+      const target = prTargets.get(rule.id) ?? { rule, files: [] };
+      target.files.push(file);
+      prTargets.set(rule.id, target);
+    } else {
+      const target = fileTargets.get(file) ?? { file, rules: [] };
+      target.rules.push(rule);
+      fileTargets.set(file, target);
+    }
+  }
+  return { fileTargets: [...fileTargets.values()], prTargets: [...prTargets.values()] };
+};
+
+const summarizeStats = (stats) =>
+  [
+    `requests: ${stats.requests}${stats.contextRetries ? ` (${stats.contextRetries} verdicts re-asked with context the model requested)` : ''}`,
+    `estimated input tokens: ${stats.estimatedTokens}`,
+    ...(client
+      ? [
+          `billed input tokens: ${stats.inputTokens} (cost $${stats.costUsd.toFixed(4)})`,
+          `measured chars per token: ${stats.charsPerTokenMeasured?.toFixed(2) ?? 'n/a'}`,
+        ]
+      : [`estimated cost: $${((stats.estimatedTokens / 1_000_000) * 0.042).toFixed(4)}`]),
+  ].join('\n');
+
+const reviewBase = (declared) => values.base ?? (declared && declared !== FULL_BASE ? declared : mainMergeBase());
+
+if (values.file?.length) {
+  // Probe mode: judge named files against named rules (or every rule whose globs match them).
+  const files = values.file.map((file) => relative(root, join(process.cwd(), file)));
+  const projectFiles = listRepoFiles();
+  const selected = values.rule?.length
+    ? values.rule.map(
+        (id) =>
+          rulesById.get(id) ??
+          (() => {
+            throw new Error(`unknown rule ${id}`);
+          })(),
+      )
+    : [...rulesById.values()];
+  const pairs = [];
+  for (const rule of selected.filter((candidate) => candidate.systemOne)) {
+    const matched = values.rule?.length
+      ? files
+      : matchRuleFiles(rule, root, { changedSet: new Set(files), projectFiles });
+    pairs.push(...matched.map((file) => ({ rule, file })));
+  }
+  const base = reviewBase(null);
+  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+  if (values.json) {
+    console.log(
+      JSON.stringify(
+        result.verdicts.map(({ rule, ...verdict }) => ({ rule: rule.id, ...verdict })),
+        null,
+        2,
+      ),
+    );
+  } else {
+    for (const verdict of result.verdicts.sort((left, right) => (right.probability ?? 0) - (left.probability ?? 0))) {
+      const status = classify(verdict, settings);
+      const where = verdict.where?.start ? `:${verdict.where.start}` : '';
+      const need =
+        verdict.need && verdict.need.kind !== 'none'
+          ? ` wants ${verdict.need.kind} (${verdict.need.probability.toFixed(2)})`
+          : '';
+      console.log(
+        `${status.padEnd(10)} ${(verdict.probability ?? NaN).toFixed(2)} r${verdict.round} ${verdict.rule.id}  ${verdict.file}${where}${need}`,
+      );
+    }
+    console.log(`\n${summarizeStats(result.stats)}`);
+  }
+} else {
+  // Store mode: fill a prepared review's fragments, leaving what System One cannot judge.
+  const store = resolveStore();
+  const review = readReview(join(store, 'REVIEW.md'));
+  const manifest = JSON.parse(readFileSync(join(store, GROUPS_MANIFEST), 'utf8'));
+  const base = reviewBase(review?.data?.base);
+  const pairs = [];
+  const skipped = [];
+  for (const [nn, group] of Object.entries(manifest)) {
+    const rule = rulesById.get(group.ruleId);
+    if (!group.files) {
+      throw new Error(`${GROUPS_MANIFEST} has no file lists: re-run prepare.mjs with this version of the harness`);
+    }
+    if (!rule?.systemOne) {
+      skipped.push({
+        nn,
+        ruleId: group.ruleId,
+        files: group.files,
+        reason: rule ? 'system-one: off' : 'rule not found',
+      });
+      continue;
+    }
+    pairs.push(...group.files.map((file) => ({ rule, file, nn })));
+  }
+  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+
+  const groupOf = (ruleId, file) =>
+    Object.entries(manifest).find(([, group]) => group.ruleId === ruleId && group.files.includes(file))?.[0];
+  const counts = { violation: 0, uncertain: 0, clean: 0, unanswered: 0 };
+  const uncertain = new Map();
+  if (client) {
+    for (const verdict of result.verdicts) {
+      const status = classify(verdict, settings);
+      counts[status]++;
+      const nn = groupOf(verdict.rule.id, verdict.file);
+      if (!nn) {
+        continue;
+      }
+      if (status === 'violation') {
+        const header = `# ${verdict.rule.severity.toUpperCase()} \`${verdict.file}:${diagnosticLine(verdict, { base })}\``;
+        appendFileSync(join(store, 'groups', `${nn}.md`), `\n${header}\n\n${diagnosticBody(verdict)}\n`);
+      } else if (status === 'uncertain' || status === 'unanswered') {
+        const entry = uncertain.get(nn) ?? { ruleId: verdict.rule.id, files: [] };
+        entry.files.push(`${verdict.file} (p=${verdict.probability?.toFixed(2) ?? 'n/a'})`);
+        uncertain.set(nn, entry);
+      }
+    }
+    writeFileSync(
+      join(store, 'system-one.json'),
+      `${JSON.stringify(
+        result.verdicts.map(({ rule, files, ...verdict }) => ({
+          rule: rule.id,
+          status: classify(verdict, settings),
+          ...verdict,
+        })),
+        null,
+        2,
+      )}\n`,
+    );
+  }
+  const report = [
+    `# System One pass — ${relative(root, store)}`,
+    '',
+    `- model: ${values.model}${client ? '' : ' (dry run: nothing was sent)'}`,
+    `- base for context: \`${base ?? 'none'}\``,
+    `- thresholds: violation ≥ ${settings.threshold}, uncertain ≥ ${settings.uncertain}, context fetched when asked with ≥ ${settings.need}`,
+    `- verdicts: ${counts.violation} violations written to fragments, ${counts.uncertain} uncertain, ${counts.clean} clean, ${counts.unanswered} unanswered`,
+    '',
+    '```text',
+    summarizeStats(result.stats),
+    '```',
+    '',
+    '## Still needs an agentic reviewer',
+    '',
+    'Spawn subagents for these only; every other group is already judged.',
+    '',
+    ...skipped.map(
+      ({ nn, ruleId, files, reason }) => `- Group ${nn} \`${ruleId}\` (${reason}): ${files.length} files, all`,
+    ),
+    ...[...uncertain.entries()].map(
+      ([nn, { ruleId, files }]) =>
+        `- Group ${nn} \`${ruleId}\` (uncertain): ${files.map((file) => `\`${file}\``).join(', ')}`,
+    ),
+    ...result.oversized.map(
+      ({ ruleId, file }) => `- \`${ruleId}\` on \`${file}\`: question too large beside its state`,
+    ),
+    '',
+  ];
+  writeFileSync(join(store, 'SYSTEM-ONE.md'), report.join('\n'));
+  console.log(report.join('\n'));
+}
