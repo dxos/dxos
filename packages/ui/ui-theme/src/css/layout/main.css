@@ -5,8 +5,8 @@
 @layer dx-components {
   /* One clock for every slide in the layout and for the view transition that stands in for them. */
   :root {
-    --dx-main-transition-duration: 200ms;
-    --dx-main-transition-easing: cubic-bezier(0.4, 0, 0.6, 1);
+    --dx-main-transition-duration: 150ms;
+    --dx-main-transition-easing: cubic-bezier(0.2, 0, 0, 1);
   }
 
   /**

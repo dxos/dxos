@@ -136,6 +136,12 @@ export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   }));
 });
 
+/** Enters `workspace`, animating only a change of workspace. */
+export const enterWorkspace = Effect.fnUntraced(function* (workspace: string) {
+  const { activeDeck } = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+  yield* activeDeck === workspace ? applyWorkspace(workspace) : withViewTransition(applyWorkspace(workspace));
+});
+
 /**
  * The companion a URL names, or undefined when it names none.
  *
