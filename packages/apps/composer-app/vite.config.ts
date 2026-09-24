@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -139,6 +139,30 @@ const SOLID_SOURCES = [
   '**/node_modules/solid-element/**',
   '**/node_modules/@solid-primitives/**',
 ];
+
+/**
+ * Sources neither React pass touches; regexes, because Rolldown hook filters match string globs
+ * against a cwd-relative id that `**` cannot climb out of.
+ */
+const REACT_EXCLUDE = [
+  /\/node_modules\//,
+  /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
+];
+
+/**
+ * React Compiler options; `sources` covers every workspace root except `react-ui`, whose primitives
+ * ship whole in the boot graph (an import-map shared package) where compiled caches cost ~75 KB
+ * and rarely hit. Scoped here rather than by `exclude` so those primitives keep Fast Refresh.
+ */
+const reactCompilerOptions = {
+  sources: readdirSync(path.join(rootDir, 'packages')).flatMap((group) =>
+    group === 'ui'
+      ? readdirSync(path.join(rootDir, 'packages/ui'))
+          .filter((name) => name !== 'react-ui')
+          .map((name) => `/packages/ui/${name}/`)
+      : [`/packages/${group}/`],
+  ),
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -553,10 +577,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // React Compiler via oxc (`oxc-transform-react`) rather than Babel; Solid sources are excluded so
-    // Solid's output is not memoised and refresh-registered as if it were React.
-    react({ compiler: true, include: /\.[jt]sx$/, exclude: [/\/node_modules\//, ...SOLID_SOURCES] }),
-    reactCompilerHooks({ exclude: SOLID_SOURCES }),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    reactCompilerHooks({ exclude: REACT_EXCLUDE, compiler: reactCompilerOptions }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

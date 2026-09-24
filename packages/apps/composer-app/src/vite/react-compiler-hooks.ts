@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { transform } from 'oxc-transform-react';
+import { type ReactCompilerOptions, transform } from 'oxc-transform-react';
 import { type PluginOption } from 'vite';
 
 const SCRIPT_MODULE = /\.[cm]?[jt]s$/;
@@ -11,8 +11,10 @@ const SCRIPT_MODULE = /\.[cm]?[jt]s$/;
 const HOOK_NAME = /\buse[A-Z0-9]/;
 
 export type ReactCompilerHooksOptions = {
-  /** Module id globs left untouched (e.g. Solid sources). */
-  exclude: string[];
+  /** Module ids left untouched. */
+  exclude: RegExp[];
+  /** The same compiler options plugin-react's pass is given. */
+  compiler: ReactCompilerOptions;
 };
 
 /**
@@ -20,19 +22,19 @@ export type ReactCompilerHooksOptions = {
  * because plugin-react's compiler pass emits `$RefreshReg$` into script modules its refresh wrapper
  * never wraps, which then throw in the client's workers.
  */
-export const reactCompilerHooks = ({ exclude }: ReactCompilerHooksOptions): PluginOption => ({
+export const reactCompilerHooks = ({ exclude, compiler }: ReactCompilerHooksOptions): PluginOption => ({
   name: 'dxos-react-compiler-hooks',
   enforce: 'pre',
   applyToEnvironment: (environment) => environment.config.consumer === 'client',
   transform: {
     filter: {
-      id: { include: [SCRIPT_MODULE], exclude: [/^\0/, /\/node_modules\//, ...exclude] },
+      id: { include: [SCRIPT_MODULE], exclude: [/^\0/, ...exclude] },
       code: HOOK_NAME,
     },
     handler: async function (code, id) {
       const result = await transform(id.split('?')[0], code, {
         jsx: 'preserve',
-        reactCompiler: {},
+        reactCompiler: compiler,
         sourcemap: this.environment.config.command !== 'build' || !!this.environment.config.build.sourcemap,
       });
       if (result.fatal) {
