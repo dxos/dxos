@@ -34,10 +34,12 @@
     "src"
   ],
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/debug": "workspace:*",
     "@dxos/diagram": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -50,7 +52,9 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "@types/react": "catalog:",

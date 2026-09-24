@@ -68,7 +68,7 @@ export const ObjectFormDialog = ({
   useActivationSignal(SpaceEvents.CreateObjectRequested);
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
-  const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Database.Database | Obj.Unknown | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   // Spaces the app manages on the user's behalf are never targets for new objects.
   const spaces = useSpaces().filter((space) => AppSpace.isVisibleSpace(space));
@@ -261,6 +261,8 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
+  const parent = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
+
   const handleConfirm = useCallback(() => {
     if (!object || !target) {
       return;
@@ -274,19 +276,15 @@ export const ObjectFormDialog = ({
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
     void Effect.gen(function* () {
-      // The object is already persisted; this files it under the target collection, if there is one.
-      yield* Operation.invoke(
-        SpaceOperation.AddObject,
-        { object, target: Collection.isCollection(target) ? target : undefined },
-        { spaceId: db?.spaceId },
-      );
+      // The object is already persisted; this only hands it to its parent.
+      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
       yield* navigateTo(object);
     }).pipe(
       Effect.provideService(Capability.Service, manager.capabilities),
       Effect.provideService(Operation.Service, operationInvoker),
       EffectEx.runAndForwardErrors,
     );
-  }, [object, target, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+  }, [object, target, parent, db, navigateTo, handle, manager.capabilities, operationInvoker]);
 
   //
   // Draft mode.
@@ -310,10 +308,7 @@ export const ObjectFormDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        // The dialog targets a database to mean "the space root"; downstream that is the absence of
-        // a collection, since `db` already says which space.
-        const collection = Collection.isCollection(target) ? target : undefined;
-        const result = yield* metadata.createObject(data, { db, target: collection, targetNodeId });
+        const result = yield* metadata.createObject(data, { db, target: parent, targetNodeId });
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
@@ -329,7 +324,7 @@ export const ObjectFormDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         EffectEx.runAndForwardErrors,
       ),
-    [target, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
+    [target, parent, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );
 
   return (

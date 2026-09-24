@@ -57,7 +57,11 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         const existing = yield* Database.add(Task.make({ title: 'Renew the domain', status: 'todo' }));
         yield* Database.flush();
 
-        yield* agent.submitPrompt(`Start working on the existing task ${Obj.getURI(existing)}.`);
+        // Only the status move is asked for: left open-ended, the model reasonably asks how to renew a
+        // domain it cannot reach, and a question blocks the task this test expects to see started.
+        yield* agent.submitPrompt(
+          `Mark the existing task ${Obj.getURI(existing)} as started. That is all for now — do not ask anything.`,
+        );
         yield* agent.waitForCompletion();
 
         const tasks = yield* Chat.loadTasks(chat);

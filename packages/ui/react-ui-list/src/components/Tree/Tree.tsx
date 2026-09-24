@@ -62,7 +62,7 @@ import {
   useTreeRender,
 } from './TreeContext.ts';
 import { TreeDropDebug } from './TreeDropDebug.tsx';
-import { TreeDropIndicator } from './TreeDropIndicator.tsx';
+import { type DropKind, TreeDropIndicator } from './TreeDropIndicator.tsx';
 import { TreeItemToggle } from './TreeItemToggle.tsx';
 
 const hoverableDescriptionIcons =
@@ -232,8 +232,9 @@ export type TreeProps<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /** What dropping at an instruction does; `reject` blocks it and `link` draws a dashed indicator. A move when absent. */
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /**
    * Whether a row with no children can be dropped onto to adopt the dragged item. Off by default:
    * in a tree whose leaves are terminal (a navtree's documents) nesting into one is meaningless, so
@@ -332,8 +333,8 @@ export const Tree = <T extends { id: string } = any>({
   renderColumns,
   renderIcon,
   renderHeading,
-  blockInstruction,
   canDrop,
+  getDropKind,
   leavesAcceptChildren = false,
   selectionFollowsFocus = false,
   debug = false,
@@ -581,8 +582,8 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
@@ -603,8 +604,8 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
@@ -919,8 +920,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
     density,
     renderColumns: Columns,
     renderHeading: RenderHeading,
-    blockInstruction,
     canDrop,
+    getDropKind,
     leavesAcceptChildren,
     debug,
     dropBelowExpanded,
@@ -936,6 +937,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
   const [dragState, setDragState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
+  const [dropKind, setDropKind] = useState<DropKind>('move');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { id, value, item, path, level, branch, open, last, current, props } = node;
@@ -1025,10 +1027,15 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
         const desired = extractInstruction(self.data);
-        const block =
-          desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+        const kind =
+          desired && desired.type !== 'instruction-blocked'
+            ? (getDropKind?.({ instruction: desired, source: source.data as TreeData, target: data }) ?? 'move')
+            : 'move';
         const next: Instruction | null =
-          block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+          kind === 'reject' && desired && desired.type !== 'instruction-blocked'
+            ? { type: 'instruction-blocked', desired }
+            : desired;
+        setDropKind(kind);
 
         if (source.data.id !== id) {
           if (next?.type === 'make-child' && branch && !open && !cancelExpandRef.current) {
@@ -1073,8 +1080,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
     level,
     branch,
     open,
-    blockInstruction,
     canDrop,
+    getDropKind,
     onOpenChange,
     onCancelExpand,
     shouldSeedNativeDragData,
@@ -1209,7 +1216,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-        {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
+        {instruction && (
+          <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
+        )}
         {debug && (
           <TreeDropDebug
             mode={mode}

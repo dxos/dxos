@@ -11,6 +11,7 @@ import { type Label } from '@dxos/react-ui';
 import { type Density } from '@dxos/ui-types';
 
 import { type TreeData } from './tree-data.ts';
+import { type DropKind } from './TreeDropIndicator.tsx';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.
@@ -132,8 +133,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */

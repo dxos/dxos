@@ -3230,22 +3230,58 @@ importers:
 
   packages/common/diagram:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.9.7
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dagrejs/dagre':
         specifier: 'catalog:'
         version: 3.1.1
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@lezer/common':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
+      '@lezer/lr':
+        specifier: ^1.4.10
+        version: 1.4.10
       elkjs:
         specifier: 'catalog:'
         version: 0.12.0
     devDependencies:
+      '@lezer/generator':
+        specifier: 'catalog:'
+        version: 1.8.0
+      '@uiw/codemirror-theme-vscode':
+        specifier: 'catalog:'
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.1)(@codemirror/view@6.43.9)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
 
   packages/common/display-name:
     devDependencies:
@@ -3451,6 +3487,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../errors
@@ -3806,12 +3845,6 @@ importers:
 
   packages/common/storybook-utils:
     dependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../effect
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -7126,9 +7159,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -8635,6 +8665,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8647,6 +8680,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -9388,6 +9424,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
@@ -11529,9 +11568,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -12122,9 +12158,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -13196,9 +13229,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -13790,9 +13820,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -17856,6 +17883,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui':
         specifier: workspace:*
         version: link:../../ui/ui
@@ -20768,6 +20798,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
@@ -20826,6 +20859,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -20844,6 +20880,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 4.0.0-rc.117
+        version: 4.0.0-rc.117
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21116,6 +21155,9 @@ importers:
 
   packages/ui/react-ui-canvas:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.1
@@ -21128,6 +21170,9 @@ importers:
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -21159,9 +21204,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -21277,9 +21328,18 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -21392,9 +21452,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -21623,9 +21680,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -21910,9 +21964,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui':
         specifier: workspace:*
         version: link:../ui
@@ -22262,9 +22313,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22420,9 +22468,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22619,9 +22664,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -22842,9 +22884,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22957,9 +22996,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -23247,9 +23283,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -66347,7 +66380,7 @@ snapshots:
 
   vite@7.3.5(@types/node@22.10.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0):
     dependencies:
-      esbuild: 0.28.0
+      esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.5)
       picomatch: 4.0.5
       postcss: 8.5.12

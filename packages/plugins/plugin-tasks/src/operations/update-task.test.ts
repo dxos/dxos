@@ -126,7 +126,7 @@ describe('update-task', () => {
         status: 'done',
         assignee: { name: 'Scout', role: 'assistant' },
       });
-      expect(task.history?.map((entry) => entry.description)).toEqual([
+      expect((task.history ?? []).filter(Task.isChangeEntry).map((entry) => entry.description)).toEqual([
         'Status changed from todo to done. Assigned to Scout.',
       ]);
 
@@ -158,7 +158,7 @@ describe('update-task', () => {
       yield* updateTask.handler({ task: Ref.make(task), assignee: null });
 
       expect(task.assignee).toBeUndefined();
-      expect(task.history?.at(-1)?.description).toEqual('Unassigned.');
+      expect((task.history ?? []).filter(Task.isChangeEntry).at(-1)?.description).toEqual('Unassigned.');
     }).pipe(
       Effect.provide(
         Layer.provideMerge(

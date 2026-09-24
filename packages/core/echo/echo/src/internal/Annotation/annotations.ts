@@ -4,6 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import * as Struct from 'effect/Struct';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
@@ -574,9 +575,20 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
   schema: Schema.String,
 });
 
+/** Value of {@link SetParentAnnotation}. */
+export type SetParentAnnotationValue = {
+  /** Whether the field owns its targets at all. */
+  readonly value: boolean;
+  /** Whether a write takes a target that already has a parent. */
+  readonly override: boolean;
+};
+
 /**
  * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
  * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * `{ override: false }` claims only a target that has no parent, so the first field to reference an
+ * object becomes its parent and later fields only reference it.
  *
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
@@ -588,14 +600,41 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
  * @example
  * ```ts
  * Schema.Struct({
- *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.SetParent.set({ override: false })),
  * })
  * ```
  */
-export const SetParentAnnotation = makeUserAnnotation<boolean>({
+const SetParentValueSchema = Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean });
+
+const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
   id: 'org.dxos.annotation.setParent',
-  schema: Schema.Boolean,
+  // Schemas persisted before the value was structured store a bare boolean.
+  schema: Schema.Union([
+    SetParentValueSchema,
+    Schema.Boolean.pipe(
+      Schema.decodeTo(
+        SetParentValueSchema,
+        SchemaTransformation.transform({
+          decode: (value: boolean): SetParentAnnotationValue => ({ value, override: true }),
+          encode: ({ value }: SetParentAnnotationValue) => value,
+        }),
+      ),
+    ),
+  ]),
 });
+
+export type SetParentAnnotationOptions = {
+  readonly override?: boolean;
+};
+
+/** {@link setParentAnnotation}, with a `set` that owns by default. */
+export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotationValue>, 'set'> & {
+  set: (options?: SetParentAnnotationOptions) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...setParentAnnotation,
+  set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
+};
 
 /**
  * Options for {@link getLabel}.
@@ -699,7 +738,10 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
 
 export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
-export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+export const getFromAst = <T>(
+  ast: SchemaAST.AST,
+  annotation: Pick<Annotation.Annotation<T>, 'key' | 'schema'>,
+): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);
   return Option.fromNullishOr(meta?.[annotation.key]).pipe(Option.map(Schema.decodeUnknownSync(annotation.schema)));
 };

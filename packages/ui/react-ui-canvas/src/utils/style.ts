@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node } from '../model/types.ts';
+import { type Node, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -37,14 +37,26 @@ const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'bor
 
 export const hueClasses = (hue: string | undefined): HueClasses => (hue && HUES[hue]) || DEFAULT;
 
-/** Frame classes for a node: fill and text colour, border and corner radius from its style. */
-export const frameClasses = (node: Node, selected: boolean): string[] => {
+/**
+ * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
+ * dashed and unfilled, and the host's `className` comes last so it wins.
+ */
+export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
   const style = node.style ?? {};
   const hue = hueClasses(style.hue);
+  const filled = style.fill !== false && !style.guide;
   return [
-    style.fill === false ? '' : hue.surface,
+    filled ? hue.surface : '',
     hue.text,
-    style.border === false && !selected ? 'border-transparent' : selected ? 'border-primary-500' : hue.border,
-    node.type === 'ellipse' ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    selected
+      ? 'border-primary-500'
+      : hovered
+        ? 'border-primary-500/50'
+        : style.border === false && !style.guide
+          ? 'border-transparent'
+          : hue.border,
+    style.guide ? 'border-dashed' : '',
+    isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    style.className ?? '',
   ];
 };

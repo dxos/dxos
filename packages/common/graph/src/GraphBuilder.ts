@@ -13,6 +13,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
+import { AtomEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -56,6 +57,12 @@ export type NodeLike = { readonly id: string };
  * produced from) and the open properties record the builder reads `position` from when ordering siblings.
  */
 export type NodeArgLike = { readonly id: string; readonly properties?: Record<string, any> };
+
+/** Time update flushes may spend in the current frame. */
+export type FrameBudget = {
+  hasTime: () => boolean;
+  spend: (ms: number) => void;
+};
 
 /**
  * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
@@ -133,6 +140,8 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   release(ids: readonly string[]): void;
   /** The edges leaving `id`, read without subscribing. */
   outgoing(id: string): readonly Edge[];
+  /** Releases what the store holds on the builder's behalf; called by {@link destroy}. */
+  dispose?(): void;
 }
 
 /**
@@ -222,9 +231,12 @@ export class GraphBuilder<
   Meta = unknown,
   G = unknown,
 >
-  implements Pipeable.Pipeable
+  implements Pipeable.Pipeable, AtomEx.Owner
 {
+  static readonly #finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+
   readonly [TypeId]: TypeId = TypeId;
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
 
   pipe() {
     // eslint-disable-next-line prefer-rest-params
@@ -247,6 +259,8 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
+  /** Whether a flush of updates to connectors already in the store is queued. */
+  _updateScheduled = false;
   _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
@@ -254,11 +268,9 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
-  /** Registered extensions keyed by extension ID. */
-  readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
-    Atom.keepAlive,
-    withLabel('graph-builder:extensions'),
-  );
+  /** Resolves when the queued update flush completes. */
+  _updatePromise: Promise<void> = Promise.resolve();
+  readonly _extensions: Atom.Writable<Record<string, Extension<Node, Arg, Rel, Meta>>>;
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -268,6 +280,13 @@ export class GraphBuilder<
 
   constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
+    this[AtomEx.OwnerId] = { registry: this._registry, finalizer: GraphBuilder.#finalizer };
+    this._extensions = AtomEx.makeOwned(
+      this,
+      Atom.make<Record<string, Extension<Node, Arg, Rel, Meta>>>(Record.empty()).pipe(
+        withLabel('graph-builder:extensions'),
+      ),
+    );
     this._relationKey = relationKey;
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
@@ -338,24 +357,54 @@ export class GraphBuilder<
     }
   }
 
-  _scheduleDirtyFlush(): void {
+  /**
+   * An update to output already in the store flushes on a microtask, so an edit renders in the frame it
+   * was made, until the frame's budget runs out; the rest, and a connector's first output, wait for
+   * {@link GraphBuilder._schedule}.
+   */
+  _scheduleDirtyFlush(update: boolean): void {
+    if (update) {
+      if (!this._updateScheduled) {
+        this._updateScheduled = true;
+        this._updatePromise = Promise.resolve().then(() => {
+          this._updateScheduled = false;
+          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key), this._frameBudget());
+          if (this._dirtyConnectors.size > 0) {
+            this._scheduleDirtyFlush(false);
+          }
+        });
+      }
+      return;
+    }
     if (!this._flushScheduled) {
       this._flushScheduled = true;
       this._flushPromise = this._schedule(() => {
         this._flushScheduled = false;
-        while (this._dirtyConnectors.size > 0) {
-          const entries = [...this._dirtyConnectors.entries()];
-          this._dirtyConnectors.clear();
-
-          const apply = () => {
-            for (const [key, { nodes, previous }] of entries) {
-              this._applyConnectorUpdate(key, nodes, previous);
-            }
-          };
-          // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
-          this._store.batch ? this._store.batch(apply) : apply();
-        }
+        this._flushDirtyConnectors();
       });
+    }
+  }
+
+  _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {
+    while (!budget || budget.hasTime()) {
+      const entries = [...this._dirtyConnectors.entries()].filter(([key]) => select(key));
+      if (entries.length === 0) {
+        return;
+      }
+
+      const apply = () => {
+        for (const [key, { nodes, previous }] of entries) {
+          if (budget && !budget.hasTime()) {
+            return;
+          }
+          this._dirtyConnectors.delete(key);
+          const start = budget ? performance.now() : 0;
+          this._applyConnectorUpdate(key, nodes, previous);
+          budget?.spend(performance.now() - start);
+        }
+      };
+      // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
+      this._store.batch ? this._store.batch(apply) : apply();
     }
   }
 
@@ -405,11 +454,16 @@ export class GraphBuilder<
   }
 
   /**
-   * When a flush runs. Defaults to the next microtask; override to hand the work to a scheduler that can
-   * yield to the main thread.
+   * When a connector's first output is flushed. Defaults to the next microtask; override to hand the work to
+   * a scheduler that can yield to the main thread.
    */
   _schedule(callback: () => void): Promise<void> {
     return Promise.resolve().then(callback);
+  }
+
+  /** What an update flush may spend in the current frame; unlimited by default. */
+  _frameBudget(): FrameBudget | undefined {
+    return undefined;
   }
 
   /** Where a traversal yields between nodes; overridden alongside {@link GraphBuilder._schedule}. */
@@ -480,7 +534,7 @@ export class GraphBuilder<
 
         log('update', { id, relation, ids });
         this._dirtyConnectors.set(key, { nodes, previous });
-        this._scheduleDirtyFlush();
+        this._scheduleDirtyFlush(this._connectorPrevious.has(key));
       },
       { immediate: true },
     );
@@ -588,9 +642,7 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
         children: (node) => node.nodes ?? [],
         map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }),
       },
-      // The default model retains its node atoms: builder graphs are consumed through atoms, and a
-      // view dropped between reads strands its subscribers. `release` is the reclamation path.
-      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry, retainAtoms: true }), hooks),
+      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry }), hooks),
     });
     if (!this.graph.findNode(rootId)) {
       this.graph.addNode({ id: rootId });
@@ -747,8 +799,9 @@ export const removeExtension: {
   return builder;
 });
 
-/** Waits for the pending flush, then for the collection pending once it lands, which covers any it triggered. */
+/** Waits for the pending flushes, then for the collection pending once they land, which covers any they triggered. */
 export const flush = async (builder: Any): Promise<void> => {
+  await builder._updatePromise;
   await builder._flushPromise;
   await builder._collectPromise;
 };
@@ -815,6 +868,7 @@ export const setRetention = <B extends Any>(
 export const destroy = (builder: Any): void => {
   builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
   builder._subscriptions.clear();
+  builder._store.dispose?.();
 };
 
 /**

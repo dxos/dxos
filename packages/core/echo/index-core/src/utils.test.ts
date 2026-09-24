@@ -4,7 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { SQL_CHUNK_SIZE, SQL_MAX_BOUND_VARIABLES, chunkRows, chunkSizeForBoundVariables } from './utils.ts';
+import {
+  SQL_CHUNK_SIZE,
+  SQL_MAX_BOUND_VARIABLES,
+  chunkRows,
+  chunkSizeForBoundVariables,
+  isUnauthorizedFunctionError,
+} from './utils.ts';
 
 /** Bound variables a chunk of `rows` costs in a multi-row insert. */
 const boundVariables = (rows: readonly Record<string, unknown>[]): number =>
@@ -65,5 +71,22 @@ describe('chunkRows', () => {
 
   test('an empty batch produces no statements', ({ expect }) => {
     expect(chunkRows([])).toEqual([]);
+  });
+});
+
+describe('isUnauthorizedFunctionError', () => {
+  test('matches the authorizer refusal nested under the driver error', ({ expect }) => {
+    const denied = new Error('not authorized to use function: sqlite_version at offset 7: SQLITE_ERROR');
+    const driver = new Error('Failed to execute statement', {
+      cause: new Error('Failed to execute statement', { cause: denied }),
+    });
+    expect(isUnauthorizedFunctionError(driver)).toBe(true);
+  });
+
+  test('does not match other SQL failures', ({ expect }) => {
+    expect(isUnauthorizedFunctionError(new Error('Failed', { cause: new Error('no such table: objectMeta') }))).toBe(
+      false,
+    );
+    expect(isUnauthorizedFunctionError(undefined)).toBe(false);
   });
 });

@@ -198,15 +198,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // The create dialog places the object in the space; the ref array is what makes it this project's,
-  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
     }
 
     const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
-      target: db,
+      target: subject,
       targetNodeId: attendableId,
       navigable: false,
     });
@@ -217,7 +215,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     updateProject((project) => {
       project.artifacts = [...project.artifacts, ref];
     });
-  }, [db, attendableId, invokePromise, updateProject]);
+  }, [db, subject, attendableId, invokePromise, updateProject]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {

@@ -7,7 +7,7 @@
 // part is named by the node property it edits; list properties read and write as one entry per line.
 //
 
-import { type Node } from '../model/types.ts';
+import { type Node, type NodeValues, isClassNode, isEllipseNode, isNoteNode, isRectNode } from '../model/types.ts';
 
 export type PartKey = 'label' | 'text' | 'name' | 'attributes' | 'methods';
 
@@ -38,30 +38,30 @@ const lines = (text: string): string[] =>
 export const partText = (node: Node, part: PartKey): string | undefined => {
   switch (part) {
     case 'label':
-      return node.type === 'rect' || node.type === 'ellipse' ? (node.label ?? '') : undefined;
+      return isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : undefined;
     case 'text':
-      return node.type === 'text' ? node.text : undefined;
+      return isNoteNode(node) ? node.text : undefined;
     case 'name':
-      return node.type === 'class' ? node.name : undefined;
+      return isClassNode(node) ? node.name : undefined;
     case 'attributes':
-      return node.type === 'class' ? node.attributes.join('\n') : undefined;
+      return isClassNode(node) ? node.attributes.join('\n') : undefined;
     case 'methods':
-      return node.type === 'class' ? node.methods.join('\n') : undefined;
+      return isClassNode(node) ? node.methods.join('\n') : undefined;
   }
 };
 
 /** The `update` values that set the part's text, or none when the node type has no such part. */
-export const partValues = (node: Node, part: PartKey, text: string): Partial<Node> | undefined => {
+export const partValues = (node: Node, part: PartKey, text: string): NodeValues | undefined => {
   switch (part) {
     case 'label':
-      return node.type === 'rect' || node.type === 'ellipse' ? { label: text } : undefined;
+      return isRectNode(node) || isEllipseNode(node) ? { label: text } : undefined;
     case 'text':
-      return node.type === 'text' ? { text } : undefined;
+      return isNoteNode(node) ? { text } : undefined;
     case 'name':
-      return node.type === 'class' ? { name: text.trim() } : undefined;
+      return isClassNode(node) ? { name: text.trim() } : undefined;
     case 'attributes':
-      return node.type === 'class' ? { attributes: lines(text) } : undefined;
+      return isClassNode(node) ? { attributes: lines(text) } : undefined;
     case 'methods':
-      return node.type === 'class' ? { methods: lines(text) } : undefined;
+      return isClassNode(node) ? { methods: lines(text) } : undefined;
   }
 };

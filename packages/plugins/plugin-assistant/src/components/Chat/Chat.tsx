@@ -39,6 +39,7 @@ import { keyToFallback } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
@@ -781,6 +782,25 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     Task.update(task, patch);
   }, []);
 
+  // Through the operation rather than `Task.answer`, so the conversation that asked is resumed.
+  const { invokePromise } = useOperationInvoker();
+  const handleQuestionAnswer = useCallback(
+    (task: Task.Task, questionId: string, answer: string) => {
+      const spaceId = Obj.getDatabase(task)?.spaceId;
+      if (spaceId) {
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
+      }
+    },
+    [invokePromise],
+  );
+
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
   // delegation, status), so the row asks for the work the way the reader would, by ordinal — the
   // number the row shows, and the one `/task:run` and the agent's selectors resolve.
@@ -826,6 +846,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
       showEstimates
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
+      onQuestionAnswer={handleQuestionAnswer}
       getTaskActions={getTaskActions}
     >
       <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>

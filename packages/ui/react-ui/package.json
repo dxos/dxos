@@ -44,6 +44,7 @@
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
@@ -66,18 +67,22 @@
     "@dxos/random": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:^",
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
