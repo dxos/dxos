@@ -523,8 +523,15 @@ export const Tree = <T extends { id: string } = any>({
   });
 
   // The machine moves focus over the whole collection, and focuses the row a frame after asking for
-  // it to be scrolled to, which is how a windowed tree gets to mount it first.
-  const scrollToNode = useCallback(({ node }: { node: TreeNodeEntry<T> }) => revealRef.current?.(node.value), []);
+  // it to be scrolled to; a row the window has not mounted by then claims the focus when it mounts.
+  const scrollToNode = useCallback(
+    ({ node, getElement }: { node: TreeNodeEntry<T>; getElement: () => HTMLElement | null }) => {
+      if (revealRef.current?.(node.value) && !getElement()) {
+        pendingFocusRef.current = { id: node.id, value: node.value };
+      }
+    },
+    [],
+  );
 
   // A dragged open branch is collapsed for the drag and reopened after it. Here rather than on the
   // row: a windowed row can scroll out of the window mid-drag, and an unmounted row hears no drop.
