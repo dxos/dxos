@@ -65,6 +65,13 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     return baseUrl.toString();
   };
 
+  // The client stays open across the deletion, so the next identity's flow runs in this same shell.
+  const startNewIdentity = async (next: ShellLayout) => {
+    runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
+    await client.halo.deleteIdentity();
+    runtime.setLayout(create(LayoutRequestSchema, { layout: next }));
+  };
+
   useEffect(() => {
     const unsubscribeLayout = runtime.layoutUpdate.on((request) => setLayout(request));
     const unsubscribeInvitationUrl = runtime.invitationUrlUpdate.on((request) => setInvitationUrl(request));
@@ -115,35 +122,9 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
       return (
         <IdentityDialog
           createInvitationUrl={createDeviceInvitationUrl}
-          onResetStorage={async () => {
-            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
-            await client.reset();
-            return runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE, reset: true }));
-          }}
-          onRecover={async () => {
-            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
-            await client.reset();
-            // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext(
-              create(AppContextRequestSchema, {
-                display: ShellDisplay.NONE,
-                reset: true,
-                target: 'recoverIdentity',
-              }),
-            );
-          }}
-          onJoinNewIdentity={async () => {
-            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
-            await client.reset();
-            // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext(
-              create(AppContextRequestSchema, {
-                display: ShellDisplay.NONE,
-                reset: true,
-                target: 'deviceInvitation',
-              }),
-            );
-          }}
+          onResetStorage={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY)}
+          onRecover={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY)}
+          onJoinNewIdentity={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION)}
           onDone={async () => {
             blurActiveElement();
             await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));

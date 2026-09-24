@@ -215,7 +215,7 @@ export const JoinPanel = ({
   }, [joinService]);
 
   // TODO(wittjosiah): Workaround, not a fix. The defect is in the join machine: `identity` enters it as
-  //   a one-time context snapshot, so a panel mounting while a `client.reset()` settles routes on the
+  //   a one-time context snapshot, so a panel mounting while an identity deletion settles routes on the
   //   outgoing identity into `resettingIdentity`, a state with no automatic exit. The machine should
   //   react to identity clearing rather than needing this effect to re-issue the disposition from
   //   outside it. Doing that means editing the machine's routing, which is riskier than this is worth
@@ -456,7 +456,7 @@ export const JoinPanel = ({
 
   const onConfirmResetStorage = useCallback(
     () =>
-      client.reset().then(() => {
+      client.halo.deleteIdentity().then(() => {
         joinSend({ type: 'resetIdentity' });
       }),
     [client, joinSend],
