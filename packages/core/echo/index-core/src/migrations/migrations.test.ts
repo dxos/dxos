@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/unstable/sql/Migrator';
@@ -12,6 +11,7 @@ import { test } from 'vitest';
 
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
+import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
@@ -22,8 +22,6 @@ import reverseRefInit from './reverse-ref/0001_init.sql?raw';
 import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
 import { MIGRATIONS as TRACKER } from './tracker/index.ts';
-
-const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },

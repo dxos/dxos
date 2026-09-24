@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as Statement from 'effect/unstable/sql/Statement';
 
 import { invariant } from '@dxos/invariant';
 
@@ -48,6 +51,102 @@ export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE
     chunks.push(items.slice(index, index + size));
   }
   return chunks;
+};
+
+/**
+ * The bound-variable limit chunked reads plan against. A reference rather than
+ * {@link SQL_MAX_BOUND_VARIABLES} itself so tests can shrink it: node SQLite accepts far wider
+ * statements, and only a small limit drives the multi-statement paths there.
+ */
+export const SqlBoundVariableLimit: Context.Reference<number> = Context.Reference<number>(
+  '@dxos/index-core/SqlBoundVariableLimit',
+  { defaultValue: () => SQL_MAX_BOUND_VARIABLES },
+);
+
+/** Most statements one chunked read may issue; a read wider than that fails instead. */
+export const MAX_CHUNKED_STATEMENTS = 64;
+
+/** Variables a fragment binds, measured by compiling it so the count cannot drift from the SQL. */
+export const countBoundVariables = (sql: SqlClient.SqlClient, fragment: Statement.Fragment): number =>
+  sql`${fragment}`.compile()[1].length;
+
+/**
+ * Splits `items` into consecutive chunks whose summed `costOf` fits `budget`, so a list too wide for
+ * one statement is read by several. No items plan no chunks: the caller answers empty rather than
+ * degrade to `IN ()` or drop the condition and match everything.
+ */
+export const planChunks = <T>(items: readonly T[], costOf: (item: T) => number, budget: number): T[][] => {
+  const chunks: T[][] = [];
+  let chunk: T[] = [];
+  let chunkCost = 0;
+  for (const item of items) {
+    const cost = costOf(item);
+    // Refused rather than emitted as one over-wide statement, which is how the 2026-09-22 outage shipped.
+    invariant(cost <= budget, `one item binds ${cost} variables but a statement has ${budget} left`);
+    if (chunkCost + cost > budget) {
+      chunks.push(chunk);
+      chunk = [];
+      chunkCost = 0;
+    }
+    chunk.push(item);
+    chunkCost += cost;
+  }
+  if (chunk.length > 0) {
+    chunks.push(chunk);
+  }
+  invariant(chunks.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${chunks.length} statements`);
+  return chunks;
+};
+
+/** A list a read is restricted to, with what each of its items binds. */
+export type ChunkPlanInput<T> = {
+  readonly items: readonly T[];
+  readonly costOf: (item: T) => number;
+};
+
+/**
+ * Plans a read restricted by two lists at once: each chunk of `outer` pairs with every chunk of
+ * `inner` planned in the budget that outer chunk leaves.
+ */
+export const planChunkPairs = <A, B>(
+  outer: ChunkPlanInput<A>,
+  inner: ChunkPlanInput<B>,
+  budget: number,
+): (readonly [A[], B[]])[] => {
+  const widestInner = inner.items.reduce((widest, item) => Math.max(widest, inner.costOf(item)), 0);
+  const pairs: (readonly [A[], B[]])[] = [];
+  for (const outerChunk of planChunks(outer.items, outer.costOf, budget - widestInner)) {
+    const outerCost = outerChunk.reduce((sum, item) => sum + outer.costOf(item), 0);
+    for (const innerChunk of planChunks(inner.items, inner.costOf, budget - outerCost)) {
+      pairs.push([outerChunk, innerChunk]);
+    }
+  }
+  invariant(pairs.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${pairs.length} statements`);
+  return pairs;
+};
+
+/**
+ * Merges the rows of a read issued as several statements: the first row per `recordId`, since
+ * chunks of overlapping conditions can match a row twice; then ordered by `compare` and cut to
+ * `limit`, which each statement could only apply to its own chunk.
+ */
+export const mergeChunkedRows = <T extends { readonly recordId: number }>(
+  results: readonly (readonly T[])[],
+  { compare, limit }: { compare?: (left: T, right: T) => number; limit?: number } = {},
+): T[] => {
+  const byRecordId = new Map<number, T>();
+  for (const rows of results) {
+    for (const row of rows) {
+      if (!byRecordId.has(row.recordId)) {
+        byRecordId.set(row.recordId, row);
+      }
+    }
+  }
+  const merged = [...byRecordId.values()];
+  if (compare) {
+    merged.sort(compare);
+  }
+  return limit === undefined ? merged : merged.slice(0, limit);
 };
 
 /**

@@ -11,10 +11,91 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
-import { chunkArray, chunkRows } from '../utils.ts';
-import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
+import {
+  SqlBoundVariableLimit,
+  chunkArray,
+  chunkRows,
+  countBoundVariables,
+  mergeChunkedRows,
+  planChunkPairs,
+  planChunks,
+} from '../utils.ts';
+import {
+  type EntityMeta,
+  type QueueRef,
+  type SourceRef,
+  buildTypeDxnCondition,
+  sourceRefs,
+  sourceVariableCost,
+  splitSourceRefs,
+  typeDxnVariableCost,
+} from './entity-meta-index.ts';
 import { type Index, type IndexerObject } from './interface.ts';
 import { extractIndexableText } from './text-extractor.ts';
+
+/** One statement of a full-text read: the chunk of each list it is restricted to, absent if unrestricted. */
+type FtsStatement = { readonly types?: string[]; readonly sources?: SourceRef[] };
+
+/**
+ * Plans the statements of a full-text read. Unlike an entity read, an absent list here restricts
+ * nothing: no type filter searches every type, and no sources search every space.
+ */
+const planFtsStatements = (
+  typeDxns: readonly string[] | undefined,
+  sources: readonly SourceRef[],
+  budget: number,
+): FtsStatement[] => {
+  if (typeDxns === undefined && sources.length === 0) {
+    return [{}];
+  }
+  if (typeDxns === undefined) {
+    return planChunks(sources, sourceVariableCost, budget).map((chunk) => ({ sources: chunk }));
+  }
+  if (sources.length === 0) {
+    return planChunks(typeDxns, typeDxnVariableCost, budget).map((chunk) => ({ types: chunk }));
+  }
+  return planChunkPairs(
+    { items: typeDxns, costOf: typeDxnVariableCost },
+    { items: sources, costOf: sourceVariableCost },
+    budget,
+  ).map(([types, chunk]) => ({ types, sources: chunk }));
+};
+
+/**
+ * The space and queue restriction of a full-text read, over the joined `objectMeta` row `m`. A row can
+ * match both a space and one of its queues, so the rows of separate chunks overlap.
+ */
+const buildFtsSourceCondition = (
+  sql: SqlClient.SqlClient,
+  sources: readonly SourceRef[],
+  includeAllQueues: boolean,
+): Statement.Fragment => {
+  const { spaceIds, queues } = splitSourceRefs(sources);
+  const conditions: Statement.Fragment[] = [];
+  if (spaceIds.length > 0) {
+    conditions.push(
+      includeAllQueues
+        ? // All items from these spaces (both space objects and queue objects).
+          sql`m.spaceId IN ${sql.in(spaceIds)}`
+        : // Only space objects (not queue objects) from these spaces.
+          sql`(m.spaceId IN ${sql.in(spaceIds)} AND m.queueId = '')`,
+    );
+  }
+  if (queues.length > 0) {
+    // Items from specific queues, each scoped by its own space: a queue id is unique only within
+    // one, so matching on the id alone would admit another space's rows.
+    conditions.push(
+      sql`(${sql.or(
+        queues.map((queue) =>
+          queue.spaceId !== undefined
+            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
+            : sql`m.queueId = ${queue.queueId}`,
+        ),
+      )})`,
+    );
+  }
+  return sql.or(conditions);
+};
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -160,73 +241,56 @@ export class FtsIndex implements Index {
       // so we negate it to get higher = better.
       const useBm25 = minTermLength >= 3;
 
-      const conditions =
+      const textConditions =
         minTermLength < 3
           ? // LIKE fallback - scan the index text column, AND all terms.
             terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
             [sql`f.text MATCH ${escapeFts5Query(trimmed)}`];
+      const text = sql.and(textConditions);
+      const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, text);
 
-      // Space and queue constraints are combined with OR.
-      const sourceConditions: Statement.Statement<{}>[] = [];
+      const results: (readonly FtsQueryResult[])[] = [];
+      for (const statement of planFtsStatements(typeDxns ?? undefined, sourceRefs(spaceId ?? [], queues), budget)) {
+        const conditions: Statement.Fragment[] = [text];
+        if (statement.sources) {
+          conditions.push(sql`(${buildFtsSourceCondition(sql, statement.sources, includeAllQueues)})`);
+        }
+        // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
+        if (statement.types) {
+          conditions.push(sql`(${buildTypeDxnCondition(sql, statement.types)})`);
+        }
 
-      if (spaceId && spaceId.length > 0) {
-        if (includeAllQueues) {
-          // All items from these spaces (both space objects and queue objects).
-          sourceConditions.push(sql`m.spaceId IN ${sql.in(spaceId)}`);
+        if (useBm25) {
+          // Use BM25 ranking for FTS5 MATCH queries.
+          // BM25 returns negative values, negate to get higher = better match.
+          // Note: bm25() requires the actual table name, not an alias.
+          results.push(
+            yield* sql<FtsQueryResult>`
+              SELECT m.*, -bm25(ftsIndex) AS rank
+              FROM ftsIndex AS f
+              JOIN objectMeta AS m ON f.rowid = m.recordId
+              WHERE ${sql.and(conditions)}
+            `,
+          );
         } else {
-          // Only space objects (not queue objects) from these spaces.
-          sourceConditions.push(sql`(m.spaceId IN ${sql.in(spaceId)} AND m.queueId = '')`);
+          // LIKE fallback - no ranking available, default to 1. A term below the trigram minimum
+          // has no tokens to match, so this scans the stored text of every row instead.
+          const rows = yield* sql<EntityMeta>`
+            SELECT m.*
+            FROM ftsIndex AS f
+            JOIN objectMeta AS m ON f.rowid = m.recordId
+            WHERE ${sql.and(conditions)}
+          `;
+          results.push(rows.map((row) => ({ ...row, rank: 1 })));
         }
       }
 
-      if (queues && queues.length > 0) {
-        // Items from specific queues, each scoped by its own space: a queue id is unique only
-        // within one, so matching on the id alone would admit another space's rows.
-        sourceConditions.push(
-          sql`(${sql.or(
-            queues.map((queue) =>
-              queue.spaceId !== undefined
-                ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
-                : sql`m.queueId = ${queue.queueId}`,
-            ),
-          )})`,
-        );
-      }
-
-      if (sourceConditions.length > 0) {
-        conditions.push(sql`(${sql.or(sourceConditions)})`);
-      }
-
-      // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
-      if (typeDxns && typeDxns.length > 0) {
-        conditions.push(sql`(${buildTypeDxnCondition(sql, typeDxns)})`);
-      }
-
-      if (useBm25) {
-        // Use BM25 ranking for FTS5 MATCH queries.
-        // BM25 returns negative values, negate to get higher = better match.
-        // Order by rank descending so best matches come first.
-        // Note: bm25() requires the actual table name, not an alias.
-        const rows = yield* sql<EntityMeta & { rank: number }>`
-          SELECT m.*, -bm25(ftsIndex) AS rank 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
-          WHERE ${sql.and(conditions)}
-          ORDER BY rank DESC
-        `;
-        return rows;
-      } else {
-        // LIKE fallback - no ranking available, default to 1. A term below the trigram minimum
-        // has no tokens to match, so this scans the stored text of every row instead.
-        const rows = yield* sql<EntityMeta>`
-          SELECT m.* 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
-          WHERE ${sql.and(conditions)}
-        `;
-        return rows.map((row) => ({ ...row, rank: 1 }));
-      }
+      // Best match first. bm25 scores one match expression against the whole table, whatever else
+      // a statement filters on, so ranks from separate statements compare.
+      return mergeChunkedRows(results, {
+        compare: (left, right) => right.rank - left.rank || left.recordId - right.recordId,
+      });
     });
   }
 
