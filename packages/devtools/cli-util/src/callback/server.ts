@@ -40,6 +40,9 @@ const getRelayPageHtml = (authUrl: string) => `
 </html>
 `;
 
+/** The `error` param is attacker-controlled, and this page is served from the loopback origin. */
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+
 type CallbackOutcome = { success: true; params: Record<string, string> } | { success: false; reason: string };
 
 /**
@@ -61,6 +64,11 @@ export type LocalCallbackServer = {
 export type LocalCallbackServerOptions = {
   /** Heading shown on the page the browser lands on. Defaults to an authentication wording. */
   readonly successMessage?: string;
+  /**
+   * Rejects a callback without consuming the one-shot result, so a request that is not the awaited
+   * one (another local process, a page probing loopback ports) cannot end the wait.
+   */
+  readonly accept?: (params: Record<string, string>) => boolean;
 };
 
 /**
@@ -75,7 +83,7 @@ export type LocalCallbackServerOptions = {
  */
 export const startLocalCallbackServer = (
   callbackPath: `/${string}`,
-  { successMessage = 'Authentication successful! You can close this window.' }: LocalCallbackServerOptions = {},
+  { successMessage = 'Authentication successful! You can close this window.', accept }: LocalCallbackServerOptions = {},
 ): Effect.Effect<LocalCallbackServer, Error> =>
   Effect.gen(function* () {
     // Probed on IPv4 loopback only: with no host, get-port-please also tries every other interface
@@ -119,15 +127,21 @@ export const startLocalCallbackServer = (
           if (error) {
             yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
             yield* Ref.set(received, true);
-            return HttpServerResponse.text(`<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`, {
-              status: 400,
-              headers: { 'Content-Type': 'text/html' },
-            });
+            return HttpServerResponse.text(
+              `<html><body><h1>Authentication failed</h1><p>${escapeHtml(error)}</p></body></html>`,
+              {
+                status: 400,
+                headers: { 'Content-Type': 'text/html' },
+              },
+            );
           }
 
           const captured: Record<string, string> = {};
           for (const [key, value] of params.entries()) {
             captured[key] = value;
+          }
+          if (accept && !accept(captured)) {
+            return HttpServerResponse.text('Not the expected callback.', { status: 400 });
           }
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);

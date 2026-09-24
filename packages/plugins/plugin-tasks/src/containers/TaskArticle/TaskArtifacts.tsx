@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
@@ -25,30 +23,28 @@ export type TaskArtifactsProps = {
  */
 export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [refs = []] = useObject(task, 'artifacts');
-  // `ref.atom` resolves the target and tracks its loading, so an artifact that replicates in after
-  // the task renders appears without a remount.
-  const objectsAtom = useMemo(
-    () => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter((object): object is Obj.Unknown => !!object)),
-    [refs],
-  );
-  const objects = useAtomValue(objectsAtom);
-  if (objects.length === 0) {
+  const [refs] = useObject(task, 'artifacts');
+  if (!refs || refs.length === 0) {
     return null;
   }
 
   return (
     <section className='flex flex-col gap-2 p-2' data-testid='tasksPlugin.artifacts'>
       <h2 className='text-sm text-subdued'>{t('task-artifacts.label')}</h2>
-      {objects.map((object) => (
-        <ArtifactCard key={object.id} object={object} />
+      {refs.map((ref) => (
+        <ArtifactCard key={ref.uri} artifact={ref} />
       ))}
     </section>
   );
 };
 
-const ArtifactCard = ({ object: objectProp }: { object: Obj.Unknown }) => {
-  const [object] = useObject(objectProp);
+/** One artifact, resolved by the card itself so a target that replicates in later still appears. */
+const ArtifactCard = ({ artifact }: { artifact: Ref.Ref<Obj.Unknown> }) => {
+  const [object] = useObject(artifact);
+  if (!object) {
+    return null;
+  }
+
   const icon = Obj.getIcon(object)?.icon ?? 'ph--file--regular';
   return (
     <Card.Root fullWidth data-testid='tasksPlugin.artifact'>

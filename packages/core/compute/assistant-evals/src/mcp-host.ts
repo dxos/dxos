@@ -183,7 +183,10 @@ const CREATE_UPLOAD_TOOL = {
     type: 'object' as const,
     properties: {
       name: { type: 'string', description: 'Filename to record on the resulting file object, e.g. capture.png.' },
-      size: { type: 'number', description: 'Size of the file in bytes, if known.' },
+      size: {
+        type: 'number',
+        description: 'Size of the file in bytes, if known. Used only to fail fast when it exceeds the limit.',
+      },
     },
   },
 };
@@ -210,7 +213,19 @@ const dispatch = async (
         if (!uploads) {
           return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));
         }
-        return yield* Effect.promise(() => uploads.mint(typeof args.name === 'string' ? args.name : undefined));
+        if (typeof args.size === 'number' && args.size > LocalUpload.MAX_UPLOAD_BYTES) {
+          return yield* Effect.fail(
+            McpServer.failure(
+              'invalid_request',
+              `File is ${args.size} bytes; the limit is ${LocalUpload.MAX_UPLOAD_BYTES}.`,
+            ),
+          );
+        }
+        return yield* Effect.tryPromise({
+          try: () => uploads.mint(typeof args.name === 'string' ? args.name : undefined),
+          catch: (error) =>
+            McpServer.failure('operation_failed', error instanceof Error ? error.message : String(error)),
+        });
       }
       case McpServer.QueryOperations.name:
         return yield* McpServer.queryOperations(registry, args);

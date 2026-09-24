@@ -19,14 +19,25 @@ import { ToolFailure, failure } from './internal/failure.ts';
 const URL_TTL_MS = 10 * 60 * 1000;
 
 /** Matches `MAX_EDGE_BLOB_SIZE`: the staged bytes end up in the same store. */
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Bounds on what one process holds. The stage is reachable by any local caller, so without them a
+ * loop of `createUpload` calls grows it until the process runs out of memory.
+ */
+const MAX_PENDING_UPLOADS = 64;
+const MAX_STAGED_BYTES = 4 * MAX_UPLOAD_BYTES;
 
 type PendingUpload = {
   readonly token: Buffer;
+  /** When the URL stops accepting bytes; a received upload is kept until {@link RECEIVED_TTL_MS}. */
   readonly expiresAt: number;
   readonly name?: string;
-  received?: StagedUpload;
+  received?: StagedUpload & { readonly receivedAt: number };
 };
+
+/** How long received bytes wait for `file.createFromUpload`; the URL's own TTL guards only the credential. */
+const RECEIVED_TTL_MS = 30 * 60 * 1000;
 
 export type StagedUpload = {
   readonly bytes: Uint8Array;
@@ -48,6 +59,10 @@ export class Stage {
 
   /** Reserves an upload slot and returns where to `PUT` its bytes. */
   async mint(name?: string) {
+    this.#prune();
+    if (this.#uploads.size >= MAX_PENDING_UPLOADS) {
+      throw new Error(`Too many pending uploads (${MAX_PENDING_UPLOADS}); create files from the ones already made.`);
+    }
     const { origin } = await this.#listen();
     const uploadId = randomBytes(16).toString('hex');
     const token = randomBytes(24);
@@ -66,19 +81,44 @@ export class Stage {
     };
   }
 
-  /** Hands over a completed upload exactly once; `undefined` if it never arrived or expired. */
-  take(uploadId: string): StagedUpload | undefined {
-    const pending = this.#uploads.get(uploadId);
-    if (!pending?.received || pending.expiresAt < Date.now()) {
-      return undefined;
-    }
+  /** A completed upload, left in place; `undefined` if it never arrived or has expired. */
+  peek(uploadId: string): StagedUpload | undefined {
+    this.#prune();
+    return this.#uploads.get(uploadId)?.received;
+  }
+
+  /** Releases a completed upload once it has been stored, so a failed create can be retried. */
+  consume(uploadId: string): void {
     this.#uploads.delete(uploadId);
-    return pending.received;
   }
 
   async close(): Promise<void> {
     const listening = await this.#server;
-    listening?.server.close();
+    this.#server = undefined;
+    this.#uploads.clear();
+    if (listening) {
+      listening.server.closeAllConnections();
+      await new Promise<void>((resolve) => listening.server.close(() => resolve()));
+    }
+  }
+
+  /** Drops slots whose URL expired unused and bytes nobody collected in time. */
+  #prune(): void {
+    const now = Date.now();
+    for (const [uploadId, pending] of this.#uploads) {
+      const expired = pending.received ? pending.received.receivedAt + RECEIVED_TTL_MS < now : pending.expiresAt < now;
+      if (expired) {
+        this.#uploads.delete(uploadId);
+      }
+    }
+  }
+
+  #stagedBytes(): number {
+    let total = 0;
+    for (const pending of this.#uploads.values()) {
+      total += pending.received?.bytes.byteLength ?? 0;
+    }
+    return total;
   }
 
   #listen() {
@@ -86,7 +126,9 @@ export class Stage {
       const server = createServer((request, response) => {
         void this.#handle(request, response).catch((error) => {
           log.catch(error);
-          respond(response, 500, 'Upload failed.');
+          if (!response.headersSent) {
+            respond(response, 500, 'Upload failed.');
+          }
         });
       });
       server.once('error', reject);
@@ -103,10 +145,11 @@ export class Stage {
   }
 
   async #handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
+    this.#prune();
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
     const match = /^\/upload\/([0-9a-f]{32})$/.exec(url.pathname);
     if (request.method !== 'PUT' || !match) {
-      return respond(response, 404, 'Not found.');
+      return reject(request, response, 404, 'Not found.');
     }
 
     const pending = this.#uploads.get(match[1]);
@@ -117,28 +160,43 @@ export class Stage {
       !timingSafeEqual(signature, pending.token) ||
       pending.expiresAt < Date.now()
     ) {
-      return respond(response, 403, 'Invalid or expired upload URL.');
+      return reject(request, response, 403, 'Invalid or expired upload URL.');
     }
     if (pending.received) {
-      return respond(response, 409, 'Upload already received.');
+      return reject(request, response, 409, 'Upload already received.');
+    }
+    const limit = Math.min(MAX_UPLOAD_BYTES, MAX_STAGED_BYTES - this.#stagedBytes());
+    if (Number(request.headers['content-length'] ?? 0) > limit) {
+      return reject(request, response, 413, `Upload exceeds the ${limit}-byte limit.`);
     }
 
     const chunks: Buffer[] = [];
     let size = 0;
     for await (const chunk of request) {
       size += chunk.length;
-      if (size > MAX_UPLOAD_BYTES) {
-        return respond(response, 413, `Upload exceeds ${MAX_UPLOAD_BYTES} bytes.`);
+      if (size > limit) {
+        return reject(request, response, 413, `Upload exceeds the ${limit}-byte limit.`);
       }
       chunks.push(chunk);
     }
+    // Re-checked after the body: a second PUT on the same URL may have landed while this one streamed.
+    if (pending.received) {
+      return respond(response, 409, 'Upload already received.');
+    }
 
     const bytes = new Uint8Array(Buffer.concat(chunks));
-    pending.received = { bytes, type: detectType(bytes, request.headers['content-type']), name: pending.name };
-    log.info('staged local upload', { uploadId: match[1], size, type: pending.received.type });
-    respond(response, 200, JSON.stringify({ uploadId: match[1], size, type: pending.received.type }));
+    const type = detectType(bytes, request.headers['content-type']);
+    pending.received = { bytes, type, name: pending.name, receivedAt: Date.now() };
+    log.info('staged local upload', { uploadId: match[1], size, type });
+    respond(response, 200, JSON.stringify({ uploadId: match[1], size, type }));
   }
 }
+
+/** Answers without reading the body, draining it so the client sees the status rather than a reset. */
+const reject = (request: IncomingMessage, response: ServerResponse, status: number, body: string) => {
+  request.resume();
+  respond(response, status, body);
+};
 
 const respond = (response: ServerResponse, status: number, body: string) => {
   response.writeHead(status, { 'Content-Type': status === 200 ? 'application/json' : 'text/plain' });
@@ -154,7 +212,7 @@ const SIGNATURES: ReadonlyArray<readonly [type: string, magic: readonly number[]
   ['video/webm', [0x1a, 0x45, 0xdf, 0xa3]],
 ];
 
-/** What the bytes are, measured rather than taken from the caller — the same rule EDGE applies. */
+/** What the bytes are, sniffed first; the declared type is only a fallback for formats not listed above. */
 const detectType = (bytes: Uint8Array, declared: string | undefined): string => {
   for (const [type, magic] of SIGNATURES) {
     if (magic.every((byte, index) => bytes[index] === byte)) {
@@ -217,7 +275,9 @@ export const handlers = (stage: Stage) =>
             failure('invalid_request', `File is ${size} bytes; the per-upload limit is ${MAX_UPLOAD_BYTES}.`),
           );
         }
-        return yield* Effect.promise(() => stage.mint(name));
+        return yield* Effect.tryPromise({
+          try: () => stage.mint(name),
+          catch: (error) => failure('operation_failed', error instanceof Error ? error.message : String(error)),
+        });
       }),
   });
-

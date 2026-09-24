@@ -46,11 +46,6 @@ export default Capability.makeModule(
         const tokenType = url.searchParams.get(tokenTypeProp);
         const invitationCode = invitationUrlHandler ? url.searchParams.get(invitationProp) : null;
 
-        // The param is consumed only once the operation has succeeded. Navigation handlers now
-        // dispatch before `client.initialize()` resolves, so a pre-init attempt fails against an
-        // unopened identity service — stripping first would destroy a one-time credential that the
-        // onboarding manager (which re-reads `location.search` on `ClientEvents.Initialized`) is
-        // still able to redeem.
         // Independent of the identity params below: approving a CLI needs an identity already here.
         const cliCallback = CliLogin.parseCallback(url.searchParams.get(CliLogin.CALLBACK_PARAM));
         const cliState = url.searchParams.get(CliLogin.STATE_PARAM);
@@ -68,6 +63,11 @@ export default Capability.makeModule(
           removeQueryParam(CliLogin.STATE_PARAM);
         }
 
+        // The param is consumed only once the operation has succeeded. Navigation handlers now
+        // dispatch before `client.initialize()` resolves, so a pre-init attempt fails against an
+        // unopened identity service — stripping first would destroy a one-time credential that the
+        // onboarding manager (which re-reads `location.search` on `ClientEvents.Initialized`) is
+        // still able to redeem.
         if (token && tokenType === 'login') {
           log('login token received via navigation');
           yield* Operation.invoke(ClientOperation.RedeemToken, { token });

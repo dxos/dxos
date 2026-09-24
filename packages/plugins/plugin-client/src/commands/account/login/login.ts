@@ -320,17 +320,22 @@ const COMPOSER_APPROVAL_TIMEOUT_MS = 10 * 60 * 1000;
  */
 const loginWithComposer = (client: Client, composerUrl: string) =>
   Effect.gen(function* () {
+    const state = CliLogin.createState();
     const server = yield* startLocalCallbackServer(CliLogin.CALLBACK_PATH, {
       successMessage: 'Invitation received. Return to your terminal; keep the Composer tab open until it finishes.',
+      accept: (params) => params[CliLogin.RESPONSE_STATE_PARAM] === state,
     });
 
     return yield* Effect.gen(function* () {
-      const state = CliLogin.createState();
-      const url = CliLogin.createAuthorizeUrl(
-        composerUrl || process.env.DX_COMPOSER_URL || DEFAULT_COMPOSER_URL,
-        `${server.origin}${CliLogin.CALLBACK_PATH}`,
-        state,
-      );
+      const url = yield* Effect.try({
+        try: () =>
+          CliLogin.createAuthorizeUrl(
+            composerUrl || process.env.DX_COMPOSER_URL || DEFAULT_COMPOSER_URL,
+            `${server.origin}${CliLogin.CALLBACK_PATH}`,
+            state,
+          ),
+        catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),
+      });
 
       // Printed whether or not a browser opens: the approving tab may belong to another browser
       // profile than the system default, and it has to be the one holding the identity.
@@ -339,11 +344,6 @@ const loginWithComposer = (client: Client, composerUrl: string) =>
       yield* openBrowser(url.href).pipe(Effect.catch(() => Effect.void));
 
       const params = yield* server.waitForResult(COMPOSER_APPROVAL_TIMEOUT_MS);
-      if (params[CliLogin.RESPONSE_STATE_PARAM] !== state) {
-        return yield* Effect.fail(
-          new CommandError({ message: 'The approval did not match this login request; run the command again.' }),
-        );
-      }
       const code = params[CliLogin.INVITATION_CODE_PARAM];
       if (!code) {
         return yield* Effect.fail(new CommandError({ message: 'Composer returned no invitation code.' }));
@@ -360,8 +360,6 @@ const loginWithComposer = (client: Client, composerUrl: string) =>
 
 /**
  * Device-invitation login: joins an existing identity from another authorized device.
- *
- * NOTE: p2p networking does not work in bun — this method will likely hang waiting for the peer.
  */
 const loginWithDeviceInvitation = (client: Client, encoded: string) =>
   Effect.gen(function* () {

@@ -427,7 +427,7 @@ const stagedUploadPlugin = (uploads: LocalUpload.Stage): Plugin.Plugin =>
           Effect.succeed([
             Capability.contribute(
               Capabilities.OperationHandler,
-              OperationHandlerSet.make(StagedUpload.createFromUploadHandler((uploadId) => uploads.take(uploadId))),
+              OperationHandlerSet.make(StagedUpload.createFromUploadHandler(uploads)),
             ),
           ]),
       }),

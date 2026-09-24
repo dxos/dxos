@@ -126,6 +126,9 @@ export const makeFlow = (
   code: Effect.map(encodableInvitation(observable), InvitationEncoder.encode),
 });
 
+/** How long the services may take to complete an invitation before its code is given up on. */
+const CODE_TIMEOUT = '30 seconds';
+
 /**
  * The invitation once it is complete enough to hand to a guest.
  *
@@ -134,13 +137,15 @@ export const makeFlow = (
  * lacks the key the guest then signs with. Encoding it early yields a code that connects and then
  * fails authentication with `keypair missing in the invitation`.
  */
-const encodableInvitation = (observable: CancellableInvitationObservable): Effect.Effect<ClientInvitation> => {
+const encodableInvitation = (
+  observable: CancellableInvitationObservable,
+): Effect.Effect<ClientInvitation, InvitationError> => {
   const isEncodable = (invitation: ClientInvitation) =>
     invitation.authMethod !== ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY ||
     !!invitation.guestKeypair?.privateKey ||
     TERMINAL_STATES.has(invitation.state);
 
-  return Effect.callback<ClientInvitation>((resume) => {
+  return Effect.callback<ClientInvitation, InvitationError>((resume) => {
     if (isEncodable(observable.get())) {
       resume(Effect.succeed(observable.get()));
       return;
@@ -151,10 +156,16 @@ const encodableInvitation = (observable: CancellableInvitationObservable): Effec
           resume(Effect.succeed(invitation));
         }
       },
-      () => resume(Effect.succeed(observable.get())),
+      // Never the pending value: without its keypair the code connects and then fails to authenticate.
+      (error: Error) => resume(Effect.fail(new InvitationError({ context: { error } }))),
     );
     return Effect.sync(() => subscription.unsubscribe());
-  });
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: CODE_TIMEOUT,
+      orElse: () => Effect.fail(new InvitationError({ context: { reason: 'invitation never became shareable' } })),
+    }),
+  );
 };
 
 /**

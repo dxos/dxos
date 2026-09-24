@@ -102,7 +102,7 @@ export const serve = Command.make(
       // FilePlugin is not activated here (it is mostly UI), so its skill is served directly — without
       // it no skill owns `file.createFromUpload` and the operation is invisible to the caller.
       skills: [FileSkill],
-      overrides: [StagedUpload.createFromUploadHandler((uploadId) => uploads.take(uploadId))],
+      overrides: [StagedUpload.createFromUploadHandler(uploads)],
     });
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });

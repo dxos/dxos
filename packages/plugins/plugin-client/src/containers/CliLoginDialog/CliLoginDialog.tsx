@@ -42,18 +42,22 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
   const { event } = useInvitationFlow(flow);
   // The flow still to cancel on close: set once created, cleared on any terminal event.
   const flowRef = useRef<Invitation.Flow | undefined>(undefined);
+  // Set on unmount, so an authorization still in flight stops before it sends the code.
+  const closedRef = useRef(false);
 
   const close = useCallback(() => invokePromise(LayoutOperation.UpdateDialog, { state: false }), [invokePromise]);
 
   // Closing mid-flow must stop the host listening, or the invitation outlives the dialog.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on (re)mount: StrictMode runs this cleanup once before the real mount.
+    closedRef.current = false;
+    return () => {
+      closedRef.current = true;
       if (flowRef.current) {
         void EffectEx.runPromise(flowRef.current.cancel()).catch((err) => log.catch(err));
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   useEffect(() => {
     switch (event?._tag) {
@@ -68,7 +72,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         setStatus('error');
         break;
     }
-  }, [event?._tag]);
+  }, [event?._tag, t]);
 
   const handleAuthorize = useCallback(async () => {
     const target = CliLogin.parseCallback(callback);
@@ -78,9 +82,16 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
     setStatus('sending');
     try {
       const created = await EffectEx.runPromise(identityService.share({ authMethod: 'known-public-key' }));
+      if (closedRef.current) {
+        await EffectEx.runPromise(created.cancel());
+        return;
+      }
       flowRef.current = created;
       setFlow(created);
       const code = await EffectEx.runPromise(created.code);
+      if (closedRef.current) {
+        return;
+      }
       // `no-cors`: the loopback server sends no CORS headers and the response carries nothing needed
       // here; the flow's own events report whether the CLI joined.
       await fetch(CliLogin.createCallbackUrl(target, code, state), { mode: 'no-cors' });
@@ -118,7 +129,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         {status === 'confirm' || status === 'sending' ? (
           <>
             <AlertDialog.Cancel asChild>
-              <Button data-testid='cliLogin.deny' onClick={close}>
+              <Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
                 {t('cli-login-deny.label')}
               </Button>
             </AlertDialog.Cancel>
@@ -133,8 +144,9 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           </>
         ) : (
           <AlertDialog.Action asChild>
+            {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
             <Button data-testid='cliLogin.done' variant={status === 'success' ? 'primary' : 'default'} onClick={close}>
-              {t('cli-login-done.label')}
+              {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
             </Button>
           </AlertDialog.Action>
         )}

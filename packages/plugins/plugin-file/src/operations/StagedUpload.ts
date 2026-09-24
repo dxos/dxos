@@ -21,20 +21,25 @@ export type Upload = {
   readonly name?: string;
 };
 
-/** Hands over a completed upload exactly once; `undefined` when it never arrived or expired. */
-export type Take = (uploadId: string) => Upload | undefined;
+/** Where completed uploads wait: read without removing, released only once the file is stored. */
+export type Source = {
+  /** `undefined` when the upload never arrived or has expired. */
+  peek(uploadId: string): Upload | undefined;
+  consume(uploadId: string): void;
+};
 
 /**
  * `file.createFromUpload` for a host that stages uploads itself (`@dxos/mcp-server/LocalUpload`)
  * rather than on EDGE. Registered in place of the default handler, which adopts from EDGE's staging
  * area — a store these uploads never reach. The bytes go to the client's default blob backend
- * (EDGE when configured, inline otherwise), exactly as a UI upload's would.
+ * (EDGE when configured), exactly as a UI upload's would; with no backend they are stored inline,
+ * which `Blob.fromBytes` caps at `Blob.MAX_INLINE_SIZE`.
  */
-export const createFromUploadHandler = (take: Take) =>
+export const createFromUploadHandler = (source: Source) =>
   FileOperation.CreateFromUpload.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ uploadId, name }) {
-        const staged = take(uploadId);
+        const staged = source.peek(uploadId);
         if (!staged) {
           return yield* Effect.fail(new UploadNotFoundError(uploadId));
         }
@@ -49,6 +54,7 @@ export const createFromUploadHandler = (take: Take) =>
         yield* Database.add(blob);
         yield* Database.add(object);
         yield* Database.flush();
+        source.consume(uploadId);
         return { object };
       }),
     ),
