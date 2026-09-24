@@ -4381,9 +4381,6 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
-      '@dxos/blob':
-        specifier: workspace:*
-        version: link:../../echo/blob
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -4412,6 +4409,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
