@@ -5,12 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 /**
- * How long a notice stays in a recipient's inbox; the recipient also discards signed notices older
- * than this, so a notice replayed after EDGE has dropped it is not shown again.
- */
-export const INBOX_NOTICE_TTL_MS = 14 * 24 * 60 * 60 * 1_000;
-
-/**
  * Body of `POST /inbox/:recipientDid`.
  * The sender is taken from the verified presentation, never from the body.
  */

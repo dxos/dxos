@@ -47,6 +47,11 @@ export const createSpaceInvitationNotice = (
     }),
   });
 
+/**
+ * Age past which a recipient discards a notice, whatever delivered it, so a replayed notice is not shown again.
+ */
+export const SPACE_INVITATION_NOTICE_TTL_MS = 14 * 24 * 60 * 60 * 1_000;
+
 export type VerifySpaceInvitationNoticeProps = {
   /** Identity key of the recipient doing the verification. */
   self: PublicKey;

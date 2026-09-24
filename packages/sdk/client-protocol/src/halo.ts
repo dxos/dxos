@@ -41,10 +41,13 @@ export interface HaloInbox {
    */
   get notices(): MulticastObservable<readonly InboxService.Notice[]>;
 
-  /** Tells a known identity it has been admitted to a space. */
+  /**
+   * Tells a known identity it has been admitted to a space.
+   * Resolves once the relay has accepted the notice, not once the recipient has received it.
+   */
   send(request: InboxService.SendRequest): Promise<void>;
 
-  /** Removes notices on every device of this identity. */
+  /** Marks notices handled for this identity, on all of its devices. */
   ack(ids: readonly string[]): Promise<void>;
 }
 

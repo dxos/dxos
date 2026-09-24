@@ -10,7 +10,12 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey, createSpaceInvitationNotice, verifySpaceInvitationNotice } from '@dxos/credentials';
+import {
+  SPACE_INVITATION_NOTICE_TTL_MS,
+  createDidFromIdentityKey,
+  createSpaceInvitationNotice,
+  verifySpaceInvitationNotice,
+} from '@dxos/credentials';
 import {
   type EdgeConnection,
   EdgeConnectionService,
@@ -20,7 +25,7 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { EdgeService, INBOX_NOTICE_TTL_MS, type InboxNotice, toServiceError } from '@dxos/protocols';
+import { EdgeService, type InboxNotice, toServiceError } from '@dxos/protocols';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InboxService } from '@dxos/protocols/rpc';
 
@@ -29,7 +34,7 @@ import { type Identity } from '../../Identity.ts';
 
 export class InboxUnavailableError extends BaseError.extend(
   'InboxUnavailableError',
-  'The inbox needs an EDGE connection and an identity.',
+  'The inbox is not available until the identity is ready and connected.',
 ) {}
 
 /** The EDGE inbox endpoints the service calls; narrowed so tests can stand in for EDGE. */
@@ -222,7 +227,7 @@ export class InboxServiceImpl implements InboxService.Handlers {
             self: identity.identityKey,
             claimedSender: edgeNotice.senderDid,
             now,
-            ttlMs: INBOX_NOTICE_TTL_MS,
+            ttlMs: SPACE_INVITATION_NOTICE_TTL_MS,
           })
         : undefined;
       if (result?.kind !== 'pass') {
