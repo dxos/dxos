@@ -119,16 +119,20 @@ export class AppManager {
     const authenticated = await this.isAuthenticated({ timeout: 30_000 });
     expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
-    // Boot ends with onboarding opening the default space's Home and persisting it as open in the navtree;
-    // acting before that last write lands races it.
+    // Boot ends with onboarding opening the default space's Home and persisting the navtree's open
+    // state; acting before that last write lands races it. Home's own key is NOT that write any
+    // more: exposing an item opens the path down to it and leaves the item itself as it was
+    // (#13414), and Home's ancestors are already open, so nothing is persisted for them either.
     await this.waitForDefaultWorkspace();
     const home = `root/${this.workspaceId}/home`;
     await expect(this.page.getByTestId('deck.plank').first()).toHaveAttribute('data-attendable-id', home, {
       timeout: 30_000,
     });
-    const homeOpenKey = `${NAVTREE_OPEN_STORAGE_PREFIX}root+root/${this.workspaceId}+${home}`;
+    // The workspace's sections are what boot persists, so one of those is the write to wait on —
+    // `content`, since that is the section the specs then act in.
+    const contentOpenKey = `${NAVTREE_OPEN_STORAGE_PREFIX}root+root/${this.workspaceId}+root/${this.workspaceId}/content`;
     await expect
-      .poll(() => this.page.evaluate((key) => window.localStorage.getItem(key), homeOpenKey), { timeout: 30_000 })
+      .poll(() => this.page.evaluate((key) => window.localStorage.getItem(key), contentOpenKey), { timeout: 30_000 })
       .toBe('{"open":true}');
 
     this.shell = new ShellManager(this.page, this._inIframe);

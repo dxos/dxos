@@ -12,6 +12,7 @@ import { useObject } from '@dxos/echo-react';
 import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
 import {
@@ -79,6 +80,8 @@ export type TaskTreeNodeProps = {
   onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
+  /** Class list from `TaskList.Content`, merged onto the tree's own. */
+  classNames?: string | (string | undefined)[];
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
@@ -93,6 +96,7 @@ export const TaskTreeNode = ({
   selected,
   checked,
   gridTemplateColumns,
+  classNames,
   renderTrailing,
   translationKey,
   showDescription = false,
@@ -306,7 +310,7 @@ export const TaskTreeNode = ({
       ariaLabel={t('task-list.label')}
       model={model}
       gridTemplateColumns={gridTemplateColumns}
-      classNames='w-full min-w-0'
+      classNames={mx('w-full min-w-0', classNames)}
       draggable={!!onTaskMove}
       // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
       // carries no toggle track and the first cell is the gutter or the status control.
@@ -314,9 +318,10 @@ export const TaskTreeNode = ({
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
-      // The highlight is what tells the reader where they are; a tree that only highlights (rather
-      // than navigating on select) wants it to travel with the arrows.
-      selectionFollowsFocus
+      // Deliberately NOT `selectionFollowsFocus`: selecting a task opens its detail (a companion, or
+      // a plank), so arrows that selected as they travelled would open every row the reader passes
+      // on the way to the one they want. The arrows move focus — the row is painted where focus
+      // lands — and `Enter` commits it.
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd

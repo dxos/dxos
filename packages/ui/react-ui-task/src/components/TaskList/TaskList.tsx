@@ -22,7 +22,7 @@ import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -354,10 +354,14 @@ const buildGridTemplate = ({
     .join(' ');
 };
 
-type TaskListContentProps = ComposableProps;
+/**
+ * `classNames` only, and no ref: the part renders no element of its own — it is the tree, and
+ * `Tree` takes a class list and forwards no ref. A wider `ComposableProps` would accept props the
+ * tree has nowhere to put, which is how the class list came to be dropped silently.
+ */
+type TaskListContentProps = ThemedClassName<{}>;
 
-const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+const TaskListContent = ({ classNames }: TaskListContentProps) => {
   const {
     tasks,
     groupByStatus,
@@ -428,9 +432,12 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
       onQuestionAnswer={onQuestionAnswer}
+      // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
+      // and `Tree` takes a plain list.
+      classNames={mx(classNames)}
     />
   );
-});
+};
 
 TaskListContent.displayName = 'TaskList.Content';
 
