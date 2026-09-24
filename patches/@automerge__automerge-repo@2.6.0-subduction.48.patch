@@ -196,10 +196,10 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0f
              return false;
          }
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
-index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..4b770cb9953d6b20d6af296fb31fdbe4cf9b0c91 100644
+index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..ddb7299e0424a3d34f91659733c5cb663916e5bb 100644
 --- a/dist/subduction/AdapterConnections.d.ts
 +++ b/dist/subduction/AdapterConnections.d.ts
-@@ -1,10 +1,24 @@
+@@ -1,10 +1,30 @@
 -import { Subduction } from "@automerge/automerge-subduction/slim";
 +import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
  import { NetworkAdapterInterface } from "../network/NetworkAdapterInterface.js";
@@ -219,20 +219,28 @@ index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..4b770cb9953d6b20d6af296fb31fdbe4
 +    role: "connect" | "accept";
 +    error: unknown;
 +}) => void;
++/** Default bound on one handshake, in milliseconds. */
++export declare const DEFAULT_HANDSHAKE_TIMEOUT_MS = 15000;
++export type AdapterConnectionsOptions = {
++    /** Milliseconds a handshake may run before it is failed. */
++    handshakeTimeoutMs?: number;
++};
  export declare class AdapterConnections implements ConnectionManager {
      #private;
 -    constructor(subduction: Promise<Subduction>, localPeerId: PeerId);
-+    constructor(subduction: Promise<Subduction>, localPeerId: PeerId, onPeerBound?: OnAdapterPeerBound, onPeerBindFailed?: OnAdapterPeerBindFailed);
++    constructor(subduction: Promise<Subduction>, localPeerId: PeerId, onPeerBound?: OnAdapterPeerBound, onPeerBindFailed?: OnAdapterPeerBindFailed, options?: AdapterConnectionsOptions);
      isConnecting(): boolean;
      isConnected(): boolean;
      generation(): number;
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d208b9ec4ab 100644
+index 40f525a6be944be10dd5e707c73f6af48d7ffde1..8328c5969813ecfc70742bea8dc2308342c423b7 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
-@@ -1,15 +1,21 @@
+@@ -1,15 +1,25 @@
 +import debug from "debug";
  import { NetworkAdapterTransport } from "./network.js";
++/** DXOS patch: default bound on one handshake; a lost reply otherwise leaves the attempt pending forever. */
++export const DEFAULT_HANDSHAKE_TIMEOUT_MS = 15_000;
  export class AdapterConnections {
      #adapters = [];
      #subduction;
@@ -244,16 +252,18 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d20
      #generation = 0;
      #isShutdown = false;
 -    constructor(subduction, localPeerId) {
++    #handshakeTimeoutMs;
 +    #log = debug("automerge-repo:subduction:adapters");
-+    constructor(subduction, localPeerId, onPeerBound, onPeerBindFailed) {
++    constructor(subduction, localPeerId, onPeerBound, onPeerBindFailed, { handshakeTimeoutMs = DEFAULT_HANDSHAKE_TIMEOUT_MS } = {}) {
          this.#subduction = subduction;
          this.#localPeerId = localPeerId;
 +        this.#onPeerBound = onPeerBound ?? null;
 +        this.#onPeerBindFailed = onPeerBindFailed ?? null;
++        this.#handshakeTimeoutMs = handshakeTimeoutMs;
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -32,17 +38,45 @@ export class AdapterConnections {
+@@ -32,17 +42,45 @@ export class AdapterConnections {
      shutdown() {
          this.#isShutdown = true;
          this.#onChangeCallback = null;
@@ -300,7 +310,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d20
          });
          void this.#watchAdapter(adapter);
          adapter.connect(this.#localPeerId);
-@@ -53,25 +87,82 @@ export class AdapterConnections {
+@@ -53,25 +91,93 @@ export class AdapterConnections {
              this.#onChangeCallback?.();
          }
      }
@@ -323,6 +333,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d20
 +    async #startTransport(adapter, serviceName, peerId, role, attempt, attempts) {
 +        let subductionPeerId = null;
 +        let bindError;
++        let handshakeTimer;
          try {
 +            await attempt.after;
              const subduction = await this.#subduction;
@@ -332,15 +343,24 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d20
 -            }
 -            else {
 -                await subduction.connectTransport(transport, serviceName);
++            // DXOS patch: aborting the transport rejects the handshake's pending receive, so the
++            // attempt fails through the catch below and releases the subduction future it holds.
++            let timeoutError;
++            handshakeTimer = setTimeout(() => {
++                timeoutError = new Error(`subduction handshake timed out after ${this.#handshakeTimeoutMs} ms`);
++                transport.abort(timeoutError);
++            }, this.#handshakeTimeoutMs);
 +            subductionPeerId =
 +                role === "accept"
 +                    ? await subduction.acceptTransport(transport, serviceName)
 +                    : await subduction.connectTransport(transport, serviceName);
 +            attempt.subductionPeerId = subductionPeerId;
-+            if (attempt.lost) {
-+                // The peer left while the handshake was in flight.
++            if (attempt.lost || timeoutError !== undefined) {
++                // The peer left, or the transport was aborted, while the handshake was in flight.
 +                this.#disconnect(attempts, peerId, attempt);
 +                subductionPeerId = null;
++                if (!attempt.lost)
++                    throw timeoutError;
              }
          }
 -        catch {
@@ -353,6 +373,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..0eab628de4160bf008ecb8279a3d2d20
 +                bindError = { error: e };
          }
          finally {
++            clearTimeout(handshakeTimer);
              this.#pendingTransports--;
              this.#generation++;
              this.#onChangeCallback?.();
@@ -493,10 +514,32 @@ index 609e087a8829d5170733ff14da63f8fbe81194b4..cc1aa0d631c27d2f378405998a7a7e8a
              const results = peerResultMap.entries();
              const anyFailed = results.some(r => !r.success || (r.transportErrors?.length ?? 0) > 0);
              // If new data was received during the heal, load it into the handle
+diff --git a/dist/subduction/network.d.ts b/dist/subduction/network.d.ts
+index fdeaeb1dc41c67b4a24c3059fb4b5d8ba2dfdda8..926ec4882385b1cc2c2206d77b87284c3d66ad6f 100644
+--- a/dist/subduction/network.d.ts
++++ b/dist/subduction/network.d.ts
+@@ -60,6 +60,8 @@ export declare class NetworkAdapterTransport implements Transport {
+      * other connections). It only unsubscribes this connection's listeners.
+      */
+     disconnect(): Promise<void>;
++    /** Fails the transport: rejects a pending `recvBytes` and fires the disconnect callback. */
++    abort(error: Error): void;
+ }
+ /**
+  * The `type` value used on automerge-repo messages that carry Subduction
 diff --git a/dist/subduction/network.js b/dist/subduction/network.js
-index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f22361b550 100644
+index 761e08f5065092d61888b381f5fe5ac08d5829db..c7b97dc3baec033fef53260ac7cec37313b99a10 100644
 --- a/dist/subduction/network.js
 +++ b/dist/subduction/network.js
+@@ -84,7 +84,7 @@ export class NetworkAdapterTransport {
+         // Otherwise enqueue for recv().
+         const waiter = this.#messageWaiters.shift();
+         if (waiter) {
+-            waiter(payload);
++            waiter.resolve(payload);
+         }
+         else {
+             this.#messageQueue.push(payload);
 @@ -92,7 +92,11 @@ export class NetworkAdapterTransport {
      };
      #handlePeerDisconnected = ({ peerId }) => {
@@ -510,8 +553,49 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
          }
      };
      /** Send a tagged frame over the adapter. */
+@@ -105,14 +109,30 @@ export class NetworkAdapterTransport {
+         });
+     }
+     /** Clean up all waiters and pending calls with the given error. */
+-    #teardown({ fireDisconnectCallback, } = {}) {
++    #teardown({ fireDisconnectCallback, error = new Error("Connection is disconnected"), } = {}) {
+         this.#adapter.off("message", this.#handleMessage);
+         this.#adapter.off("peer-disconnected", this.#handlePeerDisconnected);
+         this.#disconnected = true;
++        // DXOS patch: a pending `recvBytes` would otherwise never settle, holding the subduction
++        // future (and the handshake awaiting it) open for the life of the process.
++        const waiters = this.#messageWaiters;
++        this.#messageWaiters = [];
++        for (const waiter of waiters) {
++            waiter.reject(error);
++        }
+         if (fireDisconnectCallback && this.#disconnectCallback) {
+             this.#disconnectCallback();
+         }
+     }
++    /**
++     * DXOS patch: fail this transport with `error`, rejecting a pending `recvBytes` and firing the
++     * disconnect callback so subduction_core drops any connection it already registered for it.
++     */
++    abort(error) {
++        if (this.#disconnected)
++            return;
++        this.#teardown({ fireDisconnectCallback: true, error });
++    }
+     /**
+      * Send raw bytes during the handshake phase.
+      *
+@@ -144,7 +164,7 @@ export class NetworkAdapterTransport {
+                 reject(new Error("Connection is disconnected"));
+                 return;
+             }
+-            this.#messageWaiters.push(resolve);
++            this.#messageWaiters.push({ resolve, reject });
+         });
+     }
+     /**
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..57a35c2e207011404127ff601cc6a2695920bedd 100644
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..6ba4b154f3b1b679dea885cd6587101153554dab 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -520,9 +604,17 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..57a35c2e207011404127ff601cc6a269
  import { DocumentSource } from "../DocumentSource.js";
  import { DocumentQuery, SourcePriority } from "../DocumentQuery.js";
  import { DocumentId, PeerId } from "../types.js";
-@@ -61,6 +61,43 @@ export interface SubductionTimeouts {
+@@ -60,7 +60,51 @@ export interface SubductionTimeouts {
+      * Default: 10.
       */
      healMaxAttempts?: number;
++    /**
++     * DXOS patch: how long a handshake over a network adapter may run before it
++     * is failed and reported through `onPeerBindFailed`.
++     *
++     * Default: 15_000 (15 s).
++     */
++    handshakeMs?: number;
  }
 +/**
 + * Describes a successful subduction handshake — the moment when
@@ -564,7 +656,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..57a35c2e207011404127ff601cc6a269
  /** Intercepts and transforms incoming and outgoing blobs (e.g., for E2EE). */
  export interface BlobInterceptor {
      /**
-@@ -106,6 +143,8 @@ export interface SubductionSourceOptions {
+@@ -106,6 +150,8 @@ export interface SubductionSourceOptions {
       * dropping → `false`). Lets a consumer surface online/offline status.
       */
      onConnectionChanged?: (connected: boolean) => void;
@@ -573,7 +665,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..57a35c2e207011404127ff601cc6a269
      policy?: Policy;
      /**
       * What priority this source should have w.r.t to other sources
-@@ -123,12 +162,13 @@ export interface SubductionSourceOptions {
+@@ -123,12 +169,13 @@ export interface SubductionSourceOptions {
  export declare class SubductionSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
@@ -590,7 +682,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..57a35c2e207011404127ff601cc6a269
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..ffad95d90909d986ce2cfecad2231c8c72d7d6a5 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..b70cad733cbb5770c1ca447751c3450420b69641 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -658,7 +750,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..ffad95d90909d986ce2cfecad2231c8c
 +                source: { kind: "adapter", adapter, serviceName, role },
 +                error,
 +            })
-+            : undefined);
++            : undefined, { handshakeTimeoutMs: timeouts?.handshakeMs });
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }

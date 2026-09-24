@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type Message,
   type PeerId,
+  type SubductionPeerBindFailure,
   type SubductionPolicy,
   generateAutomergeUrl,
   initSubduction,
@@ -16,7 +17,7 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 
 import { TestAdapter } from '../testing/index.ts';
 import {
@@ -821,6 +822,41 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     clientSide.peerDisconnected(server1Side.peerId!);
     server1Side.peerDisconnected(clientSide.peerId!);
     await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+  });
+
+  test('a handshake whose reply never arrives fails once the handshake timeout elapses', async () => {
+    const { repos, adapters } = await createHostClientRepoTopology({
+      connectionStateProvider: () => 'off',
+      subductionTimeouts: { handshakeMs: 200 },
+    });
+    const [host, client] = repos;
+    const failed = new Trigger<SubductionPeerBindFailure>();
+    client.once('subduction-peer-bind-failed', (failure) => failed.wake(failure));
+    await connectAdapters(adapters);
+
+    const failure = await failed.wait({ timeout: 2_000 });
+    expect(failure.repoPeerId).toEqual(host.peerId);
+    expect(String(failure.error)).toMatch(/handshake timed out/);
+  });
+
+  test('a peer whose handshake timed out binds and syncs on the next attempt', async () => {
+    let framesDelivered: 'on' | 'off' = 'off';
+    const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
+      connectionStateProvider: () => framesDelivered,
+      subductionTimeouts: { handshakeMs: 200, syncMs: 2_000, healInitialDelayMs: 100 },
+    });
+    const [host, client] = repos;
+    const failed = new Trigger();
+    client.once('subduction-peer-bind-failed', () => failed.wake());
+    await connectAdapters(adapters);
+    await failed.wait({ timeout: 2_000 });
+
+    framesDelivered = 'on';
+    await reconnectAdapters(adapters, { repoPairs });
+    const handle = host.create<{ text?: string }>({ text: 'after-timeout' });
+    await waitForSubductionSave(repos);
+    const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
+    await expect.poll(() => observed.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('after-timeout');
   });
 
   test('a peer lost before its handshake completes does not hold back edits', async () => {
