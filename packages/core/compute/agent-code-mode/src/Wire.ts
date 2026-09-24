@@ -72,7 +72,13 @@ export const catchUp = (db: Database.Database, heads: Heads): Effect.Effect<void
     ? Effect.tryPromise({
         try: () => db.waitUntilHeadsReplicated({ heads }),
         catch: (cause) => new WireError({ message: "The other side's changes did not arrive.", cause }),
-      })
+      }).pipe(
+        // The host runs this after the evaluation's budget, so it needs its own bound.
+        Effect.timeoutOrElse({
+          duration: CATCH_UP_TIMEOUT,
+          orElse: () => Effect.fail(new WireError({ message: "The other side's changes did not arrive in time." })),
+        }),
+      )
     : Effect.void;
 
 /** The value as plain data, safe to post across the boundary. */
