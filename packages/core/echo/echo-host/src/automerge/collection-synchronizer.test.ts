@@ -4,11 +4,11 @@
 
 import * as A from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
-import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { SpaceId } from '@dxos/keys';
-import { type StartSpanOptions, TRACE_PROCESSOR, type TracingBackend } from '@dxos/tracing';
+import { type StartSpanOptions, TRACE_PROCESSOR, type TracingBackend, trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import {
@@ -545,6 +545,29 @@ describe('CollectionSynchronizer', () => {
         ['initial', 'disconnected'],
         ['initial', 'synced'],
       ]);
+    });
+
+    test('gives every span a pair opens its own id', async ({ expect }) => {
+      const spanStart = vi.spyOn(trace, 'spanStart');
+      onTestFinished(() => {
+        spanStart.mockRestore();
+      });
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+
+      // Diverges and syncs twice on one connection, then diverges again on a new connection from the same peer.
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+      synchronizer.setLocalCollectionState(collectionId, STATE_2);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onConnectionClosed(peerId);
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(spansFor(collectionId)).toHaveLength(3);
+      const spanIds = spanStart.mock.calls.map(([params]) => params.id);
+      expect(new Set(spanIds).size).toBe(3);
     });
 
     test('compares a state that arrived before registration once the collection registers', async ({ expect }) => {

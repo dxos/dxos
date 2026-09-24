@@ -45,14 +45,18 @@ export class CollectionSynchronizer extends Resource {
   private readonly _connectedPeers = new Set<PeerId>();
 
   /**
-   * Sync spans in flight, keyed by span id: one per (collection, peer) from divergence until fully synced.
+   * Ids of the sync spans in flight, by collection and then peer: at most one per pair, from divergence until
+   * fully synced.
    */
-  private readonly _syncSpans = new Map<string, { collectionId: string; peerId: PeerId }>();
+  private readonly _syncSpans = new Map<string, Map<PeerId, string>>();
 
   /**
    * Keeps span ids unique across synchronizers in one process, since the manual span registry is global.
    */
   private readonly _spanIdPrefix = `collection-sync-${PublicKey.random().toHex()}`;
+
+  /** Numbers the sync spans, so each span a pair opens over time has its own id. */
+  private _syncSpanCount = 0;
 
   public readonly peerCollectionStateUpdated = new Event<{
     collectionId: string;
@@ -126,7 +130,7 @@ export class CollectionSynchronizer extends Resource {
   }
 
   clearLocalCollectionState(collectionId: string): void {
-    this._endSyncSpans('closed', (entry) => entry.collectionId === collectionId);
+    this._endSyncSpans('closed', (spanCollectionId) => spanCollectionId === collectionId);
     this._activeCollections.delete(collectionId);
     this._perCollectionStates.delete(collectionId);
     log('clearLocalCollectionState', { collectionId });
@@ -182,7 +186,7 @@ export class CollectionSynchronizer extends Resource {
   onConnectionClosed(peerId: PeerId): void {
     log('onConnectionClosed', { peerId });
 
-    this._endSyncSpans('disconnected', (entry) => entry.peerId === peerId);
+    this._endSyncSpans('disconnected', (_, spanPeerId) => spanPeerId === peerId);
     this._connectedPeers.delete(peerId);
 
     for (const perCollectionState of this._perCollectionStates.values()) {
@@ -263,7 +267,7 @@ export class CollectionSynchronizer extends Resource {
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
     if (isDiffEmpty(diff)) {
-      this._endSyncSpan(this._getSyncSpanId(collectionId, peerId), 'synced');
+      this._endSyncSpan(collectionId, peerId, 'synced');
     } else {
       this._startSyncSpan(collectionId, peerId, trigger, diff);
     }
@@ -292,18 +296,18 @@ export class CollectionSynchronizer extends Resource {
     trigger: SyncSpanTrigger,
     diff: CollectionStateDiff,
   ): void {
-    const spanId = this._getSyncSpanId(collectionId, peerId);
     // Nothing would end a span for a pair that is not syncing, so the peer and collection must still be live.
     if (
       !this.isOpen ||
       !this._connectedPeers.has(peerId) ||
       !this._activeCollections.has(collectionId) ||
-      this._syncSpans.has(spanId)
+      this._syncSpans.get(collectionId)?.has(peerId)
     ) {
       return;
     }
 
-    this._syncSpans.set(spanId, { collectionId, peerId });
+    const spanId = `${this._spanIdPrefix}-${collectionId}-${peerId}-${++this._syncSpanCount}`;
+    defaultMap(this._syncSpans, collectionId, () => new Map<PeerId, string>()).set(peerId, spanId);
     const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
     // The derived ctx is discarded: the downstream `_queryCollectionState` hop is a user-supplied callback with no ctx.
     void trace.spanStart({
@@ -324,25 +328,28 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
-  private _endSyncSpan(spanId: string, outcome: SyncSpanOutcome): void {
-    if (this._syncSpans.delete(spanId)) {
-      trace.spanEnd(spanId, { attributes: { outcome } });
+  private _endSyncSpan(collectionId: string, peerId: PeerId, outcome: SyncSpanOutcome): void {
+    const spans = this._syncSpans.get(collectionId);
+    const spanId = spans?.get(peerId);
+    if (!spans || spanId === undefined) {
+      return;
     }
+
+    spans.delete(peerId);
+    if (spans.size === 0) {
+      this._syncSpans.delete(collectionId);
+    }
+    trace.spanEnd(spanId, { attributes: { outcome } });
   }
 
-  private _endSyncSpans(
-    outcome: SyncSpanOutcome,
-    matches: (entry: { collectionId: string; peerId: PeerId }) => boolean,
-  ): void {
-    for (const [spanId, entry] of this._syncSpans) {
-      if (matches(entry)) {
-        this._endSyncSpan(spanId, outcome);
+  private _endSyncSpans(outcome: SyncSpanOutcome, matches: (collectionId: string, peerId: PeerId) => boolean): void {
+    for (const [collectionId, spans] of this._syncSpans) {
+      for (const peerId of spans.keys()) {
+        if (matches(collectionId, peerId)) {
+          this._endSyncSpan(collectionId, peerId, outcome);
+        }
       }
     }
-  }
-
-  private _getSyncSpanId(collectionId: string, peerId: PeerId): string {
-    return `${this._spanIdPrefix}-${collectionId}-${peerId}`;
   }
 
   private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {
@@ -552,8 +559,8 @@ const isValidDocumentId = (documentId: DocumentId) => {
 };
 
 /**
- * The PostHog dashboard "EDGE nightly join latency (spans)" (https://eu.posthog.com/project/126171/dashboard/973334) is built from this span. Its
- * queries read the span name, the `ctx.*` attributes set in `_startSyncSpan`, and the {@link SyncSpanTrigger} and
- * {@link SyncSpanOutcome} values, so do not change any of them without updating the dashboard.
+ * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) is
+ * built from this span. Its queries read the span name, the `ctx.*` attributes set in `_startSyncSpan`, and the
+ * {@link SyncSpanTrigger} and {@link SyncSpanOutcome} values, so do not change any of them without updating it.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';
