@@ -36,6 +36,8 @@ export const createProxyHost = ({ automergeHost, readIndexed }: ProxyHostProps):
       isStored: (documentId) => automergeHost.hasDocOnDisk(asDocumentId(documentId)),
       save: (documentIds) => automergeHost.flush(Context.default(), { documentIds }),
       onChanged: (listener) => automergeHost.documentHeadsChanged.on(({ documentId }) => listener(documentId)),
+      // As a replica subscription leases the documents it syncs.
+      hold: (documentId) => automergeHost.acquireDoc(asDocumentId(documentId)),
     },
     copies: readIndexed && { read: async (documentIds) => documentsFromIndex(await readIndexed(documentIds)) },
   });

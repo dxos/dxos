@@ -176,7 +176,6 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  /** Serves clients that keep proxies of documents, through {@link DataServiceImpl}. */
   private readonly _proxyHost: Host.DocumentHost;
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;

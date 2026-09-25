@@ -31,9 +31,13 @@ export interface Store {
   onChanged(listener: (documentId: string) => void): () => void;
   /** Creates a document; a store without it leaves creation to another path. */
   create?(initialValue: unknown): Promise<string>;
+  /**
+   * Keeps a document resident while clients follow it live, until the result is disposed. Without
+   * it the store may evict a followed document between calls and reload it for the next change.
+   */
+  hold?(documentId: string): Disposable;
 }
 
-/** A copy of a document kept outside Automerge, and the Automerge heads it was read at. */
 /** Copies of documents kept outside Automerge, such as an index; see {@link Contract.CopyEvent}. */
 export interface CopySource {
   /** Copies of the documents; one with no exact copy is left out and followed live instead. */
@@ -75,6 +79,8 @@ type HostedDocument = {
   readonly unsent: Sync.Entry[];
   /** Serializes work on the document, so entries reach clients in the order they reached Automerge. */
   queue: Promise<unknown>;
+  /** The store's hold on the document while it has subscribers; see {@link Store.hold}. */
+  hold?: Disposable;
 };
 
 /**
@@ -110,6 +116,9 @@ export class DocumentHost extends Resource implements Repo.Host {
   protected override async _close(): Promise<void> {
     this.#offChanged?.();
     this.#offChanged = undefined;
+    for (const hosted of this.#documents.values()) {
+      hosted.hold?.[Symbol.dispose]();
+    }
     // Work still queued stops at its next step.
     this.#documents.clear();
     this.#subscriptions.clear();
@@ -434,6 +443,7 @@ export class DocumentHost extends Resource implements Repo.Host {
         return;
       }
       target.subscribers.add(subscription);
+      target.hold ??= this.#store.hold?.(documentId);
       subscription.send(events ?? [{ type: 'unavailable', documentId }]);
     });
   }
@@ -441,8 +451,14 @@ export class DocumentHost extends Resource implements Repo.Host {
   /** Forgets a document nobody follows, unless another numbering already replaced it. */
   #dropIfUnfollowed(hosted: HostedDocument): void {
     if (hosted.subscribers.size === 0 && this.#documents.get(hosted.documentId) === hosted) {
-      this.#documents.delete(hosted.documentId);
+      this.#forget(hosted);
     }
+  }
+
+  #forget(hosted: HostedDocument): void {
+    this.#documents.delete(hosted.documentId);
+    hosted.hold?.[Symbol.dispose]();
+    hosted.hold = undefined;
   }
 
   #detach(subscription: Subscription, documentId: string): void {
@@ -454,7 +470,7 @@ export class DocumentHost extends Resource implements Repo.Host {
     }
     hosted.subscribers.delete(subscription);
     if (hosted.subscribers.size === 0) {
-      this.#documents.delete(documentId);
+      this.#forget(hosted);
     }
   }
 

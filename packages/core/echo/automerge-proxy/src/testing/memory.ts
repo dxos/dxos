@@ -17,7 +17,26 @@ import * as Wire from '../Wire.ts';
 export class MemoryStore implements Host.Store {
   readonly #docs = new Map<string, A.Doc<unknown>>();
   readonly #listeners = new Set<(documentId: string) => void>();
+  readonly #holds = new Map<string, number>();
   #created = 0;
+
+  /** How many holds the host has on a document now. */
+  holds(documentId: string): number {
+    return this.#holds.get(documentId) ?? 0;
+  }
+
+  hold(documentId: string): Disposable {
+    this.#holds.set(documentId, this.holds(documentId) + 1);
+    let held = true;
+    return {
+      [Symbol.dispose]: () => {
+        if (held) {
+          held = false;
+          this.#holds.set(documentId, this.holds(documentId) - 1);
+        }
+      },
+    };
+  }
 
   /** The document as Automerge holds it. */
   get(documentId: string): A.Doc<unknown> {

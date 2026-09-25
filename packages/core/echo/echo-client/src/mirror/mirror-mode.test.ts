@@ -180,16 +180,19 @@ describe('mirror mode', () => {
     );
   });
 
-  test('documents a proxy tab creates stay pinned in the worker only until the tab follows them', async () => {
+  test('the worker holds what a proxy tab follows, and lets a document go once the tab stops following it', async () => {
     const [db] = await openTabs(1);
     // The host keeps the space root it created.
     const before = peer.host.automergeHost.leasedDocsCount;
-    for (let index = 0; index < 3; index++) {
-      db.add(Obj.make(TestSchema.Expando, { title: `object ${index}` }));
-    }
+    const objects = [0, 1, 2].map((index) => db.add(Obj.make(TestSchema.Expando, { title: `object ${index}` })));
     await db.flush();
-    // No replica client is subscribed, so only the proxy follow can release the creation leases.
-    await expect.poll(() => peer.host.automergeHost.leasedDocsCount, { timeout: 5_000 }).toBe(before);
+    await expect.poll(() => peer.host.automergeHost.leasedDocsCount).toBe(before + 3);
+
+    // Nothing else holds an unfollowed document, not even the lease its creation took.
+    const documentId = getObjectCore(objects[0]).docHandle?.documentId;
+    invariant(documentId, 'object has no document');
+    db._repo.release(documentId);
+    await expect.poll(() => peer.host.automergeHost.leasedDocsCount, { timeout: 5_000 }).toBe(before + 2);
   });
 
   test('writes from a replica client reach mirror tabs through the worker', async () => {

@@ -9,6 +9,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 
 import * as AutomergeOps from './AutomergeOps.ts';
+import type * as Contract from './Contract.ts';
 import * as Draft from './Draft.ts';
 import * as Handle from './Handle.ts';
 import * as Host from './Host.ts';
@@ -110,6 +111,17 @@ const applyToDraft = (draft: Doc, op: Op.Any): void => {
   }
   throw new Error(`Cannot apply ${op.type} to a map`);
 };
+
+/** Copies from a map, standing in for an index. */
+const copySourceOf = (index: ReadonlyMap<string, Contract.Copy>): Host.CopySource => ({
+  read: async (documentIds) =>
+    new Map(
+      documentIds.flatMap((documentId): [string, Contract.Copy][] => {
+        const copy = index.get(documentId);
+        return copy ? [[documentId, copy]] : [];
+      }),
+    ),
+});
 
 /** A transport's calls as a plain host, so a test can replace one of them. */
 const methodsOf = (transport: Transport): Repo.Host => ({
@@ -248,7 +260,7 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
   test('a document found with a copy the caller holds shows it before the host answers, then follows the host', async () => {
     const store = new MemoryStore();
     /** The copies the host serves, standing in for an index. */
-    const index = new Map<string, { heads: string[]; value: unknown }>();
+    const index = new Map<string, Contract.Copy>();
     const indexDocument = (documentId: string) =>
       index.set(documentId, {
         heads: A.getHeads(store.get(documentId)),
@@ -256,10 +268,7 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
       });
     const host = await new Host.DocumentHost({
       store,
-      copies: {
-        read: async (documentIds) =>
-          new Map(documentIds.flatMap((id) => (index.has(id) ? [[id, index.get(id)!]] : []))),
-      },
+      copies: copySourceOf(index),
     }).open();
     const random = createRandom(7);
     const writer = await new Repo.ProxyRepo({
@@ -322,6 +331,49 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
     await reader.flush();
     expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ list: ['a', 'b', 'c'] });
     expect(handle.isCopy).toBe(false);
+  });
+
+  test('the host holds a document while a client follows it live, and not while it follows a copy', async () => {
+    const store = new MemoryStore();
+    const index = new Map<string, Contract.Copy>();
+    const host = await new Host.DocumentHost({
+      store,
+      copies: copySourceOf(index),
+    }).open();
+    const random = createRandom(11);
+    const [writer, reader] = await Promise.all(
+      [0, 1].map(() =>
+        new Repo.ProxyRepo({
+          host: new Transport({ host: () => host, random: random.next }),
+          createHandle: (options) => new Handle.DocHandle(options),
+        }).open(),
+      ),
+    );
+    onTestFinished(async () => {
+      await Promise.all([writer.close(), reader.close()]);
+      await host.close();
+    });
+    const { documentId } = await share([writer], { list: ['a'] });
+    await expect.poll(() => store.holds(documentId)).toBe(1);
+
+    index.set(documentId, {
+      heads: A.getHeads(store.get(documentId)),
+      value: AutomergeOps.toValue(store.get(documentId)),
+    });
+    const handle = reader.find(documentId, { followCopy: true });
+    await handle.whenReady();
+    expect(handle.isCopy).toBe(true);
+    writer.release(documentId);
+    await expect.poll(() => store.holds(documentId)).toBe(0);
+
+    // The reader's first write follows the document live, which the host holds again.
+    handle.change((doc: Doc) => {
+      (doc.list as string[]).push('b');
+    });
+    await reader.flush();
+    expect(store.holds(documentId)).toBe(1);
+    await reader.close();
+    await expect.poll(() => store.holds(documentId)).toBe(0);
   });
 
   const Step = fc.oneof(

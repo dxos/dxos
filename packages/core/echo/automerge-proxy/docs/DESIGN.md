@@ -77,6 +77,9 @@ over its RPC services, reads from the index, Automerge replicas on `RepoProxy`, 
 types. `MirrorDocHandle` subclasses `Handle.DocHandle` for ECHO's handle interface and replica
 leases. The worker's `DataServiceImpl` serves `Host.DocumentHost` as RPCs; `createProxyHost` builds
 the host with a `Host.Store` over the Automerge host and a `Host.CopySource` over the SQLite index.
+The store's `hold` leases each document while a client follows it live, so the Automerge host keeps
+it resident, as it does for a replica subscription; a document followed through its copy is not
+held.
 
 ## Tests at the boundary
 

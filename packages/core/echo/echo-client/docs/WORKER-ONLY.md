@@ -551,10 +551,16 @@ from the package. In the worker, `DataServiceImpl` serves the `Host.DocumentHost
 `MirrorRepo`'s `Repo.Host` adapter calls `DataService`; `Repo.ProxyRepo` and `Handle.DocHandle` did
 not change.
 
-A document a proxy tab creates is no longer pinned in the worker for good. `createDocument` leases
-it until a client follows it, and only the byte protocol released that lease, so a tab with no
-replica open never did. Following it through `updateProxySubscription` now releases it too; the
-worker saves an idle document before it evicts it.
+The worker holds each document a proxy tab follows live, as a replica subscription holds the
+documents it syncs, and lets it go when the last live follower leaves (`Host.Store.hold`, a lease on
+the Automerge host). Without the hold, the worker could evict a document between two calls and have
+to reload it for the next remote change. A document followed through its index copy is not held,
+since the point is not to load it.
+
+A document a proxy tab created used to stay leased in the worker for good: `createDocument` leases it
+until a client follows it, and only the byte protocol released that lease. Following it through
+`updateProxySubscription` now releases the creation lease, and the hold takes over while the tab
+follows the document.
 
 ### The switch
 
@@ -579,7 +585,7 @@ optional bool proxy_index_reads = 20 [ (env_var) = "DX_ECHO_PROXY_INDEX_READS" ]
 | Resolution         | `EchoHost` option, config, `DX_ECHO_QUERY_EXECUTOR`, then `SQL` | config, `DX_ECHO_DOCUMENT_MODE`, then `REPLICA`                                  |
 | Resolved in        | `EchoHost`, from `runtimePropsFromConfig` in the worker         | `Client` maps config; `EchoClient.connectToService` falls back to the env        |
 | Tests pick it with | `EchoTestPeer({ queryExecutor })`                               | `EchoTestPeer({ documentMode })`, or `createClient({ documentMode })` per client |
-| Off means          | queries load documents and run in JS                            | the tab builds `RepoProxy` and uses the byte protocol, as every tab does today   |
+| Non-default value  | `MEMORY`: queries load documents and run in JS                  | `PROXY`: the tab builds `MirrorRepo` and sends op batches                        |
 
 The environment variable reaches a browser tab through the build: the config plugin copies every
 `DX_*` variable into `runtime.app.env`, and `Client` reads it there. Vite puts no `DX_*` variable in
