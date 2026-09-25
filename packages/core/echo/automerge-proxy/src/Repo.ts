@@ -163,8 +163,10 @@ export class ProxyRepo<
   /**
    * The handle of a document, created on first use. With `followCopy` the handle shows the host's
    * copy of the document until the first write, so the host need not load it to serve a reader.
+   * `copy` is one the caller already holds, such as a query result carried, shown at once; the host's
+   * answer then brings it up to date.
    */
-  find(documentId: Id, { followCopy = false }: { followCopy?: boolean } = {}): H {
+  find(documentId: Id, { followCopy = false, copy }: { followCopy?: boolean; copy?: Contract.Copy } = {}): H {
     const existing = this.#handles[documentId];
     if (existing) {
       return existing;
@@ -172,6 +174,9 @@ export class ProxyRepo<
     this.#requireOpen(documentId);
     const handle = this.#newHandle({ documentId, followCopy });
     this.#handles[documentId] = handle;
+    if (followCopy && copy) {
+      handle._receive({ type: 'copy', documentId, heads: copy.heads, value: copy.value });
+    }
     this.#pendingRemove.delete(documentId);
     this.#catchUp(documentId);
     return handle;

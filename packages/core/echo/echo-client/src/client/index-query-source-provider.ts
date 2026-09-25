@@ -50,6 +50,12 @@ export interface ObjectLoader {
   loadObject(params: LoadObjectProps): Promise<Entity.Unknown | undefined>;
 
   /**
+   * Hands over the index copies of documents a query response carried, before its records load, so
+   * documents shown from the index need no second round trip.
+   */
+  primeDocumentCopies?(copies: readonly QueryService.DocumentCopy[]): void;
+
+  /**
    * Fires when objects are added/updated locally. Lets reactive index results re-hydrate
    * index hits that previously failed to load (e.g. timed out before their document arrived).
    */
@@ -65,6 +71,8 @@ export type IndexQueryProviderProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
+  /** Ask the host for the index copies of the results' documents, for a client that shows them from the index. */
+  documentCopies?: boolean;
 };
 
 /**
@@ -95,6 +103,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       graph: this._params.graph,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
+      documentCopies: this._params.documentCopies,
     });
   }
 }
@@ -108,6 +117,8 @@ export type IndexQuerySourceProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
+  /** Ask the host for the index copies of the results' documents; see {@link ObjectLoader.primeDocumentCopies}. */
+  documentCopies?: boolean;
 };
 
 /**
@@ -273,6 +284,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
+        documentCopies: this._params.documentCopies,
       }),
       {
         onData: (response) => {
@@ -286,6 +298,7 @@ export class IndexQuerySource implements QuerySource {
               // bounded per record and must not be charged to it — doing so reported a stalled
               // document as an "index query" timeout, naming the wrong subsystem.
               clearTimeout(timeout);
+              this._primeDocumentCopies(response);
               const { results, stalled } = await this._mapRecords(
                 new Context(),
                 queryId,
@@ -339,11 +352,13 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
+        documentCopies: this._params.documentCopies,
       }),
       {
         onData: (response) => {
           try {
             this._assertResultSpaces(query, response);
+            this._primeDocumentCopies(response);
             // Remember the raw host records so a later local object load can re-hydrate them.
             this._lastRemoteResults = response.results ?? [];
             this._releasedDocumentJsonIds.clear();
@@ -696,6 +711,12 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
+  }
+
+  private _primeDocumentCopies(response: QueryService.QueryResponse): void {
+    if (response.documentCopies?.length) {
+      this._params.objectLoader.primeDocumentCopies?.(response.documentCopies);
+    }
   }
 
   /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */

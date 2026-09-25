@@ -14,6 +14,7 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
@@ -48,7 +49,16 @@ export type QueryServiceProps = {
   executor?: QueryExecutorMode;
   /** Resolved lazily, like `indexEngine`: the client exists only once the host is open. */
   sql: () => SqlClient.SqlClient;
+
+  /**
+   * The index copies of documents, for queries that ask for them (`QueryRequest.documentCopies`); a
+   * document the index cannot reproduce exactly is left out.
+   */
+  readDocumentCopies?: (documentIds: readonly string[]) => Promise<ReadonlyMap<string, DocumentCopy>>;
 };
+
+/** A document as the index rebuilds it, and the Automerge heads it was read at. */
+export type DocumentCopy = { readonly heads: readonly string[]; readonly value: unknown };
 
 /**
  * Represents an active query (stream and query state connected to that stream).
@@ -67,7 +77,9 @@ type ActiveQuery = {
   /** Query reads from at least one feed scope, so its first result must await indexing. */
   feedScoped: boolean;
 
-  sendResults: (results: QueryService.QueryResult[]) => void;
+  sendResults: (results: QueryService.QueryResult[], documentCopies?: QueryService.DocumentCopy[]) => void;
+  /** With `documentCopies` requested: the heads of each document copy sent, by document id. */
+  sentCopies?: Map<string, string>;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -244,12 +256,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       open: false,
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
-      sendResults: (results) => {
+      sendResults: (results, documentCopies) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results });
+        onResults({ queryId: request.queryId, results, ...(documentCopies?.length ? { documentCopies } : {}) });
       },
+      sentCopies: request.documentCopies ? new Map() : undefined,
       onError,
       close: async () => {
         onClose();
@@ -300,7 +313,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
           query.dirty = false;
           if (changed || query.firstResult) {
             query.firstResult = false;
-            query.sendResults(query.executor.getResults());
+            const results = query.executor.getResults();
+            query.sendResults(results, await this.#copiesToSend(query, results));
           }
         } catch (err) {
           log.catch(err, {
@@ -320,6 +334,60 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       this.#stats.totalExecutionBatches;
 
     log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
+  }
+
+  /**
+   * Copies of the results' documents the query has not sent at their current heads. Space roots are
+   * left out: the index holds none of their links, so a client follows them live.
+   */
+  async #copiesToSend(
+    query: ActiveQuery,
+    results: readonly QueryService.QueryResult[],
+  ): Promise<QueryService.DocumentCopy[] | undefined> {
+    const sent = query.sentCopies;
+    const read = this._params.readDocumentCopies;
+    if (!sent || !read) {
+      return undefined;
+    }
+    const spaceOf = new Map<string, string>();
+    for (const { documentId, spaceId, queueId } of results) {
+      if (
+        documentId &&
+        !queueId &&
+        SpaceId.isValid(spaceId) &&
+        this._params.spaceStateManager.getSpaceRootDocumentId(spaceId) !== documentId
+      ) {
+        spaceOf.set(documentId, spaceId);
+      }
+    }
+    // Documents that left the results are forgotten, so the map stays the size of one result set.
+    for (const documentId of sent.keys()) {
+      if (!spaceOf.has(documentId)) {
+        sent.delete(documentId);
+      }
+    }
+    if (spaceOf.size === 0) {
+      return undefined;
+    }
+    let copies: ReadonlyMap<string, DocumentCopy>;
+    try {
+      copies = await read([...spaceOf.keys()]);
+    } catch (err) {
+      // The client follows each document without a copy instead, one round trip later.
+      log.catch(err, { queryId: query.executor.queryId });
+      return undefined;
+    }
+    const toSend: QueryService.DocumentCopy[] = [];
+    for (const [documentId, spaceId] of spaceOf) {
+      const copy = copies.get(documentId);
+      const heads = copy?.heads.join('|');
+      if (!copy || heads === undefined || sent.get(documentId) === heads) {
+        continue;
+      }
+      sent.set(documentId, heads);
+      toSend.push({ spaceId, documentId, heads: [...copy.heads], json: JSON.stringify(copy.value) });
+    }
+    return toSend;
   }
 }
 

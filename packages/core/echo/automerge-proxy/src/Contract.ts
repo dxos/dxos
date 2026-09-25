@@ -100,6 +100,9 @@ export const CopyEvent = Schema.Struct({
   value: Schema.Unknown,
 });
 
+/** A copy of a document kept outside Automerge, as a {@link CopyEvent} carries it. */
+export type Copy = { readonly heads: string[]; readonly value: unknown };
+
 /** The document is not in the host's storage; it is being fetched. */
 export const RequestingEvent = Schema.Struct({
   type: Schema.Literal('requesting'),

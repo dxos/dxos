@@ -3,16 +3,22 @@
 //
 
 import { type DocumentId } from '@automerge/automerge-repo';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as AutomergeOps from '@dxos/automerge-proxy/AutomergeOps';
 import * as Op from '@dxos/automerge-proxy/Op';
+import * as Repo from '@dxos/automerge-proxy/Repo';
 import { Context } from '@dxos/context';
-import { type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type QueryService } from '@dxos/protocols/rpc';
 
 import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
@@ -139,6 +145,54 @@ describe('objects read from the index', () => {
     expect(objects.map((obj) => obj.title).toSorted()).toEqual(ids.map((_, index) => `object ${index}`));
     expect(objects.map((obj) => handleOf(obj).isCopy)).toEqual(ids.map(() => true));
     expect(residentOf(documentIds)).toEqual([]);
+  });
+
+  test("a query carries its results' index copies, and the tab shows them without asking the worker again", async () => {
+    const { spaceKey, rootUrl, ids, documentIds } = await setup(5);
+    const reader = await openTab(spaceKey, rootUrl, { indexed: true });
+    const find = vi.spyOn(Repo.ProxyRepo.prototype, 'find');
+    try {
+      const objects = await reader.query(Filter.type(TestSchema.Expando)).run();
+      expect(objects.map((obj) => obj.title).toSorted()).toEqual(ids.map((_, index) => `object ${index}`));
+      const seeded = find.mock.calls.flatMap(([documentId, options]) => (options?.copy ? [documentId] : []));
+      expect(seeded.toSorted()).toEqual(documentIds.toSorted());
+      expect(residentOf(documentIds)).toEqual([]);
+    } finally {
+      find.mockRestore();
+    }
+  });
+
+  test('a reactive query sends a document copy when the document is new to it or its heads move', async () => {
+    const { spaceKey, rootUrl, documentIds } = await setup(3);
+    const tab = await openTab(spaceKey, rootUrl, { indexed: true });
+    const responses: QueryService.QueryResponse[] = [];
+    const received = EffectEx.runPromise(
+      peer.host.queryService['QueryService.execQuery']({
+        queryId: 'copies',
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(Query.select(Filter.type(TestSchema.Expando)).from(tab).ast),
+        documentCopies: true,
+      }).pipe(
+        Stream.take(2),
+        Stream.runForEach((response) => Effect.sync(() => void responses.push(response))),
+      ),
+    );
+    await expect.poll(() => responses.length, { timeout: 10_000 }).toBe(1);
+    const copiesIn = (response: QueryService.QueryResponse) =>
+      (response.documentCopies ?? []).map((copy) => copy.documentId).toSorted();
+    expect(copiesIn(responses[0])).toEqual(documentIds.toSorted());
+    const [copy] = responses[0].documentCopies ?? [];
+    invariant(copy, 'no copy');
+    expect(Object.values(JSON.parse(copy.json).objects ?? {})).toEqual([
+      expect.objectContaining({ data: expect.objectContaining({ title: expect.stringMatching(/^object /) }) }),
+    ]);
+
+    // Another object joins the results: only its document is sent, the others are unchanged.
+    const added = tab.add(Obj.make(TestSchema.Expando, { title: 'added' }));
+    await tab.flush();
+    await peer.host.updateIndexes();
+    await received;
+    expect(copiesIn(responses[1])).toEqual([documentOf(added)]);
   });
 
   test('a document whose index copy stops being exact is followed live', async () => {

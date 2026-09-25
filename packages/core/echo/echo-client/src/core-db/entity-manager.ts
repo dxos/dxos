@@ -1109,6 +1109,16 @@ export class EntityManager implements IDatabaseBinding {
     return Object.values(this._repoProxy.handles);
   }
 
+  /**
+   * Keeps the index copy of a document a query carried for when this database first reads the
+   * document from the index; a database holding replicas has no use for it.
+   */
+  _primeDocumentCopy(copy: QueryService.DocumentCopy): void {
+    if (this._repoProxy instanceof MirrorRepo) {
+      this._repoProxy.primeCopy(copy.documentId, { heads: copy.heads, value: JSON.parse(copy.json) });
+    }
+  }
+
   _updateServices({
     dataService,
     queryService,

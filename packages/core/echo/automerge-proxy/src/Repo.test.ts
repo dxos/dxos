@@ -111,6 +111,17 @@ const applyToDraft = (draft: Doc, op: Op.Any): void => {
   throw new Error(`Cannot apply ${op.type} to a map`);
 };
 
+/** A transport's calls as a plain host, so a test can replace one of them. */
+const methodsOf = (transport: Transport): Repo.Host => ({
+  subscribe: (request, handlers) => transport.subscribe(request, handlers),
+  updateSubscription: (request) => transport.updateSubscription(request),
+  submit: (request) => transport.submit(request),
+  createDocument: (initialValue) => transport.createDocument(initialValue),
+  flush: (documentIds) => transport.flush(documentIds),
+  resolveCursors: (request) => transport.resolveCursors(request),
+  createCursors: (request) => transport.createCursors(request),
+});
+
 /** Opens the same document in every repo once the first has created it. */
 const share = async (repos: Repo.ProxyRepo[], value: Doc) => {
   const created = repos[0].create(value);
@@ -232,6 +243,85 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
     await repo.catchUp(documentId);
     expect(handles[0].doc()).toEqual({ list: ['r'] });
     expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ list: ['r'] });
+  });
+
+  test('a document found with a copy the caller holds shows it before the host answers, then follows the host', async () => {
+    const store = new MemoryStore();
+    /** The copies the host serves, standing in for an index. */
+    const index = new Map<string, { heads: string[]; value: unknown }>();
+    const indexDocument = (documentId: string) =>
+      index.set(documentId, {
+        heads: A.getHeads(store.get(documentId)),
+        value: AutomergeOps.toValue(store.get(documentId)),
+      });
+    const host = await new Host.DocumentHost({
+      store,
+      copies: {
+        read: async (documentIds) =>
+          new Map(documentIds.flatMap((id) => (index.has(id) ? [[id, index.get(id)!]] : []))),
+      },
+    }).open();
+    const random = createRandom(7);
+    const writer = await new Repo.ProxyRepo({
+      host: new Transport({ host: () => host, random: random.next }),
+      createHandle: (options) => new Handle.DocHandle(options),
+    }).open();
+    const transport = new Transport({ host: () => host, random: random.next });
+    // Holds the reader's follow requests until the test opens the gate.
+    const gate = { open: false, held: [] as (() => void)[] };
+    const reader = await new Repo.ProxyRepo({
+      host: {
+        ...methodsOf(transport),
+        updateSubscription: async (request) => {
+          if (!gate.open) {
+            await new Promise<void>((resolve) => gate.held.push(resolve));
+          }
+          await transport.updateSubscription(request);
+        },
+      },
+      createHandle: (options) => new Handle.DocHandle(options),
+    }).open();
+    onTestFinished(async () => {
+      await Promise.all([writer.close(), reader.close()]);
+      await host.close();
+    });
+    const { documentId } = await share([writer], { list: ['a'] });
+    await writer.flush({ storage: true });
+    indexDocument(documentId);
+    const copy = index.get(documentId);
+    invariant(copy, 'indexed');
+
+    const handle = reader.find(documentId, { followCopy: true, copy });
+    expect(handle.isReady()).toBe(true);
+    expect(handle.isCopy).toBe(true);
+    expect(handle.doc()).toEqual({ list: ['a'] });
+
+    // The host answers the follow with the copy the handle already shows, which changes nothing.
+    let changes = 0;
+    handle.on('change', () => changes++);
+    await expect.poll(() => gate.held.length).toBe(1);
+    gate.open = true;
+    gate.held.splice(0).forEach((release) => release());
+    await reader.catchUp(documentId);
+    expect(changes).toBe(0);
+
+    // A newer copy reaches it, as after an index pass.
+    const written = writer.find(documentId);
+    written.change((doc: Doc) => {
+      (doc.list as string[]).push('b');
+    });
+    await writer.flush({ storage: true });
+    indexDocument(documentId);
+    host.copiesChanged(new Set([documentId]));
+    await expect.poll(() => handle.doc()).toEqual({ list: ['a', 'b'] });
+
+    // Its first write follows the live document, and the host applies it once.
+    handle.change((doc: Doc) => {
+      (doc.list as string[]).push('c');
+    });
+    await reader.flush();
+    expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ list: ['a', 'b', 'c'] });
+    expect(handle.isCopy).toBe(false);
   });
 
   const Step = fc.oneof(

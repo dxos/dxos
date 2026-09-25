@@ -8,6 +8,7 @@ import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
 import { type Event } from '@dxos/async';
+import type * as Contract from '@dxos/automerge-proxy/Contract';
 import type * as Cursors from '@dxos/automerge-proxy/Cursors';
 import * as Op from '@dxos/automerge-proxy/Op';
 import * as Repo from '@dxos/automerge-proxy/Repo';
@@ -34,6 +35,9 @@ import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
 const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 
 const RPC_TIMEOUT = 30_000;
+
+/** How many query-carried copies {@link MirrorRepo.primeCopy} keeps for documents not read yet. */
+const PRIMED_COPIES_LIMIT = 1_000;
 
 type Services = { mirrorService: MirrorService.Client; dataService: DataService.Client };
 
@@ -71,6 +75,8 @@ export class MirrorRepo extends Resource implements ClientRepo {
   readonly #runtime: Context.Context<never>;
   readonly #spaceId: SpaceId;
   readonly #indexReads: boolean;
+  /** Index copies queries carried, kept until each document is first read from the index. */
+  readonly #primedCopies = new Map<string, Contract.Copy>();
 
   constructor({ mirrorService, dataService, runtime, spaceId, indexReads = false }: MirrorRepoProps) {
     super();
@@ -112,6 +118,26 @@ export class MirrorRepo extends Resource implements ClientRepo {
    */
   findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
     return this.#find(id, this.#indexReads);
+  }
+
+  /**
+   * Keeps the index copy of a document a query carried, so the next {@link findIndexed} of it shows
+   * the copy at once rather than after asking the worker. A document this repo follows already gets
+   * later copies from the worker itself.
+   */
+  primeCopy(documentId: string, copy: Contract.Copy): void {
+    if (!this.#indexReads || this.#repo.handles[documentId]) {
+      return;
+    }
+    this.#primedCopies.delete(documentId);
+    this.#primedCopies.set(documentId, copy);
+    for (const oldest of this.#primedCopies.keys()) {
+      if (this.#primedCopies.size <= PRIMED_COPIES_LIMIT) {
+        break;
+      }
+      // A document read after its copy is dropped waits for the worker's copy instead.
+      this.#primedCopies.delete(oldest);
+    }
   }
 
   create<T>(initialValue?: T): ClientDocHandle<T> {
@@ -183,6 +209,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
   }
 
   protected override async _close(): Promise<void> {
+    this.#primedCopies.clear();
     const replicas = this.#replicasOpening;
     this.#replicas = undefined;
     this.#replicasOpening = undefined;
@@ -221,7 +248,9 @@ export class MirrorRepo extends Resource implements ClientRepo {
       return existing;
     }
     this.#requireOpen(documentId);
-    return this.#repo.find(documentId, { followCopy });
+    const copy = followCopy ? this.#primedCopies.get(documentId) : undefined;
+    this.#primedCopies.delete(documentId);
+    return this.#repo.find(documentId, { followCopy, copy });
   }
 
   /** The proxy repo opens a step before this one and closes a step after, so this lifecycle decides. */

@@ -429,6 +429,10 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
       // Live already, or switching to live, whose answer settles the document.
       return;
     }
+    if (this.#copy && this.#client?.heads.join('|') === event.heads.join('|')) {
+      // The copy shown already, as when the caller seeded the handle with the copy the host sends.
+      return;
+    }
     const before = this.doc();
     // Structured-clone data from the host; T is the caller's promise about its shape.
     const value = Op.freeze(event.value as T);

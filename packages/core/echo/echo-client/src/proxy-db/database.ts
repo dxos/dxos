@@ -983,6 +983,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
+  /** @see EntityManager._primeDocumentCopy */
+  _primeDocumentCopy(copy: QueryService.DocumentCopy): void {
+    this._entityManager._primeDocumentCopy(copy);
+  }
+
   get _repo(): ClientRepo {
     return this._entityManager._repoProxy;
   }

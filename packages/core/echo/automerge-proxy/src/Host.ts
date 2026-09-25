@@ -34,12 +34,10 @@ export interface Store {
 }
 
 /** A copy of a document kept outside Automerge, and the Automerge heads it was read at. */
-export type Copy = { readonly heads: string[]; readonly value: unknown };
-
 /** Copies of documents kept outside Automerge, such as an index; see {@link Contract.CopyEvent}. */
 export interface CopySource {
   /** Copies of the documents; one with no exact copy is left out and followed live instead. */
-  read(documentIds: readonly string[]): Promise<ReadonlyMap<string, Copy>>;
+  read(documentIds: readonly string[]): Promise<ReadonlyMap<string, Contract.Copy>>;
 }
 
 export type Options = {
@@ -488,7 +486,7 @@ export class DocumentHost extends Resource implements Repo.Host {
     }
   }
 
-  async #readCopies(documentIds: readonly string[]): Promise<ReadonlyMap<string, Copy>> {
+  async #readCopies(documentIds: readonly string[]): Promise<ReadonlyMap<string, Contract.Copy>> {
     return (await this.#copies?.read(documentIds)) ?? new Map();
   }
 

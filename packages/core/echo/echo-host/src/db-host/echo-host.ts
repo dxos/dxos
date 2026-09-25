@@ -48,6 +48,7 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { documentsFromIndex } from '../mirror/indexed.ts';
 import { MirrorServiceImpl } from '../mirror/mirror-service.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
@@ -280,6 +281,7 @@ export class EchoHost extends Resource {
         return this._sql;
       },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      readDocumentCopies: async (documentIds) => documentsFromIndex(await this.#readIndexedDocuments(documentIds)),
     });
 
     this._mirrorService = new MirrorServiceImpl({

@@ -8,7 +8,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
@@ -150,15 +150,7 @@ export class EchoClient extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
 
-    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service: this._queryService,
-      runtime: this._runtime,
-      objectLoader: {
-        loadObject: this._loadObjectFromDocument.bind(this),
-        updateEvent: this._objectsUpdated,
-      },
-      graph: this._graph,
-    });
+    this._indexQuerySourceProvider = this._createQuerySourceProvider(this._queryService);
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
@@ -265,15 +257,7 @@ export class EchoClient extends Resource {
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
-      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-        service: this._queryService,
-        runtime: this._runtime,
-        objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
-          updateEvent: this._objectsUpdated,
-        },
-        graph: this._graph,
-      });
+      this._indexQuerySourceProvider = this._createQuerySourceProvider(this._queryService);
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
 
@@ -292,6 +276,26 @@ export class EchoClient extends Resource {
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }
+  }
+
+  private _createQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
+    return new IndexQuerySourceProvider({
+      service,
+      runtime: this._runtime,
+      objectLoader: {
+        loadObject: this._loadObjectFromDocument.bind(this),
+        primeDocumentCopies: (copies) => {
+          for (const copy of copies) {
+            if (SpaceId.isValid(copy.spaceId)) {
+              this._databases.get(copy.spaceId)?._primeDocumentCopy(copy);
+            }
+          }
+        },
+        updateEvent: this._objectsUpdated,
+      },
+      graph: this._graph,
+      documentCopies: this._proxyIndexReads,
+    });
   }
 
   private async _loadObjectFromDocument({
