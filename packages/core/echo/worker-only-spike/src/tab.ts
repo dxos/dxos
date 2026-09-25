@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ImmutableString } from '@automerge/automerge/slim';
-
 import * as Draft from '@dxos/automerge-proxy/Draft';
 import type * as Op from '@dxos/automerge-proxy/Op';
 
 import { encodeChange, sortedPreds } from './encode.ts';
-import { type Change, type Clock, type DecodedOp, Model, type Patch, formatId, parseId } from './model.ts';
+import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
+import { isImmutableString } from './immutable-string.ts';
+import { Model, type Patch } from './model.ts';
+import { readChange } from './reader.ts';
 
 /** Marks every container a tab document hands out, so the spike namespace can answer for it. */
 export const TAG = Symbol.for('dxos.worker-only-spike.tag');
@@ -24,13 +25,15 @@ export type HostMessage =
   | { type: 'ack'; hash: string }
   | { type: 'refuse'; hash: string; reason: string };
 
-export type Snapshot = { bytes: Uint8Array; hashes: string[]; heads: string[] };
+/** What a tab opens a document from. Without `hashes`, the tab computes them from the bytes. */
+export type Snapshot = { bytes: Uint8Array; hashes?: string[]; heads: string[] };
 
 const randomActor = (): string =>
   Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 type Options = {
-  send: (change: Change, bytes: Uint8Array) => void;
+  /** Where changes go; a document with none exists only in this tab, as `A.from` makes one. */
+  send?: (change: Change, bytes: Uint8Array) => void;
   actor?: string;
   now?: () => number;
 };
@@ -41,7 +44,7 @@ type Options = {
  */
 export class TabDoc {
   readonly #model: Model;
-  readonly #send: (change: Change, bytes: Uint8Array) => void;
+  readonly #send?: (change: Change, bytes: Uint8Array) => void;
   readonly #bytes = new Map<string, Uint8Array>();
   readonly #now: () => number;
   readonly #listeners = new Set<() => void>();
@@ -64,6 +67,30 @@ export class TabDoc {
   /** A document read from the host's snapshot: saved bytes, change hashes and heads. */
   static fromSnapshot(snapshot: Snapshot, options: Options): TabDoc {
     return new TabDoc(Model.fromSaved(snapshot.bytes, snapshot.hashes), [...snapshot.heads], options);
+  }
+
+  /** A document built from changes, as `A.load` of change chunks or `A.clone` builds one. */
+  static fromChanges(changes: readonly Change[], options: Options): TabDoc {
+    const model = new Model();
+    const ordered = causalOrder(changes);
+    ordered.forEach((change) => model.applyChange(change));
+    return new TabDoc(model, headsOf(ordered), options);
+  }
+
+  /** `A.load`: a saved document (uncompressed) or change chunks back to back, in any order. */
+  static load(bytes: Uint8Array, options: Options): TabDoc {
+    // The chunk type follows the magic bytes and the checksum.
+    if (bytes[8] === 0) {
+      const model = Model.fromSaved(bytes);
+      return new TabDoc(model, headsOf(model.changeHashes().map((hash) => model.changeOf(hash))), options);
+    }
+    const changes: Change[] = [];
+    for (let offset = 0; offset < bytes.length;) {
+      const { end, ...change } = readChange(bytes, offset);
+      changes.push(change);
+      offset = end;
+    }
+    return TabDoc.fromChanges(changes, options);
   }
 
   /** A document that exists only in this tab until a host takes its first change. */
@@ -112,7 +139,13 @@ export class TabDoc {
     const clock = this.clockOf(tag.heads);
     const value = this.#model.materialize('_root', clock);
     const mark = (node: unknown, path: (string | number)[]): void => {
-      if (node === null || typeof node !== 'object' || node instanceof Date || node instanceof ImmutableString) {
+      if (
+        node === null ||
+        typeof node !== 'object' ||
+        node instanceof Date ||
+        isImmutableString(node) ||
+        node instanceof Uint8Array
+      ) {
         return;
       }
       Object.defineProperty(node, TAG, { value: { tab: this, heads: tag.heads, path } satisfies Tag });
@@ -243,11 +276,13 @@ export class TabDoc {
     const { bytes, hash } = encodeChange(change);
     change.hash = hash;
     this.#model.registerChange(change);
-    this.#pending.push(change);
-    this.#bytes.set(hash, bytes);
     this.#own.push(hash);
     this.#heads = reduceHeads(this.#model, [...this.#heads, hash]);
-    this.#send(structuredClone(change), bytes);
+    if (this.#send) {
+      this.#pending.push(change);
+      this.#bytes.set(hash, bytes);
+      this.#send(structuredClone(change), bytes);
+    }
     this.#emit();
     return [hash];
   }
@@ -311,9 +346,36 @@ export class TabDoc {
     for (const change of this.#pending) {
       const bytes = this.#bytes.get(change.hash);
       if (bytes) {
-        this.#send(structuredClone(change), bytes);
+        this.#send?.(structuredClone(change), bytes);
       }
     }
+  }
+
+  /**
+   * Changes from elsewhere, as `A.applyChanges` or `A.merge` bring them: applied here, and relayed to
+   * the worker when there is one, which checks them like any change a tab sends.
+   */
+  applyChanges(changes: readonly Change[]): void {
+    const fresh = changes.filter((change) => !this.#model.hasChange(change.hash));
+    for (const change of fresh) {
+      this.#model.applyChange(change);
+      this.#send?.(structuredClone(change), encodeChange(change).bytes);
+    }
+    if (fresh.length > 0) {
+      this.#heads = reduceHeads(this.#model, [...this.#heads, ...fresh.map((change) => change.hash)]);
+      this.#emit();
+    }
+  }
+
+  /** The last change this tab wrote under its current actor, as `A.getLastLocalChange` gives it. */
+  lastLocalChange(): Change | undefined {
+    const hash = this.#own[this.#own.length - 1];
+    return hash === undefined ? undefined : this.#model.changeOf(hash);
+  }
+
+  /** Every change `heads` reach, in causal order. */
+  changesIn(heads: readonly string[]): Change[] {
+    return this.#model.changesIn(heads).map((hash) => this.#model.changeOf(hash));
   }
 
   /**
@@ -322,12 +384,10 @@ export class TabDoc {
    * its own or not, since any change rebuilt from the model encodes to the bytes of its hash.
    */
   reconnect(snapshot: Snapshot): void {
-    const theirs = new Set(snapshot.hashes);
-    const missing = snapshot.hashes.filter((hash) => !this.#model.hasChange(hash));
-    if (missing.length > 0) {
-      const fresh = Model.fromSaved(snapshot.bytes, snapshot.hashes);
-      missing.forEach((hash) => this.#model.applyChange(fresh.changeOf(hash)));
-    }
+    const fresh = Model.fromSaved(snapshot.bytes, snapshot.hashes);
+    const theirs = new Set(fresh.changeHashes());
+    const missing = fresh.changeHashes().filter((hash) => !this.#model.hasChange(hash));
+    missing.forEach((hash) => this.#model.applyChange(fresh.changeOf(hash)));
     // A pending change the worker saved before its ack was lost is confirmed.
     for (const change of [...this.#pending]) {
       if (theirs.has(change.hash)) {
@@ -339,7 +399,7 @@ export class TabDoc {
     for (const hash of this.#model.changeHashes()) {
       if (!theirs.has(hash)) {
         const change = this.#model.changeOf(hash);
-        this.#send(change, this.#bytes.get(hash) ?? encodeChange(change).bytes);
+        this.#send?.(change, this.#bytes.get(hash) ?? encodeChange(change).bytes);
       }
     }
     this.#heads = reduceHeads(this.#model, [...this.#heads, ...snapshot.heads]);
@@ -349,14 +409,64 @@ export class TabDoc {
   }
 }
 
-/** Keeps the heads no other head reaches. */
+/** The changes no other change names as a dependency, sorted as Automerge sorts heads. */
+const headsOf = (changes: readonly Change[]): string[] => {
+  const depended = new Set(changes.flatMap((change) => change.deps));
+  return changes
+    .map((change) => change.hash)
+    .filter((hash) => !depended.has(hash))
+    .sort();
+};
+
+/** Changes with every dependency before its dependents; one missing from the set is an error. */
+const causalOrder = (changes: readonly Change[]): Change[] => {
+  const byHash = new Map(changes.map((change) => [change.hash, change]));
+  const waiting = new Map<string, number>();
+  const dependents = new Map<string, Change[]>();
+  const ready: Change[] = [];
+  for (const change of byHash.values()) {
+    for (const dep of change.deps) {
+      if (!byHash.has(dep)) {
+        throw new Error(`Missing dependency ${dep}`);
+      }
+      dependents.set(dep, [...(dependents.get(dep) ?? []), change]);
+    }
+    waiting.set(change.hash, change.deps.length);
+    if (change.deps.length === 0) {
+      ready.push(change);
+    }
+  }
+  const out: Change[] = [];
+  for (let next = ready.shift(); next; next = ready.shift()) {
+    out.push(next);
+    for (const dependent of dependents.get(next.hash) ?? []) {
+      const left = (waiting.get(dependent.hash) ?? 0) - 1;
+      waiting.set(dependent.hash, left);
+      if (left === 0) {
+        ready.push(dependent);
+      }
+    }
+  }
+  if (out.length !== byHash.size) {
+    throw new Error('Changes form a cycle');
+  }
+  return out;
+};
+
+/** Keeps the heads no other head reaches, sorted as Automerge sorts heads. */
 export const reduceHeads = (model: Model, heads: readonly string[]): string[] => {
   const unique = [...new Set(heads)];
-  return unique.filter((head) => !unique.some((other) => other !== head && model.reaches([other], head)));
+  return unique.filter((head) => !unique.some((other) => other !== head && model.reaches([other], head))).sort();
 };
 
 const freezeDeep = <T>(value: T): T => {
-  if (value !== null && typeof value === 'object' && !(value instanceof Date) && !(value instanceof ImmutableString)) {
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    !(value instanceof Date) &&
+    !isImmutableString(value) &&
+    !(value instanceof Uint8Array)
+  ) {
     for (const child of Object.values(value)) {
       freezeDeep(child);
     }
@@ -421,11 +531,14 @@ export const translate = (
       }
       return listId;
     }
-    if (value instanceof ImmutableString) {
+    if (isImmutableString(value)) {
       return emit({ action: 'set', ...at, value: value.toString() });
     }
     if (value instanceof Date) {
       return emit({ action: 'set', ...at, value: value.getTime(), datatype: 'timestamp' });
+    }
+    if (value instanceof Uint8Array) {
+      return emit({ action: 'set', ...at, value: new Uint8Array(value) });
     }
     if (typeof value === 'number') {
       return emit({ action: 'set', ...at, value, datatype: Number.isInteger(value) ? 'int' : 'float64' });
@@ -520,5 +633,3 @@ export const translate = (
   }
   return out;
 };
-
-export { parseId };

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DecodedOp, compareIds, parseId } from './model.ts';
+import { type DecodedOp, compareIds, parseId } from './ids.ts';
 import { sha256 } from './sha256.ts';
 
 // Encodes a change as an Automerge change chunk, byte for byte as Automerge writes it, so a tab knows

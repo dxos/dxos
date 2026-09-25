@@ -4,7 +4,7 @@
 
 import { SpikeHandle } from './handle.ts';
 import { type SpikeHost } from './host.ts';
-import { type Change } from './model.ts';
+import { type Change } from './ids.ts';
 import { type HostMessage, TabDoc } from './tab.ts';
 
 /**

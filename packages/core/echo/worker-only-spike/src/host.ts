@@ -5,7 +5,8 @@
 import * as A from '@automerge/automerge';
 
 import { encodeChange } from './encode.ts';
-import { type Change, type Clock, type DecodedOp, Model, formatId, inClock, parseId } from './model.ts';
+import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
+import { Model } from './model.ts';
 import { type HostMessage, type Snapshot } from './tab.ts';
 
 type Subscriber = (message: HostMessage) => void;
@@ -47,7 +48,8 @@ export const decodeChange = (bytes: Uint8Array): Change => {
       obj: op.obj,
       ...('elemId' in op && typeof op.elemId === 'string' ? { elemId: op.elemId } : { key: op.key }),
       ...('insert' in op && op.insert === true ? { insert: true } : {}),
-      ...(op.value !== undefined ? { value: op.value } : {}),
+      // Automerge gives bytes as a plain array; a set op's value is never an array otherwise.
+      ...(op.value !== undefined ? { value: Array.isArray(op.value) ? Uint8Array.from(op.value) : op.value } : {}),
       ...(op.datatype !== undefined ? { datatype: op.datatype } : {}),
       pred: op.pred,
     })),
@@ -334,5 +336,3 @@ const check = (model: Model, op: DecodedOp, clock: Clock): void => {
     throw new Error(`pred ${op.pred} does not match ${current}`);
   }
 };
-
-export { inClock, parseId };

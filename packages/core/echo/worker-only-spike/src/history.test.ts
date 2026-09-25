@@ -29,7 +29,7 @@ import {
 // eslint-disable-next-line import/first
 import { SpikeHost } from './host.ts';
 // eslint-disable-next-line import/first
-import { leaks } from './namespace.ts';
+import { asTab, leaks } from './namespace.ts';
 // eslint-disable-next-line import/first
 import { Network } from './network.ts';
 // eslint-disable-next-line import/first
@@ -38,39 +38,6 @@ import { canon, unknownTo } from './testing.ts';
 const Task = Schema.Struct({ title: Schema.String, status: Schema.String, tags: Schema.Array(Schema.String) }).pipe(
   Type.makeObject(DXN.make('com.example.test.task', '0.1.0')),
 );
-
-/** `getEditHistoryWithDiffs` without Automerge: each version's heads from the history, not from replaying changes. */
-const editHistoryWithDiffs = (doc: any) => {
-  let before: string[] = [];
-  return A.getHistory(doc).map((state: any) => {
-    const after = [...before.filter((hash) => !state.change.deps.includes(hash)), state.change.hash].sort();
-    let added = 0;
-    let removed = 0;
-    for (const patch of A.diff(doc, before, after) as any[]) {
-      if (patch.action === 'splice') {
-        added += patch.value.length;
-      } else if (patch.action === 'insert') {
-        added += patch.values.reduce(
-          (sum: number, value: unknown) => sum + (typeof value === 'string' ? value.length : 1),
-          0,
-        );
-      } else if (patch.action === 'del') {
-        removed += patch.length ?? 1;
-      } else if (patch.action === 'put' || patch.action === 'inc') {
-        added += 1;
-      }
-    }
-    before = after;
-    return {
-      heads: after,
-      time: state.change.time * 1000,
-      actor: state.change.actor,
-      message: state.change.message ?? undefined,
-      added,
-      removed,
-    };
-  });
-};
 
 describe('full history in the tab', () => {
   test("ECHO's history functions read a tab document the way they read Automerge", () => {
@@ -141,9 +108,9 @@ describe('full history in the tab', () => {
       A.getChangesMetaSince(host.doc('task'), []).map(pick),
     );
 
-    // The one function that replays raw changes into a fresh Automerge document needs a small rewrite.
-    expect(() => getEditHistoryWithDiffs(spike)).toThrow();
-    expect(editHistoryWithDiffs(tab.handle.doc())).toEqual(getEditHistoryWithDiffs(real));
+    // Replaying raw changes into a fresh document works too: in a tab, `A.init` makes a tab document
+    // and `A.applyChanges` decodes the changes in JS.
+    expect(asTab(() => getEditHistoryWithDiffs(spike))).toEqual(getEditHistoryWithDiffs(real));
     expect(leaks).toEqual([]);
   });
 

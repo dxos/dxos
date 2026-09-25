@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// Reads a saved Automerge document (a document chunk) without Automerge. Columns must be uncompressed:
-// the host sends `saveNoCompress()` bytes, so the tab needs no DEFLATE.
+// Reads Automerge's binary formats without Automerge: a saved document (a document chunk) and change
+// chunks. Columns must be uncompressed: the host sends `saveNoCompress()` bytes and uncompressed
+// changes, so the tab needs no DEFLATE.
+
+import { sha256 } from './sha256.ts';
 
 const ACTIONS = ['makeMap', 'set', 'makeList', 'del', 'makeText', 'inc'];
 
@@ -180,16 +183,55 @@ export type Saved = { actors: string[]; heads: string[]; changes: SavedChange[];
 
 const hex = (bytes: Uint8Array): string => [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 
-/** Every op of a saved document in stored order, with actor indexes, plus the change metadata. */
-export const readSaved = (bytes: Uint8Array): Saved => {
-  const cursor = new Cursor(bytes);
+/** The datatypes `A.decodeChange` names; a string, bytes, a boolean or null carries none. */
+const DATATYPES: Record<number, string> = { 3: 'uint', 4: 'int', 5: 'float64', 8: 'counter', 9: 'timestamp' };
+
+/** A value from its metadata (length and type code) and the raw value column. */
+const readValue = (meta: number, raw: Cursor | undefined): { value: unknown; datatype?: string } => {
+  const length = Math.floor(meta / 16);
+  const valueType = meta & 0xf;
+  if (!raw || length === 0) {
+    return { value: valueType === 6 ? '' : valueType === 1 ? false : valueType === 2 ? true : null };
+  }
+  const value = raw.take(length);
+  const datatype = DATATYPES[valueType];
+  if (valueType === 6) {
+    return { value: decoder.decode(value), datatype };
+  }
+  if (valueType === 3) {
+    return { value: new Cursor(value).uleb(), datatype };
+  }
+  if (valueType === 4 || valueType === 8 || valueType === 9) {
+    return { value: new Cursor(value).leb(), datatype };
+  }
+  if (valueType === 5) {
+    return { value: new DataView(value.buffer, value.byteOffset, 8).getFloat64(0, true), datatype };
+  }
+  return { value: value.slice(), datatype };
+};
+
+/** Opens a chunk: checks the magic bytes and the checksum, and returns its type, hash and end. */
+const openChunk = (cursor: Cursor): { type: number; hash: Uint8Array; end: number } => {
   const magic = cursor.take(4);
   if (magic[0] !== 0x85 || magic[1] !== 0x6f || magic[2] !== 0x4a || magic[3] !== 0x83) {
     throw new Error('Not an Automerge chunk');
   }
-  cursor.take(4);
+  const checksum = cursor.take(4);
+  const hashedFrom = cursor.offset;
   const type = cursor.byte();
-  cursor.uleb();
+  const length = cursor.uleb();
+  const end = cursor.offset + length;
+  const hash = sha256(cursor.bytes.subarray(hashedFrom, end));
+  if (hash.subarray(0, 4).some((byte, index) => byte !== checksum[index])) {
+    throw new Error('Chunk checksum does not match');
+  }
+  return { type, hash, end };
+};
+
+/** Every op of a saved document in stored order, with actor indexes, plus the change metadata. */
+export const readSaved = (bytes: Uint8Array): Saved => {
+  const cursor = new Cursor(bytes);
+  const { type } = openChunk(cursor);
   if (type !== 0) {
     throw new Error(`Expected a document chunk, got type ${type}`);
   }
@@ -270,38 +312,108 @@ export const readSaved = (bytes: Uint8Array): Saved => {
       value: undefined,
       succ: [],
     };
-    const meta = next<number>(valueMeta) ?? 0;
-    const length = Math.floor(meta / 16);
-    const valueType = meta & 0xf;
-    if (raw && length > 0) {
-      const value = raw.take(length);
-      op.datatype = (
-        { 3: 'uint', 4: 'int', 5: 'float64', 6: 'str', 7: 'bytes', 8: 'counter', 9: 'timestamp' } as Record<
-          number,
-          string
-        >
-      )[valueType];
-      if (valueType === 6) {
-        op.value = decoder.decode(value);
-      } else if (valueType === 3) {
-        op.value = new Cursor(value).uleb();
-      } else if (valueType === 4 || valueType === 8 || valueType === 9) {
-        op.value = new Cursor(value).leb();
-      } else if (valueType === 5) {
-        op.value = new DataView(value.buffer, value.byteOffset, 8).getFloat64(0, true);
-      } else {
-        op.value = value.slice();
-      }
-    } else {
-      op.value = valueType === 1 ? false : valueType === 2 ? true : valueType === 6 ? '' : null;
-      if (valueType === 6) {
-        op.datatype = 'str';
-      }
-    }
+    Object.assign(op, readValue(next<number>(valueMeta) ?? 0, raw));
     for (let count = next<number>(succCount) ?? 0; count > 0; count--) {
       op.succ.push([next<number>(succActor)!, next<number>(succCounter)!]);
     }
     ops.push(op);
   }
   return { actors, heads, changes, ops };
+};
+
+export type ReadChange = {
+  actor: string;
+  seq: number;
+  startOp: number;
+  time: number;
+  message: string | null;
+  deps: string[];
+  hash: string;
+  ops: {
+    action: string;
+    obj: string;
+    key?: string;
+    elemId?: string;
+    insert?: boolean;
+    value?: unknown;
+    datatype?: string;
+    pred: string[];
+  }[];
+};
+
+/**
+ * `A.decodeChange` in JS: a change chunk's header and ops, and its hash. `bytes`
+ * may hold several chunks back to back; `offset` says where this one starts, and `end` in the result
+ * where it stopped.
+ */
+export const readChange = (bytes: Uint8Array, offset = 0): ReadChange & { end: number } => {
+  const cursor = new Cursor(bytes, offset);
+  const { type, hash, end } = openChunk(cursor);
+  if (type === 2) {
+    throw new Error('Compressed change chunks are not supported; send changes uncompressed');
+  }
+  if (type !== 1) {
+    throw new Error(`Expected a change chunk, got type ${type}`);
+  }
+  const deps: string[] = [];
+  for (let count = cursor.uleb(); count > 0; count--) {
+    deps.push(hex(cursor.take(32)));
+  }
+  const actor = hex(cursor.take(cursor.uleb()));
+  const seq = cursor.uleb();
+  const startOp = cursor.uleb();
+  const time = cursor.leb();
+  const messageLength = cursor.uleb();
+  const message = messageLength > 0 ? decoder.decode(cursor.take(messageLength)) : null;
+  const actors = [actor];
+  for (let count = cursor.uleb(); count > 0; count--) {
+    actors.push(hex(cursor.take(cursor.uleb())));
+  }
+  const specs = readColumns(cursor, bytes).specs;
+  const columns = sliceColumns(new Cursor(bytes, cursor.offset, end), specs);
+  const open = opener(columns);
+  const objActor = open(0, 1);
+  const objCounter = open(0, 2);
+  const keyActor = open(1, 1);
+  const keyCounter = open(1, 3);
+  const keyString = open(1, 5);
+  const insert = open(3, 4);
+  const action = open(4, 2);
+  const valueMeta = open(5, 6);
+  const rawBytes = columns.get((5 << 4) | 7);
+  const raw = rawBytes ? new Cursor(rawBytes) : undefined;
+  const predCount = open(7, 0);
+  const predActor = open(7, 1);
+  const predCounter = open(7, 3);
+  const id = (actorIndex: number, counter: number) => `${counter}@${actors[actorIndex]}`;
+  const ops: ReadChange['ops'] = [];
+  for (;;) {
+    const actionCode = next<number>(action);
+    if (actionCode === null) {
+      break;
+    }
+    const oActor = next<number>(objActor);
+    const oCounter = next<number>(objCounter) ?? 0;
+    const kActor = next<number>(keyActor);
+    const kCounter = next<number>(keyCounter) ?? 0;
+    const kString = next<string>(keyString);
+    const isInsert = next<boolean>(insert) ?? false;
+    const name = ACTIONS[actionCode];
+    const { value, datatype } = readValue(next<number>(valueMeta) ?? 0, raw);
+    const pred: string[] = [];
+    for (let count = next<number>(predCount) ?? 0; count > 0; count--) {
+      pred.push(id(next<number>(predActor) ?? 0, next<number>(predCounter) ?? 0));
+    }
+    const scalar = name === 'set' || name === 'inc';
+    ops.push({
+      action: name,
+      obj: oActor === null ? '_root' : id(oActor, oCounter),
+      ...(kString !== null ? { key: kString } : { elemId: kActor === null ? '_head' : id(kActor, kCounter) }),
+      ...(isInsert ? { insert: true } : {}),
+      ...(name === 'set' && datatype !== undefined ? { datatype } : {}),
+      ...(scalar ? { value } : {}),
+      pred,
+    });
+  }
+  return { actor, seq, startOp, time, message, deps, hash: hex(hash), ops, end };
 };

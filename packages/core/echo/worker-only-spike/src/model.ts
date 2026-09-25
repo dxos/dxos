@@ -2,38 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ImmutableString } from '@automerge/automerge/slim';
-
+import { encodeChange } from './encode.ts';
+import { type Change, type Clock, type DecodedOp, type OpId, compareIds, formatId, inClock, parseId } from './ids.ts';
+import { immutableString } from './immutable-string.ts';
 import { readSaved } from './reader.ts';
-
-/** An Automerge op id: counter, then actor. */
-export type OpId = readonly [counter: number, actor: string];
-
-/** An op as `A.decodeChange` returns it, which is also what `A.encodeChange` takes. */
-export type DecodedOp = {
-  action: string;
-  obj: string;
-  key?: string;
-  elemId?: string;
-  insert?: boolean;
-  value?: unknown;
-  datatype?: string;
-  pred: string[];
-};
-
-/** A change as `A.decodeChange` returns it. */
-export type Change = {
-  actor: string;
-  seq: number;
-  startOp: number;
-  time: number;
-  message: string | null;
-  deps: string[];
-  hash: string;
-  ops: DecodedOp[];
-};
-
-export type Clock = ReadonlyMap<string, number>;
 
 export type Patch =
   | { action: 'put'; path: (string | number)[]; value: unknown }
@@ -80,19 +52,6 @@ const OBJECT_TYPES: Record<string, 'map' | 'list' | 'text'> = {
   makeText: 'text',
 };
 
-export const parseId = (key: string): OpId => {
-  const at = key.indexOf('@');
-  return [Number(key.slice(0, at)), key.slice(at + 1)];
-};
-
-export const formatId = ([counter, actor]: OpId): string => `${counter}@${actor}`;
-
-/** Lamport order: counter first, then actor. */
-export const compareIds = (left: OpId, right: OpId): number =>
-  left[0] !== right[0] ? left[0] - right[0] : left[1] < right[1] ? -1 : left[1] > right[1] ? 1 : 0;
-
-export const inClock = (clock: Clock, [counter, actor]: OpId): boolean => counter <= (clock.get(actor) ?? 0);
-
 /**
  * A whole Automerge document as plain JS: every op with the ops that overwrote it, so the state at
  * any version, cursors, conflicts and diffs come out of one structure.
@@ -108,10 +67,13 @@ export class Model {
     return this.#maxOp;
   }
 
-  /** A document read from Automerge's saved bytes and its change hashes in stored order. */
-  static fromSaved(bytes: Uint8Array, hashes: readonly string[]): Model {
+  /**
+   * A document read from Automerge's saved bytes. Given no change hashes, it computes each by encoding
+   * the change again, and checks them against the saved heads as Automerge's own load does.
+   */
+  static fromSaved(bytes: Uint8Array, hashes?: readonly string[]): Model {
     const model = new Model();
-    const { actors, changes, ops } = readSaved(bytes);
+    const { actors, heads, changes, ops } = readSaved(bytes);
     const id = ([actor, counter]: readonly [number, number]): OpId => [counter, actors[actor]];
     const sequences = new Set<string>();
     for (const op of ops) {
@@ -124,7 +86,7 @@ export class Model {
         obj,
         action: op.action,
         value: op.value,
-        datatype: op.datatype === 'str' ? undefined : op.datatype,
+        datatype: op.datatype,
         ...(inSequence ? { elemId: key ?? '_head' } : { prop: key }),
         insert: op.insert,
         pred: [],
@@ -178,17 +140,29 @@ export class Model {
       startOps.set(index, first !== undefined && first <= change.maxOp ? first : change.maxOp + 1);
       previousMax.set(change.actor, change.maxOp);
     }
+    // Saved changes come in causal order, so each change's deps are hashed before it.
+    const known: string[] = [];
     changes.forEach((change, index) => {
-      model.#changes.set(hashes[index], {
+      const meta: ChangeMeta = {
         actor: actors[change.actor],
         seq: change.seq,
         startOp: startOps.get(index) ?? change.maxOp + 1,
         maxOp: change.maxOp,
-        deps: change.deps.map((dep) => hashes[dep]),
+        deps: change.deps.map((dep) => known[dep]),
         time: change.time,
         message: change.message,
-      });
+      };
+      const hash = hashes?.[index] ?? encodeChange({ ...meta, ops: model.#opsOf(meta) }).hash;
+      known.push(hash);
+      model.#changes.set(hash, meta);
     });
+    if (!hashes) {
+      const depended = new Set([...model.#changes.values()].flatMap((meta) => meta.deps));
+      const computed = known.filter((hash) => !depended.has(hash)).sort();
+      if (computed.join() !== [...heads].sort().join()) {
+        throw new Error('The saved heads do not match the changes read');
+      }
+    }
     return model;
   }
 
@@ -221,23 +195,6 @@ export class Model {
     if (!meta) {
       throw new RangeError(`Unknown change ${hash}`);
     }
-    const ops: DecodedOp[] = [];
-    for (let counter = meta.startOp; counter <= meta.maxOp; counter++) {
-      const rec = this.#ops.get(formatId([counter, meta.actor]));
-      if (!rec) {
-        throw new Error(`Missing op ${counter}@${meta.actor} of ${hash}`);
-      }
-      const scalar = rec.action === 'set' || rec.action === 'inc';
-      ops.push({
-        action: rec.action,
-        obj: rec.obj,
-        ...(rec.prop !== undefined ? { key: rec.prop } : { elemId: rec.elemId }),
-        ...(rec.insert ? { insert: true } : {}),
-        ...(scalar && rec.datatype !== undefined ? { datatype: rec.datatype } : {}),
-        ...(scalar ? { value: rec.value } : {}),
-        pred: [...rec.pred],
-      });
-    }
     return {
       actor: meta.actor,
       seq: meta.seq,
@@ -246,8 +203,38 @@ export class Model {
       message: meta.message,
       deps: [...meta.deps],
       hash,
-      ops,
+      ops: this.#opsOf(meta),
     };
+  }
+
+  #opsOf(meta: ChangeMeta): DecodedOp[] {
+    const ops: DecodedOp[] = [];
+    for (let counter = meta.startOp; counter <= meta.maxOp; counter++) {
+      const rec = this.#ops.get(formatId([counter, meta.actor]));
+      if (!rec) {
+        throw new Error(`Missing op ${counter}@${meta.actor}`);
+      }
+      const scalar = rec.action === 'set' || rec.action === 'inc';
+      ops.push({
+        action: rec.action,
+        obj: rec.obj,
+        ...(rec.prop !== undefined ? { key: rec.prop } : { elemId: rec.elemId }),
+        ...(rec.insert ? { insert: true } : {}),
+        ...(rec.action === 'set' && rec.datatype !== undefined ? { datatype: rec.datatype } : {}),
+        ...(scalar ? { value: rec.value } : {}),
+        pred: [...rec.pred],
+      });
+    }
+    return ops;
+  }
+
+  /** The hashes of the changes `heads` reach, in causal order. */
+  changesIn(heads: readonly string[]): string[] {
+    const clock = this.clockOf(heads);
+    return this.changeHashes().filter((hash) => {
+      const meta = this.#changes.get(hash);
+      return meta !== undefined && (meta.maxOp < meta.startOp || inClock(clock, [meta.maxOp, meta.actor]));
+    });
   }
 
   changeMeta(hash: string): ChangeMeta | undefined {
@@ -430,7 +417,11 @@ export class Model {
       return new Date(rec.value as number);
     }
     if (typeof rec.value === 'string' && !inText) {
-      return new ImmutableString(rec.value);
+      return immutableString(rec.value);
+    }
+    // A copy, so a reader cannot change the model's own bytes.
+    if (rec.value instanceof Uint8Array) {
+      return new Uint8Array(rec.value);
     }
     return rec.value;
   }

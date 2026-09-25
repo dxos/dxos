@@ -42,6 +42,7 @@ export type Shape = {
   tags: A.ImmutableString[];
   items: { name: A.ImmutableString; n: number }[];
   meta?: { keys: A.ImmutableString[]; at: Date };
+  blob?: Uint8Array;
 };
 
 export const initialShape = (): Shape => ({
@@ -82,10 +83,12 @@ export const randomEdit =
       }
     } else if (roll < 0.86) {
       draft.items.push({ name: new A.ImmutableString('item'), n: pick(10) });
-    } else if (roll < 0.93) {
+    } else if (roll < 0.9) {
       if (draft.items.length > 0) {
         draft.items[pick(draft.items.length)].n = pick(10);
       }
+    } else if (roll < 0.94) {
+      draft.blob = new Uint8Array([pick(256), pick(256), pick(256)]);
     } else {
       draft.meta = { keys: [new A.ImmutableString(words[pick(words.length)])], at: new Date(pick(1e6) * 1000) };
     }
