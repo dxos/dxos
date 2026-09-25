@@ -654,18 +654,13 @@ export class AppManager {
       .poll(async () => {
         nudge = 1 - nudge;
         await this.page.mouse.move(x, y + nudge);
-        return over.getAttribute('data-instruction');
+        const zone = await over.getAttribute('data-instruction');
+        if (zone !== instruction) {
+          return zone;
+        }
+        return !holdUntil || (await holdUntil()) ? zone : `${zone} (holding)`;
       })
       .toBe(instruction);
-    if (holdUntil) {
-      await expect
-        .poll(async () => {
-          nudge = 1 - nudge;
-          await this.page.mouse.move(x, y + nudge);
-          return holdUntil();
-        })
-        .toBe(true);
-    }
     await this.page.mouse.up();
   }
 

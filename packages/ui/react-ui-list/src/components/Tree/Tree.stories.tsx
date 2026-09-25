@@ -366,15 +366,17 @@ export const DragEnterPrefetches: Story = {
 
     const dataTransfer = new DataTransfer();
     drag(source, 'dragstart', dataTransfer);
-    drag(target, 'dragenter', dataTransfer);
-    drag(target, 'dragover', dataTransfer);
-
-    await waitFor(() =>
-      expect(args.onItemHover).toHaveBeenCalledWith({
-        item: expect.objectContaining({ id: target.getAttribute('data-object-id') }),
-      }),
-    );
-    drag(source, 'dragend', dataTransfer);
+    try {
+      drag(target, 'dragenter', dataTransfer);
+      drag(target, 'dragover', dataTransfer);
+      await waitFor(() =>
+        expect(args.onItemHover).toHaveBeenCalledWith({
+          item: expect.objectContaining({ id: target.getAttribute('data-object-id') }),
+        }),
+      );
+    } finally {
+      drag(source, 'dragend', dataTransfer);
+    }
   },
 };
 

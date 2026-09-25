@@ -8,7 +8,8 @@ import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
-import { Tooltip, type TooltipSide, type TooltipTriggerProps } from './Tooltip.tsx';
+import { TextTooltip } from './TextTooltip.tsx';
+import { Tooltip, type TooltipSide } from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the
@@ -69,14 +70,21 @@ describe('Tooltip', () => {
     await waitFor(() => expect(first.getAttribute('aria-describedby')).toEqual('own-description'));
   });
 
-  test('a vetoed hover stays closed without cancelling the pointer event', async ({ expect }) => {
-    render(<Harness onInteract={() => false} />, { wrapper: Wrapper });
-    const [first] = screen.getAllByRole('button');
+  test('a text tooltip that fits stays closed without cancelling the pointer event', async ({ expect }) => {
+    render(
+      <Tooltip.Provider delayDuration={0} disableHoverableContent>
+        <TextTooltip text='label' onlyWhenTruncating>
+          <button>label</button>
+        </TextTooltip>
+      </Tooltip.Provider>,
+      { wrapper: Wrapper },
+    );
+    const button = screen.getByRole('button');
 
-    expect(fireEvent.pointerMove(first, { pointerType: 'mouse' })).toBe(true);
+    expect(fireEvent.pointerMove(button, { pointerType: 'mouse' })).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(first.getAttribute('data-state')).toEqual('closed');
-    expect(first.getAttribute('aria-describedby')).toBeNull();
+    expect(button.getAttribute('data-state')).toEqual('closed');
+    expect(button.getAttribute('aria-describedby')).toBeNull();
   });
 
   test('hovering one trigger does not re-render the others', async ({ expect }) => {
@@ -152,22 +160,12 @@ describe('Tooltip', () => {
   });
 });
 
-type HarnessProps = {
-  onRender?: (label: string) => void;
-  describedBy?: string;
-  onInteract?: TooltipTriggerProps['onInteract'];
-};
+type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
 
 // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-const Harness = ({ onRender, describedBy, onInteract, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
+const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
   <Tooltip.Provider delayDuration={0} disableHoverableContent>
-    <CountingTrigger
-      label='first'
-      onRender={onRender}
-      describedBy={describedBy}
-      onInteract={onInteract}
-      side={sides[0]}
-    />
+    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} side={sides[0]} />
     <CountingTrigger label='second' onRender={onRender} side={sides[1]} />
   </Tooltip.Provider>
 );
@@ -178,10 +176,9 @@ const CountingTrigger = ({
   label,
   onRender,
   describedBy,
-  onInteract,
   side,
 }: { label: string; side?: TooltipSide } & HarnessProps) => (
-  <Tooltip.Trigger asChild content={`${label} tip`} side={side} onInteract={onInteract}>
+  <Tooltip.Trigger asChild content={`${label} tip`} side={side}>
     <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
   </Tooltip.Trigger>
 );

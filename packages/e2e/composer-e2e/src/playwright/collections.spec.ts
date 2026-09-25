@@ -61,11 +61,15 @@ test.describe('Collection tests', () => {
 
     const collection1Path = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
     const collection2Path = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
-    const collection1InCollection2Path = `${collection2Path}/${collection1Path?.split('/').at(-1)}`;
+    if (!collection1Path || !collection2Path) {
+      throw new Error('collection rows have no data-object-id');
+    }
+    const collection1InCollection2Path = `${collection2Path}/${collection1Path.split('/').at(-1)}`;
     await host.dragInto(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'));
     await expect(
       host.getObjectLinks().and(host.page.locator(`[data-object-id="${collection1InCollection2Path}"]`)),
     ).toHaveCount(1);
+    await expect(host.getObjectByName('Collection 1')).toHaveCount(1);
   });
 
   test('delete a collection', { tag: ['@QA-6'] }, async () => {
