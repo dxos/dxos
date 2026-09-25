@@ -197,7 +197,8 @@ type HighlightedSourceProps = Omit<SyntaxHighlighterProps, 'themeStyle' | 'fallb
 const HighlightedSource = memo(({ children, renderer, wrapLines, ...props }: HighlightedSourceProps) => (
   <NativeSyntaxHighlighter
     customStyle={customStyle}
-    codeTagProps={codeTagProps}
+    // Copied per render: the library writes `whiteSpace` into this style, which would leak across instances.
+    codeTagProps={{ ...codeTagProps, style: { ...codeTagProps?.style } }}
     renderer={renderer ?? renderRows}
     // Any renderer makes the library default `wrapLines` to true; only a caller's own renderer should get that.
     wrapLines={wrapLines ?? (renderer ? undefined : false)}
