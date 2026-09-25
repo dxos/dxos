@@ -28,7 +28,9 @@ export const WalkthroughView = ({ value, sidebar, layout, onLineComment }: Walkt
     [themeMode, sidebar, layout, onLineComment],
   );
 
-  return <TextEditor value={value} extensions={extensions} focusable={false} classNames='dx-expand overflow-auto' />;
+  // Only CodeMirror's own scroller may scroll: it carries the editor's themed scrollbar, whereas an
+  // overflowing host would draw the browser's.
+  return <TextEditor value={value} extensions={extensions} focusable={false} classNames='dx-expand overflow-hidden' />;
 };
 
 export type WalkthroughPlaceholderProps = {

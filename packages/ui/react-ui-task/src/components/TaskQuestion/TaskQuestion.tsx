@@ -4,8 +4,9 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Flex, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -17,6 +18,18 @@ export type TaskQuestionProps = ThemedClassName<{
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
   message?: string;
+  /**
+   * One line for the question and one for its answer, with no context or controls — for a list row,
+   * where the full prompt would crowd out the tasks; the host's detail surface renders it in full.
+   */
+  compact?: boolean;
+  /**
+   * Lay the question out on the host's own columns (`grid-cols-subgrid`) rather than its own two, so
+   * its glyph and text line up with the host's. The host must place this across the tracks it wants.
+   */
+  subgrid?: boolean;
+  /** Cell placement for the glyph and the text, when `subgrid` — the host names its own tracks. */
+  cells?: { icon?: string; body?: string };
 }>;
 
 /**
@@ -40,6 +53,9 @@ export const TaskQuestion = ({
   onAnswer,
   busy,
   message,
+  compact,
+  subgrid,
+  cells,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
@@ -64,89 +80,129 @@ export const TaskQuestion = ({
     [submit, text],
   );
 
-  return (
-    <Flex column gap='xs' asChild classNames={['text-sm', classNames]}>
+  if (compact) {
+    // No event stopping: nothing here takes input, so a click falls through to the row and selects
+    // the task — which is how the reader reaches the full question.
+    return (
       <div
         role='group'
         aria-label={question.text}
+        className={mx('flex flex-col gap-1 text-sm', classNames)}
         data-testid='task-question'
-        onClick={stop}
-        onPointerDown={stop}
-        onKeyDown={stop}
       >
-        <Flex align='start' gap='sm'>
-          <Icon icon='ph--question--regular' classNames='mt-0.5 shrink-0 text-amber-text' />
-          <span className='font-medium break-words'>{question.text}</span>
-        </Flex>
-
-        {question.context && !answer && (
-          <p className='ps-6 text-description break-words line-clamp-3'>{question.context}</p>
-        )}
-
-        {answer ? (
-          <Flex align='start' gap='sm' data-testid='task-question.answer'>
-            <Icon icon='ph--check-circle--regular' classNames='mt-0.5 shrink-0 text-success-text' />
-            <span className='break-words'>{answer.answer}</span>
-          </Flex>
-        ) : (
-          onAnswer && (
-            <Flex column gap='xs' classNames='ps-6'>
-              {question.options?.map((option) => (
-                <Button
-                  key={option.title}
-                  variant='default'
-                  disabled={busy}
-                  // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
-                  // to its text instead of clipping it.
-                  classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
-                  data-testid='task-question.option'
-                  onClick={() => submit(option.title)}
-                >
-                  {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
-                  <Flex column grow gap='xs' classNames='text-start'>
-                    <div className='font-medium break-words'>{option.title}</div>
-                    {option.description && (
-                      <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
-                    )}
-                  </Flex>
-                </Button>
-              ))}
-              {/* Wraps rather than squeezes: in a narrow host (a popover card) the field keeps a usable
-                  width and the button drops below it. */}
-              <Flex wrap gap='xs'>
-                <div className='flex-[1_1_10rem] min-w-0'>
-                  <Field.Root>
-                    <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                    <Field.Input
-                      value={text}
-                      disabled={busy}
-                      placeholder={t('question-answer.placeholder')}
-                      data-testid='task-question.input'
-                      onChange={(event) => setText(event.target.value)}
-                      onKeyDown={handleKeyDown}
-                    />
-                  </Field.Root>
-                </div>
-                <Button
-                  variant='primary'
-                  disabled={busy || text.trim() === ''}
-                  data-testid='task-question.submit'
-                  onClick={() => submit(text)}
-                >
-                  {t('question-submit.label')}
-                </Button>
-              </Flex>
-            </Flex>
-          )
-        )}
-
-        {message && (
-          <p className='ps-6 text-description' data-testid='task-question.message'>
-            {message}
-          </p>
+        <div className='flex items-center gap-2 min-w-0'>
+          <Icon icon='ph--question--regular' classNames='shrink-0 text-amber-text' />
+          <span className='font-medium truncate' title={question.text}>
+            {question.text}
+          </span>
+        </div>
+        {answer && (
+          <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
+            <Icon icon='ph--check-circle--regular' classNames='shrink-0 text-success-text' />
+            <span className='truncate' title={answer.answer}>
+              {answer.answer}
+            </span>
+          </div>
         )}
       </div>
-    </Flex>
+    );
+  }
+
+  const iconCell = mx('flex h-[1lh] items-center', cells?.icon ?? 'col-start-1');
+  const bodyCell = mx('min-w-0', cells?.body ?? 'col-start-2');
+
+  return (
+    // A grid of two tracks — glyph and text — so a host with the same tracks can lay the question on
+    // its own columns (`subgrid`), putting the glyph under its icons and the text under its titles.
+    <div
+      role='group'
+      aria-label={question.text}
+      className={mx(
+        'grid items-start gap-y-1 text-sm',
+        subgrid ? 'grid-cols-subgrid' : 'grid-cols-[min-content_1fr] gap-x-2',
+        classNames,
+      )}
+      data-testid='task-question'
+      onClick={stop}
+      onPointerDown={stop}
+      onKeyDown={stop}
+    >
+      <span className={iconCell}>
+        <Icon icon='ph--question--regular' classNames='text-amber-text' />
+      </span>
+      <span className={mx('font-medium break-words', bodyCell)}>{question.text}</span>
+
+      {question.context && !answer && (
+        <p className={mx('text-description break-words line-clamp-3', bodyCell)}>{question.context}</p>
+      )}
+
+      {answer ? (
+        <>
+          <span className={iconCell}>
+            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
+          </span>
+          <span className={mx('break-words', bodyCell)} data-testid='task-question.answer'>
+            {answer.answer}
+          </span>
+        </>
+      ) : (
+        onAnswer && (
+          <div className={mx('flex flex-col gap-1', bodyCell)}>
+            {question.options?.map((option) => (
+              <Button
+                key={option.title}
+                variant='default'
+                disabled={busy}
+                // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
+                // to its text instead of clipping it.
+                classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
+                data-testid='task-question.option'
+                onClick={() => submit(option.title)}
+              >
+                {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
+                <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
+                  <div className='font-medium break-words'>{option.title}</div>
+                  {option.description && (
+                    <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
+                  )}
+                </div>
+              </Button>
+            ))}
+            {/* Wraps rather than squeezes: in a narrow host (a popover card) the field keeps a usable
+                width and the button drops below it. */}
+            <div className='flex flex-wrap gap-1'>
+              <div className='flex-[1_1_10rem] min-w-0'>
+                <Field.Root>
+                  <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
+                  <Field.Input
+                    value={text}
+                    disabled={busy}
+                    placeholder={t('question-answer.placeholder')}
+                    data-testid='task-question.input'
+                    onChange={(event) => setText(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                </Field.Root>
+              </div>
+              <Button
+                variant='primary'
+                disabled={busy || text.trim() === ''}
+                data-testid='task-question.submit'
+                onClick={() => submit(text)}
+              >
+                {t('question-submit.label')}
+              </Button>
+            </div>
+          </div>
+        )
+      )}
+
+      {message && (
+        <p className={mx('text-description', bodyCell)} data-testid='task-question.message'>
+          {message}
+        </p>
+      )}
+    </div>
   );
 };
 

@@ -41,11 +41,24 @@ export const TaskArticle = ({ role, attendableId, subject: task }: TaskArticlePr
     { spaceId },
   );
 
+  // Record-only: an agent that asked over the MCP reads the answer back off the task.
+  const handleQuestionAnswer = useOperation(
+    TaskOperation.AnswerQuestion,
+    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
+    { spaceId },
+  );
+
   return (
     <Panel.Root role={role}>
       <Panel.Content>
         {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
-        <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+        <TaskList.Root
+          tasks={[task]}
+          selected={task.id}
+          showDescription
+          onTaskUpdate={handleUpdate}
+          onQuestionAnswer={handleQuestionAnswer}
+        >
           <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
         </TaskList.Root>
         <TaskArtifacts task={task} attendableId={attendableId} />
