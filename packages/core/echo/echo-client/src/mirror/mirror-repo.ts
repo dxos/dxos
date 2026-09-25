@@ -5,12 +5,13 @@
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
 
-import { Event, Trigger, UpdateScheduler, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
-import { Contract, Cursors, Wire } from '@dxos/automerge-proxy';
-import { Resource } from '@dxos/context';
-import { PublicKey, type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { type Event } from '@dxos/async';
+import { type Cursors, Op, Repo, Wire } from '@dxos/automerge-proxy';
+import { Resource, type Context as ResourceContext } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type MirrorService } from '@dxos/protocols/rpc';
 
@@ -27,53 +28,22 @@ import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
 import { isMirrorIndexedReads } from './mode.ts';
 
-/** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
+/** Builds the RawStrings the wire tags, since the proxy package does not run Automerge. */
 const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 
 const RPC_TIMEOUT = 30_000;
-const FLUSH_TIMEOUT = 30_000;
-const MAX_SUBMIT_FREQ = 20; // [batches/sec]
 
-/** Attempts {@link MirrorRepo.flushCreations} makes before a creation the worker refused fails it. */
-const FLUSH_ATTEMPTS = 3;
-
-/** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
-const FLUSH_RETRY_DELAY_MS = 50;
-
-/** First delay before replacing a subscription whose stream ended; doubles per failed attempt. */
-const RESUBSCRIBE_DELAY_MS = 250;
-
-/** Cap on the {@link RESUBSCRIBE_DELAY_MS} backoff, so a worker that stays down is still retried. */
-const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
-
-/** Events that answer a (re)subscription to a document. */
-const ANSWERS = new Set<Contract.DocumentEvent['type']>(['snapshot', 'recovered', 'caughtUp', 'copy', 'unavailable']);
+type Services = { mirrorService: MirrorService.Client; dataService: DataService.Client };
 
 /**
- * A repo whose documents are JSON mirrors served by the worker's `MirrorService`: the tab loads no
- * Automerge. Local edits become op batches, one in flight per document; the worker's entries bring
- * other writers' changes and acknowledge this tab's.
+ * A repo whose documents are proxies served by the worker's `MirrorService`: the tab loads no
+ * Automerge. `@dxos/automerge-proxy`'s repo does the syncing; this adds ECHO's services and errors,
+ * reads from the index, and Automerge replicas for code that needs them.
  */
 export class MirrorRepo extends Resource implements ClientRepo {
-  /** Random per tab session; tags this tab's batches in the worker's log and in change messages. */
-  readonly #clientId = PublicKey.random().toHex();
-  readonly #subscriptionId = PublicKey.random().toHex();
-  // Documents of different types share the map; `find<T>` is where a caller names the type.
-  readonly #handles: Record<string, MirrorDocHandle<any>> = {};
-  readonly #pendingCreations = new Map<string, Promise<void>>();
-  /** Creations the worker did not take; {@link flushCreations} requests them again. */
-  readonly #failedCreations = new Map<string, { handle: MirrorDocHandle<any>; error: Error; retry: () => void }>();
-  /** Answers to (re)subscriptions, for callers waiting to be caught up with the worker. */
-  readonly #answered = new Event<string>();
-  readonly #pendingAdd = new Set<string>();
-  readonly #pendingRemove = new Set<string>();
-  /**
-   * Documents whose (re)subscription the worker has not answered yet. Their batches wait: the answer
-   * settles whether the batch in flight was applied, and a batch sent meanwhile could be applied after
-   * the answer said it was not, and then sent again.
-   */
-  readonly #catchingUp = new Set<string>();
-  #subscriptionReady = new Trigger();
+  readonly #services: Services;
+  // Documents of different types share the repo; `find<T>` is where a caller names the type.
+  readonly #repo: Repo.ProxyRepo<DocumentId, MirrorDocHandle<any>>;
   /** Real Automerge replicas of documents handed to Automerge libraries, created on first use. */
   #replicas?: RepoProxy = undefined;
   /** The opening of {@link #replicas}, which every {@link replica} call made meanwhile waits on. */
@@ -85,51 +55,40 @@ export class MirrorRepo extends Resource implements ClientRepo {
       this.releaseReplica(documentId);
     },
   };
-  /** Batches whose submit failed, resent as they were: the worker ignores one it already applied. */
-  readonly #retry = new Map<string, Contract.SubmitBatch>();
-  /** Submit failures, so a flush can tell that writes it waits for may never land. */
-  readonly #failed = new Event<Error>();
-  /** Any handle confirming something, which is when a flush re-checks what is still pending. */
-  readonly #progress = new Event<void>();
-  #unsubscribe?: () => void = undefined;
-  #submitJob?: UpdateScheduler = undefined;
-  /** Bumped on reconnect, so a sync pass still waiting on the previous worker changes nothing when it returns. */
-  #generation = 0;
-  #resubscribeAttempts = 0;
-
-  readonly saveStateChanged = new Event<SaveStateChangedEvent>();
-
-  /** Edits the worker refused; each one is also logged, and fails a flush waiting for it. */
-  readonly editsRejected = new Event<EditsRejectedEvent>();
 
   constructor(
-    private _mirrorService: MirrorService.Client,
-    private _dataService: DataService.Client,
+    mirrorService: MirrorService.Client,
+    dataService: DataService.Client,
     private readonly _runtime: Context.Context<never>,
     private readonly _spaceId: SpaceId,
   ) {
     super();
+    this.#services = { mirrorService, dataService };
+    this.#repo = new Repo.ProxyRepo({
+      host: this.#createHost(),
+      createHandle: (options) => new MirrorDocHandle({ ...options, replicas: this.#replicaSource }),
+      errors: {
+        closed: (documentId) => new RepoClosedError({ spaceId: this._spaceId, documentId }),
+        refused: (documentId, changes) => new EditsRejectedError({ documentId, changes }),
+      },
+    });
   }
 
   get handles(): Record<string, ClientDocHandle<unknown>> {
-    return this.#handles;
+    return this.#repo.handles;
+  }
+
+  get saveStateChanged(): Event<SaveStateChangedEvent> {
+    return this.#repo.saveStateChanged;
+  }
+
+  /** Edits the worker refused; each one is also logged, and fails a flush waiting for it. */
+  get editsRejected(): Event<EditsRejectedEvent> {
+    return this.#repo.editsRejected;
   }
 
   find<T>(id: AnyDocumentId): ClientDocHandle<T> {
-    if (typeof id !== 'string') {
-      throw new TypeError(`Invalid documentId ${id}`);
-    }
-    const documentId = toDocumentId(id);
-    const existing = this.#handles[documentId];
-    if (existing) {
-      return existing;
-    }
-    this.#requireOpen(documentId);
-    const handle = this.#createHandle<T>({ documentId });
-    this.#handles[documentId] = handle;
-    this.#pendingRemove.delete(documentId);
-    this.#catchUp(documentId);
-    return handle;
+    return this.#find(id, false);
   }
 
   /**
@@ -138,94 +97,17 @@ export class MirrorRepo extends Resource implements ClientRepo {
    * index does not hold.
    */
   findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
-    if (!isMirrorIndexedReads() || typeof id !== 'string') {
-      return this.find(id);
-    }
-    const documentId = toDocumentId(id);
-    const existing = this.#handles[documentId];
-    if (existing) {
-      return existing;
-    }
-    this.#requireOpen(documentId);
-    const handle = this.#createHandle<T>({ documentId, followCopy: true });
-    this.#handles[documentId] = handle;
-    this.#pendingRemove.delete(documentId);
-    this.#catchUp(documentId);
-    return handle;
+    return this.#find(id, isMirrorIndexedReads());
   }
 
   create<T>(initialValue?: T): ClientDocHandle<T> {
     this.#requireOpen();
-    const handle = this.#createHandle<T>({ initialValue });
-    const request = () => {
-      const creation: Promise<void> = runServiceCall(
-        this._runtime,
-        this._dataService['DataService.createDocument']({
-          spaceId: this._spaceId,
-          // A doc's declared type is an interface without an index signature; the value is a plain JSON object.
-          initialValue: initialValue as Record<string, unknown>,
-        }),
-        { timeout: RPC_TIMEOUT },
-      )
-        .then(
-          ({ documentId }) => {
-            // The wire carries the id the worker minted as a plain string.
-            const id = documentId as DocumentId;
-            if (handle.isDeleted) {
-              this.#pendingRemove.add(id);
-              this.#submitJob?.trigger();
-              return;
-            }
-            handle._setDocumentId(id);
-            this.#handles[id] = handle;
-            this.#catchUp(id);
-          },
-          (err) => {
-            if (!this.isOpen) {
-              handle._failReady(err);
-              return;
-            }
-            log.catch(err);
-            if (!handle.isDeleted) {
-              this.#failedCreations.set(handle._internalId, { handle, error: err, retry: request });
-            }
-          },
-        )
-        .finally(() => {
-          if (this.#pendingCreations.get(handle._internalId) === creation) {
-            this.#pendingCreations.delete(handle._internalId);
-          }
-        });
-      this.#pendingCreations.set(handle._internalId, creation);
-    };
-    request();
-    return handle;
+    return this.#repo.create(initialValue);
   }
 
   /** Cursors over the text at `path` in a document this repo follows. */
   cursors(documentId: DocumentId, path: readonly (string | number)[]): Cursors.Tracker {
-    const handle = this.#handles[documentId];
-    if (!handle) {
-      throw new Error(`Document ${documentId} is not loaded`);
-    }
-    return new Cursors.Tracker(handle, [...path], {
-      resolve: async (path, heads, cursors) =>
-        (
-          await runServiceCall(
-            this._runtime,
-            this._mirrorService['MirrorService.resolveCursors']({ documentId, path: [...path], heads, cursors }),
-            { timeout: RPC_TIMEOUT },
-          )
-        ).positions,
-      create: async (path, heads, positions) =>
-        (
-          await runServiceCall(
-            this._runtime,
-            this._mirrorService['MirrorService.createCursors']({ documentId, path: [...path], heads, positions }),
-            { timeout: RPC_TIMEOUT },
-          )
-        ).cursors,
-    });
+    return this.#repo.cursors(documentId, path);
   }
 
   /**
@@ -243,8 +125,100 @@ export class MirrorRepo extends Resource implements ClientRepo {
     return handle;
   }
 
+  /** Drops a replica once nothing uses it; the document stays mirrored. */
+  releaseReplica(documentId: DocumentId): boolean {
+    return this.#replicas?.release(documentId) ?? false;
+  }
+
+  import<T>(): ClientDocHandle<T> {
+    throw new Error('Importing a binary document needs a worker RPC; not implemented in the mirror spike');
+  }
+
+  release(documentId: DocumentId): boolean {
+    return this.#repo.release(documentId);
+  }
+
+  /**
+   * Resolves once every edit made before the call is confirmed and its heads are in this tab, so heads
+   * read afterwards include the caller's writes.
+   */
+  async flush({ disk = false }: { disk?: boolean } = {}): Promise<void> {
+    await this.#repo.flushCreations();
+    await this.#replicas?.flush();
+    await this.#repo.flush({ storage: disk });
+  }
+
+  /**
+   * Waits until every pending creation has reached the worker, requesting again the ones it did not
+   * take. Throws if one still cannot be created.
+   */
+  async flushCreations(): Promise<void> {
+    await this.#repo.flushCreations();
+  }
+
+  /**
+   * Resolves once this tab holds every change the worker's copy of the document has now. The worker
+   * absorbs and saves before it answers a resubscription, so the answer is the barrier.
+   */
+  async catchUp(documentId: DocumentId): Promise<void> {
+    await this.#repo.catchUp(documentId);
+  }
+
+  protected override async _open(ctx: ResourceContext): Promise<void> {
+    await this.#repo.open(ctx);
+  }
+
+  protected override async _close(): Promise<void> {
+    const replicas = this.#replicasOpening;
+    this.#replicas = undefined;
+    this.#replicasOpening = undefined;
+    // One still opening is closed once it has opened.
+    await (await replicas?.catch(() => undefined))?.close();
+    await this.#repo.close();
+  }
+
+  _updateServices({
+    dataService,
+    mirrorService,
+  }: {
+    dataService: DataService.Client;
+    mirrorService?: MirrorService.Client;
+  }): void {
+    this.#services.dataService = dataService;
+    if (mirrorService) {
+      this.#services.mirrorService = mirrorService;
+    }
+    this.#replicas?._updateServices({ dataService });
+  }
+
+  /** Resubscribes every document with what this tab holds, so a new worker sends only what it missed. */
+  async _onReconnect(): Promise<void> {
+    await this.#repo.reconnect();
+    await this.#replicas?._onReconnect();
+  }
+
+  #find<T>(id: AnyDocumentId, followCopy: boolean): ClientDocHandle<T> {
+    if (typeof id !== 'string') {
+      throw new TypeError(`Invalid documentId ${id}`);
+    }
+    const documentId = toDocumentId(id);
+    const existing = this.#repo.handles[documentId];
+    if (existing) {
+      return existing;
+    }
+    this.#requireOpen(documentId);
+    return this.#repo.find(documentId, { followCopy });
+  }
+
+  /** The proxy repo opens a step before this one and closes a step after, so this lifecycle decides. */
+  #requireOpen(documentId?: DocumentId): void {
+    if (!this.isOpen) {
+      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+    }
+  }
+
   async #openReplicas(): Promise<RepoProxy> {
-    const replicas = new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    const replicas = new RepoProxy(this.#services.dataService, this._runtime, this._spaceId);
     this.#replicas = replicas;
     try {
       await replicas.open();
@@ -258,441 +232,60 @@ export class MirrorRepo extends Resource implements ClientRepo {
     }
   }
 
-  /** Drops a replica once nothing uses it; the document stays mirrored. */
-  releaseReplica(documentId: DocumentId): boolean {
-    return this.#replicas?.release(documentId) ?? false;
-  }
-
-  import<T>(): ClientDocHandle<T> {
-    throw new Error('Importing a binary document needs a worker RPC; not implemented in the mirror spike');
-  }
-
-  release(documentId: DocumentId): boolean {
-    const handle = this.#handles[documentId];
-    if (!handle || handle.hasPending) {
-      return false;
-    }
-    handle.removeAllListeners();
-    delete this.#handles[documentId];
-    this.#pendingAdd.delete(documentId);
-    this.#catchingUp.delete(documentId);
-    this.#retry.delete(documentId);
-    this.#pendingRemove.add(documentId);
-    this.#submitJob?.trigger();
-    return true;
-  }
-
-  /**
-   * Resolves once every edit made before the call is confirmed and its heads are in this tab, so heads
-   * read afterwards include the caller's writes.
-   */
-  async flush({ disk = false }: { disk?: boolean } = {}): Promise<void> {
-    await this.flushCreations();
-    await this.#replicas?.flush();
-    const drain = new AbortController();
-    try {
-      await asyncTimeout(this.#drain(drain.signal), FLUSH_TIMEOUT);
-    } finally {
-      drain.abort();
-    }
-    if (disk) {
-      const documentIds = Object.values(this.#handles)
-        .map((handle) => handle.documentId)
-        .filter((documentId): documentId is DocumentId => documentId !== undefined);
-      await runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
-        timeout: RPC_TIMEOUT,
-      });
-    }
-  }
-
-  /**
-   * Waits until every pending creation has reached the worker, requesting again the ones it did not
-   * take. Throws if one still cannot be created.
-   */
-  async flushCreations(): Promise<void> {
-    for (let attempt = 1; ; attempt++) {
-      for (const [id, { retry }] of this.#failedCreations) {
-        this.#failedCreations.delete(id);
-        retry();
-      }
-      await Promise.all(this.#pendingCreations.values());
-      const failed = this.#failedCreations.values().next().value;
-      if (!failed || !this.isOpen) {
-        return;
-      }
-      if (attempt >= FLUSH_ATTEMPTS) {
-        throw failed.error;
-      }
-      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
-    }
-  }
-
-  /**
-   * Resolves once this tab holds every change the worker's copy of the document has now. The worker
-   * absorbs and saves before it answers a resubscription, so the answer is the barrier.
-   */
-  async catchUp(documentId: DocumentId): Promise<void> {
-    if (!this.#handles[documentId]) {
-      throw new Error(`Document ${documentId} is not followed`);
-    }
-    if (this.#catchingUp.has(documentId)) {
-      // That request may predate what the caller needs; wait for it, then ask again.
-      await this.#answered.waitFor((answered) => answered === documentId);
-    }
-    const answered = this.#answered.waitFor((answered) => answered === documentId);
-    this.#catchUp(documentId);
-    await answered;
-  }
-
-  protected override async _open(): Promise<void> {
-    this.#submitJob = this.#createSubmitJob();
-    this.#subscribe();
-  }
-
-  protected override async _close(): Promise<void> {
-    for (const { handle, error } of this.#failedCreations.values()) {
-      handle._failReady(error);
-    }
-    this.#failedCreations.clear();
-    const replicas = this.#replicasOpening;
-    this.#replicas = undefined;
-    this.#replicasOpening = undefined;
-    // One still opening is closed once it has opened.
-    await (await replicas?.catch(() => undefined))?.close();
-    this.#unsubscribe?.();
-    this.#unsubscribe = undefined;
-    await this.#submitJob?.join();
-    this.#submitJob = undefined;
-  }
-
-  _updateServices({
-    dataService,
-    mirrorService,
-  }: {
-    dataService: DataService.Client;
-    mirrorService?: MirrorService.Client;
-  }): void {
-    this._dataService = dataService;
-    if (mirrorService) {
-      this._mirrorService = mirrorService;
-    }
-    this.#replicas?._updateServices({ dataService });
-  }
-
-  /** Resubscribes every document with what this tab holds, so a new worker sends only what it missed. */
-  async _onReconnect(): Promise<void> {
-    this.#generation++;
-    this.#unsubscribe?.();
-    // A pass still waiting for the old subscription resumes and stops at its generation check.
-    this.#subscriptionReady.wake();
-    // The previous pass may be blocked on a call to a worker that is gone; do not queue behind it.
-    this.#submitJob = this.#createSubmitJob();
-    // Answers owed on the old stream are lost with it.
-    this.#catchingUp.clear();
-    for (const documentId of Object.keys(this.#handles)) {
-      this.#catchUp(documentId);
-    }
-    this.#subscribe();
-    this.#submitJob?.trigger();
-    await this.#replicas?._onReconnect();
-  }
-
-  /** Asks the worker to (re)send a document from what this tab holds, once until it answers. */
-  #catchUp(documentId: string): void {
-    if (this.#catchingUp.has(documentId)) {
-      return;
-    }
-    this.#catchingUp.add(documentId);
-    // The answer settles the batch this retry would resend.
-    this.#retry.delete(documentId);
-    this.#pendingAdd.add(documentId);
-    this.#submitJob?.trigger();
-  }
-
-  #requireOpen(documentId?: DocumentId): void {
-    if (!this.isOpen || !this.#submitJob) {
-      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
-    }
-  }
-
-  #createHandle<T>(options: { documentId?: DocumentId; initialValue?: T; followCopy?: boolean }): MirrorDocHandle<T> {
-    const handle: MirrorDocHandle<T> = new MirrorDocHandle<T>({
-      ...options,
-      clientId: this.#clientId,
-      replicas: this.#replicaSource,
-      onDelete: () => {
-        if (!handle.documentId) {
-          this.#failedCreations.delete(handle._internalId);
-        } else {
-          delete this.#handles[handle.documentId];
-          this.#pendingAdd.delete(handle.documentId);
-          this.#catchingUp.delete(handle.documentId);
-          this.#retry.delete(handle.documentId);
-          this.#pendingRemove.add(handle.documentId);
-          this.#submitJob?.trigger();
-        }
-      },
-    });
-    handle.on('change', ({ patchInfo }) => {
-      if (patchInfo.source === 'change') {
-        this.#submitJob?.trigger();
-        this.#emitSaveState();
-      }
-    });
-    handle.gap.on(() => {
-      if (handle.documentId) {
-        this.#catchUp(handle.documentId);
-      }
-    });
-    handle.upgrade.on(() => {
-      // The worker loads its copy and answers from the heads the index was read at.
-      if (handle.documentId) {
-        this.#catchUp(handle.documentId);
-      }
-    });
-    handle.refused.on((changes) => {
-      const documentId = handle.documentId;
-      if (!documentId) {
-        return;
-      }
-      log.warn('mirror edits refused', { documentId, changes: changes.length });
-      this.editsRejected.emit({ documentId, changes });
-      // Goes out before the confirmation that follows, which would otherwise let a waiting flush resolve.
-      this.#failed.emit(new EditsRejectedError({ documentId, changes: changes.length }));
-    });
-    handle.confirmed.on(() => {
-      // One batch per document is in flight; the next can go once this one is confirmed.
-      this.#submitJob?.trigger();
-      this.#emitSaveState();
-      this.#progress.emit();
-    });
-    return handle;
-  }
-
-  #subscribe(): void {
-    const generation = this.#generation;
-    const ready = new Trigger();
-    this.#subscriptionReady = ready;
-    const stream = this._mirrorService['MirrorService.subscribe']({
-      subscriptionId: this.#subscriptionId,
-      clientId: this.#clientId,
-      spaceId: this._spaceId,
-    });
-    this.#unsubscribe = subscribeStream(this._runtime, stream, {
-      onData: ({ events }) => {
-        if (generation !== this.#generation) {
-          // Late delivery from a replaced stream: its answers are for requests made again since.
-          return;
-        }
-        this.#resubscribeAttempts = 0;
-        ready.wake();
-        for (const event of events) {
-          const handle = this.#handles[event.documentId];
-          handle?._receive(Wire.decodeEvent(event, WIRE));
-          if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
-            // The tab wrote after asking for the index copy, so its write needs the worker's copy.
-            if (event.type === 'copy' && handle && !handle.followsCopy) {
-              this.#catchUp(event.documentId);
-            }
-            this.#answered.emit(event.documentId);
-            this.#submitJob?.trigger();
-          }
-        }
-      },
-      onError: (err) => this.#onSubscriptionDropped(generation, err),
-      onClose: () => this.#onSubscriptionDropped(generation),
-    });
-  }
-
-  /**
-   * Replaces a stream that ended without this repo closing it: the worker forgets the subscription
-   * with its stream, so every document is followed again and caught up, after a backoff.
-   */
-  #onSubscriptionDropped(generation: number, err?: Error): void {
-    if (!this.isOpen || generation !== this.#generation) {
-      return;
-    }
-    log.warn('mirror subscription dropped, re-subscribing', { spaceId: this._spaceId, err });
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this.#resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
-    scheduleTask(
-      this._ctx,
-      async () => {
-        // A reconnect during the delay already replaced the stream.
-        if (this.isOpen && generation === this.#generation) {
-          await this._onReconnect();
-        }
-      },
-      delay,
-    );
-  }
-
-  #createSubmitJob(): UpdateScheduler {
-    return new UpdateScheduler(
-      this._ctx,
-      async () => {
-        const generation = this.#generation;
-        try {
-          await this.#sync(() => generation === this.#generation);
-        } catch (err) {
-          if (generation === this.#generation) {
-            throw err;
-          }
-          // Its work is redone against the new worker: every document caught up again.
-          log('sync pass for a replaced connection failed', { err });
-        }
-      },
-      { maxFrequency: MAX_SUBMIT_FREQ },
-    );
-  }
-
-  /**
-   * Sends subscription changes and one batch per document with buffered edits.
-   * @param current False once a reconnect replaced the connection this pass uses.
-   */
-  async #sync(current: () => boolean): Promise<void> {
-    await this.#subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-    if (!current()) {
-      return;
-    }
-    if (this.#pendingAdd.size > 0 || this.#pendingRemove.size > 0) {
-      // Read now, not when the catch-up was requested, so the answer is relative to what the tab holds.
-      const add = [...this.#pendingAdd].map((documentId) => {
-        const handle = this.#handles[documentId];
-        const known = handle?._known();
-        return {
-          documentId,
-          ...(known ? { known } : {}),
-          ...(handle?.followsCopy ? { mode: 'copy' as const } : {}),
-        };
-      });
-      const remove = [...this.#pendingRemove];
-      this.#pendingAdd.clear();
-      this.#pendingRemove.clear();
-      try {
-        await runServiceCall(
+  /** The worker's `MirrorService` and `DataService` as the proxy repo's host, with values tagged for JSON. */
+  #createHost(): Repo.Host<DocumentId> {
+    const services = this.#services;
+    const call = <A>(effect: Effect.Effect<A, unknown>) =>
+      runServiceCall(this._runtime, effect, { timeout: RPC_TIMEOUT });
+    return {
+      subscribe: ({ subscriptionId, clientId }, { onEvents, onError, onClose }) =>
+        subscribeStream(
           this._runtime,
-          this._mirrorService['MirrorService.updateSubscription']({
-            subscriptionId: this.#subscriptionId,
-            add,
-            remove,
+          services.mirrorService['MirrorService.subscribe']({ subscriptionId, clientId, spaceId: this._spaceId }),
+          {
+            onData: ({ events }) => onEvents(events.map((event) => Wire.decodeEvent(event, WIRE))),
+            onError,
+            onClose,
+          },
+        ),
+      updateSubscription: async (request) => {
+        await call(services.mirrorService['MirrorService.updateSubscription'](request));
+      },
+      submit: async ({ subscriptionId, batches }) =>
+        (
+          await call(
+            services.mirrorService['MirrorService.submit']({
+              subscriptionId,
+              batches: batches.map((batch) => ({ ...batch, changes: Wire.encodeChanges(batch.changes) })),
+            }),
+          )
+        ).results,
+      createDocument: async (initialValue) => {
+        const { documentId } = await call(
+          services.dataService['DataService.createDocument']({
+            spaceId: this._spaceId,
+            initialValue: toInitialValue(initialValue),
           }),
-          { timeout: RPC_TIMEOUT },
         );
-      } catch (err) {
-        if (!current()) {
-          return;
-        }
-        // Asked again on the next pass; until answered, those documents send nothing.
-        for (const { documentId } of add) {
-          if (this.#catchingUp.has(documentId)) {
-            this.#pendingAdd.add(documentId);
-          }
-        }
-        for (const documentId of remove) {
-          if (!this.#handles[documentId]) {
-            this.#pendingRemove.add(documentId);
-          }
-        }
-        this.#failed.emit(err instanceof Error ? err : new Error(String(err)));
-        return;
-      }
-      if (!current()) {
-        return;
-      }
-    }
-
-    const batches: Contract.SubmitBatch[] = [...this.#retry.values()].filter(
-      (batch) => !this.#catchingUp.has(batch.documentId),
-    );
-    this.#retry.clear();
-    for (const handle of Object.values(this.#handles)) {
-      if (!handle.documentId || this.#catchingUp.has(handle.documentId)) {
-        continue;
-      }
-      const next = handle._takeBatch();
-      if (next) {
-        batches.push({
-          documentId: handle.documentId,
-          epoch: next.epoch,
-          batchId: next.batch.batchId,
-          baseVersion: next.batch.baseVersion,
-          changes: Wire.encodeChanges(next.batch.changes),
-        });
-      }
-    }
-    if (batches.length === 0) {
-      return;
-    }
-    let results: MirrorService.SubmitResponse['results'];
-    try {
-      ({ results } = await runServiceCall(
-        this._runtime,
-        this._mirrorService['MirrorService.submit']({ subscriptionId: this.#subscriptionId, batches }),
-        { timeout: RPC_TIMEOUT },
-      ));
-    } catch (err) {
-      if (!current()) {
-        return;
-      }
-      for (const batch of batches) {
-        this.#retry.set(batch.documentId, batch);
-      }
-      this.#failed.emit(err instanceof Error ? err : new Error(String(err)));
-      return;
-    }
-    if (!current()) {
-      return;
-    }
-    for (const { documentId, status } of results) {
-      if (status !== 'applied') {
-        // Not applied by this worker; its answer to a resubscription settles the batch.
-        this.#catchUp(documentId);
-      }
-    }
-  }
-
-  /**
-   * Waits until no handle has an unconfirmed edit and every created document is back from the worker;
-   * rejects if a submit fails meanwhile. Documents still being fetched do not hold it up.
-   */
-  async #drain(signal: AbortSignal): Promise<void> {
-    while (!signal.aborted) {
-      const waiting = Object.values(this.#handles).filter(
-        (handle) =>
-          (handle.hasPending || handle.awaitingCreation) && handle.documentId && handle.state !== 'unavailable',
-      );
-      if (waiting.length === 0) {
-        return;
-      }
-      await new Promise<void>((resolve, reject) => {
-        const cleanup = () => {
-          offProgress();
-          offFailure();
-          signal.removeEventListener('abort', onAbort);
-        };
-        const onAbort = () => {
-          cleanup();
-          resolve();
-        };
-        signal.addEventListener('abort', onAbort);
-        const offProgress = this.#progress.on(() => {
-          cleanup();
-          resolve();
-        });
-        const offFailure = this.#failed.on((err) => {
-          cleanup();
-          reject(err);
-        });
-        this.#submitJob?.trigger();
-      });
-    }
-  }
-
-  #emitSaveState(): void {
-    const unsavedDocuments = Object.values(this.#handles)
-      .filter((handle) => handle.hasPending && handle.documentId)
-      .map((handle) => handle.documentId)
-      .filter((documentId): documentId is DocumentId => documentId !== undefined);
-    this.saveStateChanged.emit({ unsavedDocuments });
+        // The wire carries the id the worker minted as a plain string.
+        return documentId as DocumentId;
+      },
+      flush: async (documentIds) => {
+        await call(services.dataService['DataService.flush']({ documentIds }));
+      },
+      resolveCursors: async (request) =>
+        (await call(services.mirrorService['MirrorService.resolveCursors'](request))).positions,
+      createCursors: async (request) =>
+        (await call(services.mirrorService['MirrorService.createCursors'](request))).cursors,
+    };
   }
 }
+
+/** A document's initial value, which is a map at its root, as `DataService` takes it. */
+const toInitialValue = (value: unknown): Record<string, unknown> | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  invariant(Op.isContainer(value) && !Array.isArray(value), 'A document is a map at its root');
+  return value;
+};

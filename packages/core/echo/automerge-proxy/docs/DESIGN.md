@@ -25,23 +25,26 @@ Automerge at runtime.
 `Contract.ts` defines the payloads as effect Schemas. ECHO's `MirrorService` in `@dxos/protocols`
 wraps them in its RPCs and adds the subscription id and the space, so there is one definition.
 
-The host interface the package will program against:
+`Repo.Host` is the host as a client reaches it. `Repo.ProxyRepo` programs against it, and ECHO's
+`MirrorRepo` implements it over the worker's `MirrorService` and `DataService`:
 
 ```ts
-interface DocumentHost {
-  subscribe(clientId: string, onEvents: (events: Contract.DocumentEvent[]) => void): HostSubscription;
-  submit(subscription: HostSubscription, batches: Contract.SubmitBatch[]): Promise<Contract.SubmitResult[]>;
-  createDocument(initialValue: unknown): Promise<DocumentId>;
-  flush(documentIds: DocumentId[]): Promise<void>;
+interface Host<Id extends string = string> {
+  subscribe(
+    request: { subscriptionId: string; clientId: string },
+    handlers: { onEvents(events): void; onError(error): void; onClose(): void },
+  ): () => void;
+  updateSubscription(request: { subscriptionId: string; add?: Contract.Follow[]; remove?: string[] }): Promise<void>;
+  submit(request: { subscriptionId: string; batches: Contract.SubmitBatch[] }): Promise<Contract.SubmitResult[]>;
+  createDocument(initialValue: unknown): Promise<Id>;
+  flush(documentIds: Id[]): Promise<void>;
   resolveCursors(request: Contract.ResolveCursors): Promise<(number | null)[]>;
   createCursors(request: Contract.CreateCursors): Promise<(string | null)[]>;
 }
-
-interface HostSubscription {
-  update(request: { add?: Contract.Follow[]; remove?: DocumentId[] }): Promise<void>;
-  close(): void;
-}
 ```
+
+Values cross it plain. A transport that cannot carry RawStrings, bytes or dates encodes them with
+`Wire`, as ECHO's does for JSON.
 
 The events are `snapshot`, `entry`, `recovered`, `caughtUp`, `copy`, `requesting` and `unavailable`.
 A `copy` is a read-only value at known heads that the host keeps outside Automerge, such as ECHO's
@@ -49,17 +52,19 @@ SQLite index, so the host need not load the document to serve it.
 
 ## Status
 
-| Step | What moves                                                                                                                                                | State |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| A    | `echo-protocol/src/mirror/*` to the package root: ops, transform, client state and sequencer, wire; the contract schemas out of `MirrorService`           | done  |
-| B1   | `echo-client/src/mirror/recorder.ts` to `Draft`: the draft a `change()` callback writes through, recording ops                                            | done  |
-| B2   | `mirror-doc-handle.ts` minus ECHO's replicas, index copies and disk settlement, and `mirror-cursors.ts`                                                   | to do |
-| B3   | The core of `mirror-repo.ts` (subscriptions, submit throttling, resubscribing) over `DocumentHost`                                                        | to do |
-| C    | `echo-host/src/mirror/document-sequencer.ts` and `automerge-ops.ts` to `/host`, with a generic `DocumentHost` over a store taken from `mirror-service.ts` | to do |
+| Step | What moves                                                                                                                                      | State |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| A    | `echo-protocol/src/mirror/*` to the package root: ops, transform, client state and sequencer, wire; the contract schemas out of `MirrorService` | done  |
+| B1   | `echo-client/src/mirror/recorder.ts` to `Draft`: the draft a `change()` callback writes through, recording ops                                  | done  |
+| B2   | `mirror-doc-handle.ts` to `Handle`, minus ECHO's replicas, errors and handle interface; `mirror-cursors.ts` to `Cursors`                        | done  |
+| B3   | The core of `mirror-repo.ts` (subscriptions, submit throttling, resubscribing) to `Repo`, over `Repo.Host`                                      | done  |
+| C    | `echo-host/src/mirror/document-sequencer.ts` and `automerge-ops.ts` to `/host`, with a generic host over a store taken from `mirror-service.ts` | to do |
 
-After B2, B3 and C, ECHO keeps adapters: `MirrorRepo` implements `ClientRepo` over the package's repo and a
-`DocumentHost` built from its RPC client; the worker's service adapts the package's host to RPC and
-adds index copies from SQLite; replicas stay on `RepoProxy`.
+ECHO keeps adapters. `MirrorRepo` implements `ClientRepo` around `Repo.ProxyRepo`, with a `Repo.Host`
+over its RPC services, reads from the index, Automerge replicas on `RepoProxy`, and its own error
+types. `MirrorDocHandle` subclasses `Handle.DocHandle` for ECHO's handle interface and replica
+leases. After C, the worker's service adapts the package's host to RPC and adds index copies from
+SQLite.
 
 ## Tests at the boundary
 

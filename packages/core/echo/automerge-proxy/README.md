@@ -6,19 +6,22 @@ runtime.
 
 The package holds the parts with no dependency on ECHO:
 
-| Module      | What it is                                                                                     |
-| ----------- | ---------------------------------------------------------------------------------------------- |
-| `Op`        | Ops on plain JSON values (put, del, insert, remove, splice), applying and inverting them       |
-| `Transform` | Rebases one op list over another, so a client and the host converge in either order            |
-| `Sync`      | The client's confirmed and visible state, and the host's sequencer that orders batches         |
-| `Draft`     | The draft a `change()` callback writes through: behaves as Automerge's does and records ops    |
-| `Contract`  | Schemas of the events and requests that cross between client and host                          |
-| `Wire`      | Tags the values JSON cannot carry (RawString, bytes, dates) and restores them                  |
+| Module      | What it is                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| `Repo`      | `ProxyRepo`, the client's repo of proxy documents, and `Host`, the host as the repo sees it |
+| `Handle`    | `DocHandle`, a handle with Automerge's shape over one proxy document                        |
+| `Draft`     | The draft a `change()` callback writes through: behaves as Automerge's does and records ops |
+| `Cursors`   | Automerge cursors over a text, resolved by the host once and then moved locally             |
+| `Op`        | Ops on plain JSON values (put, del, insert, remove, splice), applying and inverting them    |
+| `Transform` | Rebases one op list over another, so a client and the host converge in either order         |
+| `Sync`      | The client's confirmed and visible state, and the host's sequencer that orders batches      |
+| `Contract`  | Schemas of the events and requests that cross between client and host                       |
+| `Wire`      | Tags the values JSON cannot carry (RawString, bytes, dates) and restores them               |
 
 `@dxos/automerge-proxy/testing` has a seeded random generator and random ops for property tests.
 
-ECHO uses it through `MirrorService` (`@dxos/protocols`), `MirrorRepo` (`@dxos/echo-client`) and the
-worker's `MirrorServiceImpl` (`@dxos/echo-host`). [docs/DESIGN.md](./docs/DESIGN.md) covers what is
+ECHO uses it through `MirrorService` (`@dxos/protocols`), `MirrorRepo` and `MirrorDocHandle`
+(`@dxos/echo-client`) and the worker's `MirrorServiceImpl` (`@dxos/echo-host`). [docs/DESIGN.md](./docs/DESIGN.md) covers what is
 still to move and the tests the boundary allows.
 
 ## Installation

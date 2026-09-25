@@ -33,6 +33,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "effect": "catalog:",
