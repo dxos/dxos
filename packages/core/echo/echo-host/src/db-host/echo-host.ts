@@ -98,8 +98,11 @@ import { type QueryExecutorMode } from '../query/index.ts';
 
 /**
  * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
- * in-memory executor. Resolved here, where the option enters, so nothing below reads the
+ * compiled SQL executor. Resolved here, where the option enters, so nothing below reads the
  * environment — the planner and executor take the mode they are given.
+ *
+ * `memory` remains reachable so a regression can be bisected against the old path without a rebuild,
+ * and the planner still falls back to it per query for the shapes the compiler declines.
  */
 const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
   if (explicit) {
@@ -108,11 +111,11 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
   const fromEnv =
     import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
     (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
-  return fromEnv === 'sql' ? 'sql' : 'memory';
+  return fromEnv === 'memory' ? 'memory' : 'sql';
 };
 
 export type EchoHostProps = {
-  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the in-memory executor. */
+  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
 
   peerIdProvider?: PeerIdProvider;

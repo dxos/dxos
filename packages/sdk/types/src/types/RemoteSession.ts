@@ -82,6 +82,7 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
     // by Claude Code (`SOURCE`). An icon annotation is type-level, so a second harness would have to
     // make this per-object — `harnessIcon` already keys off the foreign key for the places that can.
     Annotation.IconAnnotation.set({ icon: 'px--anthropic--regular', hue: 'yellow' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

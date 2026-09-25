@@ -70,7 +70,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Array of MCP servers that the AI assistant can use when this skill is active.
      */
-    mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+    mcpServers: Schema.optional(Schema.Array(McpServer.Spec)),
 
     /**
      * Hooks triggered automatically at certain points in the agent's lifecycle.
@@ -79,6 +79,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

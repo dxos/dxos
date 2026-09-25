@@ -17,21 +17,25 @@ type Handles = {
 };
 
 // Promises, not Effects: the update callback has to hand the browser one.
-const startTransition = Effect.try(() => {
-  let signalCaptured = () => {};
-  let settle = () => {};
-  const captured = new Promise<void>((resolve) => {
-    signalCaptured = resolve;
+const startTransition = (types: string[]) =>
+  Effect.try(() => {
+    let signalCaptured = () => {};
+    let settle = () => {};
+    const captured = new Promise<void>((resolve) => {
+      signalCaptured = resolve;
+    });
+    const settled = new Promise<void>((resolve) => {
+      settle = resolve;
+    });
+    document.startViewTransition({
+      update: () => {
+        signalCaptured();
+        return settled;
+      },
+      types,
+    });
+    return { captured, settle } satisfies Handles;
   });
-  const settled = new Promise<void>((resolve) => {
-    settle = resolve;
-  });
-  document.startViewTransition(() => {
-    signalCaptured();
-    return settled;
-  });
-  return { captured, settle } satisfies Handles;
-});
 
 /**
  * Run `effect` as the update step of a view transition, so the browser animates the DOM from the
@@ -42,13 +46,16 @@ const startTransition = Effect.try(() => {
  * captured. Keep the wrapped effect short: rendering is frozen until the callback settles, and the
  * browser abandons the transition after a few seconds.
  */
-export const withViewTransition = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+export const withViewTransition = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  types: string[] = [],
+): Effect.Effect<A, E, R> =>
   Effect.suspend(() => {
     if (!canTransition()) {
       return effect;
     }
 
-    return Effect.option(startTransition).pipe(
+    return Effect.option(startTransition(types)).pipe(
       Effect.flatMap(
         Option.match({
           onNone: () => effect,

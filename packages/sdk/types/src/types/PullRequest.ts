@@ -62,6 +62,7 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
     Schema.annotate({ title: 'Pull request', description: 'A proposed change to a repository.' }),
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--git-pull-request--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

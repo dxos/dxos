@@ -48,12 +48,13 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
     );
   }
 
+  // The article shows the task's artifacts itself, so the companion adds nothing beside it.
   return (
     <Surface.Surface
       type={AppSurface.Article}
       data={{ subject: task, attendableId: `${attendableId}/task` }}
-      limit={1}
       role={role}
+      limit={1}
     />
   );
 };

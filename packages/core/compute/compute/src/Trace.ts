@@ -155,10 +155,7 @@ export const MessageData = Schema.Struct({
 export type MessageData = Schema.Schema.Type<typeof MessageData>;
 
 export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.traceMessage', '0.1.0'))(
-  MessageData.pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
-    Annotation.HiddenAnnotation.set(true),
-  ),
+  MessageData.pipe(Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' })),
 ) {}
 
 /**
@@ -691,6 +688,8 @@ export const McpServerError = EventType('assistant.mcpServerError', {
     url: Schema.String,
     protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
+    /** The server wants credentials the configuration does not (validly) supply. */
+    unauthorized: Schema.optional(Schema.Boolean),
   }),
   isEphemeral: true,
 });

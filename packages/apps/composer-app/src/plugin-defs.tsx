@@ -3,8 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import { type AiService } from '@dxos/ai';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
@@ -215,6 +217,18 @@ const codeModeTurnProducer =
     );
   };
 
+// Loaded on first model resolution: the script and the operation definitions it names stay out of the
+// boot graph, which `check-boot-budget` gates.
+const scriptedAiServiceMiddleware = (upstream: AiService.Service): AiService.Service => ({
+  ...upstream,
+  languageModel: () =>
+    Layer.unwrap(
+      Effect.promise(() => import('./util/scripted-model.ts')).pipe(
+        Effect.flatMap(({ makeScriptedModel }) => makeScriptedModel()),
+      ),
+    ),
+});
+
 /** The two services the sandbox worker's ECHO client connects to, served from this tab's client. */
 const echoServices = (rpc: ClientServicesRpc) => {
   const { DataService, QueryService } = makeHandlersFromRpc(rpc);
@@ -234,7 +248,10 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make({ codeModeTurnProducer }),
+    AssistantPlugin.make(
+      // Code mode offers the model only its `eval` tool, which the script does not call.
+      config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : { codeModeTurnProducer },
+    ),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),

@@ -19,6 +19,7 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '
     content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

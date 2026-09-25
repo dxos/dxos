@@ -13,6 +13,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
   type Blob,
+  type Change,
   Database,
   Entity,
   Feed,
@@ -62,6 +63,7 @@ import {
   type ProxyTarget,
   checkoutVersionSnapshot,
   createObject,
+  getObjectChanges,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
@@ -1005,6 +1007,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
     return checkoutVersionSnapshot(obj, [...heads]);
+  }
+
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
+    return getObjectChanges(obj, opts);
   }
 
   listBranches(objectId: string): string[] {

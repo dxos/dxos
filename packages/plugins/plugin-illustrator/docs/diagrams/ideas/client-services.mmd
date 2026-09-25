@@ -1,0 +1,53 @@
+%% Client services: proxies talk to one provider interface; both transports attach to the single RpcRouter.
+flowchart TB
+  subgraph app [App: @dxos/client]
+    Halo[HaloProxy]
+    Spaces[SpaceList]
+    Provider[ServicesProvider]
+  end
+  subgraph transport [Transport]
+    Local[LocalClientSvcs]
+    Proxy[ClientSvcsProxy]
+    Worker[WorkerRuntime]
+  end
+  subgraph host [Service stack]
+    Router[RpcRouter]
+    IdSvc[IdentityService]
+    SpSvc[SpacesService]
+  end
+  IdMgr[IdentityManager]
+  DsMgr[DataSpaceMgr]
+  InvMgr[InvitationsMgr]
+  Echo[EchoHost]
+  Net[SwarmNetworkMgr]
+  Halo -->|rpc| Provider
+  Spaces -->|rpc| Provider
+  Provider -->|host mode| Local
+  Provider -->|worker mode| Proxy
+  Local -->|in-process| Router
+  Proxy -->|MessagePort| Worker
+  Worker -->|attach| Router
+  Router --> IdSvc
+  Router --> SpSvc
+  Router -->|invitations| InvMgr
+  Router -->|data| Echo
+  IdSvc --> IdMgr
+  SpSvc --> DsMgr
+  DsMgr --> Echo
+  DsMgr --> InvMgr
+  IdMgr -->|setEchoHost| Echo
+  InvMgr --> Net
+%% ref Halo packages/sdk/client/src/halo/halo-proxy.ts
+%% ref Spaces packages/sdk/client/src/echo/space-list.ts
+%% ref Provider packages/sdk/client-protocol/src/service.ts
+%% ref Local packages/sdk/client/src/services/local-client-services.ts
+%% ref Proxy packages/sdk/client/src/services/service-proxy.ts
+%% ref Worker packages/sdk/client-services/src/internal/worker/worker-runtime.ts
+%% ref Router packages/core/mesh/rpc/src/RpcRouter.ts
+%% ref IdSvc packages/sdk/client-services/src/internal/identity/identity-service.ts
+%% ref SpSvc packages/sdk/client-services/src/internal/spaces/spaces-service.ts
+%% ref IdMgr packages/sdk/client-services/src/internal/identity/identity-manager.ts
+%% ref DsMgr packages/sdk/client-services/src/internal/spaces/data-space-manager.ts
+%% ref InvMgr packages/sdk/client-services/src/internal/invitations/invitations-manager.ts
+%% ref Echo packages/core/echo/echo-host/src/db-host/echo-host.ts
+%% ref Net packages/core/mesh/network-manager/src/network-manager.ts
