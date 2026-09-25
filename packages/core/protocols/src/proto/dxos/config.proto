@@ -140,9 +140,10 @@ message Runtime {
     /// Which path evaluates ECHO queries on the host.
     enum QueryExecutor {
       UNSPECIFIED_QUERY_EXECUTOR = 0;
-      /// Load the objects a plan touches and evaluate every step in JS. The default.
+      /// Load the objects a plan touches and evaluate every step in JS.
       MEMORY = 1;
       /// Compile the plan into one SQLite statement over the index tables and load no documents.
+      /// The default.
       SQL = 2;
     }
 
