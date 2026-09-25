@@ -36,19 +36,22 @@ real worker boundary or run in a browser yet.
    confirmed heads, and an object with unconfirmed edits reports `versioned: false`. Both are
    implemented. Branch operations must queue behind pending edits, return the heads they used, and
    resolve after the tab has their result. That is not implemented.
-6. **The largest blockers** are the cursor consumers, worker RPCs for branches, history and
-   migrations, and shared operation code that calls Automerge through `Doc.Handle`. The CodeMirror
-   binding, the largest UI item, has a working prototype.
+6. **The largest blockers** are worker RPCs for branches, history and migrations, and shared
+   operation code that calls Automerge through `Doc.Handle`. The editor works: it writes to the
+   mirror and takes op-id cursors from a replica of its document that it holds while open (see
+   [The editor in mirror mode](#the-editor-in-mirror-mode)).
 7. **A tab can show objects whose documents the worker never loads.** The worker answers from its
    SQLite index, and a tab's first write to a document loads it and rebases the write. In Chromium,
    with ECHO in a dedicated worker and SQL query evaluation on, the Tasks app shows 1,000 items three
    times sooner than today while the worker holds one document instead of 1,001 (see
    [Index reads in the browser](#index-reads-in-the-browser)). Composer's nav tree lists 1,000
-   documents in about 10 s instead of 31 s with 4 documents in the worker, though opening a document
-   in mirror mode still needs the editor binding
+   documents in about 10 s instead of 31 s with 4 documents in the worker
    ([Index reads in Composer's nav tree](#index-reads-in-composers-nav-tree)). Sync still loads a
    document that receives remote changes, so this saves loads for reading, not for changes.
-8. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
+8. **Composer's e2e suite passes in mirror mode with index reads as it does today:** 28 passed and
+   15 skipped in both modes, and the one failure also fails on main. Getting there took nine fixes,
+   each with a unit test that reproduces its cause (see [E2E suites in mirror mode](#e2e-suites-in-mirror-mode)).
+9. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
    behind one interface. The mirror protocol is a separate RPC group, and `DataService` is unchanged.
@@ -151,9 +154,11 @@ Automerge has. So the requirement is met by construction instead:
   client. Any document-level function works on it, and the mirrors of that document, in the same tab
   and in others, converge with it one round trip later (`src/mirror/replica.test.ts`). A tab that
   never calls it loads no Automerge.
-- **ECHO's own editor uses the mirror.** The mirror binding (`ui-editor/.../collab/mirror/mirror.ts`)
-  is about 70 lines against 434 for the Automerge binding, because the mirror already merges with the
-  worker and the editor only keeps step with change events.
+- **ECHO's own editor writes to the mirror and takes cursors from a replica.** The mirror binding
+  (`ui-editor/.../collab/mirror/mirror.ts`) writes the editor's edits to the mirror and applies any
+  other change as the smallest edit that makes the texts equal. Comments and presence need op-id
+  cursors, so the editor also holds a replica of its document while open (see
+  [The editor in mirror mode](#the-editor-in-mirror-mode)).
 - **Repo-level libraries need a facade either way.** Neither `RepoProxy` nor `MirrorRepo` is an
   automerge-repo `Repo`, and neither handle implements `broadcast`, `heads()`, `history()` or `view()`.
   A thin `Repo` and `DocHandle` facade over replica handles would serve libraries like the React
@@ -197,6 +202,11 @@ EDGE keeps the first and tabs switch to the second.
   `waitUntilHeadsReplicated` uses it, since a mirror cannot test whether heads are ancestors of its
   own.
 - **`replica(documentId)`.** A real Automerge handle for code that needs the Automerge API.
+- **`leaseReplica(accessor)`.** Holds a replica of the document behind a mirrored accessor until
+  released, shared by every lease on that document. `inStep()` says whether the replica has
+  everything the mirror confirmed while nothing of this tab's is in flight. The cursor helpers
+  (`toCursor`, `fromCursor`, `getTextInRange`) resolve a mirrored accessor's cursors through the
+  held replica and map positions through the difference between the two texts.
 
 ### Wire
 
@@ -437,31 +447,123 @@ Medians of three runs for 200 documents; both runs for 1,000. About 5.5 s of eac
 - A mirror tab holds 25 MB less buffer memory than a replica tab at 1,000 documents.
 - With index reads every row arrives at once, since one SQLite query answers the whole subscription
   request. Answering it in chunks would show the first rows sooner.
-- Opening a document does not work in mirror mode yet, with or without index reads. The plank shows
-  "Unable to open this object": the markdown editor's Automerge extension calls Automerge on the
-  tab's copy of the document and throws `RangeError: must be the document root`. That is the
-  CodeMirror binding blocker below, and the hybrid in this proposal, a replica for any document
-  handed to Automerge code, is what fixes it.
+- Opening a document failed in mirror mode when these numbers were taken: the markdown editor
+  called Automerge on the tab's copy of the document and threw `RangeError: must be the document
+root`. [The editor in mirror mode](#the-editor-in-mirror-mode) fixes it.
+
+## The editor in mirror mode
+
+An editor over a mirrored document writes to the mirror and takes op-id cursors from a replica of
+the document (`ui-editor/.../collab/mirror/mirror.ts`).
+
+1. **Text.** `automerge(accessor)` sees a mirror document and returns `mirrorSync`. The editor's
+   transactions become splices on the mirror, and any other change reaches the editor as the
+   smallest edit that makes the two texts equal. The object reads what the editor wrote at once.
+2. **Replica.** While open, the editor leases a replica of its document with `leaseReplica`. A
+   document the tab just created opens once the worker names it. Every lease on a document shares
+   one replica, and the last release closes it.
+3. **Cursors.** Comments and presence need op-id cursors, which only Automerge mints. The replica
+   trails the mirror by a round trip, so the converter maps positions through the difference
+   between the two texts, and there are no cursors until the replica holds the text. Text typed a
+   moment ago has no cursor until the worker has applied it, so `createComment` waits for the
+   converter's `whenExact()`, which resolves once the replica has caught up, and follows the
+   selected range through edits made meanwhile.
+
+The first version moved the editor onto the Automerge binding over the replica once the two texts
+agreed. That broke reads: the editor then wrote to the replica while the object still read the
+mirror, which hears of each edit a round trip later. A new thread took its name from the object
+right after typing and came out empty, and a reply read its draft before the text had arrived.
+
+A tab holds Automerge for each document open in an editor. The saving is for documents that are
+only listed, queried or shown.
+
+## E2E suites in mirror mode
+
+`DX_ECHO_MODE=indexed` at build time turns on mirror tabs, index reads and SQL queries for a whole
+bundle (read in Composer's `main.tsx` and TodoMVC's `Root.tsx`), and `?echo=` still overrides it.
+Runs used Chromium in the cloud sandbox with 2 workers.
+
+| Suite              | Today's mode                    | Mirror with index reads         |
+| ------------------ | ------------------------------- | ------------------------------- |
+| Composer, 44 tests | 28 passed, 1 failed, 15 skipped | 28 passed, 1 failed, 15 skipped |
+| TodoMVC, 8 tests   | 8 passed                        | 8 passed                        |
+
+The one Composer failure, "drag object into collection", fails in both modes and on main's own CI
+(the runs for `08cddf6a` and earlier): after the drag, Collection 1 shows both at the top level and
+inside Collection 2.
+
+The other suites have no worker and no mirror tabs, so they ran in today's mode only. All pass:
+rpc-tunnel (4), lit-grid (3), react-ui-mosaic (7), react-ui-canvas (17), react-ui-canvas-compute
+(6), plugin-kanban (5), react-ui-table (9) and plugin-sheet (3). plugin-script's 5 tests skip
+without deployed functions. react-ui-table and plugin-sheet each failed their first two tests once:
+two tests waiting on the same cold story compile passed the 30 s wait on this 4-core sandbox. Both
+pass on a rerun, and plugin-sheet passes with one worker.
+
+The first mirror-mode run passed 24 tests. Each fix since then has a unit test that reproduces its
+cause:
+
+| Symptom in the suite                                  | Cause                                                                                                | Test                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Documents did not open                                | The editor called Automerge on a mirror document                                                     | `mirror.test.ts` (ui-editor)                |
+| Comments on a new document had no highlight           | A document the tab created has no id until the worker names it, so the editor leased no replica      | `replica.test.ts`, `mirror.test.ts`         |
+| Comments failed when several editors opened at once   | Concurrent `replica()` calls got a replica repo that had not finished opening                        | `replica.test.ts`                           |
+| Anchors collapsed to the end of the text              | A comment made right after typing asked for cursors the replica could not have yet                   | `mirror.test.ts`: a comment made before...  |
+| Anchors one character early                           | At the edge of a pure insertion, positions mapped before the inserted text                           | `replica.test.ts`: cursors map positions... |
+| New threads had empty names, replies had empty bodies | The editor wrote to the replica while the object read the mirror, a round trip behind (first design) | `mirror.test.ts`: the editor writes to...   |
+| Typed text landed mid-line in the two-peer test       | A remote insertion at the caret left the caret in front of it, so End stopped at the wrap point      | `mirror.test.ts`: a remote insertion...     |
+| Remote carets drawn in the wrong place                | The awareness extension read the cursor converter once, when it was created                          | Covered by the two-peer test                |
+| Unhandled rejections at teardown                      | A lease's `ready` rejected when the client closed while its replica opened                           | `mirror.test.ts` runs clean                 |
+
+## Folding the proxy into client services
+
+Design only; nothing here is built. Today a mirror tab talks to two services: `MirrorService`
+follows documents and takes op batches, and `DataService` still creates documents, flushes them and
+carries the byte protocol for replicas. Each has its own subscription per tab.
+
+The proposal makes `DataService` proxy-first and moves the byte protocol out of the default path:
+
+| Service                | Keeps or gains                                                                                                                                                                                   | Loses                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `DataService`          | `subscribe` and `updateSubscription` stream proxy events; `submit` takes op batches; `resolveCursors` and `createCursors`; `createDocument`, `flush`, heads, sync state and stats unchanged      | Byte-protocol `subscribe` and `update` |
+| `ReplicaService` (new) | Today's byte-protocol `subscribe` and `update`, for replicas a tab leases (editor cursors, history tools, devtools) and for clients that must hold Automerge, such as the EDGE functions runtime | Nothing else                           |
+| `QueryService`         | Results carry the index copies of the documents they return, so a list renders from one round trip and its handles follow without another                                                        | Nothing                                |
+| `MirrorService`        | Removed; its methods live in `DataService`                                                                                                                                                       | Everything                             |
+
+The service payloads are the proxy package's contract types, and ECHO's RPC schema mirrors them
+with a type-level test keeping the two in step.
+
+Before the proxy becomes the only way the ECHO client works, each of these has to hold:
+
+1. CI runs the e2e suites in both modes, with a `DX_ECHO_MODE` axis for composer-e2e and todomvc.
+2. The worker serves branches, merges, history and migrations over RPC; until then those features
+   need a replica.
+3. The proxy package's fuzz suites cover the contract, including worker restarts and reconnects.
+4. Measurements at scale with EDGE sync on: memory and write latency for 1, 2 and 3 tabs.
+5. Composer dogfoods the proxy behind a setting, and refused edits go to telemetry, since every
+   refusal is a bug.
+6. HOST mode runs on the proxy over the in-process bridge, which needs the mirror flag per client
+   instead of per process.
+
+Then the default flips, `ReplicaService` stays for replicas and EDGE, and `MirrorService` goes.
 
 ## Blockers
 
 Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week.
 
-| Blocker                                                                                                    | What it takes                                                                                                                                                 | Size |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Route through `DocOps` so both backends work; the realms report calls it the hardest part                                                                     | L    |
-| Cursor consumers: comments, anchors, presence, review (19 files, 13 minting sites)                         | Move reads to `MirrorCursors`, make minting asynchronous                                                                                                      | L    |
-| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                           | L    |
-| CodeMirror binding                                                                                         | Finish the prototype: remote presence and cursors                                                                                                             | M    |
-| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                 | M    |
-| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                              | M    |
-| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                               | M    |
-| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                  | S    |
-| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc                                                    | M    |
-| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save | S    |
-| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                 | S    |
-| Mirror mode is process-wide                                                                                | A per-client flag, for HOST mode and mixed tests                                                                                                              | S    |
-| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                       | S    |
+| Blocker                                                                                                    | What it takes                                                                                                                                                         | Size |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Route through `DocOps` so both backends work. Text writes in echo-doc and plugin-markdown now do; branch reads (`getObjectOnBranch`) still call Automerge             | L    |
+| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                    | They resolve through the replica an open editor holds, so with no editor open they have no cursors; lease a replica where they run, or answer through `MirrorCursors` | M    |
+| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                                   | L    |
+| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                         | M    |
+| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                      | M    |
+| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                       | M    |
+| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                          | S    |
+| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc                                                            | M    |
+| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save         | S    |
+| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                         | S    |
+| Mirror mode is process-wide                                                                                | A per-client flag, for HOST mode and mixed tests                                                                                                                      | S    |
+| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                               | S    |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The spike adds about
@@ -511,5 +613,5 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
    Automerge picks by op counter, so the two can choose different winners.
 2. Should recovery persist an op log in the worker, or is the rebuild path enough?
 3. Should HOST mode keep a second in-process replica, or use the mirror over the in-process bridge?
-4. Which documents get replicas: only those code asks for explicitly, or every document an
-   Automerge-API plugin opens?
+4. Which documents get replicas besides those open in an editor, which hold one for cursors: only
+   those code asks for explicitly, or every document an Automerge-API plugin opens?

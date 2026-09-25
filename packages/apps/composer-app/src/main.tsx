@@ -209,12 +209,6 @@ const main = async () => {
   }
 
   const url = new URL(window.location.href);
-  // Experimental ECHO backends: `?echo=mirror` keeps a JSON mirror of each document in the tab while
-  // only the worker runs Automerge, and `?echo=indexed` also shows objects from the worker's index
-  // until the tab writes to them. Both answer queries in SQL.
-  const echoMode = url.searchParams.get('echo');
-  const echoMirror =
-    echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
@@ -327,6 +321,13 @@ const main = async () => {
 
   startupMark('config:end');
   startupMeasure('config', 'config:start', 'config:end');
+
+  // Experimental ECHO backends: `mirror` keeps a JSON mirror of each document in the tab while only
+  // the worker runs Automerge, and `indexed` also shows objects from the worker's index until the tab
+  // writes to them. Both answer queries in SQL. `?echo=` overrides the `DX_ECHO_MODE` build default.
+  const echoMode = url.searchParams.get('echo') ?? getEnvString(config, 'DX_ECHO_MODE');
+  const echoMirror =
+    echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
 
   const isTauri = isTauri$();
   if (isTauri) {

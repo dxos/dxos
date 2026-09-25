@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
-import { Config, defs } from '@dxos/config';
+import { Config, Defaults, defs, getEnvString } from '@dxos/config';
 import { Annotation, Obj, Ref } from '@dxos/echo';
 import { AtomEx } from '@dxos/effect';
 import { type Client, ClientProvider, createClientServices } from '@dxos/react-client';
@@ -17,11 +17,13 @@ import { Todo, TodoList, TodoListAnnotation, createTodoList } from '../types.ts'
 import { Main } from './Main.tsx';
 
 /**
- * Experimental ECHO backends, chosen with `?echo=`: `mirror` keeps a JSON mirror of each document in
- * the tab while only the worker runs Automerge, and `indexed` also shows objects from the worker's
- * index until the tab writes to them. Both answer queries in SQL. Anything else is today's replica.
+ * Experimental ECHO backends, chosen with `?echo=` or the `DX_ECHO_MODE` build default: `mirror` keeps
+ * a JSON mirror of each document in the tab while only the worker runs Automerge, and `indexed` also
+ * shows objects from the worker's index until the tab writes to them. Both answer queries in SQL.
+ * Anything else is today's replica.
  */
-const echoMode = new URLSearchParams(location.search).get('echo');
+const echoMode =
+  new URLSearchParams(location.search).get('echo') ?? getEnvString(new Config(Defaults()), 'DX_ECHO_MODE');
 const echoMirror =
   echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
 
