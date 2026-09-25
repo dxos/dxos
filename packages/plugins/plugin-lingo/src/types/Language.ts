@@ -38,6 +38,7 @@ export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.
     LabelAnnotation.set(['name']),
     DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--translate--regular', hue: 'teal' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

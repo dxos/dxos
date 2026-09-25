@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
   DxAnchorActivate,
@@ -21,7 +21,7 @@ import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, RemoteSession, Task } from '@dxos/types';
-import { hoverableControlItem, mx } from '@dxos/ui-theme';
+import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -111,8 +111,9 @@ type TaskListRootProps = PropsWithChildren<{
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
   /**
-   * Render the questions in each task's history under its title; rows grow to fit. On by default:
-   * an open question is why a task is blocked, so it should not need opening anything to find.
+   * Render the questions in each task's history under its title, one line each, and the open ones in
+   * full in `TaskList.Edit`. On by default: an open question is why a task is blocked, so the row
+   * should say so without opening anything.
    */
   showQuestions?: boolean;
 
@@ -154,8 +155,8 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
   /**
-   * Enables answering a task's open questions in its row; called with the question entry's id and
-   * the answer. Without it the questions render read-only.
+   * Enables answering the selected task's open questions in `TaskList.Edit`; called with the question
+   * entry's id and the answer. Without it the questions render read-only.
    */
   onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;
@@ -383,7 +384,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
-    onQuestionAnswer,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
   const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
@@ -431,7 +431,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
-      onQuestionAnswer={onQuestionAnswer}
       // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
       // and `Tree` takes a plain list.
       classNames={mx(classNames)}
@@ -485,6 +484,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
           reach overflow on its end side, and `justify-end` spills the excess off the start. */}
       <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
+        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
@@ -591,6 +591,40 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
 };
 
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
+
+/**
+ * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
+ * reason artifacts are: a tag's target is not in memory on a cold load.
+ */
+const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.Ref<EchoTag.Tag>[] }) => {
+  const db = Obj.getDatabase(task);
+  const ids = useMemo(
+    () =>
+      tags.flatMap((ref) => {
+        const id = Task.refEntityId(ref);
+        return id ? [id] : [];
+      }),
+    [tags],
+  );
+  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
+  const resolved = db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []));
+  const labelled = useMemo(
+    () => resolved.filter((object) => Obj.instanceOf(EchoTag.Tag, object)).sort(EchoTag.sortTags),
+    [resolved],
+  );
+
+  return (
+    <>
+      {labelled.map((tag) => (
+        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+          {tag.label}
+        </Tag>
+      ))}
+    </>
+  );
+};
+
+TaskListItemTags.displayName = 'TaskList.ItemTags';
 
 /**
  * One artifact, as a tag that opens the object's preview card — the row names what the task

@@ -51,10 +51,14 @@ export class FeedServiceImpl implements FeedService.Handlers {
     return EffectStream.fromEffect(this['FeedService.queryFeed'](request));
   }
 
-  ['FeedService.insertIntoFeed'](request: FeedProtocol.InsertIntoFeedRequest): Effect.Effect<void, Error> {
+  /** The queue service reports no block ids; readers identify these blocks by their positions instead. */
+  ['FeedService.insertIntoFeed'](
+    request: FeedProtocol.InsertIntoFeedRequest,
+  ): Effect.Effect<FeedProtocol.InsertIntoFeedResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         using _ = await this._queueService.insertIntoQueue(this._ctx, request);
+        return {};
       },
       catch: (error) => {
         const { subspaceTag, spaceId, feedId } = request;

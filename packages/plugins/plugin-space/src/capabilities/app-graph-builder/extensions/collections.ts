@@ -12,6 +12,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -33,6 +34,7 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
+  ADD_TO_COLLECTION_LABEL,
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
@@ -379,6 +381,20 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
+    ...(container
+      ? [
+          AppGraphNode.makeAction({
+            id: 'removeFromContainer',
+            data: () => Effect.sync(() => ContainerModel.release({ container, object })),
+            properties: {
+              label: container.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
+              icon: 'ph--minus-circle--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.removeFromContainer',
+            },
+          }),
+        ]
+      : []),
     ...(linkedFrom
       ? [
           AppGraphNode.makeAction({
@@ -400,16 +416,6 @@ const constructObjectActions = ({
               testId: 'spacePlugin.showOriginal',
             },
           }),
-          AppGraphNode.makeAction({
-            id: 'removeFromContainer',
-            data: () => Effect.sync(() => ContainerModel.unlink({ container: linkedFrom, object })),
-            properties: {
-              label: linkedFrom.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
-              icon: 'ph--minus-circle--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.removeFromContainer',
-            },
-          }),
         ]
       : [
           AppGraphNode.makeAction({
@@ -429,6 +435,20 @@ const constructObjectActions = ({
             },
           }),
         ]),
+    ...(TypeOptions.isUserObject(object)
+      ? [
+          AppGraphNode.makeAction({
+            id: CollectionOperation.OpenAddToCollection.meta.key,
+            data: () => Operation.invoke(CollectionOperation.OpenAddToCollection, { object }),
+            properties: {
+              label: ADD_TO_COLLECTION_LABEL,
+              icon: CollectionOperation.OpenAddToCollection.meta.icon,
+              disposition: 'list-item',
+              testId: 'spacePlugin.addToCollection',
+            },
+          }),
+        ]
+      : []),
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
           AppGraphNode.makeAction({

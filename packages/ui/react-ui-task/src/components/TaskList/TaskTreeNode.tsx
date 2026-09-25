@@ -77,7 +77,6 @@ export type TaskTreeNodeProps = {
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
   /** Class list from `TaskList.Content`, merged onto the tree's own. */
@@ -107,7 +106,6 @@ export const TaskTreeNode = ({
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-  onQuestionAnswer,
 }: TaskTreeNodeProps) => {
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
@@ -180,7 +178,6 @@ export const TaskTreeNode = ({
           showQuestions,
           onTaskCheck,
           onTaskUpdate,
-          onQuestionAnswer,
         }}
       />
     ),
@@ -194,7 +191,6 @@ export const TaskTreeNode = ({
       showQuestions,
       onTaskCheck,
       onTaskUpdate,
-      onQuestionAnswer,
     ],
   );
 
@@ -325,10 +321,6 @@ export const TaskTreeNode = ({
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
-      // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
-      // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
       virtualize
       debug={debug}
       renderHeading={renderHeading}
@@ -356,7 +348,6 @@ const TaskTreeHeading = ({
   showQuestions,
   onTaskCheck,
   onTaskUpdate,
-  onQuestionAnswer,
 }: {
   node: TaskNode;
   showGutter: boolean;
@@ -368,7 +359,6 @@ const TaskTreeHeading = ({
   showQuestions: boolean;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }) => {
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
@@ -431,7 +421,9 @@ const TaskTreeHeading = ({
             <TaskQuestion
               key={thread.question.id}
               thread={thread}
-              onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
+              // One line each: answering takes the room of the detail pane, which a click on the
+              // row opens.
+              compact
             />
           ))}
         </div>

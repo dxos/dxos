@@ -4,10 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { type TestContext } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -80,13 +83,18 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];
-  const extraServices = usesFactStore(config.mode)
+  const modeServices = usesFactStore(config.mode)
     ? factStoreLayer(config.facts)
     : config.mode === 'rag'
       ? vectorStoreLayer(config.messages)
       : config.mode === 'hybrid'
         ? subjectIndexLayer(config.facts, config.messages)
         : Layer.empty;
+  // The space verbs declare the capability manager (e.g. `addObject`), which every real host binds.
+  const extraServices = Layer.merge(
+    modeServices,
+    Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+  );
 
   const TestLayer = AssistantTestLayer({
     aiServicePreset: config.variant.preset,

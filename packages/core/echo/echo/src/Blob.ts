@@ -13,7 +13,6 @@ import { DXN } from '@dxos/keys';
 import * as Annotation from './Annotation.ts';
 import * as Database from './Database.ts';
 import * as Error from './Error.ts';
-import * as internal from './internal/index.ts';
 import * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
@@ -59,10 +58,7 @@ export class Blob extends Type.makeObject<Blob>(DXN.make('org.dxos.type.blob', '
     type: Schema.optional(Schema.String),
     size: Schema.Number,
     data: BlobData,
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' })),
 ) {}
 
 //

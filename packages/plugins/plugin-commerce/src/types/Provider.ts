@@ -67,6 +67,7 @@ export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -222,6 +222,25 @@ test QA-1: A project with a large task set and long documents
         Last deliberately: by now the journey has genuinely navigated away, into the editor. Catches
         cost paid per mount rather than once — a warm re-render should be far cheaper than
         `open-tasks`, and a run where it is not has cached nothing.
+    - name: Open the assistant
+      id: open-assistant
+      do: Open the project's assistant companion.
+      invoke: org.dxos.operation.appToolkit.updateCompanion { subject: "root/$given.space.id/ai/org.dxos.type.project/$given.project.id/~assistant-chat" }
+      expect: the companion chat renders with an editable prompt
+      note: |
+        Opening the companion provisions the project's chat, so this stage pays chat creation and
+        skill binding as well as the chat surface's first render.
+    - name: Run a scripted agent loop
+      id: assistant-turns
+      do: Send a prompt and wait for the assistant's closing answer.
+      expect: twenty database-query tool calls, each preceded by thinking and a status line, then a final answer
+      note: |
+        Booted with `?model=scripted` (honoured on loopback hosts only), which replaces every assistant language model with the offline
+        script in `src/util/scripted-model.ts`: each turn emits a reasoning block, a `<status>`
+        line and one `space-query-objects` call, rotating across query shapes, and the twenty-first
+        answers. A live model's latency and variable tool use would otherwise be most of the number;
+        this measures the app's side of an agent loop — streaming render, tool dispatch, the query
+        itself — with a fixed 250 ms per turn that the wall time includes.
   after:
     - name: Delete the fixture space
       do: Delete the space from its settings.

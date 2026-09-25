@@ -21,7 +21,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { CollectionItemAnnotation, FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
+import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -140,23 +140,18 @@ export const ObjectFormDialog = ({
     return set;
   }, [typeByTypename]);
 
-  // Types eligible to live inside a collection: collections themselves, plus types carrying
-  // CollectionItemAnnotation. Used to filter the create dialog when targeting a collection.
+  // Creating into a collection offers only the types made to live there; any other user type joins a
+  // collection from the object itself.
   const collectionItemTypenames = useMemo(() => {
     const set = new Set<string>();
-    const collectionTypename = Type.getTypename(Collection.Collection);
     for (const [name, type] of typeByTypename) {
-      if (
-        name === collectionTypename ||
-        CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
-      ) {
+      if (TypeOptions.hasUserTypeTag(type, Collection.ItemTag)) {
         set.add(name);
       }
     }
     return set;
   }, [typeByTypename]);
 
-  // When creating into a collection, offer only collection-eligible types (mirrors the `views` filter).
   const collectionTarget = Collection.isCollection(target);
 
   const options = useMemo<CreateObjectOption[]>(
@@ -169,6 +164,11 @@ export const ObjectFormDialog = ({
               ? collectionItemTypenames.has(entry.id)
               : true,
         )
+        // Only object types opt in; the entry that creates a new type is itself the meta-schema.
+        .filter((entry) => {
+          const type = typeByTypename.get(entry.id);
+          return type === undefined || !Type.isObject(type) || TypeOptions.isUserType(type);
+        })
         .map((entry) => {
           const type = typeByTypename.get(entry.id);
           const schema = type && Type.getSchema(type);
