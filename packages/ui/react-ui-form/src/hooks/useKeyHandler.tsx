@@ -8,9 +8,12 @@ import { addEventListener } from '@dxos/async';
 
 import { type FormHandler } from './useFormHandler.ts';
 
-/** Cmd+Enter on macOS, Ctrl+Enter elsewhere; both are accepted everywhere, as GitHub's forms do. */
+/**
+ * Cmd+Enter on macOS, Ctrl+Enter elsewhere; both are accepted everywhere, as GitHub's forms do.
+ * Not while an IME is composing, where the chord confirms the text being composed.
+ */
 const isSubmitChord = (event: KeyboardEvent) =>
-  event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey;
+  event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && !event.isComposing;
 
 export type KeyHandlerOptions = {
   /** A readonly form has nothing to submit, so the chord passes through to whatever holds focus. */
@@ -29,6 +32,12 @@ export const useKeyHandler = (
     (event: KeyboardEvent) => {
       // An auto-saving form has no submit for the chord to mean.
       if (!isSubmitChord(event) || readonly || form.autoSave) {
+        return;
+      }
+
+      // Capture runs outermost first, so a nested form's chord must be left to that form.
+      const owner = event.target instanceof Element ? event.target.closest('[role="form"]') : null;
+      if (owner !== event.currentTarget) {
         return;
       }
 
