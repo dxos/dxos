@@ -91,7 +91,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
         //
         // `items-start`, since a wrapped description makes the line taller than one row: centring
         // would then float the glyph against the middle of the paragraph.
-        <div key={`${entry.date}-${index}`} role='listitem' className='flex items-start gap-2 min-w-0'>
+        <div key={`${entry.date}-${index}`} role='listitem' className='flex items-start gap-1 min-w-0'>
           {/* Exactly one line box tall, so the glyph it centres sits on the centre of the entry's
               FIRST line: a fixed square is taller than a line, which floats the glyph below that
               centre, and a wrapped description would otherwise carry it down the paragraph. The hue

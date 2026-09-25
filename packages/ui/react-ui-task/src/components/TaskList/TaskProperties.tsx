@@ -133,7 +133,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       <IconBlock classNames='size-6'>
         <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
       </IconBlock>
-      <span className={mx('min-w-0 px-1 truncate', unset && 'text-description')}>{label}</span>
+      <span className={mx('min-w-0 pe-1.5 truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
@@ -149,7 +149,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
     // Deferred, as the row's controls are: the menu is built when it is opened, not when the pane
     // renders three of them.
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button variant='ghost' density='sm' classNames='w-fit justify-start gap-0 px-0' data-testid={testId}>
+      <Button variant='ghost' density='sm' classNames='w-fit justify-start px-0 gap-1' data-testid={testId}>
         {content}
       </Button>
     </ActionMenu>

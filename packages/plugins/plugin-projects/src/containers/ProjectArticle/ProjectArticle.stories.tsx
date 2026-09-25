@@ -59,6 +59,7 @@ const ARTIFACT_TITLE = 'Design Notes';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
 const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
 const TASK_ANSWER = 'On for internal spaces only';
+const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 
@@ -111,6 +112,14 @@ const createProject = (space: Space, storyGeneration: number) => {
     actor: { role: 'assistant', name: 'Scout' },
   });
   Task.answer(task, question.id, TASK_ANSWER, { actor: { role: 'user', name: 'Rich' } });
+  // A second question, left open: answered, a question is a record and reads as two lines of the
+  // log; open, it is a prompt the pane puts to the reader, which is the other half of the surface.
+  Task.ask(task, {
+    text: TASK_OPEN_QUESTION,
+    context: 'Nobody has said which spaces count as internal, and the flag needs a list.',
+    options: [{ title: 'Every space the team owns' }, { title: 'Only the demo space' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
   // What the task produced, linked the way the verbs link it: a ref on the task, with the object
   // filed in the space rather than parented to the task.
   Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
@@ -387,9 +396,16 @@ export const TaskDetail: Story = {
     await waitFor(() => expect(history()).toBeTruthy(), { timeout: 10_000 });
     await expect(within(history()!).findByText(TASK_QUESTION, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(within(history()!).findByText(TASK_ANSWER, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // Answered, so the pane offers nothing to answer with — the ledger row still summarises the
-    // exchange, which is why this checks for the prompt's field rather than for the question itself.
-    await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).toBeNull();
+    // The open one is a prompt instead: its text, the options it suggests, and a field for an answer
+    // it did not think of. Scoped to the prompt, since the ledger row summarises every question.
+    const prompt = () => canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
+    await waitFor(() => expect(prompt()).toBeTruthy(), { timeout: 10_000 });
+    await expect(
+      within(prompt()!).findByText(TASK_OPEN_QUESTION, undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(within(prompt()!).findAllByTestId('task-question.option')).resolves.toHaveLength(2);
+    // The answered one stays a record: exactly one prompt, not two.
+    await expect(canvasElement.querySelectorAll('[data-testid="task-question.input"]')).toHaveLength(1);
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(
