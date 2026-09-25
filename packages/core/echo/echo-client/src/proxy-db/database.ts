@@ -53,7 +53,7 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import type { DocumentMode, EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
 import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
@@ -188,8 +188,6 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.Branch
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
-  /** Serves proxies of documents; the `proxy` document mode needs it. */
-  mirrorService?: MirrorService.Client;
   /** How this database holds its documents. */
   documentMode: DocumentMode;
   /** With `proxy` documents, show objects from the services' index until this database writes to them. */
@@ -337,7 +335,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
-      mirrorService: params.mirrorService,
       documentMode: params.documentMode,
       proxyIndexReads: params.proxyIndexReads,
       queryService: params.queryService,
@@ -1149,14 +1146,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     dataService,
     queryService,
     feedService,
-    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
     feedService?: FeedService.Client;
-    mirrorService?: MirrorService.Client;
   }): void {
-    this._entityManager._updateServices({ dataService, queryService, mirrorService });
+    this._entityManager._updateServices({ dataService, queryService });
     if (feedService !== undefined && feedService !== this.#feedService) {
       const stale = [...this.#feeds.values()];
       this.#feeds.clear();

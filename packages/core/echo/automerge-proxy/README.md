@@ -29,9 +29,10 @@ The first nine need nothing at runtime, so a client that imports only them loads
 random ops, a `MemoryStore` of Automerge documents, and a `Transport` that carries calls through JSON
 after random delays and can lose responses.
 
-ECHO uses it through `MirrorService` (`@dxos/protocols`), `MirrorRepo` and `MirrorDocHandle`
-(`@dxos/echo-client`) and the worker's `MirrorServiceImpl` (`@dxos/echo-host`). [docs/DESIGN.md](./docs/DESIGN.md) covers what is
-still to move and the tests the boundary allows.
+ECHO uses it through the proxy RPCs of `DataService` (`@dxos/protocols`), `MirrorRepo` and
+`MirrorDocHandle` (`@dxos/echo-client`), and the worker's `DataServiceImpl` over `createProxyHost`
+(`@dxos/echo-host`). [docs/DESIGN.md](./docs/DESIGN.md) covers the contract and the tests the
+boundary allows.
 
 ## Installation
 

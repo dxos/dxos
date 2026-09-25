@@ -234,9 +234,9 @@ describe('objects read from the index', () => {
     const inReader = await load(reader, ids[0]);
 
     // Keep the reader's copy out of date: the worker sends it no index updates.
-    const mirrorService = peer.host.mirrorService;
-    const onIndexed = mirrorService.onIndexed.bind(mirrorService);
-    Reflect.set(mirrorService, 'onIndexed', () => {});
+    const proxyHost = peer.host.proxyHost;
+    const copiesChanged = proxyHost.copiesChanged.bind(proxyHost);
+    Reflect.set(proxyHost, 'copiesChanged', () => {});
     const writer = await openTab(spaceKey, rootUrl, { indexed: false });
     const inWriter = await load(writer, ids[0]);
     Obj.update(inWriter, (inWriter) => {
@@ -244,7 +244,7 @@ describe('objects read from the index', () => {
     });
     await writer.flush();
     await peer.host.updateIndexes();
-    Reflect.set(mirrorService, 'onIndexed', onIndexed);
+    Reflect.set(proxyHost, 'copiesChanged', copiesChanged);
     expect(inReader.items.map((item: { label: string }) => item.label)).toEqual(['a', 'b', 'c']);
 
     // The reader means item `c`, which is at index 3 once the insert it has not seen is applied.

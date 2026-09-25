@@ -22,7 +22,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DataService, FeedService, MirrorService, QueryService } from '@dxos/protocols/rpc';
+import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
@@ -216,15 +216,14 @@ export class EchoTestPeer extends Resource {
 
   private async _makeServiceClients() {
     invariant(this._serviceScope, 'Service scope not initialized');
-    const [dataService, queryService, feedService, mirrorService] = await EffectEx.runPromise(
+    const [dataService, queryService, feedService] = await EffectEx.runPromise(
       Effect.all([
         makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
         makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
         makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
-        makeInProcessClient(MirrorService.Rpcs, this._echoHost.mirrorService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    return { dataService, queryService, feedService, mirrorService };
+    return { dataService, queryService, feedService };
   }
 
   /**

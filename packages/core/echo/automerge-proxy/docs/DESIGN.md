@@ -30,11 +30,13 @@ repo imports it.
 
 ## The contract
 
-`Contract.ts` defines the payloads as effect Schemas. ECHO's `MirrorService` in `@dxos/protocols`
-wraps them in its RPCs and adds the subscription id and the space, so there is one definition.
+`Contract.ts` defines the payloads as effect Schemas. ECHO's `DataService` in `@dxos/protocols`
+wraps them in its proxy RPCs (`subscribeProxy`, `updateProxySubscription`, `submit`,
+`resolveCursors`, `createCursors`) and adds the subscription id and the space, so there is one
+definition.
 
 `Repo.Host` is the host as a client reaches it. `Repo.ProxyRepo` programs against it, and ECHO's
-`MirrorRepo` implements it over the worker's `MirrorService` and `DataService`:
+`MirrorRepo` implements it over the worker's `DataService`:
 
 ```ts
 interface Host<Id extends string = string> {
@@ -56,7 +58,9 @@ Values cross it plain. A transport that cannot carry RawStrings, bytes or dates 
 
 The events are `snapshot`, `entry`, `recovered`, `caughtUp`, `copy`, `requesting` and `unavailable`.
 A `copy` is a read-only value at known heads that the host keeps outside Automerge, such as ECHO's
-SQLite index, so the host need not load the document to serve it.
+SQLite index, so the host need not load the document to serve it. A client that already holds a
+copy, as ECHO's query results carry them, passes it to `Repo.ProxyRepo.find`, and the handle shows it
+before the host answers.
 
 ## Status
 
@@ -71,8 +75,8 @@ SQLite index, so the host need not load the document to serve it.
 ECHO keeps adapters. `MirrorRepo` implements `ClientRepo` around `Repo.ProxyRepo`, with a `Repo.Host`
 over its RPC services, reads from the index, Automerge replicas on `RepoProxy`, and its own error
 types. `MirrorDocHandle` subclasses `Handle.DocHandle` for ECHO's handle interface and replica
-leases. The worker's `MirrorServiceImpl` adapts `Host.DocumentHost` to RPC, with a `Host.Store` over
-its Automerge host and a `Host.CopySource` over the SQLite index.
+leases. The worker's `DataServiceImpl` serves `Host.DocumentHost` as RPCs; `createProxyHost` builds
+the host with a `Host.Store` over the Automerge host and a `Host.CopySource` over the SQLite index.
 
 ## Tests at the boundary
 

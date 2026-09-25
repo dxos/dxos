@@ -14,14 +14,13 @@ import * as AutomergeOps from '@dxos/automerge-proxy/AutomergeOps';
 import * as Op from '@dxos/automerge-proxy/Op';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
-import { type MirrorServiceImpl } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DataService, type MirrorService, QueryService } from '@dxos/protocols/rpc';
+import { DataService, QueryService } from '@dxos/protocols/rpc';
 
 import { type EditsRejectedEvent } from '../automerge/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
@@ -90,13 +89,13 @@ describe('mirror repo and worker', () => {
     return Op.getAt(AutomergeOps.toValue(lease?.doc()), ['objects', obj.id, 'data']);
   };
 
-  type Submit = (request: MirrorService.SubmitRequest) => ReturnType<MirrorServiceImpl['MirrorService.submit']>;
+  type Submit = (request: DataService.SubmitRequest) => ReturnType<DataService.Handlers['DataService.submit']>;
 
   /** Replaces the worker's submit handler for the rest of the test. */
-  const interceptSubmit = (handler: (request: MirrorService.SubmitRequest, submit: Submit) => ReturnType<Submit>) => {
-    const service = peer.host.mirrorService;
-    const submit: Submit = service['MirrorService.submit'].bind(service);
-    Reflect.set(service, 'MirrorService.submit', (request: MirrorService.SubmitRequest) => handler(request, submit));
+  const interceptSubmit = (handler: (request: DataService.SubmitRequest, submit: Submit) => ReturnType<Submit>) => {
+    const service = peer.host.dataService;
+    const submit: Submit = service['DataService.submit'].bind(service);
+    Reflect.set(service, 'DataService.submit', (request: DataService.SubmitRequest) => handler(request, submit));
   };
 
   test('a failed save keeps the batch and the entries; nothing is applied twice', async () => {
@@ -304,10 +303,10 @@ describe('mirror repo and worker', () => {
   });
 
   test('a tab whose subscription stream ends follows its documents again', async () => {
-    const service = peer.host.mirrorService;
-    const subscribe = service['MirrorService.subscribe'].bind(service);
+    const service = peer.host.dataService;
+    const subscribe = service['DataService.subscribeProxy'].bind(service);
     let drops = 1;
-    Reflect.set(service, 'MirrorService.subscribe', (request: MirrorService.SubscribeRequest) => {
+    Reflect.set(service, 'DataService.subscribeProxy', (request: DataService.SubscribeProxyRequest) => {
       const stream = subscribe(request);
       // The first stream delivers a few batches, then ends as a dropped transport would.
       return drops-- > 0 ? stream.pipe(Stream.take(3), Stream.concat(Stream.fail(new StreamDroppedError()))) : stream;

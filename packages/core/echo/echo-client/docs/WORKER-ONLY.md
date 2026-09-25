@@ -1,11 +1,13 @@
 # Worker-only ECHO: spike and API proposal
 
-Status: spike, not for merge. Branch `claude/compassionate-davinci-z0634h`, based on `fd873d2f`.
+Status: built into ECHO's client services behind `runtime.client.document_mode`, which is off
+(`REPLICA`) by default. Branch `claude/compassionate-davinci-z0634h`.
 
 Tabs keep a JSON mirror of each document plus their own unconfirmed edits. Only the worker runs
-Automerge. This document evaluates that design, describes the spike that tests it, and proposes the
-API it implies. Everything here ran in Node tests over an in-process transport. Nothing has crossed a
-real worker boundary or run in a browser yet.
+Automerge. This document evaluates that design, describes the spike that tested it, and records how
+it now fits into ECHO's services (see [Folding the proxy into client services](#folding-the-proxy-into-client-services)).
+The early sections ran in Node over an in-process transport; later ones ran across the real worker
+boundary in Chromium.
 
 ## Short answer
 
@@ -54,7 +56,8 @@ real worker boundary or run in a browser yet.
 9. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
-   behind one interface. The mirror protocol is a separate RPC group, and `DataService` is unchanged.
+   behind one interface. `DataService` carries both protocols: the byte protocol, unchanged, and the
+   proxy RPCs beside it.
 
 ## What the spike shows
 
@@ -210,12 +213,12 @@ EDGE keeps the first and tabs switch to the second.
 
 ### Wire
 
-`MirrorService` (`protocols/src/MirrorService.ts`), a separate RPC group:
+`DataService`'s proxy RPCs (`protocols/src/DataService.ts`), beside its byte protocol:
 
 | RPC                                                 | Purpose                                                                                  |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `subscribe(subscriptionId, clientId, spaceId)`      | Stream of document events                                                                |
-| `updateSubscription(add, remove)`                   | Follow documents; `add` carries `{ epoch, version, heads, inflight }` when catching up   |
+| `subscribeProxy(subscriptionId, clientId, spaceId)` | Stream of document events                                                                |
+| `updateProxySubscription(add, remove)`              | Follow documents; `add` carries `{ epoch, version, heads, inflight }` when catching up   |
 | `submit(batches)`                                   | Apply batches of changes; `applied` once saved and on the stream, or `resync` or `stale` |
 | `resolveCursors(documentId, path, heads, cursors)`  | Positions of Automerge cursors as of `heads`                                             |
 | `createCursors(documentId, path, heads, positions)` | Cursors for positions as of `heads`                                                      |
@@ -258,8 +261,9 @@ export, migrations, change times for `meta.updatedAt`.
   heads from change metadata, so the tab recognizes its applied batch.
 - **`Host.DocumentHost`** (`@dxos/automerge-proxy/Host`) serializes work per document, saves before
   it sends, ignores a batch it already applied, and sends `requesting` when a document is not
-  stored. Once closed it refuses new calls and stops queued work. `MirrorServiceImpl` in echo-host
-  adapts it to RPC over the worker's Automerge host, with the index as the documents' copies.
+  stored. Once closed it refuses new calls and stops queued work. echo-host's `createProxyHost`
+  builds it over the worker's Automerge host, with the index as the documents' copies, and
+  `DataServiceImpl` serves it as RPCs.
 
 ### Shared
 
@@ -268,7 +272,7 @@ export, migrations, change times for `meta.updatedAt`.
 `change()` call) with `Op.apply` and `Op.invert`; `Transform.pair`, `Transform.lists` and
 `Transform.changes`; `Sync.ClientState` (the tab's confirmed state, one batch in flight and a
 buffer) and `Sync.Sequencer`; `Draft.Recorder`, the draft a `change()` callback writes through;
-and the `Contract` schemas `MirrorService` carries. Text splices transform as in ot.js, the
+and the `Contract` schemas `DataService`'s proxy RPCs carry. Text splices transform as in ot.js, the
 operational-transformation library CodeMirror's collaboration model follows. Map and list ops
 transform by path, as in ShareDB's json0 type.
 
@@ -328,8 +332,10 @@ The worker's SQLite index already holds every object's JSON. A mirror tab can as
 document in `copy` mode, and the worker answers from the index without loading the Automerge
 document. The tab's first write to the document switches it to live. The tab resubscribes from the
 heads the index copy was read at, the worker loads the document, and its recovery path sends what
-changed since those heads. That rebases the write the way a restart does. `setMirrorIndexedReads`,
-or `echoMirror: { indexedReads: true }` on `Client`, turns it on; it is off by default.
+changed since those heads. That rebases the write the way a restart does.
+`runtime.client.proxy_index_reads` (or `DX_ECHO_PROXY_INDEX_READS`) turns it on for a proxy client;
+it is off by default. With it on, query results also carry the copies, so a listed object needs no
+second round trip.
 
 The index copy is used only when it reproduces the document exactly. After the switch, recovery
 sends only what changed since the index heads, so a field the copy got wrong would stay wrong in the
@@ -380,20 +386,22 @@ Limits on what it saves:
 ## Index reads in the browser
 
 TodoMVC and the Tasks app run the whole path in Chromium: ECHO in a dedicated worker behind the real
-worker transport, mirror tabs, SQL query evaluation and index reads. `?echo=indexed` turns all three
-on, `?echo=mirror` leaves out index reads, and `?seed=N` fills the list.
-`packages/apps/todomvc/scripts/measure-echo.mjs` drives either app (`APP=tasks` for Tasks).
+worker transport, proxy tabs, SQL query evaluation and index reads. `DX_ECHO_DOCUMENT_MODE=proxy` at
+build time turns on proxy tabs, `DX_ECHO_PROXY_INDEX_READS=true` adds index reads, and `?seed=N`
+fills the list. `packages/apps/todomvc/scripts/measure-echo.mjs` measures a served build in the mode
+it was built with (`APP=tasks` for Tasks). The numbers below predate the fold-in, when a `?echo=`
+parameter chose the mode per page load.
 
 Four changes made that work beyond the Node tests:
 
-1. `MirrorService` is registered with the worker's services, and `Client` passes it to ECHO under
-   the `echoMirror` option.
+1. The worker's services serve the proxy protocol (then a separate `MirrorService`, now part of
+   `DataService`), and `Client` chooses proxies from its config.
 2. The worker transport encodes every `Schema.Unknown` as strict JSON and fails on a RawString,
    bytes or a date. Mirror values now cross it with those leaves tagged (`Wire.encodeEvent`,
    `Wire.encodeChanges` and their inverses).
 3. The index copy lives in snapshot columns rather than in the snapshot JSON, which SQL query
    results now carry.
-4. The same switch sets `runtime.client.queryExecutor: SQL` for the worker.
+4. Queries run in SQL, which is now the worker's default.
 
 Time until every item is on screen, with a fresh page and worker per run on data seeded in replica
 mode. About 2 s of each is boot, the same in every mode. Medians of three runs for 200 items, of two
@@ -429,11 +437,12 @@ for 1,000.
 
 ## Index reads in Composer's nav tree
 
-Composer takes the same switch (`?echo=mirror`, `?echo=indexed`, read in `main.tsx`).
-`packages/apps/composer-app/scripts/measure-navtree.mjs` seeds a space with markdown documents
-through the `markdown.create` operation, opens its Collections branch, and times each mode until
-every document row is in the nav tree. Each run relaunches the browser on the same profile, so every
-mode starts a fresh worker on the same data.
+Composer takes the same switch: the build variables, or the ECHO documents choice in its debug
+settings. `packages/apps/composer-app/scripts/measure-navtree.mjs` seeds a space with markdown
+documents through the `markdown.create` operation, opens its Collections branch, and times the
+served build until every document row is in the nav tree. Each run relaunches the browser on the
+same profile, so every run starts a fresh worker on the same data. The runs below chose each mode
+with a `?echo=` parameter, since removed.
 
 The nav tree lists a space's documents with an ECHO query that follows its root collection's
 `objects` refs, and each row reads the live object for its label. With SQL queries and index reads,
@@ -527,85 +536,91 @@ cause:
 
 ## Folding the proxy into client services
 
-Design only; nothing here is built. Today a mirror tab talks to two services: `MirrorService`
-follows documents and takes op batches, and `DataService` still creates documents, flushes them and
-carries the byte protocol for replicas. Each has its own subscription per tab.
+Built, behind a switch that is off by default. A proxy tab reaches documents through one service,
+`DataService`, and the separate `MirrorService` is gone.
 
-The proposal makes `DataService` proxy-first and moves the byte protocol out of the default path:
+| Service         | What it carries                                                                                                                                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DataService`   | The byte protocol for replicas (`subscribe`, `updateSubscription`, `update`), unchanged. Beside it the proxy RPCs: `subscribeProxy`, `updateProxySubscription`, `submit`, `resolveCursors`, `createCursors`. `createDocument`, `flush`, heads, sync state and stats serve both. |
+| `QueryService`  | With `documentCopies` in the request, the index copy of each result document that is new to the query or whose heads moved, so a listed object shows from the query's own round trip.                                                                                           |
+| `MirrorService` | Removed.                                                                                                                                                                                                                                                                        |
 
-| Service                | Keeps or gains                                                                                                                                                                                   | Loses                                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| `DataService`          | `subscribe` and `updateSubscription` stream proxy events; `submit` takes op batches; `resolveCursors` and `createCursors`; `createDocument`, `flush`, heads, sync state and stats unchanged      | Byte-protocol `subscribe` and `update` |
-| `ReplicaService` (new) | Today's byte-protocol `subscribe` and `update`, for replicas a tab leases (editor cursors, history tools, devtools) and for clients that must hold Automerge, such as the EDGE functions runtime | Nothing else                           |
-| `QueryService`         | Results carry the index copies of the documents they return, so a list renders from one round trip and its handles follow without another                                                        | Nothing                                |
-| `MirrorService`        | Removed; its methods live in `DataService`                                                                                                                                                       | Everything                             |
+The proxy RPCs' payloads are the proxy package's `Contract` schemas, so the RPC schema cannot drift
+from the package. In the worker, `DataServiceImpl` serves the `Host.DocumentHost` that
+`createProxyHost` builds over the Automerge host, with the index as its copies. In the tab,
+`MirrorRepo`'s `Repo.Host` adapter calls `DataService`; `Repo.ProxyRepo` and `Handle.DocHandle` did
+not change.
 
-The service payloads are the proxy package's `Contract` schemas. `MirrorService` already builds its
-RPCs from them, so the RPC schema cannot drift from the package.
-
-The package makes the move small on both sides. In the worker, `DataService`'s proxy methods delegate
-to the `Host.DocumentHost` that `MirrorServiceImpl` wraps today, with the same `Host.Store` over the
-Automerge host and the index as its `Host.CopySource`. In the tab, `MirrorRepo`'s `Repo.Host` adapter
-calls `DataService` instead of `MirrorService`; `Repo.ProxyRepo` and `Handle.DocHandle` do not change.
+A document a proxy tab creates is no longer pinned in the worker for good. `createDocument` leases
+it until a client follows it, and only the byte protocol released that lease, so a tab with no
+replica open never did. Following it through `updateProxySubscription` now releases it too; the
+worker saves an idle document before it evicts it.
 
 ### The switch
 
-Every step below lands behind one switch that is off by default, built the way the SQL query
-executor's is: a `runtime.client` enum in `config.proto` with an environment variable, resolved once
-where it enters, so nothing below reads config or the environment.
+Configured like the SQL query executor: a `runtime.client` field in `config.proto` with an
+environment variable, resolved once where it enters, so nothing below reads config or the
+environment.
 
 ```proto
 enum DocumentMode {
   UNSPECIFIED_DOCUMENT_MODE = 0;
-  /// The tab holds an Automerge replica of each document it opens. The default.
-  REPLICA = 1;
-  /// The tab holds proxies from `@dxos/automerge-proxy` and sends op batches.
+  REPLICA = 1; // The default.
   PROXY = 2;
 }
 
 optional DocumentMode document_mode = 19 [ (env_var) = "DX_ECHO_DOCUMENT_MODE" ];
-/// With PROXY, show documents from the worker's index until the tab writes to them.
 optional bool proxy_index_reads = 20 [ (env_var) = "DX_ECHO_PROXY_INDEX_READS" ];
 ```
 
-| Question           | Query executor (`query_executor`)                                  | Document mode (`document_mode`)                                                |
-| ------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Values, default    | `MEMORY`, `SQL`; `MEMORY`                                          | `REPLICA`, `PROXY`; `REPLICA`                                                  |
-| Resolution         | `EchoHost` option, config, `DX_ECHO_QUERY_EXECUTOR`, then `MEMORY` | `Client` option, config, `DX_ECHO_DOCUMENT_MODE`, then `REPLICA`               |
-| Resolved in        | `EchoHost`, from `runtimePropsFromConfig` in the worker            | `Client`, handed to `EchoClient`, which picks `MirrorRepo` or `RepoProxy`      |
-| Tests pick it with | `EchoTestPeer({ queryExecutor })`                                  | `EchoTestPeer({ documentMode })`                                               |
-| Off means          | queries load documents and run in JS                               | the tab builds `RepoProxy` and uses the byte protocol, as every tab does today |
+| Question           | Query executor (`query_executor`)                               | Document mode (`document_mode`)                                                  |
+| ------------------ | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Values, default    | `MEMORY`, `SQL`; `SQL`                                          | `REPLICA`, `PROXY`; `REPLICA`                                                    |
+| Resolution         | `EchoHost` option, config, `DX_ECHO_QUERY_EXECUTOR`, then `SQL` | config, `DX_ECHO_DOCUMENT_MODE`, then `REPLICA`                                  |
+| Resolved in        | `EchoHost`, from `runtimePropsFromConfig` in the worker         | `Client` maps config; `EchoClient.connectToService` falls back to the env        |
+| Tests pick it with | `EchoTestPeer({ queryExecutor })`                               | `EchoTestPeer({ documentMode })`, or `createClient({ documentMode })` per client |
+| Off means          | queries load documents and run in JS                            | the tab builds `RepoProxy` and uses the byte protocol, as every tab does today   |
 
-The one difference is which side reads it. Queries run in the worker, so the worker picks the
-executor. The tab picks its repo, and the worker serves both kinds of tab at once: tabs sharing a
-SharedWorker may differ, as one dogfooding tab would. The worker's proxy methods cost nothing
-until a tab calls them, because `Host.DocumentHost` loads no document and reads no index until a
-subscription follows one. Resolving per client also drops the spike's process-wide setting, which
-condition 6 needs: in HOST mode the services and every client share one process.
+The environment variable reaches a browser tab through the build: the config plugin copies every
+`DX_*` variable into `runtime.app.env`, and `Client` reads it there. Vite puts no `DX_*` variable in
+`import.meta.env`, which is also why `DX_ECHO_QUERY_EXECUTOR` has no effect in a browser build.
 
-The switch replaces what the spike uses today: the `echoMirror` option on `Client`, the
-process-wide `setMirrorIndexedReads`, and the apps reading `DX_ECHO_MODE`. Composer's `?echo=`
-override stays, as a way to set the field for one tab.
+The tab reads the switch, not the worker. Queries run in the worker, so the worker picks the
+executor, but the worker serves both kinds of tab at once. Its proxy RPCs cost nothing until a tab
+calls them, because `Host.DocumentHost` loads no document and reads no index until a subscription
+follows one.
+
+Each client decides for itself, so no process-wide setting remains, which HOST mode needs. An object
+made before it joins a database keeps an Automerge document in every mode, since no database is
+known yet, and joining a proxy database copies its value.
+
+Composer's debug settings offer the three choices (replicas, proxies, proxies read from the index)
+and write the two fields to stored config, like the storage adaptor beside them. Every refused edit
+counts in `dxos.echo.edits.rejected` and is captured as an error, without the refused ops, which are
+user content.
 
 ### Order of work
 
-| Step | Change                                                                                                                | With the switch off                                                    |
-| ---- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1    | Add `document_mode` and `proxy_index_reads`; `Client` resolves them and the spike's options go                        | Nothing changes                                                        |
-| 2    | `DataService` gains the proxy methods over `Host.DocumentHost`; `MirrorRepo` moves to them; `MirrorService` stays too | Nothing calls the new methods                                          |
-| 3    | `QueryService` results carry index copies, read when `proxy_index_reads` is on                                        | Results carry none                                                     |
-| 4    | `ReplicaService` takes the byte protocol; `RepoProxy` and leased replicas move to it                                  | Replica tabs move to `ReplicaService`, the only change to the off path |
-| 5    | Composer offers `PROXY` as a setting, and refused edits go to telemetry                                               | Only tabs that opt in run the proxy                                    |
-| 6    | The default flips to `PROXY` once the conditions below hold                                                           | `REPLICA` is the off position, a kill switch                           |
-| 7    | After two releases on the new default, `REPLICA` goes as a mode, and `MirrorService` with it                          | Replicas remain only on lease and for EDGE                             |
+| Step | Change                                                                                               | With the switch off                      | State    |
+| ---- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------- |
+| 1    | `document_mode` and `proxy_index_reads`; `Client` resolves them; the spike's options and `?echo=` go | Nothing changes                          | done     |
+| 2    | `DataService` gains the proxy RPCs over `Host.DocumentHost`; `MirrorService` goes                    | Nothing calls the new RPCs               | done     |
+| 3    | `QueryService` results carry index copies when the client asks                                       | Queries ask for none                     | done     |
+| 4    | `ReplicaService` takes the byte protocol                                                             | Would move replica tabs to a new service | deferred |
+| 5    | Composer offers the modes as a setting, and refused edits go to telemetry                            | Only tabs that opt in run the proxy      | done     |
+| 6    | The default flips to `PROXY` once the conditions below hold                                          | `REPLICA` is the off position            |          |
+| 7    | After two releases on the new default, `REPLICA` goes as a mode for tabs                             | Replicas remain on lease and for EDGE    |          |
 
-Step 4 is the only one that changes a path with the switch off, so it lands on its own, with the
-e2e suites run in both modes before and after.
+Step 4 waits for step 6. It was the only step that changed the off path, and it would break edge on
+its next bump: edge's operation-service builds its own `FunctionContext`, and its tests connect ECHO
+with only `dataService` and `queryService`. Moving the byte protocol off the default path pays only
+once `PROXY` is the default, so until then the byte protocol keeps its names, and the proxy RPCs take
+names that do not clash with them.
 
 Before the default flips, each of these has to hold:
 
 1. CI runs the e2e suites in both modes, with a `DX_ECHO_DOCUMENT_MODE` axis for composer-e2e and
-   todomvc.
+   todomvc. Not built yet.
 2. The worker serves branches, merges, history and migrations over RPC; until then those features
    need a replica.
 3. The proxy package's property suites cover the contract, including worker restarts, reconnects
@@ -614,7 +629,8 @@ Before the default flips, each of these has to hold:
 4. Measurements at scale with EDGE sync on: memory and write latency for 1, 2 and 3 tabs.
 5. Composer has dogfooded `PROXY` behind its setting with no refused edits in telemetry, since every
    refusal is a bug.
-6. HOST mode runs on the proxy over the in-process bridge.
+6. HOST mode runs on the proxy over the in-process bridge. The per-client switch allows it; no test
+   runs it yet.
 
 ## Blockers
 
@@ -629,10 +645,9 @@ Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week
 | Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                      | M    |
 | Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                       | M    |
 | Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                          | S    |
-| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc                                                            | M    |
+| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database                  | M    |
 | A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save         | S    |
 | `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                         | S    |
-| Mirror mode is process-wide                                                                                | A per-client flag, for HOST mode and mixed tests                                                                                                                      | S    |
 | Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                               | S    |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
@@ -668,13 +683,13 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 
 1. Land the interfaces: `ClientRepo`, `ClientDocHandle` and `DocOps`. Behavior-neutral: the replica
    suite passes unchanged.
-2. Land the shared protocol and the worker's `MirrorService` behind a flag, with the fuzz and
-   regression tests.
+2. Land the shared protocol and the worker's proxy RPCs behind a flag, with the fuzz and regression
+   tests. Done: `DataService`'s proxy RPCs behind `runtime.client.document_mode`.
 3. Add worker RPCs for history, branches, migrations and import; replica clients can use them too.
 4. Port the editor binding and the cursor consumers, and give Automerge-API code replicas.
 5. Fix heads-after-write callers.
-6. Switch Composer tabs to mirror mode behind a flag, measure 1, 2 and 3 tabs against the baseline,
-   then drop wasm initialization from tabs.
+6. Switch Composer tabs to proxies behind a flag (done: the debug settings choice), measure 1, 2 and
+   3 tabs against the baseline, then drop wasm initialization from tabs.
 7. Move HOST-mode clients and tests to the mirror. Keep the replica backend for EDGE.
 
 ## Open questions

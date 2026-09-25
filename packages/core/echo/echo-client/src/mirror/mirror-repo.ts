@@ -17,7 +17,7 @@ import { Resource, type Context as ResourceContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type DataService, type MirrorService } from '@dxos/protocols/rpc';
+import { type DataService } from '@dxos/protocols/rpc';
 
 import {
   type ClientDocHandle,
@@ -39,9 +39,8 @@ const RPC_TIMEOUT = 30_000;
 /** How many query-carried copies {@link MirrorRepo.primeCopy} keeps for documents not read yet. */
 const PRIMED_COPIES_LIMIT = 1_000;
 
-type Services = { mirrorService: MirrorService.Client; dataService: DataService.Client };
-
-export type MirrorRepoProps = Services & {
+export type MirrorRepoProps = {
+  dataService: DataService.Client;
   runtime: Context.Context<never>;
   spaceId: SpaceId;
   /**
@@ -52,12 +51,15 @@ export type MirrorRepoProps = Services & {
 };
 
 /**
- * A repo whose documents are proxies served by the worker's `MirrorService`: the tab loads no
+ * A repo whose documents are proxies served by the worker's `DataService`: the tab loads no
  * Automerge. `@dxos/automerge-proxy`'s repo does the syncing; this adds ECHO's services and errors,
  * reads from the index, and Automerge replicas for code that needs them.
  */
 export class MirrorRepo extends Resource implements ClientRepo {
-  readonly #services: Services;
+  readonly #runtime: Context.Context<never>;
+  readonly #spaceId: SpaceId;
+  readonly #indexReads: boolean;
+  #dataService: DataService.Client;
   // Documents of different types share the repo; `find<T>` is where a caller names the type.
   readonly #repo: Repo.ProxyRepo<DocumentId, MirrorDocHandle<any>>;
   /** Real Automerge replicas of documents handed to Automerge libraries, created on first use. */
@@ -71,19 +73,15 @@ export class MirrorRepo extends Resource implements ClientRepo {
       this.releaseReplica(documentId);
     },
   };
-
-  readonly #runtime: Context.Context<never>;
-  readonly #spaceId: SpaceId;
-  readonly #indexReads: boolean;
   /** Index copies queries carried, kept until each document is first read from the index. */
   readonly #primedCopies = new Map<string, Contract.Copy>();
 
-  constructor({ mirrorService, dataService, runtime, spaceId, indexReads = false }: MirrorRepoProps) {
+  constructor({ dataService, runtime, spaceId, indexReads = false }: MirrorRepoProps) {
     super();
     this.#runtime = runtime;
     this.#spaceId = spaceId;
     this.#indexReads = indexReads;
-    this.#services = { mirrorService, dataService };
+    this.#dataService = dataService;
     this.#repo = new Repo.ProxyRepo({
       host: this.#createHost(),
       createHandle: (options) => new MirrorDocHandle({ ...options, replicas: this.#replicaSource }),
@@ -218,17 +216,8 @@ export class MirrorRepo extends Resource implements ClientRepo {
     await this.#repo.close();
   }
 
-  _updateServices({
-    dataService,
-    mirrorService,
-  }: {
-    dataService: DataService.Client;
-    mirrorService?: MirrorService.Client;
-  }): void {
-    this.#services.dataService = dataService;
-    if (mirrorService) {
-      this.#services.mirrorService = mirrorService;
-    }
+  _updateServices({ dataService }: { dataService: DataService.Client }): void {
+    this.#dataService = dataService;
     this.#replicas?._updateServices({ dataService });
   }
 
@@ -261,7 +250,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
   }
 
   async #openReplicas(): Promise<RepoProxy> {
-    const replicas = new RepoProxy(this.#services.dataService, this.#runtime, this.#spaceId);
+    const replicas = new RepoProxy(this.#dataService, this.#runtime, this.#spaceId);
     this.#replicas = replicas;
     try {
       await replicas.open();
@@ -275,16 +264,17 @@ export class MirrorRepo extends Resource implements ClientRepo {
     }
   }
 
-  /** The worker's `MirrorService` and `DataService` as the proxy repo's host, with values tagged for JSON. */
+  /** The worker's `DataService` as the proxy repo's host, with values tagged for JSON. */
   #createHost(): Repo.Host<DocumentId> {
-    const services = this.#services;
+    // Read at each call, so a call after a reconnect reaches the service the reconnect handed over.
+    const service = () => this.#dataService;
     const call = <A>(effect: Effect.Effect<A, unknown>) =>
       runServiceCall(this.#runtime, effect, { timeout: RPC_TIMEOUT });
     return {
       subscribe: ({ subscriptionId, clientId }, { onEvents, onError, onClose }) =>
         subscribeStream(
           this.#runtime,
-          services.mirrorService['MirrorService.subscribe']({ subscriptionId, clientId, spaceId: this.#spaceId }),
+          service()['DataService.subscribeProxy']({ subscriptionId, clientId, spaceId: this.#spaceId }),
           {
             onData: ({ events }) => onEvents(events.map((event) => Wire.decodeEvent(event, WIRE))),
             onError,
@@ -292,12 +282,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
           },
         ),
       updateSubscription: async (request) => {
-        await call(services.mirrorService['MirrorService.updateSubscription'](request));
+        await call(service()['DataService.updateProxySubscription'](request));
       },
       submit: async ({ subscriptionId, batches }) =>
         (
           await call(
-            services.mirrorService['MirrorService.submit']({
+            service()['DataService.submit']({
               subscriptionId,
               batches: batches.map((batch) => ({ ...batch, changes: Wire.encodeChanges(batch.changes) })),
             }),
@@ -305,7 +295,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
         ).results,
       createDocument: async (initialValue) => {
         const { documentId } = await call(
-          services.dataService['DataService.createDocument']({
+          service()['DataService.createDocument']({
             spaceId: this.#spaceId,
             initialValue: toInitialValue(initialValue),
           }),
@@ -314,12 +304,10 @@ export class MirrorRepo extends Resource implements ClientRepo {
         return documentId as DocumentId;
       },
       flush: async (documentIds) => {
-        await call(services.dataService['DataService.flush']({ documentIds }));
+        await call(service()['DataService.flush']({ documentIds }));
       },
-      resolveCursors: async (request) =>
-        (await call(services.mirrorService['MirrorService.resolveCursors'](request))).positions,
-      createCursors: async (request) =>
-        (await call(services.mirrorService['MirrorService.createCursors'](request))).cursors,
+      resolveCursors: async (request) => (await call(service()['DataService.resolveCursors'](request))).positions,
+      createCursors: async (request) => (await call(service()['DataService.createCursors'](request))).cursors,
     };
   }
 }

@@ -51,7 +51,6 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
-  MirrorService,
   NetworkService,
   QueryService,
   SpacesService,
@@ -735,20 +734,6 @@ export const FeedServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(FeedService.Rpcs, FeedService.Tag),
 );
 
-export const MirrorServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [EchoHostService], provides: [MirrorService.Tag] },
-  () =>
-    Layer.effect(
-      MirrorService.Tag,
-      Effect.map(EchoHostService, (echoHost) => echoHost.mirrorService),
-    ),
-);
-
-export const MirrorServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [MirrorService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(MirrorService.Rpcs, MirrorService.Tag),
-);
-
 export const LoggingServiceSpec = LayerSpec.make(
   { affinity: 'application', requires: [], provides: [LoggingService.Tag] },
   () => LoggingServiceLayer,
@@ -849,8 +834,6 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   QueryServiceRegistrationSpec,
   FeedServiceSpec,
   FeedServiceRegistrationSpec,
-  MirrorServiceSpec,
-  MirrorServiceRegistrationSpec,
   LoggingServiceSpec,
   LoggingServiceRegistrationSpec,
   DevtoolsHostSpec,

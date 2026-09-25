@@ -10,7 +10,7 @@ import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type DocumentMode, parseDocumentMode } from '../automerge/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
@@ -27,8 +27,6 @@ export type ConnectToServiceProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  /** Serves proxies of documents; the `proxy` document mode needs it. */
-  mirrorService?: MirrorService.Client;
 
   /** Defaults to `DX_ECHO_DOCUMENT_MODE` in the process environment, else `replica`. */
   documentMode?: DocumentMode;
@@ -83,7 +81,6 @@ export class EchoClient extends Resource {
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
   private _dataService: DataService.Client | undefined = undefined;
-  private _mirrorService: MirrorService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
@@ -121,7 +118,6 @@ export class EchoClient extends Resource {
     dataService,
     queryService,
     feedService,
-    mirrorService,
     documentMode,
     proxyIndexReads,
     runtime,
@@ -131,8 +127,6 @@ export class EchoClient extends Resource {
     this._documentMode = documentMode ?? parseDocumentMode(processEnv('DX_ECHO_DOCUMENT_MODE')) ?? 'replica';
     this._proxyIndexReads =
       this._documentMode === 'proxy' && (proxyIndexReads ?? processEnv('DX_ECHO_PROXY_INDEX_READS') === 'true');
-    invariant(this._documentMode === 'replica' || mirrorService, 'The proxy document mode needs a mirror service.');
-    this._mirrorService = mirrorService;
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
@@ -182,7 +176,6 @@ export class EchoClient extends Resource {
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new DatabaseImpl({
       dataService: this._dataService!,
-      mirrorService: this._mirrorService,
       documentMode: this._documentMode,
       proxyIndexReads: this._proxyIndexReads,
       queryService: this._queryService!,
@@ -239,20 +232,15 @@ export class EchoClient extends Resource {
     dataService,
     queryService,
     feedService,
-    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
     feedService?: FeedService.Client;
-    mirrorService?: MirrorService.Client;
   }): void {
     log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
-    if (mirrorService) {
-      this._mirrorService = mirrorService;
-    }
 
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
@@ -263,7 +251,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService, feedService, mirrorService });
+      db._updateServices({ dataService, queryService, feedService });
     }
   }
 

@@ -236,6 +236,38 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
+  // Clients here hold Automerge replicas: the functions runtime reads commit blobs, not proxies.
+
+  ['DataService.subscribeProxy'](
+    _request: DataService.SubscribeProxyRequest,
+  ): EffectStream.Stream<DataService.ProxyEventBatch, Error> {
+    return EffectStream.fail(
+      new NotImplementedError({ message: 'Proxy documents are not served in the EDGE runtime.' }),
+    );
+  }
+
+  ['DataService.updateProxySubscription'](
+    _request: DataService.UpdateProxySubscriptionRequest,
+  ): Effect.Effect<void, BaseError> {
+    return Effect.fail(new NotImplementedError({ message: 'Proxy documents are not served in the EDGE runtime.' }));
+  }
+
+  ['DataService.submit'](_request: DataService.SubmitRequest): Effect.Effect<DataService.SubmitResponse, BaseError> {
+    return Effect.fail(new NotImplementedError({ message: 'Proxy documents are not served in the EDGE runtime.' }));
+  }
+
+  ['DataService.resolveCursors'](
+    _request: DataService.ResolveCursorsRequest,
+  ): Effect.Effect<DataService.ResolveCursorsResponse, BaseError> {
+    return Effect.fail(new NotImplementedError({ message: 'Proxy documents are not served in the EDGE runtime.' }));
+  }
+
+  ['DataService.createCursors'](
+    _request: DataService.CreateCursorsRequest,
+  ): Effect.Effect<DataService.CreateCursorsResponse, BaseError> {
+    return Effect.fail(new NotImplementedError({ message: 'Proxy documents are not served in the EDGE runtime.' }));
+  }
+
   ['DataService.runGarbageCollection'](
     _request: DataService.RunGarbageCollectionRequest,
   ): Effect.Effect<DataService.GarbageCollectionReport, BaseError> {

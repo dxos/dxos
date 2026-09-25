@@ -35,7 +35,7 @@ import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import type { DataService, MirrorService, QueryService } from '@dxos/protocols/rpc';
+import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
@@ -100,8 +100,6 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  /** Serves proxies of documents; the `proxy` document mode needs it. */
-  mirrorService?: MirrorService.Client;
   documentMode: DocumentMode;
   /** With `proxy` documents, show objects from the services' index until this database writes to them. */
   proxyIndexReads?: boolean;
@@ -254,9 +252,7 @@ export class EntityManager implements IDatabaseBinding {
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
     if (options.documentMode === 'proxy') {
-      invariant(options.mirrorService, 'The proxy document mode needs a mirror service.');
       this._repoProxy = new MirrorRepo({
-        mirrorService: options.mirrorService,
         dataService: this._dataService,
         runtime: this._runtime,
         spaceId: this._spaceId,
@@ -1122,15 +1118,13 @@ export class EntityManager implements IDatabaseBinding {
   _updateServices({
     dataService,
     queryService,
-    mirrorService,
   }: {
     dataService: DataService.Client;
     queryService: QueryService.Client;
-    mirrorService?: MirrorService.Client;
   }): void {
     this._dataService = dataService;
     this._queryService = queryService;
-    this._repoProxy._updateServices({ dataService, mirrorService });
+    this._repoProxy._updateServices({ dataService });
   }
 
   async _onReconnect(): Promise<void> {

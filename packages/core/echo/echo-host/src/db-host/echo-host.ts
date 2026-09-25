@@ -15,6 +15,7 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import type * as Host from '@dxos/automerge-proxy/Host';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -48,8 +49,8 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
-import { documentsFromIndex } from '../mirror/indexed.ts';
-import { MirrorServiceImpl } from '../mirror/mirror-service.ts';
+import { documentsFromIndex } from '../proxy/indexed.ts';
+import { createProxyHost } from '../proxy/proxy-host.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
@@ -175,7 +176,8 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _mirrorService: MirrorServiceImpl;
+  /** Serves clients that keep proxies of documents, through {@link DataServiceImpl}. */
+  private readonly _proxyHost: Host.DocumentHost;
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
@@ -284,12 +286,13 @@ export class EchoHost extends Resource {
       readDocumentCopies: async (documentIds) => documentsFromIndex(await this.#readIndexedDocuments(documentIds)),
     });
 
-    this._mirrorService = new MirrorServiceImpl({
+    this._proxyHost = createProxyHost({
       automergeHost: this._automergeHost,
       readIndexed: (documentIds) => this.#readIndexedDocuments(documentIds),
     });
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
+      proxyHost: this._proxyHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
@@ -351,9 +354,9 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  /** Document sync for clients that keep JSON mirrors instead of Automerge replicas. */
-  get mirrorService(): MirrorServiceImpl {
-    return this._mirrorService;
+  /** Serves clients that keep proxies of documents; `dataService` exposes it as RPCs. */
+  get proxyHost(): Host.DocumentHost {
+    return this._proxyHost;
   }
 
   get feedService(): FeedService.Handlers {
@@ -410,7 +413,7 @@ export class EchoHost extends Resource {
     log('echo-host: opening automerge host...');
     await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
-    await this._mirrorService.open(ctx);
+    await this._proxyHost.open(ctx);
 
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
@@ -471,7 +474,7 @@ export class EchoHost extends Resource {
     // iteration finishes.
     await this._updateIndexes?.join();
 
-    await this._mirrorService.close(ctx);
+    await this._proxyHost.close();
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
@@ -1420,7 +1423,8 @@ export class EchoHost extends Resource {
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
-        this._mirrorService.onIndexed(combinedResult.documents);
+        // Followers of an index copy get it again, and one the index no longer reproduces goes live.
+        this._proxyHost.copiesChanged(combinedResult.documents);
       }
 
       return {

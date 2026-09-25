@@ -505,7 +505,6 @@ export class Client {
       dataService: this._services.rpc,
       queryService: this._services.rpc,
       feedService: this._services.rpc,
-      mirrorService: this._services.rpc,
       documentMode: documentModeFromConfig(this._config),
       proxyIndexReads: proxyIndexReadsFromConfig(this._config),
       runtime: this._effectRuntime,
