@@ -265,8 +265,8 @@ export class DataServiceImpl implements DataService.Handlers {
     return Effect.tryPromise({
       try: async () => {
         await this.#proxy.updateSubscription(request);
-        // The proxy host loads a document for each call rather than holding it, so the creation lease
-        // goes once the document is followed: an idle document is saved before it is evicted.
+        // Once followed, the proxy host keeps the document resident while its calls use it, and an idle
+        // document is saved before it is evicted, so the creation lease has nothing left to guard.
         this.#releaseCreations(request.add?.map(({ documentId }) => documentId) ?? []);
       },
       catch: toServiceError,

@@ -31,10 +31,7 @@ export interface Store {
   onChanged(listener: (documentId: string) => void): () => void;
   /** Creates a document; a store without it leaves creation to another path. */
   create?(initialValue: unknown): Promise<string>;
-  /**
-   * Keeps a document resident while clients follow it live, until the result is disposed. Without
-   * it the store may evict a followed document between calls and reload it for the next change.
-   */
+  /** Keeps a document resident until the result is disposed; see {@link Options.holdFor}. */
   hold?(documentId: string): Disposable;
 }
 
@@ -47,6 +44,12 @@ export interface CopySource {
 export type Options = {
   store: Store;
   copies?: CopySource;
+  /**
+   * How long, in milliseconds, the host holds a document through {@link Store.hold} after its last
+   * call on it, so a client's next edit finds it loaded. The host lets go sooner once no client
+   * follows the document live. Unset, the store alone decides what stays loaded between calls.
+   */
+  holdFor?: number;
 };
 
 /** Entries kept per document for batches based on older versions. */
@@ -79,9 +82,10 @@ type HostedDocument = {
   readonly unsent: Sync.Entry[];
   /** Serializes work on the document, so entries reach clients in the order they reached Automerge. */
   queue: Promise<unknown>;
-  /** The store's hold on the document while it has subscribers; see {@link Store.hold}. */
-  hold?: Disposable;
 };
+
+/** The store's hold on a document, and the timer that ends it; see {@link Options.holdFor}. */
+type Held = { readonly hold: Disposable; readonly timer: ReturnType<typeof setTimeout> };
 
 /**
  * Serves documents to clients that keep proxies instead of Automerge replicas. Each followed document
@@ -91,16 +95,19 @@ type HostedDocument = {
 export class DocumentHost extends Resource implements Repo.Host {
   readonly #store: Store;
   readonly #copies?: CopySource;
+  readonly #holdFor: number;
   readonly #documents = new Map<string, HostedDocument>();
   readonly #subscriptions = new Map<string, Subscription>();
   readonly #copyWatches = new Map<string, CopyWatch>();
+  readonly #held = new Map<string, Held>();
   #copyPushes: Promise<void> = Promise.resolve();
   #offChanged?: () => void = undefined;
 
-  constructor({ store, copies }: Options) {
+  constructor({ store, copies, holdFor = 0 }: Options) {
     super();
     this.#store = store;
     this.#copies = copies;
+    this.#holdFor = holdFor;
   }
 
   protected override async _open(): Promise<void> {
@@ -116,8 +123,8 @@ export class DocumentHost extends Resource implements Repo.Host {
   protected override async _close(): Promise<void> {
     this.#offChanged?.();
     this.#offChanged = undefined;
-    for (const hosted of this.#documents.values()) {
-      hosted.hold?.[Symbol.dispose]();
+    for (const documentId of [...this.#held.keys()]) {
+      this.#letGo(documentId);
     }
     // Work still queued stops at its next step.
     this.#documents.clear();
@@ -203,7 +210,7 @@ export class DocumentHost extends Resource implements Repo.Host {
             await this.#publish(hosted);
             return 'applied' as const;
           }
-          const result = await this.#store.withDocument(documentId, (document) =>
+          const result = await this.#withDocument(documentId, (document) =>
             hosted.sequencer.submit(document, subscription.clientId, { batchId, baseVersion, changes }),
           );
           if (!result) {
@@ -242,7 +249,7 @@ export class DocumentHost extends Resource implements Repo.Host {
   }
 
   async resolveCursors({ documentId, path, heads, cursors }: Contract.ResolveCursors): Promise<(number | null)[]> {
-    const positions = await this.#store.withDocument(documentId, (document) => {
+    const positions = await this.#withDocument(documentId, (document) => {
       const view = A.view(document.doc(), heads);
       return cursors.map((cursor) => {
         try {
@@ -256,7 +263,7 @@ export class DocumentHost extends Resource implements Repo.Host {
   }
 
   async createCursors({ documentId, path, heads, positions }: Contract.CreateCursors): Promise<(string | null)[]> {
-    const cursors = await this.#store.withDocument(documentId, (document) => {
+    const cursors = await this.#withDocument(documentId, (document) => {
       const view = A.view(document.doc(), heads);
       return positions.map((position) => {
         try {
@@ -350,7 +357,7 @@ export class DocumentHost extends Resource implements Repo.Host {
   async #deliver(subscription: Subscription, documentId: string, known?: Contract.Known): Promise<void> {
     let hosted = this.#documents.get(documentId);
     if (!hosted) {
-      const heads = await this.#store.withDocument(documentId, (document) => A.getHeads(document.doc()));
+      const heads = await this.#withDocument(documentId, (document) => A.getHeads(document.doc()));
       if (!heads) {
         throw new Error('document not found');
       }
@@ -384,7 +391,7 @@ export class DocumentHost extends Resource implements Repo.Host {
         this.#dropIfUnfollowed(target);
         return;
       }
-      const events = await this.#store.withDocument(documentId, (document): Contract.DocumentEvent[] => {
+      const events = await this.#withDocument(documentId, (document): Contract.DocumentEvent[] => {
         this.#absorbLoaded(target, document);
         const { sequencer, epoch } = target;
         if (known?.epoch === epoch) {
@@ -443,7 +450,6 @@ export class DocumentHost extends Resource implements Repo.Host {
         return;
       }
       target.subscribers.add(subscription);
-      target.hold ??= this.#store.hold?.(documentId);
       subscription.send(events ?? [{ type: 'unavailable', documentId }]);
     });
   }
@@ -457,8 +463,7 @@ export class DocumentHost extends Resource implements Repo.Host {
 
   #forget(hosted: HostedDocument): void {
     this.#documents.delete(hosted.documentId);
-    hosted.hold?.[Symbol.dispose]();
-    hosted.hold = undefined;
+    this.#letGo(hosted.documentId);
   }
 
   #detach(subscription: Subscription, documentId: string): void {
@@ -471,6 +476,38 @@ export class DocumentHost extends Resource implements Repo.Host {
     hosted.subscribers.delete(subscription);
     if (hosted.subscribers.size === 0) {
       this.#forget(hosted);
+    }
+  }
+
+  /** Runs `fn` on the document the store produces, and holds the document for {@link Options.holdFor}. */
+  #withDocument<T>(documentId: string, fn: (document: StoredDocument) => T): Promise<T | undefined> {
+    return this.#store.withDocument(documentId, (document) => {
+      this.#hold(documentId);
+      return fn(document);
+    });
+  }
+
+  /** Holds the document until {@link Options.holdFor} passes with no further call on it. */
+  #hold(documentId: string): void {
+    if (!this.#store.hold || this.#holdFor <= 0 || !this.isOpen) {
+      return;
+    }
+    const held = this.#held.get(documentId);
+    if (held) {
+      clearTimeout(held.timer);
+    }
+    this.#held.set(documentId, {
+      hold: held?.hold ?? this.#store.hold(documentId),
+      timer: setTimeout(() => this.#letGo(documentId), this.#holdFor),
+    });
+  }
+
+  #letGo(documentId: string): void {
+    const held = this.#held.get(documentId);
+    if (held) {
+      this.#held.delete(documentId);
+      clearTimeout(held.timer);
+      held.hold[Symbol.dispose]();
     }
   }
 
@@ -516,7 +553,7 @@ export class DocumentHost extends Resource implements Repo.Host {
   }
 
   async #absorb(hosted: HostedDocument): Promise<void> {
-    await this.#store.withDocument(hosted.documentId, (document) => this.#absorbLoaded(hosted, document));
+    await this.#withDocument(hosted.documentId, (document) => this.#absorbLoaded(hosted, document));
     await this.#publish(hosted);
   }
 

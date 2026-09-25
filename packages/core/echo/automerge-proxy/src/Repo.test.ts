@@ -333,12 +333,14 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
     expect(handle.isCopy).toBe(false);
   });
 
-  test('the host holds a document while a client follows it live, and not while it follows a copy', async () => {
+  test('the host lets a document go once no client follows it live, and never holds one followed as a copy', async () => {
     const store = new MemoryStore();
     const index = new Map<string, Contract.Copy>();
     const host = await new Host.DocumentHost({
       store,
       copies: copySourceOf(index),
+      // Long enough that only unfollowing can end a hold during the test.
+      holdFor: 60_000,
     }).open();
     const random = createRandom(11);
     const [writer, reader] = await Promise.all(
@@ -353,7 +355,7 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
       await Promise.all([writer.close(), reader.close()]);
       await host.close();
     });
-    const { documentId } = await share([writer], { list: ['a'] });
+    const { documentId } = await share([writer], { title: 'a' });
     await expect.poll(() => store.holds(documentId)).toBe(1);
 
     index.set(documentId, {
@@ -368,12 +370,36 @@ describe('Repo.ProxyRepo with Host.DocumentHost', () => {
 
     // The reader's first write follows the document live, which the host holds again.
     handle.change((doc: Doc) => {
-      (doc.list as string[]).push('b');
+      doc.title = 'b';
     });
     await reader.flush();
     expect(store.holds(documentId)).toBe(1);
     await reader.close();
     await expect.poll(() => store.holds(documentId)).toBe(0);
+  });
+
+  test('the host holds a document for `holdFor` after its last call, though a client still follows it live', async () => {
+    const store = new MemoryStore();
+    const host = await new Host.DocumentHost({ store, holdFor: 1_000 }).open();
+    const repo = await new Repo.ProxyRepo({
+      host: new Transport({ host: () => host, random: createRandom(12).next }),
+      createHandle: (options) => new Handle.DocHandle(options),
+    }).open();
+    onTestFinished(async () => {
+      await repo.close();
+      await host.close();
+    });
+    const { documentId, handles } = await share([repo], { title: 'a' });
+    await expect.poll(() => store.holds(documentId)).toBe(1);
+    await expect.poll(() => store.holds(documentId), { timeout: 5_000 }).toBe(0);
+
+    // The next edit still reaches the document, and holds it again.
+    handles[0].change((doc: Doc) => {
+      doc.title = 'b';
+    });
+    await repo.flush();
+    expect(store.holds(documentId)).toBe(1);
+    expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ title: 'b' });
   });
 
   const Step = fc.oneof(

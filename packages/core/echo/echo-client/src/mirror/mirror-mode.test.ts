@@ -180,7 +180,7 @@ describe('mirror mode', () => {
     );
   });
 
-  test('the worker holds what a proxy tab follows, and lets a document go once the tab stops following it', async () => {
+  test('the worker holds what a proxy tab just wrote, and lets a document go once the tab stops following it', async () => {
     const [db] = await openTabs(1);
     // The host keeps the space root it created.
     const before = peer.host.automergeHost.leasedDocsCount;
