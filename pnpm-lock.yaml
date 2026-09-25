@@ -5494,16 +5494,24 @@ importers:
 
   packages/core/echo/automerge-proxy:
     dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
-    devDependencies:
       '@automerge/automerge':
         specifier: 3.5.0
         version: 3.5.0
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      effect:
+        specifier: 4.0.0-rc.117
+        version: 4.0.0-rc.117
+      eventemitter3:
+        specifier: 'catalog:'
+        version: 5.0.1
 
   packages/core/echo/blob:
     dependencies:

@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { Patch } from '@automerge/automerge';
 
-import { Op } from '@dxos/automerge-proxy';
+import type * as Handle from './Handle.ts';
+import type * as Op from './Op.ts';
 
-import { type ChangeEvent } from '../automerge/client-handle.ts';
-import { type MirrorDocHandle } from './mirror-doc-handle.ts';
-
-export type CursorService = {
+export type Service = {
   /** Positions of Automerge cursors in the text at `path`, both as of `heads`. */
   resolve: (path: Op.Path, heads: string[], cursors: string[]) => Promise<(number | null)[]>;
   /** Automerge cursors for positions in the text at `path`, both as of `heads`. */
@@ -17,18 +17,18 @@ export type CursorService = {
 };
 
 /**
- * Automerge cursors over one mirrored text, readable synchronously.
+ * Automerge cursors over one text in a proxy document, readable synchronously.
  *
- * The worker resolves each cursor once, against the tab's confirmed heads; from then on the tab moves
- * the position through its own unconfirmed edits and every later change, as CodeMirror maps
+ * The host resolves each cursor once, against the client's confirmed heads; from then on the client
+ * moves the position through its own unconfirmed edits and every later change, as CodeMirror maps
  * positions through transactions. Comments, anchors and remote presence read positions here. The
  * text's path follows list edits above it; a cursor whose text was removed or replaced reads
  * undefined until tracked again.
  */
-export class MirrorCursors {
+export class Tracker {
   readonly #positions = new Map<string, number | null>();
   #path: Op.Path | null;
-  readonly #onChange = ({ patches }: ChangeEvent<unknown>) => {
+  readonly #onChange = ({ patches }: Handle.ChangeEvent<unknown>) => {
     const { path, map } = followPatches(this.#path, patches);
     this.#path = path;
     for (const [cursor, position] of this.#positions) {
@@ -37,9 +37,9 @@ export class MirrorCursors {
   };
 
   constructor(
-    private readonly _handle: MirrorDocHandle<unknown>,
+    private readonly _handle: Handle.DocHandle<unknown>,
     path: Op.Path,
-    private readonly _service: CursorService,
+    private readonly _service: Service,
   ) {
     this.#path = path;
     this._handle.on('change', this.#onChange);
@@ -64,10 +64,10 @@ export class MirrorCursors {
     const heads = this._handle.heads;
     const pending = this._handle.pendingOps;
     const later: Patch[][] = [];
-    const record = ({ patches }: ChangeEvent<unknown>) => later.push(patches);
+    const record = ({ patches }: Handle.ChangeEvent<unknown>) => later.push(patches);
     this._handle.on('change', record);
     try {
-      // The worker answers in the confirmed text, whose path is the one before unconfirmed edits moved it.
+      // The host answers in the confirmed text, whose path is the one before unconfirmed edits moved it.
       const confirmedPath = unfollowOps(path, pending);
       const positions = confirmedPath
         ? await this._service.resolve(confirmedPath, heads, cursors)
@@ -94,7 +94,7 @@ export class MirrorCursors {
   }
 
   /**
-   * Cursors for positions in the tab's current text. A position inside text the worker has not
+   * Cursors for positions in the client's current text. A position inside text the host has not
    * confirmed has no Automerge character yet, so creation waits for the confirmation, moving the
    * requested positions through whatever arrives meanwhile.
    */
@@ -117,7 +117,7 @@ export class MirrorCursors {
         return confirmed.map((position) => (position === null ? null : (cursors[next++] ?? null)));
       }
       const later: Patch[][] = [];
-      const record = ({ patches }: ChangeEvent<unknown>) => later.push(patches);
+      const record = ({ patches }: Handle.ChangeEvent<unknown>) => later.push(patches);
       this._handle.on('change', record);
       try {
         await this._handle.confirmed.waitForCount(1);
@@ -264,7 +264,7 @@ const unfollowOps = (path: Op.Path, ops: readonly Op.Any[]): Op.Path | null => {
 
 /**
  * Moves a position in the visible text back through unconfirmed ops into the confirmed text, whose
- * path is `confirmedPath`. Undefined when it lies in text only this tab has seen.
+ * path is `confirmedPath`. Undefined when it lies in text only this client has seen.
  */
 const mapBackThroughOps = (position: number, confirmedPath: Op.Path, ops: readonly Op.Any[]): number | undefined => {
   // Each splice is matched against the text's path at the point the op was made.

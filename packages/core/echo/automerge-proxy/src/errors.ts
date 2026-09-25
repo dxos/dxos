@@ -13,3 +13,10 @@ export class InvalidOpError extends Error {
     super(`Invalid ${op.type} at ${JSON.stringify(op.path)}: ${reason}`);
   }
 }
+
+/** The host cannot produce a document: it is not stored and there is nothing to fetch it from. */
+export class DocumentUnavailableError extends Error {
+  constructor(readonly documentId: string) {
+    super(`Document ${documentId} is unavailable`);
+  }
+}

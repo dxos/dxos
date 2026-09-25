@@ -121,7 +121,7 @@ describe('objects read from the index', () => {
     const reader = await openTab(spaceKey, rootUrl, { indexed: true });
     const objects = await Promise.all(ids.map((id) => load(reader, id)));
     expect(objects.map((obj) => obj.title)).toEqual(ids.map((_, index) => `object ${index}`));
-    expect(objects.map((obj) => handleOf(obj).isIndexed)).toEqual(ids.map(() => true));
+    expect(objects.map((obj) => handleOf(obj).isCopy)).toEqual(ids.map(() => true));
     expect(residentOf(documentIds)).toEqual([]);
 
     Obj.update(objects[5], (obj) => {
@@ -129,7 +129,7 @@ describe('objects read from the index', () => {
     });
     expect(objects[5].title).toBe('edited');
     await reader.flush();
-    expect(handleOf(objects[5]).isIndexed).toBe(false);
+    expect(handleOf(objects[5]).isCopy).toBe(false);
     expect(await hostData(objects[5])).toEqual(expect.objectContaining({ title: 'edited' }));
     expect(residentOf(documentIds)).toEqual([documentIds[5]]);
   });
@@ -139,7 +139,7 @@ describe('objects read from the index', () => {
     const reader = await openTab(spaceKey, rootUrl, { indexed: true });
     const objects = await reader.query(Filter.type(TestSchema.Expando)).run();
     expect(objects.map((obj) => obj.title).toSorted()).toEqual(ids.map((_, index) => `object ${index}`));
-    expect(objects.map((obj) => handleOf(obj).isIndexed)).toEqual(ids.map(() => true));
+    expect(objects.map((obj) => handleOf(obj).isCopy)).toEqual(ids.map(() => true));
     expect(residentOf(documentIds)).toEqual([]);
   });
 
@@ -155,7 +155,7 @@ describe('objects read from the index', () => {
     });
     await writer.flush();
     await peer.host.updateIndexes();
-    await expect.poll(() => handleOf(inReader).isIndexed).toBe(false);
+    await expect.poll(() => handleOf(inReader).isCopy).toBe(false);
     expect(inReader.bytes).toEqual(new Uint8Array([1, 2, 3]));
   });
 
@@ -173,7 +173,7 @@ describe('objects read from the index', () => {
     await peer.host.updateIndexes();
 
     await expect.poll(() => inReader.title).toBe('renamed elsewhere');
-    expect(handleOf(inReader).isIndexed).toBe(true);
+    expect(handleOf(inReader).isCopy).toBe(true);
   });
 
   test('a write made against an out-of-date index copy is rebased onto the current document', async () => {
@@ -223,7 +223,7 @@ describe('objects read from the index', () => {
     });
     await handle.whenReady();
     await repo.flush();
-    expect(handle.isIndexed).toBe(false);
+    expect(handle.isCopy).toBe(false);
     expect(await hostDataAt(documentIds[0], ids[0])).toEqual(expect.objectContaining({ title: 'written on arrival' }));
   });
 
@@ -236,7 +236,7 @@ describe('objects read from the index', () => {
     });
     await peer.restartHost();
     await reader.flush();
-    expect(handleOf(obj).isIndexed).toBe(false);
+    expect(handleOf(obj).isCopy).toBe(false);
     expect(await hostData(obj)).toEqual(expect.objectContaining({ title: 'edited' }));
   });
 
@@ -290,7 +290,7 @@ describe('objects read from the index', () => {
       const fromWorker = liveRepo.find<DatabaseDirectory>(documentId);
       await Promise.all([fromIndex.whenReady(), fromWorker.whenReady()]);
       invariant(fromIndex instanceof MirrorDocHandle, 'not a mirror document');
-      expect(fromIndex.isIndexed, `entity ${index}`).toBe(entities[index] !== binary);
+      expect(fromIndex.isCopy, `entity ${index}`).toBe(entities[index] !== binary);
       found.push(...differences(fromIndex.doc(), fromWorker.doc(), [`entity ${index}`]));
     }
     expect(found).toEqual([]);

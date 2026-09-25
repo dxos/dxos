@@ -7,7 +7,7 @@ import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
-import { Contract, Wire } from '@dxos/automerge-proxy';
+import { Contract, Cursors, Wire } from '@dxos/automerge-proxy';
 import { Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,7 +24,6 @@ import { type DocHandleProxy } from '../automerge/doc-handle-proxy.ts';
 import { toDocumentId } from '../automerge/document-id.ts';
 import { RepoProxy } from '../automerge/repo-proxy.ts';
 import { EditsRejectedError, RepoClosedError } from '../errors.ts';
-import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
 import { isMirrorIndexedReads } from './mode.ts';
 
@@ -148,7 +147,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
       return existing;
     }
     this.#requireOpen(documentId);
-    const handle = this.#createHandle<T>({ documentId, indexed: true });
+    const handle = this.#createHandle<T>({ documentId, followCopy: true });
     this.#handles[documentId] = handle;
     this.#pendingRemove.delete(documentId);
     this.#catchUp(documentId);
@@ -204,12 +203,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
   }
 
   /** Cursors over the text at `path` in a document this repo follows. */
-  cursors(documentId: DocumentId, path: readonly (string | number)[]): MirrorCursors {
+  cursors(documentId: DocumentId, path: readonly (string | number)[]): Cursors.Tracker {
     const handle = this.#handles[documentId];
     if (!handle) {
       throw new Error(`Document ${documentId} is not loaded`);
     }
-    return new MirrorCursors(handle, [...path], {
+    return new Cursors.Tracker(handle, [...path], {
       resolve: async (path, heads, cursors) =>
         (
           await runServiceCall(
@@ -416,7 +415,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
     }
   }
 
-  #createHandle<T>(options: { documentId?: DocumentId; initialValue?: T; indexed?: boolean }): MirrorDocHandle<T> {
+  #createHandle<T>(options: { documentId?: DocumentId; initialValue?: T; followCopy?: boolean }): MirrorDocHandle<T> {
     const handle: MirrorDocHandle<T> = new MirrorDocHandle<T>({
       ...options,
       clientId: this.#clientId,
@@ -492,7 +491,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
           handle?._receive(Wire.decodeEvent(event, WIRE));
           if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
             // The tab wrote after asking for the index copy, so its write needs the worker's copy.
-            if (event.type === 'copy' && handle && !handle.followsIndex) {
+            if (event.type === 'copy' && handle && !handle.followsCopy) {
               this.#catchUp(event.documentId);
             }
             this.#answered.emit(event.documentId);
@@ -563,7 +562,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
         return {
           documentId,
           ...(known ? { known } : {}),
-          ...(handle?.followsIndex ? { mode: 'copy' as const } : {}),
+          ...(handle?.followsCopy ? { mode: 'copy' as const } : {}),
         };
       });
       const remove = [...this.#pendingRemove];

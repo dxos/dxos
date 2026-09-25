@@ -31,10 +31,11 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "effect": "catalog:"
-  },
-  "devDependencies": {
-    "@automerge/automerge": "catalog:"
+    "@dxos/log": "workspace:*",
+    "effect": "catalog:",
+    "eventemitter3": "catalog:"
   }
 }

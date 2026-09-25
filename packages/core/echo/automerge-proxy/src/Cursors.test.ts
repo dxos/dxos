@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { Contract, Draft, Op } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
 
-import { MirrorCursors } from './mirror-cursors.ts';
-import { MirrorDocHandle } from './mirror-doc-handle.ts';
+import type * as Contract from './Contract.ts';
+import * as Cursors from './Cursors.ts';
+import * as Draft from './Draft.ts';
+import * as Handle from './Handle.ts';
+import * as Op from './Op.ts';
 
-const documentId = 'cursor-doc' as DocumentId;
+const documentId = 'cursor-doc';
 
-/** A handle fed by hand with the events a worker would send. */
+/** A handle fed by hand with the events a host would send. */
 const createHandle = (value: Record<string, unknown>) => {
-  const handle = new MirrorDocHandle<Record<string, unknown>>({ clientId: 'tab', documentId, onDelete: () => {} });
+  const handle = new Handle.DocHandle<Record<string, unknown>>({ clientId: 'tab', documentId });
   handle._receive({ type: 'snapshot', documentId, epoch: 'epoch', version: 0, heads: ['h0'], value });
   let version = 0;
   const receive = (ops: Op.Any[], origin?: Contract.Entry['origin']) => {
@@ -30,7 +31,7 @@ const createHandle = (value: Record<string, unknown>) => {
   return { handle, receive };
 };
 
-/** A worker that knows the confirmed text and answers with positions for cursors named `c<position>`. */
+/** A host that knows the confirmed text and answers with positions for cursors named `c<position>`. */
 const createService = (requests: { path: Op.Path; positions: number[] }[] = []) => ({
   resolve: async (_path: Op.Path, _heads: string[], cursors: string[]) =>
     cursors.map((cursor) => Number(cursor.slice(1))),
@@ -40,14 +41,14 @@ const createService = (requests: { path: Op.Path; positions: number[] }[] = []) 
   },
 });
 
-describe('MirrorCursors', () => {
+describe('Cursors.Tracker', () => {
   test('create moves the requested positions through changes that arrive while it waits', async () => {
     const { handle, receive } = createHandle({ text: 'abc' });
     handle.change((doc) => {
       Draft.splice(doc, ['text'], 3, 0, 'XY');
     });
     const requests: { path: Op.Path; positions: number[] }[] = [];
-    const cursors = new MirrorCursors(handle, ['text'], createService(requests));
+    const cursors = new Cursors.Tracker(handle, ['text'], createService(requests));
 
     // Position 4 is 'Y', which only this tab has seen, so creation waits for the confirmation.
     const created = cursors.create([4]);
@@ -68,7 +69,7 @@ describe('MirrorCursors', () => {
 
   test('a tracked position follows its text when a list edit above it moves the text', async () => {
     const { handle, receive } = createHandle({ items: [{ title: 'zero' }, { title: 'hello world' }] });
-    const cursors = new MirrorCursors(handle, ['items', 1, 'title'], createService());
+    const cursors = new Cursors.Tracker(handle, ['items', 1, 'title'], createService());
     await cursors.track(['c6']);
     expect(cursors.position('c6')).toBe(6);
 
@@ -92,7 +93,7 @@ describe('MirrorCursors', () => {
     });
     const paths: Op.Path[] = [];
     const service = createService();
-    const cursors = new MirrorCursors(handle, ['items', 2, 'title'], {
+    const cursors = new Cursors.Tracker(handle, ['items', 2, 'title'], {
       ...service,
       resolve: async (path, heads, cursorIds) => {
         paths.push(path);
@@ -106,7 +107,7 @@ describe('MirrorCursors', () => {
 
   test('a rebuild of the document leaves tracked cursors without a position', async () => {
     const { handle } = createHandle({ text: 'hello' });
-    const cursors = new MirrorCursors(handle, ['text'], createService());
+    const cursors = new Cursors.Tracker(handle, ['text'], createService());
     await cursors.track(['c2']);
     expect(cursors.position('c2')).toBe(2);
     handle._receive({
