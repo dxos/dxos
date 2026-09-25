@@ -30,10 +30,15 @@ export default Capability.makeModule(
     const seenToursAtom = createKvsStore({
       key: toursPrefix,
       schema: HelpCapabilities.SeenToursSchema,
-      defaultValue: () => Object.fromEntries((registry.get(stateAtom).seenTours ?? []).map((id) => [id, true])),
+      defaultValue: (): HelpCapabilities.SeenTours => ({}),
     });
-    // Persists the legacy seed before any consumer can write help state.
-    registry.get(seenToursAtom);
+
+    // Merges the legacy record before any consumer can write help state.
+    const seen = registry.get(seenToursAtom);
+    const legacy = (registry.get(stateAtom).seenTours ?? []).filter((id) => !seen[id]);
+    if (legacy.length > 0) {
+      registry.set(seenToursAtom, { ...seen, ...Object.fromEntries(legacy.map((id) => [id, true])) });
+    }
 
     return [
       Capability.contribute(HelpCapabilities.State, stateAtom),

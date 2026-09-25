@@ -45,6 +45,13 @@ describe('help state', () => {
     expect(harness.registry.get(harness.get(HelpCapabilities.SeenTours))).toEqual({ a: true, b: true });
   });
 
+  test('merges the legacy record into existing seen tours', async ({ expect }) => {
+    storage.set('org.dxos.plugin.support.state', JSON.stringify(legacyState));
+    storage.set('org.dxos.plugin.support.tours', JSON.stringify({ b: true, c: true }));
+    await using harness = await createApp();
+    expect(JSON.parse(storage.get('org.dxos.plugin.support.tours') ?? '{}')).toEqual({ a: true, b: true, c: true });
+  });
+
   test('starts empty without a legacy record', async ({ expect }) => {
     await using harness = await createApp();
     expect(harness.registry.get(harness.get(HelpCapabilities.SeenTours))).toEqual({});

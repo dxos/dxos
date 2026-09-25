@@ -18,7 +18,7 @@ export const StateSchema = Schema.Struct({
   showWelcome: Schema.Boolean,
   tourId: Schema.optional(Schema.String),
   subjectId: Schema.optional(Schema.String),
-  /** Legacy device-local record; seeds {@link SeenTours} when help state activates. */
+  /** Legacy device-local record; merged into {@link SeenTours} when help state activates. */
   seenTours: Schema.optional(Schema.Array(Schema.String)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
