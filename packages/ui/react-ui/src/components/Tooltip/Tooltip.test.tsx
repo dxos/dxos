@@ -73,7 +73,6 @@ describe('Tooltip', () => {
     render(<Harness onInteract={() => false} />, { wrapper: Wrapper });
     const [first] = screen.getAllByRole('button');
 
-    // WebKit starts no native drag after a cancelled pointermove, so a veto must leave the event alone.
     expect(fireEvent.pointerMove(first, { pointerType: 'mouse' })).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(first.getAttribute('data-state')).toEqual('closed');

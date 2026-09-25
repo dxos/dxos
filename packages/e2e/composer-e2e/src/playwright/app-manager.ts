@@ -651,6 +651,13 @@ export class AppManager {
     await this.page.mouse.up();
   }
 
+  /** Drops `active` inside `collection` and discloses it; a collection takes children only once opened. */
+  async dragInto(active: Locator, collection: Locator, timeout = 15_000): Promise<void> {
+    await collection.click();
+    await this.dragTo(active, collection, { instruction: 'make-child' });
+    await this.#expandRow(collection, timeout);
+  }
+
   //
   // Plugins
   //
