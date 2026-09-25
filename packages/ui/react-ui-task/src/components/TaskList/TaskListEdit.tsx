@@ -14,7 +14,6 @@ import { type ComposableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { TaskQuestion } from '../TaskQuestion/index.ts';
-import { TaskHistory } from './TaskHistory.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
@@ -55,10 +54,9 @@ export type TaskListEditProps = ComposableProps<{
    */
   showControls?: boolean;
   /**
-   * Render the open questions and the history under the fields. Off for a host that lays out the
-   * task's sections itself — a detail article, where they are siblings of the artifacts rather than
-   * a tail on the editor, and where placing them here would indent them inside the host's own
-   * content track.
+   * Render the open questions under the fields. Off for a host that lays out the task's sections
+   * itself — a detail article, where a question is a section beside the properties and the history
+   * rather than a tail on the editor.
    */
   showSections?: boolean;
 }>;
@@ -215,13 +213,13 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       <div
         {...rest}
         data-testid='taskList.edit'
-        // Four rows, placed explicitly rather than by flow: header (icon, title, toolbar),
-        // description, open questions, history. Auto-placement drops a cell into whatever track is free, which put
-        // the description in the icon column whenever the toolbar was absent.
+        // Three rows, placed explicitly rather than by flow: header (icon, title, toolbar),
+        // description, open questions. Auto-placement drops a cell into whatever track is free,
+        // which put the description in the icon column whenever the toolbar was absent.
         className={mx(
           // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
           // repeated on every cell that might start a row, and is missed by whichever one is added next.
-          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto_auto] gap-y-2',
+          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto] gap-y-2',
           // No leading control means no icon track: the title then starts where the host's own
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
@@ -319,13 +317,14 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         )}
 
         {/* The full question — context, options and the answer field — lives here rather than in the
-            row, which shows only its one-line summary: the pane has the room a prompt needs. */}
+            row, which shows only its one-line summary: the pane has the room a prompt needs. The
+            history does NOT: a log of what has already happened is what the reader opens the task
+            to read, and under a row it pushed the next task off the screen. */}
         {showSections &&
           openQuestions.length > 0 &&
           task && (
-            // A Column of its own, placed across the host's span: the questions and the history below
-            // them then share one set of tracks — a glyph gutter and a content track — whoever the
-            // host is, instead of each child being handed the host's column names.
+            // A Column of its own, placed across the host's span, so the questions lay themselves out
+            // the same way here as in a detail pane rather than being handed the host's column names.
             <Column.Root
               gutter='md'
               gap='lg'
@@ -339,27 +338,6 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
                 />
               ))}
-            </Column.Root>
-          )}
-
-        {/* The log, on the row below the description: it reports what has happened to the task, so it
-            reads under what the task says rather than beside it. Only when editing — a task being
-            created has no history yet, and the add row must stay one line tall. */}
-        {showSections &&
-          current &&
-          current.history &&
-          current.history.length > 0 && (
-            // The same Column the questions get, for the same reason: the log places its own glyphs in
-            // the gutter and its own text in the content track, and the host only says where the
-            // Column sits.
-            <Column.Root
-              gutter='md'
-              classNames={mx(
-                'min-w-0 pt-2 row-start-4',
-                grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
-              )}
-            >
-              <TaskHistory entries={current.history} />
             </Column.Root>
           )}
 

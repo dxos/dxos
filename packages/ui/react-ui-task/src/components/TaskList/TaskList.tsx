@@ -484,9 +484,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
           reach overflow on its end side, and `justify-end` spills the excess off the start. */}
       <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-        <TaskListItemArtifacts task={task} />
-        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+        <TaskTags task={task} />
       </div>
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
@@ -591,6 +589,30 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
 };
 
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
+
+/**
+ * Everything a task carries as a chip: its tags, what it produced, and who has it.
+ *
+ * Bare chips with no layout of their own, so a host decides how they run — the row scrolls them on
+ * one line inside its chip cell, a detail pane wraps them into a flow under the title. Rendering the
+ * same set in both is the point: a reader who learned the row's chips reads the pane's without
+ * learning anything new.
+ */
+export const TaskTags = ({ task }: { task: Task.Task }) => {
+  // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
+  // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  return (
+    <>
+      <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      <TaskListItemArtifacts task={task} />
+      {current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+    </>
+  );
+};
+
+TaskTags.displayName = 'TaskList.Tags';
 
 /**
  * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the

@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskHistory, TaskList, TaskProperties, TaskQuestion } from '@dxos/react-ui-task';
+import { TaskHistory, TaskList, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -97,6 +97,13 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                     descriptionExtensions={descriptionExtensions}
                     classNames='dx-document'
                   />
+                </Column.Center>
+
+                {/* What the task carries, in a flow rather than the row's one scrolling line: the
+                    pane has the width to wrap them, and a chip that wraps is a chip the reader can
+                    see without dragging the row sideways. */}
+                <Column.Center classNames='flex flex-wrap gap-1' data-testid='tasksPlugin.tags'>
+                  <TaskTags task={task} />
                 </Column.Center>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
