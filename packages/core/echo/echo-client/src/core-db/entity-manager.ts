@@ -1500,6 +1500,8 @@ export class EntityManager implements IDatabaseBinding {
       handle.on('change', this._onDocumentUpdate);
     }
     core.bind({ db: this, docHandle: handle, path: ['objects', memberId], assignFromLocalState: false });
+    // A rebind fires no change event, and the branch's document can hold a different parent.
+    this.#workingSetIndex.update(core);
     // The canonical instance now views this branch; `Obj.getBranch` reads it. A member absent from the
     // branch's set was bound to main above (`url` undefined), so it reports `'main'`, not `name`.
     core.branch = url ? name : 'main';

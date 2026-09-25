@@ -10,6 +10,7 @@ import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
+import { createBranch, switchBranch } from '../echo-handler/branching.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
@@ -364,6 +365,26 @@ describe('WorkingSetQueryExecutor', () => {
 
     db.remove(child);
     await db.flush();
+    expect(childrenOf(second)).toEqual([]);
+  });
+
+  test('the reverse-link index follows a branch switch', async ({ expect }) => {
+    const first = db.add(Obj.make(TestSchema.Expando, { name: 'First' }));
+    const second = db.add(Obj.make(TestSchema.Expando, { name: 'Second' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: first, name: 'Child' }));
+    await db.flush();
+
+    const childrenOf = (parent: Obj.Any) =>
+      planAndExecute(db, Query.select(Filter.id(parent.id)).children()).map((item) => item.objectId);
+
+    await createBranch(child, 'draft');
+    await switchBranch(child, 'draft');
+    Obj.setParent(child, second);
+    await db.flush();
+    expect(childrenOf(second)).toEqual([child.id]);
+
+    await switchBranch(child, 'main');
+    expect(childrenOf(first)).toEqual([child.id]);
     expect(childrenOf(second)).toEqual([]);
   });
 
