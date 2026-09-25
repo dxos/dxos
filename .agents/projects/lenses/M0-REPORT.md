@@ -1,6 +1,6 @@
 # M0 Migration Research — Final Report
 
-_2026-08-02 · The definitive record of the migration research: the final design, the evidence that
+_2026-08-02, updated 2026-09-25 (follow-up spikes against the landed #12412 engine) · The definitive record of the migration research: the final design, the evidence that
 proves it, and the alternatives ruled out along the way. DESIGN.md §10 states outcomes and points
 here for detail. Evidence:
 `packages/core/echo/echo-client-e2e/src/migration-bench/` — the minimal proving suite (6 files,
@@ -31,13 +31,20 @@ recovery and fold-forward for late old-schema data. Concretely, per shape:
    one); a query-based late-child path (a child created after the fan-in has no heads by
    construction — heads-based detection categorically cannot see it). Late writes to tombstoned
    children fold forward; tombstones never erase.
-4. **Fan-out (1→N objects).** Migration-created objects get a random object id + a derived meta
-   key (`<lensId>:<sourceId>:<role>`); duplicates from independent peers collapse **passively**
-   via the merge engine (#12412). Duplicate collapse uses the **baseline-aware three-way merge**:
-   classify each field against the recomputable baseline (the deterministic transform re-run);
-   take unconflicted loser edits; genuine conflicts keep the winner's value and are recorded;
-   losers are tombstoned, never erased. This is the proposed improvement to #12412's per-field
-   winner-preference, which loses unconflicted loser edits for migration-minted duplicates.
+4. **Fan-out (1→N objects).** Migration-created objects get a random object id + a derived
+   `meta.convergenceKey` (`<lensId>:<sourceId>:<role>`); duplicates from independent peers collapse
+   **passively** via the landed merge engine (#12412). The landed per-field winner-preference loses
+   an edit made on the losing copy before the merge (reproduced against the real engine). Fix,
+   **history-native**: each duplicate lives in its own document, so its **creation heads** are its
+   baseline; replay the loser's edits since creation (`A.diff` from its creation heads) onto the
+   winner with `changeAt` at the **winner's** creation heads. Unconflicted loser edits land; a field
+   both copies edited becomes a real automerge conflict (`A.getConflicts`), identical on every peer;
+   a re-run writes nothing. No transform re-run and no app-level record. Copies minted from
+   different source states replay nothing wrong (only post-creation edits are replayed) — that gap
+   is the source object's fold-forward (1). Engine change: record `creationHeads` per entity at
+   creation; in `ConvergenceKeyMerger#mergeCandidates` replace the flat per-field write with this
+   replay for loser-edited fields. It composes with the landed `mergedAtHeads` straggler fold
+   (disjoint windows: `[creation, merge)` vs `[mergedAt, now)`).
 5. **Array fan-out (1→N from a collection).** RATIFIED: a define-time precondition + two-step
    composition. Fanning an array out requires each element to carry a **pre-existing stable id**,
    used in the meta key (`<lensId>:<parentId>:<elementId>`); declaring an array fan-out over an
@@ -46,9 +53,17 @@ recovery and fold-forward for late old-schema data. Concretely, per shape:
    idempotent, purely schema-level; concurrent stampers' register conflicts settle by LWW);
    **step 2**, shipped after step 1 has reconciled, splits by element id — peers split
    independently and duplicates collapse passively via merge keys. The temporal gate carries the
-   correctness; no id determinism, baseline agreement, or cleanup process is needed. Residual: a
-   peer partitioned across the entire step-1 rollout that also reorder-recreated an element can
-   race the id; this degrades to reviewable duplicates in the existing dedup machinery.
+   correctness; no id determinism, baseline agreement, or cleanup process is needed. Proven
+   against the real engine: concurrent stamping converges to one id per element; independent
+   splits collapse to one child per element and refs made to a losing child resolve to the
+   survivor. Residual (reproduced): a reorder racing an unseen stamp orphans it (a reorder is
+   delete+reinsert, so the stamp lands on the dead node) and a re-run mints a second id; a split
+   run before the stamps reconciled leaves two live children under different keys. Both are
+   **reviewable duplicates, detectable without tracking** — a child whose `elementId` is no longer
+   in the parent's array. The step-2 gate (`id` present and `A.getConflicts(element, 'id')` empty)
+   narrows the window but cannot close it: it is blind to unreplicated stamps, and a register's
+   conflict set never self-clears, so a raced element also needs a reconcile write (re-assert the
+   presented value) or the gate stays shut.
 6. **Conflicts are history-native.** No app-level conflict records. The fold writes via `changeAt`
    at the recorded migration heads, re-keying the late value into the concurrent past — a real
    CRDT conflict on the target key, replicating identically, inspectable via `A.getConflicts` now
@@ -56,10 +71,17 @@ recovery and fold-forward for late old-schema data. Concretely, per shape:
    later writes), discoverable by an unmodified history walker (conflict-flagged patches), and
    attributable via change `message`/`time` (plumbed, surfaced by `getEditHistoryWithDiffs`). The
    winner is a deterministic **policy**: plain live-handle `changeAt` → the fold wins by Lamport-
-   counter dominance; fork a view at the migration heads with a sentinel all-zeros actor and merge
-   back via `docHandle.update(doc => A.merge(doc, clone))` → counters tie and the fold
-   deterministically loses (**user wins — recommended default**). Same-key concurrent writes are
-   history-native for free.
+   counter dominance (still a real conflict); fork a view at the migration heads with a sentinel
+   all-zeros actor and merge back via `docHandle.update(doc => A.merge(doc, clone))` → counters tie
+   and the fold deterministically loses (user wins). **The sentinel is sound only if every peer's
+   fold change is byte-identical**: two different changes under one (actor, seq) make automerge
+   reject the merge (`duplicate seq`), and through live replication that surfaced as an unhandled
+   rejection that corrupted connection state. Byte-identity is achievable (pure `migrate()`, fixed
+   `time: 0`, deterministic `message`) but is a caller contract. The sound fallback is to write with
+   the peer's own actor and let readers pick the policy winner from `A.getConflicts` by change
+   `message`. Proposed primitive: `ObjectCore.foldAt(heads, mutate, { policy, message, time = 0 })`
+   (internal); the worker's `MergeDocumentRef` needs an `update` for the user-wins path. Same-key
+   concurrent writes are history-native for free.
 7. **Multi-object non-atomicity is a repairable window, not corruption.** The half-applied state
    of a cross-object write set is observable and replicates — but with effects-as-data write sets
    and per-step idempotence guards, **any** peer completes an interrupted migration by re-running
@@ -71,7 +93,20 @@ recovery and fold-forward for late old-schema data. Concretely, per shape:
    window closes at the boundary — owned consequences; the heads ancestry check makes the boundary
    safe (folds stop on foreign heads instead of re-applying the world), and its failure doubles as
    the app-consumable "you missed an epoch, review your changes" signal. Epoch timing IS the
-   fold-forward window policy. Epoch management is not exposed at the app level.
+   fold-forward window policy. Epoch management is not exposed at the app level. Epoch machinery
+   itself is out of scope: coordination-free approaches are always preferred.
+9. **Collaborative text folds character-wise.** A fold of a text field replays the late `splice`/
+   delete patches (from `A.diff`) into the target with `changeAt`, so they merge character-by-
+   character with concurrent edits instead of replacing the value (the scalar fold silently
+   clobbers them — quantified). Iterated folds must fork from the heads **returned by the previous
+   `changeAt`** (a target-side frontier), not the original migration heads, or offsets overrun;
+   so text folds keep two markers per property (source checkpoint + target frontier). The initial
+   copy must be a plain assignment (`A.updateText` cannot create a field); later writes use
+   `updateText`, so the `Write` vocabulary needs a text-aware `assignText`. Across fan-out
+   duplicates the same replay works only when both copies' creation text is equal; unequal
+   baselines corrupt badly, so the merge must compare creation-time text first and, on mismatch,
+   skip and keep the loser reachable. In practice collaborative text lives in a separate `Text`
+   object behind a `Ref`, so fanning out the parent copies the ref and duplicates no text.
 
 ### Proposed API embodiment: `Migration.declare` + a guarded `Write` vocabulary
 
@@ -92,22 +127,29 @@ and bidirectionality (rollback / fan-in derived from fan-out's `put`).
 partition/heal, heads/diff helpers, guarded writers, `writesSince` — conflict-marker patches are
 metadata, not writes).
 
-| Suite                       | Proves                                                                                                                                                                                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `single-object.test.ts` (4) | Design 1 end-to-end: lifecycle with conflict detection + iterated folds, composed chains, independent-fold convergence, the foreign-heads ancestry caveat                                                                                              |
-| `multi-object.test.ts` (2)  | Design 2: independent per-object folds; the guarded cross-object move, clean and conflicting paths                                                                                                                                                     |
-| `fan-in.test.ts` (4)        | Design 3: all three conditions independently load-bearing; late writes to tombstoned children; two-round late-child detection/absorption                                                                                                               |
-| `fan-out.test.ts` (3)       | Design 4: winner-preference's unconflicted loss quantified; three-way merge preserves it; inspect/revert via record + tombstone; independent merges converge, re-merge zero-write                                                                      |
-| `atomicity.test.ts` (3)     | Design 7: the window is real and replicates; any-peer idempotent resume; zero-write third run; strong-deps gating for relations                                                                                                                        |
-| `conflicts.test.ts` (6)     | Design 6: fold-at-heads materializes a rename conflict; historical inspection (clone caveat); history-walk discovery; message attribution; winner-policy determinism both ways (counter dominance vs sentinel-actor tie loss); same-key conflicts free |
+| Suite                         | Proves                                                                                                                                                                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `single-object.test.ts` (4)   | Design 1 end-to-end: lifecycle with conflict detection + iterated folds, composed chains, independent-fold convergence, the foreign-heads ancestry caveat                                                                                              |
+| `multi-object.test.ts` (2)    | Design 2: independent per-object folds; the guarded cross-object move, clean and conflicting paths                                                                                                                                                     |
+| `fan-in.test.ts` (4)          | Design 3: all three conditions independently load-bearing; late writes to tombstoned children; two-round late-child detection/absorption                                                                                                               |
+| `fan-out.test.ts` (3)         | Design 4: winner-preference's unconflicted loss quantified; three-way merge preserves it; inspect/revert via record + tombstone; independent merges converge, re-merge zero-write                                                                      |
+| `atomicity.test.ts` (3)       | Design 7: the window is real and replicates; any-peer idempotent resume; zero-write third run; strong-deps gating for relations                                                                                                                        |
+| `conflicts.test.ts` (6)       | Design 6: fold-at-heads materializes a rename conflict; historical inspection (clone caveat); history-walk discovery; message attribution; winner-policy determinism both ways (counter dominance vs sentinel-actor tie loss); same-key conflicts free |
+| `fan-out-engine.test.ts` (5)  | Design 4 against the landed engine: pre-merge loser edit lost (winner untouched / disjoint edit); creation-heads replay recovers it idempotently; both-edited field becomes a converged automerge conflict; divergent source states replay nothing     |
+| `array-fan-out.test.ts` (6)   | Design 5 against the landed engine: concurrent stamping converges; reorder after vs racing a stamp; independent splits collapse with refs redirected; early split leaves detectable duplicates; the gate's blind spot and sticky conflicts             |
+| `fold-at.ts` + `.test.ts` (8) | Design 6 primitive: `foldAt` with both policies; sentinel sound when byte-identical, `duplicate seq` rejection when not; idempotent re-run; two-peer convergence                                                                                       |
+| `text.test.ts` (5)            | Design 9: `updateText` cannot create; character-wise text fold with the chained fork frontier; scalar fold clobbers text; duplicate text replay with equal and mismatched baselines                                                                    |
 
 Not separately benched (proven in since-pruned exploratory suites; retained here as findings):
 concurrent map-key delete-vs-write survival; identity-key duplicates replicating addressably;
 `Annotation.set` markers replicating; late-created entities replicating and queryable;
 `referencedBy` cardinality; tombstoned objects readable under `deleted: 'include'` and
-resurrectable by re-add. Design 5's two-step composition is a composition of proven pieces
-(guarded stamping = design 1 machinery; split-by-key = design 4) and has no dedicated bench test;
-one is optional.
+resurrectable by re-add.
+
+Bycatch platform fixes on this branch: `waitUntilHeadsReplicated` hung when the awaited change
+merged into an already-conflicted key (heads move, no `change` event); it now waits on
+`heads-changed` (`heads-replication.test.ts`). History-native conflicts produce exactly such
+changes. `TestReplicationNetwork` disconnect now tears down only the local end.
 
 ## Ruled out, and why
 
@@ -121,7 +163,16 @@ one is optional.
 - **Per-field winner-preference merge without a baseline** (#12412's current semantics) — for
   migration-minted duplicates the transform wrote every field on both copies, so "the winner
   defines it" is vacuously true and a loser's unconflicted edit loses to the winner's untouched
-  baseline value. Quantified in `fan-out.test.ts`; fixed by the three-way merge.
+  baseline value. Quantified in `fan-out.test.ts`, reproduced against the landed engine in
+  `fan-out-engine.test.ts`; fixed by the creation-heads replay (design 4).
+- **Recomputed-baseline three-way merge with conflict records** (the first fix for the above) —
+  worked, but it re-ran the transform to recover a baseline and recorded conflicts in app data.
+  Superseded: each duplicate's creation heads already are its baseline, and the replay makes the
+  conflict native.
+- **Shared sentinel actor with non-deterministic change metadata** — `duplicate seq` rejection
+  (design 6). Fixed `time`, deterministic `message`, or the own-actor fallback.
+- **Forking every text replay from the original migration heads** — offsets overrun from the
+  second fold on (design 9).
 - **Embedded element stamps written by migration-time backfill (without the temporal gate)** — a
   concurrent reorder is remove+insert and recreates the element from a snapshot that may not
   include the stamp yet; orphan-keyed split objects follow. Also: cloning an element duplicates
@@ -161,20 +212,22 @@ one is optional.
 
 - The fold-forward trigger (DESIGN.md §10.7 q6) — DECIDED (2026-09-25): the worker's indexing
   stream, alongside #12412's merge. Runtime cost there is still unmeasured.
-- Collaborative-text: schema-declared text fields route through `splice` writes (vocabulary
-  exists); the duplicate-merge case needs an app-level three-way text diff against the recomputed
-  baseline — unbuilt, also answers #12412's open text policy.
-- ~~Real epoch machinery against stored heads~~ — OUT OF SCOPE (2026-09-25): epochs are avoided;
-  coordination-free approaches are always preferred.
-- A first-class fold-at-heads primitive (the user-wins path is a four-step dance today).
-- Optional composition spikes: the two-step array fan-out under partition/reorder; step-1 rollout
-  race surfacing as reviewable duplicates.
-- #12412 adoption: baseline-aware merge; the permanent-divergence finding; winner-side heads for
-  conflict detection; minimal writes in the executor.
+- **Winner policy mechanism** (design 6): sentinel actor under a byte-identity contract, or own
+  actor with readers resolving from `A.getConflicts`. Needs a decision before `foldAt` ships.
+- **Engine adoption** (for the object-merging project): `creationHeads` + creation-heads replay in
+  `ConvergenceKeyMerger`; mismatched-baseline text guard; `MergeDocumentRef.update`.
+- **Text merge across mismatched baselines**: only detect-and-skip is built; a three-way text diff
+  is not.
+- **Stale live proxy after a remote reorder**: a long-held object reference showed a wrong element
+  id (leaked from another index) after a remote reorder merged, and a presence-guarded stamp through
+  it skipped a blank element. Fresh reads on another peer are correct. An ECHO reactivity issue,
+  not a design flaw; migrations must re-query per run. Needs its own investigation.
+- ~~Real epoch machinery against stored heads~~ — OUT OF SCOPE (2026-09-25).
 
 ## Sequencing
 
 M1 (lens-backed single-object, shippable, documents its residual loss) gates on Phase 5 (Lens into
-`@dxos/echo`); fan-out collapse gates on #12412 landing; M2 (fold-forward standing rule — what
+`@dxos/echo`); fan-out collapse runs on the landed #12412 engine and needs the creation-heads
+replay adopted there to meet the losslessness bar; M2 (fold-forward standing rule — what
 meets the losslessness bar) integrates this report. Every load-bearing mechanism above has a
 passing test; the remaining work is engineering with known shape, not feasibility research.

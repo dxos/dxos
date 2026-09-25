@@ -1,14 +1,15 @@
 # ECHO Lenses — Tasks
 
-_Resume: **MIGRATION RESEARCH COMPLETE AND CONSOLIDATED** (2026-08-02, branch
-`claude/m0-migrations-research-zw15ml`, DRAFT PR #12439). The definitive record is
-[M0-REPORT.md](./M0-REPORT.md) — final design (8 outcomes incl. the ratified array-fan-out
-two-step, history-native conflicts, epoch policy), evidence map, and everything ruled out with
-reasons; DESIGN.md §10.3 "Outcomes" is the summary that points to it. The proving suite is
-`echo-client-e2e/src/migration-bench/` (6 files, 22 tests; exploratory research files pruned).
-Also fixed en route: a real `test-replicator.ts` disconnect bug. NEXT options: (1) feed
-M0-REPORT.md into implementation planning; (2) carry the merge proposal + permanent-divergence
-finding onto PR #12412; (3) Phase 5 promote Lens into @dxos/echo, which M1 gates on. Previously:
+_Resume: **MIGRATION RESEARCH COMPLETE; FOLLOW-UP SPIKES DONE 2026-09-25** (branch
+`claude/m0-migrations-research-zw15ml`, DRAFT PR #12439, merged with main incl. landed #12412).
+The definitive record is [M0-REPORT.md](./M0-REPORT.md) (9 outcomes, evidence map, ruled-out
+list); DESIGN.md §10.3 "Outcomes" summarizes it. Proving suite:
+`echo-client-e2e/src/migration-bench/` (10 files, 46 tests). Decided 2026-09-25: fold-forward runs
+off the worker indexing stream; epochs out of scope. Bycatch fixes: `waitUntilHeadsReplicated`
+hang on patchless merges (echo-host, changeset) and local-only test-replicator disconnect. OPEN:
+(1) winner-policy mechanism (sentinel byte-identity contract vs own actor + reader resolution);
+(2) engine adoption of creation-heads replay (object-merging project); (3) stale live proxy after
+remote reorder (ECHO investigation); (4) DESIGN §10.7 q1, q3-q5, q7 still to revisit. Previously:
 PR #12420 MERGED (squash `f8637f1d`), lens PHASES 1-4 DONE; stories/gotchas for stories-lens in
 older resume history (git log of this file)._
 

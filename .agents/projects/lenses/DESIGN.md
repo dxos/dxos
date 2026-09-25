@@ -596,11 +596,11 @@ knows only the old type and writes it directly. Fold-forward is for that case.
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
    most likely reason the bar in §10.1 turns out to be unreachable.
 
-#### Outcomes (M0 complete, 2026-08-02)
+#### Outcomes (M0 complete 2026-08-02; follow-up spikes 2026-09-25)
 
 Every falsifiable claim above was answered empirically and none broke the §10.1 bar — the
 fold-forward hypothesis stands. The proving suite is
-`echo-client-e2e/src/migration-bench/` (6 files, 22 tests); the full record — the final design,
+`echo-client-e2e/src/migration-bench/` (10 files, 46 tests); the full record — the final design,
 the evidence map, and everything ruled out along the way with reasons — is
 [M0-REPORT.md](./M0-REPORT.md). The outcomes, in brief:
 
@@ -610,15 +610,20 @@ the evidence map, and everything ruled out along the way with reasons — is
 - **N→N multi-object: same machinery per object**, including guarded cross-object moves.
 - **Fan-in: solved with three declared ingredients** — removal choice, property-collision
   resolution, and a query-based late-child path — each independently load-bearing.
-- **Fan-out: reduced to object-merging keys** (random object id + derived meta key; passive
-  collapse via the merge engine), with the baseline-aware three-way merge as the loss-only-on-
-  conflict collapse semantics (proposal flowed to PR #12412).
+- **Fan-out: reduced to object-merging keys** (random object id + derived `meta.convergenceKey`;
+  passive collapse via the landed #12412 engine). The engine loses pre-merge loser edits; the fix
+  replays the loser's edits since creation at the winner's creation heads, which makes genuine
+  conflicts native automerge conflicts (needs adopting in the engine).
 - **Array fan-out: a define-time precondition + two-step composition** — elements must carry a
   pre-existing stable id used in the meta key; id-less arrays first run an ordinary stamping
-  migration (random ids; the temporal gate to step 2 carries the correctness).
+  migration (random ids; the temporal gate to step 2 carries the correctness). Proven against
+  the real engine; the residual is reviewable duplicates, detectable without tracking.
 - **Conflicts are history-native** — `changeAt` fold-at-heads materializes real CRDT conflicts,
   reviewable forever from ops alone, with the winner a deterministic policy (user-wins
-  recommended). No app-level shadow records.
+  recommended). No app-level shadow records. The user-wins sentinel actor is sound only for
+  byte-identical fold changes; the mechanism is an open decision.
+- **Collaborative text folds character-wise** via `changeAt` splice replay, with a chained
+  target-side fork frontier; across fan-out duplicates only when creation text matches.
 - **Multi-object non-atomicity is a repairable window, not corruption** — effects-as-data write
   sets + per-step guards make any peer able to complete an interrupted migration.
 - **Epochs: last resort, platform-owned, deliberately history-erasing** — the fold window closes
