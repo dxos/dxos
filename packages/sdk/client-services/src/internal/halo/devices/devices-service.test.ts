@@ -1,0 +1,78 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as EffectContext from 'effect/Context';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+
+import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
+import { subscribeStream } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
+import { type ServiceContext } from '../../testing/index.ts';
+import { createServiceContext } from '../../testing/index.ts';
+import { DevicesServiceImpl } from './devices-service.ts';
+
+describe('DevicesService', () => {
+  let serviceContext: ServiceContext;
+  let devicesService: DevicesServiceImpl;
+
+  beforeEach(async () => {
+    serviceContext = await createServiceContext();
+    await serviceContext.open(new Context());
+    devicesService = new DevicesServiceImpl(serviceContext.identityManager);
+  });
+
+  afterEach(async () => {
+    await serviceContext.close();
+  });
+
+  describe('updateDevice', () => {
+    test.skip('updates device profile', async () => {
+      const stream = devicesService['DevicesService.queryDevices']();
+      const device = await EffectEx.runPromise(
+        devicesService['DevicesService.updateDevice'](
+          buf.create(DeviceProfileDocumentSchema, { label: 'test-device' }),
+        ),
+      );
+      const result = new Trigger<Device[] | undefined>();
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
+        onData: ({ devices }) => result.wake(devices),
+      });
+      onTestFinished(cleanup);
+      expect(device.profile?.label).to.equal('test-device');
+    });
+  });
+
+  describe('queryDevices', () => {
+    test('returns empty list if no identity is available', async () => {
+      const stream = devicesService['DevicesService.queryDevices']();
+      const result = new Trigger<Device[] | undefined>();
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
+        onData: ({ devices }) => result.wake(devices),
+        onError: (err) => log.catch(err),
+      });
+      onTestFinished(cleanup);
+      expect(await result.wait()).to.be.length(0);
+    });
+
+    test('updates when identity is created', async () => {
+      const stream = devicesService['DevicesService.queryDevices']();
+      let result = new Trigger<Device[] | undefined>();
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
+        onData: ({ devices }) => result.wake(devices),
+      });
+      onTestFinished(cleanup);
+      expect(await result.wait()).to.be.length(0);
+
+      result = new Trigger<Device[] | undefined>();
+      await serviceContext.createIdentity();
+      expect(await result.wait()).to.be.length(1);
+    });
+  });
+});

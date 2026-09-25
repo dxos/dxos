@@ -4,4 +4,4 @@
 
 // @import-as-namespace
 
-export * from './internal/agents/index.ts';
+export * from './internal/halo/agents/index.ts';

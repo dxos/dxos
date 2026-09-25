@@ -4,4 +4,4 @@
 
 // @import-as-namespace
 
-export * from './internal/diagnostics/index.ts';
+export * from './internal/host/diagnostics/index.ts';

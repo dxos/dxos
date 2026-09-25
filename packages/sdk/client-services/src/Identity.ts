@@ -37,7 +37,7 @@ import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import * as Auth from './Auth.ts';
-import { type Space } from './internal/space/index.ts';
+import { type Space } from './internal/echo/space/index.ts';
 import { EdgeFeedReplicator } from './Replication.ts';
 
 export type IdentityProps = {

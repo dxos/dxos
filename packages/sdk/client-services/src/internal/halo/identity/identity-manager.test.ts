@@ -1,0 +1,248 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { create } from '@bufbuild/protobuf';
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
+import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AuthorizedDeviceSchema, ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { openCredentialsDocument } from '../../../CredentialsDocument.ts';
+import { AuthStatus, SpaceManager } from '../../echo/space/index.ts';
+import { MetadataStore } from '../../kernel/metadata/index.ts';
+import { valueEncoding } from '../../kernel/pipeline/index.ts';
+import { createServiceContext } from '../../testing/index.ts';
+import { IdentityManager } from './identity-manager.ts';
+
+describe('identity/identity-manager', () => {
+  const setupPeer = async ({
+    signalContext = new MemorySignalManagerContext(),
+    storage = createStorage({ type: StorageType.RAM }),
+  }: {
+    signalContext?: MemorySignalManagerContext;
+    storage?: Storage;
+  } = {}) => {
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+
+    const keyring = new Keyring(storage.createDirectory('keyring'));
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
+        root: storage.createDirectory('feeds'),
+        signer: keyring,
+        hypercore: {
+          valueEncoding,
+        },
+      }),
+    });
+
+    onTestFinished(() => hypercoreStore.close());
+
+    const networkManager = new SwarmNetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory,
+    });
+    const spaceManager = new SpaceManager({
+      hypercoreStore,
+      networkManager,
+      metadataStore,
+    });
+    // The automerge scheme is opt-in in the product; these tests are what cover it.
+    const identityManager = new IdentityManager({
+      metadataStore,
+      keyring,
+      hypercoreStore,
+      spaceManager,
+      automergeCredentials: true,
+    });
+
+    return {
+      networkManager,
+      metadataStore,
+      identityManager,
+      hypercoreStore,
+      keyring,
+    };
+  };
+
+  test('creates identity', async () => {
+    const { identityManager } = await setupPeer();
+    await identityManager.open(new Context());
+    onTestFinished(() => identityManager.close(Context.default()));
+
+    const identity = await identityManager.createIdentity();
+    expect(identity).to.exist;
+  });
+
+  test('anchors the halo space on a space root document and mirrors its credentials', async () => {
+    const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
+    await peer.open(new Context());
+    onTestFinished(() => peer.close());
+
+    await peer.createIdentity();
+    const identity = peer.identityManager.identity!;
+    const spaceId = identity.haloSpaceId;
+
+    // HALO has never had a directory of its own, so anchoring has to mint one for the root to point at.
+    const refs = peer.echoHost.getSpaceRootRefs(spaceId);
+    expect(refs?.spaceRootDocUrl).to.exist;
+
+    // The id stays key-derived: recovery reconstructs the halo space from `haloSpaceKey` alone, so a
+    // root-derived id would leave a recovering device computing an id no document belongs to.
+    expect(spaceId).to.equal(await createIdFromSpaceKey(identity.haloSpaceKey));
+
+    const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs!.spaceRootDocUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
+
+    // Every credential the control feed carries is mirrored into the credentials document.
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, spaceId);
+    await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
+
+    const mirrored = new Set(store.read().map((entry) => entry.id));
+    for (const credential of identity.space.spaceState.credentials) {
+      expect(mirrored.has(requirePublicKey(credential.id).toHex())).to.be.true;
+    }
+
+    // The genesis credential is what makes the chain processable on its own.
+    const types = store.read().map((entry) => getCredentialAssertion(entry.credential).$typeName);
+    expect(types).to.include('dxos.halo.credentials.SpaceGenesis');
+    expect(types).to.include('dxos.halo.credentials.AuthorizedDevice');
+  });
+
+  test('reload from storage', async () => {
+    const storage = createStorage({ type: StorageType.RAM });
+
+    const peer1 = await setupPeer({ storage });
+    await peer1.metadataStore.load();
+    await peer1.identityManager.open(new Context());
+    const identity1 = await peer1.identityManager.createIdentity();
+    await peer1.identityManager.close(Context.default());
+    await peer1.hypercoreStore.close();
+    await peer1.metadataStore.close();
+
+    const peer2 = await setupPeer({ storage });
+    await peer2.metadataStore.load();
+    await peer2.identityManager.open(new Context());
+
+    expect(peer2.identityManager.identity).to.exist;
+    expect(peer2.identityManager.identity!.identityKey).to.deep.eq(identity1.identityKey);
+    expect(peer2.identityManager.identity!.deviceKey).to.deep.eq(identity1.deviceKey);
+
+    // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
+  });
+
+  test('update profile', async () => {
+    const { identityManager } = await setupPeer();
+    await identityManager.open(new Context());
+    onTestFinished(() => identityManager.close(Context.default()));
+
+    const identity = await identityManager.createIdentity();
+    expect(identity.profileDocument?.displayName).to.be.undefined;
+    await identityManager.updateProfile(create(ProfileDocumentSchema, { displayName: 'Example' }));
+    expect(identity.profileDocument?.displayName).to.equal('Example');
+  });
+
+  test('admit another device', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer1 = await setupPeer({ signalContext });
+    const identity1 = await peer1.identityManager.createIdentity();
+    peer1.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity1.deviceKey.toHex(),
+        identityKey: identity1.identityKey.toHex(),
+      }),
+    );
+    await identity1.joinNetwork(Context.default());
+
+    const peer2 = await setupPeer({ signalContext });
+
+    const deviceKey = await peer2.keyring.createKey();
+    const controlFeedKey = await peer2.keyring.createKey();
+    const dataFeedKey = await peer2.keyring.createKey();
+
+    const credential = await identity1.getIdentityCredentialSigner().createCredential({
+      subject: deviceKey,
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(identity1.identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
+    });
+
+    await identity1.controlPipeline.writer.write(credentialPayload(credential));
+
+    const { identity: identity2, identityRecord } = await peer2.identityManager.prepareIdentity({
+      identityKey: identity1.identityKey,
+      deviceKey,
+      haloSpaceKey: identity1.haloSpaceKey,
+      haloGenesisFeedKey: identity1.haloGenesisFeedKey,
+      controlFeedKey,
+      dataFeedKey,
+      authorizedDeviceCredential: credential,
+    });
+    peer2.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity2.deviceKey.toHex(),
+        identityKey: identity2.identityKey.toHex(),
+      }),
+    );
+    await identity2.joinNetwork(Context.default());
+
+    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
+    await peer2.identityManager.acceptIdentity(identity2, identityRecord);
+
+    // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
+    // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
+    await identity2.ready();
+
+    // Connection is authenticated.
+    expect(identity1.space.protocol.sessions.get(identity2.deviceKey)).to.exist;
+    expect(identity1.space.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    expect(identity2.space.protocol.sessions.get(identity1.deviceKey)).to.exist;
+    expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    // TODO(nf): how to check whether peer1 has written the device profile credential?
+  });
+
+  test('sets device profile', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer = await setupPeer({ signalContext });
+    const identity = await peer.identityManager.createIdentity();
+
+    // Note: Waiting for device profile credential to be processed.
+    await identity.stateUpdate.waitForCount(1);
+
+    expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
+  });
+
+  test('updates device profile', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer = await setupPeer({ signalContext });
+
+    const identity = await peer.identityManager.createIdentity();
+
+    // Note: Waiting for device profile credential to be processed.
+    await identity.stateUpdate.waitForCount(1);
+
+    const deviceProfile = identity.authorizedDeviceKeys.get(identity.deviceKey);
+    expect(deviceProfile).to.exist;
+
+    deviceProfile!.label = 'updated profile';
+    await peer.identityManager.updateDeviceProfile(deviceProfile!);
+
+    expect(identity.authorizedDeviceKeys.get(identity.deviceKey)?.label).to.equal('updated profile');
+  });
+});
