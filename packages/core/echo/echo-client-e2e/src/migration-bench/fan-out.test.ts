@@ -40,14 +40,14 @@ class ExtractedAddressDoc extends Type.makeObject<ExtractedAddressDoc>(
     note: Schema.optional(Schema.String),
     sourceId: Schema.optional(Schema.String),
     conflicts: Schema.optional(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({
           mine: Schema.optional(Schema.String),
           theirs: Schema.optional(Schema.String),
           loserId: Schema.optional(Schema.String),
         }),
-      }),
+      ),
     ),
   }),
 ) {}

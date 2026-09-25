@@ -5,7 +5,7 @@ proves it, and the alternatives ruled out along the way. DESIGN.md §10 states o
 here for detail. Evidence:
 `packages/core/echo/echo-client-e2e/src/migration-bench/` — the minimal proving suite (6 files,
 22 tests; run `moon run echo-client-e2e:test -- src/migration-bench`). Related: PR #12412
-(natural-key merging, not landed)._
+(convergence-key merging, landed 2026-09-14 as `meta.convergenceKey`)._
 
 ## The final design
 
@@ -159,12 +159,13 @@ one is optional.
 
 ## Open items
 
-- The fold-forward trigger and its runtime cost (DESIGN.md §10.7 q6) — the one unpriced element.
+- The fold-forward trigger (DESIGN.md §10.7 q6) — DECIDED (2026-09-25): the worker's indexing
+  stream, alongside #12412's merge. Runtime cost there is still unmeasured.
 - Collaborative-text: schema-declared text fields route through `splice` writes (vocabulary
   exists); the duplicate-merge case needs an app-level three-way text diff against the recomputed
   baseline — unbuilt, also answers #12412's open text policy.
-- Real epoch machinery against stored heads (only the foreign-heads failure shape is
-  characterized).
+- ~~Real epoch machinery against stored heads~~ — OUT OF SCOPE (2026-09-25): epochs are avoided;
+  coordination-free approaches are always preferred.
 - A first-class fold-at-heads primitive (the user-wins path is a four-step dance today).
 - Optional composition spikes: the two-step array fan-out under partition/reorder; step-1 rollout
   race surfacing as reviewable duplicates.

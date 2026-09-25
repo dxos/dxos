@@ -950,7 +950,10 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    base type is what is changing.
 6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data
    appears" needs a concrete hook — a doc-change listener, the indexer, or query time — and every
-   choice taxes a hot path on each change to each object of a migrated type. Unpriced so far.
+   choice taxes a hot path on each change to each object of a migrated type. Unpriced so far. —
+   **DECIDED (2026-09-25): the worker's indexing stream**, the home #12412's convergence-key merge
+   settled on (durable intents in the indexing transaction, crash-safe, sees replication arrivals).
+   Cost still to be measured there.
 7. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
    better home for in-flight migration state than the overlay.

@@ -27,7 +27,7 @@ const ConflictEntrySchema = Schema.Struct({
   loserId: Schema.optional(Schema.String),
 });
 
-const ConflictsSchema = Schema.optional(Schema.Record({ key: Schema.String, value: ConflictEntrySchema }));
+const ConflictsSchema = Schema.optional(Schema.Record(Schema.String, ConflictEntrySchema));
 
 /** All-optional so no schema validation gets in the way of partition/edit choreography; reused across suites. */
 export class PersonDoc extends Type.makeObject<PersonDoc>(DXN.make('org.dxos.test.migration.bench.PersonDoc', '0.1.0'))(
