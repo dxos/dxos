@@ -7,7 +7,7 @@ import React from 'react';
 import { useOperation } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { TaskList } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
@@ -43,12 +43,21 @@ export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
-        {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
-        <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
-          <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
-        </TaskList.Root>
-        <TaskArtifacts task={task} />
+      <Panel.Toolbar />
+      <Panel.Content asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
+            {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
+            <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+              <TaskList.Edit
+                showDescription
+                descriptionExtensions={descriptionExtensions}
+                classNames='dx-document p-2'
+              />
+            </TaskList.Root>
+            <TaskArtifacts task={task} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Panel.Content>
     </Panel.Root>
   );

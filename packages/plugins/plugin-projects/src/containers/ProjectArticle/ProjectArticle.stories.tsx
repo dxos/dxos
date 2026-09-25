@@ -46,7 +46,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TaskCompanion } from '../TaskCompanion/TaskCompanion.tsx';
+import { ProjectTaskCompanion } from '../ProjectTaskCompanion/ProjectTaskCompanion.tsx';
 import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
@@ -226,7 +226,7 @@ const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
                 selection itself, renders the article through the surface (so plugin-tasks'
                 `article.task` registration is still what resolves), and adds the task's artifacts
                 as cards beneath it. */}
-            <TaskCompanion role={role} attendableId={attendableId} project={project} />
+            <ProjectTaskCompanion role={role} attendableId={attendableId} project={project} />
           </TestGrid.Panel>
         )}
       </TestGrid.Stack>

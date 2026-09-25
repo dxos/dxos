@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 
-import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle, TaskCompanion } from '#containers';
+import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle, ProjectTaskCompanion } from '#containers';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'task'),
           AppSurface.companion(AppSurface.Article, Project.Project),
         ),
-        component: TaskCompanion,
+        component: ProjectTaskCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
