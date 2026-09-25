@@ -2,9 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LanguageDescription, type LanguageSupport } from '@codemirror/language';
+import { HighlightStyle, LanguageDescription, type LanguageSupport } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { classHighlighter, highlightCode } from '@lezer/highlight';
+import { type Highlighter, highlightCode } from '@lezer/highlight';
+import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
+
+/**
+ * The editor's own code colours (see `createBasicExtensions`), so a chunk reads exactly as the same
+ * code does in an editor. Both modules are mounted, so the caller picks one by the editor's
+ * `darkTheme`: a style's `themeType` is only honoured through `syntaxHighlighting`, not by its rules.
+ */
+export const diffHighlightStyles: Record<'dark' | 'light', HighlightStyle> = {
+  dark: HighlightStyle.define(vscodeDarkStyle),
+  light: HighlightStyle.define(vscodeLightStyle),
+};
 
 /** Resolved supports, so a document with many blocks in one language loads its parser once. */
 const loaded = new Map<string, Promise<LanguageSupport | undefined>>();
@@ -27,20 +38,32 @@ const loadLanguage = (name: string): Promise<LanguageSupport | undefined> => {
  * (a block comment, a template literal) are coloured as the constructs they are; Lezer's error
  * recovery covers the fact that a chunk is not a whole file.
  *
+ * A chunk is a window into a file, and one that opens inside a declaration parses as top-level
+ * statements: a type's members come out as bare variable names, uncoloured. `context` — the enclosing
+ * line git names in the hunk header — is parsed ahead of the code and dropped from the result, so the
+ * chunk is read inside the construct it belongs to.
+ *
  * Resolves `undefined` when the language is unknown, leaving the caller's plain text in place.
  */
-export const highlightLines = async (code: string, language: string): Promise<DocumentFragment[] | undefined> => {
+export const highlightLines = async (
+  code: string,
+  language: string,
+  context?: string,
+  highlighter: Highlighter | readonly Highlighter[] = diffHighlightStyles.light,
+): Promise<DocumentFragment[] | undefined> => {
   const support = await loadLanguage(language);
   if (!support) {
     return undefined;
   }
 
-  const tree = support.language.parser.parse(code);
+  const prefix = context ? `${context}\n` : '';
+  const source = prefix + code;
+  const tree = support.language.parser.parse(source);
   const lines: DocumentFragment[] = [document.createDocumentFragment()];
   highlightCode(
-    code,
+    source,
     tree,
-    classHighlighter,
+    highlighter,
     (text, classes) => {
       const line = lines[lines.length - 1];
       if (!classes) {
@@ -55,5 +78,5 @@ export const highlightLines = async (code: string, language: string): Promise<Do
     () => lines.push(document.createDocumentFragment()),
   );
 
-  return lines;
+  return prefix ? lines.slice(1) : lines;
 };

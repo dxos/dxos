@@ -11175,9 +11175,15 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../../ui/react-ui-markdown
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -11187,6 +11193,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

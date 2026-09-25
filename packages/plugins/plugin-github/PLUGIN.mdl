@@ -434,9 +434,17 @@ feat F-9: Pull Request Review
 
   req F-9.6: The article opens on an Overview tab showing the pull request's live description as markdown, with the harness's Claude Code footer and CI's Composer preview block taken out of the prose.
 
-  req F-9.7: A link into the agent-artifacts R2 bucket renders as a pill that previews its image or video in place, and each such artifact, the Composer preview, the Claude Code session and the branches are listed as related cards.
+  req F-9.7: A link into the agent-artifacts R2 bucket renders as a pill that previews its image or video in place, and each such artifact, the Composer preview and the Claude Code session are listed as related cards in a masonry grid.
 
   req F-9.8: The Overview lists every check run on the head commit, failures first, with its outcome, duration and a link to the provider's logs.
+
+  req F-9.9: The Overview shows the pull request's reference, state, CI outcome and branches as a read-only form in a details card.
+
+  req F-9.10: A Files tab shows one changed file at a time as the walkthrough's own diff chunk, beside a tree of every changed file with its change counts; the toolbar steps to the previous or next file.
+
+  req F-9.11:
+    when: the reader checks a file off, in the tree or with the toolbar's Reviewed action
+    then: the file counts as reviewed in that browser until a push changes it, and the toolbar action moves on to the next file
 ```
 
 ## Acceptance
