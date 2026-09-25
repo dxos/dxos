@@ -963,7 +963,13 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    explicitly declared version-to-version migrations, applied in sequence — never a discovered
    path, which could route through an unrelated type and permanently drop what that detour drops.
 5. **Validation on the way through.** A `put` validates against the base type; during a migration the
-   base type is what is changing.
+   base type is what is changing. — **DECIDED (2026-09-25):** ordinary writes validate against the
+   object's own current version (today's per-property `_validateValue`); the migration's write set
+   validates as a whole against the target version and applies in the same change as the type
+   switch; retained source properties are declared by the migration and accepted by the target as
+   retired; a fold write that fails target validation becomes `Write.report` (source left, flagged).
+   Validation is a local-write guard only — replicated ops are never validated, so readers must
+   tolerate invalid data regardless.
 6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data
    appears" needs a concrete hook — a doc-change listener, the indexer, or query time — and every
    choice taxes a hot path on each change to each object of a migrated type. Unpriced so far. —
