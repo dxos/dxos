@@ -5,11 +5,11 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Op, Sync } from '@dxos/automerge-proxy';
-import { createRandom, initialDocument, randomOp } from '@dxos/automerge-proxy/testing';
-
-import { applyOpsToDraft, toMirror } from './automerge-ops.ts';
-import { DocumentSequencer, type SequencedDocument } from './document-sequencer.ts';
+import * as Op from '../Op.ts';
+import * as Sync from '../Sync.ts';
+import { createRandom, initialDocument, randomOp } from '../testing/index.ts';
+import * as AutomergeOps from './AutomergeOps.ts';
+import * as Sequencing from './Sequencing.ts';
 
 /** Actor ids fixed per seed, so a failing seed replays exactly: Automerge orders concurrent inserts by actor. */
 const createActors = (seed: number) => {
@@ -25,7 +25,7 @@ const createActors = (seed: number) => {
 class TestWorker {
   doc: A.Doc<Record<string, unknown>>;
   saved: A.Doc<Record<string, unknown>>;
-  sequencer: DocumentSequencer;
+  sequencer: Sequencing.DocumentSequencer;
   epoch = 0;
   /** Durable entries of the current epoch, in order. */
   log: Sync.Entry[] = [];
@@ -33,7 +33,7 @@ class TestWorker {
   durableVersion = 0;
   #unsaved: Sync.Entry[] = [];
 
-  readonly target: SequencedDocument = {
+  readonly target: Sequencing.SequencedDocument = {
     doc: () => this.doc,
     change: (callback, options) => {
       // A fixed time keeps change hashes, and so the order of heads, the same from run to run.
@@ -49,7 +49,7 @@ class TestWorker {
       Object.assign(doc, structuredClone(initial));
     });
     this.saved = A.clone(this.doc, nextActor());
-    this.sequencer = new DocumentSequencer(A.getHeads(this.doc));
+    this.sequencer = new Sequencing.DocumentSequencer(A.getHeads(this.doc));
   }
 
   submit(clientId: string, batch: Sync.Batch): 'applied' | 'resync' {
@@ -80,7 +80,7 @@ class TestWorker {
 
   restart(): void {
     this.doc = A.clone(this.saved, this.nextActor());
-    this.sequencer = new DocumentSequencer(A.getHeads(this.doc));
+    this.sequencer = new Sequencing.DocumentSequencer(A.getHeads(this.doc));
     this.epoch++;
     this.log = [];
     this.durableVersion = 0;
@@ -111,7 +111,7 @@ const isPoison = (op: Op.Any) => op.path[0] === '\u2620';
 const markersIn = (changes: readonly Op.Change[]) =>
   changes.flat().flatMap((op) => (op.type === 'splice' && isProtected(op) && op.insert.length > 0 ? [op.insert] : []));
 
-describe('DocumentSequencer over Automerge', () => {
+describe('Sequencing.DocumentSequencer over Automerge', () => {
   test('tabs, a remote peer and worker restarts converge with every edit applied once', () => {
     const totals = { entries: 0, restarts: 0, recoveredAcks: 0, rebuilt: 0, resyncs: 0, markers: 0, refused: 0 };
 
@@ -128,7 +128,7 @@ describe('DocumentSequencer over Automerge', () => {
       let batchCounter = 0;
 
       const tabs: Tab[] = Array.from({ length: 2 + random.int(2) }, (_, index) => ({
-        state: new Sync.ClientState(`tab-${index}`, toMirror(worker.doc), 0, A.getHeads(worker.doc)),
+        state: new Sync.ClientState(`tab-${index}`, AutomergeOps.toValue(worker.doc), 0, A.getHeads(worker.doc)),
         epoch: 0,
         delivered: 0,
         inTransit: [],
@@ -136,7 +136,7 @@ describe('DocumentSequencer over Automerge', () => {
       }));
 
       const recover = (tab: Tab) => {
-        const entries = DocumentSequencer.recover(worker.saved, [...tab.state.heads]);
+        const entries = Sequencing.DocumentSequencer.recover(worker.saved, [...tab.state.heads]);
         if (!entries) {
           throw new Error(`seed ${seed}: ${tab.state.clientId} confirmed history the worker never saved`);
         }
@@ -211,10 +211,10 @@ describe('DocumentSequencer over Automerge', () => {
           worker.save();
         } else if (roll < 18) {
           if (random.chance(0.5)) {
-            const op = randomOp(random, toMirror(remote), 'R');
+            const op = randomOp(random, AutomergeOps.toValue(remote), 'R');
             if (op && !isProtected(op)) {
               remote = A.change(remote, { time: 0 }, (draft) => {
-                applyOpsToDraft(draft, [op]);
+                AutomergeOps.applyOps(draft, [op]);
               });
             }
           } else {
@@ -260,7 +260,7 @@ describe('DocumentSequencer over Automerge', () => {
       }
       remote = A.merge(remote, A.clone(worker.saved, worker.nextActor()));
 
-      const expected = toMirror(worker.doc);
+      const expected = AutomergeOps.toValue(worker.doc);
       for (const tab of tabs) {
         expect(tab.state.hasPending).toBe(false);
         if (!Op.equals(tab.state.current, expected)) {
@@ -271,7 +271,7 @@ describe('DocumentSequencer over Automerge', () => {
       }
       // The replica's document, not its cached view: Automerge 3.5.0 can leave that view out of step
       // with the document after `A.merge`, with no mirror code involved.
-      const remoteState = toMirror(A.load(A.save(remote)));
+      const remoteState = AutomergeOps.toValue(A.load(A.save(remote)));
       if (!Op.equals(remoteState, expected)) {
         throw new Error(
           `seed ${seed}: the remote peer diverged\n${JSON.stringify(remoteState)}\n${JSON.stringify(expected)}`,

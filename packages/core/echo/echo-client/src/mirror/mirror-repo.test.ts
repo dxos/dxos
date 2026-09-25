@@ -11,9 +11,10 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { sleep } from '@dxos/async';
 import { Op } from '@dxos/automerge-proxy';
+import { AutomergeOps } from '@dxos/automerge-proxy/host';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
-import { type MirrorServiceImpl, toMirror } from '@dxos/echo-host';
+import { type MirrorServiceImpl } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -86,7 +87,7 @@ describe('mirror repo and worker', () => {
   /** The worker's Automerge copy of an object's data. */
   const hostData = async (obj: Obj.Any) => {
     using lease = await peer.host.automergeHost.loadDoc(Context.default(), documentOf(obj));
-    return Op.getAt(toMirror(lease?.doc()), ['objects', obj.id, 'data']);
+    return Op.getAt(AutomergeOps.toValue(lease?.doc()), ['objects', obj.id, 'data']);
   };
 
   type Submit = (request: MirrorService.SubmitRequest) => ReturnType<MirrorServiceImpl['MirrorService.submit']>;

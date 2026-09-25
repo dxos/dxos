@@ -7,10 +7,10 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Op } from '@dxos/automerge-proxy';
+import { AutomergeOps } from '@dxos/automerge-proxy/host';
 import { createRandom } from '@dxos/automerge-proxy/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
-import { toMirror } from '@dxos/echo-host';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -51,7 +51,7 @@ describe('mirror mode', () => {
   /** The host's Automerge copy of a document, as a mirror value. */
   const hostValue = async (documentId: DocumentId) => {
     using lease = await peer.host.automergeHost.loadDoc(Context.default(), documentId);
-    return toMirror(lease?.doc());
+    return AutomergeOps.toValue(lease?.doc());
   };
 
   test('tabs use mirror repos and hold no Automerge document', async () => {

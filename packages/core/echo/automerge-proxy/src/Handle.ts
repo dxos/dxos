@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import type * as Contract from './Contract.ts';
 import * as Draft from './Draft.ts';
 import { DocumentUnavailableError } from './errors.ts';
+import { randomId } from './internal/index.ts';
 import * as Op from './Op.ts';
 import * as Sync from './Sync.ts';
 
@@ -496,10 +497,6 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
     }
   }
 }
-
-/** Hex from the platform's random source, which browsers and Node both provide as `crypto`. */
-const randomId = (): string =>
-  Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 /** Patches announcing a whole document, as a first Automerge delivery reports it. */
 const topLevelPuts = (root: unknown): Op.Patch[] =>

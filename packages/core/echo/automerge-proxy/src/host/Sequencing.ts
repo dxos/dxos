@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { next as A, type Heads } from '@automerge/automerge';
 
-import { Op, Sync } from '@dxos/automerge-proxy';
 import { log } from '@dxos/log';
 
-import { applyOpsToDraft, decodeBatchMessage, diffToOps, encodeBatchMessage } from './automerge-ops.ts';
+import * as Op from '../Op.ts';
+import * as Sync from '../Sync.ts';
+import * as AutomergeOps from './AutomergeOps.ts';
 
 /** What the sequencer needs from a resident document: the current state and a way to write. */
 export interface SequencedDocument {
@@ -24,20 +27,20 @@ export type SubmitResult =
    * the document or held a value Automerge refuses: the changes before it were written, none after.
    */
   | { type: 'applied'; entries: Sync.Entry[]; refused?: { index: number; error: Error } }
-  /** The batch is older than the retained window; the tab must resubscribe from its heads. */
+  /** The batch is older than the retained window; the client must resubscribe from its heads. */
   | { type: 'resync'; entries: Sync.Entry[] };
 
-/** An entry rebuilt from Automerge history, numbered by the receiving tab. */
+/** An entry rebuilt from Automerge history, numbered by the receiving client. */
 export type RecoveredEntry = Omit<Sync.Entry, 'version'>;
 
 /**
- * Orders every write to one document into entries tabs can follow. Tab batches are transformed over
- * the entries their tab had not seen and written as one Automerge change each; changes that reach
- * the document another way (network merges, replica-protocol clients) are absorbed as entries
- * computed from an Automerge diff.
+ * Orders every write to one document into entries clients can follow. Client batches are
+ * transformed over the entries their client had not seen and written as one Automerge change each;
+ * changes that reach the document another way (network merges, replica-protocol clients) are
+ * absorbed as entries computed from an Automerge diff.
  *
  * The sequencer holds no copy of the document, only a short window of entries and the heads after
- * the last one, so the worker can evict the document between writes.
+ * the last one, so the host can evict the document between writes.
  */
 export class DocumentSequencer {
   readonly #sequencer: Sync.Sequencer;
@@ -73,13 +76,13 @@ export class DocumentSequencer {
     if (A.equals(heads, this.#heads)) {
       return undefined;
     }
-    const ops = diffToOps(doc, this.#heads, heads);
+    const ops = AutomergeOps.diffToOps(doc, this.#heads, heads);
     this.#heads = heads;
     return this.#sequencer.append({ ops, heads });
   }
 
   /**
-   * Applies a tab's batch, writing its changes in order as one Automerge change and stopping at the
+   * Applies a client's batch, writing its changes in order as one Automerge change and stopping at the
    * first that does not fit. Returns every entry it produced, including one absorbing changes that
    * arrived since the last entry, which the caller must send whatever the outcome.
    */
@@ -99,7 +102,7 @@ export class DocumentSequencer {
     }
 
     const { written, error } = writeChanges(target, changes, (count) =>
-      encodeBatchMessage(clientId, batch.batchId, count < batch.changes.length ? count : undefined),
+      AutomergeOps.encodeBatchMessage(clientId, batch.batchId, count < batch.changes.length ? count : undefined),
     );
     const refused =
       written < changes.length && error
@@ -121,7 +124,7 @@ export class DocumentSequencer {
   /** The origin recorded for the batch, or undefined when no change was written for it. Reads all change metadata. */
   static findBatch(doc: A.Doc<unknown>, batchId: string): Sync.Origin | undefined {
     for (const change of A.getChangesMetaSince(doc, [])) {
-      const origin = decodeBatchMessage(change.message);
+      const origin = AutomergeOps.decodeBatchMessage(change.message);
       if (origin?.batchId === batchId) {
         return origin;
       }
@@ -130,10 +133,10 @@ export class DocumentSequencer {
   }
 
   /**
-   * Rebuilds, change by change, what happened after `since`, for a tab resubscribing to a worker that
-   * restarted. A change written for a batch carries the batch's origin, so the tab recognizes its own
+   * Rebuilds, change by change, what happened after `since`, for a client resubscribing to a host that
+   * restarted. A change written for a batch carries the batch's origin, so the client recognizes its own
    * applied batch as acknowledged instead of sending it again. Returns undefined when the document
-   * does not contain `since`, which means the tab confirmed history this worker never saved.
+   * does not contain `since`, which means the client confirmed history this host never saved.
    */
   static recover(doc: A.Doc<unknown>, since: Heads): RecoveredEntry[] | undefined {
     if (!A.hasHeads(doc, since)) {
@@ -143,8 +146,8 @@ export class DocumentSequencer {
     let heads = since.slice();
     for (const change of A.getChangesMetaSince(doc, since)) {
       const next = [...heads.filter((head) => !change.deps.includes(head)), change.hash].sort();
-      const origin = decodeBatchMessage(change.message);
-      entries.push({ ops: diffToOps(doc, heads, next), heads: next, ...(origin ? { origin } : {}) });
+      const origin = AutomergeOps.decodeBatchMessage(change.message);
+      entries.push({ ops: AutomergeOps.diffToOps(doc, heads, next), heads: next, ...(origin ? { origin } : {}) });
       heads = next;
     }
     return entries;
@@ -183,7 +186,7 @@ const writeChanges = (
           for (let index = 0; index < count; index++) {
             let skipped: number;
             try {
-              skipped = applyOpsToDraft(draft, changes[index]);
+              skipped = AutomergeOps.applyOps(draft, changes[index]);
             } catch (err) {
               throw new RefusedChange(index, err);
             }

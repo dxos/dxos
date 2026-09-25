@@ -250,14 +250,16 @@ export, migrations, change times for `meta.updatedAt`.
 
 ### Worker
 
-- **`DocumentSequencer`** (`echo-host/src/mirror`) orders every write to a document into entries.
-  Each tab batch is transformed over the entries its tab had not seen and written as one Automerge
-  change, up to the first change that does not fit, with the batch id in the change message. Changes that arrive another way (network merges,
-  replica clients) become entries through `A.diff`. After a restart, `recover` rebuilds the entries
-  after a tab's confirmed heads from change metadata, so the tab recognizes its applied batch.
-- **`MirrorServiceImpl`** serializes work per document, saves before it sends, ignores a batch it
-  already applied, and sends `requesting` when a document is not on disk. Once closed it refuses new
-  calls and stops queued work.
+- **`Sequencing.DocumentSequencer`** (`@dxos/automerge-proxy/host`) orders every write to a
+  document into entries. Each tab batch is transformed over the entries its tab had not seen and
+  written as one Automerge change, up to the first change that does not fit, with the batch id in
+  the change message. Changes that arrive another way (network merges, replica clients) become
+  entries through `A.diff`. After a restart, `recover` rebuilds the entries after a tab's confirmed
+  heads from change metadata, so the tab recognizes its applied batch.
+- **`Host.DocumentHost`** (same entry) serializes work per document, saves before it sends, ignores
+  a batch it already applied, and sends `requesting` when a document is not stored. Once closed it
+  refuses new calls and stops queued work. `MirrorServiceImpl` in echo-host adapts it to RPC over
+  the worker's Automerge host, with the index as the documents' copies.
 
 ### Shared
 
@@ -580,7 +582,7 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 
 | #   | Defect                                                                                                                             | Fix                                                                                        | Test                                                                   |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                    | `automerge-ops.test.ts`, including a 2,000-diff differential run       |
+| F1  | A new text next to a `RawString` inserted before it became `RawString('')`                                                         | Trust the value types patches carry; `RawString` arrives as an instance                    | `AutomergeOps.test.ts`, including a 2,000-diff differential run        |
 | F2  | A failed save left an entry that was never sent, and the resent batch was applied twice                                            | Hold entries until a save succeeds; record dedupe at commit; apply a batch whole or not    | `mirror-repo.test.ts`: a failed save                                   |
 | F3  | A document re-followed under the same epoch restarted its numbering, orphaning tabs                                                | An epoch per numbering; `since()` refuses versions it never produced; re-check in delivery | `mirror-mode.test.ts`: reconnecting to the same worker; orphan test    |
 | F4  | A `resync` or same-epoch `stale` never settled the batch in flight, losing every later edit                                        | The `caughtUp` answer settles it                                                           | `mirror-repo.test.ts`: a batch sent again after catching up            |

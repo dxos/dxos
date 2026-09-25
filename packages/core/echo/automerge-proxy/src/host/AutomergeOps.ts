@@ -2,14 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { next as A, type Heads, type Patch } from '@automerge/automerge';
 
-import { Op, Sync } from '@dxos/automerge-proxy';
+import * as Op from '../Op.ts';
+import type * as Sync from '../Sync.ts';
 
 /**
- * Change message a batch is written with, so a restarted worker can tell which batches it already
- * applied, and which change of one it refused. Ids are random per tab session, so they never collide
- * across devices.
+ * Change message a batch is written with, so a restarted host can tell which batches it already
+ * applied, and which change of one it refused. Ids are random per client session, so they never
+ * collide across devices. The `mirror` key is stored in documents, so it stays.
  */
 export type BatchMessage = { mirror: Sync.Origin };
 
@@ -46,24 +49,24 @@ export const decodeBatchMessage = (message: string | null | undefined): Sync.Ori
 };
 
 /**
- * Copies an Automerge document (or part of one) into a plain frozen mirror value. Text becomes
+ * Copies an Automerge document (or part of one) into a plain frozen proxy value. Text becomes
  * strings; RawString, bytes and dates stay as they are.
  */
-export const toMirror = (value: unknown): unknown => {
+export const toValue = (value: unknown): unknown => {
   if (Array.isArray(value)) {
-    return Object.freeze(value.map((entry) => toMirror(entry)));
+    return Object.freeze(value.map((entry) => toValue(entry)));
   }
   if (typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype) {
     const copy: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value)) {
-      copy[key] = toMirror(entry);
+      copy[key] = toValue(entry);
     }
     return Object.freeze(copy);
   }
   return value;
 };
 
-/** Copies a mirror value into a fresh plain structure Automerge can store. */
+/** Copies a proxy value into a fresh plain structure Automerge can store. */
 const toAutomerge = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map((entry) => toAutomerge(entry));
@@ -93,10 +96,10 @@ const isDraftList = (
 const isDraftMap = (value: unknown): value is Draft => typeof value === 'object' && value !== null;
 
 /**
- * Applies mirror ops inside an Automerge change callback, at exact positions. Ops that no longer fit
+ * Applies proxy ops inside an Automerge change callback, at exact positions. Ops that no longer fit
  * are skipped; the sequencer's transforms normally rule them out.
  */
-export const applyOpsToDraft = (draft: unknown, ops: readonly Op.Any[]): number => {
+export const applyOps = (draft: unknown, ops: readonly Op.Any[]): number => {
   let skipped = 0;
   for (const op of ops) {
     if (op.type === 'splice') {
@@ -159,8 +162,8 @@ export const applyOpsToDraft = (draft: unknown, ops: readonly Op.Any[]): number 
 };
 
 /**
- * Converts the patches of `A.diff(doc, before, after)` into mirror ops that take a mirror of
- * `before` to a mirror of `after`. Patches apply in order. RawString values arrive as instances; a
+ * Converts the patches of `A.diff(doc, before, after)` into proxy ops that take a proxy of
+ * `before` to a proxy of `after`. Patches apply in order. RawString values arrive as instances; a
  * new text arrives as an empty string followed by splices. The after-document tells text deletions
  * from list removals: a deletion's parent path is final, since Automerge reports an object's own
  * patches before those of its children.
@@ -170,7 +173,7 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Op.Any[
   for (const patch of patches) {
     switch (patch.action) {
       case 'put': {
-        ops.push({ type: 'put', path: patch.path, value: toMirror(patch.value) });
+        ops.push({ type: 'put', path: patch.path, value: toValue(patch.value) });
         break;
       }
       case 'del': {
@@ -187,7 +190,7 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Op.Any[
         break;
       }
       case 'insert': {
-        ops.push({ type: 'insert', path: patch.path, values: patch.values.map((value) => toMirror(value)) });
+        ops.push({ type: 'insert', path: patch.path, values: patch.values.map((value) => toValue(value)) });
         break;
       }
       case 'splice': {
@@ -202,14 +205,14 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Op.Any[
         break;
       }
       default:
-        // Counters, marks and conflict flags are unused by ECHO documents and change no mirrored value.
+        // Counters, marks and conflict flags change no proxy value.
         break;
     }
   }
   return ops;
 };
 
-/** Ops taking a mirror of the document at `before` to a mirror at `after`. */
+/** Ops taking a proxy of the document at `before` to a proxy at `after`. */
 export const diffToOps = (doc: A.Doc<unknown>, before: Heads, after: Heads): Op.Any[] => {
   if (A.equals(before, after)) {
     return [];

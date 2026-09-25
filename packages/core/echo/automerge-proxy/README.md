@@ -18,6 +18,10 @@ The package holds the parts with no dependency on ECHO:
 | `Contract`  | Schemas of the events and requests that cross between client and host                       |
 | `Wire`      | Tags the values JSON cannot carry (RawString, bytes, dates) and restores them               |
 
+`@dxos/automerge-proxy/host` is the other side, and needs Automerge at runtime: `Host.DocumentHost`
+implements `Repo.Host` over a `Host.Store` of Automerge documents, with `Sequencing` and
+`AutomergeOps` beneath it.
+
 `@dxos/automerge-proxy/testing` has a seeded random generator and random ops for property tests.
 
 ECHO uses it through `MirrorService` (`@dxos/protocols`), `MirrorRepo` and `MirrorDocHandle`

@@ -5,21 +5,21 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Op, Sync } from '@dxos/automerge-proxy';
-import { createRandom } from '@dxos/automerge-proxy/testing';
-
-import { patchesToOps, toMirror } from './automerge-ops.ts';
-import { DocumentSequencer, type SequencedDocument } from './document-sequencer.ts';
+import * as Op from '../Op.ts';
+import * as Sync from '../Sync.ts';
+import { createRandom } from '../testing/index.ts';
+import * as AutomergeOps from './AutomergeOps.ts';
+import * as Sequencing from './Sequencing.ts';
 
 type ListDoc = { list: unknown[]; map: Record<string, unknown> };
 
 /** The mirror a tab reaches by applying the ops for one absorbed diff, and the worker's own state. */
 const absorb = (before: A.Doc<ListDoc>, after: A.Doc<ListDoc>) => {
-  const ops = patchesToOps(A.diff(after, A.getHeads(before), A.getHeads(after)), after);
-  return { mirror: Op.apply(toMirror(before), ops).root, expected: toMirror(after) };
+  const ops = AutomergeOps.patchesToOps(A.diff(after, A.getHeads(before), A.getHeads(after)), after);
+  return { mirror: Op.apply(AutomergeOps.toValue(before), ops).root, expected: AutomergeOps.toValue(after) };
 };
 
-describe('patchesToOps', () => {
+describe('AutomergeOps.patchesToOps', () => {
   test('a new text next to a RawString inserted before it stays a text', () => {
     const before = A.from<ListDoc>({
       list: [new A.RawString('a'), new A.RawString('b'), new A.RawString('c')],
@@ -98,19 +98,19 @@ describe('patchesToOps', () => {
   });
 });
 
-describe('DocumentSequencer.submit', () => {
+describe('Sequencing.DocumentSequencer.submit', () => {
   type Doc = { log: string; list: string[]; map: Record<string, unknown> };
 
   /** A document with one change the sequencer has not absorbed yet, as from a network merge. */
   const setup = () => {
     let doc = A.from<Doc>({ log: '', list: ['a'], map: {} });
-    const target: SequencedDocument = {
+    const target: Sequencing.SequencedDocument = {
       doc: () => doc,
       change: (callback, options) => {
         doc = A.change(doc, options, callback);
       },
     };
-    const sequencer = new DocumentSequencer(A.getHeads(doc));
+    const sequencer = new Sequencing.DocumentSequencer(A.getHeads(doc));
     doc = A.change(doc, (draft) => {
       A.insertAt(draft.list, 1, 'remote');
     });
@@ -146,8 +146,12 @@ describe('DocumentSequencer.submit', () => {
     expect(result.entries[1].ops).toEqual([append(0, 'X')]);
     expect(doc().log).toBe('X');
     // Recorded in the change message, so a restarted worker can tell where the batch stopped.
-    expect(DocumentSequencer.findBatch(doc(), 'batch')).toEqual({ clientId: 'tab', batchId: 'batch', refusedAt: 1 });
-    expect(DocumentSequencer.recover(doc(), [...result.entries[0].heads])?.[0].origin).toEqual({
+    expect(Sequencing.DocumentSequencer.findBatch(doc(), 'batch')).toEqual({
+      clientId: 'tab',
+      batchId: 'batch',
+      refusedAt: 1,
+    });
+    expect(Sequencing.DocumentSequencer.recover(doc(), [...result.entries[0].heads])?.[0].origin).toEqual({
       clientId: 'tab',
       batchId: 'batch',
       refusedAt: 1,
@@ -166,7 +170,7 @@ describe('DocumentSequencer.submit', () => {
     expect(result.entries.at(-1)?.ops).toEqual([]);
     // Nothing was written, so no change carries the batch.
     expect(doc().log).toBe('');
-    expect(DocumentSequencer.findBatch(doc(), 'batch')).toBeUndefined();
+    expect(Sequencing.DocumentSequencer.findBatch(doc(), 'batch')).toBeUndefined();
   });
 
   test('refuses a change holding a malformed op whole', () => {
@@ -178,7 +182,11 @@ describe('DocumentSequencer.submit', () => {
     });
     expect(result.type === 'applied' && result.refused?.index).toBe(1);
     expect(doc().log).toBe('X');
-    expect(DocumentSequencer.findBatch(doc(), 'batch')).toEqual({ clientId: 'tab', batchId: 'batch', refusedAt: 1 });
+    expect(Sequencing.DocumentSequencer.findBatch(doc(), 'batch')).toEqual({
+      clientId: 'tab',
+      batchId: 'batch',
+      refusedAt: 1,
+    });
   });
 
   test('writes every change of a batch that fits as one Automerge change', () => {

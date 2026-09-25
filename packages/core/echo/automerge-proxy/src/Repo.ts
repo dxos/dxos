@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import type * as Contract from './Contract.ts';
 import * as Cursors from './Cursors.ts';
 import type * as Handle from './Handle.ts';
+import { randomId } from './internal/index.ts';
 import type * as Op from './Op.ts';
 
 /**
@@ -604,7 +605,3 @@ export class ProxyRepo<
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }
-
-/** Hex from the platform's random source, which browsers and Node both provide as `crypto`. */
-const randomId = (): string =>
-  Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');

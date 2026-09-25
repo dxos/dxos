@@ -19,6 +19,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./host": {
+      "source": "./src/host/index.ts",
+      "types": "./dist/types/src/host/index.d.ts",
+      "import": "./dist/lib/host.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

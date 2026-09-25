@@ -6,9 +6,9 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Op } from '@dxos/automerge-proxy';
+import { AutomergeOps } from '@dxos/automerge-proxy/host';
 import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { toMirror } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -67,7 +67,7 @@ describe('objects read from the index', () => {
 
   const hostDataAt = async (documentId: DocumentId, objectId: string) => {
     using lease = await peer.host.automergeHost.loadDoc(Context.default(), documentId);
-    return Op.getAt(toMirror(lease?.doc()), ['objects', objectId, 'data']);
+    return Op.getAt(AutomergeOps.toValue(lease?.doc()), ['objects', objectId, 'data']);
   };
 
   /** Which of the documents the worker holds in memory. */
