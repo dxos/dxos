@@ -89,26 +89,6 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
       />
 
       <TaskProperty
-        icon={priorityIcon(priority)}
-        iconClassNames={priorityTextStyle(priority)}
-        label={priority ? t(`priority-${priority}.label`) : t('set-priority.label')}
-        unset={!priority}
-        testId='taskList.property.priority'
-        actions={
-          onTaskUpdate &&
-          (() =>
-            [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
-              createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
-                label: t(`priority-${id}.label`),
-                icon,
-                iconClassNames: priorityTextStyle(id),
-                checked: (priority ?? 'none') === id,
-              }),
-            ))
-        }
-      />
-
-      <TaskProperty
         icon={assignee ? ASSIGNEE_ICON : UNSET_ICON}
         label={assigneeLabel ?? t('set-assignee.label')}
         unset={!assignee}
@@ -134,6 +114,26 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
               ),
             ),
           ])
+        }
+      />
+
+      <TaskProperty
+        icon={priorityIcon(priority)}
+        iconClassNames={priorityTextStyle(priority)}
+        label={priority ? t(`priority-${priority}.label`) : t('set-priority.label')}
+        unset={!priority}
+        testId='taskList.property.priority'
+        actions={
+          onTaskUpdate &&
+          (() =>
+            [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
+              createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+                label: t(`priority-${id}.label`),
+                icon,
+                iconClassNames: priorityTextStyle(id),
+                checked: (priority ?? 'none') === id,
+              }),
+            ))
         }
       />
 
