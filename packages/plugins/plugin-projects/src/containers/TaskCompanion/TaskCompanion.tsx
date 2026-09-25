@@ -15,11 +15,11 @@ import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ProjectTaskCompanionProps = {
+export type TaskCompanionProps = {
+  project: Project.Project;
   role: string;
   /** The plank this companion is anchored to — the project's, and the context its selection lives in. */
   attendableId: string;
-  project: Project.Project;
 };
 
 /**
@@ -30,7 +30,7 @@ export type ProjectTaskCompanionProps = {
  * its own. It renders the task through the article surface, so the detail is the same component the
  * deck mounts when a task is opened as a plank on a narrow screen.
  */
-export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTaskCompanionProps) => {
+export const TaskCompanion = ({ project, role, attendableId }: TaskCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolved through the hook: on a cold load the ref has no target yet, and a direct read would
   // leave the companion on its empty state once it arrives.
@@ -67,4 +67,4 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
   );
 };
 
-ProjectTaskCompanion.displayName = 'ProjectTaskCompanion';
+TaskCompanion.displayName = 'TaskCompanion';
