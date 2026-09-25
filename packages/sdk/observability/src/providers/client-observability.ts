@@ -5,7 +5,7 @@
 import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 
-import { Event, scheduleTaskInterval } from '@dxos/async';
+import { Event, type ReadOnlyEvent, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -396,6 +396,51 @@ export const syncMetricsProvider = (client: Client): Observability.DataProvider 
         SECONDS,
       ),
     );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/** A space as {@link editsRejectedProvider} reads it. */
+type SpaceWithRefusals = {
+  readonly id: string;
+  readonly db: { readonly editsRejected: ReadOnlyEvent<{ readonly changes: readonly unknown[] }> };
+};
+
+/** What {@link editsRejectedProvider} reads of a client. */
+export type RefusedEditsSource = {
+  readonly spaces: {
+    get(): readonly SpaceWithRefusals[];
+    subscribe(observer: { next: (spaces: readonly SpaceWithRefusals[]) => void }): { unsubscribe(): void };
+  };
+};
+
+/**
+ * Counts and reports the edits the services refused to a client holding proxies of documents. The
+ * client shows an edit before the services apply it, so a refusal means the two disagreed about a
+ * document, which is a bug, and the edit is gone from the client too. The refused ops stay out of
+ * telemetry, since they are user content.
+ */
+export const editsRejectedProvider = (client: RefusedEditsSource): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const watched = new Set<string>();
+    const watch = (space: SpaceWithRefusals) => {
+      if (watched.has(space.id)) {
+        return;
+      }
+      watched.add(space.id);
+      space.db.editsRejected.on(ctx, ({ changes }) => {
+        observability.metrics.increment('dxos.echo.edits.rejected', changes.length, undefined, { unit: '{change}' });
+        observability.errors.captureException(new Error('The services refused edits to a proxied document'), {
+          changes: changes.length,
+        });
+      });
+    };
+    client.spaces.get().forEach(watch);
+    const subscription = client.spaces.subscribe({ next: (spaces) => spaces.forEach(watch) });
+    ctx.onDispose(() => subscription.unsubscribe());
 
     return async () => {
       await ctx.dispose();

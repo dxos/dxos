@@ -31,6 +31,17 @@ const StorageAdapters = {
   idb: defs.Runtime_Client_Storage_StorageDriver.IDB,
 } as const;
 
+/** `runtime.client.documentMode` and `proxyIndexReads` for each choice; the client reads them when it starts. */
+const DocumentModes = {
+  replica: { documentMode: defs.Runtime_Client_DocumentMode.REPLICA, proxyIndexReads: false },
+  proxy: { documentMode: defs.Runtime_Client_DocumentMode.PROXY, proxyIndexReads: false },
+  indexed: { documentMode: defs.Runtime_Client_DocumentMode.PROXY, proxyIndexReads: true },
+} as const;
+
+type DocumentModeKey = keyof typeof DocumentModes;
+
+const isDocumentModeKey = (value: string): value is DocumentModeKey => Object.hasOwn(DocumentModes, value);
+
 export type DebugSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
@@ -142,15 +153,33 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
   const handleStorageAdapterChange = useCallback(
     (value: string) => {
       if (confirm(t('settings.storage-adapter.changed-alert.message'))) {
-        updateConfig(
-          storageConfig,
-          setStorageConfig,
-          ['runtime', 'client', 'storage', 'dataStore'],
-          StorageAdapters[value as keyof typeof StorageAdapters],
-        );
+        updateConfig(storageConfig, setStorageConfig, [
+          [['runtime', 'client', 'storage', 'dataStore'], StorageAdapters[value as keyof typeof StorageAdapters]],
+        ]);
       }
     },
     [storageConfig, t],
+  );
+
+  const documentMode = useMemo((): DocumentModeKey => {
+    const client = storageConfig?.runtime?.client;
+    const entry = Object.entries(DocumentModes).find(
+      ([_key, value]) =>
+        value.documentMode === client?.documentMode && value.proxyIndexReads === (client?.proxyIndexReads ?? false),
+    );
+    return entry && isDocumentModeKey(entry[0]) ? entry[0] : 'replica';
+  }, [storageConfig]);
+
+  const handleDocumentModeChange = useCallback(
+    (value: string) => {
+      if (isDocumentModeKey(value)) {
+        updateConfig(storageConfig, setStorageConfig, [
+          [['runtime', 'client', 'documentMode'], DocumentModes[value].documentMode],
+          [['runtime', 'client', 'proxyIndexReads'], DocumentModes[value].proxyIndexReads],
+        ]);
+      }
+    },
+    [storageConfig],
   );
 
   return (
@@ -250,6 +279,22 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
                 </Select.Portal>
               </Select.Root>
             </Form.Field>
+            <Form.Field label={t('settings.document-mode.label')} description={t('settings.document-mode.description')}>
+              <Select.Root disabled={!onSettingsChange} value={documentMode} onValueChange={handleDocumentModeChange}>
+                <Select.TriggerButton disabled={!onSettingsChange} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {Object.keys(DocumentModes).map((key) => (
+                        <Select.Option key={key} value={key}>
+                          {t(`settings.document-mode.${key}.label`)}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </Form.Field>
           </Form.FieldSet>
 
           <DebugPortSettings disabled={!onSettingsChange} />
@@ -259,9 +304,15 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
   );
 };
 
-const updateConfig = (config: ConfigInit, setConfig: (newConfig: ConfigInit) => void, path: string[], value: any) => {
+const updateConfig = (
+  config: ConfigInit,
+  setConfig: (newConfig: ConfigInit) => void,
+  entries: [path: string[], value: unknown][],
+) => {
   const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
-  setDeep(storageConfigCopy, path, value);
+  for (const [path, value] of entries) {
+    setDeep(storageConfigCopy, path, value);
+  }
   setConfig(storageConfigCopy);
   queueMicrotask(async () => {
     await SaveConfig(storageConfigCopy);

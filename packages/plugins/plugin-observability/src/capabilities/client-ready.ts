@@ -69,6 +69,8 @@ export default Capability.makeModule(
     yield* observability.addDataProvider(ObservabilityClientProvider.Client.syncMetricsProvider(client));
     log('client-ready: document metrics data provider added');
 
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.editsRejectedProvider(client));
+
     return [];
   }),
 );
