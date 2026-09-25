@@ -1,0 +1,129 @@
+---
+id: org.dxos.review.process
+name: ProcessRules
+version: 0.1.0
+---
+
+Repo-process and build-config conventions mined from a year of human review
+comments on `dxos/dxos`, clustered into candidate rules in
+`.agents/projects/architecture-rules/dataset/CANDIDATES.md`. Each `rule` block
+below is discovered by the agentic-review harness, matched against the files
+its globs select, and applied by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule catalog-is-dependency-source-of-truth: Bump, add, and remove dependency versions in the workspace catalog, not per-package.json
+  `pnpm-workspace.yaml`'s catalog is the one source of truth for a
+  dependency's version; bumping it directly in a package's own `package.json`
+  instead creates a second place that can disagree with the catalog, and a
+  catalog entry left behind after its last consumer is removed is a version
+  nobody is pinning to anymore. Flag a version bump made directly in a
+  `package.json` `dependencies`/`devDependencies` entry instead of the
+  catalog; a catalog entry with no remaining consumer in the change set; a
+  build- or dev-only tool listed under `dependencies` instead of
+  `devDependencies`. Do not flag a `package.json` entry correctly pointing at
+  the catalog (`catalog:`/`workspace:*`) left unchanged. Fix: move the bump
+  into `pnpm-workspace.yaml`, delete the orphaned entry, reclassify the dep.
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/10380#discussion_r2674394262.
+  scope: repo
+  files:
+    - packages/**/package.json
+    - pnpm-workspace.yaml
+  unit: pr
+  context: diff, package
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule ci-and-tooling-avoid-duplicate-mechanisms: Don't stand up a second CI step or shared setting that duplicates one that already covers the concern
+  This specializes `one-mechanism-per-concern` with process-specific
+  boundaries a repo-wide architecture rule can't derive without knowing what
+  the existing CI graph and settings already cover: a full-repo lint step
+  added beside an existing affected-only lint step, or a personal editor
+  preference committed into shared project settings so it silently applies to
+  every contributor. Flag a new CI workflow step whose coverage an existing
+  step already provides; an editor/IDE preference added to a checked-in
+  shared settings file that is really a personal choice. Do not flag a
+  genuinely new CI check with no existing overlap, or a project-wide setting
+  the whole team needs, correctly placed in shared config. Fix: drop the
+  duplicate step, or move the preference to user-level settings.
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/10685#discussion_r2891618104.
+  scope: repo
+  files:
+    - .github/workflows/**/*.yml
+    - .vscode/**/*.json
+  unit: pr
+  context: diff, pr
+  system-one: off
+  severity: warn
+```
+
+```mdl
+rule diff-scoped-to-pr-purpose: Keep a diff scoped to what the PR says it does; drop unrelated or accidental hunks
+  A hunk that reformats, reorders, or otherwise edits code the PR's stated
+  purpose gives no reason to touch is usually leftover from a bad merge or an
+  editor auto-format, and it costs a reviewer time disentangling it from the
+  actual change — or worse, it lands unreviewed inside a change nobody meant
+  to make. Flag a hunk that reformats or reorders code with no connection to
+  what the PR description says the change does. Do not flag an incidental
+  change the PR description explicitly calls out and justifies (a named
+  drive-by fix). Fix: revert the unrelated hunk so the diff matches the PR
+  description.
+  Source: 2 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/10527#discussion_r2863781713.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+    - packages/**/*.md
+  unit: pr
+  context: diff, pr
+  system-one: on
+  question: Does this diff contain a hunk with no stated connection to the PR's description?
+  severity: warn
+```
+
+```mdl
+rule moon-yml-entrypoint-registration: Every package.json export/import entrypoint must be registered in the package's moon.yml
+  Adding an entrypoint to `package.json`'s `exports`/`imports` without also
+  registering the matching path in the same package's `moon.yml` compile
+  configuration means the build silently misses it — the entrypoint resolves
+  in dev but is absent from the published build with no error anywhere. Flag
+  a `package.json` `exports`/`imports` entry that is added or changed with no
+  matching update to the same package's `moon.yml`. Do not flag an entrypoint
+  that already maps to a registered glob/pattern in `moon.yml`. Fix: add the
+  new path to `moon.yml`'s compile configuration.
+  Source: 5 review comments across 1 PR, e.g. https://github.com/dxos/dxos/pull/10452#discussion_r2725564421.
+  scope: repo
+  files:
+    - packages/**/package.json
+  unit: file
+  context: diff, siblings
+  system-one: on
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

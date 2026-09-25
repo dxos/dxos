@@ -82,7 +82,21 @@ const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corner
 };
 
 /** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
-const colorClass = (color?: Scene.Color) => (color === 'grey' ? 'text-neutral-400 dark:text-neutral-500' : undefined);
+/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
+const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
+  'grey': 'text-neutral-400 dark:text-neutral-500',
+  'light-blue': 'text-sky-500',
+  'light-green': 'text-emerald-500',
+  'yellow': 'text-amber-500',
+  'light-violet': 'text-violet-500',
+  'orange': 'text-orange-500',
+  'light-red': 'text-rose-500',
+};
+
+const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+
+/** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
+const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
 
 type Resolved = {
   viewBox: string;
@@ -147,19 +161,28 @@ type MultilineTextProps = {
   cy: number;
   text: string;
   weight: Scene.Weight;
+  /** Wrap to this width (scene px), as `Diagnostics` assumes a box label does; unbounded when absent. */
+  width?: number;
   className?: string;
 };
 
-const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) => {
-  const lines = text.split('\n');
-  const lineH = LINE_H[weight];
+/** Inset kept between a box label and the box's sides. */
+const LABEL_INSET = 12;
+
+const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineTextProps) => {
+  const room = width === undefined ? Infinity : width - LABEL_INSET * 2;
+  const lines = wrapLines(text, Math.max(4, Math.floor(room / (FONT_SIZE[weight] * CHAR_EM))));
+  // A word longer than the box cannot wrap (a class name has no spaces), so the font shrinks to fit it.
+  const longest = Math.max(...lines.map((line) => line.length));
+  const fit = Math.min(1, room / (longest * FONT_SIZE[weight] * CHAR_EM));
+  const lineH = LINE_H[weight] * fit;
   return (
     <text
       x={cx}
       y={cy - ((lines.length - 1) * lineH) / 2}
       textAnchor='middle'
       dominantBaseline='central'
-      fontSize={FONT_SIZE[weight]}
+      fontSize={FONT_SIZE[weight] * fit}
       className={mx('fill-current', className)}
     >
       {lines.map((line, index) => (
@@ -194,22 +217,30 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'triangle': {
       const rect = rectOf(object, element);
       const mid = center(rect);
-      const fill = element.fill === 'solid' ? 'fill-neutral-100 dark:fill-neutral-800' : 'fill-transparent';
+      const tinted = element.fill === 'tint';
+      const fill = tinted
+        ? undefined
+        : element.fill === 'solid'
+          ? 'fill-neutral-100 dark:fill-neutral-800'
+          : 'fill-transparent';
+      const style = tinted ? TINT : undefined;
       const shape =
         element.kind === 'ellipse' ? (
-          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} />
+          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} style={style} />
         ) : element.kind === 'diamond' ? (
           <polygon
             points={`${mid.x},${rect.y} ${rect.x + rect.w},${mid.y} ${mid.x},${rect.y + rect.h} ${rect.x},${mid.y}`}
             className={fill}
+            style={style}
           />
         ) : element.kind === 'triangle' ? (
           <polygon
             points={`${mid.x},${rect.y} ${rect.x + rect.w},${rect.y + rect.h} ${rect.x},${rect.y + rect.h}`}
             className={fill}
+            style={style}
           />
         ) : element.corners === 'top' || element.corners === 'bottom' ? (
-          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} />
+          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
         ) : (
           <rect
             x={rect.x}
@@ -218,6 +249,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
             height={rect.h}
             rx={element.corners === 'none' ? 0 : RADIUS}
             className={fill}
+            style={style}
           />
         );
       return (
@@ -228,7 +260,14 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         >
           {shape}
           {element.text && (
-            <MultilineText cx={mid.x} cy={mid.y} text={element.text} weight={weight} className='stroke-none' />
+            <MultilineText
+              cx={mid.x}
+              cy={mid.y}
+              text={element.text}
+              weight={weight}
+              width={rect.w}
+              className='stroke-none'
+            />
           )}
         </g>
       );

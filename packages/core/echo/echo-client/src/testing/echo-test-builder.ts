@@ -43,7 +43,7 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
-  /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `memory`. */
+  /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `sql`. */
   queryExecutor?: QueryExecutorMode;
 };
 

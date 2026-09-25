@@ -123,7 +123,7 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
+Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
 `caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
@@ -132,6 +132,21 @@ driver.
 `press` also puts the chord in the action feed (`⌘ ⇧ K`), so a recording of a shortcut shows what was
 pressed — pass `"hud": false` to suppress it, or `keys` to show a chord for a gesture the driver did
 not perform. The chip is the proof; without it a palette just appears. See "The action overlay" below.
+
+### The boot is cut by default
+
+App boot is almost never what a demo is about, and it is the longest stretch of motion in a session, so
+the trimmer cannot remove it. The first `goto` therefore waits for the app to be ready — `--ready`,
+by default a Composer plank or a rendered storybook story (not the sidebar, which renders ~8s before any content) — lets it settle for `--settle` ms, and
+discards everything recorded before that. Its reply says what happened: `"boot":{"cut":true}`, or
+`cut:false` with the reason (the selector never appeared within `--ready-timeout`, or the 1x fallback,
+which cannot drop frames).
+
+- **Keep it when it matters** — a demo about startup, a splash, or a slow boot — with `--boot keep`.
+- **`cut` at any point** drops everything recorded so far, for setup you would rather not show (seeding
+  a space, enabling a plugin). Captions issued before it are dropped too, so caption after the cut.
+- **For another app**, pass a selector whose first match is the element that means "ready", e.g.
+  `--ready '[data-testid=app]'`; the driver waits for that first match to become visible.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
