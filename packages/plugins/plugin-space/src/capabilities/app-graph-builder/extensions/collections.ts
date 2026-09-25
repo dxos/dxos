@@ -27,6 +27,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -35,12 +36,14 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   ADD_TO_COLLECTION_LABEL,
+  ARCHIVE_OBJECT_LABEL,
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
   REMOVE_FROM_COLLECTION_LABEL,
   SHOW_ORIGINAL_LABEL,
+  UNARCHIVE_OBJECT_LABEL,
 } from './shared.ts';
 
 //
@@ -173,9 +176,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
 
         const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
-        const objects = get(space.db.query(Query.select(Filter.entity(collection)).reference('objects')).atom).filter(
-          (object: Obj.Unknown) => isTypeAvailable(available, object),
-        );
+        const objects = get(
+          space.db.query(
+            Query.select(Filter.entity(collection))
+              .reference('objects')
+              .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+          ).atom,
+        ).filter((object: Obj.Unknown) => isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
@@ -232,7 +239,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const db = Obj.getDatabase(collection);
 
         const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
-        const members = db ? get(db.query(Query.select(Filter.entity(collection)).reference('objects')).atom) : [];
+        const members = db
+          ? get(
+              db.query(
+                Query.select(Filter.entity(collection))
+                  .reference('objects')
+                  .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+              ).atom,
+            )
+          : [];
         const objects = members.filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
 
         return Effect.succeed(
@@ -287,6 +302,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             shareableLinkOrigin,
             container,
             parent: container ? get(Obj.parentAtom(object)) : undefined,
+            archived: isArchivable(object)
+              ? Option.getOrElse(get(Annotation.atom(object, ArchivedAnnotation)), () => false)
+              : undefined,
           }),
         );
       },
@@ -338,6 +356,7 @@ const constructObjectActions = ({
   shareableLinkOrigin,
   container,
   parent,
+  archived,
 }: {
   object: Obj.Unknown;
   nodeId: string;
@@ -346,6 +365,8 @@ const constructObjectActions = ({
   navigable?: boolean;
   container?: ContainerModel.Container;
   parent?: Obj.Unknown;
+  /** Current archive state; undefined when the object's type is not archivable. */
+  archived?: boolean;
 }) => {
   const db = Obj.getDatabase(object);
   invariant(db, 'Database not found');
@@ -445,6 +466,20 @@ const constructObjectActions = ({
               icon: CollectionOperation.OpenAddToCollection.meta.icon,
               disposition: 'list-item',
               testId: 'spacePlugin.addToCollection',
+            },
+          }),
+        ]
+      : []),
+    ...(archived !== undefined
+      ? [
+          AppGraphNode.makeAction({
+            id: SpaceOperation.SetArchived.meta.key,
+            data: () => Operation.invoke(SpaceOperation.SetArchived, { objects: [object], archived: !archived }),
+            properties: {
+              label: archived ? UNARCHIVE_OBJECT_LABEL : ARCHIVE_OBJECT_LABEL,
+              icon: archived ? 'ph--tray-arrow-up--regular' : 'ph--archive--regular',
+              disposition: 'list-item',
+              testId: archived ? 'spacePlugin.unarchiveObject' : 'spacePlugin.archiveObject',
             },
           }),
         ]

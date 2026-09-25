@@ -32,7 +32,10 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const HelpState = Capability.lazyModule(
   'HelpState',
-  { provides: [HelpCapabilities.State] },
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.Settings, HelpCapabilities.SeenTours, HelpCapabilities.State],
+  },
   () => import('./help-state.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
@@ -71,6 +74,7 @@ export const TourAutoStart = Capability.lazyModule(
       Capabilities.AtomRegistry,
       Capabilities.OperationInvoker,
       ClientCapabilities.Client,
+      HelpCapabilities.SeenTours,
       HelpCapabilities.State,
     ],
     provides: [],
