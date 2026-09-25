@@ -34,19 +34,26 @@ import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 const parseArgs = () => {
   const args = process.argv.slice(2);
   const options = {
-    port: 7333,
-    url: 'http://localhost:4173',
-    out: 'demo-out',
+    'port': 7333,
+    'url': 'http://localhost:4173',
+    'out': 'demo-out',
     // A 16" laptop's layout: at 1280x800 Composer's chrome fills the frame and reads as a small-screen
     // app, however sharp the pixels are.
-    width: 1728,
-    height: 1080,
-    scale: 2,
-    fps: 25,
-    crf: 28,
-    quality: 92,
-    overlay: 'on',
-    feed: 'top-right',
+    'width': 1728,
+    'height': 1080,
+    'scale': 2,
+    'fps': 25,
+    'crf': 28,
+    'quality': 92,
+    'overlay': 'on',
+    // App boot is rarely what a demo is about: the first `goto` waits for the app to be ready and cuts
+    // everything before it. `--boot keep` records it when the boot is the subject.
+    'boot': 'cut',
+    // A plank, not the sidebar: Composer's sidebar renders ~8s before any space content does.
+    'ready': '[data-testid="deck.plank"], #storybook-root > *',
+    'ready-timeout': 180_000,
+    'settle': 5_000,
+    'feed': 'top-right',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -120,7 +127,7 @@ const recorder = hires
  * these onto the trimmed timeline and turns them into chapters and a WebVTT track, so the steps stay
  * navigable instead of living only in burned-in pixels.
  */
-const started = recorder?.started ?? Date.now();
+let started = recorder?.started ?? Date.now();
 const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
@@ -243,12 +250,59 @@ const center = async (selector) => {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
+/**
+ * Drops everything recorded so far. Captions already issued are dropped too, since their times would
+ * point into footage that no longer exists.
+ */
+const NO_CUT = { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+
+const cut = async () => {
+  if (!recorder) {
+    return NO_CUT;
+  }
+  // The banner is page DOM, so it would outlive the timeline entry it belongs to; the page is repainted
+  // before the cut so the frame the recorder keeps does not carry it either.
+  await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID).catch(() => {});
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // The repainted frame reaches the recorder over CDP a beat after the paint itself.
+  await page.waitForTimeout(150);
+  started = recorder.cut();
+  timeline.length = 0;
+  return { cut: true };
+};
+
+let booted = false;
+
 const handlers = {
   goto: async (command) => {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
+    const result = { url: page.url() };
+    // Only the first navigation boots the app; a later `goto` is part of the demo.
+    if (!booted && options.boot !== 'keep') {
+      booted = true;
+      if (!recorder) {
+        // Waiting minutes for a ready screen buys nothing when the footage cannot be dropped anyway.
+        await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
+        return { ...result, boot: NO_CUT };
+      }
+      const ready = await page
+        .locator(options.ready)
+        .first()
+        .waitFor({ state: 'visible', timeout: options['ready-timeout'] })
+        .then(() => true)
+        .catch(() => false);
+      if (ready) {
+        // A plank mounts seconds before its content has filled in, more on a fresh profile.
+        await page.waitForTimeout(options.settle);
+        result.boot = await cut();
+      } else {
+        result.boot = { cut: false, reason: `no ${options.ready} within ${options['ready-timeout']}ms` };
+      }
+    }
     await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
-    return { url: page.url() };
+    return result;
   },
+  cut: () => cut(),
   click: async (command) => {
     const target = locator(command).first();
     await pointAt(target, command, 'click');

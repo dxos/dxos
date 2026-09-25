@@ -176,6 +176,10 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
 - After creating an object the user asked for while working in a project's context, file it with
   `projects-add-artifact { project, object }` so the project owns it and it appears in the project's list.
   Filing the same object twice is a no-op.
+- When the object was made for one task — a screenshot a task asked for, a report it produced —
+  record it on that task with `tasks-add-artifact { task, object }`. It needs no project, so it is also
+  the verb for a task that lives in a plain task set. For a file on your own disk, create the `File`
+  first (see the File skill's upload flow) and pass its reference as `object`.
 - Before searching the whole space for something the project should already hold, call
   `projects-list-artifact { project }` — it returns a DXN, type and label per artifact, and you load the
   content of the one you want.

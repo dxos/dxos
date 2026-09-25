@@ -6,8 +6,9 @@ import { describe, test } from 'vitest';
 
 import { Entity, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { FeedProtocol } from '@dxos/protocols';
 
-import { FeedObjectCore } from './feed-object-core.ts';
+import { FeedObjectCore, positionOfJSON } from './feed-object-core.ts';
 
 describe('FeedObjectCore', () => {
   // Large enough that retaining the canonical JSON per object would dominate the object itself —
@@ -78,6 +79,34 @@ describe('FeedObjectCore', () => {
     expect(entity.name).toEqual('v2');
     core.dispose();
   });
+
+  test('a block is settled once applied, and a newer block is not', ({ expect }) => {
+    const entity = withPosition(Obj.make(TestSchema.Person, { name: 'v1' }), 1);
+    const core = new FeedObjectCore(entity, () => {});
+    expect(positionOfJSON(jsonOf(entity))).toEqual(1);
+    expect(core.isSettledAt(1)).toBe(true);
+    expect(core.isSettledAt(undefined)).toBe(false);
+
+    const next = withPosition(Obj.make(TestSchema.Person, { name: 'v2' }), 2);
+    expect(core.isSettledAt(positionOfJSON(jsonOf(next)))).toBe(false);
+    core.reconcile(next, jsonOf(next));
+    expect(entity.name).toEqual('v2');
+    expect(core.isSettledAt(2)).toBe(true);
+
+    // A local change unappended makes every inbound block ignorable.
+    Obj.update(entity, (entity) => {
+      entity.name = 'local';
+    });
+    expect(core.isSettledAt(3)).toBe(true);
+    core.dispose();
+  });
 });
+
+const withPosition = <T extends Obj.Any>(obj: T, position: number): T => {
+  Obj.update(obj, (obj) => {
+    Obj.getMeta(obj).keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: String(position) });
+  });
+  return obj;
+};
 
 const jsonOf = (entity: Entity.Unknown): Record<string, unknown> => Entity.toJSON(entity) as Record<string, unknown>;

@@ -4415,6 +4415,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -6808,6 +6811,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-file
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
@@ -11646,6 +11652,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -11701,9 +11710,15 @@ importers:
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
