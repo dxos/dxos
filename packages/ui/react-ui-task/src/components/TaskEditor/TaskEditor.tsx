@@ -183,7 +183,14 @@ export type TaskEditorProps = ComposableProps<
   TaskEditorRootProps & {
     /** Edit a description under the title. Off by default: a markdown field is several rows tall. */
     showDescription?: boolean;
-  } & Pick<TaskEditorDescriptionProps, 'extensions'>
+    /**
+     * Editor extensions for the description beyond its own — what the host's plugins contribute.
+     * Named as the list's strip names it: a host moving from one to the other that found `extensions`
+     * here would have passed the strip's name and had them silently dropped, which is how the
+     * article lost its GitHub decorations once already.
+     */
+    descriptionExtensions?: TaskEditorDescriptionProps['extensions'];
+  }
 >;
 
 /**
@@ -195,13 +202,13 @@ export type TaskEditorProps = ComposableProps<
  * that machinery is for.
  */
 const TaskEditorComposite = composable<HTMLDivElement, TaskEditorProps>(
-  ({ task, onUpdate, showDescription = false, extensions, ...props }, forwardedRef) => {
+  ({ task, onUpdate, showDescription = false, descriptionExtensions, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     return (
       <TaskEditorRoot task={task} onUpdate={onUpdate}>
         <div {...rest} className={mx('flex flex-col w-full min-w-0 gap-2', className)} ref={forwardedRef}>
           <TaskEditorTitle />
-          {showDescription && <TaskEditorDescription extensions={extensions} />}
+          {showDescription && <TaskEditorDescription extensions={descriptionExtensions} />}
         </div>
       </TaskEditorRoot>
     );

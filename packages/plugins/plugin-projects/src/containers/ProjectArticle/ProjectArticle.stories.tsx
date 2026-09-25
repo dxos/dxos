@@ -426,6 +426,15 @@ export const TaskDetail: Story = {
         ).toContain('https://github.com/dxos/dxos/issues/12431'),
       { timeout: 10_000 },
     );
+    // A pasted URL is a chip here as it is in the row: the reader wrote a bare link either way, and
+    // the pane used to leave it as raw text while the row named it `#12752`.
+    await waitFor(
+      async () =>
+        await expect(
+          [...(editor()?.querySelectorAll('.dx-tag--anchor') ?? [])].map((chip) => chip.textContent),
+        ).toContain('#12752'),
+      { timeout: 10_000 },
+    );
   },
 };
 
