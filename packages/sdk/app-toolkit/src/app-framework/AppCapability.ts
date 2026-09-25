@@ -138,6 +138,16 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 );
 
 /**
+ * Module maker contributing a {@link AppCapabilities.DefaultParent} rule. On the startup pass: an
+ * operation handler asks for rules mid-create, which has no demand event to gate on.
+ */
+export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capability$.moduleMaker(
+  'DefaultParent',
+  AppCapabilities.DefaultParent,
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+);
+
+/**
  * Module maker contributing navigation target resolvers. On the startup pass: URL restore runs as
  * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
  * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.

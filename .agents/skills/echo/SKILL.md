@@ -111,7 +111,10 @@ export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.t
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     objects: Schema.Array(Ref.Ref(Obj.Unknown)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' }),
+    Annotation.UserType.set({ tags: [ItemTag] }),
+  ),
 ) {}
 
 // Relation type
@@ -120,6 +123,8 @@ export class HasManager extends Type.makeRelation<HasManager>(DXN.make('com.exam
   target: Person,
 })(Schema.Struct({})) {}
 ```
+
+**A static type is internal until it opts in.** Without `Annotation.UserType.set()` it stays out of the nav tree, pickers, search, and collections. Add it to any type users create or browse; leave it off implementation details (a drawing's canvas, a game's state). Types persisted in a space are always user-facing. `tags` are keys a surface filters on: `Collection.ItemTag` puts the type in a collection's create dialog (`Annotation.UserType.set({ tags: [Collection.ItemTag] })`). Check with `TypeOptions.isUserType(type, { tag })` / `isUserObject` (`@dxos/app-toolkit/TypeOptions`), never by reading the annotation directly.
 
 **No separate `type X = ...` or `interface X extends ...` is needed.** The class name itself is the TypeScript type for instances.
 

@@ -41,6 +41,7 @@ export class Video extends Type.makeObject<Video>(DXN.make('org.dxos.type.video'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--video-camera--regular', hue: 'red' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

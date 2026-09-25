@@ -25,8 +25,6 @@ export class Frame extends Type.makeObject<Frame>(DXN.make('org.dxos.type.frame'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--frame-corners--regular', hue: 'indigo' }),
-    // Owned child of a Storyboard — hidden from the navtree type list and object picker.
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 

@@ -67,6 +67,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
