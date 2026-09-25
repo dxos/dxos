@@ -3,11 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { corePlugins } from '@dxos/plugin-testing';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -20,6 +22,13 @@ const meta = {
   title: 'plugins/plugin-github/stories/PullRequestOverview',
   component: PullRequestOverview,
   decorators: [
+    (Story) => (
+      <Panel.Root>
+        <Panel.Content>
+          <Story />
+        </Panel.Content>
+      </Panel.Root>
+    ),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({

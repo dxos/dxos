@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type DiffLayout, type DiffLineTarget } from '@dxos/ui-editor';
 
@@ -42,13 +43,15 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
   }, []);
 
   return (
-    <>
-      <WalkthroughView
-        value={text}
-        layout={layout}
-        sidebar={sidebar}
-        onLineComment={comments ? handleLineComment : undefined}
-      />
+    <Panel.Root>
+      <Panel.Content>
+        <WalkthroughView
+          value={text}
+          layout={layout}
+          sidebar={sidebar}
+          onLineComment={comments ? handleLineComment : undefined}
+        />
+      </Panel.Content>
       <LineCommentPopover
         open={!!target}
         anchorRef={anchorRef}
@@ -58,7 +61,7 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
         onSubmit={handleCancel}
         onCancel={handleCancel}
       />
-    </>
+    </Panel.Root>
   );
 };
 

@@ -16,7 +16,7 @@ import { type GitHubOperation } from '#types';
 
 import { parseArtifactLink, parsePullRequestBody } from '../../pull-request-body.ts';
 import { ArtifactPill } from './ArtifactPill.tsx';
-import { CheckRunList } from './CheckRunList.tsx';
+import { CheckRunList, useCheckSummary } from './CheckRunList.tsx';
 import { PullRequestDetails, type PullRequestDetailsValues } from './PullRequestDetails.tsx';
 import { RelatedCards, useRelatedItems } from './RelatedCards.tsx';
 
@@ -37,6 +37,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
   const related = useRelatedItems(parsed);
+  const checkSummary = useCheckSummary(runs);
 
   return (
     <ScrollArea.Root thin>
@@ -47,13 +48,17 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
           ) : (
             <Empty label={t('no-description.message')} />
           )}
-          <PullRequestDetails values={details} />
+          <Section label={t('details.label')}>
+            <PullRequestDetails values={details} />
+          </Section>
           {related.length > 0 && (
             <Section label={t('related.label')}>
               <RelatedCards items={related} />
             </Section>
           )}
-          <CheckRunList runs={runs} />
+          <Section label={checkSummary}>
+            <CheckRunList runs={runs} />
+          </Section>
         </Flex>
       </ScrollArea.Viewport>
     </ScrollArea.Root>

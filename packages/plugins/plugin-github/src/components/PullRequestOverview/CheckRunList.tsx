@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -51,7 +51,56 @@ export type CheckRunListProps = {
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const { t } = useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
-  const summary = useMemo(() => {
+  const summary = useCheckSummary(runs);
+
+  if (!sorted || sorted.length === 0) {
+    return <Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />;
+  }
+
+  return (
+    <Listbox.Root>
+      <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
+        {sorted.map((run) => {
+          const { icon, classNames } = outcomeIcon[run.outcome];
+          const duration = formatDuration(run.startedAt, run.completedAt);
+          // GitHub's own word when it says more than the outcome: `timed out` rather than `failed`.
+          const detail =
+            run.conclusion && run.conclusion !== run.outcome && run.conclusion !== 'failure'
+              ? run.conclusion.replace(/_/g, ' ')
+              : undefined;
+          const outcome =
+            run.outcome === 'skipped'
+              ? t('check-outcome.skipped.label')
+              : (duration ?? t(`check-outcome.${run.outcome}.label`));
+          const url = run.url;
+          return (
+            <Listbox.Item
+              key={`${run.name}-${url ?? ''}`}
+              id={`${run.name}-${url ?? ''}`}
+              data-outcome={run.outcome}
+              data-testid='pull-request.check'
+              onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
+            >
+              <Listbox.ItemContent
+                icon={<Icon icon={icon} size={5} classNames={classNames} />}
+                title={run.name}
+                description={[detail, outcome].filter(Boolean).join(' · ')}
+              />
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+
+/** The label the checks section carries: the counts once there are runs to count. */
+export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
+  const { t } = useTranslation(meta.profile.key);
+  return useMemo(() => {
+    if (!runs || runs.length === 0) {
+      return t('checks.label');
+    }
     const counts: Record<GitHubOperation.CheckOutcome, number> = {
       success: 0,
       failure: 0,
@@ -59,7 +108,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
       skipped: 0,
       neutral: 0,
     };
-    for (const run of runs ?? []) {
+    for (const run of runs) {
       counts[run.outcome]++;
     }
     return t('checks-summary.label', {
@@ -69,54 +118,4 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
       skipped: counts.skipped,
     });
   }, [runs, t]);
-
-  return (
-    <Card.Root fullWidth data-testid='pull-request.checks'>
-      <Card.Header>
-        <Card.Block>
-          <Icon icon='ph--check-square-offset--regular' />
-        </Card.Block>
-        <Card.Title>{sorted && sorted.length > 0 ? summary : t('checks.label')}</Card.Title>
-      </Card.Header>
-      <Card.Body>
-        {!sorted || sorted.length === 0 ? (
-          <Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />
-        ) : (
-          <Listbox.Root>
-            <Listbox.Content aria-label={t('checks.label')}>
-              {sorted.map((run) => {
-                const { icon, classNames } = outcomeIcon[run.outcome];
-                const duration = formatDuration(run.startedAt, run.completedAt);
-                // GitHub's own word when it says more than the outcome: `timed out` rather than `failed`.
-                const detail =
-                  run.conclusion && run.conclusion !== run.outcome && run.conclusion !== 'failure'
-                    ? run.conclusion.replace(/_/g, ' ')
-                    : undefined;
-                const outcome =
-                  run.outcome === 'skipped'
-                    ? t('check-outcome.skipped.label')
-                    : (duration ?? t(`check-outcome.${run.outcome}.label`));
-                const url = run.url;
-                return (
-                  <Listbox.Item
-                    key={`${run.name}-${url ?? ''}`}
-                    id={`${run.name}-${url ?? ''}`}
-                    data-outcome={run.outcome}
-                    data-testid='pull-request.check'
-                    onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
-                  >
-                    <Listbox.ItemContent
-                      icon={<Icon icon={icon} size={5} classNames={classNames} />}
-                      title={run.name}
-                      description={[detail, outcome].filter(Boolean).join(' · ')}
-                    />
-                  </Listbox.Item>
-                );
-              })}
-            </Listbox.Content>
-          </Listbox.Root>
-        )}
-      </Card.Body>
-    </Card.Root>
-  );
 };

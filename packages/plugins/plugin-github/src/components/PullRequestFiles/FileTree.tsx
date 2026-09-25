@@ -96,6 +96,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
       id={root.id}
       model={model}
       ariaLabel={t('files-tree.label')}
+      classNames='text-sm'
       density='sm'
       renderIcon={renderIcon}
       renderColumns={renderColumns}

@@ -3,12 +3,12 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Decoration, type EditorView, WidgetType } from '@codemirror/view';
+import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
 import { type WidgetMatcher, widgetMatchersFacet, widgetsCore } from '../widgets/index.ts';
 import { type DiffRow, type ParsedDiff, languageLabel, parseDiff, parseFenceInfo } from './diff-parser.ts';
-import { highlightLines } from './highlight.ts';
+import { diffHighlightStyles, highlightLines } from './highlight.ts';
 import { diffBlockTheme } from './theme.ts';
 
 /** The fence language this extension claims. */
@@ -77,6 +77,11 @@ export const diffBlocks = (options: DiffBlocksOptions = {}): Extension => [
   widgetsCore,
   widgetMatchersFacet.of(createDiffMatcher(options)),
   diffBlockTheme,
+  // The highlighted spans are static DOM, so the styles' rules are mounted directly rather than
+  // through `syntaxHighlighting`, which would also restyle the host document.
+  Object.values(diffHighlightStyles).flatMap((style) =>
+    style.module ? [EditorView.styleModule.of(style.module)] : [],
+  ),
 ];
 
 /**
@@ -301,16 +306,15 @@ class DiffBlockWidget extends WidgetType {
       this.#root.dataset.layout = this.#layout;
     }
 
-    const pending: PendingCell[] = [];
-    const before: string[] = [];
-    const after: string[] = [];
-
     for (const chunk of this.#diff.chunks) {
       if (chunk.gap) {
         body.appendChild(expander(chunk.gap, chunk.section));
       }
       const grid = body.appendChild(document.createElement('div'));
       grid.className = 'cm-diff-grid';
+      const pending: PendingCell[] = [];
+      const before: string[] = [];
+      const after: string[] = [];
       for (const row of chunk.rows) {
         if (this.#layout === 'split') {
           this.#renderSplitRow(grid, row, pending, before, after);
@@ -318,10 +322,12 @@ class DiffBlockWidget extends WidgetType {
           this.#renderInlineRow(grid, row, pending, before, after);
         }
       }
-    }
 
-    if (highlighted(this.#options) && this.#diff.language) {
-      void this.#highlight(this.#diff.language, before, after, pending);
+      // Per chunk rather than per side of the whole block: each chunk is its own window into the
+      // file, read inside the declaration its hunk header names.
+      if (highlighted(this.#options) && this.#diff.language) {
+        void this.#highlight(this.#diff.language, chunk.section, before, after, pending);
+      }
     }
   }
 
@@ -408,10 +414,17 @@ class DiffBlockWidget extends WidgetType {
     cell.prepend(button);
   }
 
-  async #highlight(language: string, before: string[], after: string[], pending: PendingCell[]): Promise<void> {
+  async #highlight(
+    language: string,
+    section: string | undefined,
+    before: string[],
+    after: string[],
+    pending: PendingCell[],
+  ): Promise<void> {
+    const style = diffHighlightStyles[this.#view?.state.facet(EditorView.darkTheme) ? 'dark' : 'light'];
     const [beforeLines, afterLines] = await Promise.all([
-      before.length > 0 ? highlightLines(before.join('\n'), language) : undefined,
-      after.length > 0 ? highlightLines(after.join('\n'), language) : undefined,
+      before.length > 0 ? highlightLines(before.join('\n'), language, section, style) : undefined,
+      after.length > 0 ? highlightLines(after.join('\n'), language, section, style) : undefined,
     ]);
     if (!this.#alive || (!beforeLines && !afterLines)) {
       return;
