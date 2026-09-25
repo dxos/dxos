@@ -14,7 +14,7 @@ import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messe
 
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
-import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer.ts';
+import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketClosedError, WebSocketMuxer } from './edge-ws-muxer.ts';
 import { toUint8Array } from './protocol.ts';
 import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
 
@@ -156,7 +156,14 @@ export class EdgeWsConnection extends Resource {
       // For muxer, we need to track the size of the message being sent.
       const binary = buf.toBinary(MessageSchema, message);
       this._recordBytes(binary.byteLength, 0);
-      this._wsMuxer.send(message).catch((e) => log.catch(e));
+      this._wsMuxer.send(message).catch((error) => {
+        // A close mid-send is routine (the close handler reconnects), so it is not reported as an error.
+        if (error instanceof WebSocketClosedError) {
+          log.verbose('segmented message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
+        } else {
+          log.catch(error);
+        }
+      });
     }
   }
 

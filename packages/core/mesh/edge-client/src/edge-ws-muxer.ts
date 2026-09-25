@@ -70,6 +70,8 @@ export class WebSocketMuxer {
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
+   * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing first, or
+   * with the error the socket's `send` throws; either failure drops every queued segmented message, not just this one.
    */
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
@@ -239,7 +241,11 @@ export class WebSocketMuxer {
         return;
       }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-        log.warn('send called for closed websocket');
+        log.warn('send called for closed websocket', {
+          readyState: this._ws.readyState,
+          pendingChannels: this._outMessageChunks.size,
+        });
+        this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
         this._sendTimeout = undefined;
         return;
       }
@@ -259,9 +265,18 @@ export class WebSocketMuxer {
           }
         }
 
-        const nextMessage = messages.shift();
+        // Dequeued only once sent, so a chunk the socket refused keeps its waiter queued for the rejection.
+        const nextMessage = messages.at(0);
         if (nextMessage) {
-          this._ws.send(nextMessage.payload);
+          try {
+            this._ws.send(nextMessage.payload);
+          } catch (error) {
+            log.warn('muxer failed to send segmented message chunk', { channelId, error });
+            this._rejectPendingSends(error instanceof Error ? error : new Error(String(error)));
+            this._sendTimeout = undefined;
+            return;
+          }
+          messages.shift();
           nextMessage.trigger?.wake();
         } else {
           emptyChannels.push(channelId);
@@ -277,6 +292,14 @@ export class WebSocketMuxer {
       }
     };
     this._sendTimeout = setTimeout(send);
+  }
+
+  /** Rejects every queued segmented send and drops the chunks they had yet to send. */
+  private _rejectPendingSends(error: Error): void {
+    for (const channelChunks of this._outMessageChunks.values()) {
+      channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
+    }
+    this._outMessageChunks.clear();
   }
 
   private _resolveChannel(message: Message): number | undefined {
@@ -306,6 +329,16 @@ export class SegmentedMessageLimitError extends Error {
   }
 }
 
+/**
+ * Rejects a segmented send whose remaining segments were dropped because the socket began closing
+ * before they could be handed to it.
+ */
+export class WebSocketClosedError extends Error {
+  constructor(public readonly readyState: number) {
+    super(`WebSocket closed (readyState ${readyState}) before a segmented message was sent.`);
+  }
+}
+
 type WebSocketCompat = {
   readonly readyState: number;
   /**
@@ -318,7 +351,7 @@ type WebSocketCompat = {
 type MessageChunk = {
   payload: Uint8Array;
   /**
-   * Wakes when the payload is enqueued by WebSocket.
+   * Wakes when the payload is enqueued by WebSocket, or throws if the socket fails first.
    */
   trigger?: Trigger;
 };
