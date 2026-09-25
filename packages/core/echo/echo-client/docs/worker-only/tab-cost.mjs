@@ -44,7 +44,7 @@ if (isMainThread) {
           worker.postMessage(payloads[mode]);
         } else {
           resolve(msg);
-          worker.terminate();
+          void worker.terminate();
         }
       });
       worker.on('error', reject);
