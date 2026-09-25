@@ -2,7 +2,17 @@ import { test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
 
-const EVENTS = ['pointerdown', 'mousedown', 'pointermove', 'dragstart', 'dragenter', 'dragover', 'drop', 'dragend', 'mouseup'];
+const EVENTS = [
+  'pointerdown',
+  'mousedown',
+  'pointermove',
+  'dragstart',
+  'dragenter',
+  'dragover',
+  'drop',
+  'dragend',
+  'mouseup',
+];
 
 const setup = async (browser: any) => {
   const host = new AppManager(browser, false);
