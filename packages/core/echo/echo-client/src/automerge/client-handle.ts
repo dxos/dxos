@@ -7,7 +7,7 @@ import { type AnyDocumentId, type AutomergeUrl, type DocumentId } from '@automer
 import type { EventEmitter } from 'eventemitter3';
 
 import type { Event } from '@dxos/async';
-import { Op } from '@dxos/automerge-proxy';
+import * as Op from '@dxos/automerge-proxy/Op';
 import type { Context } from '@dxos/context';
 import type { DataService, MirrorService } from '@dxos/protocols/rpc';
 

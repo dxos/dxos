@@ -4,7 +4,9 @@
 
 import { next as A, type Heads } from '@automerge/automerge';
 
-import { Draft, Handle, Op } from '@dxos/automerge-proxy';
+import * as Draft from '@dxos/automerge-proxy/Draft';
+import * as Handle from '@dxos/automerge-proxy/Handle';
+import * as Op from '@dxos/automerge-proxy/Op';
 
 //
 // The Automerge calls the database layer makes directly, routed to the proxy when the document is

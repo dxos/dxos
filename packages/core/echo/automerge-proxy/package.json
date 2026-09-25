@@ -19,11 +19,72 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./host": {
-      "source": "./src/host/index.ts",
-      "types": "./dist/types/src/host/index.d.ts",
-      "import": "./dist/lib/host.mjs"
+    "./AutomergeOps": {
+      "source": "./src/AutomergeOps.ts",
+      "types": "./dist/types/src/AutomergeOps.d.ts",
+      "import": "./dist/lib/AutomergeOps.mjs"
     },
+    "./Contract": {
+      "source": "./src/Contract.ts",
+      "types": "./dist/types/src/Contract.d.ts",
+      "import": "./dist/lib/Contract.mjs"
+    },
+    "./Cursors": {
+      "source": "./src/Cursors.ts",
+      "types": "./dist/types/src/Cursors.d.ts",
+      "import": "./dist/lib/Cursors.mjs"
+    },
+    "./Draft": {
+      "source": "./src/Draft.ts",
+      "types": "./dist/types/src/Draft.d.ts",
+      "import": "./dist/lib/Draft.mjs"
+    },
+    "./Handle": {
+      "source": "./src/Handle.ts",
+      "types": "./dist/types/src/Handle.d.ts",
+      "import": "./dist/lib/Handle.mjs"
+    },
+    "./Host": {
+      "source": "./src/Host.ts",
+      "types": "./dist/types/src/Host.d.ts",
+      "import": "./dist/lib/Host.mjs"
+    },
+    "./Op": {
+      "source": "./src/Op.ts",
+      "types": "./dist/types/src/Op.d.ts",
+      "import": "./dist/lib/Op.mjs"
+    },
+    "./Repo": {
+      "source": "./src/Repo.ts",
+      "types": "./dist/types/src/Repo.d.ts",
+      "import": "./dist/lib/Repo.mjs"
+    },
+    "./Sequencing": {
+      "source": "./src/Sequencing.ts",
+      "types": "./dist/types/src/Sequencing.d.ts",
+      "import": "./dist/lib/Sequencing.mjs"
+    },
+    "./Sync": {
+      "source": "./src/Sync.ts",
+      "types": "./dist/types/src/Sync.d.ts",
+      "import": "./dist/lib/Sync.mjs"
+    },
+    "./Transform": {
+      "source": "./src/Transform.ts",
+      "types": "./dist/types/src/Transform.d.ts",
+      "import": "./dist/lib/Transform.mjs"
+    },
+    "./Wire": {
+      "source": "./src/Wire.ts",
+      "types": "./dist/types/src/Wire.d.ts",
+      "import": "./dist/lib/Wire.mjs"
+    },
+    "./errors": {
+      "source": "./src/errors.ts",
+      "types": "./dist/types/src/errors.d.ts",
+      "import": "./dist/lib/errors.mjs"
+    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

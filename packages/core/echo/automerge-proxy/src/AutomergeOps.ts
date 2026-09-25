@@ -6,8 +6,8 @@
 
 import { next as A, type Heads, type Patch } from '@automerge/automerge';
 
-import * as Op from '../Op.ts';
-import type * as Sync from '../Sync.ts';
+import * as Op from './Op.ts';
+import type * as Sync from './Sync.ts';
 
 /**
  * Change message a batch is written with, so a restarted host can tell which batches it already

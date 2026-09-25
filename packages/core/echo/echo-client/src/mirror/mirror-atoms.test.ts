@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Op } from '@dxos/automerge-proxy';
+import * as Op from '@dxos/automerge-proxy/Op';
 import { Obj, Ref } from '@dxos/echo';
 import { MetaId, ObjectDatabaseId, TypeId } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';

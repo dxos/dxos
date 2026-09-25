@@ -7,8 +7,9 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import type * as EffectStream from 'effect/Stream';
 
-import { type Contract, Wire } from '@dxos/automerge-proxy';
-import { Host } from '@dxos/automerge-proxy/host';
+import type * as Contract from '@dxos/automerge-proxy/Contract';
+import * as Host from '@dxos/automerge-proxy/Host';
+import * as Wire from '@dxos/automerge-proxy/Wire';
 import { Context, Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { type DocumentObjectRow } from '@dxos/index-core';

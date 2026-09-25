@@ -9,12 +9,12 @@ import { next as A } from '@automerge/automerge';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import type * as Contract from '../Contract.ts';
-import { randomId } from '../internal/index.ts';
-import type * as Repo from '../Repo.ts';
-import type * as Sync from '../Sync.ts';
 import * as AutomergeOps from './AutomergeOps.ts';
+import type * as Contract from './Contract.ts';
+import { randomId } from './internal/index.ts';
+import type * as Repo from './Repo.ts';
 import * as Sequencing from './Sequencing.ts';
+import type * as Sync from './Sync.ts';
 
 /** A document the store has loaded: its current state and a way to write it. */
 export type StoredDocument = Sequencing.SequencedDocument;

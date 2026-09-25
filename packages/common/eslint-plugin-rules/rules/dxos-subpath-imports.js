@@ -17,6 +17,7 @@ const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/app-graph',
   '@dxos/app-toolkit',
   '@dxos/assistant-toolkit',
+  '@dxos/automerge-proxy',
   '@dxos/compute',
   '@dxos/graph',
   '@dxos/observability',

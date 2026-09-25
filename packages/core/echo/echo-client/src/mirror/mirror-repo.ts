@@ -8,7 +8,10 @@ import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
 import { type Event } from '@dxos/async';
-import { type Cursors, Op, Repo, Wire } from '@dxos/automerge-proxy';
+import type * as Cursors from '@dxos/automerge-proxy/Cursors';
+import * as Op from '@dxos/automerge-proxy/Op';
+import * as Repo from '@dxos/automerge-proxy/Repo';
+import * as Wire from '@dxos/automerge-proxy/Wire';
 import { Resource, type Context as ResourceContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

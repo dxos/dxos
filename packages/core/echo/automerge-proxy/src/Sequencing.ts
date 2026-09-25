@@ -8,9 +8,9 @@ import { next as A, type Heads } from '@automerge/automerge';
 
 import { log } from '@dxos/log';
 
-import * as Op from '../Op.ts';
-import * as Sync from '../Sync.ts';
 import * as AutomergeOps from './AutomergeOps.ts';
+import * as Op from './Op.ts';
+import * as Sync from './Sync.ts';
 
 /** What the sequencer needs from a resident document: the current state and a way to write. */
 export interface SequencedDocument {

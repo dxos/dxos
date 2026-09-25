@@ -8,7 +8,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { Contract } from '@dxos/automerge-proxy';
+import * as Contract from '@dxos/automerge-proxy/Contract';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';

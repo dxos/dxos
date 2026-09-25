@@ -12,13 +12,21 @@ Automerge at runtime.
    (its Automerge host) and extras (index copies, replicas).
 3. Code outside DXOS that wants Automerge documents in a UI thread without wasm can use it.
 
-## Layers
+## Entry points
 
-| Entry point                     | Needs at runtime | Contents                                                                                                               |
-| ------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `@dxos/automerge-proxy`         | nothing          | Ops and transforms, client state, the draft that records `change()` calls, handle, repo, cursors, wire codec, contract |
-| `@dxos/automerge-proxy/host`    | Automerge        | Sequencer, ops to and from Automerge patches, a `DocumentHost` over any store of Automerge documents                   |
-| `@dxos/automerge-proxy/testing` | Automerge        | In-memory store and transport with controllable delivery, fast-check arbitraries                                       |
+The package is a subpath package: each namespace module has its own entry, and consumers import the
+namespace they use (`import * as Repo from '@dxos/automerge-proxy/Repo'`). `dxos-subpath-imports`
+rewrites a barrel import into that form, and `dxos-subpath-exports` checks the barrel against the
+exports map. Importing only what a side needs is what keeps Automerge out of a client.
+
+| Subpaths                                                                            | Needs at runtime | Side   |
+| ----------------------------------------------------------------------------------- | ---------------- | ------ |
+| `Repo`, `Handle`, `Draft`, `Cursors`, `Op`, `Transform`, `Sync`, `Wire`, `Contract` | nothing          | client |
+| `Host`, `Sequencing`, `AutomergeOps`                                                | Automerge        | host   |
+| `testing`                                                                           | Automerge        | tests  |
+
+The root barrel re-exports every namespace, so it loads Automerge through `Host`; nothing in the
+repo imports it.
 
 ## The contract
 
@@ -52,13 +60,13 @@ SQLite index, so the host need not load the document to serve it.
 
 ## Status
 
-| Step | What moves                                                                                                                                                                                   | State |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| A    | `echo-protocol/src/mirror/*` to the package root: ops, transform, client state and sequencer, wire; the contract schemas out of `MirrorService`                                              | done  |
-| B1   | `echo-client/src/mirror/recorder.ts` to `Draft`: the draft a `change()` callback writes through, recording ops                                                                               | done  |
-| B2   | `mirror-doc-handle.ts` to `Handle`, minus ECHO's replicas, errors and handle interface; `mirror-cursors.ts` to `Cursors`                                                                     | done  |
-| B3   | The core of `mirror-repo.ts` (subscriptions, submit throttling, resubscribing) to `Repo`, over `Repo.Host`                                                                                   | done  |
-| C    | `echo-host/src/mirror/document-sequencer.ts` to `Sequencing` and `automerge-ops.ts` to `AutomergeOps` in `/host`; the core of `mirror-service.ts` to `Host.DocumentHost` over a `Host.Store` | done  |
+| Step | What moves                                                                                                                                                                        | State |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| A    | `echo-protocol/src/mirror/*` to the package root: ops, transform, client state and sequencer, wire; the contract schemas out of `MirrorService`                                   | done  |
+| B1   | `echo-client/src/mirror/recorder.ts` to `Draft`: the draft a `change()` callback writes through, recording ops                                                                    | done  |
+| B2   | `mirror-doc-handle.ts` to `Handle`, minus ECHO's replicas, errors and handle interface; `mirror-cursors.ts` to `Cursors`                                                          | done  |
+| B3   | The core of `mirror-repo.ts` (subscriptions, submit throttling, resubscribing) to `Repo`, over `Repo.Host`                                                                        | done  |
+| C    | `echo-host/src/mirror/document-sequencer.ts` to `Sequencing` and `automerge-ops.ts` to `AutomergeOps`; the core of `mirror-service.ts` to `Host.DocumentHost` over a `Host.Store` | done  |
 
 ECHO keeps adapters. `MirrorRepo` implements `ClientRepo` around `Repo.ProxyRepo`, with a `Repo.Host`
 over its RPC services, reads from the index, Automerge replicas on `RepoProxy`, and its own error

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { invariant } from '@dxos/invariant';
 
 import * as Contract from '../Contract.ts';
-import type * as Host from '../host/Host.ts';
+import type * as Host from '../Host.ts';
 import * as Op from '../Op.ts';
 import type * as Repo from '../Repo.ts';
 import * as Wire from '../Wire.ts';

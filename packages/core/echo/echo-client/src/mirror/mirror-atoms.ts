@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Op } from '@dxos/automerge-proxy';
+import * as Op from '@dxos/automerge-proxy/Op';
 import { type Obj } from '@dxos/echo';
 import { DATA_NAMESPACE, isEncodedReference } from '@dxos/echo-protocol';
 import {

@@ -4,23 +4,26 @@ Automerge-shaped documents whose reads and writes are synchronous, kept in step 
 the real Automerge documents over an asynchronous contract. The client side needs no Automerge at
 runtime.
 
-The package holds the parts with no dependency on ECHO:
+The package holds the parts with no dependency on ECHO. Each namespace has its own subpath; import
+the ones a side needs, such as `import * as Repo from '@dxos/automerge-proxy/Repo'`.
 
-| Module      | What it is                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------- |
-| `Repo`      | `ProxyRepo`, the client's repo of proxy documents, and `Host`, the host as the repo sees it |
-| `Handle`    | `DocHandle`, a handle with Automerge's shape over one proxy document                        |
-| `Draft`     | The draft a `change()` callback writes through: behaves as Automerge's does and records ops |
-| `Cursors`   | Automerge cursors over a text, resolved by the host once and then moved locally             |
-| `Op`        | Ops on plain JSON values (put, del, insert, remove, splice), applying and inverting them    |
-| `Transform` | Rebases one op list over another, so a client and the host converge in either order         |
-| `Sync`      | The client's confirmed and visible state, and the host's sequencer that orders batches      |
-| `Contract`  | Schemas of the events and requests that cross between client and host                       |
-| `Wire`      | Tags the values JSON cannot carry (RawString, bytes, dates) and restores them               |
+| Subpath        | What it is                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `Repo`         | `ProxyRepo`, the client's repo of proxy documents, and `Host`, the host as the repo sees it |
+| `Handle`       | `DocHandle`, a handle with Automerge's shape over one proxy document                        |
+| `Draft`        | The draft a `change()` callback writes through: behaves as Automerge's does and records ops |
+| `Cursors`      | Automerge cursors over a text, resolved by the host once and then moved locally             |
+| `Op`           | Ops on plain JSON values (put, del, insert, remove, splice), applying and inverting them    |
+| `Transform`    | Rebases one op list over another, so a client and the host converge in either order         |
+| `Sync`         | The client's confirmed and visible state, and the host's sequencer that orders batches      |
+| `Contract`     | Schemas of the events and requests that cross between client and host                       |
+| `Wire`         | Tags the values JSON cannot carry (RawString, bytes, dates, NaN and the like) and restores them |
+| `Host`         | `DocumentHost`, which implements `Repo.Host` over a `Host.Store` of Automerge documents      |
+| `Sequencing`   | `DocumentSequencer`, which orders every write to one Automerge document into entries         |
+| `AutomergeOps` | Ops to and from Automerge: applying them in a change, diffing heads into ops                |
 
-`@dxos/automerge-proxy/host` is the other side, and needs Automerge at runtime: `Host.DocumentHost`
-implements `Repo.Host` over a `Host.Store` of Automerge documents, with `Sequencing` and
-`AutomergeOps` beneath it.
+The first nine need nothing at runtime, so a client that imports only them loads no Automerge. `Host`,
+`Sequencing` and `AutomergeOps` are the host's side and import Automerge.
 
 `@dxos/automerge-proxy/testing` has what the package's property tests use: a seeded random generator,
 random ops, a `MemoryStore` of Automerge documents, and a `Transport` that carries calls through JSON

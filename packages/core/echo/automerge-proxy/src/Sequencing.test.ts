@@ -5,11 +5,11 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import * as Op from '../Op.ts';
-import * as Sync from '../Sync.ts';
-import { createRandom, initialDocument, randomOp } from '../testing/index.ts';
 import * as AutomergeOps from './AutomergeOps.ts';
+import * as Op from './Op.ts';
 import * as Sequencing from './Sequencing.ts';
+import * as Sync from './Sync.ts';
+import { createRandom, initialDocument, randomOp } from './testing/index.ts';
 
 /** Actor ids fixed per seed, so a failing seed replays exactly: Automerge orders concurrent inserts by actor. */
 const createActors = (seed: number) => {

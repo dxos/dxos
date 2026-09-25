@@ -5,8 +5,8 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Op } from '@dxos/automerge-proxy';
-import { AutomergeOps } from '@dxos/automerge-proxy/host';
+import * as AutomergeOps from '@dxos/automerge-proxy/AutomergeOps';
+import * as Op from '@dxos/automerge-proxy/Op';
 import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';

@@ -8,9 +8,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
+import * as AutomergeOps from './AutomergeOps.ts';
 import * as Draft from './Draft.ts';
 import * as Handle from './Handle.ts';
-import { AutomergeOps, Host } from './host/index.ts';
+import * as Host from './Host.ts';
 import * as Op from './Op.ts';
 import * as Repo from './Repo.ts';
 import { MemoryStore, type Random, Transport, createRandom, initialDocument, randomOp } from './testing/index.ts';

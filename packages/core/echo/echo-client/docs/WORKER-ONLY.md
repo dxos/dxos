@@ -250,16 +250,16 @@ export, migrations, change times for `meta.updatedAt`.
 
 ### Worker
 
-- **`Sequencing.DocumentSequencer`** (`@dxos/automerge-proxy/host`) orders every write to a
+- **`Sequencing.DocumentSequencer`** (`@dxos/automerge-proxy/Sequencing`) orders every write to a
   document into entries. Each tab batch is transformed over the entries its tab had not seen and
   written as one Automerge change, up to the first change that does not fit, with the batch id in
   the change message. Changes that arrive another way (network merges, replica clients) become
   entries through `A.diff`. After a restart, `recover` rebuilds the entries after a tab's confirmed
   heads from change metadata, so the tab recognizes its applied batch.
-- **`Host.DocumentHost`** (same entry) serializes work per document, saves before it sends, ignores
-  a batch it already applied, and sends `requesting` when a document is not stored. Once closed it
-  refuses new calls and stops queued work. `MirrorServiceImpl` in echo-host adapts it to RPC over
-  the worker's Automerge host, with the index as the documents' copies.
+- **`Host.DocumentHost`** (`@dxos/automerge-proxy/Host`) serializes work per document, saves before
+  it sends, ignores a batch it already applied, and sends `requesting` when a document is not
+  stored. Once closed it refuses new calls and stops queued work. `MirrorServiceImpl` in echo-host
+  adapts it to RPC over the worker's Automerge host, with the index as the documents' copies.
 
 ### Shared
 

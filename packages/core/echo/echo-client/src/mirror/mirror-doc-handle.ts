@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
 
-import { Handle } from '@dxos/automerge-proxy';
+import * as Handle from '@dxos/automerge-proxy/Handle';
 import { invariant } from '@dxos/invariant';
 
 import { type ClientDocHandle, type DiskSettlement } from '../automerge/client-handle.ts';
