@@ -7,11 +7,35 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Type } from '@dxos/echo';
+import { Collection, Format, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
+
+/**
+ * A task is named by its title, so the form holds its submit (button and Cmd/Ctrl+Enter alike) until
+ * there is one; the description is edited as markdown, as it is everywhere else a task is written.
+ * Rebuilt from the AST because an ECHO type's schema is a bare codec, with no `mapFields`.
+ */
+export const TaskInputSchema = Schema.Struct({
+  ...Object.fromEntries(
+    SchemaAST.getPropertySignatures(Type.getSchema(Task.Task).ast)
+      .filter((property) => property.name !== 'id')
+      .map((property) => [property.name, Schema.make<Schema.Top>(property.type)]),
+  ),
+  title: Schema.String.pipe(
+    Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Title cannot be empty.')),
+    Schema.annotate({ title: 'Title' }),
+  ),
+  description: Schema.optional(
+    Schema.String.pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+      Schema.annotate({ title: 'Description' }),
+    ),
+  ),
+});
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -84,7 +108,7 @@ export default Capability.makeModule(
         },
         {
           id: Type.getTypename(Task.Task),
-          inputSchema: Type.getSchema(Task.Task),
+          inputSchema: TaskInputSchema,
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Task.make(props);
