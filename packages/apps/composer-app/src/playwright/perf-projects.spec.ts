@@ -74,6 +74,26 @@ const documentPath = (spaceId: string, documentId: string): string =>
  */
 const documentEditor = (page: Page): Locator => page.getByTestId('composer.markdownRoot').getByRole('textbox');
 
+/** The companion variant `plugin-assistant` registers its chat under (`ASSISTANT_COMPANION_VARIANT`). */
+const ASSISTANT_COMPANION = 'assistant-chat';
+
+/** The editable prompt inside the companion chat, as opposed to the one the space home renders. */
+const assistantPrompt = (page: Page): Locator =>
+  page.getByTestId('deck.companion').getByTestId('assistant.prompt').locator('.cm-content');
+
+/**
+ * The closing line of the scripted conversation (`src/testing/scripted-model.ts`), which the model
+ * emits only after its twentieth database query has returned.
+ */
+const ASSISTANT_DONE = /ran 20 database queries/;
+
+/**
+ * Records the page as `video/*.webm` in the run's artifact directory (`DX_PERF_VIDEO=1`), for a
+ * reviewer who wants to watch the flow rather than read its rows. Off by default: the encoder runs
+ * on the same cores the stages are measured on.
+ */
+const VIDEO = process.env.DX_PERF_VIDEO === '1';
+
 /**
  * Idle allowed after ready before the first measured stage.
  *
@@ -207,7 +227,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const { browser, browserCdp, debugPort } = instrumented;
 
   try {
-    const context = await browser.newContext();
+    const context = await browser.newContext(
+      VIDEO ? { recordVideo: { dir: path.join(artifactDir, 'video'), size: { width: 1280, height: 720 } } } : {},
+    );
     const page = await context.newPage();
     const network = trackNetwork(page);
 
@@ -216,7 +238,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
-      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}`,
+      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}${VIDEO ? '+video' : ''}`,
       ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
     };
     const snapshotDir = path.join(artifactDir, 'snapshots');
@@ -251,7 +273,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
 
     await runner.stage('boot', async () => {
-      await page.goto(`${BASE_URL}/?profiler=1`, { timeout: 120_000 });
+      // `model=scripted` so the assistant stages run a fixed agent loop offline: a live model's
+      // latency and variable tool use would be most of what those stages measured.
+      await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
       await waitForReady(page);
     });
 
@@ -445,6 +469,29 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       });
       await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
       await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
+    });
+
+    // The assistant stages: a project accumulates a conversation as well as tasks and documents,
+    // and an agent turn is a third engine — streaming render, tool dispatch and database queries
+    // interleaved — so it is measured on the same journey rather than in isolation.
+    await runner.stage('open-assistant', async () => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.updateCompanion', {
+        subject: `${projectPath(fixture.spaceId, fixture.projectIds[0])}/~${ASSISTANT_COMPANION}`,
+      });
+      await assistantPrompt(page).waitFor({ timeout: budget });
+    });
+
+    await runner.stage('assistant-turns', async () => {
+      const prompt = assistantPrompt(page);
+      await prompt.click({ timeout: budget });
+      await prompt.fill('Survey this project.');
+      await expect(prompt).toHaveText('Survey this project.');
+      await prompt.press('Enter');
+      await page
+        .getByTestId('deck.companion')
+        .getByTestId('assistant.thread')
+        .getByText(ASSISTANT_DONE)
+        .waitFor({ timeout: budget });
     });
 
     const rows = runner.rows;

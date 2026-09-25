@@ -45,6 +45,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
+import { PARAM_MODEL } from './testing/scripted-assistant.ts';
 import { initAutomergeWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
@@ -587,6 +588,7 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
+    scriptedModel: url.searchParams.get(PARAM_MODEL) === 'scripted',
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

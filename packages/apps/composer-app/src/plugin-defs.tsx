@@ -97,6 +97,7 @@ import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
+import { scriptedAiServiceMiddleware } from './testing/scripted-assistant.ts';
 
 export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
@@ -234,7 +235,10 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make({ codeModeTurnProducer }),
+    AssistantPlugin.make({
+      codeModeTurnProducer,
+      ...(config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : {}),
+    }),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),
