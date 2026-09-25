@@ -79,9 +79,6 @@ shape and wants its own step (below). If that step is deferred, the same gutter 
 without the form context by wrapping the viewport in `Column.Root gutter='md'` directly — the
 mechanism is the same, only the vocabulary is thinner.
 
-Everything at content level — label, field, card grid — starts at the content track. Only a glyph
-hangs in the gutter, which is what a gutter is for.
-
 **Rows with a leading glyph are `Column.Row`.** A history entry and a question are the same shape: a
 glyph, then a body. Each renders its own row and places its own parts:
 
@@ -138,6 +135,35 @@ Option 2 is the one that removes a reason for the ad-hoc grid rather than reloca
 splits cleanly: the toolbar's contents are contributed by the article, so the list's own edit strip
 keeps its header unchanged, where the 2rem track belongs to the list.
 
+**The row's task menu goes with it.** `TaskList.ItemActions` renders whatever plugins contributed
+for a task — one action as a bare button, several behind a `…` — in the row's trailing gutter, where
+it is revealed on hover and sized to a rail item. An article whose whole subject is that one task
+has no reason to hide its actions behind a hover on a strip inside itself: the same items are the
+pane's actions, and they belong in `Panel.Toolbar` beside the status and the estimate.
+
+The article already has everything needed to build them — `useTaskActions()` resolves the
+contributions and `TaskSetArticle` shows the pattern of appending Delete — so the toolbar reads:
+
+```tsx
+const contributed = useTaskActions();
+const menu = useMenuActions(() => MenuBuilder.make().root(…).items(contributed(task), …).build());
+
+<Panel.Toolbar>
+  <Menu.Root {...menu} attendableId={attendableId}>
+    <Menu.Toolbar />
+  </Menu.Root>
+</Panel.Toolbar>;
+```
+
+`useMenuActions` + `Menu.Root` rather than bare `Toolbar.IconButton`s, and `attendableId` threaded
+through, because that is how a toolbar is built here — and it is what lets a contributed action
+raise a dialog against the right plank.
+
+What the row keeps is the row's: `TaskList.ItemActions` stays as it is for the list, since a list of
+thirty tasks does need a per-row affordance. The article simply stops relying on it, which is the
+same split as the header — one component, two hosts, each rendering the chrome its own shape calls
+for.
+
 ## Migration
 
 Ordered so each step is shippable on its own, and so the pane is never worse than it is now.
@@ -147,8 +173,8 @@ Ordered so each step is shippable on its own, and so the pane is never worse tha
 3. `TaskList.Edit` takes `Column.Root subgrid` in place of `grid`, and keeps only the header row's
    explicit placement.
 4. `TaskArticle` swaps its `ScrollArea.Root` for `Form.Viewport scroll` under a `Form.Root`, moves
-   the status control and the trailing controls into `Panel.Toolbar` (option 2), and drops the
-   ad-hoc `p-2` / `dx-document` padding — the gutter is the viewport's.
+   the status control, the trailing controls and the contributed task menu into `Panel.Toolbar`
+   (option 2), and drops the ad-hoc `p-2` / `dx-document` padding — the gutter is the viewport's.
 5. The article's header and description become a `Form.Layout` template over `Task`, at which point
    the article no longer mounts `TaskList.Edit` and the list keeps it to itself. This is the step
    that decides whether commit-on-blur or the form's `autoSave` owns the write; until it lands,
