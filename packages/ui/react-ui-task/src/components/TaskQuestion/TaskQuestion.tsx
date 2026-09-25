@@ -18,6 +18,11 @@ export type TaskQuestionProps = ThemedClassName<{
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
   message?: string;
+  /**
+   * One line for the question and one for its answer, with no context or controls — for a list row,
+   * where the full prompt would crowd out the tasks; the host's detail surface renders it in full.
+   */
+  compact?: boolean;
 }>;
 
 /**
@@ -41,6 +46,7 @@ export const TaskQuestion = ({
   onAnswer,
   busy,
   message,
+  compact,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
@@ -64,6 +70,34 @@ export const TaskQuestion = ({
     },
     [submit, text],
   );
+
+  if (compact) {
+    // No event stopping: nothing here takes input, so a click falls through to the row and selects
+    // the task — which is how the reader reaches the full question.
+    return (
+      <div
+        role='group'
+        aria-label={question.text}
+        className={mx('flex flex-col gap-1 text-sm', classNames)}
+        data-testid='task-question'
+      >
+        <div className='flex items-center gap-2 min-w-0'>
+          <Icon icon='ph--question--regular' classNames='shrink-0 text-amber-text' />
+          <span className='font-medium truncate' title={question.text}>
+            {question.text}
+          </span>
+        </div>
+        {answer && (
+          <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
+            <Icon icon='ph--check-circle--regular' classNames='shrink-0 text-success-text' />
+            <span className='truncate' title={answer.answer}>
+              {answer.answer}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -713,7 +713,10 @@ export const WithQuestions: Story = {
   },
 };
 
-/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
+/**
+ * A row shows its questions one line each; selecting it opens the full question in the edit pane,
+ * where picking an option or typing records the answer, which then shows under the row's question.
+ */
 export const TestAnswerQuestion: Story = {
   args: {
     seed: seedQuestions,
@@ -722,7 +725,23 @@ export const TestAnswerQuestion: Story = {
   play: async ({ canvasElement }) => {
     const answers = () =>
       [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const selectRow = async (title: string) => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]')].find(
+        (element) => element.textContent === title,
+      );
+      if (!row) {
+        throw new Error(`no row titled ${title}`);
+      }
+      await userEvent.click(row);
+    };
 
+    // The rows carry no controls: answering belongs to the pane.
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="task-question"]').length).toBeGreaterThan(0);
+    });
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    await selectRow('Draft the refund reply');
     await waitFor(async () => {
       await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
     });
@@ -735,7 +754,11 @@ export const TestAnswerQuestion: Story = {
       await expect(answers()).toContain('30 days');
     });
 
-    // Typing in the free-form field must not reach the row: its keys would move the selection.
+    // Typing in the free-form field must not reach the list: its keys would move the selection.
+    await selectRow('Schedule the launch post');
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).not.toBeNull();
+    });
     const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
     if (!input) {
       throw new Error('the open question has no answer field');
@@ -744,7 +767,7 @@ export const TestAnswerQuestion: Story = {
     await waitFor(async () => {
       await expect(answers()).toContain('Tuesday');
     });
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
+    await expect(canvasElement.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
   },
 };
 
