@@ -436,7 +436,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         </Panel.Toolbar>
         <Panel.Content classNames='flex flex-col'>
           <Toolbar.Root>
-            <span className='dx-tag'>
+            <span className='dx-tag' data-hue='neutral'>
               {pullRequest.owner}/{pullRequest.repo}#{pullRequest.number}
             </span>
             <span className='truncate'>{pullRequest.title}</span>
@@ -464,6 +464,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             anchorRef={lineAnchorRef}
             target={lineTarget?.target}
           />
+
           {/* Rendered by hand rather than through `Tabs.Panel`, so the walkthrough editor's element exists
             only while its tab is shown and the editor is built against a visible, measured element. */}
           {tab === 'overview' ? (
