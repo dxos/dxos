@@ -153,11 +153,17 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
 When a task is stuck on a decision only the user can make, ask it on the task rather than
 guessing: an assumption the ledger then carries as fact costs more than the round trip.
 
-- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, spaceId }`
+- **Ask only what you genuinely cannot decide.** If the answer is in the prompt, the space or the
+  code, use it and carry on: a question costs the user a round trip, and the task stays `blocked`
+  until they answer.
+- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, remoteSession?, spaceId }`
   files the question in the task's `history` and sets the task to `blocked`. Put what you are
   stuck on in `context`, offer the likely answers in `options` (`{ title, description? }` — the
-  user may still type their own), and pass your own actor as `actor` (see "Assignee" above). It
-  returns the question's `questionId`.
+  user may still type their own, so never phrase the list as exhaustive, and never pick an answer
+  yourself), and pass your own actor as `actor` (see "Assignee" above). A coding-agent session
+  passes `remoteSession: { "sessionId": "<the harness session id>" }` instead: the blocked task is
+  assigned to that session and the question is recorded as asked by it, as `tasks-update` does.
+  It returns the question's `questionId`.
 - One open question per task: a second call while the first is unanswered is refused. Ask
   everything you need in one question.
 - The user answers in Composer, on the task. Nothing wakes you: read the answer back with

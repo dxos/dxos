@@ -12,10 +12,11 @@ import { Task } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
+import { assignToSession } from './session-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOperation.AskQuestion.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ task: taskRef, question: text, context, options, actor }) {
+    Effect.fnUntraced(function* ({ task: taskRef, question: text, context, options, actor, remoteSession }) {
       const task = yield* Database.load(taskRef);
 
       // A retried call must not file a second question: the user would have two to answer where the
@@ -31,15 +32,22 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The question is empty.' }));
       }
 
+      // After the refusals, so a refused call leaves the task's assignee as it found it.
+      let asker = actor;
+      if (remoteSession) {
+        asker = yield* assignToSession(remoteSession, actor);
+        Task.update(task, { assignee: asker }, { actor: asker });
+      }
+
       const question = Task.ask(task, {
         text,
         ...(context ? { context } : {}),
         ...(options && options.length > 0 ? { options } : {}),
-        ...(actor ? { actor } : {}),
+        ...(asker ? { actor: asker } : {}),
       });
 
       const previousStatus = task.status;
-      Task.setStatus(task, 'blocked', actor ? { actor } : {});
+      Task.setStatus(task, 'blocked', asker ? { actor: asker } : {});
       if (task.status !== undefined && task.status !== previousStatus) {
         yield* Trace.write(Trace.TaskStatusChanged, {
           taskId: task.id,
