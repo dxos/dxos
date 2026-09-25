@@ -6,10 +6,11 @@ import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Op } from '@dxos/automerge-proxy';
+import { createRandom } from '@dxos/automerge-proxy/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
 import { toMirror } from '@dxos/echo-host';
-import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -83,7 +84,7 @@ describe('mirror mode', () => {
     const handle = getObjectCore(task).docHandle;
     invariant(handle?.documentId, 'object has no document');
     const host = await hostValue(handle.documentId);
-    expect(Mirror.mirrorEquals(host, handle.doc())).toBe(true);
+    expect(Op.equals(host, handle.doc())).toBe(true);
   });
 
   test('concurrent text edits from two tabs merge', async () => {
@@ -195,9 +196,9 @@ describe('mirror mode', () => {
     }
     // The new worker's Automerge copy holds each edit once.
     const host = await hostValue(documentId);
-    const data = Mirror.getAt(host, ['objects', task.id, 'data']);
+    const data = Op.getAt(host, ['objects', task.id, 'data']);
     expect(data).toEqual(expect.objectContaining({ title: 'before, after' }));
-    expect(Mirror.getAt(host, ['objects', task.id, 'data', 'log'])).toHaveLength(3);
+    expect(Op.getAt(host, ['objects', task.id, 'data', 'log'])).toHaveLength(3);
     const handle = getObjectCore(task).docHandle;
     invariant(handle instanceof MirrorDocHandle, 'not a mirror document');
     expect(handle.hasPending).toBe(false);
@@ -242,7 +243,7 @@ describe('mirror mode', () => {
       [note, getObjectCore(note).docHandle?.documentId],
     ] as const) {
       invariant(id, 'object has no document');
-      expect(Mirror.getAt(await hostValue(id), ['objects', obj.id, 'data', 'log'])).toEqual(['one', 'two', 'three']);
+      expect(Op.getAt(await hostValue(id), ['objects', obj.id, 'data', 'log'])).toEqual(['one', 'two', 'three']);
     }
   });
 
@@ -252,7 +253,7 @@ describe('mirror mode', () => {
     for (let seed = 1; seed <= seeds; seed++) {
       // A peer per seed, so a restart reconnects only this seed's tabs.
       peer = await builder.createPeer();
-      const random = MirrorTesting.createRandom(seed);
+      const random = createRandom(seed);
       const tabs = await openTabs(3);
       const task = tabs[0].add(Obj.make(TestSchema.Expando, { log: [], text: '' }));
       await tabs[0].flush();
@@ -301,7 +302,7 @@ describe('mirror mode', () => {
       }
       const documentId = getObjectCore(task).docHandle?.documentId;
       invariant(documentId, 'object has no document');
-      expect(Mirror.getAt(await hostValue(documentId), ['objects', task.id, 'data', 'text'])).toBe(objects[0].text);
+      expect(Op.getAt(await hostValue(documentId), ['objects', task.id, 'data', 'text'])).toBe(objects[0].text);
       totals.edits += expected.length;
       await peer.close();
     }

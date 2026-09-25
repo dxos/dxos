@@ -38,6 +38,7 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/blob": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",

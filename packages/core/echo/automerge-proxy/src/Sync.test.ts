@@ -4,29 +4,29 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Op, freezeValue } from './ops.ts';
-import { type Entry, MirrorClientState, MirrorSequencer } from './protocol.ts';
+import * as Op from './Op.ts';
+import * as Sync from './Sync.ts';
 
 /** An op no document fits, so the worker refuses the change that holds it. */
-const POISON: Op = { type: 'put', path: ['missing', 'key'], value: 1 };
+const POISON: Op.Any = { type: 'put', path: ['missing', 'key'], value: 1 };
 
 /** A tab with one batch in flight, and the sequencer that ordered its base. */
 const setup = (value: unknown) => {
-  const tab = new MirrorClientState('tab', freezeValue(value), 0, []);
-  const sequencer = new MirrorSequencer();
+  const tab = new Sync.ClientState('tab', Op.freeze(value), 0, []);
+  const sequencer = new Sync.Sequencer();
   return { tab, sequencer };
 };
 
 /** The entry a worker appends when it wrote the changes before `refusedAt` and refused that one. */
-const refusal = (sequencer: MirrorSequencer, batchId: string, ops: Op[], refusedAt: number): Entry =>
+const refusal = (sequencer: Sync.Sequencer, batchId: string, ops: Op.Any[], refusedAt: number): Sync.Entry =>
   sequencer.append({ ops, heads: [], origin: { clientId: 'tab', batchId, refusedAt } });
 
-describe('MirrorClientState refusals', () => {
+describe('Sync.ClientState refusals', () => {
   test('the worker refusing the middle of three changes takes back only that one', () => {
     const { tab, sequencer } = setup({ a: 'x', b: 'x', c: 'x' });
-    const first: Op[] = [{ type: 'put', path: ['a'], value: 'A' }];
-    const middle: Op[] = [{ type: 'put', path: ['b'], value: 'B' }, POISON];
-    const last: Op[] = [{ type: 'put', path: ['c'], value: 'C' }];
+    const first: Op.Any[] = [{ type: 'put', path: ['a'], value: 'A' }];
+    const middle: Op.Any[] = [{ type: 'put', path: ['b'], value: 'B' }, POISON];
+    const last: Op.Any[] = [{ type: 'put', path: ['c'], value: 'C' }];
     tab.applyLocal(first);
     tab.applyLocal(middle);
     tab.applyLocal(last);
@@ -81,8 +81,8 @@ describe('MirrorClientState refusals', () => {
 
   test('a change that only made sense on top of the refused one is refused with it', () => {
     const { tab, sequencer } = setup({ items: [] });
-    const insert: Op[] = [{ type: 'insert', path: ['items', 0], values: [{ title: 'new' }] }, POISON];
-    const edit: Op[] = [{ type: 'splice', path: ['items', 0, 'title'], index: 3, remove: 0, insert: '!' }];
+    const insert: Op.Any[] = [{ type: 'insert', path: ['items', 0], values: [{ title: 'new' }] }, POISON];
+    const edit: Op.Any[] = [{ type: 'splice', path: ['items', 0, 'title'], index: 3, remove: 0, insert: '!' }];
     tab.applyLocal(insert);
     tab.applyLocal(edit);
     tab.takeBatch('batch');
@@ -95,8 +95,8 @@ describe('MirrorClientState refusals', () => {
 
   test('changes other writers emptied still count toward the refused index', () => {
     const { tab, sequencer } = setup({ map: { key: { title: 'x' } }, other: 'x' });
-    const emptied: Op[] = [{ type: 'put', path: ['map', 'key', 'title'], value: 'y' }];
-    const refused: Op[] = [{ type: 'put', path: ['other', 'deep'], value: 1 }];
+    const emptied: Op.Any[] = [{ type: 'put', path: ['map', 'key', 'title'], value: 'y' }];
+    const refused: Op.Any[] = [{ type: 'put', path: ['other', 'deep'], value: 1 }];
     tab.applyLocal(emptied);
     tab.applyLocal(refused);
     tab.takeBatch('batch');
@@ -116,7 +116,7 @@ describe('MirrorClientState refusals', () => {
     tab.applyLocal([{ type: 'put', path: ['c'], value: 'C' }]);
     tab.takeBatch('batch');
 
-    const { refused } = tab.reset(freezeValue({ a: 'A', b: 'x', c: 'x', d: 'remote' }), 7, ['h7'], true, 1);
+    const { refused } = tab.reset(Op.freeze({ a: 'A', b: 'x', c: 'x', d: 'remote' }), 7, ['h7'], true, 1);
     expect(refused).toEqual([[{ type: 'put', path: ['b'], value: 'B' }, POISON]]);
     expect(tab.current).toEqual({ a: 'A', b: 'x', c: 'C', d: 'remote' });
     expect(tab.version).toBe(7);
@@ -125,13 +125,13 @@ describe('MirrorClientState refusals', () => {
 
   test('a snapshot keeps a change that does not fit it, for the worker to judge', () => {
     const { tab } = setup({ list: ['a', 'b', 'c'] });
-    const change: Op[] = [
+    const change: Op.Any[] = [
       { type: 'put', path: ['title'], value: 'shown' },
       { type: 'remove', path: ['list', 2], count: 1 },
     ];
     tab.applyLocal(change);
 
-    const { refused } = tab.reset(freezeValue({ list: ['a'] }), 3, ['h3']);
+    const { refused } = tab.reset(Op.freeze({ list: ['a'] }), 3, ['h3']);
     expect(refused).toEqual([]);
     expect(tab.current).toEqual({ list: ['a'], title: 'shown' });
     expect(tab.takeBatch('next')?.changes).toEqual([change]);

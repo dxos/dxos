@@ -4,16 +4,16 @@
 
 import type { Patch } from '@automerge/automerge';
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Op } from '@dxos/automerge-proxy';
 
 import { type ChangeEvent } from '../automerge/client-handle.ts';
 import { type MirrorDocHandle } from './mirror-doc-handle.ts';
 
 export type CursorService = {
   /** Positions of Automerge cursors in the text at `path`, both as of `heads`. */
-  resolve: (path: Mirror.Path, heads: string[], cursors: string[]) => Promise<(number | null)[]>;
+  resolve: (path: Op.Path, heads: string[], cursors: string[]) => Promise<(number | null)[]>;
   /** Automerge cursors for positions in the text at `path`, both as of `heads`. */
-  create: (path: Mirror.Path, heads: string[], positions: number[]) => Promise<(string | null)[]>;
+  create: (path: Op.Path, heads: string[], positions: number[]) => Promise<(string | null)[]>;
 };
 
 /**
@@ -27,7 +27,7 @@ export type CursorService = {
  */
 export class MirrorCursors {
   readonly #positions = new Map<string, number | null>();
-  #path: Mirror.Path | null;
+  #path: Op.Path | null;
   readonly #onChange = ({ patches }: ChangeEvent<unknown>) => {
     const { path, map } = followPatches(this.#path, patches);
     this.#path = path;
@@ -38,7 +38,7 @@ export class MirrorCursors {
 
   constructor(
     private readonly _handle: MirrorDocHandle<unknown>,
-    path: Mirror.Path,
+    path: Op.Path,
     private readonly _service: CursorService,
   ) {
     this.#path = path;
@@ -80,7 +80,7 @@ export class MirrorCursors {
         }
         const { map } = followOps(confirmedPath, pending);
         let position: number | null = map(confirmed);
-        let current: Mirror.Path | null = path;
+        let current: Op.Path | null = path;
         for (const patches of later) {
           const followed = followPatches(current, patches);
           current = followed.path;
@@ -124,7 +124,7 @@ export class MirrorCursors {
       } finally {
         this._handle.off('change', record);
       }
-      let current: Mirror.Path | null = path;
+      let current: Op.Path | null = path;
       for (const patches of later) {
         const followed = followPatches(current, patches);
         current = followed.path;
@@ -141,7 +141,7 @@ const isPrefix = (prefix: readonly (string | number)[], path: readonly (string |
   prefix.length <= path.length && prefix.every((key, index) => String(key) === String(path[index]));
 
 /** Moves `path` through inserting `count` elements at `index` of the list at `listPath`. */
-const shiftForInsert = (path: Mirror.Path, listPath: readonly (string | number)[], index: number, count: number) => {
+const shiftForInsert = (path: Op.Path, listPath: readonly (string | number)[], index: number, count: number) => {
   if (listPath.length >= path.length || !isPrefix(listPath, path)) {
     return path;
   }
@@ -153,11 +153,11 @@ const shiftForInsert = (path: Mirror.Path, listPath: readonly (string | number)[
 
 /** Moves `path` through removing `count` elements at `index` of the list at `listPath`; null if removed. */
 const shiftForRemove = (
-  path: Mirror.Path,
+  path: Op.Path,
   listPath: readonly (string | number)[],
   index: number,
   count: number,
-): Mirror.Path | null => {
+): Op.Path | null => {
   if (listPath.length >= path.length || !isPrefix(listPath, path)) {
     return path;
   }
@@ -170,14 +170,14 @@ const shiftForRemove = (
     : [...path.slice(0, listPath.length), element - count, ...path.slice(listPath.length + 1)];
 };
 
-type Followed = { path: Mirror.Path | null; map: (position: number) => number | null };
+type Followed = { path: Op.Path | null; map: (position: number) => number | null };
 
 /**
  * Follows a text through Automerge-shaped patches: its path through list edits above it, and a
  * position through edits to it. Everything maps to null once the text or a container above it is
  * replaced or removed, including the root put of a rebuild.
  */
-const followPatches = (start: Mirror.Path | null, patches: readonly Patch[]): Followed => {
+const followPatches = (start: Op.Path | null, patches: readonly Patch[]): Followed => {
   let path = start;
   const steps: ((position: number) => number)[] = [];
   for (const patch of patches) {
@@ -210,8 +210,8 @@ const followPatches = (start: Mirror.Path | null, patches: readonly Patch[]): Fo
 };
 
 /** Follows a text from the confirmed state through unconfirmed ops, as {@link followPatches} does. */
-const followOps = (start: Mirror.Path, ops: readonly Mirror.Op[]): Followed => {
-  let path: Mirror.Path | null = start;
+const followOps = (start: Op.Path, ops: readonly Op.Any[]): Followed => {
+  let path: Op.Path | null = start;
   const steps: ((position: number) => number)[] = [];
   for (const op of ops) {
     if (!path) {
@@ -242,8 +242,8 @@ const followOps = (start: Mirror.Path, ops: readonly Mirror.Op[]): Followed => {
 };
 
 /** The text's path in the confirmed state, given its path after unconfirmed ops; null if they created it. */
-const unfollowOps = (path: Mirror.Path, ops: readonly Mirror.Op[]): Mirror.Path | null => {
-  let current: Mirror.Path | null = path;
+const unfollowOps = (path: Op.Path, ops: readonly Op.Any[]): Op.Path | null => {
+  let current: Op.Path | null = path;
   for (const op of [...ops].reverse()) {
     if (!current) {
       break;
@@ -266,14 +266,10 @@ const unfollowOps = (path: Mirror.Path, ops: readonly Mirror.Op[]): Mirror.Path 
  * Moves a position in the visible text back through unconfirmed ops into the confirmed text, whose
  * path is `confirmedPath`. Undefined when it lies in text only this tab has seen.
  */
-const mapBackThroughOps = (
-  position: number,
-  confirmedPath: Mirror.Path,
-  ops: readonly Mirror.Op[],
-): number | undefined => {
+const mapBackThroughOps = (position: number, confirmedPath: Op.Path, ops: readonly Op.Any[]): number | undefined => {
   // Each splice is matched against the text's path at the point the op was made.
-  const pathAt: (Mirror.Path | null)[] = [];
-  let path: Mirror.Path | null = confirmedPath;
+  const pathAt: (Op.Path | null)[] = [];
+  let path: Op.Path | null = confirmedPath;
   for (const op of ops) {
     pathAt.push(path);
     if (path) {

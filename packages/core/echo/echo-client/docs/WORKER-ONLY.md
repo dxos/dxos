@@ -113,7 +113,7 @@ Values are heap plus wasm in MB.
   less of its wasm memory than Node, so a browser may come in lower.
 - **Load order moves the replica figure.** Loading the three documents before the tasks gives 12.8
   and 55.5 MB instead of 16.4 and 71.8.
-- **The mirror side is complete.** With the real `MirrorClientState` and a tab mid-typing, the mirror
+- **The mirror side is complete.** With the real `Sync.ClientState` and a tab mid-typing, the mirror
   costs 0.56 to 0.69 MB.
 
 Not counted above: the compiled code of the Automerge and Subduction modules, which a page heap
@@ -261,10 +261,12 @@ export, migrations, change times for `meta.updatedAt`.
 
 ### Shared
 
-`Mirror` in echo-protocol: the op model (`put`, `del`, `insert`, `remove`, `splice` addressed by
-path, grouped into one `Change` per `change()` call), `applyOps`, `invertOps`, `transformOp`,
-`transformLists` and `transformChanges`, `MirrorClientState` (the tab's confirmed state, one batch in
-flight and a buffer) and `MirrorSequencer`. Text splices transform as in ot.js,
+`@dxos/automerge-proxy` (see its [design](../../automerge-proxy/docs/DESIGN.md)): the op model in
+`Op` (`put`, `del`, `insert`, `remove`, `splice` addressed by path, grouped into one `Op.Change` per
+`change()` call) with `Op.apply` and `Op.invert`; `Transform.pair`, `Transform.lists` and
+`Transform.changes`; `Sync.ClientState` (the tab's confirmed state, one batch in flight and a
+buffer) and `Sync.Sequencer`; and the `Contract` schemas `MirrorService` carries. Text splices
+transform as in ot.js,
 the operational-transformation library CodeMirror's collaboration model follows. Map and list ops
 transform by path, as in ShareDB's json0 type.
 
@@ -317,7 +319,7 @@ value, symbols and meta included, and keep the identity of unchanged items; `Obj
 ## Reading objects from the index
 
 The worker's SQLite index already holds every object's JSON. A mirror tab can ask for an object's
-document in `indexed` mode, and the worker answers from the index without loading the Automerge
+document in `copy` mode, and the worker answers from the index without loading the Automerge
 document. The tab's first write to the document switches it to live. The tab resubscribes from the
 heads the index copy was read at, the worker loads the document, and its recovery path sends what
 changed since those heads. That rebases the write the way a restart does. `setMirrorIndexedReads`,
@@ -381,8 +383,8 @@ Four changes made that work beyond the Node tests:
 1. `MirrorService` is registered with the worker's services, and `Client` passes it to ECHO under
    the `echoMirror` option.
 2. The worker transport encodes every `Schema.Unknown` as strict JSON and fails on a RawString,
-   bytes or a date. Mirror values now cross it with those leaves tagged (`Mirror.eventToWire`,
-   `Mirror.changesToWire` and their inverses).
+   bytes or a date. Mirror values now cross it with those leaves tagged (`Wire.encodeEvent`,
+   `Wire.encodeChanges` and their inverses).
 3. The index copy lives in snapshot columns rather than in the snapshot JSON, which SQL query
    results now carry.
 4. The same switch sets `runtime.client.queryExecutor: SQL` for the worker.
@@ -529,8 +531,8 @@ The proposal makes `DataService` proxy-first and moves the byte protocol out of 
 | `QueryService`         | Results carry the index copies of the documents they return, so a list renders from one round trip and its handles follow without another                                                        | Nothing                                |
 | `MirrorService`        | Removed; its methods live in `DataService`                                                                                                                                                       | Everything                             |
 
-The service payloads are the proxy package's contract types, and ECHO's RPC schema mirrors them
-with a type-level test keeping the two in step.
+The service payloads are the proxy package's `Contract` schemas. `MirrorService` already builds its
+RPCs from them, so the RPC schema cannot drift from the package.
 
 Before the proxy becomes the only way the ECHO client works, each of these has to hold:
 

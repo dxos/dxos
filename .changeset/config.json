@@ -22,6 +22,7 @@
       "@dxos/assistant-evals",
       "@dxos/assistant-toolkit",
       "@dxos/async",
+      "@dxos/automerge-proxy",
       "@dxos/av",
       "@dxos/beast",
       "@dxos/blade-runner",

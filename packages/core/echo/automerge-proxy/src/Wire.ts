@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MirrorService } from '@dxos/protocols/rpc';
+// @import-as-namespace
+
+import type * as Contract from './Contract.ts';
 
 /** Own property Automerge sets on a RawString, whose class this package does not import. */
 const IMMUTABLE_STRING = Symbol.for('_am_immutableString');
@@ -16,18 +18,18 @@ const ESCAPE = '/escape';
 const TAGS = new Set([RAW_STRING, BYTES, DATE, ESCAPE]);
 
 /** Builds the values this package cannot construct without Automerge. */
-export type FromWireOptions = { rawString: (text: string) => unknown };
+export type DecodeOptions = { rawString: (text: string) => unknown };
 
 /**
  * Copies a mirror value with its RawString, byte and date leaves replaced by tags, since the worker
  * transport sends values as JSON. Returns the value itself when nothing in it needs a tag.
  */
-export const toWire = (value: unknown): unknown => {
+export const encode = (value: unknown): unknown => {
   if (typeof value !== 'object' || value === null) {
     return value;
   }
   if (Array.isArray(value)) {
-    const entries = value.map(toWire);
+    const entries = value.map(encode);
     return entries.some((entry, index) => entry !== value[index]) ? entries : value;
   }
   if (Object.hasOwn(value, IMMUTABLE_STRING)) {
@@ -42,7 +44,7 @@ export const toWire = (value: unknown): unknown => {
   let changed = false;
   const copy: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value)) {
-    copy[key] = toWire(entry);
+    copy[key] = encode(entry);
     changed ||= copy[key] !== entry;
   }
   if (looksTagged(copy)) {
@@ -51,13 +53,13 @@ export const toWire = (value: unknown): unknown => {
   return changed ? copy : value;
 };
 
-/** Restores the leaves {@link toWire} tagged. */
-export const fromWire = (value: unknown, options: FromWireOptions): unknown => {
+/** Restores the leaves {@link encode} tagged. */
+export const decode = (value: unknown, options: DecodeOptions): unknown => {
   if (typeof value !== 'object' || value === null) {
     return value;
   }
   if (Array.isArray(value)) {
-    return value.map((entry) => fromWire(entry, options));
+    return value.map((entry) => decode(entry, options));
   }
   const entries = Object.entries(value);
   if (entries.length === 1) {
@@ -78,8 +80,8 @@ export const fromWire = (value: unknown, options: FromWireOptions): unknown => {
   return restoreEntries(entries, options);
 };
 
-const restoreEntries = (entries: [string, unknown][], options: FromWireOptions): Record<string, unknown> =>
-  Object.fromEntries(entries.map(([key, entry]) => [key, fromWire(entry, options)]));
+const restoreEntries = (entries: [string, unknown][], options: DecodeOptions): Record<string, unknown> =>
+  Object.fromEntries(entries.map(([key, entry]) => [key, decode(entry, options)]));
 
 const looksTagged = (value: Record<string, unknown>): boolean => {
   const keys = Object.keys(value);
@@ -98,30 +100,24 @@ const toBase64 = (bytes: Uint8Array): string => {
 const fromBase64 = (text: string): Uint8Array => Uint8Array.from(atob(text), (char) => char.charCodeAt(0));
 
 /** Tags the values of an event bound for a tab; only its value-typed fields can hold Automerge leaves. */
-export const eventToWire = (event: MirrorService.DocumentEvent): MirrorService.DocumentEvent =>
-  mapEventValues(event, toWire);
+export const encodeEvent = (event: Contract.DocumentEvent): Contract.DocumentEvent => mapEventValues(event, encode);
 
 /** Restores the values of an event the worker sent. */
-export const eventFromWire = (
-  event: MirrorService.DocumentEvent,
-  options: FromWireOptions,
-): MirrorService.DocumentEvent => mapEventValues(event, (value) => fromWire(value, options));
+export const decodeEvent = (event: Contract.DocumentEvent, options: DecodeOptions): Contract.DocumentEvent =>
+  mapEventValues(event, (value) => decode(value, options));
 
 /** Tags the ops of a batch's changes bound for the worker. */
-export const changesToWire = (changes: readonly (readonly unknown[])[]): unknown[][] =>
-  changes.map((ops) => ops.map(toWire));
+export const encodeChanges = (changes: readonly (readonly unknown[])[]): unknown[][] =>
+  changes.map((ops) => ops.map(encode));
 
 /** Restores the ops of a batch's changes a tab sent. */
-export const changesFromWire = (changes: readonly (readonly unknown[])[], options: FromWireOptions): unknown[][] =>
-  changes.map((ops) => ops.map((op) => fromWire(op, options)));
+export const decodeChanges = (changes: readonly (readonly unknown[])[], options: DecodeOptions): unknown[][] =>
+  changes.map((ops) => ops.map((op) => decode(op, options)));
 
-const mapEventValues = (
-  event: MirrorService.DocumentEvent,
-  map: (value: unknown) => unknown,
-): MirrorService.DocumentEvent => {
+const mapEventValues = (event: Contract.DocumentEvent, map: (value: unknown) => unknown): Contract.DocumentEvent => {
   switch (event.type) {
     case 'snapshot':
-    case 'indexed':
+    case 'copy':
       return { ...event, value: map(event.value) };
     case 'entry':
       return { ...event, entry: { ...event.entry, ops: event.entry.ops.map(map) } };

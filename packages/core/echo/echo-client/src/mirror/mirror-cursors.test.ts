@@ -5,9 +5,8 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Contract, Op } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
-import { type MirrorService } from '@dxos/protocols/rpc';
 
 import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
@@ -20,7 +19,7 @@ const createHandle = (value: Record<string, unknown>) => {
   const handle = new MirrorDocHandle<Record<string, unknown>>({ clientId: 'tab', documentId, onDelete: () => {} });
   handle._receive({ type: 'snapshot', documentId, epoch: 'epoch', version: 0, heads: ['h0'], value });
   let version = 0;
-  const receive = (ops: Mirror.Op[], origin?: MirrorService.Entry['origin']) => {
+  const receive = (ops: Op.Any[], origin?: Contract.Entry['origin']) => {
     version++;
     handle._receive({
       type: 'entry',
@@ -33,10 +32,10 @@ const createHandle = (value: Record<string, unknown>) => {
 };
 
 /** A worker that knows the confirmed text and answers with positions for cursors named `c<position>`. */
-const createService = (requests: { path: Mirror.Path; positions: number[] }[] = []) => ({
-  resolve: async (_path: Mirror.Path, _heads: string[], cursors: string[]) =>
+const createService = (requests: { path: Op.Path; positions: number[] }[] = []) => ({
+  resolve: async (_path: Op.Path, _heads: string[], cursors: string[]) =>
     cursors.map((cursor) => Number(cursor.slice(1))),
-  create: async (path: Mirror.Path, _heads: string[], positions: number[]) => {
+  create: async (path: Op.Path, _heads: string[], positions: number[]) => {
     requests.push({ path, positions });
     return positions.map((position) => `c${position}`);
   },
@@ -48,7 +47,7 @@ describe('MirrorCursors', () => {
     handle.change((doc) => {
       recordSplice(doc, ['text'], 3, 0, 'XY');
     });
-    const requests: { path: Mirror.Path; positions: number[] }[] = [];
+    const requests: { path: Op.Path; positions: number[] }[] = [];
     const cursors = new MirrorCursors(handle, ['text'], createService(requests));
 
     // Position 4 is 'Y', which only this tab has seen, so creation waits for the confirmation.
@@ -62,7 +61,7 @@ describe('MirrorCursors', () => {
     });
     await created;
 
-    const text = Mirror.getAt(handle.doc(), ['text']);
+    const text = Op.getAt(handle.doc(), ['text']);
     expect(text).toBe('123abcXY');
     expect(requests[0].positions).toEqual([7]);
     expect(String(text)[requests[0].positions[0]]).toBe('Y');
@@ -78,7 +77,7 @@ describe('MirrorCursors', () => {
     receive([{ type: 'insert', path: ['items', 0], values: [{ title: 'new' }] }]);
     receive([{ type: 'splice', path: ['items', 2, 'title'], index: 0, remove: 0, insert: '>> ' }]);
     expect(cursors.position('c6')).toBe(9);
-    expect(String(Mirror.getAt(handle.doc(), ['items', 2, 'title']))[9]).toBe('w');
+    expect(String(Op.getAt(handle.doc(), ['items', 2, 'title']))[9]).toBe('w');
 
     // Removing the item that holds the text leaves the cursor without a position.
     receive([{ type: 'remove', path: ['items', 2], count: 1 }]);
@@ -92,7 +91,7 @@ describe('MirrorCursors', () => {
       invariant(Array.isArray(items), 'items is not a list');
       items.unshift({ title: 'local' });
     });
-    const paths: Mirror.Path[] = [];
+    const paths: Op.Path[] = [];
     const service = createService();
     const cursors = new MirrorCursors(handle, ['items', 2, 'title'], {
       ...service,

@@ -4,7 +4,7 @@
 
 import { next as A, type Heads } from '@automerge/automerge';
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Op } from '@dxos/automerge-proxy';
 
 import { Recorder, recordSplice, recordUpdateText } from './recorder.ts';
 
@@ -63,7 +63,7 @@ export const updateText = (draft: object, path: readonly (string | number)[], te
 
 /** A document for an object not yet added to a database. */
 export const createLocalDoc = <T extends Record<string, unknown>>(value: T, mirror: boolean): A.Doc<T> =>
-  mirror ? registerMirrorDoc(Mirror.freezeValue(value), []) : A.from<T>(value);
+  mirror ? registerMirrorDoc(Op.freeze(value), []) : A.from<T>(value);
 
 /** `A.change` for a local document of either kind. */
 export const changeLocalDoc = <T>(doc: A.Doc<T>, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): A.Doc<T> => {

@@ -4,7 +4,7 @@
 
 import { next as A, type Heads } from '@automerge/automerge';
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Op, Sync } from '@dxos/automerge-proxy';
 import { log } from '@dxos/log';
 
 import { applyOpsToDraft, decodeBatchMessage, diffToOps, encodeBatchMessage } from './automerge-ops.ts';
@@ -16,19 +16,19 @@ export interface SequencedDocument {
 }
 
 /** A batch as it arrives over the wire, before its ops are checked. */
-export type IncomingBatch = Omit<Mirror.Batch, 'changes'> & { readonly changes: readonly (readonly unknown[])[] };
+export type IncomingBatch = Omit<Sync.Batch, 'changes'> & { readonly changes: readonly (readonly unknown[])[] };
 
 export type SubmitResult =
   /**
    * The batch's entry is the last of `entries`. `refused` is set when one of its changes did not fit
    * the document or held a value Automerge refuses: the changes before it were written, none after.
    */
-  | { type: 'applied'; entries: Mirror.Entry[]; refused?: { index: number; error: Error } }
+  | { type: 'applied'; entries: Sync.Entry[]; refused?: { index: number; error: Error } }
   /** The batch is older than the retained window; the tab must resubscribe from its heads. */
-  | { type: 'resync'; entries: Mirror.Entry[] };
+  | { type: 'resync'; entries: Sync.Entry[] };
 
 /** An entry rebuilt from Automerge history, numbered by the receiving tab. */
-export type RecoveredEntry = Omit<Mirror.Entry, 'version'>;
+export type RecoveredEntry = Omit<Sync.Entry, 'version'>;
 
 /**
  * Orders every write to one document into entries tabs can follow. Tab batches are transformed over
@@ -40,12 +40,12 @@ export type RecoveredEntry = Omit<Mirror.Entry, 'version'>;
  * the last one, so the worker can evict the document between writes.
  */
 export class DocumentSequencer {
-  readonly #sequencer: Mirror.MirrorSequencer;
+  readonly #sequencer: Sync.Sequencer;
   #heads: Heads;
 
   constructor(heads: Heads, version = 0) {
     this.#heads = heads;
-    this.#sequencer = new Mirror.MirrorSequencer(version);
+    this.#sequencer = new Sync.Sequencer(version);
   }
 
   get version(): number {
@@ -58,7 +58,7 @@ export class DocumentSequencer {
   }
 
   /** Entries after `version`, or undefined when the window no longer reaches back that far. */
-  since(version: number): Mirror.Entry[] | undefined {
+  since(version: number): Sync.Entry[] | undefined {
     return this.#sequencer.since(version);
   }
 
@@ -68,7 +68,7 @@ export class DocumentSequencer {
   }
 
   /** Turns changes made outside the sequencer into an entry, if there are any. */
-  absorb(doc: A.Doc<unknown>): Mirror.Entry | undefined {
+  absorb(doc: A.Doc<unknown>): Sync.Entry | undefined {
     const heads = A.getHeads(doc);
     if (A.equals(heads, this.#heads)) {
       return undefined;
@@ -84,16 +84,16 @@ export class DocumentSequencer {
    * arrived since the last entry, which the caller must send whatever the outcome.
    */
   submit(target: SequencedDocument, clientId: string, batch: IncomingBatch): SubmitResult {
-    const entries: Mirror.Entry[] = [];
+    const entries: Sync.Entry[] = [];
     const absorbed = this.absorb(target.doc());
     if (absorbed) {
       entries.push(absorbed);
     }
 
     // A change holding a malformed op is refused whole, like one that does not fit.
-    const malformed = batch.changes.findIndex((change) => !change.every(Mirror.isOp));
+    const malformed = batch.changes.findIndex((change) => !change.every(Op.is));
     const checked = batch.changes.slice(0, malformed === -1 ? undefined : malformed);
-    const changes = this.#sequencer.rebase({ ...batch, changes: checked.map((change) => change.filter(Mirror.isOp)) });
+    const changes = this.#sequencer.rebase({ ...batch, changes: checked.map((change) => change.filter(Op.is)) });
     if (!changes) {
       return { type: 'resync', entries };
     }
@@ -119,7 +119,7 @@ export class DocumentSequencer {
   }
 
   /** The origin recorded for the batch, or undefined when no change was written for it. Reads all change metadata. */
-  static findBatch(doc: A.Doc<unknown>, batchId: string): Mirror.Origin | undefined {
+  static findBatch(doc: A.Doc<unknown>, batchId: string): Sync.Origin | undefined {
     for (const change of A.getChangesMetaSince(doc, [])) {
       const origin = decodeBatchMessage(change.message);
       if (origin?.batchId === batchId) {
@@ -170,7 +170,7 @@ class RefusedChange extends Error {
  */
 const writeChanges = (
   target: SequencedDocument,
-  changes: readonly Mirror.Change[],
+  changes: readonly Op.Change[],
   message: (written: number) => string,
 ): { written: number; error?: Error } => {
   let count = changes.length;

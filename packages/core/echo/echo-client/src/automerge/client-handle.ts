@@ -7,8 +7,8 @@ import { type AnyDocumentId, type AutomergeUrl, type DocumentId } from '@automer
 import type { EventEmitter } from 'eventemitter3';
 
 import type { Event } from '@dxos/async';
+import { Op } from '@dxos/automerge-proxy';
 import type { Context } from '@dxos/context';
-import type { Mirror } from '@dxos/echo-protocol';
 import type { DataService, MirrorService } from '@dxos/protocols/rpc';
 
 import type * as Doc from './Doc.ts';
@@ -75,7 +75,7 @@ export type SaveStateChangedEvent = {
 export type EditsRejectedEvent = {
   documentId: DocumentId;
   /** The ops of each refused `change()` call, kept for diagnostics. */
-  changes: readonly Mirror.Change[];
+  changes: readonly Op.Change[];
 };
 
 export interface ClientRepo {

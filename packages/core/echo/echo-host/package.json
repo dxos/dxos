@@ -47,6 +47,7 @@
     "@automerge/automerge-subduction": "catalog:",
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",

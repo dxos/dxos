@@ -5,7 +5,8 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
+import { Op } from '@dxos/automerge-proxy';
+import { type Random, createRandom, initialDocument, randomValue } from '@dxos/automerge-proxy/testing';
 
 import { Recorder, getDraftInfo, recordSplice, recordUpdateText } from './recorder.ts';
 
@@ -60,7 +61,7 @@ const viaAutomerge = (initial: Record<string, unknown>, callback: Callback): Out
 
 /** Runs the callback on a recording draft and returns the initial state with the recorded ops applied. */
 const viaRecorder = (initial: Record<string, unknown>, callback: Callback): Outcome => {
-  const base = Mirror.freezeValue(initial);
+  const base = Op.freeze(initial);
   const recorder = new Recorder(base);
   let returned: unknown;
   try {
@@ -69,8 +70,8 @@ const viaRecorder = (initial: Record<string, unknown>, callback: Callback): Outc
     expect(error instanceof RangeError || error instanceof TypeError, String(error)).toBe(true);
     return { threw: String(error) };
   }
-  const { root } = Mirror.applyOps(base, recorder.ops, { strict: true });
-  expect(Mirror.mirrorEquals(root, recorder.current)).toBe(true);
+  const { root } = Op.apply(base, recorder.ops, { strict: true });
+  expect(Op.equals(root, recorder.current)).toBe(true);
   return { value: render(root), returned };
 };
 
@@ -548,7 +549,7 @@ const REFUSED: [string, Record<string, unknown>, Callback][] = [
 const KEYS = ['a', 'b', 'title', 'items'];
 
 /** A container reached by walking a few random steps down from `draft`. */
-const pickContainer = (random: MirrorTesting.Random, draft: Draft): Draft => {
+const pickContainer = (random: Random, draft: Draft): Draft => {
   let node = draft;
   while (random.chance(0.6)) {
     const keys: (string | number)[] = Array.isArray(node) ? [...node.keys()] : Object.keys(node);
@@ -562,7 +563,7 @@ const pickContainer = (random: MirrorTesting.Random, draft: Draft): Draft => {
 };
 
 /** One random edit of a list draft, returning what the edit returned. */
-const randomListEdit = (random: MirrorTesting.Random, list: Draft, held: Draft[], value: () => unknown): unknown => {
+const randomListEdit = (random: Random, list: Draft, held: Draft[], value: () => unknown): unknown => {
   const length = list.length;
   switch (random.int(7)) {
     case 0:
@@ -593,7 +594,7 @@ const randomListEdit = (random: MirrorTesting.Random, list: Draft, held: Draft[]
 };
 
 /** One random edit of a map draft. */
-const randomMapEdit = (random: MirrorTesting.Random, map: Draft, value: () => unknown): void => {
+const randomMapEdit = (random: Random, map: Draft, value: () => unknown): void => {
   const keys = Object.keys(map);
   const texts = keys.filter((key) => typeof map[key] === 'string');
   if (texts.length > 0 && random.chance(0.3)) {
@@ -610,7 +611,7 @@ const randomMapEdit = (random: MirrorTesting.Random, map: Draft, value: () => un
 };
 
 /** Random list, map and text edits through drafts held across them; returns what it read along the way. */
-const randomEdits = (random: MirrorTesting.Random, root: Draft): unknown[] => {
+const randomEdits = (random: Random, root: Draft): unknown[] => {
   const trace: unknown[] = [];
   const held: Draft[] = [root];
   for (let step = 0; step < 40; step++) {
@@ -618,7 +619,7 @@ const randomEdits = (random: MirrorTesting.Random, root: Draft): unknown[] => {
     if (random.chance(0.3)) {
       held.push(target);
     }
-    const value = () => MirrorTesting.randomValue(random, 1, `${step}.`);
+    const value = () => randomValue(random, 1, `${step}.`);
     try {
       trace.push(
         Array.isArray(target) ? randomListEdit(random, target, held, value) : randomMapEdit(random, target, value),
@@ -665,7 +666,7 @@ describe('Recorder', () => {
   });
 
   test('getDraftInfo reports where a held draft is now', () => {
-    const recorder = new Recorder(Mirror.freezeValue({ list: [{ t: 0 }, { t: 1 }] }));
+    const recorder = new Recorder(Op.freeze({ list: [{ t: 0 }, { t: 1 }] }));
     const draft: Draft = recorder.draft();
     const item = draft.list[1];
     draft.list.insertAt(0, { t: -1 });
@@ -684,8 +685,8 @@ describe('Recorder', () => {
   test('random edits through held drafts agree with A.change', () => {
     const seeds = Number(process.env.RECORDER_FUZZ_SEEDS ?? 100);
     for (let seed = 1; seed <= seeds; seed++) {
-      const callback: Callback = (draft) => randomEdits(MirrorTesting.createRandom(seed), draft);
-      const initial = MirrorTesting.initialDocument();
+      const callback: Callback = (draft) => randomEdits(createRandom(seed), draft);
+      const initial = initialDocument();
       const expected = viaAutomerge(initial, callback);
       expect(expected, `seed ${seed}`).not.toHaveProperty('threw');
       expect(viaRecorder(initial, callback), `seed ${seed}`).toEqual(expected);

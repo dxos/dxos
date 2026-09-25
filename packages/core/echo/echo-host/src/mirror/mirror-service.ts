@@ -7,8 +7,8 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import type * as EffectStream from 'effect/Stream';
 
+import { Contract, Sync, Wire } from '@dxos/automerge-proxy';
 import { Context, Resource } from '@dxos/context';
-import { Mirror } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type DocumentObjectRow } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
@@ -22,7 +22,7 @@ import { DocumentSequencer } from './document-sequencer.ts';
 import { type IndexedDocument, documentsFromIndex } from './indexed.ts';
 
 /** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
-const WIRE: Mirror.FromWireOptions = { rawString: (text) => new A.RawString(text) };
+const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 
 /** Entries kept per document for batches based on older versions. */
 const ENTRY_WINDOW = 1_000;
@@ -36,7 +36,7 @@ type Subscription = {
   readonly documents: Set<DocumentId>;
   /** Documents followed through the index, which the worker has not loaded for this subscription. */
   readonly indexed: Set<DocumentId>;
-  readonly send: (events: MirrorService.DocumentEvent[]) => void;
+  readonly send: (events: Contract.DocumentEvent[]) => void;
 };
 
 /** Subscriptions following a document through the index, and the heads they were last sent. */
@@ -54,7 +54,7 @@ type HostedDocument = {
   /** Batches already applied, so a batch resent after a lost response is not applied twice. */
   readonly applied: Set<string>;
   /** Entries whose changes may not be saved yet; sent in order once a save succeeds. */
-  readonly unsent: Mirror.Entry[];
+  readonly unsent: Sync.Entry[];
   /** Serializes work on the document, so entries reach tabs in the order they reached Automerge. */
   queue: Promise<unknown>;
 };
@@ -103,14 +103,14 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
 
   ['MirrorService.subscribe'](
     request: MirrorService.SubscribeRequest,
-  ): EffectStream.Stream<MirrorService.EventBatch, Error> {
-    return EffectEx.streamFromEmitter<MirrorService.EventBatch, Error>((emit) => {
+  ): EffectStream.Stream<Contract.EventBatch, Error> {
+    return EffectEx.streamFromEmitter<Contract.EventBatch, Error>((emit) => {
       const subscription: Subscription = {
         id: request.subscriptionId,
         clientId: request.clientId,
         documents: new Set(),
         indexed: new Set(),
-        send: (events) => void emit.single({ events: events.map(Mirror.eventToWire) }),
+        send: (events) => void emit.single({ events: events.map(Wire.encodeEvent) }),
       };
       this.#subscriptions.set(request.subscriptionId, subscription);
       // Ready beacon, as in DataService.subscribe: `updateSubscription` may follow.
@@ -138,7 +138,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
         }
         const add = request.add ?? [];
         // One index read answers every document the tab asked to follow that way.
-        const indexed = this.#readIndexed ? add.filter(({ mode }) => mode === 'indexed') : [];
+        const indexed = this.#readIndexed ? add.filter(({ mode }) => mode === 'copy') : [];
         if (indexed.length > 0) {
           const documentIds = indexed.map(({ documentId }) => documentId as DocumentId);
           documentIds.forEach((documentId) => subscription.indexed.add(documentId));
@@ -179,7 +179,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
                 hosted.sequencer.submit(lease, subscription.clientId, {
                   batchId: batch.batchId,
                   baseVersion: batch.baseVersion,
-                  changes: Mirror.changesFromWire(batch.changes, WIRE),
+                  changes: Wire.decodeChanges(batch.changes, WIRE),
                 }),
               );
               if (!result) {
@@ -211,7 +211,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
   }
 
   ['MirrorService.resolveCursors'](
-    request: MirrorService.ResolveCursorsRequest,
+    request: Contract.ResolveCursors,
   ): Effect.Effect<MirrorService.ResolveCursorsResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
@@ -232,7 +232,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
   }
 
   ['MirrorService.createCursors'](
-    request: MirrorService.CreateCursorsRequest,
+    request: Contract.CreateCursors,
   ): Effect.Effect<MirrorService.CreateCursorsResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
@@ -272,7 +272,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
    * arrives on the stream once the document is loaded, after a `requesting` event when it has to
    * come from the network, as the replica protocol's disk probe reports it.
    */
-  async #attach(subscription: Subscription, documentId: DocumentId, known?: MirrorService.Known): Promise<void> {
+  async #attach(subscription: Subscription, documentId: DocumentId, known?: Contract.Known): Promise<void> {
     this.#unwatchIndexed(subscription, documentId);
     subscription.documents.add(documentId);
     void this.#probeDisk(subscription, documentId).catch((err) => this.#reportBackgroundError(err));
@@ -297,7 +297,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
     }
   }
 
-  async #deliver(subscription: Subscription, documentId: DocumentId, known?: MirrorService.Known): Promise<void> {
+  async #deliver(subscription: Subscription, documentId: DocumentId, known?: Contract.Known): Promise<void> {
     let hosted = this.#documents.get(documentId);
     if (!hosted) {
       const heads = await this.#withDocument(documentId, (lease) => A.getHeads(lease.doc()));
@@ -334,14 +334,14 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
         this.#dropIfUnfollowed(target);
         return;
       }
-      const event = await this.#withDocument(documentId, (lease): MirrorService.DocumentEvent[] => {
+      const event = await this.#withDocument(documentId, (lease): Contract.DocumentEvent[] => {
         this.#absorbLoaded(target, lease);
         const { sequencer, epoch } = target;
         if (known?.epoch === epoch) {
           const entries = sequencer.since(known.version);
           if (entries) {
             return [
-              ...entries.map((entry): MirrorService.DocumentEvent => ({
+              ...entries.map((entry): Contract.DocumentEvent => ({
                 type: 'entry',
                 documentId,
                 epoch,
@@ -421,7 +421,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
    */
   async #deliverIndexed(subscription: Subscription, documentIds: readonly DocumentId[]): Promise<void> {
     const reads = await this.#readIndexedDocuments(documentIds);
-    const events: MirrorService.DocumentEvent[] = [];
+    const events: Contract.DocumentEvent[] = [];
     for (const documentId of documentIds) {
       if (!subscription.indexed.has(documentId)) {
         // Unfollowed, or followed live, while the index was read.
@@ -436,7 +436,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
       watch.subscriptions.add(subscription);
       watch.heads = read.heads.join('|');
       this.#indexWatches.set(documentId, watch);
-      events.push({ type: 'indexed', documentId, heads: read.heads, value: read.value });
+      events.push({ type: 'copy', documentId, heads: read.heads, value: read.value });
     }
     if (events.length > 0) {
       subscription.send(events);
@@ -469,7 +469,7 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
           }
           watch.heads = read.heads.join('|');
           for (const subscription of watch.subscriptions) {
-            subscription.send([{ type: 'indexed', documentId, heads: read.heads, value: read.value }]);
+            subscription.send([{ type: 'copy', documentId, heads: read.heads, value: read.value }]);
           }
         }
       })
@@ -514,11 +514,11 @@ export class MirrorServiceImpl extends Resource implements MirrorService.Handler
     this.#broadcast(hosted, hosted.unsent.splice(0));
   }
 
-  #broadcast(hosted: HostedDocument, entries: readonly Mirror.Entry[]): void {
+  #broadcast(hosted: HostedDocument, entries: readonly Sync.Entry[]): void {
     if (entries.length === 0) {
       return;
     }
-    const events: MirrorService.DocumentEvent[] = entries.map((entry) => ({
+    const events: Contract.DocumentEvent[] = entries.map((entry) => ({
       type: 'entry',
       documentId: hosted.documentId,
       epoch: hosted.epoch,
@@ -564,7 +564,7 @@ const rememberBatch = (applied: Set<string>, batchId: string) => {
   }
 };
 
-const toWire = (entry: Mirror.Entry): MirrorService.Entry => ({
+const toWire = (entry: Sync.Entry): Contract.Entry => ({
   version: entry.version,
   ops: [...entry.ops],
   heads: [...entry.heads],

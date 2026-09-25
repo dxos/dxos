@@ -10,10 +10,11 @@ import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { Op } from '@dxos/automerge-proxy';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Text } from '@dxos/echo';
 import { type MirrorServiceImpl, toMirror } from '@dxos/echo-host';
-import { type DatabaseDirectory, Mirror } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -85,7 +86,7 @@ describe('mirror repo and worker', () => {
   /** The worker's Automerge copy of an object's data. */
   const hostData = async (obj: Obj.Any) => {
     using lease = await peer.host.automergeHost.loadDoc(Context.default(), documentOf(obj));
-    return Mirror.getAt(toMirror(lease?.doc()), ['objects', obj.id, 'data']);
+    return Op.getAt(toMirror(lease?.doc()), ['objects', obj.id, 'data']);
   };
 
   type Submit = (request: MirrorService.SubmitRequest) => ReturnType<MirrorServiceImpl['MirrorService.submit']>;
@@ -295,7 +296,7 @@ describe('mirror repo and worker', () => {
     const expected = expect.objectContaining({ title: 'from B', count: 99 });
     expect(await hostData(obj)).toEqual(expected);
     for (const handle of [handleB, handleC]) {
-      await expect.poll(() => Mirror.getAt(handle.doc(), ['objects', obj.id, 'data'])).toEqual(expected);
+      await expect.poll(() => Op.getAt(handle.doc(), ['objects', obj.id, 'data'])).toEqual(expected);
     }
   });
 

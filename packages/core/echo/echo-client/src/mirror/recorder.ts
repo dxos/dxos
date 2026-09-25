@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Op } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
 
 type Key = string | number;
@@ -56,7 +56,7 @@ const draftState = (value: unknown): DraftState | undefined =>
 type DraftInfo = {
   readonly recorder: Recorder<unknown>;
   /** Where the draft's container is now: in the document when attached, else in its detached subtree. */
-  readonly path: Mirror.Path;
+  readonly path: Op.Path;
   readonly attached: boolean;
 };
 
@@ -128,7 +128,7 @@ const shift = (parent: Slot, from: number, delta: number): void => {
 };
 
 /** Moves the slots under `parent` that an op on its container displaced; `before` is that container before the op. */
-const moveSlots = (parent: Slot, op: Mirror.Op, before: Container): void => {
+const moveSlots = (parent: Slot, op: Op.Any, before: Container): void => {
   const key = op.path[op.path.length - 1];
   switch (op.type) {
     case 'put':
@@ -236,7 +236,7 @@ const compareKeys = (left: string, right: string): number => {
  * proxy would. Text edits go through {@link recordSplice} and {@link recordUpdateText}.
  */
 export class Recorder<T = unknown> {
-  readonly ops: Mirror.Op[] = [];
+  readonly ops: Op.Any[] = [];
   readonly #root: Slot;
   #current: T;
 
@@ -251,16 +251,16 @@ export class Recorder<T = unknown> {
   }
 
   /** Records an op addressed from the document root, moving the drafts it displaces. */
-  record(op: Mirror.Op): void {
+  record(op: Op.Any): void {
     this.#write(this.#root, op);
   }
 
   /** A draft of the container at `path`; the root draft is what a change callback receives. */
-  draft(path: Mirror.Path = []): object {
+  draft(path: Op.Path = []): object {
     let slot = this.#root;
     for (const key of path) {
       const value = valueIn(this.#container(slot), key);
-      invariant(Mirror.isContainer(value), `No container at ${pointer(path)}`);
+      invariant(Op.isContainer(value), `No container at ${pointer(path)}`);
       slot = this.#child(slot, key, value);
     }
     return this.#draft(slot);
@@ -302,7 +302,7 @@ export class Recorder<T = unknown> {
     }
     state.cache.clear();
     const { text: current, path: textPath } = this.#textAt(state.slot, path, 'updateText');
-    const edit = Mirror.diffText(current, text);
+    const edit = Op.diffText(current, text);
     if (edit) {
       this.#write(state.slot, { type: 'splice', path: textPath, ...edit });
     }
@@ -312,8 +312,8 @@ export class Recorder<T = unknown> {
   /** The container a slot holds now. */
   #container(slot: Slot): Container {
     const { detached, path } = locate(slot);
-    const value = Mirror.getAt(detached ? detached.value : this.#current, path);
-    invariant(Mirror.isContainer(value), 'A draft lost its container');
+    const value = Op.getAt(detached ? detached.value : this.#current, path);
+    invariant(Op.isContainer(value), 'A draft lost its container');
     return value;
   }
 
@@ -367,7 +367,7 @@ export class Recorder<T = unknown> {
 
   /** What a read through a draft returns: a draft for a container, a copy of a mutable leaf, else the value. */
   #read(parent: Slot, key: Key, value: unknown): unknown {
-    return Mirror.isContainer(value) ? this.#draft(this.#child(parent, key, value)) : copyLeaf(value);
+    return Op.isContainer(value) ? this.#draft(this.#child(parent, key, value)) : copyLeaf(value);
   }
 
   /** A list element as Automerge reads it: uncached, so every read of a container is a new draft. */
@@ -380,19 +380,19 @@ export class Recorder<T = unknown> {
    * Applies an op addressed from `slot`'s container: recorded when the container is in the document,
    * applied to its detached subtree otherwise, as Automerge writes to an object no longer reachable.
    */
-  #write(slot: Slot, op: Mirror.Op): void {
+  #write(slot: Slot, op: Op.Any): void {
     const { detached, path } = locate(slot);
-    const absolute: Mirror.Op = { ...op, path: [...path, ...op.path] };
+    const absolute: Op.Any = { ...op, path: [...path, ...op.path] };
     const parentKeys = op.path.slice(0, -1);
     const parent = op.type === 'splice' ? undefined : this.#descend(slot, parentKeys);
-    const before = parent && Mirror.getAt(detached ? detached.value : this.#current, [...path, ...parentKeys]);
+    const before = parent && Op.getAt(detached ? detached.value : this.#current, [...path, ...parentKeys]);
     if (detached) {
-      detached.value = Mirror.applyOps(detached.value, [absolute], { strict: true }).root;
+      detached.value = Op.apply(detached.value, [absolute], { strict: true }).root;
     } else {
-      this.#current = Mirror.applyOps(this.#current, [absolute], { strict: true }).root;
+      this.#current = Op.apply(this.#current, [absolute], { strict: true }).root;
       this.ops.push(absolute);
     }
-    if (parent && Mirror.isContainer(before)) {
+    if (parent && Op.isContainer(before)) {
       moveSlots(parent, op, before);
     }
   }
@@ -473,7 +473,7 @@ export class Recorder<T = unknown> {
     const segments: Key[] = [];
     let node: unknown = this.#container(slot);
     for (const [depth, key] of path.entries()) {
-      if (!Mirror.isContainer(node)) {
+      if (!Op.isContainer(node)) {
         throw fail(`path component ${depth} (${key}) did not refer to an object`);
       }
       const isIndex = typeof key === 'number' || INDEX.test(key);
@@ -486,7 +486,7 @@ export class Recorder<T = unknown> {
       node = child;
     }
     if (typeof node !== 'string') {
-      throw fail(Mirror.isContainer(node) ? 'object was not a text object' : 'path did not refer to an object');
+      throw fail(Op.isContainer(node) ? 'object was not a text object' : 'path did not refer to an object');
     }
     return { text: node, path: segments };
   }
@@ -726,7 +726,7 @@ export class Recorder<T = unknown> {
           const at = position(index);
           const value = list[at];
           // Text, maps and lists are objects to Automerge: text matches its content, containers their own drafts.
-          if (typeof value === 'string' || Mirror.isContainer(value)) {
+          if (typeof value === 'string' || Op.isContainer(value)) {
             if (value === search) {
               return index;
             }

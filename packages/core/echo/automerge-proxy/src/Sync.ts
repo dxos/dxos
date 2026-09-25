@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Change, type MirrorPatch, type Op, applyOps, invertOps, isContainer } from './ops.ts';
-import { transformChanges } from './transform.ts';
+// @import-as-namespace
+
+import * as Op from './Op.ts';
+import * as Transform from './Transform.ts';
 
 /**
  * One step of a document's history as the worker ordered it. Every subscribed tab receives every
@@ -11,7 +13,7 @@ import { transformChanges } from './transform.ts';
  */
 export type Entry = {
   readonly version: number;
-  readonly ops: readonly Op[];
+  readonly ops: readonly Op.Any[];
   /** Automerge heads of the worker's document after this entry. */
   readonly heads: readonly string[];
   /** Set when the entry applies a tab's batch. */
@@ -36,12 +38,12 @@ export type Batch = {
   readonly batchId: string;
   readonly baseVersion: number;
   /** One per `change()` call, in order. */
-  readonly changes: readonly Change[];
+  readonly changes: readonly Op.Change[];
 };
 
 export type ReceiveResult = {
   /** Changes to the tab's visible state, empty for an acknowledgement that matched. */
-  readonly patches: MirrorPatch[];
+  readonly patches: Op.Patch[];
   /** Whether the entry acknowledged the in-flight batch. */
   readonly acknowledged: boolean;
   /**
@@ -53,7 +55,7 @@ export type ReceiveResult = {
    * This tab's changes that will never be written, as it made them: one the worker refused, and any
    * that only made sense on top of it. They are no longer visible.
    */
-  readonly refused: readonly Change[];
+  readonly refused: readonly Op.Change[];
 };
 
 /**
@@ -65,7 +67,7 @@ export type ReceiveResult = {
  * whether a change fits: the tab shows the ops of each that fit its view and takes back those ops
  * when the worker refuses the change.
  */
-export class MirrorClientState<T = unknown> {
+export class ClientState<T = unknown> {
   #confirmed: T;
   #current: T;
   #version: number;
@@ -73,7 +75,7 @@ export class MirrorClientState<T = unknown> {
   /** Keeps changes that other writers emptied, since the worker's `refusedAt` counts them. */
   #inflight: Batch | undefined = undefined;
   /** Changes made since the in-flight batch, none of them empty. */
-  #buffer: Change[] = [];
+  #buffer: Op.Change[] = [];
 
   constructor(
     readonly clientId: string,
@@ -114,16 +116,16 @@ export class MirrorClientState<T = unknown> {
   }
 
   /** Every unconfirmed op, in-flight first, relative to the confirmed state. */
-  get pendingOps(): Op[] {
+  get pendingOps(): Op.Any[] {
     return [...(this.#inflight?.changes ?? []), ...this.#buffer].flat();
   }
 
   /** Records one change made against {@link current}. */
-  applyLocal(ops: readonly Op[]): MirrorPatch[] {
+  applyLocal(ops: readonly Op.Any[]): Op.Patch[] {
     if (ops.length === 0) {
       return [];
     }
-    const { root, patches } = applyOps(this.#current, ops);
+    const { root, patches } = Op.apply(this.#current, ops);
     this.#current = root;
     this.#buffer.push(ops.slice());
     return patches;
@@ -149,20 +151,20 @@ export class MirrorClientState<T = unknown> {
       return this.#acknowledge(inflight, entry, entry.origin.refusedAt);
     }
 
-    let incoming: Op[] = entry.ops.slice();
+    let incoming: Op.Any[] = entry.ops.slice();
     if (inflight) {
-      const [rebased, past] = transformChanges(inflight.changes, incoming, false);
+      const [rebased, past] = Transform.changes(inflight.changes, incoming, false);
       this.#inflight = { ...inflight, changes: rebased };
       incoming = past;
     }
     if (this.#buffer.length > 0) {
-      const [rebased, past] = transformChanges(this.#buffer, incoming, false);
+      const [rebased, past] = Transform.changes(this.#buffer, incoming, false);
       // A change emptied here edited inside a value another writer removed, which Automerge loses too.
       this.#buffer = rebased.filter((change) => change.length > 0);
       incoming = past;
     }
-    this.#confirmed = applyOps(this.#confirmed, entry.ops).root;
-    const { root, patches } = applyOps(this.#current, incoming);
+    this.#confirmed = Op.apply(this.#confirmed, entry.ops).root;
+    const { root, patches } = Op.apply(this.#current, incoming);
     this.#current = root;
     this.#version = entry.version;
     this.#heads = entry.heads;
@@ -181,15 +183,15 @@ export class MirrorClientState<T = unknown> {
     heads: readonly string[],
     applied = false,
     refusedAt?: number,
-  ): { patches: MirrorPatch[]; refused: Change[] } {
+  ): { patches: Op.Patch[]; refused: Op.Change[] } {
     const inflight = this.#inflight;
-    let pending: readonly Change[] = [...(inflight?.changes ?? []), ...this.#buffer];
-    let refused: Change[] = [];
+    let pending: readonly Op.Change[] = [...(inflight?.changes ?? []), ...this.#buffer];
+    let refused: Op.Change[] = [];
     if (inflight && applied) {
       if (refusedAt === undefined || refusedAt >= inflight.changes.length) {
         pending = this.#buffer;
       } else {
-        const base = applyOps(this.#confirmed, inflight.changes.slice(0, refusedAt).flat()).root;
+        const base = Op.apply(this.#confirmed, inflight.changes.slice(0, refusedAt).flat()).root;
         ({ rebased: pending, refused } = takeBack(base, inflight.changes, refusedAt, this.#buffer));
       }
     }
@@ -198,7 +200,7 @@ export class MirrorClientState<T = unknown> {
     this.#heads = heads;
     this.#inflight = undefined;
     this.#buffer = pending.filter((change) => change.length > 0);
-    this.#current = applyOps(snapshot, this.#buffer.flat()).root;
+    this.#current = Op.apply(snapshot, this.#buffer.flat()).root;
     return { patches: [{ action: 'put', path: [], value: this.#current }], refused };
   }
 
@@ -211,9 +213,9 @@ export class MirrorClientState<T = unknown> {
     entries: readonly Omit<Entry, 'version'>[],
     version: number,
     heads: readonly string[],
-  ): { patches: MirrorPatch[]; rebuilt: boolean; refused: Change[] } {
-    const patches: MirrorPatch[] = [];
-    const refused: Change[] = [];
+  ): { patches: Op.Patch[]; rebuilt: boolean; refused: Op.Change[] } {
+    const patches: Op.Patch[] = [];
+    const refused: Op.Change[] = [];
     let rebuilt = false;
     for (const entry of entries) {
       const result = this.receive({ ...entry, version: this.#version + 1 });
@@ -237,26 +239,26 @@ export class MirrorClientState<T = unknown> {
 
   /** Settles the in-flight batch with the entry that applied it, or the part of it before `refusedAt`. */
   #acknowledge(inflight: Batch, entry: Entry, refusedAt = inflight.changes.length): ReceiveResult {
-    const expected = applyOps(this.#confirmed, inflight.changes.slice(0, refusedAt).flat()).root;
-    this.#confirmed = applyOps(this.#confirmed, entry.ops).root;
+    const expected = Op.apply(this.#confirmed, inflight.changes.slice(0, refusedAt).flat()).root;
+    this.#confirmed = Op.apply(this.#confirmed, entry.ops).root;
     this.#version = entry.version;
     this.#heads = entry.heads;
     this.#inflight = undefined;
-    let refused: Change[] = [];
-    let undo: Op[] | undefined;
+    let refused: Op.Change[] = [];
+    let undo: Op.Any[] | undefined;
     if (refusedAt < inflight.changes.length) {
-      let rebased: Op[][];
+      let rebased: Op.Any[][];
       ({ rebased, undo, refused } = takeBack(expected, inflight.changes, refusedAt, this.#buffer));
       this.#buffer = rebased.filter((change) => change.length > 0);
     }
-    const replayed = (): T => applyOps(this.#confirmed, this.#buffer.flat()).root;
-    if (mirrorEquals(expected, this.#confirmed)) {
+    const replayed = (): T => Op.apply(this.#confirmed, this.#buffer.flat()).root;
+    if (Op.equals(expected, this.#confirmed)) {
       if (!undo) {
         return { patches: [], acknowledged: true, rebuilt: false, refused };
       }
       // Taking the change back in place gives readers precise patches, when it reaches the same state.
-      const inPlace = applyOps(this.#current, undo);
-      if (mirrorEquals(inPlace.root, replayed())) {
+      const inPlace = Op.apply(this.#current, undo);
+      if (Op.equals(inPlace.root, replayed())) {
         this.#current = inPlace.root;
         return { patches: inPlace.patches, acknowledged: true, rebuilt: false, refused };
       }
@@ -274,12 +276,12 @@ export class MirrorClientState<T = unknown> {
  */
 const takeBack = (
   base: unknown,
-  changes: readonly Change[],
+  changes: readonly Op.Change[],
   refusedAt: number,
-  buffer: readonly Change[],
-): { rebased: Op[][]; undo: Op[]; refused: Change[] } => {
+  buffer: readonly Op.Change[],
+): { rebased: Op.Any[][]; undo: Op.Any[]; refused: Op.Change[] } => {
   const following = [...changes.slice(refusedAt + 1), ...buffer];
-  const [rebased, undo] = transformChanges(following, invertOps(base, changes[refusedAt]), false, 'later-wins');
+  const [rebased, undo] = Transform.changes(following, Op.invert(base, changes[refusedAt]), false, 'later-wins');
   const lost = following.filter((change, index) => change.length > 0 && rebased[index].length === 0);
   return { rebased, undo, refused: [changes[refusedAt], ...lost] };
 };
@@ -288,7 +290,7 @@ const takeBack = (
  * The worker's order for one document: a window of recent entries, so a batch based on an older
  * version can be transformed over the entries its tab had not seen when it made it.
  */
-export class MirrorSequencer {
+export class Sequencer {
   #version: number;
   #entries: Entry[] = [];
 
@@ -310,14 +312,14 @@ export class MirrorSequencer {
    * base is older than the retained window and the tab must resynchronize. A change keeps its place
    * even when it comes out empty, so `refusedAt` counts the changes as the tab made them.
    */
-  rebase(batch: Batch): Op[][] | undefined {
+  rebase(batch: Batch): Op.Any[][] | undefined {
     if (batch.baseVersion > this.#version || batch.baseVersion < this.oldestBase) {
       return undefined;
     }
-    let changes: Op[][] = batch.changes.map((change) => change.slice());
+    let changes: Op.Any[][] = batch.changes.map((change) => change.slice());
     for (const entry of this.#entries) {
       if (entry.version > batch.baseVersion) {
-        [changes] = transformChanges(changes, entry.ops, false);
+        [changes] = Transform.changes(changes, entry.ops, false);
       }
     }
     return changes;
@@ -344,39 +346,3 @@ export class MirrorSequencer {
     this.#entries = this.#entries.filter((entry) => entry.version > throughVersion);
   }
 }
-
-/** Structural equality of two mirror values; leaves such as RawString compare by class and text. */
-export const mirrorEquals = (left: unknown, right: unknown): boolean => {
-  if (left === right || Object.is(left, right)) {
-    return true;
-  }
-  if (!isContainer(left) || !isContainer(right)) {
-    return leafEquals(left, right);
-  }
-  if (Array.isArray(left) || Array.isArray(right)) {
-    return (
-      Array.isArray(left) &&
-      Array.isArray(right) &&
-      left.length === right.length &&
-      left.every((entry, index) => mirrorEquals(entry, right[index]))
-    );
-  }
-  const entries = Object.entries(left);
-  return (
-    entries.length === Object.keys(right).length &&
-    entries.every(([key, value]) => key in right && mirrorEquals(value, right[key]))
-  );
-};
-
-const leafEquals = (left: unknown, right: unknown): boolean => {
-  if (left instanceof Date && right instanceof Date) {
-    return left.getTime() === right.getTime();
-  }
-  if (left instanceof Uint8Array && right instanceof Uint8Array) {
-    return left.length === right.length && left.every((byte, index) => byte === right[index]);
-  }
-  if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null) {
-    return Object.getPrototypeOf(left) === Object.getPrototypeOf(right) && String(left) === String(right);
-  }
-  return false;
-};

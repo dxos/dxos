@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Op, type Path, getAt, isContainer } from './ops.ts';
+import * as Op from '../Op.ts';
 
 /** Deterministic PRNG so failing seeds reproduce. */
 export const createRandom = (seed: number) => {
@@ -25,17 +25,17 @@ export const createRandom = (seed: number) => {
 export type Random = ReturnType<typeof createRandom>;
 
 /** Every container and text in a document, with its path. */
-const collect = (root: unknown): { maps: Path[]; lists: Path[]; texts: Path[] } => {
-  const maps: Path[] = [];
-  const lists: Path[] = [];
-  const texts: Path[] = [];
-  const walk = (value: unknown, path: Path) => {
+const collect = (root: unknown): { maps: Op.Path[]; lists: Op.Path[]; texts: Op.Path[] } => {
+  const maps: Op.Path[] = [];
+  const lists: Op.Path[] = [];
+  const texts: Op.Path[] = [];
+  const walk = (value: unknown, path: Op.Path) => {
     if (typeof value === 'string') {
       texts.push(path);
     } else if (Array.isArray(value)) {
       lists.push(path);
       value.forEach((entry, index) => walk(entry, [...path, index]));
-    } else if (isContainer(value)) {
+    } else if (Op.isContainer(value)) {
       maps.push(path);
       for (const [key, entry] of Object.entries(value)) {
         walk(entry, [...path, key]);
@@ -71,7 +71,7 @@ export const randomValue = (random: Random, depth = 0, tag = ''): unknown => {
  * A random op that is valid against `root`. `tag` marks inserted text and values, so an identity
  * check can tell which writer produced what survives.
  */
-export const randomOp = (random: Random, root: unknown, tag = ''): Op | undefined => {
+export const randomOp = (random: Random, root: unknown, tag = ''): Op.Any | undefined => {
   const { maps, lists, texts } = collect(root);
   for (let attempt = 0; attempt < 10; attempt++) {
     switch (random.int(5)) {
@@ -80,7 +80,7 @@ export const randomOp = (random: Random, root: unknown, tag = ''): Op | undefine
           break;
         }
         const path = random.pick(texts);
-        const text = getAt(root, path);
+        const text = Op.getAt(root, path);
         if (typeof text !== 'string') {
           break;
         }
@@ -98,8 +98,8 @@ export const randomOp = (random: Random, root: unknown, tag = ''): Op | undefine
       }
       case 2: {
         const path = random.pick(maps);
-        const node = getAt(root, path);
-        const keys = isContainer(node) && !Array.isArray(node) ? Object.keys(node) : [];
+        const node = Op.getAt(root, path);
+        const keys = Op.isContainer(node) && !Array.isArray(node) ? Object.keys(node) : [];
         if (keys.length === 0) {
           break;
         }
@@ -110,7 +110,7 @@ export const randomOp = (random: Random, root: unknown, tag = ''): Op | undefine
           break;
         }
         const path = random.pick(lists);
-        const node = getAt(root, path);
+        const node = Op.getAt(root, path);
         const length = Array.isArray(node) ? node.length : 0;
         const count = 1 + random.int(2);
         return {
@@ -124,7 +124,7 @@ export const randomOp = (random: Random, root: unknown, tag = ''): Op | undefine
           break;
         }
         const path = random.pick(lists);
-        const node = getAt(root, path);
+        const node = Op.getAt(root, path);
         const length = Array.isArray(node) ? node.length : 0;
         if (length === 0) {
           break;

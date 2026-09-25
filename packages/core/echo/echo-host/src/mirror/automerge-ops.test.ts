@@ -5,7 +5,8 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
+import { Op, Sync } from '@dxos/automerge-proxy';
+import { createRandom } from '@dxos/automerge-proxy/testing';
 
 import { patchesToOps, toMirror } from './automerge-ops.ts';
 import { DocumentSequencer, type SequencedDocument } from './document-sequencer.ts';
@@ -15,7 +16,7 @@ type ListDoc = { list: unknown[]; map: Record<string, unknown> };
 /** The mirror a tab reaches by applying the ops for one absorbed diff, and the worker's own state. */
 const absorb = (before: A.Doc<ListDoc>, after: A.Doc<ListDoc>) => {
   const ops = patchesToOps(A.diff(after, A.getHeads(before), A.getHeads(after)), after);
-  return { mirror: Mirror.applyOps(toMirror(before), ops).root, expected: toMirror(after) };
+  return { mirror: Op.apply(toMirror(before), ops).root, expected: toMirror(after) };
 };
 
 describe('patchesToOps', () => {
@@ -31,8 +32,8 @@ describe('patchesToOps', () => {
       A.insertAt(doc.list, 0, new A.RawString('y'));
     });
     const { mirror, expected } = absorb(before, after);
-    expect(Mirror.mirrorEquals(mirror, expected)).toBe(true);
-    expect(Mirror.getAt(mirror, ['list'])).toEqual([
+    expect(Op.equals(mirror, expected)).toBe(true);
+    expect(Op.getAt(mirror, ['list'])).toEqual([
       new A.RawString('y'),
       new A.RawString('x'),
       new A.RawString('a'),
@@ -47,7 +48,7 @@ describe('patchesToOps', () => {
   test('matches Automerge on random diffs', () => {
     const failures: number[] = [];
     for (let seed = 1; seed <= 2_000; seed++) {
-      const random = MirrorTesting.createRandom(seed);
+      const random = createRandom(seed);
       const value = (): unknown =>
         random.pick([
           () => new A.RawString(`r${random.int(100)}`),
@@ -89,7 +90,7 @@ describe('patchesToOps', () => {
       doc = A.change(doc, edit);
       const after = A.change(A.clone(doc), edit);
       const { mirror, expected } = absorb(doc, after);
-      if (!Mirror.mirrorEquals(mirror, expected)) {
+      if (!Op.equals(mirror, expected)) {
         failures.push(seed);
       }
     }
@@ -116,7 +117,7 @@ describe('DocumentSequencer.submit', () => {
     return { sequencer, target, doc: () => doc };
   };
 
-  const append = (index: number, text: string): Mirror.Op => ({
+  const append = (index: number, text: string): Op.Any => ({
     type: 'splice',
     path: ['log'],
     index,
@@ -126,7 +127,7 @@ describe('DocumentSequencer.submit', () => {
 
   test('writes the changes before one that does not fit and none after', () => {
     const { sequencer, target, doc } = setup();
-    const batch: Mirror.Batch = {
+    const batch: Sync.Batch = {
       batchId: 'batch',
       baseVersion: 0,
       changes: [

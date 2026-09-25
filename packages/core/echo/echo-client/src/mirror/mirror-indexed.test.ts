@@ -5,10 +5,11 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Op } from '@dxos/automerge-proxy';
 import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { toMirror } from '@dxos/echo-host';
-import { type DatabaseDirectory, Mirror } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -22,11 +23,11 @@ import { setMirrorIndexedReads } from './mode.ts';
 
 /** Paths at which two JSON trees differ, with both values. */
 const differences = (left: unknown, right: unknown, path: string[] = []): string[] => {
-  if (Mirror.isContainer(left) && Mirror.isContainer(right) && Array.isArray(left) === Array.isArray(right)) {
+  if (Op.isContainer(left) && Op.isContainer(right) && Array.isArray(left) === Array.isArray(right)) {
     const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
     return [...keys].flatMap((key) => differences(Reflect.get(left, key), Reflect.get(right, key), [...path, key]));
   }
-  return Mirror.mirrorEquals(left, right)
+  return Op.equals(left, right)
     ? []
     : [`${path.join('.')}: index ${JSON.stringify(left)}, worker ${JSON.stringify(right)}`];
 };
@@ -66,7 +67,7 @@ describe('objects read from the index', () => {
 
   const hostDataAt = async (documentId: DocumentId, objectId: string) => {
     using lease = await peer.host.automergeHost.loadDoc(Context.default(), documentId);
-    return Mirror.getAt(toMirror(lease?.doc()), ['objects', objectId, 'data']);
+    return Op.getAt(toMirror(lease?.doc()), ['objects', objectId, 'data']);
   };
 
   /** Which of the documents the worker holds in memory. */
@@ -200,7 +201,7 @@ describe('objects read from the index', () => {
     });
     await reader.flush();
     const expected = ['new', 'a', 'b', 'C'];
-    expect(Mirror.getAt(await hostData(inReader), ['items'])).toEqual(expected.map((label) => ({ label })));
+    expect(Op.getAt(await hostData(inReader), ['items'])).toEqual(expected.map((label) => ({ label })));
     expect(inReader.items.map((item: { label: string }) => item.label)).toEqual(expected);
     await expect.poll(() => inWriter.items.map((item: { label: string }) => item.label)).toEqual(expected);
   });

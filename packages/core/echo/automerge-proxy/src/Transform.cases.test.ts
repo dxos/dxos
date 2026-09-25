@@ -4,9 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Op, applyOps, freezeValue } from './ops.ts';
-import { mirrorEquals } from './protocol.ts';
-import { transformLists } from './transform.ts';
+import * as Op from './Op.ts';
+import * as Transform from './Transform.ts';
 
 /** A leaf class, as RawString is: stored and compared whole, never merged. */
 class Leaf {
@@ -18,16 +17,16 @@ class Leaf {
 }
 
 /** Both orders of applying two concurrent op lists reach the same state (TP1), and every op still applies. */
-const converges = (base: unknown, left: Op[], right: Op[], leftFirst: boolean): boolean => {
-  const [leftPrime, rightPrime] = transformLists(left, right, leftFirst);
-  const viaRight = applyOps(applyOps(base, right, { strict: true }).root, leftPrime, { strict: true }).root;
-  const viaLeft = applyOps(applyOps(base, left, { strict: true }).root, rightPrime, { strict: true }).root;
-  return mirrorEquals(viaLeft, viaRight);
+const converges = (base: unknown, left: Op.Any[], right: Op.Any[], leftFirst: boolean): boolean => {
+  const [leftPrime, rightPrime] = Transform.lists(left, right, leftFirst);
+  const viaRight = Op.apply(Op.apply(base, right, { strict: true }).root, leftPrime, { strict: true }).root;
+  const viaLeft = Op.apply(Op.apply(base, left, { strict: true }).root, rightPrime, { strict: true }).root;
+  return Op.equals(viaLeft, viaRight);
 };
 
 /** Edge cases an adversarial review of the transforms picked, kept so each stays covered by name. */
 describe('transform edge cases', () => {
-  const base = freezeValue({
+  const base = Op.freeze({
     text: 'abcdef',
     empty: '',
     leaf: new Leaf('r'),
@@ -35,7 +34,7 @@ describe('transform edge cases', () => {
     map: { 'key': { nested: [1, 2, 3] }, '0': 'numeric key' },
   });
 
-  const cases: [string, Op[], Op[]][] = [
+  const cases: [string, Op.Any[], Op.Any[]][] = [
     [
       'splice at the end against splice at the end',
       [{ type: 'splice', path: ['text'], index: 6, remove: 0, insert: 'X' }],
@@ -151,18 +150,18 @@ describe('transform edge cases', () => {
 });
 
 /** Both orders of two concurrent op lists, which TP1 requires to agree. */
-const bothOrders = (base: unknown, left: Op[], right: Op[]) => {
-  const [leftPrime, rightPrime] = transformLists(left, right, true);
+const bothOrders = (base: unknown, left: Op.Any[], right: Op.Any[]) => {
+  const [leftPrime, rightPrime] = Transform.lists(left, right, true);
   return {
-    leftThenRight: applyOps(applyOps(base, left, { strict: true }).root, rightPrime, { strict: true }).root,
-    rightThenLeft: applyOps(applyOps(base, right, { strict: true }).root, leftPrime, { strict: true }).root,
+    leftThenRight: Op.apply(Op.apply(base, left, { strict: true }).root, rightPrime, { strict: true }).root,
+    rightThenLeft: Op.apply(Op.apply(base, right, { strict: true }).root, leftPrime, { strict: true }).root,
   };
 };
 
 /** Automerge keeps a write over a concurrent delete of what it writes, and loses edits inside a deleted value. */
 describe('a write beats a concurrent delete', () => {
   test('of a map key', () => {
-    const base = freezeValue({ map: { key: 'old', other: 1 } });
+    const base = Op.freeze({ map: { key: 'old', other: 1 } });
     const { leftThenRight, rightThenLeft } = bothOrders(
       base,
       [{ type: 'put', path: ['map', 'key'], value: 'new' }],
@@ -173,7 +172,7 @@ describe('a write beats a concurrent delete', () => {
   });
 
   test('of a list element, where the removed range closes up around it', () => {
-    const base = freezeValue({ list: ['a', 'b', 'c', 'd'] });
+    const base = Op.freeze({ list: ['a', 'b', 'c', 'd'] });
     const { leftThenRight, rightThenLeft } = bothOrders(
       base,
       [
@@ -187,7 +186,7 @@ describe('a write beats a concurrent delete', () => {
   });
 
   test('but not an edit inside the deleted value', () => {
-    const base = freezeValue({ map: { key: { title: 'old' } }, list: [{ title: 'one' }, { title: 'two' }] });
+    const base = Op.freeze({ map: { key: { title: 'old' } }, list: [{ title: 'one' }, { title: 'two' }] });
     const { leftThenRight, rightThenLeft } = bothOrders(
       base,
       [

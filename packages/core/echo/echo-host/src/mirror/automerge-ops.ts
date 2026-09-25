@@ -4,21 +4,21 @@
 
 import { next as A, type Heads, type Patch } from '@automerge/automerge';
 
-import { Mirror } from '@dxos/echo-protocol';
+import { Op, Sync } from '@dxos/automerge-proxy';
 
 /**
  * Change message a batch is written with, so a restarted worker can tell which batches it already
  * applied, and which change of one it refused. Ids are random per tab session, so they never collide
  * across devices.
  */
-export type BatchMessage = { mirror: Mirror.Origin };
+export type BatchMessage = { mirror: Sync.Origin };
 
 export const encodeBatchMessage = (clientId: string, batchId: string, refusedAt?: number): string =>
   JSON.stringify({
     mirror: { clientId, batchId, ...(refusedAt === undefined ? {} : { refusedAt }) },
   } satisfies BatchMessage);
 
-export const decodeBatchMessage = (message: string | null | undefined): Mirror.Origin | undefined => {
+export const decodeBatchMessage = (message: string | null | undefined): Sync.Origin | undefined => {
   if (!message || !message.startsWith('{"mirror"')) {
     return undefined;
   }
@@ -68,7 +68,7 @@ const toAutomerge = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map((entry) => toAutomerge(entry));
   }
-  if (Mirror.isContainer(value)) {
+  if (Op.isContainer(value)) {
     const copy: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value)) {
       copy[key] = toAutomerge(entry);
@@ -96,11 +96,11 @@ const isDraftMap = (value: unknown): value is Draft => typeof value === 'object'
  * Applies mirror ops inside an Automerge change callback, at exact positions. Ops that no longer fit
  * are skipped; the sequencer's transforms normally rule them out.
  */
-export const applyOpsToDraft = (draft: unknown, ops: readonly Mirror.Op[]): number => {
+export const applyOpsToDraft = (draft: unknown, ops: readonly Op.Any[]): number => {
   let skipped = 0;
   for (const op of ops) {
     if (op.type === 'splice') {
-      const text = Mirror.getAt(draft, op.path);
+      const text = Op.getAt(draft, op.path);
       if (typeof text !== 'string' || op.index + op.remove > text.length) {
         skipped++;
         continue;
@@ -113,7 +113,7 @@ export const applyOpsToDraft = (draft: unknown, ops: readonly Mirror.Op[]): numb
       continue;
     }
 
-    const parent = Mirror.getAt(draft, op.path.slice(0, -1));
+    const parent = Op.getAt(draft, op.path.slice(0, -1));
     const key = op.path[op.path.length - 1];
     if (isDraftList(parent)) {
       const index = Number(key);
@@ -165,8 +165,8 @@ export const applyOpsToDraft = (draft: unknown, ops: readonly Mirror.Op[]): numb
  * from list removals: a deletion's parent path is final, since Automerge reports an object's own
  * patches before those of its children.
  */
-export const patchesToOps = (patches: readonly Patch[], after: unknown): Mirror.Op[] => {
-  const ops: Mirror.Op[] = [];
+export const patchesToOps = (patches: readonly Patch[], after: unknown): Op.Any[] => {
+  const ops: Op.Any[] = [];
   for (const patch of patches) {
     switch (patch.action) {
       case 'put': {
@@ -176,7 +176,7 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Mirror.
       case 'del': {
         const parentPath = patch.path.slice(0, -1);
         const index = patch.path[patch.path.length - 1];
-        const parent = Mirror.getAt(after, parentPath);
+        const parent = Op.getAt(after, parentPath);
         if (typeof parent === 'string' || parent instanceof A.RawString) {
           ops.push({ type: 'splice', path: parentPath, index: Number(index), remove: patch.length ?? 1, insert: '' });
         } else if (typeof index === 'number') {
@@ -210,7 +210,7 @@ export const patchesToOps = (patches: readonly Patch[], after: unknown): Mirror.
 };
 
 /** Ops taking a mirror of the document at `before` to a mirror at `after`. */
-export const diffToOps = (doc: A.Doc<unknown>, before: Heads, after: Heads): Mirror.Op[] => {
+export const diffToOps = (doc: A.Doc<unknown>, before: Heads, after: Heads): Op.Any[] => {
   if (A.equals(before, after)) {
     return [];
   }

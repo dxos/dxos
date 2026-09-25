@@ -8,11 +8,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { EventEmitter } from 'eventemitter3';
 
 import { Event, Trigger, TriggerState } from '@dxos/async';
-import { Mirror } from '@dxos/echo-protocol';
+import { Contract, Op, Sync } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type MirrorService } from '@dxos/protocols/rpc';
 
 import {
   type ClientDocHandle,
@@ -67,7 +66,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   readonly gap = new Event<void>();
 
   /** Fires with this tab's changes the worker refused, before the {@link confirmed} that settles them. */
-  readonly refused = new Event<Mirror.Change[]>();
+  readonly refused = new Event<Op.Change[]>();
 
   /** Fires on the tab's first write to a document that follows the index, which needs the worker's copy to land. */
   readonly upgrade = new Event<void>();
@@ -90,11 +89,11 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   #state: DocHandleProxyState = 'pending';
   #documentId?: DocumentId;
   #epoch?: string;
-  #client?: Mirror.MirrorClientState<T>;
+  #client?: Sync.ClientState<T>;
   /** State before the worker's first snapshot: the initial value of a document being created. */
   #local: T;
   /** Changes made before the worker's first snapshot. */
-  #early: Mirror.Op[][] = [];
+  #early: Op.Any[][] = [];
   #deleted = false;
   /** Read from the worker's index: shown, but not written until the worker's copy answers. */
   #indexed = false;
@@ -117,7 +116,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     this.#created = initialValue !== undefined;
     this.#followsIndex = indexed;
     // Wire and caller data become the mirror's frozen state; T is the caller's promise about its shape.
-    this.#local = Mirror.freezeValue((initialValue ?? {}) as T);
+    this.#local = Op.freeze((initialValue ?? {}) as T);
   }
 
   get url(): AutomergeUrl | undefined {
@@ -138,7 +137,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /** Edits not yet confirmed, relative to the confirmed state, in order. */
-  get pendingOps(): Mirror.Op[] {
+  get pendingOps(): Op.Any[] {
     return [...this.#early.flat(), ...(this.#client?.pendingOps ?? [])];
   }
 
@@ -270,11 +269,11 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (recorder.ops.length === 0) {
       return;
     }
-    let patches: Mirror.MirrorPatch[];
+    let patches: Op.Patch[];
     if (this.#client) {
       patches = this.#client.applyLocal(recorder.ops);
     } else {
-      ({ root: this.#local, patches } = Mirror.applyOps(this.#local, recorder.ops));
+      ({ root: this.#local, patches } = Op.apply(this.#local, recorder.ops));
       this.#early.push([...recorder.ops]);
     }
     const after = this.doc();
@@ -314,7 +313,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /** What the tab holds, sent when resubscribing so the worker can send only what it missed. */
-  _known(): MirrorService.Known | undefined {
+  _known(): Contract.Known | undefined {
     if (!this.#client || !this.#epoch) {
       return undefined;
     }
@@ -328,7 +327,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /** The next batch to submit, if there is no batch in flight and there are buffered edits. */
-  _takeBatch(): { epoch: string; batch: Mirror.Batch } | undefined {
+  _takeBatch(): { epoch: string; batch: Sync.Batch } | undefined {
     if (!this.#client || !this.#epoch || this.#indexed) {
       return undefined;
     }
@@ -370,7 +369,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /** Integrates an event from the worker. */
-  _receive(event: MirrorService.DocumentEvent): void {
+  _receive(event: Contract.DocumentEvent): void {
     switch (event.type) {
       case 'snapshot':
         return this.#applySnapshot(event);
@@ -380,7 +379,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
         return this.#applyRecovered(event);
       case 'caughtUp':
         return this.#applyCaughtUp(event);
-      case 'indexed':
+      case 'copy':
         return this.#applyIndexed(event);
       case 'requesting':
         return this._markRequesting();
@@ -389,15 +388,15 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     }
   }
 
-  #applySnapshot(event: Extract<MirrorService.DocumentEvent, { type: 'snapshot' }>): void {
+  #applySnapshot(event: Extract<Contract.DocumentEvent, { type: 'snapshot' }>): void {
     const before = this.doc();
     // Structured-clone data from the worker; T is the database layer's promise about its shape.
-    const value = Mirror.freezeValue(event.value as T);
+    const value = Op.freeze(event.value as T);
     this.#epoch = event.epoch;
     this.#indexed = false;
     this.#followsIndex = false;
-    let patches: Mirror.MirrorPatch[];
-    let refused: Mirror.Change[] = [];
+    let patches: Op.Patch[];
+    let refused: Op.Change[] = [];
     if (this.#client) {
       ({ patches, refused } = this.#client.reset(
         value,
@@ -407,7 +406,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
         event.refusedAt,
       ));
     } else {
-      this.#client = new Mirror.MirrorClientState<T>(this.#clientId, value, event.version, event.heads);
+      this.#client = new Sync.ClientState<T>(this.#clientId, value, event.version, event.heads);
       for (const change of this.#early) {
         this.#client.applyLocal(change);
       }
@@ -420,7 +419,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     this.confirmed.emit();
   }
 
-  #applyEntry(event: Extract<MirrorService.DocumentEvent, { type: 'entry' }>): void {
+  #applyEntry(event: Extract<Contract.DocumentEvent, { type: 'entry' }>): void {
     if (!this.#client || event.epoch !== this.#epoch || event.entry.version <= this.#client.version) {
       // Another numbering, which a resubscription replaces, or an entry already integrated.
       return;
@@ -432,7 +431,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     const before = this.doc();
     const { patches, acknowledged, refused } = this.#client.receive({
       version: event.entry.version,
-      ops: event.entry.ops.filter(Mirror.isOp),
+      ops: event.entry.ops.filter(Op.is),
       heads: event.entry.heads,
       ...(event.entry.origin ? { origin: event.entry.origin } : {}),
     });
@@ -445,7 +444,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     }
   }
 
-  #applyRecovered(event: Extract<MirrorService.DocumentEvent, { type: 'recovered' }>): void {
+  #applyRecovered(event: Extract<Contract.DocumentEvent, { type: 'recovered' }>): void {
     if (!this.#client || event.epoch === this.#epoch) {
       // Recovery answers a tab that knew another worker; this one already follows the stream.
       return;
@@ -453,7 +452,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     const before = this.doc();
     const { patches, refused } = this.#client.recover(
       event.entries.map((entry) => ({
-        ops: entry.ops.filter(Mirror.isOp),
+        ops: entry.ops.filter(Op.is),
         heads: entry.heads,
         ...(entry.origin ? { origin: entry.origin } : {}),
       })),
@@ -474,19 +473,19 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
    * Shows the document as the worker's index holds it. Its heads are where a live subscription
    * resumes from on the first write, so edits made meanwhile are rebased over anything newer.
    */
-  #applyIndexed(event: Extract<MirrorService.DocumentEvent, { type: 'indexed' }>): void {
+  #applyIndexed(event: Extract<Contract.DocumentEvent, { type: 'copy' }>): void {
     if (this.#client && !(this.#indexed && this.#followsIndex)) {
       // Live already, or switching to live, whose answer settles the document.
       return;
     }
     const before = this.doc();
     // Structured-clone data from the worker; T is the database layer's promise about its shape.
-    const value = Mirror.freezeValue(event.value as T);
-    let patches: Mirror.MirrorPatch[];
+    const value = Op.freeze(event.value as T);
+    let patches: Op.Patch[];
     if (this.#client) {
       ({ patches } = this.#client.reset(value, 0, event.heads));
     } else {
-      this.#client = new Mirror.MirrorClientState<T>(this.#clientId, value, 0, event.heads);
+      this.#client = new Sync.ClientState<T>(this.#clientId, value, 0, event.heads);
       for (const change of this.#early) {
         this.#client.applyLocal(change);
       }
@@ -500,7 +499,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     this.confirmed.emit();
   }
 
-  #applyCaughtUp(event: Extract<MirrorService.DocumentEvent, { type: 'caughtUp' }>): void {
+  #applyCaughtUp(event: Extract<Contract.DocumentEvent, { type: 'caughtUp' }>): void {
     if (!this.#client || event.epoch !== this.#epoch) {
       return;
     }
@@ -521,13 +520,13 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     return registerMirrorDoc(this.#client?.current ?? this.#local, this.#client?.heads ?? []);
   }
 
-  #emitRefused(refused: readonly Mirror.Change[]): void {
+  #emitRefused(refused: readonly Op.Change[]): void {
     if (refused.length > 0) {
       this.refused.emit([...refused]);
     }
   }
 
-  #emitHostChange(before: AutomergeDoc<T>, patches: Mirror.MirrorPatch[]): void {
+  #emitHostChange(before: AutomergeDoc<T>, patches: Op.Patch[]): void {
     const after = this.doc();
     this.emit('change', {
       handle: this,
@@ -554,8 +553,8 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 }
 
 /** Patches announcing a whole document, as a first Automerge delivery reports it. */
-const topLevelPuts = (root: unknown): Mirror.MirrorPatch[] =>
-  Mirror.isContainer(root) && !Array.isArray(root)
+const topLevelPuts = (root: unknown): Op.Patch[] =>
+  Op.isContainer(root) && !Array.isArray(root)
     ? Object.entries(root).map(([key, value]) => ({ action: 'put', path: [key], value }))
     : [];
 
@@ -565,7 +564,7 @@ const toPatchValue = (value: unknown): PatchValue => (value === undefined ? null
 
 /** An empty container of the same kind, as Automerge reports a new object before filling it. */
 const emptyOf = (value: unknown): PatchValue =>
-  Array.isArray(value) ? [] : Mirror.isContainer(value) ? {} : toPatchValue(value);
+  Array.isArray(value) ? [] : Op.isContainer(value) ? {} : toPatchValue(value);
 
 /**
  * Appends patches creating `value` at `path` the way Automerge reports it: an empty container,
@@ -582,9 +581,9 @@ const expandChildren = (path: (string | number)[], value: unknown, out: Patch[])
     if (value.length > 0) {
       expandInsert([...path, 0], value, out);
     }
-  } else if (Mirror.isContainer(value)) {
+  } else if (Op.isContainer(value)) {
     for (const [key, child] of Object.entries(value)) {
-      if (Mirror.isContainer(child)) {
+      if (Op.isContainer(child)) {
         expandPut([...path, key], child, out);
       } else {
         out.push({ action: 'put', path: [...path, key], value: toPatchValue(child) });
@@ -601,7 +600,7 @@ const expandInsert = (path: (string | number)[], values: readonly unknown[], out
 };
 
 /** Mirror patches in Automerge's patch type and shape, for listeners written against Automerge handles. */
-const toPatches = (patches: readonly Mirror.MirrorPatch[]): Patch[] => {
+const toPatches = (patches: readonly Op.Patch[]): Patch[] => {
   const out: Patch[] = [];
   for (const patch of patches) {
     switch (patch.action) {

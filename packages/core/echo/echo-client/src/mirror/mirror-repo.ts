@@ -7,8 +7,8 @@ import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
+import { Contract, Wire } from '@dxos/automerge-proxy';
 import { Resource } from '@dxos/context';
-import { Mirror } from '@dxos/echo-protocol';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
@@ -29,7 +29,7 @@ import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
 import { isMirrorIndexedReads } from './mode.ts';
 
 /** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
-const WIRE: Mirror.FromWireOptions = { rawString: (text) => new A.RawString(text) };
+const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 
 const RPC_TIMEOUT = 30_000;
 const FLUSH_TIMEOUT = 30_000;
@@ -48,13 +48,7 @@ const RESUBSCRIBE_DELAY_MS = 250;
 const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
 /** Events that answer a (re)subscription to a document. */
-const ANSWERS = new Set<MirrorService.DocumentEvent['type']>([
-  'snapshot',
-  'recovered',
-  'caughtUp',
-  'indexed',
-  'unavailable',
-]);
+const ANSWERS = new Set<Contract.DocumentEvent['type']>(['snapshot', 'recovered', 'caughtUp', 'copy', 'unavailable']);
 
 /**
  * A repo whose documents are JSON mirrors served by the worker's `MirrorService`: the tab loads no
@@ -93,7 +87,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
     },
   };
   /** Batches whose submit failed, resent as they were: the worker ignores one it already applied. */
-  readonly #retry = new Map<string, MirrorService.SubmitRequest['batches'][number]>();
+  readonly #retry = new Map<string, Contract.SubmitBatch>();
   /** Submit failures, so a flush can tell that writes it waits for may never land. */
   readonly #failed = new Event<Error>();
   /** Any handle confirming something, which is when a flush re-checks what is still pending. */
@@ -495,10 +489,10 @@ export class MirrorRepo extends Resource implements ClientRepo {
         ready.wake();
         for (const event of events) {
           const handle = this.#handles[event.documentId];
-          handle?._receive(Mirror.eventFromWire(event, WIRE));
+          handle?._receive(Wire.decodeEvent(event, WIRE));
           if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
             // The tab wrote after asking for the index copy, so its write needs the worker's copy.
-            if (event.type === 'indexed' && handle && !handle.followsIndex) {
+            if (event.type === 'copy' && handle && !handle.followsIndex) {
               this.#catchUp(event.documentId);
             }
             this.#answered.emit(event.documentId);
@@ -569,7 +563,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
         return {
           documentId,
           ...(known ? { known } : {}),
-          ...(handle?.followsIndex ? { mode: 'indexed' as const } : {}),
+          ...(handle?.followsIndex ? { mode: 'copy' as const } : {}),
         };
       });
       const remove = [...this.#pendingRemove];
@@ -608,7 +602,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
       }
     }
 
-    const batches: MirrorService.SubmitRequest['batches'] = [...this.#retry.values()].filter(
+    const batches: Contract.SubmitBatch[] = [...this.#retry.values()].filter(
       (batch) => !this.#catchingUp.has(batch.documentId),
     );
     this.#retry.clear();
@@ -623,7 +617,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
           epoch: next.epoch,
           batchId: next.batch.batchId,
           baseVersion: next.batch.baseVersion,
-          changes: Mirror.changesToWire(next.batch.changes),
+          changes: Wire.encodeChanges(next.batch.changes),
         });
       }
     }

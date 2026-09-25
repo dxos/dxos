@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Change, type Op, type Path, type PutOp, type RemoveOp, type SpliceOp } from './ops.ts';
+// @import-as-namespace
+
+import * as Op from './Op.ts';
 
 /**
  * How a write and a delete of the same map key or list element resolve. Concurrent writers follow
@@ -23,7 +25,7 @@ export type ConflictRule = 'write-wins' | 'later-wins';
  *
  * Returns zero ops when `a` no longer has a target, and two when `b` split the range `a` removes.
  */
-export const transformOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule = 'write-wins'): Op[] => {
+export const pair = (a: Op.Any, b: Op.Any, aFirst: boolean, rule: ConflictRule = 'write-wins'): Op.Any[] => {
   switch (b.type) {
     case 'splice':
       return overSplice(a, b, aFirst);
@@ -40,17 +42,17 @@ export const transformOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule = 
  * Transforms two op lists made against the same state: returns `as` rebased onto `bs` and `bs`
  * rebased onto `as`. Applying `bs` then the first result equals applying `as` then the second.
  */
-export const transformLists = (
-  as: readonly Op[],
-  bs: readonly Op[],
+export const lists = (
+  as: readonly Op.Any[],
+  bs: readonly Op.Any[],
   aFirst: boolean,
   rule: ConflictRule = 'write-wins',
-): [Op[], Op[]] => {
-  let bCurrent: Op[] = bs.slice();
-  const aOut: Op[] = [];
+): [Op.Any[], Op.Any[]] => {
+  let bCurrent: Op.Any[] = bs.slice();
+  const aOut: Op.Any[] = [];
   for (const a of as) {
-    let aCurrent: Op[] = [a];
-    const bNext: Op[] = [];
+    let aCurrent: Op.Any[] = [a];
+    const bNext: Op.Any[] = [];
     for (const b of bCurrent) {
       const [aTransformed, bTransformed] = transformSmall(aCurrent, [b], aFirst, rule);
       aCurrent = aTransformed;
@@ -63,32 +65,32 @@ export const transformLists = (
 };
 
 /**
- * {@link transformLists} for a list of changes, keeping each change's ops together, since the worker
+ * {@link lists} for a list of changes, keeping each change's ops together, since the worker
  * writes or refuses a change as a unit. A change can come out empty.
  */
-export const transformChanges = (
-  changes: readonly Change[],
-  ops: readonly Op[],
+export const changes = (
+  list: readonly Op.Change[],
+  ops: readonly Op.Any[],
   aFirst: boolean,
   rule: ConflictRule = 'write-wins',
-): [Op[][], Op[]] => {
-  const rebased: Op[][] = [];
-  let past: Op[] = ops.slice();
-  for (const change of changes) {
-    const [changePrime, pastPrime] = transformLists(change, past, aFirst, rule);
+): [Op.Any[][], Op.Any[]] => {
+  const rebased: Op.Any[][] = [];
+  let past: Op.Any[] = ops.slice();
+  for (const change of list) {
+    const [changePrime, pastPrime] = lists(change, past, aFirst, rule);
     rebased.push(changePrime);
     past = pastPrime;
   }
   return [rebased, past];
 };
 
-/** Recursive form of {@link transformLists} for the one- and two-op lists a split produces. */
-const transformSmall = (as: Op[], bs: Op[], aFirst: boolean, rule: ConflictRule): [Op[], Op[]] => {
+/** Recursive form of {@link lists} for the one- and two-op lists a split produces. */
+const transformSmall = (as: Op.Any[], bs: Op.Any[], aFirst: boolean, rule: ConflictRule): [Op.Any[], Op.Any[]] => {
   if (as.length === 0 || bs.length === 0) {
     return [as, bs];
   }
   if (as.length === 1 && bs.length === 1) {
-    return [transformOp(as[0], bs[0], aFirst, rule), transformOp(bs[0], as[0], !aFirst, rule)];
+    return [pair(as[0], bs[0], aFirst, rule), pair(bs[0], as[0], !aFirst, rule)];
   }
   if (as.length > 1) {
     const [head, bs1] = transformSmall([as[0]], bs, aFirst, rule);
@@ -100,19 +102,19 @@ const transformSmall = (as: Op[], bs: Op[], aFirst: boolean, rule: ConflictRule)
   return [as2, [...head, ...rest]];
 };
 
-const samePath = (left: Path, right: Path) =>
+const samePath = (left: Op.Path, right: Op.Path) =>
   left.length === right.length && left.every((key, index) => String(key) === String(right[index]));
 
-const isStrictPrefix = (prefix: Path, path: Path) =>
+const isStrictPrefix = (prefix: Op.Path, path: Op.Path) =>
   prefix.length < path.length && prefix.every((key, index) => String(key) === String(path[index]));
 
-const withSegment = (op: Op, depth: number, index: number): Op => ({
+const withSegment = (op: Op.Any, depth: number, index: number): Op.Any => ({
   ...op,
   path: [...op.path.slice(0, depth), index, ...op.path.slice(depth + 1)],
 });
 
 /** `b` replaced or deleted the value at its path, so anything `a` does inside it has no target. */
-const overWrite = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => {
+const overWrite = (a: Op.Any, b: Op.Any, aFirst: boolean, rule: ConflictRule): Op.Any[] => {
   if (isStrictPrefix(b.path, a.path)) {
     return [];
   }
@@ -145,7 +147,7 @@ const overWrite = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => {
 };
 
 /** `b` inserted into or removed from a list; shift or drop whatever `a` addresses in it. */
-const overListOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => {
+const overListOp = (a: Op.Any, b: Op.Any, aFirst: boolean, rule: ConflictRule): Op.Any[] => {
   if (b.type !== 'insert' && b.type !== 'remove') {
     return [a];
   }
@@ -207,7 +209,7 @@ const overListOp = (a: Op, b: Op, aFirst: boolean, rule: ConflictRule): Op[] => 
 };
 
 /** A remove spares the list element a concurrent write set, which Automerge keeps. */
-const removeAroundWrite = (a: RemoveOp, b: PutOp): Op[] => {
+const removeAroundWrite = (a: Op.Remove, b: Op.Put): Op.Any[] => {
   const listPath = a.path.slice(0, -1);
   // A put whose parent is the remove's list writes one of its elements.
   if (!samePath(listPath, b.path.slice(0, -1))) {
@@ -227,7 +229,7 @@ const removeAroundWrite = (a: RemoveOp, b: PutOp): Op[] => {
 };
 
 /** `b` edited a text in place; only another edit to the same text needs rebasing. */
-const overSplice = (a: Op, b: SpliceOp, aFirst: boolean): Op[] => {
+const overSplice = (a: Op.Any, b: Op.Splice, aFirst: boolean): Op.Any[] => {
   if (a.type !== 'splice' || !samePath(a.path, b.path)) {
     return [a];
   }
@@ -244,7 +246,7 @@ const overSplice = (a: Op, b: SpliceOp, aFirst: boolean): Op[] => {
  */
 type Component = number | string;
 
-const toComponents = (op: SpliceOp, length: number): Component[] => {
+const toComponents = (op: Op.Splice, length: number): Component[] => {
   const components: Component[] = [];
   if (op.index > 0) {
     components.push(op.index);
@@ -378,8 +380,8 @@ const advance = (
 };
 
 /** Turns a component sequence back into splices applied one after another. */
-const toSplices = (path: Path, components: Component[]): SpliceOp[] => {
-  const splices: SpliceOp[] = [];
+const toSplices = (path: Op.Path, components: Component[]): Op.Splice[] => {
+  const splices: Op.Splice[] = [];
   let position = 0;
   for (const component of components) {
     if (typeof component === 'string') {

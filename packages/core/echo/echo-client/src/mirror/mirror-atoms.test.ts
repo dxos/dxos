@@ -6,8 +6,8 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Op } from '@dxos/automerge-proxy';
 import { Obj, Ref } from '@dxos/echo';
-import { Mirror } from '@dxos/echo-protocol';
 import { MetaId, ObjectDatabaseId, TypeId } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
@@ -24,7 +24,7 @@ const normalize = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map(normalize);
   }
-  if (Mirror.isContainer(value)) {
+  if (Op.isContainer(value)) {
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, normalize(entry)]));
   }
   return value;
@@ -132,10 +132,10 @@ describe('mirror snapshot atoms', () => {
           expect(calls[0]).toBe(1);
         }
         notificationsPerEdit[`${subscribe}, ${placeIn}`] = calls[0];
-        const keptItem = Mirror.getAt(after, ['items', 0]) === Mirror.getAt(before, ['items', 0]);
+        const keptItem = Op.getAt(after, ['items', 0]) === Op.getAt(before, ['items', 0]);
         // The proxy walk copies everything on every change; the document projection shares what did not change.
         expect(keptItem, `${subscribe} ${placeIn}`).toBe(subscribe !== 'Obj.atom');
-        expect(Mirror.getAt(after, ['items', 1, 'label'])).toBe(subscribe);
+        expect(Op.getAt(after, ['items', 1, 'label'])).toBe(subscribe);
       }
     }
     console.log({ notificationsPerEdit });

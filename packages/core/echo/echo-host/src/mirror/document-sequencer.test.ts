@@ -5,7 +5,8 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Mirror, MirrorTesting } from '@dxos/echo-protocol';
+import { Op, Sync } from '@dxos/automerge-proxy';
+import { createRandom, initialDocument, randomOp } from '@dxos/automerge-proxy/testing';
 
 import { applyOpsToDraft, toMirror } from './automerge-ops.ts';
 import { DocumentSequencer, type SequencedDocument } from './document-sequencer.ts';
@@ -27,10 +28,10 @@ class TestWorker {
   sequencer: DocumentSequencer;
   epoch = 0;
   /** Durable entries of the current epoch, in order. */
-  log: Mirror.Entry[] = [];
+  log: Sync.Entry[] = [];
   /** Version of the last durable entry. */
   durableVersion = 0;
-  #unsaved: Mirror.Entry[] = [];
+  #unsaved: Sync.Entry[] = [];
 
   readonly target: SequencedDocument = {
     doc: () => this.doc,
@@ -51,7 +52,7 @@ class TestWorker {
     this.sequencer = new DocumentSequencer(A.getHeads(this.doc));
   }
 
-  submit(clientId: string, batch: Mirror.Batch): 'applied' | 'resync' {
+  submit(clientId: string, batch: Sync.Batch): 'applied' | 'resync' {
     const result = this.sequencer.submit(this.target, clientId, batch);
     this.#unsaved.push(...result.entries);
     if (result.type === 'applied' && result.refused && !batch.changes[result.refused.index].some(isPoison)) {
@@ -88,26 +89,26 @@ class TestWorker {
 }
 
 type Tab = {
-  state: Mirror.MirrorClientState;
+  state: Sync.ClientState;
   epoch: number;
   /** Index into the worker's durable log of the next entry to deliver. */
   delivered: number;
   /** Batches sent but not yet received by the worker; lost if it restarts. */
-  inTransit: Mirror.Batch[];
+  inTransit: Sync.Batch[];
   appended: number;
 };
 
 const LOG_PATH = ['log'];
 
-const isProtected = (op: Mirror.Op) => op.path.length > 0 && op.path[0] === 'log';
+const isProtected = (op: Op.Any) => op.path.length > 0 && op.path[0] === 'log';
 
 /** An op no document fits, so the worker refuses the change that holds it. */
-const POISON: Mirror.Op = { type: 'put', path: ['\u2620', 'x'], value: 1 };
+const POISON: Op.Any = { type: 'put', path: ['\u2620', 'x'], value: 1 };
 
-const isPoison = (op: Mirror.Op) => op.path[0] === '\u2620';
+const isPoison = (op: Op.Any) => op.path[0] === '\u2620';
 
 /** The markers a list of changes appends to the log. */
-const markersIn = (changes: readonly Mirror.Change[]) =>
+const markersIn = (changes: readonly Op.Change[]) =>
   changes.flat().flatMap((op) => (op.type === 'splice' && isProtected(op) && op.insert.length > 0 ? [op.insert] : []));
 
 describe('DocumentSequencer over Automerge', () => {
@@ -116,8 +117,8 @@ describe('DocumentSequencer over Automerge', () => {
 
     const seeds = Number(process.env.MIRROR_FUZZ_SEEDS ?? 120);
     for (let seed = 1; seed <= seeds; seed++) {
-      const random = MirrorTesting.createRandom(seed);
-      const initial = { ...MirrorTesting.initialDocument(), log: '' };
+      const random = createRandom(seed);
+      const initial = { ...initialDocument(), log: '' };
       const worker = new TestWorker(initial, createActors(seed));
       let remote = A.clone(worker.doc, worker.nextActor());
       let remoteAppends = 0;
@@ -127,7 +128,7 @@ describe('DocumentSequencer over Automerge', () => {
       let batchCounter = 0;
 
       const tabs: Tab[] = Array.from({ length: 2 + random.int(2) }, (_, index) => ({
-        state: new Mirror.MirrorClientState(`tab-${index}`, toMirror(worker.doc), 0, A.getHeads(worker.doc)),
+        state: new Sync.ClientState(`tab-${index}`, toMirror(worker.doc), 0, A.getHeads(worker.doc)),
         epoch: 0,
         delivered: 0,
         inTransit: [],
@@ -179,16 +180,16 @@ describe('DocumentSequencer over Automerge', () => {
         const tab = random.pick(tabs);
         const roll = random.int(20);
         if (roll < 5) {
-          const op = MirrorTesting.randomOp(random, tab.state.current, tab.state.clientId);
+          const op = randomOp(random, tab.state.current, tab.state.clientId);
           if (op && !isProtected(op)) {
             tab.state.applyLocal([op]);
           }
         } else if (roll < 7) {
           const marker = `|${tab.state.clientId}:${tab.appended++}|`;
           markers.push(marker);
-          const text = Mirror.getAt(tab.state.current, LOG_PATH);
+          const text = Op.getAt(tab.state.current, LOG_PATH);
           const index = typeof text === 'string' ? text.length : 0;
-          const append: Mirror.Op = { type: 'splice', path: LOG_PATH, index, remove: 0, insert: marker };
+          const append: Op.Any = { type: 'splice', path: LOG_PATH, index, remove: 0, insert: marker };
           if (random.chance(0.1)) {
             poisoned.add(marker);
             tab.state.applyLocal([append, POISON]);
@@ -210,7 +211,7 @@ describe('DocumentSequencer over Automerge', () => {
           worker.save();
         } else if (roll < 18) {
           if (random.chance(0.5)) {
-            const op = MirrorTesting.randomOp(random, toMirror(remote), 'R');
+            const op = randomOp(random, toMirror(remote), 'R');
             if (op && !isProtected(op)) {
               remote = A.change(remote, { time: 0 }, (draft) => {
                 applyOpsToDraft(draft, [op]);
@@ -220,7 +221,7 @@ describe('DocumentSequencer over Automerge', () => {
             const marker = `|remote:${remoteAppends++}|`;
             markers.push(marker);
             remote = A.change(remote, { time: 0 }, (draft) => {
-              const text = Mirror.getAt(draft, LOG_PATH);
+              const text = Op.getAt(draft, LOG_PATH);
               A.splice(draft, [...LOG_PATH], typeof text === 'string' ? text.length : 0, 0, marker);
             });
           }
@@ -262,7 +263,7 @@ describe('DocumentSequencer over Automerge', () => {
       const expected = toMirror(worker.doc);
       for (const tab of tabs) {
         expect(tab.state.hasPending).toBe(false);
-        if (!Mirror.mirrorEquals(tab.state.current, expected)) {
+        if (!Op.equals(tab.state.current, expected)) {
           throw new Error(
             `seed ${seed}: ${tab.state.clientId} diverged\n${JSON.stringify(tab.state.current)}\n${JSON.stringify(expected)}`,
           );
@@ -271,7 +272,7 @@ describe('DocumentSequencer over Automerge', () => {
       // The replica's document, not its cached view: Automerge 3.5.0 can leave that view out of step
       // with the document after `A.merge`, with no mirror code involved.
       const remoteState = toMirror(A.load(A.save(remote)));
-      if (!Mirror.mirrorEquals(remoteState, expected)) {
+      if (!Op.equals(remoteState, expected)) {
         throw new Error(
           `seed ${seed}: the remote peer diverged\n${JSON.stringify(remoteState)}\n${JSON.stringify(expected)}`,
         );
@@ -279,7 +280,7 @@ describe('DocumentSequencer over Automerge', () => {
 
       // A marker the worker refused is gone and was reported; every other one landed exactly once.
       expect(reported.toSorted()).toEqual([...poisoned].toSorted());
-      const log = Mirror.getAt(expected, LOG_PATH);
+      const log = Op.getAt(expected, LOG_PATH);
       expect(typeof log).toBe('string');
       for (const marker of markers) {
         const occurrences = String(log).split(marker).length - 1;

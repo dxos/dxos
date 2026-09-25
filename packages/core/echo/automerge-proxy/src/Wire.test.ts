@@ -5,9 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { MirrorService } from '@dxos/protocols/rpc';
-
-import { eventFromWire, eventToWire, fromWire, toWire } from './wire.ts';
+import * as Contract from './Contract.ts';
+import * as Wire from './Wire.ts';
 
 /** Stands in for Automerge's RawString, which carries this marker as an own property. */
 class TestRawString {
@@ -23,12 +22,12 @@ class TestRawString {
 const options = { rawString: (text: string) => new TestRawString(text) };
 
 /** What the worker transport does to a value: encode as JSON, parse on the other side. */
-const acrossTheWire = (value: unknown) => fromWire(JSON.parse(JSON.stringify(toWire(value))), options);
+const acrossTheWire = (value: unknown) => Wire.decode(JSON.parse(JSON.stringify(Wire.encode(value))), options);
 
 describe('mirror values on the wire', () => {
   test('plain JSON goes as it is', () => {
     const value = { title: 'a', list: [1, 'two', { three: true, four: null }] };
-    expect(toWire(value)).toBe(value);
+    expect(Wire.encode(value)).toBe(value);
     expect(acrossTheWire(value)).toEqual(value);
   });
 
@@ -55,8 +54,8 @@ describe('mirror values on the wire', () => {
   });
 
   test('an event crosses the JSON codec the worker transport encodes with', () => {
-    const codec = Schema.toCodecJson(MirrorService.DocumentEvent);
-    const event: MirrorService.DocumentEvent = {
+    const codec = Schema.toCodecJson(Contract.DocumentEvent);
+    const event: Contract.DocumentEvent = {
       type: 'snapshot',
       documentId: 'document',
       epoch: 'epoch',
@@ -65,7 +64,7 @@ describe('mirror values on the wire', () => {
       value: { long: new TestRawString('text'), bytes: new Uint8Array([1, 2]), when: new Date(5) },
     };
     expect(() => Schema.encodeSync(codec)(event)).toThrow();
-    const sent = JSON.parse(JSON.stringify(Schema.encodeSync(codec)(eventToWire(event))));
-    expect(eventFromWire(Schema.decodeUnknownSync(codec)(sent), options)).toEqual(event);
+    const sent = JSON.parse(JSON.stringify(Schema.encodeSync(codec)(Wire.encodeEvent(event))));
+    expect(Wire.decodeEvent(Schema.decodeUnknownSync(codec)(sent), options)).toEqual(event);
   });
 });

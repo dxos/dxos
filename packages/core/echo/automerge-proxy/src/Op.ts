@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
+import { InvalidOpError } from './errors.ts';
+
 /**
  * Path to a value inside a mirrored document: map keys are strings, list positions are numbers.
  */
@@ -13,25 +17,25 @@ export type Path = readonly (string | number)[];
  * Tabs record these instead of Automerge changes; the worker applies them to the Automerge document
  * and converts the patches of changes it merges from elsewhere back into them.
  */
-export type Op = PutOp | DelOp | InsertOp | RemoveOp | SpliceOp;
+export type Any = Put | Del | Insert | Remove | Splice;
 
 /** The ops of one `change()` call: the unit the worker writes whole or refuses. */
-export type Change = readonly Op[];
+export type Change = readonly Any[];
 
 /** Sets a map key or replaces a list element. A string value becomes a new text object. */
-export type PutOp = { readonly type: 'put'; readonly path: Path; readonly value: unknown };
+export type Put = { readonly type: 'put'; readonly path: Path; readonly value: unknown };
 
 /** Deletes a map key. */
-export type DelOp = { readonly type: 'del'; readonly path: Path };
+export type Del = { readonly type: 'del'; readonly path: Path };
 
 /** Inserts values into the list at `path[:-1]`, before the element at index `path[-1]`. */
-export type InsertOp = { readonly type: 'insert'; readonly path: Path; readonly values: readonly unknown[] };
+export type Insert = { readonly type: 'insert'; readonly path: Path; readonly values: readonly unknown[] };
 
 /** Removes `count` elements from the list at `path[:-1]`, starting at index `path[-1]`. */
-export type RemoveOp = { readonly type: 'remove'; readonly path: Path; readonly count: number };
+export type Remove = { readonly type: 'remove'; readonly path: Path; readonly count: number };
 
 /** Edits the text at `path` in place, so concurrent edits to the same text merge. */
-export type SpliceOp = {
+export type Splice = {
   readonly type: 'splice';
   readonly path: Path;
   readonly index: number;
@@ -43,7 +47,7 @@ export type SpliceOp = {
  * Change notification in Automerge's patch format, so consumers written against Automerge patches
  * (document-change routing, store adapters) read mirror changes unchanged.
  */
-export type MirrorPatch =
+export type Patch =
   | { action: 'put'; path: (string | number)[]; value: unknown }
   | { action: 'del'; path: (string | number)[]; length?: number }
   | { action: 'insert'; path: (string | number)[]; values: unknown[] }
@@ -67,7 +71,7 @@ export const isContainer = (value: unknown): value is Container => {
  * Deep-copies containers and freezes them, keeping leaves by reference. Already-frozen containers
  * are shared, so a snapshot can be stored inside another without copying.
  */
-export const freezeValue = <T>(value: T): T => freezeAt(value, []);
+export const freeze = <T>(value: T): T => freezeAt(value, []);
 
 /** Refuses `undefined` and array holes, as Automerge does when a document is created from a value. */
 const freezeAt = <T>(value: T, path: readonly (string | number)[]): T => {
@@ -100,29 +104,21 @@ export const getAt = (root: unknown, path: Path): unknown => {
 };
 
 /** Thrown in strict mode when an op does not fit the state it is applied to. */
-export class InvalidOpError extends Error {
-  constructor(
-    readonly op: Op,
-    reason: string,
-  ) {
-    super(`Invalid ${op.type} at ${JSON.stringify(op.path)}: ${reason}`);
-  }
-}
 
 export type ApplyOptions = {
   /** Throw on an op that does not fit instead of skipping it; tests use this to catch transform bugs. */
   strict?: boolean;
 };
 
-export type ApplyResult<T> = { root: T; patches: MirrorPatch[] };
+export type ApplyResult<T> = { root: T; patches: Patch[] };
 
 /**
  * Applies ops to a frozen snapshot and returns the new snapshot. Only containers on each op's path
  * are copied, so untouched subtrees keep their identity.
  */
-export const applyOps = <T>(root: T, ops: readonly Op[], options: ApplyOptions = {}): ApplyResult<T> => {
+export const apply = <T>(root: T, ops: readonly Any[], options: ApplyOptions = {}): ApplyResult<T> => {
   let current: unknown = root;
-  const patches: MirrorPatch[] = [];
+  const patches: Patch[] = [];
   for (const op of ops) {
     const next = applyOp(current, op, options);
     if (next !== undefined) {
@@ -133,7 +129,7 @@ export const applyOps = <T>(root: T, ops: readonly Op[], options: ApplyOptions =
   return { root: current as T, patches };
 };
 
-const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<unknown> | undefined => {
+const applyOp = (root: unknown, op: Any, { strict }: ApplyOptions): ApplyResult<unknown> | undefined => {
   const fail = (reason: string) => {
     if (strict) {
       throw new InvalidOpError(op, reason);
@@ -151,7 +147,7 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
         return fail(`range ${op.index}+${op.remove} outside length ${text.length}`);
       }
       const updated = text.slice(0, op.index) + op.insert + text.slice(op.index + op.remove);
-      const patches: MirrorPatch[] = [];
+      const patches: Patch[] = [];
       if (op.remove > 0) {
         patches.push({ action: 'del', path: [...op.path, op.index], length: op.remove });
       }
@@ -186,7 +182,7 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
             if (index >= parent.length) {
               return fail(`index ${index} outside length ${parent.length}`);
             }
-            const value = freezeValue(op.value);
+            const value = freeze(op.value);
             return {
               root: setIn(root, parentPath, 0, () => replaceAt(parent, index, 0, [value], 1)),
               patches: [{ action: 'put', path: listPath, value }],
@@ -196,7 +192,7 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
             if (index > parent.length) {
               return fail(`insert index ${index} outside length ${parent.length}`);
             }
-            const values = op.values.map((value) => freezeValue(value));
+            const values = op.values.map((value) => freeze(value));
             return {
               root: setIn(root, parentPath, 0, () => replaceAt(parent, index, 0, values, 0)),
               patches: [{ action: 'insert', path: listPath, values }],
@@ -219,7 +215,7 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
       const mapKey = String(key);
       switch (op.type) {
         case 'put': {
-          const value = freezeValue(op.value);
+          const value = freeze(op.value);
           return {
             root: setIn(root, parentPath, 0, () => Object.freeze({ ...parent, [mapKey]: value })),
             patches: [{ action: 'put', path: [...parentPath, mapKey], value }],
@@ -247,8 +243,8 @@ const applyOp = (root: unknown, op: Op, { strict }: ApplyOptions): ApplyResult<u
  * Ops that undo `ops`, to apply to the state they produce from `root`. An op that does not fit
  * changed nothing, so it has no inverse.
  */
-export const invertOps = (root: unknown, ops: readonly Op[]): Op[] => {
-  const inverses: Op[][] = [];
+export const invert = (root: unknown, ops: readonly Any[]): Any[] => {
+  const inverses: Any[][] = [];
   let current = root;
   for (const op of ops) {
     const inverse = invertOp(current, op);
@@ -262,7 +258,7 @@ export const invertOps = (root: unknown, ops: readonly Op[]): Op[] => {
 };
 
 /** The ops that undo `op`, read from the state it applies to. */
-const invertOp = (root: unknown, op: Op): Op[] | undefined => {
+const invertOp = (root: unknown, op: Any): Any[] | undefined => {
   if (op.type === 'splice') {
     const text = getAt(root, op.path);
     return typeof text === 'string'
@@ -359,7 +355,7 @@ export const diffText = (
 };
 
 /** Checks the shape of an op received over the wire. */
-export const isOp = (value: unknown): value is Op => {
+export const is = (value: unknown): value is Any => {
   if (typeof value !== 'object' || value === null || !('type' in value) || !('path' in value)) {
     return false;
   }
@@ -387,4 +383,40 @@ export const isOp = (value: unknown): value is Op => {
     default:
       return false;
   }
+};
+
+/** Structural equality of two mirror values; leaves such as RawString compare by class and text. */
+export const equals = (left: unknown, right: unknown): boolean => {
+  if (left === right || Object.is(left, right)) {
+    return true;
+  }
+  if (!isContainer(left) || !isContainer(right)) {
+    return leafEquals(left, right);
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((entry, index) => equals(entry, right[index]))
+    );
+  }
+  const entries = Object.entries(left);
+  return (
+    entries.length === Object.keys(right).length &&
+    entries.every(([key, value]) => key in right && equals(value, right[key]))
+  );
+};
+
+const leafEquals = (left: unknown, right: unknown): boolean => {
+  if (left instanceof Date && right instanceof Date) {
+    return left.getTime() === right.getTime();
+  }
+  if (left instanceof Uint8Array && right instanceof Uint8Array) {
+    return left.length === right.length && left.every((byte, index) => byte === right[index]);
+  }
+  if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null) {
+    return Object.getPrototypeOf(left) === Object.getPrototypeOf(right) && String(left) === String(right);
+  }
+  return false;
 };

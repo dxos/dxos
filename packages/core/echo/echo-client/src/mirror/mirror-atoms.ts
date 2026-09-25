@@ -5,8 +5,9 @@
 import { next as A } from '@automerge/automerge';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { Op } from '@dxos/automerge-proxy';
 import { type Obj } from '@dxos/echo';
-import { DATA_NAMESPACE, Mirror, isEncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, isEncodedReference } from '@dxos/echo-protocol';
 import {
   KindId,
   MetaId,
@@ -67,7 +68,7 @@ export const mirrorSnapshotAtom = Atom.family((obj: Obj.Unknown) => {
   return Atom.make((get): MirrorSnapshot => {
     const handle = core.docHandle;
     invariant(handle instanceof MirrorDocHandle, 'object is not in a mirror document');
-    return projector(Mirror.getAt(get(handle.atom), core.mountPath));
+    return projector(Op.getAt(get(handle.atom), core.mountPath));
   });
 });
 
@@ -81,7 +82,7 @@ export const routedSnapshotAtom = Atom.family((obj: Obj.Unknown) => {
   const read = (): MirrorSnapshot => {
     const handle = core.docHandle;
     invariant(handle instanceof MirrorDocHandle, 'object is not in a mirror document');
-    return projector(Mirror.getAt(handle.doc(), core.mountPath));
+    return projector(Op.getAt(handle.doc(), core.mountPath));
   };
   return Atom.make((get): MirrorSnapshot => {
     get.addFinalizer(core.updates.on(() => get.setSelf(read())));
@@ -105,9 +106,9 @@ const createProjector = (obj: Obj.Unknown) => {
 
 const project = (obj: Obj.Unknown, node: unknown, decoded: WeakMap<object, unknown>): MirrorSnapshot => {
   const target = getProxyTarget<ProxyTarget>(obj);
-  const data = decodeStored(Mirror.getAt(node, [DATA_NAMESPACE]) ?? {}, target, decoded);
+  const data = decodeStored(Op.getAt(node, [DATA_NAMESPACE]) ?? {}, target, decoded);
   const snapshot: Record<string | symbol, unknown> = { id: obj.id };
-  if (Mirror.isContainer(data) && !Array.isArray(data)) {
+  if (Op.isContainer(data) && !Array.isArray(data)) {
     Object.assign(snapshot, data);
   }
   snapshot[SnapshotKindId] = Reflect.get(obj, KindId);
@@ -135,7 +136,7 @@ const readLive = (obj: Obj.Unknown, symbol: symbol): unknown => {
 
 /** The copy `getSnapshot` makes, so the snapshot does not follow later edits to the live meta. */
 const copyMeta = (meta: unknown): Record<string, unknown> => {
-  const field = (key: string): unknown => (Mirror.isContainer(meta) ? Reflect.get(meta, key) : undefined);
+  const field = (key: string): unknown => (Op.isContainer(meta) ? Reflect.get(meta, key) : undefined);
   const list = (key: string): unknown[] => {
     const value = field(key);
     return Array.isArray(value) ? [...value] : [];
@@ -144,7 +145,7 @@ const copyMeta = (meta: unknown): Record<string, unknown> => {
   const copy: Record<string, unknown> = {
     keys: list('keys'),
     tags: list('tags'),
-    ...(Mirror.isContainer(annotations) ? { annotations: { ...annotations } } : {}),
+    ...(Op.isContainer(annotations) ? { annotations: { ...annotations } } : {}),
   };
   for (const key of SCALAR_META_FIELDS) {
     if (field(key) != null) {
@@ -162,7 +163,7 @@ const decodeStored = (value: unknown, target: ProxyTarget, decoded: WeakMap<obje
   if (isEncodedReference(value)) {
     return lookupRef(target, value);
   }
-  if (!Mirror.isContainer(value)) {
+  if (!Op.isContainer(value)) {
     return value;
   }
   const cached = decoded.get(value);
