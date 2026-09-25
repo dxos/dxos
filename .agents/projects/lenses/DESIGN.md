@@ -948,9 +948,20 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    conflicts, as an owned consequence. Epoch timing is the policy knob; the heads ancestry check
    makes the boundary safe (§10.3 addendum).
 3. **Reverse compatibility window.** How long do we keep old lenses, and what happens when a chain
-   grows to several hops?
+   grows to several hops? — **DECIDED (2026-09-25):** migrations are structured to be kept
+   indefinitely (a peer can return from any offline period, and epochs are out of scope); never
+   retiring is the default. Retirement is planned for as part of the process (e.g. a declared
+   support window after which late old-version data arrives unmigrated for manual review) but used
+   only if migrations become unmanageable. Long chains only affect views: stored objects converge
+   to the latest version by fold-forward.
 4. **Lens versioning** (§8.7) — a lens pins `source` to `typename@version`, and migration is exactly
-   the event that moves it. These must be designed together.
+   the event that moves it. These must be designed together. — **DECIDED (2026-09-25):** two
+   mechanisms. _Viewing_ (ephemeral) resolves the shortest path through the registry's graph of
+   lenses between type versions (`Task@2 → Task@1 → GtdTask@1`; a direct lens, once written, is
+   simply shorter), with deterministic tie-breaking so peers present the same view; weighting paths
+   by coverage loss is a later refinement. _Migrating_ (permanent base-data rewrite) only ever uses
+   explicitly declared version-to-version migrations, applied in sequence — never a discovered
+   path, which could route through an unrelated type and permanently drop what that detour drops.
 5. **Validation on the way through.** A `put` validates against the base type; during a migration the
    base type is what is changing.
 6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data
