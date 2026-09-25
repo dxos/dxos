@@ -121,6 +121,22 @@ design.
 - **Triage.** Calibration on the hunks the rules were mined from (`dataset/CALIBRATION.md`)
   shows high precision and modest recall, so the checker reports only verdicts at 0.8 or above
   and sends the band between 0.15 and 0.8 to agentic reviewers; below 0.15 is dismissed.
+- **Location granularity.** Segments are at most 12 lines. On the reviewers' own lines
+  (`dataset/CALIBRATION-CONTEXT.md`) they are hit as often as 40-line segments (57% against 59%)
+  at half the span; a second choice among 5-line runs inside the first choice dropped hits to 47%,
+  so there is no refinement round.
+
+## What calibration with context showed
+
+`dataset/calibrate-context.ts` repeats the calibration the way the checker runs: the whole file at
+the reviewer's commit, with each rule's declared context, the hunk standing in for `diff`. It did
+not separate better than bare hunks. At 0.5, recall on own hunks rose (36% → 45% for rules that
+declare context), but so did flags on other hunks (2% → 7%); at the 0.8 report threshold recall
+held or fell slightly. Two things blunt the measurement: a whole file is no longer a clean
+negative for other rules the way a hunk was, and most rules have two to four examples, so per-rule
+movement (16 rules separated better, 26 worse) is mostly noise. Context stays declared for the
+rules that need it, since the subagent comparison in `TRIAL.md` shows the reviewers do use it, but
+the checker's thresholds rest on the bare-hunk calibration and the trial.
 
 ## How the rules classify
 
@@ -129,24 +145,26 @@ several kinds.
 
 | Context kind                   | Rules declaring it |
 | ------------------------------ | ------------------ |
-| `diff`                         | 30                 |
-| `imports`                      | 3                  |
-| `importers`                    | 6                  |
+| `diff`                         | 36                 |
+| `imports`                      | 8                  |
+| `importers`                    | 9                  |
 | `siblings`                     | 13                 |
-| `package`                      | 3                  |
+| `package`                      | 4                  |
 | `public-api`                   | 3                  |
 | `similar`                      | 5                  |
-| `test`                         | 0                  |
+| `test`                         | 1                  |
 | `pr`                           | 3                  |
-| none: the file alone is enough | 52                 |
+| none: the file alone is enough | 37                 |
 
 Judged as a whole change set (`unit: pr`): `delete-dead-code-after-migration`, `refactor-must-preserve-behavior`, `catalog-is-dependency-source-of-truth`, `ci-and-tooling-avoid-duplicate-mechanisms`, `diff-scoped-to-pr-purpose`.
 
 Left to agentic reviewers only (`system-one: off`), because no fetcher can supply what they need:
 `delete-dead-code-after-migration`, `fix-root-cause-not-symptom`, `no-premature-abstraction`, `avoid-full-collection-scans`, `refactor-must-preserve-behavior`, `ci-and-tooling-avoid-duplicate-mechanisms`.
 
-No rule declares `test`, but it stays a kind: the model can still ask for it in round two. The 31
-older rules predate the field and declare nothing yet.
+Of the 31 rules that predate the field, 15 now declare what they need (`diff` for the bounded-state,
+comment and manifest rules, `imports` for the rules about which primitive or base class to use,
+`importers` for the wrapper and shim rules, `package` for layering, `test` for
+`test-asserts-real-behavior`); the rest judge the file alone.
 
 The pattern matches the calibration: rules that need no context separate cleanly under System
 One, and the ones that need `similar`, `package` or `siblings` depend on those fetchers to be

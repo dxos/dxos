@@ -25,7 +25,7 @@ import {
 import { type Answer, type Client, type EvaluateResponse, type Question, errorMessage } from './client.ts';
 import { fetchContext } from './fetchers.ts';
 import { contextQuestion, locationQuestion, verdictQuestion, type QuestionInstructions } from './questions.ts';
-import { numberLines, segmentLines, windowLines } from './source.ts';
+import { numberLines, segmentLines, truncateText, windowLines } from './source.ts';
 
 /** Published input price, USD per million tokens (output is free). */
 export const PRICE_PER_MILLION = 0.042;
@@ -88,7 +88,7 @@ export type PrState = {
 export type SystemOneState = FileState | PrState;
 
 /** One state built for review, and the location options it offers. */
-type BuiltState = {
+export type BuiltState = {
   state: SystemOneState;
   segments: LocationOption[];
   kinds: ContextKind[];
@@ -96,25 +96,36 @@ type BuiltState = {
   files?: string[];
 };
 
-/** Build the states for one file and one set of context kinds, windowing the file if needed. */
-const buildFileStates = ({
+/**
+ * Build the states for one file and one set of context kinds, windowing the file if needed.
+ * `text` and `fetched` stand in for the working tree and the fetchers, for code that is not
+ * checked out (calibration on the hunks a rule was mined from).
+ */
+export const buildFileStates = ({
   root,
   file,
   base,
   kinds,
+  text,
+  fetched = {},
 }: {
   root: string;
   file: string;
   base: string | null;
   kinds: ContextKind[];
+  text?: string;
+  fetched?: Partial<Record<ContextKind, string>>;
 }): BuiltState[] => {
-  const text = readFileSync(join(root, file), 'utf8');
-  const lines = text.split(/\r?\n/);
+  const lines = (text ?? readFileSync(join(root, file), 'utf8')).split(/\r?\n/);
   const perKind = Math.min(MAX_CONTEXT_TOKENS, Math.floor((STATE_BUDGET * CONTEXT_SHARE) / Math.max(1, kinds.length)));
   const context: Partial<Record<ContextKind, string>> = {};
   for (const kind of kinds) {
-    const fetched = fetchContext(kind, { root, file, base, maxChars: charsForTokens(perKind) });
-    context[kind] = fetched ?? '(not available)';
+    const maxChars = charsForTokens(perKind);
+    const supplied = fetched[kind];
+    context[kind] =
+      (supplied === undefined
+        ? fetchContext(kind, { root, file, base, maxChars, text })
+        : truncateText(supplied, maxChars)) ?? '(not available)';
   }
   const sourceBudget = charsForTokens(STATE_BUDGET - estimateTokens(context)) - 200;
   const windows = windowLines(lines, Math.max(2_000, sourceBudget));

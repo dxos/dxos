@@ -18,7 +18,7 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention.ts';
+import { AttentionManager, attendElement } from '../../types/Attention.ts';
 import { AttentionContextProvider, useAttentionAttributes } from './attention-context.ts';
 
 type RootAttentionProviderProps = PropsWithChildren<{
@@ -35,19 +35,8 @@ const RootAttentionProvider = ({ children, attention: propsAttention, onChange }
       // NOTE(thure): Use the following to debug focus movement across the app:
       log('focus', { related: event.relatedTarget, target: event.target });
 
-      const selector = [
-        ATTENDABLE_SELECTOR,
-        ...Array.from(document.querySelectorAll('[aria-controls]')).map(
-          (el) => `[id="${el.getAttribute('aria-controls')}"]`,
-        ),
-      ].join(',');
-      const prev = attention.getCurrent();
-      const next = getAttendables(selector, event.target);
-      // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
-      //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
-      // Only update state if the result is different and not empty.
-      if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
-        attention.update(next);
+      const next = attendElement(attention, event.target);
+      if (next) {
         onChange?.(next);
       }
     },

@@ -99,7 +99,7 @@ export const applyActive = Effect.fnUntraced(function* (
 
   // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
   // update step.
-  yield* intent?.transition && changed ? withViewTransition(write) : write;
+  yield* intent?.transition && changed ? withViewTransition(write, ['dx-plank']) : write;
 
   return toAttend;
 });

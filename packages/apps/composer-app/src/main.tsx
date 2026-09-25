@@ -50,6 +50,7 @@ import {
   APP_KEY,
   LOG_STORE_DB_NAME,
   PARAM_LOG_LEVEL,
+  PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   type Profiler,
@@ -587,6 +588,10 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
+    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
+    scriptedModel:
+      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

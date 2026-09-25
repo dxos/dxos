@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
+import { next as A, type Doc, type Heads, type Prop, type State } from '@automerge/automerge';
 
-import { Obj } from '@dxos/echo';
+import { type Change, Obj } from '@dxos/echo';
 import { EntityStructure } from '@dxos/echo-protocol';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
@@ -158,14 +158,97 @@ export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, versio
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  const historical = A.view(objectCore.getDoc() as Doc<any>, version);
+  return snapshotAt<T>(objectCore, A.view(objectCore.getDoc() as Doc<any>, version));
+};
 
-  // Reconstruct the object over the historical doc in a detached core, then brand it as an immutable
-  // snapshot. The core is transient — it exists only to produce the snapshot.
+/**
+ * @returns The object's history, oldest first: one entry per change to its document that touched the
+ * object (or, given `property`, that property), with the value before and after — see `Obj.getChanges`.
+ *
+ * Each change is diffed against the cumulative frontier of the changes before it in topological order
+ * (as in {@link getEditHistoryWithDiffs}), so a change made concurrently with another still reports
+ * exactly its own effect, and its `heads` round-trip through `Obj.getVersion`.
+ */
+export const getObjectChanges = <T extends Obj.Unknown>(
+  object: T,
+  opts: Obj.GetChangesOptions = {},
+): Change.ValueChange<unknown>[] => {
+  assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
+  const { property } = opts;
+  const objectCore = getObjectCore(object);
+  const doc = objectCore.getDoc() as Doc<any>;
+  const mountPath = [...objectCore.mountPath];
+  const target: Prop[] = property === undefined ? mountPath : [...mountPath, 'data', property];
+
+  const readValue = (heads: Heads): unknown => {
+    if (heads.length === 0) {
+      return undefined;
+    }
+    const historical = A.view(doc, heads);
+    if (getDeep(historical, mountPath) == null) {
+      return undefined;
+    }
+    const snapshot = snapshotAt<T>(objectCore, historical);
+    return property === undefined ? snapshot : Reflect.get(snapshot, property);
+  };
+
+  const changes: Change.ValueChange<unknown>[] = [];
+  let frontier: Heads = [];
+  for (const meta of A.getChangesMetaSince(doc, [])) {
+    const previous = frontier;
+    frontier = [...previous.filter((hash) => !meta.deps.includes(hash)), meta.hash].sort();
+    if (!A.diff(doc, previous, frontier).some((patch) => overlaps(patch.path, target))) {
+      continue;
+    }
+
+    const before = readValue(previous);
+    const after = readValue(frontier);
+    // A write to an ancestor (e.g. the document's first change creating the object map) overlaps
+    // the target path without changing the value there.
+    if (before === after) {
+      continue;
+    }
+
+    changes.push(
+      Object.freeze({
+        key: meta.hash,
+        source: 'document',
+        // Automerge stores change time in epoch seconds.
+        time: meta.time * 1000,
+        actor: meta.actor,
+        seq: meta.seq,
+        ops: meta.maxOp - meta.startOp + 1,
+        object: objectCore.id,
+        ...(property !== undefined && { property }),
+        heads: Object.freeze(frontier),
+        ...(meta.message != null && { message: meta.message }),
+        before,
+        after,
+      }),
+    );
+  }
+
+  return changes;
+};
+
+/** Reconstructs the object over a historical view of its document as an immutable snapshot. */
+const snapshotAt = <T extends Obj.Unknown>(objectCore: ObjectCore, historical: Doc<any>): Obj.Snapshot<T> => {
+  // The core is transient — it exists only to produce the snapshot.
   const versionCore = new ObjectCore();
   versionCore.id = objectCore.id;
   versionCore.doc = historical;
   versionCore.mountPath = objectCore.mountPath;
   const proxy = initEchoReactiveObjectRootProxy(versionCore) as T;
   return Obj.getSnapshot(proxy);
+};
+
+/** Whether a patch at `path` can change the value at `target`: one path is a prefix of the other. */
+const overlaps = (path: readonly Prop[], target: readonly Prop[]): boolean => {
+  const length = Math.min(path.length, target.length);
+  for (let index = 0; index < length; index++) {
+    if (path[index] !== target[index]) {
+      return false;
+    }
+  }
+  return true;
 };

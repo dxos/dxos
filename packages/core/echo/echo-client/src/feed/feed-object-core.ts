@@ -3,68 +3,51 @@
 //
 
 import { Entity } from '@dxos/echo';
-import { EchoFeedCodec } from '@dxos/echo-protocol';
+import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
 import { type AnyProperties, change, getMetaChecked } from '@dxos/echo/internal';
 import { FeedProtocol } from '@dxos/protocols';
 
-const canonicalStringify = (value: unknown): string => {
-  const sortKeys = (input: unknown): unknown => {
-    if (Array.isArray(input)) {
-      return input.map(sortKeys);
-    }
-    if (input !== null && typeof input === 'object') {
-      return Object.keys(input as Record<string, unknown>)
-        .sort()
-        .reduce<Record<string, unknown>>((acc, key) => {
-          acc[key] = sortKeys((input as Record<string, unknown>)[key]);
-          return acc;
-        }, {});
-    }
-    return input;
-  };
-  return JSON.stringify(sortKeys(value));
-};
+/** How an inbound block relates to the block a core last applied. */
+type BlockOrder = 'same' | 'newer' | 'older' | 'concurrent';
+
+const blockIdOf = (ref: FeedBlockRef): string | undefined =>
+  ref.actorId !== undefined && ref.sequence !== undefined
+    ? EchoFeedCodec.blockId(ref.actorId, ref.sequence)
+    : undefined;
 
 /**
- * 128-bit non-cryptographic digest (cyrb128) of a string. Four independently-seeded 32-bit lanes
- * mixed and avalanched, rendered as 32 hex chars.
+ * Orders two blocks of the same object. A position authority's order wins where both blocks have
+ * one; otherwise the feed's sequence, which a writer assigns after every block it holds, orders
+ * causally related writes. Blocks nothing orders are taken as newer, since the reader has only what
+ * it is sent.
  */
-const cyrb128 = (input: string): string => {
-  let h1 = 1779033703;
-  let h2 = 3144134277;
-  let h3 = 1013904242;
-  let h4 = 2773480762;
-  for (let i = 0; i < input.length; i++) {
-    const code = input.charCodeAt(i);
-    h1 = h2 ^ Math.imul(h1 ^ code, 597399067);
-    h2 = h3 ^ Math.imul(h2 ^ code, 2869860233);
-    h3 = h4 ^ Math.imul(h3 ^ code, 951274213);
-    h4 = h1 ^ Math.imul(h4 ^ code, 2716044179);
+const compareBlocks = (inbound: FeedBlockRef, current: FeedBlockRef | undefined): BlockOrder => {
+  if (current === undefined) {
+    return 'newer';
   }
-  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-  const lanes = [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
-  return lanes.map((lane) => lane.toString(16).padStart(8, '0')).join('');
+  const inboundId = blockIdOf(inbound);
+  const currentId = blockIdOf(current);
+  if (inboundId !== undefined && currentId !== undefined) {
+    if (inboundId === currentId) {
+      return 'same';
+    }
+  } else if (inbound.position !== undefined && inbound.position === current.position) {
+    return 'same';
+  }
+  if (inbound.position !== undefined && current.position !== undefined) {
+    return inbound.position > current.position ? 'newer' : 'older';
+  }
+  if (inbound.sequence !== undefined && current.sequence !== undefined) {
+    if (inbound.sequence === current.sequence) {
+      return 'concurrent';
+    }
+    return inbound.sequence > current.sequence ? 'newer' : 'older';
+  }
+  return 'newer';
 };
 
-/**
- * Digest of the entity's canonical (position-stripped) JSON. Reconciliation only ever compares
- * states for equality, so retaining the digest instead of the JSON keeps per-object overhead O(1)
- * rather than O(document size) — mail payloads run to hundreds of KB each.
- */
-const canonicalDigestOf = (json: Record<string, unknown>): string =>
-  cyrb128(canonicalStringify(EchoFeedCodec.stripQueuePosition(json)));
-
-const positionOf = (entity: Entity.Unknown): number | undefined => {
-  const key = Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION).at(0);
-  if (!key) {
-    return undefined;
-  }
-  const position = Number(key.id);
-  return Number.isFinite(position) ? position : undefined;
-};
+/** What reconciling an inbound block would do, decided from its block reference alone. */
+type Classification = 'ignore' | 'reposition' | 'apply';
 
 /**
  * Per-object client-side state for a live feed-backed entity: tracks local (`Obj.update`) changes
@@ -77,26 +60,21 @@ const positionOf = (entity: Entity.Unknown): number | undefined => {
  * coalesce to a single append (the latest combined state), so only ONE state is ever pending — we
  * never queue intermittent states.
  *
- * Reconciliation is a small state machine over a single `#state` (a digest of the latest known
- * canonical JSON) and a version (`KEY_QUEUE_POSITION`) baseline:
+ * Reconciliation compares block references, never content: every object read from a feed carries
+ * the id (`<sequence>@<actorId>`) and, once ordered, the position of the block it came from (see
+ * `EchoFeedCodec.decodeBlock`). The core keeps the reference of the block its state reflects:
  *
- *   Obj.update → dirty (local, unappended) → appended (awaiting echo) → roundtripped (came back)
+ *   Obj.update → dirty (local, unappended) → in flight → confirmed (the append returned its block id)
  *
- * Before our own append roundtrips we prefer the local state (ignore stale pre-echo reads); once it
- * roundtrips (an inbound block matches what we appended), every later block updates the state,
- * subject to the version being newer.
+ * A re-read of the block already applied costs nothing beyond adopting a new position; a newer block
+ * is decoded and applied; an older one is ignored. While a write is in flight its block id is not
+ * known yet, so only a block a position authority ordered after the current state overrides it.
  *
  * Concurrent writers (two tabs/processes holding a live proxy for the same id) are last-*flush*-wins
- * at whole-object granularity: whichever write's block the local index observes last overwrites the
- * other in full, including fields the winner never touched. This is stronger than typical per-field
- * last-write-wins and is a known limitation — precise resolution needs a real merge protocol
- * (TODO(wittjosiah), out of scope for now).
- *
- * Versioning uses `KEY_QUEUE_POSITION` (`assignQueuePositions`) — the only monotonic block version
- * exposed to the client on both the poll and index read paths. When positions are off, ordering is
- * unavailable: a concurrent remote write racing a not-yet-echoed local write is conservatively
- * ignored (prefer local) until it roundtrips. `insertionId` would be an always-present alternative
- * but is currently stripped before the object JSON reaches the client.
+ * at whole-object granularity: whichever write's block orders last overwrites the other in full,
+ * including fields the winner never touched. This is stronger than typical per-field last-write-wins
+ * and is a known limitation — precise resolution needs a real merge protocol (TODO(wittjosiah), out
+ * of scope for now).
  */
 export class FeedObjectCore {
   readonly entity: Entity.Unknown;
@@ -106,30 +84,25 @@ export class FeedObjectCore {
   #applyingRemote = false;
   #unsubscribe: (() => void) | undefined;
 
-  /**
-   * Digest of the canonical (position-stripped) JSON of the entity's current known state — the
-   * single source of truth for reconciliation comparisons (updated on capture and on applied remote
-   * reads). A digest rather than the JSON because every use is an equality test.
-   */
-  #state: string;
+  /** The block the entity's state reflects; `undefined` for an object written here and not yet sent. */
+  #applied: FeedBlockRef | undefined;
 
   /**
-   * Version (queue position) of the block `#state` reflects, or `undefined` when positions are off
-   * or the state hasn't been seen from the feed yet. Baseline for ordering inbound blocks.
+   * The capture awaiting its block id: at most one, because appends coalesce to the latest combined
+   * state and a later capture replaces it. `confirmed` marks a write whose store reported no block id,
+   * which stays pending until an ordered block supersedes it.
    */
-  #version: number | undefined;
+  #pending: { token: number; confirmed: boolean } | undefined;
 
-  /**
-   * Digest of the state captured for append and awaiting its echo (roundtrip). A single
-   * slot, not a list: appends coalesce to the latest combined state, so at most one write is in
-   * flight; a later capture simply replaces it. `undefined` once roundtripped.
-   */
-  #pendingAppend: string | undefined;
+  #nextToken = 0;
 
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
-    this.#state = canonicalDigestOf(Entity.toJSON(entity) as Record<string, unknown>);
-    this.#version = positionOf(entity);
+    const ref = EchoFeedCodec.blockOfKeys([
+      ...Entity.getKeys(entity, FeedProtocol.KEY_FEED_BLOCK),
+      ...Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION),
+    ]);
+    this.#applied = blockIdOf(ref) !== undefined || ref.position !== undefined ? ref : undefined;
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
         return;
@@ -139,120 +112,132 @@ export class FeedObjectCore {
     });
   }
 
+  get deleted(): boolean {
+    return this.#deleted;
+  }
+
   /**
    * Capture the entity's current state for an append, marking it clean. The caller (`FeedHandle`'s
    * flush) calls this once per dirty core per flush cycle, coalescing any number of synchronous
    * `Obj.update`s since the last flush into a single feed block. Returns the JSON to send plus a
-   * token identifying this write, for {@link revertCapture} if the append fails.
+   * token naming this write, for {@link confirmAppend} or {@link revertCapture}.
    */
-  captureForAppend(): { json: Record<string, unknown>; token: string } {
+  captureForAppend(): { json: Record<string, unknown>; token: number } {
     const json = Entity.toJSON(this.entity) as Record<string, unknown>;
-    const digest = canonicalDigestOf(json);
-    this.#pendingAppend = digest;
-    this.#state = digest;
+    const token = ++this.#nextToken;
+    this.#pending = { token, confirmed: false };
     this.#dirty = false;
-    return { json, token: digest };
+    return { json, token };
+  }
+
+  /**
+   * Record that a captured write reached the store. With the block id the store reported, the core
+   * reflects that block from here on; without one it keeps preferring its state until an ordered
+   * block supersedes it. A no-op once a newer capture replaced this one.
+   */
+  confirmAppend(token: number, blockId: string | undefined): void {
+    if (this.#pending?.token !== token) {
+      return;
+    }
+    if (blockId === undefined) {
+      this.#pending = { token, confirmed: true };
+      return;
+    }
+    this.#pending = undefined;
+    this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
   }
 
   /**
    * Revert a just-captured write back to dirty after its append RPC failed, so it's retried. Only
    * clears the pending slot if it still holds this write (a newer capture may have superseded it).
    */
-  revertCapture(token: string): void {
-    if (this.#pendingAppend === token) {
-      this.#pendingAppend = undefined;
+  revertCapture(token: number): void {
+    if (this.#pending?.token === token) {
+      this.#pending = undefined;
     }
     this.#dirty = true;
   }
 
   /**
-   * Reconcile an inbound decode of this object's latest feed state (from polling or a query) against
-   * local state per the lifecycle in the class doc: keep local while a change is unappended or a
-   * pending append hasn't roundtripped; otherwise adopt newer remote blocks (whole-object LWW).
+   * Whether an inbound block has to be decoded and passed to {@link reconcile}. A re-read of the
+   * block already applied does not: a position it gained is adopted here, from the reference alone.
    */
-  reconcile(decoded: Entity.Unknown, inboundJson: Record<string, unknown>): void {
+  accepts(ref: FeedBlockRef): boolean {
+    const classification = this.#classify(ref);
+    if (classification === 'reposition') {
+      this.#setPosition(ref.position);
+    }
+    return classification === 'apply';
+  }
+
+  /**
+   * Reconcile a decoded inbound block that {@link accepts} took. Re-classified, since local state can
+   * have changed while it was decoding.
+   */
+  reconcile(decoded: Entity.Unknown, ref: FeedBlockRef): void {
+    const classification = this.#classify(ref);
+    if (classification === 'reposition') {
+      this.#setPosition(ref.position);
+    } else if (classification === 'apply') {
+      this.#applyingRemote = true;
+      try {
+        this.#copyFieldsFrom(decoded);
+      } finally {
+        this.#applyingRemote = false;
+      }
+      this.#applied = ref;
+      this.#pending = undefined;
+    }
+  }
+
+  /** Adopt a position a subscription reported for a block, when it is the block this core reflects. */
+  reposition(blockId: string, position: number | null): void {
+    if (
+      this.#applied !== undefined &&
+      blockIdOf(this.#applied) === blockId &&
+      (position ?? undefined) !== this.#applied.position
+    ) {
+      this.#setPosition(position ?? undefined);
+    }
+  }
+
+  #classify(ref: FeedBlockRef): Classification {
     if (this.#deleted || this.#dirty) {
       // Deleted: ignore remote emissions entirely (re-appending is the only path back to a core).
       // Dirty: a local change hasn't been appended yet, so local state is strictly newer.
-      return;
+      return 'ignore';
     }
-
-    const inboundDigest = canonicalDigestOf(inboundJson);
-    const inboundPosition = positionOf(decoded);
-
-    if (this.#pendingAppend !== undefined) {
-      if (inboundDigest === this.#pendingAppend) {
-        // Our own append roundtripped: adopt its version and stop preferring local.
-        this.#pendingAppend = undefined;
-        this.#state = inboundDigest;
-        this.#version = inboundPosition ?? this.#version;
-        this.#mergeQueuePosition(decoded);
-        return;
-      }
-      // Not our echo. Only a provably-newer remote write overrides our still-unconfirmed append
-      // (whole-object LWW). Without positions we can't order, so prefer local — anything else is
-      // treated as a stale pre-echo read and ignored.
-      if (this.#strictlyNewer(inboundPosition)) {
-        this.#pendingAppend = undefined;
-        this.#applyRemote(decoded);
-        this.#state = inboundDigest;
-        this.#version = inboundPosition;
-      }
-      return;
+    const order = compareBlocks(ref, this.#applied);
+    if (order === 'same') {
+      // A read never clears a position: index snapshots keep the one a block had when indexed.
+      return ref.position !== undefined && ref.position !== this.#applied?.position ? 'reposition' : 'ignore';
     }
-
-    // Clean (no local change, nothing pending).
-    if (inboundDigest === this.#state) {
-      // No content change — a repeated poll; keep the position baseline in sync.
-      this.#mergeQueuePosition(decoded);
-      if (inboundPosition !== undefined) {
-        this.#version = inboundPosition;
-      }
-      return;
+    if (this.#pending !== undefined) {
+      // Our write orders after every block we hold, so only one an authority placed after the
+      // current state can be newer; unordered reads are stale.
+      const newerPosition =
+        ref.position !== undefined && (this.#applied?.position === undefined || ref.position > this.#applied.position);
+      return newerPosition ? 'apply' : 'ignore';
     }
-    // Differing remote block with nothing local to protect: adopt it unless it's a provably-older
-    // (out-of-order) stale read.
-    if (!this.#strictlyOlder(inboundPosition)) {
-      this.#applyRemote(decoded);
-      this.#state = inboundDigest;
-      this.#version = inboundPosition ?? this.#version;
-    }
+    return order === 'newer' ? 'apply' : 'ignore';
   }
 
-  /** Inbound block is ordered strictly after our current baseline (both positions known). */
-  #strictlyNewer(inboundPosition: number | undefined): boolean {
-    return inboundPosition !== undefined && (this.#version === undefined || inboundPosition > this.#version);
-  }
-
-  /** Inbound block is ordered strictly before our current baseline (both positions known). */
-  #strictlyOlder(inboundPosition: number | undefined): boolean {
-    return inboundPosition !== undefined && this.#version !== undefined && inboundPosition <= this.#version;
-  }
-
-  #mergeQueuePosition(decoded: Entity.Unknown): void {
-    const positionKeys = Entity.getKeys(decoded, FeedProtocol.KEY_QUEUE_POSITION);
-    if (positionKeys.length === 0) {
-      return;
-    }
-    const currentKeys = Entity.getKeys(this.entity, FeedProtocol.KEY_QUEUE_POSITION);
-    if (currentKeys.length === positionKeys.length && currentKeys.every((key, i) => key.id === positionKeys[i].id)) {
-      return;
-    }
+  #setPosition(position: number | undefined): void {
+    this.#applied = { ...this.#applied, position };
     this.#applyingRemote = true;
     try {
       change(this.entity, (mutable: Entity.Mutable<Entity.Unknown>) => {
-        const meta = getMetaChecked(mutable as AnyProperties);
-        meta.keys = [...meta.keys.filter((key) => key.source !== FeedProtocol.KEY_QUEUE_POSITION), ...positionKeys];
+        // In place: the existing key records belong to this array, and ECHO refuses to re-home them.
+        const keys = getMetaChecked(mutable as AnyProperties).keys;
+        for (let index = keys.length - 1; index >= 0; index--) {
+          if (keys[index].source === FeedProtocol.KEY_QUEUE_POSITION) {
+            keys.splice(index, 1);
+          }
+        }
+        if (position !== undefined) {
+          keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: String(position) });
+        }
       });
-    } finally {
-      this.#applyingRemote = false;
-    }
-  }
-
-  #applyRemote(decoded: Entity.Unknown): void {
-    this.#applyingRemote = true;
-    try {
-      this.#copyFieldsFrom(decoded);
     } finally {
       this.#applyingRemote = false;
     }
@@ -262,9 +247,9 @@ export class FeedObjectCore {
    * Apply another entity's state onto this core's working-set instance — used when
    * `FeedHandle.append` is called again with a different object reusing this core's id. The
    * working-set instance (`this.entity`) stays canonical/identity-stable; `source` is the argument
-   * passed to `append` and is not retained afterwards. Unlike {@link #applyRemote}, this is not
-   * guarded by `#applyingRemote` — the mutation is genuinely local, so it should mark the core dirty
-   * like any other `Obj.update` (the caller immediately captures it for append regardless).
+   * passed to `append` and is not retained afterwards. Unlike a remote apply, this is not guarded by
+   * `#applyingRemote` — the mutation is genuinely local, so it should mark the core dirty like any
+   * other `Obj.update` (the caller immediately captures it for append regardless).
    */
   applyLocalUpdate(source: Entity.Unknown): void {
     this.#copyFieldsFrom(source);
@@ -294,10 +279,6 @@ export class FeedObjectCore {
       meta.tags = sourceMeta.tags;
       meta.annotations = sourceMeta.annotations;
     });
-  }
-
-  get deleted(): boolean {
-    return this.#deleted;
   }
 
   /**

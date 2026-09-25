@@ -24,7 +24,7 @@ const title: ComponentFunction<BannerStyleProps> = (_, etc) => {
 };
 
 const body: ComponentFunction<BannerStyleProps> = (_, etc) => {
-  return mx('col-start-2 flex flex-col first:font-medium pb-1.5', etc);
+  return mx('col-start-2 flex flex-col first:font-medium first:pt-1.5 pb-1.5', etc);
 };
 
 export const bannerTheme: Theme<BannerStyleProps> = {

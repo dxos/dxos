@@ -2196,6 +2196,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -2214,6 +2217,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -11175,9 +11181,15 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../../ui/react-ui-markdown
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -11187,6 +11199,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11652,6 +11667,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -11707,9 +11725,15 @@ importers:
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
