@@ -748,54 +748,83 @@ export const TestAnswerQuestion: Story = {
   },
 };
 
+/** A single-task list whose description runs past the row's three-line clamp. */
+const seedDescription = (description: string) => () => [
+  Task.make({ title: 'Plan the cupping', status: 'todo', description }),
+];
+
 /**
- * A description longer than the row's clamp, mixing a paragraph and a bullet list: the row shows
- * exactly three whole lines and no sliver of a fourth.
+ * The row shows exactly three whole lines of the description and no sliver of a fourth: the box is
+ * three line-heights tall, and every line of text is wholly inside it or wholly below it.
  */
-export const TestDescriptionClamp: Story = {
-  args: {
-    seed: () => [
-      Task.make({
-        title: 'Plan the cupping',
-        status: 'todo',
-        description: [
-          'Line up the samples before the roaster is booked.',
-          '',
-          '- Ethiopian Guji',
-          '- Colombian Huila',
-          '- Kenyan Nyeri',
-          '- Sumatra Mandheling',
-        ].join('\n'),
-      }),
-    ],
-    showGroupLabels: false,
-  },
-  play: async ({ canvasElement }) => {
-    const description = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
-      if (!found) {
-        throw new Error('Task description not rendered.');
-      }
-      return found;
-    });
+const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
+  const description = await waitFor(() => {
+    const found = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+    if (!found) {
+      throw new Error('Task description not rendered.');
+    }
+    return found;
+  });
 
-    const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
-    const box = description.getBoundingClientRect();
-    await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
-    await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
+  const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+  const box = description.getBoundingClientRect();
+  await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
+  await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
 
-    // Every line box is either wholly inside the clamp or wholly below it.
-    const range = document.createRange();
-    range.selectNodeContents(description);
+  // Text rects only: an element's border box spans its padding, which is not a line of text.
+  const walker = document.createTreeWalker(description, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) {
+      continue;
+    }
+    range.selectNodeContents(node);
     for (const rect of range.getClientRects()) {
-      if (rect.height === 0) {
-        continue;
-      }
       const inside = rect.bottom <= box.bottom + 0.5;
       const outside = rect.top >= box.bottom - 0.5;
       await expect(inside || outside).toBe(true);
     }
+  }
+};
+
+/** Every block the default renderer pads or rescales — heading, code, quote, list — inside the clamp. */
+export const TestDescriptionClamp: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        '# Cupping plan',
+        '',
+        '```',
+        'roast --profile city',
+        '```',
+        '',
+        '> Book the roaster first.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
   },
+  play: assertDescriptionClamp,
+};
+
+/** A paragraph run into a list, so the clamp falls between two list items. */
+export const TestDescriptionClampList: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        'Line up the samples before the roaster is booked.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+        '- Kenyan Nyeri',
+        '- Sumatra Mandheling',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
+  },
+  play: assertDescriptionClamp,
 };
 
 export const Hierarchical: Story = {

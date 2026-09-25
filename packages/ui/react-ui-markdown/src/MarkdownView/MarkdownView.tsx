@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentProps, type ComponentPropsWithRef } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -14,6 +14,12 @@ export type MarkdownViewProps = ThemedClassName<
   ComponentPropsWithRef<'div'> & {
     content?: string;
     components?: ReactMarkdownOptions['components'];
+    /**
+     * Render every block — headings, quotes, lists, code, tables — at the container's font size and
+     * line height with no vertical padding or margin, so each line is the same height. For a
+     * clamped preview (`line-clamp-*`), which otherwise cuts partway into a line.
+     */
+    uniformLineHeight?: boolean;
   }
 > & {
   /** Merged by a parent rendering this `asChild`; consumers use `classNames`. */
@@ -33,11 +39,16 @@ export const MarkdownView = ({
   children,
   components,
   content = '',
+  uniformLineHeight = false,
   ...props
 }: MarkdownViewProps) => {
   return (
     <div {...props} className={mx(classNames, className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        skipHtml
+        components={{ ...defaultComponents, ...(uniformLineHeight && uniformComponents), ...components }}
+      >
         {content}
       </ReactMarkdown>
       {children}
@@ -127,4 +138,29 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
       </SyntaxHighlighter>
     );
   },
+};
+
+// Preflight already resets heading sizes and block margins, so each block only has to avoid adding
+// its own padding, font size or leading; horizontal insets and borders do not change a line's height.
+const uniformHeading = ({ children }: PropsWithChildren) => <div className='font-medium'>{children}</div>;
+
+const uniformComponents: ReactMarkdownOptions['components'] = {
+  h1: uniformHeading,
+  h2: uniformHeading,
+  h3: uniformHeading,
+  h4: uniformHeading,
+  h5: uniformHeading,
+  h6: uniformHeading,
+  p: ({ children }) => <div>{children}</div>,
+  blockquote: ({ children }) => <blockquote className='ps-2 border-l-2 border-accent-text'>{children}</blockquote>,
+  ul: ({ children }) => <ul className='ps-5 list-disc'>{children}</ul>,
+  ol: ({ children }) => <ol className='ps-5 list-decimal'>{children}</ol>,
+  pre: ({ children }) => <pre className='font-mono whitespace-pre-wrap'>{children}</pre>,
+  code: ({ children }) => <code className='font-mono text-info-text'>{children}</code>,
+  table: ({ children }) => <table className='border-collapse'>{children}</table>,
+  th: ({ children }) => <th className='p-0 pe-4 text-start font-medium'>{children}</th>,
+  td: ({ children }) => <td className='p-0 pe-4'>{children}</td>,
+  // A rule or an image has no line of text to align, so it gives way to its alt text or to nothing.
+  hr: () => null,
+  img: ({ alt }) => (alt ? <span>{alt}</span> : null),
 };
