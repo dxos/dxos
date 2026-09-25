@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BrowserContext, type Locator, type Page, expect, test } from '@playwright/test';
+import { type BrowserContext, type Locator, type Page, type Request, expect, test } from '@playwright/test';
 import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -483,6 +483,17 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // The assistant stages: a project accumulates a conversation as well as tasks and documents,
     // and an agent turn is a third engine — streaming render, tool dispatch and database queries
     // interleaved — so it is measured on the same journey rather than in isolation.
+    //
+    // Context-wide, so a call from a worker counts too: a request to EDGE's `/ai/generate/` route
+    // means a live model answered, and a stage timed against a provider's latency is not this one.
+    const liveModelCalls: string[] = [];
+    const onRequest = (request: Request) => {
+      if (new URL(request.url()).pathname.includes('/ai/generate/')) {
+        liveModelCalls.push(request.url());
+      }
+    };
+    page.context().on('request', onRequest);
+
     await runner.stage('open-assistant', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.updateCompanion', {
         subject: `${projectPath(fixture.spaceId, fixture.projectIds[0])}/~${ASSISTANT_COMPANION}`,
@@ -501,7 +512,13 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
         .getByTestId('assistant.thread')
         .getByText(ASSISTANT_DONE)
         .waitFor({ timeout: Math.max(budget, ASSISTANT_TIMEOUT) });
+      if (liveModelCalls.length > 0) {
+        throw new Error(`assistant reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
+      }
     });
+
+    page.context().off('request', onRequest);
+    log.info('assistant stages', { liveModelCalls: liveModelCalls.length });
 
     const rows = runner.rows;
     const name = `${FLOW}-${mode}`;
