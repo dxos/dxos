@@ -5,11 +5,15 @@
 import { describe, test } from 'vitest';
 
 import {
+  MAX_CHUNKED_STATEMENTS,
   SQL_CHUNK_SIZE,
   SQL_MAX_BOUND_VARIABLES,
   chunkRows,
   chunkSizeForBoundVariables,
   isUnauthorizedFunctionError,
+  mergeChunkedRows,
+  planChunkPairs,
+  planChunks,
 } from './utils.ts';
 
 /** Bound variables a chunk of `rows` costs in a multi-row insert. */
@@ -71,6 +75,77 @@ describe('chunkRows', () => {
 
   test('an empty batch produces no statements', ({ expect }) => {
     expect(chunkRows([])).toEqual([]);
+  });
+});
+
+describe('chunk planning', () => {
+  const unitCost = (): number => 1;
+
+  test('no items plan no chunks, so a caller answers empty rather than IN ()', ({ expect }) => {
+    expect(planChunks([], unitCost, 5)).toEqual([]);
+  });
+
+  test('chunks fill up to the budget by summed cost', ({ expect }) => {
+    const costs = [1, 2, 2, 1, 3, 1];
+    expect(planChunks(costs, (cost) => cost, 4)).toEqual([
+      [1, 2],
+      [2, 1],
+      [3, 1],
+    ]);
+    for (const size of [4, 5, 9, 10, 11]) {
+      const items = Array.from({ length: size }, (_, index) => index);
+      const chunks = planChunks(items, unitCost, 5);
+      expect(chunks.flat()).toEqual(items);
+      expect(chunks.every((chunk) => chunk.length <= 5)).toBe(true);
+    }
+  });
+
+  test('an item wider than the whole budget is refused rather than emitted as one over-wide statement', ({
+    expect,
+  }) => {
+    expect(() => planChunks([1, 6], (cost) => cost, 5)).toThrow();
+  });
+
+  test('a pair of lists leaves each outer chunk room for the widest inner item', ({ expect }) => {
+    const pairs = planChunkPairs(
+      { items: [2, 2, 2], costOf: (cost) => cost },
+      { items: [1, 1, 1, 1], costOf: (cost) => cost },
+      5,
+    );
+    for (const [outer, inner] of pairs) {
+      expect([...outer, ...inner].reduce((sum, cost) => sum + cost, 0)).toBeLessThanOrEqual(5);
+    }
+    // Every pairing of an outer item with an inner item is covered exactly once.
+    expect(pairs.flatMap(([outer, inner]) => outer.flatMap(() => inner)).length).toBe(3 * 4);
+  });
+
+  test('a read needing more statements than the cap fails instead of issuing them', ({ expect }) => {
+    const items = Array.from({ length: MAX_CHUNKED_STATEMENTS + 1 }, (_, index) => index);
+    expect(planChunks(items.slice(1), unitCost, 1)).toHaveLength(MAX_CHUNKED_STATEMENTS);
+    expect(() => planChunks(items, unitCost, 1)).toThrow();
+    expect(() =>
+      planChunkPairs({ items: items.slice(0, 9), costOf: unitCost }, { items: items.slice(0, 9), costOf: unitCost }, 2),
+    ).toThrow();
+  });
+
+  test('merging keeps the first row per record, then orders and cuts', ({ expect }) => {
+    const merged = mergeChunkedRows(
+      [
+        [
+          { recordId: 3, rank: 1 },
+          { recordId: 1, rank: 2 },
+        ],
+        [
+          { recordId: 1, rank: 2 },
+          { recordId: 2, rank: 3 },
+        ],
+      ],
+      { compare: (left, right) => right.rank - left.rank || left.recordId - right.recordId, limit: 2 },
+    );
+    expect(merged).toEqual([
+      { recordId: 2, rank: 3 },
+      { recordId: 1, rank: 2 },
+    ]);
   });
 });
 

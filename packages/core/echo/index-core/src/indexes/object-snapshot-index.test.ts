@@ -2,25 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
 import { ObjectSnapshotIndex } from './object-snapshot-index.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
-
-const TestLayer = SqliteClient.layer({
-  filename: ':memory:',
-}).pipe(Layer.provideMerge(Reactivity.layer));
 
 const migrated = Effect.fnUntraced(function* () {
   const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);

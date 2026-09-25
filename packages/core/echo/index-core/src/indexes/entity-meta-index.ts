@@ -21,7 +21,17 @@ import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { localEntityId } from '../entity-ids.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
-import { chunkArray, chunkSizeForBoundVariables } from '../utils.ts';
+import {
+  SqlBoundVariableLimit,
+  chunkArray,
+  chunkSizeForBoundVariables,
+  countBoundVariables,
+  measuredVariableCost,
+  mergeChunkedRows,
+  planChunkPairs,
+  planChunks,
+  readConsistently,
+} from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
 import type { Index } from './interface.ts';
 
@@ -62,6 +72,16 @@ const _escapeLikePrefix = (prefix: string) => {
   return `${escaped}:%`;
 };
 
+/** The stored forms a type identifier matches, and whether it also matches versioned rows by prefix. */
+const _typeDxnMatch = (typeDXN: string): { forms: string[]; hasNoVersion: boolean } => {
+  const normalized = _normalizeTypeUri(typeDXN);
+  const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
+  return {
+    forms: _typeUriEquivalents(normalized),
+    hasNoVersion: parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined,
+  };
+};
+
 /**
  * WHERE fragment matching the `typeDXN` column against any of the given type identifiers,
  * covering legacy-equivalent stored forms and — for versionless DXNs — versioned rows via a
@@ -70,10 +90,7 @@ const _escapeLikePrefix = (prefix: string) => {
 export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readonly string[]): Statement.Fragment =>
   sql.or(
     typeDxns.map((typeDXN) => {
-      const normalized = _normalizeTypeUri(typeDXN);
-      const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
-      const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-      const forms = _typeUriEquivalents(normalized);
+      const { forms, hasNoVersion } = _typeDxnMatch(typeDXN);
       const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
       if (!hasNoVersion) {
         return exactMatch;
@@ -139,6 +156,21 @@ export interface QueueRef {
   readonly spaceId?: string;
 }
 
+/** One source a read selects from: a whole space, or one queue. */
+export type SourceRef = { readonly spaceId: string } | { readonly queue: QueueRef };
+
+/** The sources of a read, as the unit its source condition is chunked by. */
+export const sourceRefs = (
+  spaceIds: readonly string[],
+  queues: readonly QueueRef[] | null | undefined,
+): SourceRef[] => [...spaceIds.map((spaceId) => ({ spaceId })), ...(queues ?? []).map((queue) => ({ queue }))];
+
+/** Splits sources back into the space ids and queues a source condition is built from. */
+export const splitSourceRefs = (sources: readonly SourceRef[]): { spaceIds: string[]; queues: QueueRef[] } => ({
+  spaceIds: sources.flatMap((source) => ('spaceId' in source ? [source.spaceId] : [])),
+  queues: sources.flatMap((source) => ('queue' in source ? [source.queue] : [])),
+});
+
 /**
  * Builds a SQL condition for filtering by space and queue source.
  * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
@@ -148,7 +180,15 @@ export const buildSourceCondition = (
   spaceIds: readonly string[],
   includeAllQueues: boolean,
   queues: readonly QueueRef[] | null,
+): Statement.Fragment => buildSourceRefsCondition(sql, sourceRefs(spaceIds, queues), includeAllQueues);
+
+/** {@link buildSourceCondition} over one chunk of a read's sources. */
+const buildSourceRefsCondition = (
+  sql: SqlClient.SqlClient,
+  sources: readonly SourceRef[],
+  includeAllQueues: boolean,
 ): Statement.Fragment => {
+  const { spaceIds, queues } = splitSourceRefs(sources);
   const conditions: Statement.Fragment[] = [];
 
   if (spaceIds.length > 0) {
@@ -159,7 +199,7 @@ export const buildSourceCondition = (
     }
   }
 
-  if (queues && queues.length > 0) {
+  if (queues.length > 0) {
     // Each queue carries its own space: a queue id is unique only within one, so matching on the id
     // alone would admit another space's rows for a colliding id.
     conditions.push(
@@ -231,11 +271,16 @@ export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow |
     return sql``;
   }
 
+  // `recordId` breaks ties in every ordering: a read split across statements is merged in memory,
+  // and each statement's LIMIT must cut at the same rows the merge will.
   if (window.kind === 'natural') {
     const deleted = window.deleted !== undefined ? sql` AND deleted = ${window.deleted ? 1 : 0}` : sql``;
     // Unpositioned blocks are in scope here, unlike a cursor read: a natural read is over the feed
     // as the caller sees it, and a locally appended block is part of that before it is positioned.
-    const order = window.direction === 'desc' ? sql` ORDER BY objectId DESC` : sql` ORDER BY objectId ASC`;
+    const order =
+      window.direction === 'desc'
+        ? sql` ORDER BY objectId DESC, recordId DESC`
+        : sql` ORDER BY objectId ASC, recordId ASC`;
     return sql`${deleted}${order} LIMIT ${window.limit}`;
   }
 
@@ -244,8 +289,40 @@ export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow |
   // would let it slip past a later read that resumes beyond its eventual position.
   const upper = window.before !== undefined ? sql` AND queuePosition < ${window.before}` : sql``;
   const limit = window.limit !== undefined ? sql` LIMIT ${window.limit}` : sql``;
-  return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC${limit}`;
+  return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC, recordId ASC${limit}`;
 };
+
+/** Code-unit order, as SQLite's default BINARY collation sorts the ASCII ids compared here. */
+const compareText = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);
+
+/** The order and cut {@link buildQueueWindow} applies, for merging a read issued as several statements. */
+const queueWindowMerge = (
+  window: QueueWindow | undefined,
+): { compare?: (left: EntityMeta, right: EntityMeta) => number; limit?: number } => {
+  if (window === undefined) {
+    return {};
+  }
+  if (window.kind === 'natural') {
+    const direction = window.direction === 'desc' ? -1 : 1;
+    return {
+      compare: (left, right) =>
+        direction * (compareText(left.objectId, right.objectId) || left.recordId - right.recordId),
+      limit: window.limit,
+    };
+  }
+  return {
+    // A cursor read selects positioned rows only, so neither position is null here.
+    compare: (left, right) => (left.queuePosition ?? 0) - (right.queuePosition ?? 0) || left.recordId - right.recordId,
+    limit: window.limit,
+  };
+};
+
+/** Widens a window's limit by `extra` rows; an unlimited window stays unlimited. */
+const widenQueueWindow = (window: QueueWindow | undefined, extra: number): QueueWindow | undefined =>
+  window?.limit === undefined ? window : { ...window, limit: window.limit + extra };
+
+/** SQLite stores booleans as integers. */
+const withDeletedFlag = (row: EntityMeta): EntityMeta => ({ ...row, deleted: !!row.deleted });
 
 export class EntityMetaIndex implements Index {
   readonly #sql: SqlClient.SqlClient;
@@ -317,23 +394,29 @@ export class EntityMetaIndex implements Index {
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
-        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
+        const sources = sourceRefs(query.spaceIds, query.queues);
+        if (sources.length === 0) {
           return [];
         }
 
         const sql = this.#sql;
-        const sourceCondition = buildSourceCondition(
-          sql,
-          query.spaceIds,
-          query.includeAllQueues ?? false,
-          query.queues ?? null,
-        );
+        const includeAllQueues = query.includeAllQueues ?? false;
         const window = buildQueueWindow(sql, query.window);
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${window}`;
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, window);
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
+        const chunks = planChunks(sources, sourceCost, budget);
+        const results = yield* readConsistently(
+          sql,
+          chunks.length,
+          Effect.forEach(
+            chunks,
+            (chunk) =>
+              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${window}`,
+          ),
+        );
+        return mergeChunkedRows(results, queueWindowMerge(query.window)).map(withDeletedFlag);
       }),
   );
 
@@ -354,35 +437,85 @@ export class EntityMetaIndex implements Index {
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
-        if (spaceIds.length === 0 && (!queues || queues.length === 0)) {
+        const sources = sourceRefs(spaceIds, queues);
+        if (sources.length === 0 || (typeDxns.length === 0 && !inverted)) {
           return [];
         }
 
-        if (typeDxns.length === 0) {
-          if (!inverted) {
-            return [];
-          }
-
-          const sql = this.#sql;
-          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
-          const rows =
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${buildQueueWindow(sql, window)}`;
-          return rows.map((row) => ({
-            ...row,
-            deleted: !!row.deleted,
-          }));
-        }
         const sql = this.#sql;
-        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
-        const typeWhere = buildTypeDxnCondition(sql, typeDxns);
+        const limit = yield* SqlBoundVariableLimit;
         const queueWindow = buildQueueWindow(sql, window);
-        const rows = inverted
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}${queueWindow}`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${typeWhere}${queueWindow}`;
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        const budget = limit - countBoundVariables(sql, queueWindow);
+        const merge = queueWindowMerge(window);
+        const typeCost = measuredVariableCost(sql, (types: readonly string[]) => buildTypeDxnCondition(sql, types));
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
+        if (!inverted) {
+          // A row matching any type chunk of any source chunk matches the query, so the chunks union.
+          const pairs = planChunkPairs(
+            { items: typeDxns, costOf: typeCost },
+            { items: sources, costOf: sourceCost },
+            budget,
+          );
+          const results = yield* readConsistently(
+            sql,
+            pairs.length,
+            Effect.forEach(
+              pairs,
+              ([types, chunk]) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
+            ),
+          );
+          return mergeChunkedRows(results, merge).map(withDeletedFlag);
+        }
+
+        // NOT over a union of type chunks is the intersection of their negations, so the negated
+        // type list stays whole in each statement and only the sources are chunked.
+        const negatedCost = typeDxns.reduce((sum, typeDXN) => sum + typeCost(typeDXN), 0);
+        const widestSource = sources.reduce((widest, source) => Math.max(widest, sourceCost(source)), 0);
+        if (negatedCost + widestSource <= budget) {
+          const typeWhere = typeDxns.length > 0 ? sql` AND NOT ${buildTypeDxnCondition(sql, typeDxns)}` : sql``;
+          const chunks = planChunks(sources, sourceCost, budget - negatedCost);
+          const results = yield* readConsistently(
+            sql,
+            chunks.length,
+            Effect.forEach(
+              chunks,
+              (chunk) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
+            ),
+          );
+          return mergeChunkedRows(results, merge).map(withDeletedFlag);
+        }
+
+        // Too many types to negate in one statement: find the rows they match, then read the sources
+        // without those rows, each statement's limit leaving room for the ones it drops. Always
+        // several statements, and a row written between the phases would escape the exclusion.
+        const results = yield* sql.withTransaction(
+          Effect.gen(function* () {
+            const excluded = new Set<number>();
+            for (const [types, chunk] of planChunkPairs(
+              { items: typeDxns, costOf: typeCost },
+              { items: sources, costOf: sourceCost },
+              limit,
+            )) {
+              const rows = yield* sql<{
+                recordId: number;
+              }>`SELECT recordId FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
+              rows.forEach((row) => excluded.add(row.recordId));
+            }
+            const widenedWindow = buildQueueWindow(sql, widenQueueWindow(window, excluded.size));
+            const chunks = planChunks(sources, sourceCost, limit - countBoundVariables(sql, widenedWindow));
+            const rows = yield* Effect.forEach(
+              chunks,
+              (chunk) =>
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${widenedWindow}`,
+            );
+            return rows.map((chunkRows) => chunkRows.filter((row) => !excluded.has(row.recordId)));
+          }),
+        );
+        return mergeChunkedRows(results, merge).map(withDeletedFlag);
       }),
   );
 
@@ -734,18 +867,13 @@ export class EntityMetaIndex implements Index {
       queues?: readonly QueueRef[] | null;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
-        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
+        const sources = sourceRefs(query.spaceIds, query.queues);
+        if (sources.length === 0) {
           return [];
         }
 
         const sql = this.#sql;
-        const sourceCondition = buildSourceCondition(
-          sql,
-          query.spaceIds,
-          query.includeAllQueues ?? false,
-          query.queues ?? null,
-        );
-
+        const includeAllQueues = query.includeAllQueues ?? false;
         const timeConditions: Statement.Fragment[] = [];
         if (query.updatedAfter != null) {
           timeConditions.push(sql`updatedAt >= ${query.updatedAfter}`);
@@ -760,15 +888,22 @@ export class EntityMetaIndex implements Index {
           timeConditions.push(sql`createdAt <= ${query.createdBefore}`);
         }
 
-        const rows =
-          timeConditions.length > 0
-            ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${sql.and(timeConditions)}`
-            : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
-
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        const timeFilter = timeConditions.length > 0 ? sql` AND ${sql.and(timeConditions)}` : sql``;
+        const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, timeFilter);
+        const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+          buildSourceRefsCondition(sql, chunk, includeAllQueues),
+        );
+        const chunks = planChunks(sources, sourceCost, budget);
+        const results = yield* readConsistently(
+          sql,
+          chunks.length,
+          Effect.forEach(
+            chunks,
+            (chunk) =>
+              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${timeFilter}`,
+          ),
+        );
+        return mergeChunkedRows(results).map(withDeletedFlag);
       }),
   );
 
