@@ -152,6 +152,18 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       onTaskSelect?.(undefined);
     }, [commitTitle, task, current, onTaskSelect]);
 
+    // Capture phase so the save runs before CodeMirror's own `Mod-Enter` binding can consume the key.
+    const handleDescriptionKeyDownCapture = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          event.stopPropagation();
+          handleSave();
+        }
+      },
+      [handleSave],
+    );
+
     // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
     // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields. An
     // abandoned create is cleared rather than reverted — a blur may already have committed text into
@@ -235,6 +247,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // column — a field one word wide. It runs to the row's end: the toolbar sits on the
             // title line only.
             className={mx('flex min-w-0 row-start-2 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            onKeyDownCapture={handleDescriptionKeyDownCapture}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
