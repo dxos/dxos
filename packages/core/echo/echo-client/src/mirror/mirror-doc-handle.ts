@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { EventEmitter } from 'eventemitter3';
 
 import { Event, Trigger, TriggerState } from '@dxos/async';
-import { Contract, Op, Sync } from '@dxos/automerge-proxy';
+import { Contract, Draft, Op, Sync } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,7 +21,6 @@ import {
 } from '../automerge/client-handle.ts';
 import { DocumentUnavailableError } from '../errors.ts';
 import { registerMirrorDoc } from './doc-ops.ts';
-import { Recorder } from './recorder.ts';
 
 /** Names the state of a document read from the index, which no worker numbering ever uses. */
 const INDEXED_EPOCH = 'indexed';
@@ -263,7 +262,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   change(callback: ChangeFn<T>, _options?: ChangeOptions<T>): void {
     invariant(!this.#deleted, 'MirrorDocHandle.change called on deleted doc');
     const before = this.doc();
-    const recorder = new Recorder<AutomergeDoc<T>>(before);
+    const recorder = new Draft.Recorder<AutomergeDoc<T>>(before);
     // The draft emulates the document the callback expects; its type cannot be derived from a Proxy.
     callback(recorder.draft() as T);
     if (recorder.ops.length === 0) {

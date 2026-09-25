@@ -4,9 +4,7 @@
 
 import { next as A, type Heads } from '@automerge/automerge';
 
-import { Op } from '@dxos/automerge-proxy';
-
-import { Recorder, recordSplice, recordUpdateText } from './recorder.ts';
+import { Draft, Op } from '@dxos/automerge-proxy';
 
 //
 // The Automerge calls the database layer makes directly, routed to the mirror when the document is
@@ -49,14 +47,14 @@ export const splice = (
   remove: number,
   insert: string,
 ): void => {
-  if (!recordSplice(draft, path, index, remove, insert)) {
+  if (!Draft.splice(draft, path, index, remove, insert)) {
     A.splice(draft, path.slice(), index, remove, insert);
   }
 };
 
 /** `A.updateText` for a change callback's draft. */
 export const updateText = (draft: object, path: readonly (string | number)[], text: string): void => {
-  if (!recordUpdateText(draft, path, text)) {
+  if (!Draft.updateText(draft, path, text)) {
     A.updateText(draft, path.slice(), text);
   }
 };
@@ -70,7 +68,7 @@ export const changeLocalDoc = <T>(doc: A.Doc<T>, callback: A.ChangeFn<T>, option
   if (!isMirrorDoc(doc)) {
     return options ? A.change(doc, options, callback) : A.change(doc, callback);
   }
-  const recorder = new Recorder(doc);
+  const recorder = new Draft.Recorder(doc);
   // The draft emulates the document the callback expects; its type cannot be derived from a Proxy.
   callback(recorder.draft() as T);
   return registerMirrorDoc(recorder.current, []);

@@ -5,16 +5,15 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { Op } from '@dxos/automerge-proxy';
-import { type Random, createRandom, initialDocument, randomValue } from '@dxos/automerge-proxy/testing';
-
-import { Recorder, getDraftInfo, recordSplice, recordUpdateText } from './recorder.ts';
+import * as Draft from './Draft.ts';
+import * as Op from './Op.ts';
+import { type Random, createRandom, initialDocument, randomValue } from './testing/index.ts';
 
 // The same callbacks drive Automerge proxies and mirror drafts with arbitrary shapes, including writes
 // both refuse, which no static type admits.
-type Draft = any;
+type AnyDraft = any;
 
-type Callback = (draft: Draft) => unknown;
+type Callback = (draft: AnyDraft) => unknown;
 
 type Outcome = { value: unknown; returned: unknown } | { threw: string };
 
@@ -62,7 +61,7 @@ const viaAutomerge = (initial: Record<string, unknown>, callback: Callback): Out
 /** Runs the callback on a recording draft and returns the initial state with the recorded ops applied. */
 const viaRecorder = (initial: Record<string, unknown>, callback: Callback): Outcome => {
   const base = Op.freeze(initial);
-  const recorder = new Recorder(base);
+  const recorder = new Draft.Recorder(base);
   let returned: unknown;
   try {
     returned = render(callback(recorder.draft()));
@@ -76,14 +75,14 @@ const viaRecorder = (initial: Record<string, unknown>, callback: Callback): Outc
 };
 
 /** Text edits dispatched as `DocOps` does: a mirror draft records them, an Automerge draft makes them. */
-const splice = (draft: Draft, path: (string | number)[], index: number, remove: number, insert: string) => {
-  if (!recordSplice(draft, path, index, remove, insert)) {
+const splice = (draft: AnyDraft, path: (string | number)[], index: number, remove: number, insert: string) => {
+  if (!Draft.splice(draft, path, index, remove, insert)) {
     A.splice(draft, path, index, remove, insert);
   }
 };
 
-const updateText = (draft: Draft, path: (string | number)[], text: string) => {
-  if (!recordUpdateText(draft, path, text)) {
+const updateText = (draft: AnyDraft, path: (string | number)[], text: string) => {
+  if (!Draft.updateText(draft, path, text)) {
     A.updateText(draft, path, text);
   }
 };
@@ -463,7 +462,7 @@ const REFUSED: [string, Record<string, unknown>, Callback][] = [
     'ECHO sort-copy-assign of a list of maps',
     { list: [{ n: 2 }, { n: 1 }] },
     (draft) => {
-      draft.list = [...draft.list].sort((left: Draft, right: Draft) => left.n - right.n);
+      draft.list = [...draft.list].sort((left: AnyDraft, right: AnyDraft) => left.n - right.n);
     },
   ],
   [
@@ -549,7 +548,7 @@ const REFUSED: [string, Record<string, unknown>, Callback][] = [
 const KEYS = ['a', 'b', 'title', 'items'];
 
 /** A container reached by walking a few random steps down from `draft`. */
-const pickContainer = (random: Random, draft: Draft): Draft => {
+const pickContainer = (random: Random, draft: AnyDraft): AnyDraft => {
   let node = draft;
   while (random.chance(0.6)) {
     const keys: (string | number)[] = Array.isArray(node) ? [...node.keys()] : Object.keys(node);
@@ -563,7 +562,7 @@ const pickContainer = (random: Random, draft: Draft): Draft => {
 };
 
 /** One random edit of a list draft, returning what the edit returned. */
-const randomListEdit = (random: Random, list: Draft, held: Draft[], value: () => unknown): unknown => {
+const randomListEdit = (random: Random, list: AnyDraft, held: AnyDraft[], value: () => unknown): unknown => {
   const length = list.length;
   switch (random.int(7)) {
     case 0:
@@ -594,7 +593,7 @@ const randomListEdit = (random: Random, list: Draft, held: Draft[], value: () =>
 };
 
 /** One random edit of a map draft. */
-const randomMapEdit = (random: Random, map: Draft, value: () => unknown): void => {
+const randomMapEdit = (random: Random, map: AnyDraft, value: () => unknown): void => {
   const keys = Object.keys(map);
   const texts = keys.filter((key) => typeof map[key] === 'string');
   if (texts.length > 0 && random.chance(0.3)) {
@@ -611,9 +610,9 @@ const randomMapEdit = (random: Random, map: Draft, value: () => unknown): void =
 };
 
 /** Random list, map and text edits through drafts held across them; returns what it read along the way. */
-const randomEdits = (random: Random, root: Draft): unknown[] => {
+const randomEdits = (random: Random, root: AnyDraft): unknown[] => {
   const trace: unknown[] = [];
-  const held: Draft[] = [root];
+  const held: AnyDraft[] = [root];
   for (let step = 0; step < 40; step++) {
     const target = random.chance(0.5) ? random.pick(held) : pickContainer(random, root);
     if (random.chance(0.3)) {
@@ -633,7 +632,7 @@ const randomEdits = (random: Random, root: Draft): unknown[] => {
   return trace;
 };
 
-describe('Recorder', () => {
+describe('Draft.Recorder', () => {
   test.each(AGREE)('agrees with A.change: %s', (_name, initial, callback) => {
     const expected = viaAutomerge(initial, callback);
     expect(expected).not.toHaveProperty('threw');
@@ -665,15 +664,15 @@ describe('Recorder', () => {
     expect(viaRecorder({ list: ['a'] }, callback)).toHaveProperty('threw');
   });
 
-  test('getDraftInfo reports where a held draft is now', () => {
-    const recorder = new Recorder(Op.freeze({ list: [{ t: 0 }, { t: 1 }] }));
-    const draft: Draft = recorder.draft();
+  test('Draft.getInfo reports where a held draft is now', () => {
+    const recorder = new Draft.Recorder(Op.freeze({ list: [{ t: 0 }, { t: 1 }] }));
+    const draft: AnyDraft = recorder.draft();
     const item = draft.list[1];
     draft.list.insertAt(0, { t: -1 });
-    expect(getDraftInfo(item)).toMatchObject({ path: ['list', 2], attached: true });
+    expect(Draft.getInfo(item)).toMatchObject({ path: ['list', 2], attached: true });
     item.t = 2;
     draft.list.deleteAt(2);
-    expect(getDraftInfo(item)).toMatchObject({ path: [], attached: false });
+    expect(Draft.getInfo(item)).toMatchObject({ path: [], attached: false });
     item.t = 3;
     expect(recorder.ops).toEqual([
       { type: 'insert', path: ['list', 0], values: [{ t: -1 }] },

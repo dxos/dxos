@@ -31,6 +31,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@automerge/automerge": "catalog:"
   }
 }

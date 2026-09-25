@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Op } from '@dxos/automerge-proxy';
+// @import-as-namespace
+
 import { invariant } from '@dxos/invariant';
+
+import * as Op from './Op.ts';
 
 type Key = string | number;
 
@@ -53,7 +56,7 @@ const drafts = new WeakMap<object, DraftState>();
 const draftState = (value: unknown): DraftState | undefined =>
   typeof value === 'object' && value !== null ? drafts.get(value) : undefined;
 
-type DraftInfo = {
+type Info = {
   readonly recorder: Recorder<unknown>;
   /** Where the draft's container is now: in the document when attached, else in its detached subtree. */
   readonly path: Op.Path;
@@ -61,7 +64,7 @@ type DraftInfo = {
 };
 
 /** Where a draft proxy points now, if the value is one. */
-export const getDraftInfo = (value: unknown): DraftInfo | undefined => {
+export const getInfo = (value: unknown): Info | undefined => {
   const state = draftState(value);
   if (!state) {
     return undefined;
@@ -233,7 +236,7 @@ const compareKeys = (left: string, right: string): number => {
  * The callback receives a draft that behaves as the draft of `A.change` does: writes Automerge refuses
  * throw synchronously, reads return what Automerge's proxies return, and drafts keep their container
  * by identity, so a draft held across a list insert, removal or replacement edits what an Automerge
- * proxy would. Text edits go through {@link recordSplice} and {@link recordUpdateText}.
+ * proxy would. Text edits go through {@link splice} and {@link updateText}.
  */
 export class Recorder<T = unknown> {
   readonly ops: Op.Any[] = [];
@@ -817,7 +820,7 @@ export class Recorder<T = unknown> {
  * root draft and a full path to `A.splice`.
  * @returns false when `draft` is not a mirror draft, so the caller can use `A.splice`.
  */
-export const recordSplice = (
+export const splice = (
   draft: unknown,
   path: readonly (string | number)[],
   index: number,
@@ -830,5 +833,5 @@ export const recordSplice = (
  * when `path` does not lead to text, including a RawString.
  * @returns false when `draft` is not a mirror draft, so the caller can use `A.updateText`.
  */
-export const recordUpdateText = (draft: unknown, path: readonly (string | number)[], text: string): boolean =>
+export const updateText = (draft: unknown, path: readonly (string | number)[], text: string): boolean =>
   draftState(draft)?.recorder.updateText(draft, path, text) ?? false;

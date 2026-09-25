@@ -5,12 +5,11 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { Contract, Op } from '@dxos/automerge-proxy';
+import { Contract, Draft, Op } from '@dxos/automerge-proxy';
 import { invariant } from '@dxos/invariant';
 
 import { MirrorCursors } from './mirror-cursors.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
-import { recordSplice } from './recorder.ts';
 
 const documentId = 'cursor-doc' as DocumentId;
 
@@ -45,7 +44,7 @@ describe('MirrorCursors', () => {
   test('create moves the requested positions through changes that arrive while it waits', async () => {
     const { handle, receive } = createHandle({ text: 'abc' });
     handle.change((doc) => {
-      recordSplice(doc, ['text'], 3, 0, 'XY');
+      Draft.splice(doc, ['text'], 3, 0, 'XY');
     });
     const requests: { path: Op.Path; positions: number[] }[] = [];
     const cursors = new MirrorCursors(handle, ['text'], createService(requests));

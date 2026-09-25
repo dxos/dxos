@@ -11,6 +11,7 @@ The package holds the parts with no dependency on ECHO:
 | `Op`        | Ops on plain JSON values (put, del, insert, remove, splice), applying and inverting them       |
 | `Transform` | Rebases one op list over another, so a client and the host converge in either order            |
 | `Sync`      | The client's confirmed and visible state, and the host's sequencer that orders batches         |
+| `Draft`     | The draft a `change()` callback writes through: behaves as Automerge's does and records ops    |
 | `Contract`  | Schemas of the events and requests that cross between client and host                          |
 | `Wire`      | Tags the values JSON cannot carry (RawString, bytes, dates) and restores them                  |
 
