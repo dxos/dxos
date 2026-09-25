@@ -1,0 +1,29 @@
+{
+  "name": "@dxos/worker-only-spike",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Spikes that prove a fix for each blocker to a tab without Automerge.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/automerge-proxy": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:",
+    "eventemitter3": "catalog:"
+  }
+}
