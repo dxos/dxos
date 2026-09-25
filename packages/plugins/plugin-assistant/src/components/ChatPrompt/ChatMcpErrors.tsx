@@ -40,14 +40,14 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
           <Listbox.Root>
             <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
               {errors.map((error) => (
-                <Listbox.Item
-                  key={`${error.url}::${error.protocol}`}
-                  id={`${error.url}::${error.protocol}`}
-                  classNames='truncate'
-                >
-                  <span className='font-mono'>{error.url}</span>
-                  {' — '}
-                  <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
+                  {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
+                      the content's intrinsic width. */}
+                  <span className='truncate min-w-0'>
+                    <span className='font-mono'>{error.url}</span>
+                    {' — '}
+                    <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                  </span>
                 </Listbox.Item>
               ))}
             </Listbox.Content>

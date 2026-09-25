@@ -194,7 +194,9 @@ const TranscriptTabs = ({
         onValueChange={onTabChange}
       >
         <Panel.Toolbar asChild>
-          <ActionToolbar {...regenerateActions} attendableId={attendableId}>
+          {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and `disabled`
+              would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
+          <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive>
             <Tabs.Tablist classNames='order-0'>
               <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
               <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>

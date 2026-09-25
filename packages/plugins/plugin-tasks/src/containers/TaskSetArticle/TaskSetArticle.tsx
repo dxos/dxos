@@ -195,9 +195,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         showDescription
         descriptionExtensions={descriptionExtensions}
         // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-        // and a fourth line would double it. `px-trim-md` carries the pane's own inline padding —
-        // no wrapper div needed, `classNames` reaches `TaskList.Edit`'s own root.
-        classNames='px-trim-md bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+        // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
+        // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
+        // existing `p-2`'s horizontal component and silently dropped.
+        classNames='mx-trim-md bg-input-surface border-x border-t border-separator rounded-t-md p-2'
         placeholder={t('task-create.placeholder')}
       />
     </TaskList.Root>

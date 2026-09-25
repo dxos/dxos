@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useCallback, useMemo } from 'react';
+import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
@@ -34,29 +34,43 @@ const getHueValue = (identity?: Identity.Info): string => identity?.data?.hue ||
 const getDefaultEmojiValue = (identity?: Identity.Info): string => hexToEmoji(identity?.identityKey ?? '0');
 const getEmojiValue = (identity?: Identity.Info): string => identity?.data?.emoji || getDefaultEmojiValue(identity);
 
+/**
+ * `useControlledState`, frozen while `pending` — so a resync from the live identity (a change from
+ * another device/session) can't clobber an edit whose debounced write hasn't reached the server yet.
+ */
+const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetStateAction<T>>] => {
+  const lastRef = useRef(value);
+  if (!pending) {
+    lastRef.current = value;
+  }
+  return useControlledState(lastRef.current);
+};
+
 export const ProfileContainer = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
-  // Resync from the live identity (e.g. a change from another device/session) while still allowing
-  // in-flight local edits, the same pattern `FunctionBinding`'s `binding` field uses.
-  const [displayName, setDisplayNameDirectly] = useControlledState(identity?.displayName ?? '');
-  const [emoji, setEmojiDirectly] = useControlledState(getEmojiValue(identity));
-  const [hue, setHueDirectly] = useControlledState(getHueValue(identity));
+  const pendingRef = useRef(false);
+  const [displayName, setDisplayNameDirectly] = usePendingGatedState(identity?.displayName ?? '', pendingRef.current);
+  const [emoji, setEmojiDirectly] = usePendingGatedState(getEmojiValue(identity), pendingRef.current);
+  const [hue, setHueDirectly] = usePendingGatedState(getHueValue(identity), pendingRef.current);
 
   const updateProfile = useMemo(
     () =>
       debounce(
         // Merge onto the current profile data so unrelated metadata is preserved.
-        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) =>
-          invokePromise(ClientOperation.UpdateProfile, {
+        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) => {
+          void invokePromise(ClientOperation.UpdateProfile, {
             displayName: profile.displayName,
             data: {
               ...currentData,
               emoji: profile.emoji,
               hue: profile.hue,
             },
-          }),
+          }).finally(() => {
+            pendingRef.current = false;
+          });
+        },
         2_000,
       ),
     [invokePromise],
@@ -64,6 +78,7 @@ export const ProfileContainer = () => {
 
   const handleChange = useCallback(
     (profile: Partial<UserProfile>, meta: FormUpdateMeta<UserProfile>) => {
+      pendingRef.current = true;
       for (const [path, changed] of Object.entries(meta.changed)) {
         if (changed) {
           switch (path) {
