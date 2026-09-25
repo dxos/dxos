@@ -267,18 +267,18 @@ export class WebSocketMuxer {
           }
         }
 
-        // Dequeued only once sent, so a chunk the socket refused keeps its waiter queued for the rejection.
-        const nextMessage = messages.at(0);
+        const nextMessage = messages.shift();
         if (nextMessage) {
           try {
             this._ws.send(nextMessage.payload);
           } catch (error) {
             log.warn('muxer failed to send segmented message chunk', { channelId, error });
-            this._rejectPendingSends(error instanceof Error ? error : new Error(String(error)));
+            const sendError = error instanceof Error ? error : new Error(String(error));
+            nextMessage.trigger?.throw(sendError);
+            this._rejectPendingSends(sendError);
             this._sendTimeout = undefined;
             return;
           }
-          messages.shift();
           if ((nextMessage.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
             this._outOpenSequences.add(channelId);
           } else {

@@ -163,6 +163,22 @@ describe('WebSocketMuxerTest', () => {
     await Promise.all(sends.map((sent) => expect(sent).rejects.toBe(socket.sendError)));
   });
 
+  test('rejects a segmented send whose final segment the socket refuses', async ({ expect }) => {
+    const socket = new TestSocket();
+    const failure = new Error("Can't call WebSocket send() after close()");
+    const message = textMessage(SEGMENTED_CONTENT);
+    const segmentCount = Math.ceil(buf.toBinary(MessageSchema, message).byteLength / MAX_CHUNK_LENGTH);
+    socket.onFrame = () => {
+      if (socket.frames.length === segmentCount - 1) {
+        socket.sendError = failure;
+      }
+    };
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+
+    await expect(muxer.send(message)).rejects.toBe(failure);
+    expect(socket.frames).toHaveLength(segmentCount - 1);
+  });
+
   test('sends segmented messages again once the socket stops throwing', async ({ expect }) => {
     const socket = new TestSocket();
     socket.sendError = new Error("Can't call WebSocket send() after close()");
