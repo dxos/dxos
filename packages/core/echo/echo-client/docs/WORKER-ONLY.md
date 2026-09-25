@@ -548,21 +548,73 @@ to the `Host.DocumentHost` that `MirrorServiceImpl` wraps today, with the same `
 Automerge host and the index as its `Host.CopySource`. In the tab, `MirrorRepo`'s `Repo.Host` adapter
 calls `DataService` instead of `MirrorService`; `Repo.ProxyRepo` and `Handle.DocHandle` do not change.
 
-Before the proxy becomes the only way the ECHO client works, each of these has to hold:
+### The switch
 
-1. CI runs the e2e suites in both modes, with a `DX_ECHO_MODE` axis for composer-e2e and todomvc.
+Every step below lands behind one switch that is off by default, built the way the SQL query
+executor's is: a `runtime.client` enum in `config.proto` with an environment variable, resolved once
+where it enters, so nothing below reads config or the environment.
+
+```proto
+enum DocumentMode {
+  UNSPECIFIED_DOCUMENT_MODE = 0;
+  /// The tab holds an Automerge replica of each document it opens. The default.
+  REPLICA = 1;
+  /// The tab holds proxies from `@dxos/automerge-proxy` and sends op batches.
+  PROXY = 2;
+}
+
+optional DocumentMode document_mode = 19 [ (env_var) = "DX_ECHO_DOCUMENT_MODE" ];
+/// With PROXY, show documents from the worker's index until the tab writes to them.
+optional bool proxy_index_reads = 20 [ (env_var) = "DX_ECHO_PROXY_INDEX_READS" ];
+```
+
+| Question           | Query executor (`query_executor`)                                  | Document mode (`document_mode`)                                                |
+| ------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Values, default    | `MEMORY`, `SQL`; `MEMORY`                                          | `REPLICA`, `PROXY`; `REPLICA`                                                  |
+| Resolution         | `EchoHost` option, config, `DX_ECHO_QUERY_EXECUTOR`, then `MEMORY` | `Client` option, config, `DX_ECHO_DOCUMENT_MODE`, then `REPLICA`               |
+| Resolved in        | `EchoHost`, from `runtimePropsFromConfig` in the worker            | `Client`, handed to `EchoClient`, which picks `MirrorRepo` or `RepoProxy`      |
+| Tests pick it with | `EchoTestPeer({ queryExecutor })`                                  | `EchoTestPeer({ documentMode })`                                               |
+| Off means          | queries load documents and run in JS                               | the tab builds `RepoProxy` and uses the byte protocol, as every tab does today |
+
+The one difference is which side reads it. Queries run in the worker, so the worker picks the
+executor. The tab picks its repo, and the worker serves both kinds of tab at once: tabs sharing a
+SharedWorker may differ, as one dogfooding tab would. The worker's proxy methods cost nothing
+until a tab calls them, because `Host.DocumentHost` loads no document and reads no index until a
+subscription follows one. Resolving per client also drops the spike's process-wide setting, which
+condition 6 needs: in HOST mode the services and every client share one process.
+
+The switch replaces what the spike uses today: the `echoMirror` option on `Client`, the
+process-wide `setMirrorIndexedReads`, and the apps reading `DX_ECHO_MODE`. Composer's `?echo=`
+override stays, as a way to set the field for one tab.
+
+### Order of work
+
+| Step | Change                                                                                                                | With the switch off                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1    | Add `document_mode` and `proxy_index_reads`; `Client` resolves them and the spike's options go                        | Nothing changes                                                        |
+| 2    | `DataService` gains the proxy methods over `Host.DocumentHost`; `MirrorRepo` moves to them; `MirrorService` stays too | Nothing calls the new methods                                          |
+| 3    | `QueryService` results carry index copies, read when `proxy_index_reads` is on                                        | Results carry none                                                     |
+| 4    | `ReplicaService` takes the byte protocol; `RepoProxy` and leased replicas move to it                                  | Replica tabs move to `ReplicaService`, the only change to the off path |
+| 5    | Composer offers `PROXY` as a setting, and refused edits go to telemetry                                               | Only tabs that opt in run the proxy                                    |
+| 6    | The default flips to `PROXY` once the conditions below hold                                                           | `REPLICA` is the off position, a kill switch                           |
+| 7    | After two releases on the new default, `REPLICA` goes as a mode, and `MirrorService` with it                          | Replicas remain only on lease and for EDGE                             |
+
+Step 4 is the only one that changes a path with the switch off, so it lands on its own, with the
+e2e suites run in both modes before and after.
+
+Before the default flips, each of these has to hold:
+
+1. CI runs the e2e suites in both modes, with a `DX_ECHO_DOCUMENT_MODE` axis for composer-e2e and
+   todomvc.
 2. The worker serves branches, merges, history and migrations over RPC; until then those features
    need a replica.
 3. The proxy package's property suites cover the contract, including worker restarts, reconnects
    and lost responses. They do today for one document per repo; several documents per repo, copy
    following and cursors under load are next.
 4. Measurements at scale with EDGE sync on: memory and write latency for 1, 2 and 3 tabs.
-5. Composer dogfoods the proxy behind a setting, and refused edits go to telemetry, since every
+5. Composer has dogfooded `PROXY` behind its setting with no refused edits in telemetry, since every
    refusal is a bug.
-6. HOST mode runs on the proxy over the in-process bridge, which needs the mirror flag per client
-   instead of per process.
-
-Then the default flips, `ReplicaService` stays for replicas and EDGE, and `MirrorService` goes.
+6. HOST mode runs on the proxy over the in-process bridge.
 
 ## Blockers
 
