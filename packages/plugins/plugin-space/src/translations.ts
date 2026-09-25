@@ -165,6 +165,11 @@ export const translations = [
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',
+        'archive-object.label': 'Archive',
+        'unarchive-object.label': 'Unarchive',
+        'objects-archived.label': 'Archived',
+        'objects-unarchived.label': 'Unarchived',
+        'archived.label': 'Archived',
         'missing-object.message': 'Object not available.',
         'missing-object.description':
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
