@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -81,25 +81,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The overview's description reads at document width, and the article scrolls in a themed scroll area. */
+/** The description reads at document width, inside the article's themed scroll area. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = await canvas.findByTestId('pull-request.body', {}, { timeout: 10_000 });
     await expect(body.closest('.dx-document')).not.toBeNull();
-    await expect(body.closest('[data-slot="scroll-area-viewport"], .dx-scroll-boundary')).not.toBeNull();
+    await expect(body.closest('.dx-scroll-boundary')).not.toBeNull();
   },
 };
 
-/** dxos/dxos#13363's diff, one file at a time: the file scrolls in the editor's own themed scroller. */
+/** dxos/dxos#13363, one file at a time: only CodeMirror's themed scroller scrolls, never its host. */
 export const Files: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByTestId('pull-request.tab.files', {}, { timeout: 10_000 }));
     const files = await canvas.findByTestId('pull-request.files', {}, { timeout: 10_000 });
-    const scroller = await within(files).findByText(
-      (_, element) => element?.classList.contains('cm-scroller') ?? false,
-    );
-    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    await waitFor(() => expect(files.querySelector('.cm-editor')).not.toBeNull(), { timeout: 10_000 });
+    const host = files.querySelector('.cm-editor')?.parentElement;
+    await expect(host && getComputedStyle(host).overflowY).toBe('hidden');
   },
 };
