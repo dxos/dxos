@@ -167,6 +167,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/diagram": "workspace:*",
@@ -187,7 +188,9 @@
   },
   "devDependencies": {
     "@codemirror/language": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",

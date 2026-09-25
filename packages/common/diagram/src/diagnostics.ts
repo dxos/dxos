@@ -28,6 +28,8 @@ export const Code = Schema.Literals([
   'label-overflow',
   'edge-crossing',
   'excessive-bends',
+  'text-overlap',
+  'edge-overlap',
 ]);
 export type Code = Schema.Schema.Type<typeof Code>;
 
@@ -37,6 +39,8 @@ export const SEVERITY: Record<Code, Severity> = {
   'label-overflow': 'error',
   'edge-crossing': 'warning',
   'excessive-bends': 'warning',
+  'text-overlap': 'warning',
+  'edge-overlap': 'warning',
 };
 
 /** A schema so operations can return diagnostics to the agent — the repair loop. */
@@ -57,6 +61,10 @@ export type Metrics = {
   overlaps: number;
   routesThroughNodes: number;
   labelOverflows: number;
+  /** Free text (edge and frame labels) overlapping another label or a box it does not belong to. */
+  textOverlaps: number;
+  /** Connector pairs that run along the same line for part of their length, so a reader cannot tell them apart. */
+  edgeOverlaps: number;
   crossings: number;
   bends: number;
   /** Total connector length in scene units; long edges are hard to follow. */
@@ -111,6 +119,51 @@ const nodes = (objects: readonly Scene.WorldObject[]): Node[] =>
         text: element.text,
         weight: element.weight ?? 'm',
       };
+    }),
+  );
+
+/** Length two axis-aligned segments share when they lie on the same line; 0 when they only cross or touch. */
+const sharedRun = ([a, b]: Segment, [c, d]: Segment): number => {
+  const overlap = (lo1: number, hi1: number, lo2: number, hi2: number) =>
+    Math.max(0, Math.min(Math.max(lo1, hi1), Math.max(lo2, hi2)) - Math.max(Math.min(lo1, hi1), Math.min(lo2, hi2)));
+  const horizontal = (p: Point, q: Point) => Math.abs(p.y - q.y) < EPSILON;
+  const vertical = (p: Point, q: Point) => Math.abs(p.x - q.x) < EPSILON;
+  if (horizontal(a, b) && horizontal(c, d) && Math.abs(a.y - c.y) < EPSILON) {
+    return overlap(a.x, b.x, c.x, d.x);
+  }
+  if (vertical(a, b) && vertical(c, d) && Math.abs(a.x - c.x) < EPSILON) {
+    return overlap(a.y, b.y, c.y, d.y);
+  }
+  return 0;
+};
+
+type Label = { ref: string; rect: Rect };
+
+/**
+ * Absolute extents of free text elements, estimated from the font metrics as the renderers draw it:
+ * `x, y` is the top-left, one line per `\n`.
+ */
+const labels = (objects: readonly Scene.WorldObject[]): Label[] =>
+  objects.flatMap((object) =>
+    object.elements.flatMap((element) => {
+      if (element.kind !== 'text') {
+        return [];
+      }
+      const font = Layout.FONT_METRICS[element.weight ?? 's'];
+      const scale = object.scale ?? 1;
+      const lines = element.text.split('\n');
+      const origin = place(object, { x: element.x, y: element.y });
+      return [
+        {
+          ref: `${object.id}/${element.id}`,
+          rect: {
+            x: origin.x,
+            y: origin.y,
+            w: Math.max(...lines.map((line) => line.length)) * font.charW * scale,
+            h: lines.length * font.lineH * scale,
+          },
+        },
+      ];
     }),
   );
 
@@ -336,6 +389,54 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
     }
   }
 
+  let edgeOverlaps = 0;
+  for (let i = 0; i < allConnectors.length; i++) {
+    for (let j = i + 1; j < allConnectors.length; j++) {
+      const [left, right] = [allConnectors[i], allConnectors[j]];
+      const run = segmentsOf(left).reduce(
+        (total, a) => total + segmentsOf(right).reduce((sum, b) => sum + sharedRun(a, b), 0),
+        0,
+      );
+      if (run > EPSILON) {
+        edgeOverlaps++;
+        diagnostics.push({
+          code: 'edge-overlap',
+          severity: SEVERITY['edge-overlap'],
+          message: `Connectors "${left.ref}" and "${right.ref}" run along the same line for ${Math.round(run)} units.`,
+          refs: [left.ref, right.ref],
+        });
+      }
+    }
+  }
+
+  // Text is compared with other text and with boxes outside its own object; a frame's label sits in
+  // the frame's band by design, and a container is a backdrop, not an obstacle.
+  const allLabels = labels(objects);
+  let textOverlaps = 0;
+  const overlapText = (ref: string, other: string) => {
+    textOverlaps++;
+    diagnostics.push({
+      code: 'text-overlap',
+      severity: SEVERITY['text-overlap'],
+      message: `Label "${ref}" overlaps "${other}".`,
+      refs: [ref, other],
+    });
+  };
+  for (let i = 0; i < allLabels.length; i++) {
+    for (let j = i + 1; j < allLabels.length; j++) {
+      if (overlapArea(allLabels[i].rect, allLabels[j].rect) > EPSILON) {
+        overlapText(allLabels[i].ref, allLabels[j].ref);
+      }
+    }
+    for (const node of allNodes) {
+      if (ownerOf(node.ref) !== ownerOf(allLabels[i].ref) && !containers.has(node.ref)) {
+        if (overlapArea(allLabels[i].rect, node.rect) > EPSILON) {
+          overlapText(allLabels[i].ref, node.ref);
+        }
+      }
+    }
+  }
+
   let bends = 0;
   let length = 0;
   for (const connector of allConnectors) {
@@ -376,6 +477,8 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
       overlaps: diagnostics.filter(({ code }) => code === 'node-overlap').length,
       routesThroughNodes: diagnostics.filter(({ code }) => code === 'route-through-node').length,
       labelOverflows: diagnostics.filter(({ code }) => code === 'label-overflow').length,
+      textOverlaps,
+      edgeOverlaps,
       crossings,
       bends,
       length,
