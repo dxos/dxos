@@ -11,7 +11,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { UNSET_ICON, priorityIcon, priorityTextStyle, statusIcon, statusTextStyle } from './status-icons.ts';
+import {
+  UNSET_ICON,
+  estimateTextStyle,
+  priorityIcon,
+  priorityTextStyle,
+  statusIcon,
+  statusTextStyle,
+} from './status-icons.ts';
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
@@ -85,6 +92,7 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
 
       <TaskProperty
         icon={estimate ? ESTIMATE_ICON : UNSET_ICON}
+        iconClassNames={estimateTextStyle(estimate)}
         label={estimate ? estimate.toUpperCase() : t('set-estimate.label')}
         unset={!estimate}
         testId='taskList.property.estimate'
@@ -119,8 +127,11 @@ type TaskPropertyProps = {
 const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: TaskPropertyProps) => {
   const content = (
     <>
-      <Icon icon={icon} classNames={mx('shrink-0', iconClassNames)} />
-      <span className={mx('min-w-0 truncate', unset && 'text-subdued')}>{label}</span>
+      {/* Unset takes the label's own hue, not the value palette's neutral: they are different
+          greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
+          not carry. A value keeps the hue its option table gives it. */}
+      <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
+      <span className={mx('min-w-0 truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
@@ -136,7 +147,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
     // Deferred, as the row's controls are: the menu is built when it is opened, not when the pane
     // renders three of them.
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button variant='ghost' classNames='w-full min-w-0 justify-start gap-2 px-1' data-testid={testId}>
+      <Button variant='ghost' density='sm' classNames='w-fit justify-start gap-2 px-1' data-testid={testId}>
         {content}
       </Button>
     </ActionMenu>
