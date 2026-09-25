@@ -34,20 +34,26 @@ remote op arrives (see [Sequences](#sequences)).
 
 ## What was checked
 
-| Claim                                                                                                | Evidence                                                                                                                                                                                 |
-| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The worker can write a change under the tab's actor and ids after merging a concurrent remote change | Same text as a real replica making the same edit and merging; the tab's cursors resolve to the characters it typed                                                                       |
-| The tab can predict every id                                                                         | 300 of 300 start ops matched the highest op the peer had seen, plus one; ids equal a replica's; one op per code point; a splice numbers its inserts before its deletes                   |
-| Resending is safe                                                                                    | Encoding the same change twice gives the same hash, and applying it twice changes nothing                                                                                                |
-| A plain JS model of a text reproduces Automerge                                                      | 800 random concurrent histories (partial syncs, random causal replay order, 2-unit characters): text, 65,376 `getCursor` checks and 22,810 positions of deleted characters, 0 mismatches |
-| A clock-based diff reproduces `A.diff`                                                               | 6,600 diffs between random pairs of versions, including backwards and concurrent pairs: identical patches                                                                                |
-| A plain JS map register reproduces Automerge                                                         | 2,700 keys with concurrent puts and deletes: same winner and same `getConflicts`, checked against a fresh load of the document                                                           |
-| A bad reference corrupts the document, so none may reach Automerge                                   | An unknown element or object panics inside the wasm (`PanicError`); the document still reads and edits in memory, but its saved form no longer loads. A seq gap panics without harm      |
-| `changeAt` at heads that leave out the actor's own last change switches actor                        | Automerge writes that change under a fresh actor with seq 1, starting after the highest op it knows                                                                                      |
+| Claim                                                                                                | Evidence                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The worker can write a change under the tab's actor and ids after merging a concurrent remote change | Same text as a real replica making the same edit and merging; the tab's cursors resolve to the characters it typed                                                                                                                                                                                                      |
+| The tab can predict every id                                                                         | 300 of 300 start ops matched the highest op the peer had seen, plus one; ids equal a replica's; one op per code point; a splice numbers its inserts before its deletes                                                                                                                                                  |
+| Resending is safe                                                                                    | Encoding the same change twice gives the same hash, and applying it twice changes nothing                                                                                                                                                                                                                               |
+| A plain JS model of a text reproduces Automerge                                                      | 800 random concurrent histories (partial syncs, random causal replay order, 2-unit characters): text, 65,376 `getCursor` checks and 22,810 positions of deleted characters, 0 mismatches                                                                                                                                |
+| A clock-based diff reproduces `A.diff`                                                               | 6,600 diffs between random pairs of versions, including backwards and concurrent pairs: identical patches                                                                                                                                                                                                               |
+| A plain JS map register reproduces Automerge                                                         | 2,700 keys with concurrent puts and deletes: same winner and same `getConflicts`, checked against a fresh load of the document                                                                                                                                                                                          |
+| A bad reference corrupts the document, so none may reach Automerge                                   | An unknown element or object panics inside the wasm (`PanicError`); the document still reads and edits in memory, but its saved form no longer loads. A seq gap panics without harm                                                                                                                                     |
+| `changeAt` at heads that leave out the actor's own last change switches actor                        | Automerge writes that change under a fresh actor with seq 1, starting after the highest op it knows                                                                                                                                                                                                                     |
+| A plain JS model of a whole document reproduces Automerge at every version                           | Random ECHO-shaped documents (nested maps, lists of scalars and of objects, text, `RawString`, numbers, dates, null, concurrent replacement of nested objects), 7,680 versions: the state equals `A.view` then `toJS` every time; 1,421 `getHistory` entries identical; `getConflicts` identical at the current version |
+| The model's whole-document diff reproduces `A.diff`                                                  | 2,700 random version pairs: every patch list turns the first version into the second; 97% are identical to `A.diff` patch for patch, and the rest differ because Automerge also re-sends a key whose conflicts changed                                                                                                  |
+| A saved document can be read without Automerge                                                       | A JS reader of the saved format recovers every element's id, origin and deletion, since Automerge stores sequences in document order: same runs, tombstones, text and cursors as the replay below                                                                                                                       |
+| Taking refused changes back out of the model is exact                                                | 400 refusals of a random tab change and every later one, with a remote peer editing meanwhile: the model's state equals Automerge's document built without those changes                                                                                                                                                |
 
 The map check had to use a fresh load: after many merges, Automerge 3.5.0's cached view dropped a
 conflicting value in about 0.4% of keys, though the winner stayed right. That is the drift already
-listed under [Blockers](../../echo-client/docs/WORKER-ONLY.md#blockers).
+listed under [Blockers](../../echo-client/docs/WORKER-ONLY.md#blockers). The whole-document check
+found a second bug: `getConflicts` on `A.view(doc, heads)` ignores the heads and reports the current
+conflicts, including values the view does not contain. The model answers for the version asked.
 
 Two rules came out of the text checks that Automerge does not document:
 
@@ -106,6 +112,15 @@ its unconfirmed changes, which is safe because the same change encodes to the sa
 This removes the `Transform` module. Positional ops needed rebasing because a position means
 something only in one state; an op that names ids means the same thing in every state.
 
+### Objects read from the index
+
+Under index reads the tab holds only an object's JSON copy, with no ids. A write to such an object
+still mints ids for what it creates, which needs only the document's highest op counter, so the copy
+has to carry that number. What the write refers to, the element an insert follows or the values a
+put overwrites, the tab names by position in the copy, and the worker resolves it against the version
+the copy came from with Automerge (`view` at those heads). Cursors need the object's ids, which arrive
+once the tab subscribes to the document.
+
 ### Remote changes
 
 The worker sends the ops of each new change in the order Automerge applied them, which is causal,
@@ -113,18 +128,25 @@ with the change's hash, actor, seq and deps. The tab's own changes come back as 
 
 ### Snapshots
 
-A subscribe returns the JSON with the ids above. Automerge has no call that lists deleted elements,
-so the worker builds them by replaying the document's decoded changes:
+A subscribe returns the JSON with the ids above. Automerge has no call that lists deleted elements.
+Two ways work without one:
 
-| History                                  | Decode the changes | Replay | Runs             |
-| ---------------------------------------- | ------------------ | ------ | ---------------- |
-| 31k characters after 20,000 keystrokes   | 530 ms             | 45 ms  | 5,971 (93 KiB)   |
-| 156k characters after 100,000 keystrokes | 3.4 s              | 290 ms | 29,987 (469 KiB) |
+| History                                  | Saved size | Replay decoded changes | Read the saved document | Runs             |
+| ---------------------------------------- | ---------- | ---------------------- | ----------------------- | ---------------- |
+| 31k characters after 20,000 keystrokes   | 31 KB      | 580 ms                 | 95 ms                   | 5,971 (93 KiB)   |
+| 156k characters after 100,000 keystrokes | 131 KB     | 3.7 s                  | 820 ms                  | 29,987 (469 KiB) |
 
-Decoding costs about 10 µs per op, through `decodeChange` and through bundles alike. Two faster paths
-exist. The worker could read the saved document format itself, which stores every op in document order
-with its successors, or Automerge could expose the element list. Either way the worker keeps the
-result per document and updates it from new changes, so the replay runs once.
+Replaying spends about 10 µs per op decoding, through `decodeChange` and through bundles alike. The
+reader is an untuned prototype of the saved format (header, column metadata, RLE, delta and boolean
+columns, values, successors) that skips everything but the op columns. It works because Automerge
+stores a sequence's ops in document order, with each op's successors, though the format spec says
+they are sorted by element id; the reference implementation decides, and the replay stays as the
+fallback if that ever changes.
+
+The reader needs no Automerge, so it can run in the tab as well as the worker: the worker sends the
+saved bytes, which already carry the ids and for these documents are no larger than the text alone
+(31 KB for 31k characters, 131 KB for 156k), and the tab reads the state and ids itself. The same bytes hold every change's metadata and every op's successors, which is what
+[HISTORY.md](./HISTORY.md) builds on.
 
 ## History
 
@@ -143,8 +165,9 @@ actor, which is Automerge's own rule, since an actor's changes form a chain.
 | `getConflicts`                   | The current values of the key                                                                                            |
 
 A token becomes an alias of the hash when the worker confirms the change, so heads captured before
-the confirmation keep working. The tab can name every version since its snapshot. Older heads throw,
-as Automerge throws for heads it does not have.
+the confirmation keep working. A tab that loaded the document's full history ([HISTORY.md](./HISTORY.md))
+can name every version; one seeded from a snapshot names every version since the snapshot, and older
+heads throw, as Automerge throws for heads it does not have.
 
 The editor's Automerge binding (`ui-editor/.../collab/automerge`) uses `getHeads`, `equals`, `diff`,
 `changeAt` and the two cursor calls, all in the table, plus `splice`, which the draft records. The
@@ -154,9 +177,8 @@ tldraw and excalidraw store adapters use `getHeads`, `equals` and `diff`. So bot
 - The position mapping between mirror and replica in `echo-client/src/text.ts`.
 - `Cursors` and the `resolveCursors` and `createCursors` RPCs.
 
-Full history is a different matter: `getHistory`, `view` before the snapshot, `save`, branches,
-merge and migrations need the change graph, which only the worker has. Those stay behind worker RPCs,
-as [Blockers](../../echo-client/docs/WORKER-ONLY.md#blockers) already plans.
+Full history, branches, merge and migrations are covered in [HISTORY.md](./HISTORY.md): the tab reads
+the whole history from the document's saved bytes, and forks, merges and imports run in the worker.
 
 ## Costs
 
@@ -185,13 +207,13 @@ the same check with a map lookup.
 
 From the inventory of tab code, beyond cursors and recent history:
 
-| Use                                                                         | Where                                                                                                                             | Without Automerge                                                         |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Wasm initialization at boot                                                 | `composer-app/src/main.tsx:268`                                                                                                   | Only in replica mode and `DX_HOST`                                        |
-| `A.from` for an object before it joins a database                           | `echo-client/src/core-db/object-core.ts:252`                                                                                      | A proxy document with no host, whose first change the tab mints           |
-| `RawString`                                                                 | 8 files                                                                                                                           | Automerge's class is plain JS; import it from `@automerge/automerge/slim` |
-| The devtools hook exposes the Automerge namespace                           | `sdk/client/src/devtools/devtools.ts:30`                                                                                          | Expose `@dxos/automerge-proxy/Automerge`                                  |
-| Edit history, branches, merge, migrations, versioning, import, change times | `echo-handler/edit-history.ts`, `core-db/branching.ts`, `entity-manager.ts`, `sdk/migrations`, `sdk/versioning`, `object-core.ts` | Worker RPCs (existing blocker)                                            |
+| Use                                                                         | Where                                                                                                                             | Without Automerge                                                                                                 |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Wasm initialization at boot                                                 | `composer-app/src/main.tsx:268`                                                                                                   | Only in replica mode and `DX_HOST`                                                                                |
+| `A.from` for an object before it joins a database                           | `echo-client/src/core-db/object-core.ts:252`                                                                                      | A proxy document with no host, whose first change the tab mints                                                   |
+| `RawString`                                                                 | 8 files                                                                                                                           | Automerge's class is plain JS; import it from `@automerge/automerge/slim`                                         |
+| The devtools hook exposes the Automerge namespace                           | `sdk/client/src/devtools/devtools.ts:30`                                                                                          | Expose `@dxos/automerge-proxy/Automerge`                                                                          |
+| Edit history, branches, merge, migrations, versioning, import, change times | `echo-handler/edit-history.ts`, `core-db/branching.ts`, `entity-manager.ts`, `sdk/migrations`, `sdk/versioning`, `object-core.ts` | History reads in the tab from saved bytes; forks, merges and imports as worker calls ([HISTORY.md](./HISTORY.md)) |
 
 The namespace would re-export `@automerge/automerge/slim` instead of the default entry, so importing
 it never starts the wasm, and a test would check that a proxy tab never does. Nothing in the tab uses
@@ -207,7 +229,7 @@ Size: S is up to a day, M is 2 to 5 days, L is more than a week.
 | 2. Tab-minted writes: the draft records Automerge ops, the worker checks, encodes and batches, refusal and resend; `Transform` and `Cursors` go | L    |
 | 3. Versions: `getHeads`, `diff`, `view`, `changeAt`; the Automerge binding and store adapters over proxies; `mirrorSync` and replica leases go  | M    |
 | 4. No wasm in a proxy tab: slim re-export, hostless documents, `RawString`, devtools, no initialization, a check                                | M    |
-| 5. Faster snapshots: read the saved document or an upstream call; keep the element index per document                                           | M    |
+| 5. Faster snapshots: a tuned reader of the saved document, in the tab or the worker                                                             | M    |
 
 The full-history RPCs stay a separate L blocker.
 
