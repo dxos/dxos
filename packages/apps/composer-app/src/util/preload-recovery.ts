@@ -60,7 +60,12 @@ export const registerPreloadErrorHandler = ({
       }
       sessionStorage.setItem(PRELOAD_RETRY_KEY, '1');
       if (url) {
-        recordFailure(url);
+        // Best effort: the guard is already set, so a failed record must not also skip the reload.
+        try {
+          recordFailure(url);
+        } catch (error) {
+          log.catch(error);
+        }
       }
       // Vite rethrows the error unless the event is cancelled, and the reload is the recovery.
       event.preventDefault();

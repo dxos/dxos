@@ -78,6 +78,19 @@ describe('preload recovery', () => {
     });
   });
 
+  test('still reloads when the failure record cannot be written', () => {
+    // A corrupt record from an earlier session makes the read in `recordFailure` throw after the retry
+    // guard is already set; losing the record must not also lose the recovery.
+    localStorage.setItem(BOOT_ASSET_FAILURE_KEY, '{not json');
+    const reload = vi.fn();
+    const { target, dispatch } = createTarget();
+    registerPreloadErrorHandler({ target, reload });
+
+    const event = dispatch('https://composer.space/assets/src-abc123.css');
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
   test('does not reload when storage is unavailable', () => {
     vi.stubGlobal('sessionStorage', {
       getItem: () => {
