@@ -104,13 +104,20 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                     room a pane has, each says what its glyph means. */}
                 <TaskProperties task={task} onTaskUpdate={handleUpdate} />
 
-                {openQuestions.map((thread) => (
-                  <TaskQuestion
-                    key={thread.question.id}
-                    thread={thread}
-                    onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
-                  />
-                ))}
+                {/* Headed like the sections around it, and only when something is waiting: a
+                    standing "Questions" label over nothing says the pane expects them, when what a
+                    task with none has is nothing to answer. */}
+                {openQuestions.length > 0 && (
+                  <Column.Section label={t('task-questions.label')}>
+                    {openQuestions.map((thread) => (
+                      <TaskQuestion
+                        key={thread.question.id}
+                        thread={thread}
+                        onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
+                      />
+                    ))}
+                  </Column.Section>
+                )}
 
                 {history && history.length > 0 && <TaskHistory entries={history} />}
 

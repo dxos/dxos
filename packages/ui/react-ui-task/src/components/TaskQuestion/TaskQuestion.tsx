@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, useTranslation, withColumn } from '@dxos/react-ui';
+import { Button, Field, Icon, IconBlock, type ThemedClassName, useTranslation, withColumn } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -116,8 +116,10 @@ export const TaskQuestion = ({
     >
       {/* The glyph rides with the text in the content track, as the history's does: it names what
           the line is rather than acting on it, and the gutter is where the pane's affordances live. */}
-      <div className='flex items-start gap-2 min-w-0'>
-        <Icon icon='ph--question--regular' classNames='shrink-0 h-[1lh] text-amber-text' />
+      <div className='flex items-start gap-1 min-w-0'>
+        <IconBlock classNames='size-6 h-[1lh] shrink-0'>
+          <Icon icon='ph--question--regular' classNames='text-warning-text' />
+        </IconBlock>
         <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
       </div>
 
@@ -126,8 +128,10 @@ export const TaskQuestion = ({
       )}
 
       {answer ? (
-        <div className='flex items-start gap-2 min-w-0'>
-          <Icon icon='ph--check-circle--regular' classNames='shrink-0 h-[1lh] text-success-text' />
+        <div className='flex items-start gap-1 min-w-0'>
+          <IconBlock classNames='size-6 h-[1lh] shrink-0'>
+            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
+          </IconBlock>
           <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}
           </span>
@@ -135,7 +139,7 @@ export const TaskQuestion = ({
       ) : (
         onAnswer && (
           <div className='flex flex-col gap-1 min-w-0'>
-            {question.options?.map((option) => (
+            {question.options?.map((option, index) => (
               <Button
                 key={option.title}
                 variant='default'
@@ -146,6 +150,10 @@ export const TaskQuestion = ({
                 data-testid='task-question.option'
                 onClick={() => handleSubmit(option.title)}
               >
+                {/* Numbered, so the options can be referred to — an agent asking again, a person
+                    saying "the second one" — rather than quoted back in full. On the first line and
+                    top-aligned, since an option's text wraps. */}
+                <div className='shrink-0 tabular-nums text-description self-start'>{index + 1}.</div>
                 {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
                 <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
                   <div className='font-medium wrap-break-word'>{option.title}</div>

@@ -90,13 +90,13 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     const {
       tasks,
       selected,
+      gridTemplateColumns,
+      showEstimates,
+      showQuestions,
       onTaskCreate,
       onTaskUpdate,
       onTaskSelect,
       onQuestionAnswer,
-      gridTemplateColumns,
-      showEstimates,
-      showQuestions,
     } = useTaskListContext('TaskList.Edit');
 
     const task = useMemo(

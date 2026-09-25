@@ -50,7 +50,7 @@ const row: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
     // track: a row already spans all three, and `col-start-2` on top of `col-span-3` walks it one
     // track right, leaving its content in the trailing gutter.
     'dx-column-row col-span-3 grid grid-cols-subgrid',
-    '[&>*:not(.dx-gutter)]:col-start-2',
+    '[&>*:not(.dx-gutter):not(.dx-column-span)]:col-start-2',
     ...etc,
   );
 };
@@ -85,8 +85,9 @@ const center: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 const section: ComponentFunction<ColumnStyleProps> = ({ gap }, ...etc) =>
   mx(
     'col-span-3 grid grid-cols-subgrid',
-    // Plain content lands in the content track; a gutter slot and a row place themselves.
-    '[&>*:not(.dx-gutter):not(.dx-column-row)]:col-start-2',
+    // Plain content lands in the content track; a gutter slot, a row, and anything that spans the
+    // tracks to re-expose them (`withColumn.propagate`) place themselves.
+    '[&>*:not(.dx-gutter):not(.dx-column-row):not(.dx-column-span)]:col-start-2',
     gap && columnGapClasses[gap],
     ...etc,
   );
