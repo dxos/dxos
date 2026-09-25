@@ -72,7 +72,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
       onQuestionAnswer={handleQuestionAnswer}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Toolbar>
           <Toolbar.Root classNames='dx-document'>
             {/* Actions only: what the task IS — its status, estimate and priority — reads with the
                 text below, while the toolbar carries what can be done to it. */}
@@ -117,7 +117,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 {/* What the task produced, as cards. `plugin-space` renders the grid; nothing shows
                     for a task with no artifacts, so the section is absent rather than empty. */}
                 {artifacts && artifacts.length > 0 && (
-                  <Column.Section label={t('task-artifacts.label')}>
+                  <Column.Section label={t('task-artifacts.label')} classNames='gap-y-0'>
                     <Surface.Surface
                       type={AppSurface.CardMasonry}
                       data={{ objects: artifacts, attendableId }}

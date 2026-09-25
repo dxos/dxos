@@ -57,6 +57,8 @@ const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
+const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
+const TASK_ANSWER = 'On for internal spaces only';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 
@@ -98,6 +100,17 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
+  // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
+  // pair is what the detail pane renders as two lines — the question an agent asked, and the answer
+  // it was resumed on. `answer` refuses an id that is not in this task's log, so seeding through
+  // them is also the check that the two entries are joined.
+  const question = Task.ask(task, {
+    text: TASK_QUESTION,
+    context: 'The section ships behind a flag either way; the question is what the flag defaults to.',
+    options: [{ title: TASK_ANSWER }, { title: 'Off for everyone' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  Task.answer(task, question.id, TASK_ANSWER, { actor: { role: 'user', name: 'Rich' } });
   // What the task produced, linked the way the verbs link it: a ref on the task, with the object
   // filed in the space rather than parented to the task.
   Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
@@ -368,6 +381,15 @@ export const TaskDetail: Story = {
     await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
     // Once only: the companion used to render the same artifacts a second time beneath the article.
     await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
+    // The exchange reads as two lines of the log: what was asked, and what it was answered with.
+    // Answered, so it is a record rather than a prompt — the pane offers no controls for it.
+    const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
+    await waitFor(() => expect(history()).toBeTruthy(), { timeout: 10_000 });
+    await expect(within(history()!).findByText(TASK_QUESTION, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(within(history()!).findByText(TASK_ANSWER, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Answered, so the pane offers nothing to answer with — the ledger row still summarises the
+    // exchange, which is why this checks for the prompt's field rather than for the question itself.
+    await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).toBeNull();
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(

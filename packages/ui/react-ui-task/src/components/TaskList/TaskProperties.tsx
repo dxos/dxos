@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Icon, IconBlock, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -130,8 +130,10 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       {/* Unset takes the label's own hue, not the value palette's neutral: they are different
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
-      <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
-      <span className={mx('min-w-0 truncate', unset && 'text-description')}>{label}</span>
+      <IconBlock classNames='size-6'>
+        <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
+      </IconBlock>
+      <span className={mx('min-w-0 px-1 truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
@@ -147,7 +149,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
     // Deferred, as the row's controls are: the menu is built when it is opened, not when the pane
     // renders three of them.
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button variant='ghost' density='sm' classNames='w-fit justify-start gap-2 px-1' data-testid={testId}>
+      <Button variant='ghost' density='sm' classNames='w-fit justify-start gap-0 px-0' data-testid={testId}>
         {content}
       </Button>
     </ActionMenu>

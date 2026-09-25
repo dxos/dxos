@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Column, Icon, IconBlock, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -95,7 +95,9 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
           {/* One line box tall, so a wrapped description leaves the glyph on the first line. The hue
               comes from the event table, through the same palette the status and priority glyphs
               read. */}
-          <Icon icon={icon} classNames={mx('shrink-0 h-[1lh]', hue)} size={4} />
+          <IconBlock classNames='size-6'>
+            <Icon icon={icon} classNames={hue} />
+          </IconBlock>
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened. */}
           <span className='grow min-w-0'>{entryText(entry)}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
