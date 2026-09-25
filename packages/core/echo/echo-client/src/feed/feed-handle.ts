@@ -28,7 +28,7 @@ import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { FeedCoreRegistry } from './feed-core-registry.ts';
-import { FeedObjectCore } from './feed-object-core.ts';
+import { FeedObjectCore, positionOfJSON } from './feed-object-core.ts';
 
 const TRACE_FEED_LOAD = false;
 
@@ -613,6 +613,9 @@ export class FeedHandle {
 
     const existingCore = this.#cores.get(id);
     if (existingCore) {
+      if (existingCore.isSettledAt(positionOfJSON(json))) {
+        return existingCore.entity;
+      }
       try {
         const decoded = await Obj.fromJSON(json, {
           refResolver: this._refResolver,
