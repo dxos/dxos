@@ -17,8 +17,10 @@ import { afterEach, beforeEach } from 'vitest';
 import { Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import { type OpenOptions, SqliteDatabase, UnsupportedOperationError } from './database.ts';
+import init from './migrations/0001_init.sql?raw';
 
 const TYPES = [
   TestSchema.Person,
@@ -455,6 +457,62 @@ describe('SqliteDatabase', () => {
         { spaceId, types: [] },
       );
     }),
+  );
+
+  it.effect('retries a failed write instead of dropping it', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      yield* session(
+        (db) =>
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            const doomed = db.add(Obj.make(TestSchema.Organization, { name: 'Doomed' }));
+            yield* promise(() => db.flush());
+
+            // Break the store so the next batch fails.
+            yield* sql`DROP TABLE echo_objects`;
+            db.add(Obj.make(TestSchema.Organization, { name: 'Added' }));
+            db.remove(doomed);
+            const error = yield* Effect.flip(Effect.tryPromise(() => db.flush()));
+            expect(error).toBeDefined();
+
+            // Once the store recovers, the next flush writes the requeued batch.
+            yield* SqlMigrations.apply(init);
+            yield* promise(() => db.flush());
+          }),
+        { spaceId },
+      );
+      yield* session(
+        (db) =>
+          Effect.sync(() => {
+            expect(
+              db
+                .query(Filter.type(TestSchema.Organization))
+                .runSync()
+                .map((org) => org.name),
+            ).toEqual(['Added']);
+            expect(
+              db
+                .query(Query.select(Filter.type(TestSchema.Organization)).options({ deleted: 'only' }))
+                .runSync()
+                .map((org) => org.name),
+            ).toEqual(['Doomed']);
+          }),
+        { spaceId },
+      );
+    }),
+  );
+
+  it.effect('builds data URLs for maximum-size inline blobs', () =>
+    session((db) =>
+      Effect.gen(function* () {
+        const bytes = new Uint8Array(Blob.MAX_INLINE_SIZE).fill(7);
+        const blob = yield* promise(() => db.createBlob(bytes));
+        const url = yield* promise(() => db.getBlobUrl(blob));
+        const decoded = Buffer.from((url ?? '').split(',')[1] ?? '', 'base64');
+        expect(Buffer.compare(decoded, bytes)).toBe(0);
+      }),
+    ),
   );
 
   it.effect('stores inline blobs', () =>

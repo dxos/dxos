@@ -191,10 +191,13 @@ export class SqliteDatabase implements Database.Database {
     if (this.#closed) {
       return;
     }
-    await this.flush();
-    this.#closed = true;
-    for (const tracked of this.#tracked.values()) {
-      tracked.unsubscribe();
+    try {
+      await this.flush();
+    } finally {
+      this.#closed = true;
+      for (const tracked of this.#tracked.values()) {
+        tracked.unsubscribe();
+      }
     }
   }
 
@@ -286,6 +289,11 @@ export class SqliteDatabase implements Database.Database {
     })) as Database.QueryFn;
 
   async flush(_opts?: Database.FlushOptions): Promise<void> {
+    // A failed batch is requeued without rescheduling, so flushing is what retries it.
+    this.#writeError = undefined;
+    if (this.#dirty.size > 0 || this.#purged.size > 0) {
+      this.#schedule();
+    }
     // Let the microtask that batches the current turn's writes enqueue them first.
     await Promise.resolve();
     await this.#writes;
@@ -399,7 +407,13 @@ export class SqliteDatabase implements Database.Database {
     if (blob.data._tag !== 'inline') {
       return undefined;
     }
-    return `data:${blob.type ?? 'application/octet-stream'};base64,${btoa(String.fromCharCode(...blob.data.bytes))}`;
+    // Chunked: spreading a multi-megabyte array into one call overflows the argument limit.
+    const bytes = blob.data.bytes;
+    let binary = '';
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    return `data:${blob.type ?? 'application/octet-stream'};base64,${btoa(binary)}`;
   }
 
   //
@@ -676,6 +690,9 @@ export class SqliteDatabase implements Database.Database {
         } catch (err) {
           log.error('failed to persist objects', { count: records.length, error: err });
           this.#writeError = err;
+          // Requeue the batch so memory and disk cannot silently diverge; the next flush retries it.
+          records.filter(({ id }) => this.#tracked.has(id)).forEach(({ id }) => this.#dirty.add(id));
+          purged.filter((id) => !this.#tracked.has(id)).forEach((id) => this.#purged.add(id));
         }
       });
     });
