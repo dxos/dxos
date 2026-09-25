@@ -22,12 +22,15 @@ type StoryArgs = {
 const DefaultStory = ({ tooltips, side, defaultOpen }: StoryArgs) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
-      <div className='w-32'>
-        {tooltips.map(({ label, content }, i) => (
-          <Tooltip.Trigger asChild key={i} content={content} side={side}>
-            <Button classNames='block w-full'>{label}</Button>
-          </Tooltip.Trigger>
-        ))}
+      {/* Centered here, since the test runner ignores `layout` and a corner trigger flips the tooltip. */}
+      <div className='grid place-items-center w-screen h-screen'>
+        <div className='w-32'>
+          {tooltips.map(({ label, content }, i) => (
+            <Tooltip.Trigger asChild key={i} content={content} side={side}>
+              <Button classNames='block w-full'>{label}</Button>
+            </Tooltip.Trigger>
+          ))}
+        </div>
       </div>
     </Tooltip.Provider>
   );

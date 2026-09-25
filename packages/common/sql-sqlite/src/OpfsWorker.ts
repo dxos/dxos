@@ -29,6 +29,8 @@ import {
   checkpointWal,
 } from './internal/opfs-pragmas.ts';
 import { recordSqliteQueryMetrics } from './internal/query-log.ts';
+import { readRow } from './internal/row-decode.ts';
+import { instantiateSqliteModule } from './internal/sqlite-module.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -65,7 +67,7 @@ export interface OpfsWorkerConfig {
  */
 export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.SqlError> =>
   Effect.gen(function* () {
-    const factory = yield* Effect.promise(() => SQLiteESMFactory());
+    const factory = yield* Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory));
     const sqlite3 = WaSqlite.Factory(factory);
     const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create('opfs', factory));
     sqlite3.vfs_register(vfs as any, false);
@@ -161,9 +163,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
                 let statementColumns: Array<string> | undefined;
                 sqlite3.bind_collection(stmt, params as any);
                 while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                  statementColumns = statementColumns ?? sqlite3.column_names(stmt);
-                  const row = sqlite3.row(stmt);
-                  results.push(row);
+                  const decoded = readRow(sqlite3, stmt, sql, statementColumns);
+                  statementColumns = decoded.columns;
+                  results.push(decoded.row);
                   columns.push(statementColumns);
                 }
               }

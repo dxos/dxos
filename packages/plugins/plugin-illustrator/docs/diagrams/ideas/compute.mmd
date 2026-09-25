@@ -1,0 +1,48 @@
+%% Compute invocation path: the dispatcher owns trigger state (capped), the process manager owns live processes.
+flowchart LR
+  subgraph Dispatch [Trigger dispatch]
+    Dispatcher[TriggerDispatcher]
+    Runs[Recent runs ≤10]
+    StateStore[TriggerStateStore]
+  end
+  subgraph Sources [Trigger sources]
+    TriggerObj[Trigger objects]
+    FeedQ[Feed queue]
+    Database[Database]
+  end
+  subgraph Runtime [Process runtime]
+    PM[ProcessManager]
+    Invoker[ProcessOpInvoker]
+    HandlerSet[OpHandlerSet]
+    LayerStack[LayerStack]
+    ProcStore[ProcessStore KV]
+    TraceSink[FeedTraceSink]
+  end
+  Ai[AiService]
+  Dispatcher -->|owns, capped| Runs
+  Dispatcher -->|change state| StateStore
+  Dispatcher -->|live query| TriggerObj
+  Dispatcher -->|cursor query| FeedQ
+  Dispatcher -->|subscriptions| Database
+  Dispatcher -->|spawn| PM
+  PM --> Invoker
+  Invoker -->|spawn child| PM
+  Invoker -->|fromOperation| HandlerSet
+  PM -->|resolve services| LayerStack
+  PM -->|records| ProcStore
+  PM -->|trace| TraceSink
+  TraceSink -->|append| FeedQ
+  LayerStack --> Ai
+%% ref Dispatcher packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts
+%% ref Runs packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts
+%% ref StateStore packages/core/compute/compute-runtime/src/triggers/trigger-state-store.ts
+%% ref TriggerObj packages/core/compute/compute/src/types/Trigger.ts
+%% ref FeedQ packages/core/echo/echo/src/Feed.ts
+%% ref Database packages/plugins/plugin-client/src/capabilities/layer-specs.ts
+%% ref PM packages/core/compute/compute-runtime/src/ProcessManager.ts
+%% ref Invoker packages/core/compute/compute-runtime/src/ProcessOperationInvoker.ts
+%% ref HandlerSet packages/core/compute/compute/src/OperationHandlerSet.ts
+%% ref LayerStack packages/core/compute/compute-runtime/src/LayerStack.ts
+%% ref ProcStore packages/core/compute/compute-runtime/src/process-store.ts
+%% ref TraceSink packages/core/compute/compute-runtime/src/FeedTraceSink.ts
+%% ref Ai packages/core/compute/ai/src/AiService.ts

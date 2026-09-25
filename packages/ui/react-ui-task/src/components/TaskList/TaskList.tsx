@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
   DxAnchorActivate,
@@ -20,9 +20,9 @@ import {
 import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
-import { type Actor, PullRequest, Question, RemoteSession, Task } from '@dxos/types';
-import { hoverableControlItem, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { type Actor, PullRequest, RemoteSession, Task } from '@dxos/types';
+import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
+import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -110,6 +110,12 @@ type TaskListRootProps = PropsWithChildren<{
   showDescription?: boolean;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
+  /**
+   * Render the questions in each task's history under its title, one line each, and the open ones in
+   * full in `TaskList.Edit`. On by default: an open question is why a task is blocked, so the row
+   * should say so without opening anything.
+   */
+  showQuestions?: boolean;
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -148,6 +154,11 @@ type TaskListRootProps = PropsWithChildren<{
    * Enables collapsing/expanding a task's sub-tasks; called with the new set of collapsed ids.
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
+  /**
+   * Enables answering the selected task's open questions in `TaskList.Edit`; called with the question
+   * entry's id and the answer. Without it the questions render read-only.
+   */
+  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;
 
 const TaskListRoot = ({
@@ -160,6 +171,7 @@ const TaskListRoot = ({
   showDescription = false,
   descriptionComponents,
   showEstimates = false,
+  showQuestions = true,
   hierarchical = false,
   collapsed,
   selected: selectedProp,
@@ -172,6 +184,7 @@ const TaskListRoot = ({
   onTaskCheck,
   onTaskMove,
   onCollapsedChange,
+  onQuestionAnswer,
 }: TaskListRootProps) => {
   // Uncontrolled by default: a host that only wants the click callback still gets the selected
   // styling, and one that owns the selection passes `selected`.
@@ -238,6 +251,7 @@ const TaskListRoot = ({
       showDescription={showDescription}
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
+      showQuestions={showQuestions}
       hierarchical={hierarchical}
       debug={debug}
       showGutter={showGutter}
@@ -253,6 +267,7 @@ const TaskListRoot = ({
       onTaskSelect={selectable ? handleSelect : undefined}
       onTaskCheck={onTaskCheck}
       onTaskMove={onTaskMove}
+      onQuestionAnswer={onQuestionAnswer}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
       <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
@@ -340,10 +355,14 @@ const buildGridTemplate = ({
     .join(' ');
 };
 
-type TaskListContentProps = ComposableProps;
+/**
+ * `classNames` only, and no ref: the part renders no element of its own — it is the tree, and
+ * `Tree` takes a class list and forwards no ref. A wider `ComposableProps` would accept props the
+ * tree has nowhere to put, which is how the class list came to be dropped silently.
+ */
+type TaskListContentProps = ThemedClassName<{}>;
 
-const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+const TaskListContent = ({ classNames }: TaskListContentProps) => {
   const {
     tasks,
     groupByStatus,
@@ -356,6 +375,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showOrdinals,
     showDescription,
     descriptionComponents,
+    showQuestions,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -403,6 +423,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       selected={selected}
       checked={checked}
       showDescription={showDescription}
+      showQuestions={showQuestions}
       renderTrailing={TaskTreeTrailing}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}
@@ -410,9 +431,12 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
+      // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
+      // and `Tree` takes a plain list.
+      classNames={mx(classNames)}
     />
   );
-});
+};
 
 TaskListContent.displayName = 'TaskList.Content';
 
@@ -460,6 +484,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
           reach overflow on its end side, and `justify-end` spills the excess off the start. */}
       <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
+        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
@@ -568,19 +593,46 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 /**
+ * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
+ * reason artifacts are: a tag's target is not in memory on a cold load.
+ */
+const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.Ref<EchoTag.Tag>[] }) => {
+  const db = Obj.getDatabase(task);
+  const ids = useMemo(
+    () =>
+      tags.flatMap((ref) => {
+        const id = Task.refEntityId(ref);
+        return id ? [id] : [];
+      }),
+    [tags],
+  );
+  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
+  const resolved = db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []));
+  const labelled = useMemo(
+    () => resolved.filter((object) => Obj.instanceOf(EchoTag.Tag, object)).sort(EchoTag.sortTags),
+    [resolved],
+  );
+
+  return (
+    <>
+      {labelled.map((tag) => (
+        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+          {tag.label}
+        </Tag>
+      ))}
+    </>
+  );
+};
+
+TaskListItemTags.displayName = 'TaskList.ItemTags';
+
+/**
  * One artifact, as a tag that opens the object's preview card — the row names what the task
  * produced, and the reader wants to see it without leaving the list.
  *
  * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
  * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
  * the row on its way somewhere else.
- *
- * A {@link Question.Question} also opens on hover: it is not something the task produced but the
- * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
- * answers the objection above. No tab stop is added — that half of the objection still stands, so
- * the tag carries no `button` role either: a role promising keyboard activation that a
- * non-focusable element cannot deliver is worse than none. A question is answered from its card in
- * the conversation, which is keyboard-operable throughout.
  *
  * A {@link PullRequest.PullRequest} renders as its `#number` pill — the form a PR link takes in
  * markdown — so a row reads the same as the text that references it.
@@ -589,16 +641,13 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
-  const question = Obj.instanceOf(Question.Question, artifact);
-  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
-  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
-  // means any re-render inside the hover delay swallows the hover.
+  // Keyed on the URI string, not the object: the live query re-identifies the artifact on every
+  // tick, and the callback should not change with it.
   const uri = Obj.getURI(artifact);
   const openCard = useCallback(() => {
     const trigger = tagRef.current ?? buttonRef.current;
     trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
   }, [uri, label]);
-  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
   const handleClick = useCallback(
     (event: MouseEvent<HTMLElement>) => {
       // The row is an option: without this the click selects the task as well as opening the card.
@@ -628,14 +677,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   }
 
   return (
-    <Tag
-      ref={tagRef}
-      hue='amber'
-      classNames='cursor-pointer'
-      onClick={handleClick}
-      onPointerEnter={question ? startHover : undefined}
-      onPointerLeave={question ? cancelHover : undefined}
-    >
+    <Tag ref={tagRef} hue='amber' classNames='cursor-pointer' onClick={handleClick}>
       {label}
     </Tag>
   );

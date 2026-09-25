@@ -2,18 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { SpaceOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
+  CollectionOperation.OpenAddToCollection.pipe(Operation.lazyHandler(() => import('./open-add-to-collection.ts'))),
   SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag.ts'))),
   SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects.ts'))),
   SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects.ts'))),
   SpaceOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types.ts'))),
   SpaceOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag.ts'))),
   SpaceOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object.ts'))),
+  SpaceOperation.AddMembers.pipe(Operation.lazyHandler(() => import('./add-members.ts'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object.ts'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation.ts'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type.ts'))),
@@ -28,6 +32,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.GetShareLink.pipe(Operation.lazyHandler(() => import('./get-share-link.ts'))),
   SpaceOperation.ImportSpace.pipe(Operation.lazyHandler(() => import('./import-space.ts'))),
   SpaceOperation.Join.pipe(Operation.lazyHandler(() => import('./join.ts'))),
+  SpaceInvitationOperation.JoinBySpaceKey.pipe(Operation.lazyHandler(() => import('./join-by-space-key.ts'))),
   SpaceOperation.MergeDuplicates.pipe(Operation.lazyHandler(() => import('./merge-duplicates.ts'))),
   SpaceOperation.Migrate.pipe(Operation.lazyHandler(() => import('./migrate.ts'))),
   SpaceOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),

@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Blob, Obj, Ref } from '@dxos/echo';
+import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { File, PullRequest, Question, Task } from '@dxos/types';
+import { File, PullRequest, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -212,6 +212,40 @@ const seedDrag = (): Task.Task[] => {
   return [a, b, c];
 };
 
+/**
+ * Tasks an agent stopped on to ask something: one question still open with options to pick from,
+ * one open with nothing but the free-form field, and one already answered — so the three shapes a
+ * question takes in a row sit side by side.
+ */
+const seedQuestions = (): Task.Task[] => {
+  const agent = { role: 'assistant' as const, name: 'Scout' };
+  const refunds = Task.make({ title: 'Draft the refund reply', status: 'started', priority: 'high', assignee: agent });
+  Task.ask(refunds, {
+    text: 'What is our refund window for annual plans?',
+    context: 'The order is 45 days old and nothing in the project states the policy.',
+    options: [
+      { title: '30 days', description: 'The standard terms on the pricing page.' },
+      { title: '60 days', description: 'The enterprise terms, if this customer is on them.' },
+    ],
+    actor: agent,
+  });
+  Task.setStatus(refunds, 'blocked', { actor: agent });
+
+  const launch = Task.make({ title: 'Schedule the launch post', status: 'started', assignee: agent });
+  Task.ask(launch, { text: 'Which day should the launch post go out?', actor: agent });
+  Task.setStatus(launch, 'blocked', { actor: agent });
+
+  const roast = Task.make({ title: 'Pick the house roast', status: 'started', assignee: agent });
+  const roastQuestion = Task.ask(roast, {
+    text: 'Light or medium for the house roast?',
+    options: [{ title: 'Light' }, { title: 'Medium' }],
+    actor: agent,
+  });
+  Task.answer(roast, roastQuestion.id, 'Medium', { actor: { name: 'Rich', role: 'user' } });
+
+  return [refunds, launch, roast, Task.make({ title: 'Design label', status: 'todo' })];
+};
+
 /** A public CC0 clip; video is too large to generate or inline, so its blob points at it externally. */
 const SAMPLE_VIDEO_URL = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm';
 
@@ -236,8 +270,8 @@ const makePngBytes = (): Uint8Array => {
 };
 
 /**
- * One task per artifact kind — a GitHub pull request, an image, a video and a question — plus one
- * carrying the first three, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
+ * One task per artifact kind — a GitHub pull request, an image and a video — plus a task blocked on a
+ * question in its history, and one carrying all three artifacts, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
  * shape an uploaded attachment takes in a space.
  */
 const seedArtifacts = (): Task.Task[] => {
@@ -266,23 +300,19 @@ const seedArtifacts = (): Task.Task[] => {
     data: Ref.make(Blob.make({ type: 'video/webm', size: 554_058, data: Blob.externalData(SAMPLE_VIDEO_URL) })),
   });
 
-  // The question points back at the task it blocks, so the task exists first and takes it after.
+  // A question is a history entry, not an artifact: the row shows it under the title.
   const blocked = Task.make({
     title: 'Choose the launch roast',
     status: 'blocked',
     assignee: { role: 'assistant', name: 'Scout' },
   });
-  const question = Question.make({
+  Task.ask(blocked, {
     text: 'Which roast should launch first?',
     context: 'Both lots cupped well; the label and the post need one name.',
     options: [
       { title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' },
       { title: 'Colombian Huila', description: 'Rounder, chocolate notes.' },
     ],
-    task: Ref.make(blocked),
-  });
-  Obj.update(blocked, (blocked) => {
-    blocked.artifacts = [Ref.make(question)];
   });
 
   return [
@@ -351,30 +381,8 @@ const FilePreview = ({ file }: { file: File.File }) => {
   return null;
 };
 
-const QuestionPreview = ({ question }: { question: Question.Question }) => (
-  <>
-    {question.context && (
-      <Card.Row>
-        <Card.Text variant='description'>{question.context}</Card.Text>
-      </Card.Row>
-    )}
-    {(question.options ?? []).map((option) => (
-      <Card.Row key={option.title}>
-        <Card.Text data-testid='artifact-preview.question.option'>
-          {option.title}
-          {option.description && ` — ${option.description}`}
-        </Card.Text>
-      </Card.Row>
-    ))}
-  </>
-);
-
 const iconFor = (artifact: Obj.Unknown): string =>
-  PullRequest.instanceOf(artifact)
-    ? 'ph--git-pull-request--regular'
-    : Obj.instanceOf(Question.Question, artifact)
-      ? 'ph--question--regular'
-      : 'ph--file--regular';
+  PullRequest.instanceOf(artifact) ? 'ph--git-pull-request--regular' : 'ph--file--regular';
 
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
@@ -437,7 +445,6 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
                   <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
                 </Card.Header>
                 {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
-                {Obj.instanceOf(Question.Question, artifact) && <QuestionPreview question={artifact} />}
                 {Obj.instanceOf(File.File, artifact) && (
                   <Card.Row>
                     <FilePreview file={artifact} />
@@ -454,6 +461,31 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
 };
 
 /** The default story under a preview host that knows the seed's artifacts. */
+/** {@link seedArtifacts} with tags on most rows, so tags sit beside artifact and assignee chips. */
+const seedTagged = (): Task.Task[] => {
+  const tags = {
+    launch: Tag.make({ label: 'launch', hue: 'rose' }),
+    design: Tag.make({ label: 'design', hue: 'sky' }),
+    frontend: Tag.make({ label: 'frontend', hue: 'violet' }),
+    content: Tag.make({ label: 'content', hue: 'lime' }),
+  };
+  const byTitle: Record<string, Tag.Tag[]> = {
+    'Choose the launch roast': [tags.launch],
+    'Render artifacts in the task list': [tags.frontend],
+    'Design the new label': [tags.design, tags.launch],
+    'Prepare the launch post': [tags.content, tags.launch],
+  };
+  const tasks = seedArtifacts();
+  for (const task of tasks) {
+    Obj.update(task, (task) => {
+      for (const tag of byTitle[task.title] ?? []) {
+        Obj.addTag(task, Ref.make(tag));
+      }
+    });
+  }
+  return tasks;
+};
+
 const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   const tasks = useMemo(() => (props.seed ?? seedArtifacts)(), [props.seed]);
   const artifacts = useMemo(
@@ -548,6 +580,12 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
+  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+    setTasks((tasks) => [...tasks]);
+  }, []);
+
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -587,6 +625,7 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
+      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -602,6 +641,62 @@ const DefaultStory = ({
         <TaskList.Edit grid showDescription={showDescription} />
       )}
     </TaskList.Root>
+  );
+};
+
+/**
+ * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
+ * carry each question as one line, and the detail — its own root holding just the selected task, as
+ * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ */
+const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
+  const [tasks] = useState<Task.Task[]>(seed);
+  const [selected, setSelected] = useState<string | undefined>(() => tasks[0]?.id);
+  const task = tasks.find(({ id }) => id === selected);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+  }, []);
+
+  // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+  }, []);
+
+  return (
+    <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
+      <div className='flex flex-col min-w-0 min-h-0' data-testid='story.list'>
+        <TaskList.Root
+          tasks={tasks}
+          selected={selected}
+          selectable
+          showGroupLabels={false}
+          onTaskUpdate={handleUpdate}
+          onTaskSelect={(task) => setSelected(task?.id)}
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </TaskList.Root>
+      </div>
+      <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
+        {task ? (
+          <TaskList.Root
+            tasks={[task]}
+            selected={task.id}
+            showDescription
+            onTaskUpdate={handleUpdate}
+            onQuestionAnswer={handleQuestionAnswer}
+          >
+            <TaskList.Edit showDescription classNames='p-2' />
+          </TaskList.Root>
+        ) : (
+          <p className='p-4 text-subdued'>No task selected.</p>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -664,6 +759,104 @@ export const WithDescriptions: Story = {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: true,
+  },
+};
+
+export const WithQuestions: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+};
+
+/**
+ * A row shows its questions one line each; selecting it opens the full question in the edit pane,
+ * where picking an option or typing records the answer, which then shows under the row's question.
+ */
+export const TestAnswerQuestion: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const answers = () =>
+      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const selectRow = async (title: string) => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]')].find(
+        (element) => element.textContent === title,
+      );
+      if (!row) {
+        throw new Error(`no row titled ${title}`);
+      }
+      await userEvent.click(row);
+    };
+
+    // The rows carry no controls: answering belongs to the pane.
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="task-question"]').length).toBeGreaterThan(0);
+    });
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    await selectRow('Draft the refund reply');
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(answers()).toContain('30 days');
+    });
+
+    // Typing in the free-form field must not reach the list: its keys would move the selection.
+    await selectRow('Schedule the launch post');
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).not.toBeNull();
+    });
+    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
+    if (!input) {
+      throw new Error('the open question has no answer field');
+    }
+    await userEvent.type(input, 'Tuesday{Enter}');
+    await waitFor(async () => {
+      await expect(answers()).toContain('Tuesday');
+    });
+    await expect(canvasElement.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
+  },
+};
+
+export const ListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+};
+
+/** Answering in the detail lands under the row's one-line question, and the row itself has no controls. */
+export const TestListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+  play: async ({ canvasElement }) => {
+    const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
+    const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
+    await waitFor(async () => {
+      await expect(detail()?.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    await expect(list()?.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    const option = detail()?.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(
+        [...(list()?.querySelectorAll('[data-testid="task-question.answer"]') ?? [])].map(
+          (answer) => answer.textContent,
+        ),
+      ).toContain('30 days');
+    });
+    await expect(detail()?.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
   },
 };
 
@@ -797,8 +990,8 @@ export const TestLongArtifactTag: Story = {
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), and a question blocking its task. Clicking a tag opens a preview of the artifact it names;
- * the question's also opens on hover.
+ * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
+ * artifact it names.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -809,7 +1002,22 @@ export const WithArtifacts: Story = {
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video, the question. */
+/** Tags render as chips in the same cell as the task's artifacts and assignee. */
+export const WithTags: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedTagged,
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.tag"]')).toHaveLength(6);
+    });
+  },
+};
+
+/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -848,7 +1056,6 @@ export const TestArtifactPreviews: Story = {
     await open('#12752', 'artifact-preview.pullRequest');
     await open('label-v2.png', 'artifact-preview.image');
     await open('roast-timelapse.webm', 'artifact-preview.video');
-    await open('Which roast should launch first?', 'artifact-preview.question.option');
   },
 };
 
@@ -1206,14 +1413,14 @@ export const TestHierarchy: Story = {
   play: async ({ canvasElement }) => {
     const rows = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'))
-        // A collapsed branch HIDES its descendants rather than unmounting them, so presence in the
-        // DOM is not visibility — the flat list dropped them from the walk instead.
+        // Unwindowed, a collapsed branch HIDES its descendants rather than unmounting them, so
+        // presence in the DOM is not visibility.
         .filter((row) => !row.closest('[hidden]'))
         .map((row) => ({
           row,
           title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
-          // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
-          // around the focusable row — so the level is read from whichever of the two carries it.
+          // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
+          // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
           ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
         }));
@@ -1313,9 +1520,6 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    // Each row is findable by task id. In the tree the attribute is `data-object-id`, stamped by
-    // `Tree` itself — the flat row's own `data-task-id` is what its drag preview reads to collect a
-    // subtree to clone, and that path is unchanged.
     await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it

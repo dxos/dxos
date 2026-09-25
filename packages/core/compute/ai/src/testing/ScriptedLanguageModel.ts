@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
@@ -39,10 +40,12 @@ const EPOCH = '1970-01-01T00:00:00.000Z';
 const ZERO_USAGE = { inputTokens: { total: 0 }, outputTokens: { total: 0 } } as const;
 
 /**
- * A single fragment emitted within a scripted turn. Build with {@link text} / {@link toolCall}.
+ * A single fragment emitted within a scripted turn. Build with {@link text} / {@link reasoning} /
+ * {@link toolCall}.
  */
 export type ScriptedPart =
   | { readonly _tag: 'text'; readonly text: string }
+  | { readonly _tag: 'reasoning'; readonly text: string }
   | { readonly _tag: 'toolCall'; readonly name: string; readonly input: unknown; readonly id?: string };
 
 /**
@@ -62,11 +65,16 @@ export type ScriptedTurn =
        * against well-nested Anthropic output.
        */
       readonly deferToolEnds?: boolean;
+      /** Held before the turn's first part, so a UI driven by the script sees a turn in flight. */
+      readonly delay?: Duration.Input;
     }
   | { readonly fail: AiError.AiError };
 
 /** Scripts a text fragment. */
 export const text = (content: string): ScriptedPart => ({ _tag: 'text', text: content });
+
+/** Scripts a reasoning (thinking) fragment, emitted as the provider-native reasoning parts. */
+export const reasoning = (content: string): ScriptedPart => ({ _tag: 'reasoning', text: content });
 
 /**
  * Scripts a tool call. `name` must match a tool registered on the toolkit under test; `input` is
@@ -96,6 +104,8 @@ export type ScriptedRequest = {
   readonly system: string;
   readonly text: string;
   readonly prompt: Prompt.Prompt;
+  /** Names of the tools the caller offered on this call. */
+  readonly tools: readonly string[];
 };
 
 /**
@@ -110,8 +120,15 @@ export type ScriptedRoute = {
   readonly turns: readonly ScriptedTurn[];
 };
 
-/** A plain sequential script, or a routed script for cooperating sessions. */
-export type Script = readonly ScriptedTurn[] | readonly ScriptedRoute[];
+/**
+ * Computes each turn from the request rather than reading it from a fixed list, for a script that
+ * must serve any number of conversations (a long-lived app rather than one test). `index` is the
+ * global call count.
+ */
+export type ScriptedTurnGenerator = (request: ScriptedRequest, index: number) => ScriptedTurn;
+
+/** A plain sequential script, a routed script for cooperating sessions, or a turn generator. */
+export type Script = readonly ScriptedTurn[] | readonly ScriptedRoute[] | ScriptedTurnGenerator;
 
 /** Route predicate matching a substring anywhere in the system prompt or message text. */
 export const promptIncludes =
@@ -120,7 +137,7 @@ export const promptIncludes =
     request.system.includes(needle) || request.text.includes(needle);
 
 /** Flattens a prompt into the text a routing predicate matches against. */
-const flattenRequest = (prompt: Prompt.Prompt): ScriptedRequest => {
+const flattenRequest = ({ prompt, tools }: LanguageModel.ProviderOptions): ScriptedRequest => {
   let system = '';
   let text = '';
   for (const message of prompt.content) {
@@ -134,13 +151,15 @@ const flattenRequest = (prompt: Prompt.Prompt): ScriptedRequest => {
       }
     }
   }
-  return { system, text, prompt };
+  return { system, text, prompt, tools: tools.map((tool) => tool.name) };
 };
 
 // A route script is distinguished structurally: every route has a `match` predicate, turns never do.
-const isRouteScript = (script: Script): script is readonly ScriptedRoute[] => script.length > 0 && 'match' in script[0];
+const isRouteScript = (
+  script: readonly ScriptedTurn[] | readonly ScriptedRoute[],
+): script is readonly ScriptedRoute[] => script.length > 0 && 'match' in script[0];
 
-const toRoutes = (script: Script): readonly ScriptedRoute[] =>
+const toRoutes = (script: readonly ScriptedTurn[] | readonly ScriptedRoute[]): readonly ScriptedRoute[] =>
   isRouteScript(script) ? script : [{ match: () => true, turns: script }];
 
 /** A turn with no explicit reason finishes on `tool-calls` when it emits a tool call, else `stop`. */
@@ -178,6 +197,11 @@ const encodeStreamTurn = (
       out.push({ type: 'text-start', id });
       out.push({ type: 'text-delta', id, delta: part.text });
       out.push({ type: 'text-end', id });
+    } else if (part._tag === 'reasoning') {
+      const id = `reasoning_${turnIndex}_${partIndex}`;
+      out.push({ type: 'reasoning-start', id });
+      out.push({ type: 'reasoning-delta', id, delta: part.text });
+      out.push({ type: 'reasoning-end', id });
     } else {
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
@@ -207,6 +231,8 @@ const encodeTurn = (
   parts.forEach((part, partIndex) => {
     if (part._tag === 'text') {
       out.push({ type: 'text', text: part.text });
+    } else if (part._tag === 'reasoning') {
+      out.push({ type: 'reasoning', text: part.text });
     } else {
       out.push({
         type: 'tool-call',
@@ -248,7 +274,8 @@ const unmatched = (request: ScriptedRequest): AiError.AiError =>
  */
 export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
-    const routes = toRoutes(script);
+    const generator = typeof script === 'function' ? script : undefined;
+    const routes = typeof script === 'function' ? [] : toRoutes(script);
     // Per-route script position. The Request semaphore serializes turns within a session, and
     // cooperating sessions interleave deterministically in tests, so plain monotonic cursors are
     // race-free; Refs keep them explicit and inspectable rather than closure variables.
@@ -257,9 +284,13 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     // order, not the per-route cursor.
     const calls = yield* Ref.make(0);
 
-    const nextTurn = (prompt: Prompt.Prompt) =>
+    const nextTurn = (options: LanguageModel.ProviderOptions) =>
       Effect.gen(function* () {
-        const request = flattenRequest(prompt);
+        const request = flattenRequest(options);
+        if (generator) {
+          const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
+          return { index, turn: generator(request, index) };
+        }
         const routeIndex = routes.findIndex((route) => route.match(request));
         if (routeIndex < 0) {
           return yield* Effect.fail(unmatched(request));
@@ -278,9 +309,12 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
       generateText: (options) =>
         Effect.gen(function* () {
           annotate(options.span);
-          const { index, turn } = yield* nextTurn(options.prompt);
+          const { index, turn } = yield* nextTurn(options);
           if (isFailure(turn)) {
             return yield* Effect.fail(turn.fail);
+          }
+          if (turn.delay !== undefined) {
+            yield* Effect.sleep(turn.delay);
           }
           return encodeTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts));
         }),
@@ -288,9 +322,12 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
         Stream.unwrap(
           Effect.gen(function* () {
             annotate(options.span);
-            const { index, turn } = yield* nextTurn(options.prompt);
+            const { index, turn } = yield* nextTurn(options);
             if (isFailure(turn)) {
               return Stream.fail(turn.fail);
+            }
+            if (turn.delay !== undefined) {
+              yield* Effect.sleep(turn.delay);
             }
             return Stream.fromIterable(
               encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {

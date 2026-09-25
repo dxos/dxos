@@ -14,6 +14,7 @@ import { Task } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { useMarkdownExtensions } from '../../hooks/index.ts';
+import { TaskArtifacts } from './TaskArtifacts.tsx';
 
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
@@ -40,13 +41,27 @@ export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
     { spaceId },
   );
 
+  // Record-only: an agent that asked over the MCP reads the answer back off the task.
+  const handleQuestionAnswer = useOperation(
+    TaskOperation.AnswerQuestion,
+    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
+    { spaceId },
+  );
+
   return (
     <Panel.Root role={role}>
       <Panel.Content>
         {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
-        <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+        <TaskList.Root
+          tasks={[task]}
+          selected={task.id}
+          showDescription
+          onTaskUpdate={handleUpdate}
+          onQuestionAnswer={handleQuestionAnswer}
+        >
           <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
         </TaskList.Root>
+        <TaskArtifacts task={task} />
       </Panel.Content>
     </Panel.Root>
   );

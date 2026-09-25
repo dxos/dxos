@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -12,7 +12,8 @@ import { TableOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperation.AddRow.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ view, data }) {
+    Effect.fnUntraced(function* ({ view: viewRef, data }) {
+      const view = yield* Database.load(viewRef);
       const db = Obj.getDatabase(view);
       invariant(db);
       const typeUri = view.query ? getTypeURIFromQuery(view.query.ast) : undefined;

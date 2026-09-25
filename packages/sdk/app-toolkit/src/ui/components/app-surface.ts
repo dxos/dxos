@@ -7,10 +7,10 @@ import { type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
 import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -493,6 +493,27 @@ export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subje
   role?: string;
 };
 
+/**
+ * Role token for the `cardMasonry` role: several objects laid out as cards.
+ *
+ * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
+ * surface deriving them from a subject, which is what separates this from {@link Related}: the
+ * caller already knows what belongs in the grid and only wants it rendered.
+ */
+export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
+
+/** Surface data for the card-masonry role. */
+export type CardMasonryData = {
+  /**
+   * What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
+   * link to, and resolving them is the surface's job, so a cold load fills in rather than reading
+   * empty.
+   */
+  objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+  /** The plank the grid renders in, so a card's actions resolve against the right node. */
+  attendableId?: string;
+};
+
 /** Surface data for card-role ECHO object. */
 export type ObjectCardData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = CardData<
   Subject,
@@ -628,6 +649,18 @@ export type NavtreeItemEndData<Subject = unknown> = {
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
+
+/** Data for the contact-picker slot on a space's members article. */
+export type ContactPickerData = {
+  space: Space;
+  onAdd: (
+    identityKeys: string[],
+    role: SpaceMember_Role,
+  ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
+};
+
+/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
+export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');

@@ -9,7 +9,7 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 export class Data extends Type.makeObject<Data>(DXN.make('org.dxos.type.data', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--asterisk--regular', hue: 'sky' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--asterisk--regular', hue: 'sky' }), Annotation.UserType.set()),
 ) {}
 
 export const make = (props: Partial<Data>) => Obj.make(Data, props);

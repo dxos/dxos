@@ -11,6 +11,8 @@ export const id = 'dxos:account';
 /** Panel ids, relative to the account workspace they hang off. Each is also its own singleton URL key. */
 export const Profile = 'profile';
 export const Devices = 'devices';
+export const Contacts = 'contacts';
+export const SpaceInvitations = 'space-invitations';
 export const Security = 'security';
 export const Account = 'account';
 export const Invitations = 'invitations';

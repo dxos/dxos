@@ -21,11 +21,13 @@ import { MemorySignalManagerContext } from '@dxos/messaging';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Runtime_Client_QueryExecutor } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing/index.ts';
+import { runtimePropsFromConfig } from './client-services-stack.ts';
 
 /**
  * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped
@@ -175,5 +177,28 @@ describe('ClientServicesLayer', () => {
       await stream?.close();
       await host.close(Context.default());
     }
+  });
+});
+
+describe('runtimePropsFromConfig', () => {
+  // The config field is the declared surface for the query executor; `DX_ECHO_QUERY_EXECUTOR` is the
+  // fallback `EchoHost` applies, so an unset field must stay undefined rather than pinning a mode
+  // here and shadowing it.
+  test('maps the configured query executor and leaves it unset otherwise', () => {
+    expect(
+      runtimePropsFromConfig(new Config({ runtime: { client: { queryExecutor: Runtime_Client_QueryExecutor.SQL } } }))
+        .queryExecutor,
+    ).toBe('sql');
+    expect(
+      runtimePropsFromConfig(
+        new Config({ runtime: { client: { queryExecutor: Runtime_Client_QueryExecutor.MEMORY } } }),
+      ).queryExecutor,
+    ).toBe('memory');
+    expect(runtimePropsFromConfig(new Config({})).queryExecutor).toBeUndefined();
+  });
+
+  test('an explicit override wins over config', () => {
+    const config = new Config({ runtime: { client: { queryExecutor: Runtime_Client_QueryExecutor.SQL } } });
+    expect(runtimePropsFromConfig(config, { queryExecutor: 'memory' }).queryExecutor).toBe('memory');
   });
 });

@@ -55,6 +55,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
     // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
     // the static `ph--sword--regular` above while the variant ref is still loading.
     Annotation.IconFromRefAnnotation.set('variant'),
+    Annotation.UserType.set(),
   ),
 ) {}
 

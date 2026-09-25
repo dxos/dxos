@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { compile, parse } from './mermaid.ts';
+import { compile, markers, parse } from './mermaid.ts';
 import type * as Scene from './scene.ts';
 
 /** Exercises node declarations, a labelled-blank subgraph, fan-out, and a `C <-> Y` cycle. */
@@ -53,6 +53,22 @@ describe('mermaid', () => {
       'C->Y',
       'Y->C',
     ]);
+  });
+
+  test('reads the relation tokens as kinds with their UML markers', ({ expect }) => {
+    const graph = parse(
+      ['flowchart TB', '  B ..|> A', '  C -.-> D', '  E o--> F', '  G --{ H', '  I --|> J', '  K --> L'].join('\n'),
+    );
+    expect(graph.edges.map(({ kind }) => kind)).toEqual([
+      'implements',
+      'creates',
+      'contains',
+      'hasMany',
+      'inheritance',
+      'reference',
+    ]);
+    expect(markers('implements')).toEqual({ head: 'triangle', stroke: 'dashed' });
+    expect(markers('creates')).toEqual({ stroke: 'dashed' });
   });
 
   test('compiles to one object per node plus a frame and an edge object', ({ expect }) => {

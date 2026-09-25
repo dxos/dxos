@@ -10,7 +10,6 @@ export * from './Button/index.ts';
 export * from './Calendar/index.ts';
 export * from './Card/index.ts';
 export * from './Carousel/index.ts';
-export * from './Clipboard/index.ts';
 export * from './Collapsible/index.ts';
 export * from './Column/index.ts';
 export * from './DatePicker/index.ts';

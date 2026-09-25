@@ -3,7 +3,7 @@
 //
 
 export * from './hierarchy.ts';
-export { statusIcon } from './status-icons.ts';
+export { statusIcon, statusTextStyle } from './status-icons.ts';
 export * from './TaskHistory.tsx';
 export * from './TaskList.tsx';
 export { type TaskSelectModifiers } from './TaskTreeNode.tsx';

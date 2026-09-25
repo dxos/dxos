@@ -21,6 +21,7 @@ export default defineConfig({
     FileEvents: 'src/types/FileEvents.ts',
     FileOperation: 'src/types/FileOperation.ts',
     Settings: 'src/types/Settings.ts',
+    StagedUpload: 'src/StagedUpload.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

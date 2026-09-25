@@ -93,7 +93,30 @@ export type IndexRunReason =
 /** Requests that drive the indexer directly, as opposed to the events that schedule it. */
 export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-scoped-query' | 'epoch'>;
 
+import { type QueryExecutorMode } from '../query/index.ts';
+
+/**
+ * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
+ * compiled SQL executor. Resolved here, where the option enters, so nothing below reads the
+ * environment — the planner and executor take the mode they are given.
+ *
+ * `memory` remains reachable so a regression can be bisected against the old path without a rebuild,
+ * and the planner still falls back to it per query for the shapes the compiler declines.
+ */
+const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
+  if (explicit) {
+    return explicit;
+  }
+  const fromEnv =
+    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
+  return fromEnv === 'memory' ? 'memory' : 'sql';
+};
+
 export type EchoHostProps = {
+  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
+  queryExecutor?: QueryExecutorMode;
+
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
@@ -156,6 +179,8 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   /** Built in `_open`: resolving the SQL client is asynchronous on some platforms. */
   private _indexEngine: IndexEngine | undefined;
+  /** Resolved when the host opens; the query planner builds compiled statements with it. */
+  private _sql: SqlClient.SqlClient | undefined;
   private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
@@ -194,6 +219,7 @@ export class EchoHost extends Resource {
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
+    queryExecutor,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -210,7 +236,9 @@ export class EchoHost extends Resource {
 
     this._runtime = runtime;
     this._spaceStateManager = new SpaceStateManager({ runtime });
-    this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
+    this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
+      isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+    });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
     this._feedDataSource = new FeedDataSource({
@@ -236,13 +264,20 @@ export class EchoHost extends Resource {
     });
 
     this._queryService = new QueryServiceImpl({
-      automergeHost: this._automergeHost,
       indexEngine: () => this.indexEngine,
       runtime: this._runtime,
+      automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      // `QueryEntry.feedScoped` is what decides a query must await indexing before its first result.
+      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
+      // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
+      executor: resolveQueryExecutorMode(queryExecutor),
+      sql: () => {
+        invariant(this._sql, 'EchoHost is not open.');
+        return this._sql;
+      },
+      hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
     });
 
     this._dataService = new DataServiceImpl({
@@ -345,7 +380,8 @@ export class EchoHost extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
     // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
-    this._indexEngine = new IndexEngine(await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient));
+    this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
+    this._indexEngine = new IndexEngine(this._sql);
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
@@ -1451,7 +1487,7 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction'
+  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
 >;
 
 /**

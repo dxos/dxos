@@ -88,6 +88,12 @@
       "path": "../../core/compute/agent-runtime"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -434,6 +440,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/client-services"

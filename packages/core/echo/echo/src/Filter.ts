@@ -14,6 +14,7 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import type * as Feed from './Feed.ts';
 import * as internal from './internal/index.ts';
@@ -490,6 +491,34 @@ export const childOf = (
     type: 'child-of',
     parents: dxns,
     transitive: options?.transitive ?? true,
+  });
+};
+
+/**
+ * Select Automerge changes instead of objects: one {@link Change.Change} per change to the documents
+ * holding `targets`, or to every document in the space when called with no argument.
+ *
+ * Changes belong to documents, not entities. Entities that share a document share its changes, and
+ * content held by another entity (a document's `Text`) needs its own target. Only the host answers
+ * these queries; a space-wide query must aggregate, and the index answers it only at hour
+ * granularity (see `Aggregate.time`).
+ *
+ * @example
+ * ```ts
+ * Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), changes: Aggregate.count() });
+ * Query.select(Filter.changes([doc, doc.content])).orderBy(Order.property('time', 'desc')).limit(50);
+ * ```
+ */
+export const changes = (
+  targets?: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+): Filter<Change.Change> => {
+  if (targets === undefined) {
+    return new FilterClass({ type: 'changes' });
+  }
+  const items = Array.isArray(targets) ? targets : [targets];
+  return new FilterClass({
+    type: 'changes',
+    targets: items.map((item) => (Ref.isRef(item) ? EID.parse(item.uri) : EID.parse(internal.getUri(item)))),
   });
 };
 

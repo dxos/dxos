@@ -12,7 +12,9 @@ import { useObject } from '@dxos/echo-react';
 import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
+import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
 import {
   type TaskDropIntent,
   type TaskPlacement,
@@ -68,6 +70,8 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
+  /** Render the questions in each task's history under its title. */
+  showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
@@ -75,6 +79,8 @@ export type TaskTreeNodeProps = {
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
+  /** Class list from `TaskList.Content`, merged onto the tree's own. */
+  classNames?: string | (string | undefined)[];
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
@@ -89,10 +95,12 @@ export const TaskTreeNode = ({
   selected,
   checked,
   gridTemplateColumns,
+  classNames,
   renderTrailing,
   translationKey,
   showDescription = false,
   descriptionComponents,
+  showQuestions = false,
   onCollapseToggle,
   onTaskCheck,
   onTaskSelect,
@@ -167,12 +175,23 @@ export const TaskTreeNode = ({
           translationKey,
           showDescription,
           descriptionComponents,
+          showQuestions,
           onTaskCheck,
           onTaskUpdate,
         }}
       />
     ),
-    [showGutter, ordinals, checked, translationKey, showDescription, descriptionComponents, onTaskCheck, onTaskUpdate],
+    [
+      showGutter,
+      ordinals,
+      checked,
+      translationKey,
+      showDescription,
+      descriptionComponents,
+      showQuestions,
+      onTaskCheck,
+      onTaskUpdate,
+    ],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -287,7 +306,7 @@ export const TaskTreeNode = ({
       ariaLabel={t('task-list.label')}
       model={model}
       gridTemplateColumns={gridTemplateColumns}
-      classNames='w-full min-w-0'
+      classNames={mx('w-full min-w-0', classNames)}
       draggable={!!onTaskMove}
       // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
       // carries no toggle track and the first cell is the gutter or the status control.
@@ -295,16 +314,13 @@ export const TaskTreeNode = ({
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
-      // The highlight is what tells the reader where they are; a tree that only highlights (rather
-      // than navigating on select) wants it to travel with the arrows.
-      selectionFollowsFocus
+      // Deliberately NOT `selectionFollowsFocus`: selecting a task opens its detail (a companion, or
+      // a plank), so arrows that selected as they travelled would open every row the reader passes
+      // on the way to the one they want. The arrows move focus — the row is painted where focus
+      // lands — and `Enter` commits it.
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
-      // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
-      // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
       virtualize
       debug={debug}
       renderHeading={renderHeading}
@@ -329,6 +345,7 @@ const TaskTreeHeading = ({
   translationKey,
   showDescription,
   descriptionComponents,
+  showQuestions,
   onTaskCheck,
   onTaskUpdate,
 }: {
@@ -339,6 +356,7 @@ const TaskTreeHeading = ({
   translationKey: string;
   showDescription: boolean;
   descriptionComponents?: TaskDescriptionProps['components'];
+  showQuestions: boolean;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
@@ -355,6 +373,8 @@ const TaskTreeHeading = ({
   }
 
   const description = showDescription ? current.description?.trim() || undefined : undefined;
+  // Read off the snapshot, so an answer given anywhere else lands in the row as it is written.
+  const questions = showQuestions ? Task.getQuestions(current.history) : [];
 
   return (
     // Cells, not a container: they are direct children of the tree row's subgrid and take the
@@ -394,12 +414,19 @@ const TaskTreeHeading = ({
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
-      {description && (
-        <TaskDescription
-          content={description}
-          components={descriptionComponents}
-          classNames='col-[title/chips-end] row-start-2 pb-1'
-        />
+      {(description || questions.length > 0) && (
+        <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
+          {description && <TaskDescription content={description} components={descriptionComponents} />}
+          {questions.map((thread) => (
+            <TaskQuestion
+              key={thread.question.id}
+              thread={thread}
+              // One line each: answering takes the room of the detail pane, which a click on the
+              // row opens.
+              compact
+            />
+          ))}
+        </div>
       )}
     </>
   );

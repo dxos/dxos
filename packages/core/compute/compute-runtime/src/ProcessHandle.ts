@@ -149,7 +149,7 @@ const fromPersistedChildEvent = (event: {
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
 export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, any> {
-  readonly statusAtom: Atom.Writable<ProcessManager.Status>;
+  readonly statusAtom: Atom.Atom<ProcessManager.Status> = Atom.readable(() => this.#currentStatus);
   readonly parentId: Process.ID | null;
   readonly environment: Process.Environment;
 
@@ -244,8 +244,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    this.statusAtom = Atom.make<ProcessManager.Status>(this.#currentStatus);
-    this.#registry.mount(this.statusAtom);
     log('lifecycle: created', { parentId, key, params });
   }
   snapshotStatus(): ProcessManager.Status {
@@ -863,7 +861,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
     };
     log('state updated', { pid: this.pid, state });
-    this.#registry.set(this.statusAtom, this.#currentStatus);
+    this.#registry.refresh(this.statusAtom);
     this.#onStatusChanged?.();
     // State is persisted after handlers settle (in #runHandler success pipeline).
   }
