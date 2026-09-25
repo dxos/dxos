@@ -82,9 +82,9 @@ export class TestReplicationNetwork extends Resource {
   }
 
   private async _disconnectReplicator(replicator: TestReplicator): Promise<void> {
-    // Set tolerates deleting the current element mid-iteration.
+    // Only this side's end: notifying a still-open peer host stalls its subduction repo shutdown, so
+    // a partition removes the replicator on each side. Set tolerates deleting mid-iteration.
     for (const connection of replicator.connections) {
-      await connection.otherSide!.owningReplicator!.removeConnection(connection.otherSide!);
       await replicator.removeConnection(connection);
     }
   }
