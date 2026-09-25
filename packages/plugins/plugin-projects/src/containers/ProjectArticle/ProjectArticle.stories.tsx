@@ -59,6 +59,8 @@ const ARTIFACT_TITLE = 'Design Notes';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
+const OTHER_PROJECT_NAME = 'Project 2';
+const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -473,6 +475,44 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Move to…` action: it opens the project picker (a dialog the storybook layout hosts),
+ * and picking another project transfers the task into that project's task set.
+ */
+export const MoveTaskToProject: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, taskSet, task } = await seedContent();
+    const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
+    await space.db.flush({ indexes: true });
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    const row = title.closest('[data-testid="taskList.item"]');
+    await expect(row).toBeTruthy();
+    await userEvent.click(
+      await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+    );
+    await userEvent.click(await screen.findByText(MOVE_ACTION_LABEL, undefined, { timeout: 10_000 }));
+
+    // The picker lists the other project only: the task's own project is not a destination.
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await expect(within(dialog).queryByText(PROJECT_NAME)).toBeNull();
+    await userEvent.click(await within(dialog).findByText(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 }));
+
+    await waitFor(
+      async () => {
+        await expect(TaskSet.resolveTasks(taskSet).map(({ id }) => id)).not.toContain(task.id);
+        await expect(destination.taskSet?.target?.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
   },
 };
 
