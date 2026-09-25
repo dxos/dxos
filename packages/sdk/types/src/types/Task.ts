@@ -291,8 +291,13 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * happened, so rewriting one would be rewriting the past. It lives on the task rather than in a
      * side channel because the log is worthless if it can be separated from what it describes.
      */
+    // TODO(burdon): Rename activity.
+    // TODO(burdon): This should really be a Feed object, or as comments.
     history: Schema.optional(
-      Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+      Schema.Array(HistoryEntry).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Activity' }),
+      ),
     ),
 
     /**
@@ -436,6 +441,12 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
  *
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
+ *
+ * **Only a change to the WORK is logged** — its status, its priority, its size, who has it. A title
+ * or description is the task's text, and the text is edited by typing: every blur commits, so
+ * logging those filled the history with "Description updated." and buried the entries a reader
+ * opens it for. They are still written, they are simply not narrated. A caller with something to
+ * say about an edit says it through `options.description`, which is always recorded.
  */
 export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
   const changes: Edit =
@@ -443,12 +454,15 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
       ? requested
       : { ...requested, status: finishStatus(task, requested.status, options.approve ?? false) };
   const notes: string[] = [];
+  // Whether anything at all differs, which decides if the write happens; `notes` decides whether it
+  // is narrated. The two used to be the same question.
+  let changed = false;
 
   if (changes.title !== undefined && changes.title !== task.title) {
-    notes.push(`Title changed to ${quote(changes.title)}.`);
+    changed = true;
   }
   if (changes.description !== undefined && (changes.description ?? undefined) !== task.description) {
-    notes.push(changes.description === null ? 'Description cleared.' : 'Description updated.');
+    changed = true;
   }
   if (changes.status !== undefined && changes.status !== task.status) {
     notes.push(
@@ -473,17 +487,22 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
   }
 
-  if (notes.length === 0) {
+  changed ||= notes.length > 0;
+  if (!changed) {
     return undefined;
   }
 
-  const entry: UpdatedEntry = {
-    id: EntityId.random(),
-    date: options.date ?? new Date().toISOString(),
-    ...(options.actor ? { actor: options.actor } : {}),
-    event: 'updated',
-    description: options.description ?? notes.join(' '),
-  };
+  // A silent edit — a title or a description — still writes its field; it just carries no entry.
+  const narrate = notes.length > 0 || options.description !== undefined;
+  const entry: UpdatedEntry | undefined = narrate
+    ? {
+        id: EntityId.random(),
+        date: options.date ?? new Date().toISOString(),
+        ...(options.actor ? { actor: options.actor } : {}),
+        event: 'updated',
+        description: options.description ?? notes.join(' '),
+      }
+    : undefined;
 
   // One transaction: the fields and the entry that explains them are never separately observable.
   Obj.update(task, (task) => {
@@ -523,8 +542,10 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         task.assignee = changes.assignee;
       }
     }
-    task.history ??= [];
-    task.history.push(mutableEntry(entry));
+    if (entry) {
+      task.history ??= [];
+      task.history.push(mutableEntry(entry));
+    }
   });
 
   return entry;

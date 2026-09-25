@@ -6,11 +6,20 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import {
+  Banner,
+  Column,
+  Icon,
+  IconBlock,
+  IconButton,
+  Panel,
+  ScrollArea,
+  type ThemedClassName,
+  Tooltip,
+} from '@dxos/react-ui';
 import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { Empty } from '../Empty/index.ts';
 import { OrderedList } from '../OrderedList/index.ts';
 
 // Presentation-only master-detail layout: a selectable list (master) above a single detail pane, with
@@ -73,7 +82,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   orientation = 'vertical',
   detail,
 }: MasterDetailProps<T>) => {
-  const list = (items.length === 0 && <Empty label={emptyLabel} />) || (
+  const list = (items.length === 0 && <Banner.Empty label={emptyLabel} />) || (
     // The list carries a selection, so a reader arrows between entries rather than their menus.
     <OrderedList.Root<T> items={items} navigationMode='listbox'>
       {({ items }) => (

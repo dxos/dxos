@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
@@ -59,15 +59,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
-    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    // Longer than the pane shows, and all of it about the work: a text edit writes no entry, so a
+    // seeded "Description updated" would be history this app never produces.
     history: seedHistory(
       3,
       'Created this task',
-      'Description updated',
+      'Assigned to Scout',
       'Priority changed from medium to high',
       'Status changed from todo to started',
       'Estimate set to m',
-      'Description updated',
+      'Unassigned',
     ),
   }),
   Task.make({
@@ -580,12 +581,6 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
-  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
-  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
-    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
-    setTasks((tasks) => [...tasks]);
-  }, []);
-
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -625,20 +620,19 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
-      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit
+          <TaskList.Editor
             showDescription={showDescription}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
         </div>
       ) : (
-        <TaskList.Edit grid showDescription={showDescription} />
+        <TaskList.Editor grid showDescription={showDescription} />
       )}
     </TaskList.Root>
   );
@@ -661,9 +655,6 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
   }, []);
 
   // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
-  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
-    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
-  }, []);
 
   return (
     <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
@@ -683,14 +674,8 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
       </div>
       <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
         {task ? (
-          <TaskList.Root
-            tasks={[task]}
-            selected={task.id}
-            showDescription
-            onTaskUpdate={handleUpdate}
-            onQuestionAnswer={handleQuestionAnswer}
-          >
-            <TaskList.Edit showDescription classNames='p-2' />
+          <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+            <TaskList.Editor showDescription classNames='p-2' />
           </TaskList.Root>
         ) : (
           <p className='p-4 text-subdued'>No task selected.</p>
@@ -770,93 +755,59 @@ export const WithQuestions: Story = {
 };
 
 /**
- * A row shows its questions one line each; selecting it opens the full question in the edit pane,
- * where picking an option or typing records the answer, which then shows under the row's question.
+ * A task's questions live on the detail surface, not in the list: a row carries its title and its
+ * description, and the strip below carries the fields. Answering is `TaskArticle`'s, and is covered
+ * where it happens — plugin-projects' `ProjectArticle` › Task Detail story.
  */
-export const TestAnswerQuestion: Story = {
+export const TestNoQuestionsInList: Story = {
   args: {
     seed: seedQuestions,
     showGroupLabels: false,
   },
   play: async ({ canvasElement }) => {
-    const answers = () =>
-      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
-    const selectRow = async (title: string) => {
-      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]')].find(
-        (element) => element.textContent === title,
-      );
-      if (!row) {
-        throw new Error(`no row titled ${title}`);
-      }
-      await userEvent.click(row);
-    };
+    const canvas = within(canvasElement);
+    // The seeded tasks all carry questions, answered and open alike.
+    await expect(canvas.findByText('Draft the refund reply', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Pick the house roast', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // The rows carry no controls: answering belongs to the pane.
-    await waitFor(async () => {
-      await expect(canvasElement.querySelectorAll('[data-testid="task-question"]').length).toBeGreaterThan(0);
-    });
+    // None of it reaches the rows: no question line, no answer line, and nothing to answer with.
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question.answer"]')).toBeNull();
     await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+    // Nor does the log: the strip below the rows is the fields.
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
 
-    await selectRow('Draft the refund reply');
+    // Selecting a row opens it for editing, and still shows neither.
+    await userEvent.click(canvas.getByText('Draft the refund reply'));
     await waitFor(async () => {
-      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+      await expect(canvasElement.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
-    if (!option) {
-      throw new Error('the open question has no options');
-    }
-    await userEvent.click(option);
-    await waitFor(async () => {
-      await expect(answers()).toContain('30 days');
-    });
-
-    // Typing in the free-form field must not reach the list: its keys would move the selection.
-    await selectRow('Schedule the launch post');
-    await waitFor(async () => {
-      await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).not.toBeNull();
-    });
-    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
-    if (!input) {
-      throw new Error('the open question has no answer field');
-    }
-    await userEvent.type(input, 'Tuesday{Enter}');
-    await waitFor(async () => {
-      await expect(answers()).toContain('Tuesday');
-    });
-    await expect(canvasElement.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
   },
 };
 
-export const ListAndDetail: Story = {
-  decorators: [withLayout({ layout: 'fullscreen' })],
-  render: () => <ListDetailStory />,
-};
-
-/** Answering in the detail lands under the row's one-line question, and the row itself has no controls. */
 export const TestListAndDetail: Story = {
   decorators: [withLayout({ layout: 'fullscreen' })],
   render: () => <ListDetailStory />,
   play: async ({ canvasElement }) => {
     const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
     const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
-    await waitFor(async () => {
-      await expect(detail()?.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
-    });
-    await expect(list()?.querySelector('[data-testid="task-question.option"]')).toBeNull();
 
-    const option = detail()?.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
-    if (!option) {
-      throw new Error('the open question has no options');
-    }
-    await userEvent.click(option);
+    // The detail pane edits the selected task: its title is a field, not a line of text.
     await waitFor(async () => {
-      await expect(
-        [...(list()?.querySelectorAll('[data-testid="task-question.answer"]') ?? [])].map(
-          (answer) => answer.textContent,
-        ),
-      ).toContain('30 days');
+      await expect(detail()?.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    await expect(detail()?.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
+    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')?.value).toEqual(
+      'Draft the refund reply',
+    );
+
+    // Neither side carries the task's questions or its log — both belong to the article surface,
+    // which is what a host mounts in place of this strip when it has the room for them.
+    for (const pane of [list(), detail()]) {
+      await expect(pane?.querySelector('[data-testid="task-question"]')).toBeNull();
+      await expect(pane?.querySelector('[data-testid="taskList.history"]')).toBeNull();
+    }
   },
 };
 

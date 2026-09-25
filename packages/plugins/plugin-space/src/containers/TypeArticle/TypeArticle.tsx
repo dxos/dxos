@@ -12,9 +12,8 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Banner, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
@@ -321,7 +320,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
   <Tabs.Panel value={value} classNames='contents'>
-    {empty ? <Empty classNames='h-full' label={empty} /> : children}
+    {empty ? <Banner.Empty classNames='h-full' label={empty} /> : children}
   </Tabs.Panel>
 );
 

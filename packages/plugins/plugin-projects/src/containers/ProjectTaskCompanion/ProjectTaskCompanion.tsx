@@ -9,18 +9,21 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Banner, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ProjectTaskCompanionProps = {
-  role: string;
-  /** The plank this companion is anchored to — the project's, and the context its selection lives in. */
-  attendableId: string;
-  project: Project.Project;
-};
+/**
+ * The surface's own contract, narrowed to what this component reads: the registration matches a
+ * companion node (`subject: 'task'`) on a project's article, so the project arrives as `companionTo`
+ * and `attendableId` is the host plank's — the context the ledger's selection lives in.
+ */
+export type ProjectTaskCompanionProps = Pick<
+  AppSurface.ArticleProps<'task', {}, Project.Project>,
+  'companionTo' | 'attendableId' | 'role'
+>;
 
 /**
  * The selected task, beside the project rather than in place of it.
@@ -30,7 +33,7 @@ export type ProjectTaskCompanionProps = {
  * its own. It renders the task through the article surface, so the detail is the same component the
  * deck mounts when a task is opened as a plank on a narrow screen.
  */
-export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTaskCompanionProps) => {
+export const ProjectTaskCompanion = ({ companionTo: project, role, attendableId }: ProjectTaskCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolved through the hook: on a cold load the ref has no target yet, and a direct read would
   // leave the companion on its empty state once it arrives.
@@ -41,11 +44,7 @@ export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTas
   const task = tasks.find(({ id }) => id === selected);
 
   if (!task) {
-    return (
-      <Flex justify='center' classNames='p-4 text-subdued'>
-        {t('no-task-selected.message')}
-      </Flex>
-    );
+    return <Banner.Empty label={t('no-task-selected.message')} />;
   }
 
   // The article shows the task's artifacts itself, so the companion adds nothing beside it.
