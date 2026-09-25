@@ -8,8 +8,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
-import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Banner, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { Banner, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Task } from '@dxos/types';
 
