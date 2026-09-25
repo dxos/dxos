@@ -194,7 +194,7 @@ describe('WebSocketMuxerTest', () => {
     expect(received.map(textOf)).toEqual(['delivered'.repeat(8)]);
   });
 
-  test('a message that fails mid-sequence does not corrupt the next one from the same service', async ({ expect }) => {
+  test('rejects later segmented sends once a message was cut off mid-sequence', async ({ expect }) => {
     const socket = new TestSocket();
     const failure = new Error("Can't call WebSocket send() after close()");
     socket.onFrame = () => {
@@ -206,12 +206,28 @@ describe('WebSocketMuxerTest', () => {
 
     socket.onFrame = undefined;
     socket.sendError = undefined;
-    await muxer.send(textMessage('delivered'.repeat(8)));
+    // The receiver still holds the first segment, which a later sequence would be appended to.
+    await expect(muxer.send(textMessage('next'.repeat(8)))).rejects.toBe(failure);
+    await expect(muxer.send(textMessage('other'.repeat(8), 'other-service'))).rejects.toBe(failure);
+    expect(socket.frames).toHaveLength(1);
 
-    // The receiver keeps the failed message's first segment, so the next message must not extend it.
+    // Unsegmented frames never touch the receiver's sequences, so they still go through.
+    await muxer.send(protocol.createMessage(TextMessageSchema, { payload: { message: 'unsegmented' } }));
+    expect(socket.frames).toHaveLength(2);
+  });
+
+  test('keeps 300 concurrent segmented messages apart on one-byte channel ids', async ({ expect }) => {
+    const socket = new TestSocket();
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    const services = Array.from({ length: 300 }, (_, index) => `service-${index}`);
+    await Promise.all(
+      services.map((serviceId) => muxer.send(textMessage(`${serviceId}:${SEGMENTED_CONTENT}`, serviceId))),
+    );
+
     const receiver = new WebSocketMuxer(new TestSocket());
     const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
-    expect(received.map(textOf)).toEqual(['delivered'.repeat(8)]);
+    expect(received.map((message) => message.serviceId).sort()).toEqual([...services].sort());
+    expect(received.every((message) => textOf(message) === `${message.serviceId}:${SEGMENTED_CONTENT}`)).toBe(true);
   });
 
   test('rejects queued segmented sends when the muxer is destroyed', async ({ expect }) => {

@@ -31,6 +31,7 @@ export const CLOUDFLARE_MESSAGE_MAX_BYTES = 1000 * 1000; // 1MB
 export const CLOUDFLARE_RPC_MAX_BYTES = 32 * 1000 * 1000; // 32MB
 
 const MAX_CHUNK_LENGTH = 16384;
+const MAX_OUT_CHANNEL_ID = 255;
 const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
@@ -58,8 +59,11 @@ export class WebSocketMuxer {
   private readonly _outMessageChannelByService = new Map<string, number>();
   /** Channels whose last sent segment left the receiver mid-sequence. */
   private readonly _outOpenSequences = new Set<number>();
-  /** Never reused, so a service moved off a channel cannot land on one a receiver still holds a sequence for. */
-  private _nextOutChannelId = 1;
+  /**
+   * Set once pending sends were dropped with a sequence still open at the receiver: the wire format has no abort, so
+   * the receiver keeps those segments and would prepend them to the next sequence on that channel.
+   */
+  private _segmentedSendError: Error | undefined;
 
   private _sendTimeout: any | undefined;
 
@@ -76,7 +80,7 @@ export class WebSocketMuxer {
    * Resolves when all the message chunks get enqueued for sending.
    * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing or the muxer is
    * destroyed first, or with the error the socket's `send` throws; any of these drops every queued segmented message,
-   * not just this one.
+   * not just this one. Once a message was cut off mid-sequence, every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
@@ -97,6 +101,9 @@ export class WebSocketMuxer {
     if (channelId == null || binary.length < this._maxChunkLength) {
       this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
       return;
+    }
+    if (this._segmentedSendError) {
+      throw this._segmentedSendError;
     }
 
     const chunkCount = Math.ceil(binary.length / this._maxChunkLength);
@@ -301,23 +308,16 @@ export class WebSocketMuxer {
     this._sendTimeout = setTimeout(send);
   }
 
-  /**
-   * Rejects every queued segmented send and drops the chunks they had yet to send.
-   *
-   * A service whose message was cut off mid-sequence moves to a fresh channel: the wire format has no abort, so the
-   * receiver keeps that message's first segments and would prepend them to the next message on the channel.
-   */
+  /** Rejects every queued segmented send and drops the chunks they had yet to send. */
   private _rejectPendingSends(error: Error): void {
     for (const channelChunks of this._outMessageChunks.values()) {
       channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
     }
     this._outMessageChunks.clear();
-    for (const [serviceId, channelId] of this._outMessageChannelByService) {
-      if (this._outOpenSequences.has(channelId)) {
-        this._outMessageChannelByService.delete(serviceId);
-      }
+    if (this._outOpenSequences.size > 0) {
+      this._segmentedSendError ??= error;
+      this._outOpenSequences.clear();
     }
-    this._outOpenSequences.clear();
   }
 
   private _resolveChannel(message: Message): number | undefined {
@@ -326,7 +326,9 @@ export class WebSocketMuxer {
     }
     let id = this._outMessageChannelByService.get(message.serviceId);
     if (!id) {
-      id = this._nextOutChannelId++;
+      // Channel ids are one byte on the wire. Past that many services they are shared, which is safe because a
+      // channel is a single queue: its services take turns rather than interleave segments.
+      id = (this._outMessageChannelByService.size % MAX_OUT_CHANNEL_ID) + 1;
       this._outMessageChannelByService.set(message.serviceId, id);
     }
     return id;
