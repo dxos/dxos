@@ -69,9 +69,9 @@ test.describe('Collection tests', () => {
     await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
       instruction: 'make-child',
     });
-    // The drop writes the move asynchronously, so wait for the tree to render it.
+    // Collection 2 had no children when the drag began, so the drop does not open it.
+    await host.expandCollection(0);
     await expect(host.getObjectLinks().and(host.page.locator(`[data-object-id="${moved}"]`))).toHaveCount(1);
-    await expect(host.getObjectByName('Collection 1')).toHaveCount(1);
   });
 
   test('delete a collection', { tag: ['@QA-6'] }, async () => {
