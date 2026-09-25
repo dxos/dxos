@@ -23,6 +23,13 @@ export type TaskQuestionProps = ThemedClassName<{
    * where the full prompt would crowd out the tasks; the host's detail surface renders it in full.
    */
   compact?: boolean;
+  /**
+   * Lay the question out on the host's own columns (`grid-cols-subgrid`) rather than its own two, so
+   * its glyph and text line up with the host's. The host must place this across the tracks it wants.
+   */
+  subgrid?: boolean;
+  /** Cell placement for the glyph and the text, when `subgrid` — the host names its own tracks. */
+  cells?: { icon?: string; body?: string };
 }>;
 
 /**
@@ -47,6 +54,8 @@ export const TaskQuestion = ({
   busy,
   message,
   compact,
+  subgrid,
+  cells,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
@@ -99,33 +108,46 @@ export const TaskQuestion = ({
     );
   }
 
+  const iconCell = mx('flex h-[1lh] items-center', cells?.icon ?? 'col-start-1');
+  const bodyCell = mx('min-w-0', cells?.body ?? 'col-start-2');
+
   return (
+    // A grid of two tracks — glyph and text — so a host with the same tracks can lay the question on
+    // its own columns (`subgrid`), putting the glyph under its icons and the text under its titles.
     <div
       role='group'
       aria-label={question.text}
-      className={mx('flex flex-col gap-1 text-sm', classNames)}
+      className={mx(
+        'grid items-start gap-y-1 text-sm',
+        subgrid ? 'grid-cols-subgrid' : 'grid-cols-[min-content_1fr] gap-x-2',
+        classNames,
+      )}
       data-testid='task-question'
       onClick={stop}
       onPointerDown={stop}
       onKeyDown={stop}
     >
-      <div className='flex items-start gap-2'>
-        <Icon icon='ph--question--regular' classNames='mt-0.5 shrink-0 text-amber-text' />
-        <span className='font-medium break-words'>{question.text}</span>
-      </div>
+      <span className={iconCell}>
+        <Icon icon='ph--question--regular' classNames='text-amber-text' />
+      </span>
+      <span className={mx('font-medium break-words', bodyCell)}>{question.text}</span>
 
       {question.context && !answer && (
-        <p className='ps-6 text-description break-words line-clamp-3'>{question.context}</p>
+        <p className={mx('text-description break-words line-clamp-3', bodyCell)}>{question.context}</p>
       )}
 
       {answer ? (
-        <div className='flex items-start gap-2' data-testid='task-question.answer'>
-          <Icon icon='ph--check-circle--regular' classNames='mt-0.5 shrink-0 text-success-text' />
-          <span className='break-words'>{answer.answer}</span>
-        </div>
+        <>
+          <span className={iconCell}>
+            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
+          </span>
+          <span className={mx('break-words', bodyCell)} data-testid='task-question.answer'>
+            {answer.answer}
+          </span>
+        </>
       ) : (
         onAnswer && (
-          <div className='flex flex-col gap-1 ps-6'>
+          <div className={mx('flex flex-col gap-1', bodyCell)}>
             {question.options?.map((option) => (
               <Button
                 key={option.title}
@@ -176,7 +198,7 @@ export const TaskQuestion = ({
       )}
 
       {message && (
-        <p className='ps-6 text-description' data-testid='task-question.message'>
+        <p className={mx('text-description', bodyCell)} data-testid='task-question.message'>
           {message}
         </p>
       )}

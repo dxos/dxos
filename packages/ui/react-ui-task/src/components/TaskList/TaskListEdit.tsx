@@ -285,23 +285,32 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         )}
         {/* The full question — context, options and the answer field — lives here rather than in the
             row, which shows only its one-line summary: the pane has the room a prompt needs. */}
-        {openQuestions.length > 0 && task && (
-          <div
-            data-testid='taskList.edit.questions'
-            className={mx(
-              'flex min-w-0 flex-col gap-3 row-start-3 -col-end-1',
-              grid ? 'col-start-[title]' : 'col-start-2',
-            )}
-          >
-            {openQuestions.map((thread) => (
-              <TaskQuestion
-                key={thread.question.id}
-                thread={thread}
-                onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
-              />
-            ))}
-          </div>
-        )}
+        {openQuestions.length > 0 &&
+          task && (
+            // On the pane's own tracks, as the history is: a question's glyph sits under the pane's
+            // leading icon and its text under the title, rather than both indented into the title column.
+            <div
+              data-testid='taskList.edit.questions'
+              className={mx(
+                'grid grid-cols-subgrid gap-y-3 min-w-0 row-start-3',
+                grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
+              )}
+            >
+              {openQuestions.map((thread) => (
+                <TaskQuestion
+                  key={thread.question.id}
+                  thread={thread}
+                  subgrid
+                  cells={{
+                    icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
+                    body: grid ? 'col-start-[title] -col-end-1' : 'col-start-2 -col-end-1',
+                  }}
+                  classNames='col-span-full'
+                  onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
+                />
+              ))}
+            </div>
+          )}
         {/* The log, on the row below the description: it reports what has happened to the task, so it
             reads under what the task says rather than beside it. Only when editing — a task being
             created has no history yet, and the add row must stay one line tall. */}
