@@ -19,7 +19,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Milestone, Task } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -36,7 +36,10 @@ const DefaultStory = () => {
   return (
     <>
       {/* Readout for the play tests, outside the dialog: a submit closes it. */}
-      <div data-testid='tasks'>{`tasks:${tasks.length} ${tasks.map((task) => task.title).join(',')}`}</div>
+      <div
+        className='p-4 bg-base-surface'
+        data-testid='tasks'
+      >{`tasks:${tasks.length} ${tasks.map((task) => task.title).join(',')}`}</div>
       {space ? (
         <Dialog.Root defaultOpen>
           <Dialog.Overlay>
@@ -54,6 +57,7 @@ const meta = {
   title: 'plugins/plugin-space/containers/ObjectFormDialog/CreateTask',
   render: DefaultStory,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
