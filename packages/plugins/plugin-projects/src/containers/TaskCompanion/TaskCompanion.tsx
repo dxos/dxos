@@ -11,6 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { Flex, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -45,11 +46,7 @@ export const TaskCompanion = ({ project, role, attendableId }: TaskCompanionProp
   const [artifacts] = useObject(task, 'artifacts');
 
   if (!task) {
-    return (
-      <Flex justify='center' classNames='p-4 text-subdued'>
-        {t('no-task-selected.message')}
-      </Flex>
-    );
+    return <Empty label={t('no-task-selected.message')} />;
   }
 
   return (

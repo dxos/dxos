@@ -20,6 +20,7 @@ export type EmptyProps = ComposableProps<{
  * when there are no items. Pass a domain-specific {@link EmptyProps.label} (already translated); when none is
  * given it falls back to a generic "No items" message from the shared `os` translation namespace.
  */
+// TODO(burdon): Reconcile with react-ui Banner.
 export const Empty = composable<HTMLDivElement, EmptyProps>(({ label, icon, ...props }, forwardedRef) => {
   const { t } = useTranslation(osTranslations);
   // `defaultValue` keeps the fallback working even before a host registers the key, and leaves it translatable.
@@ -27,7 +28,7 @@ export const Empty = composable<HTMLDivElement, EmptyProps>(({ label, icon, ...p
   return (
     <div
       {...composableProps<HTMLDivElement>(props, {
-        classNames: 'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
+        classNames: 'flex flex-col items-center justify-center gap-2 p-trim-md text-sm text-center text-description',
         role: 'status',
       })}
       ref={forwardedRef}
