@@ -361,13 +361,13 @@ export const TaskDetail: Story = {
     // The detail panel renders the same title as an editable field, so the form is what is asserted
     // rather than a second copy of the row's text.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // What the task produced, under its editor: the task article's own artifacts section. Scoped to
-    // the section rather than the canvas — the ledger row carries a chip with the same text, which
-    // would pass this assertion with no section rendered at all.
-    const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.artifacts"]');
+    // What the task produced, under its editor: the card grid the task article hands its artifacts
+    // to. Scoped to the grid rather than the canvas — the ledger row carries a chip with the same
+    // text, which would pass this assertion with no grid rendered at all.
+    const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
     await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
-    // Once only: the companion used to render the same artifacts again as a grid beneath the article.
-    await expect(canvasElement.querySelector('[data-testid="cardMasonry"]')).toBeNull();
+    // Once only: the companion used to render the same artifacts a second time beneath the article.
+    await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(

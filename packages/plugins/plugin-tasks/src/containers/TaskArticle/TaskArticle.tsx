@@ -9,7 +9,7 @@ import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Field, Panel, ScrollArea } from '@dxos/react-ui';
 import { TaskList } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
@@ -77,6 +77,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
 
             {/* What the task produced, as cards. `plugin-space` renders the grid; nothing shows for a task
                 with no artifacts, so the article keeps the whole companion until there are some. */}
+            <Field.Label>Artifacts</Field.Label>
             <Surface.Surface
               type={AppSurface.CardMasonry}
               data={{ objects: artifacts ?? [], attendableId }}

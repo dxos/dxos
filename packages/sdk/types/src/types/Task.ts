@@ -291,6 +291,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * happened, so rewriting one would be rewriting the past. It lives on the task rather than in a
      * side channel because the log is worthless if it can be separated from what it describes.
      */
+    // TODO(burdon): This should really be a Feed object, or as comments.
     history: Schema.optional(
       Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
     ),

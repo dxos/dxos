@@ -10,10 +10,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+/**
+ * Stops an event at the question: it sits inside a listbox row, whose click selects the task and
+ * whose arrow keys move the selection, and typing an answer must do neither.
+ */
+const stop = (event: SyntheticEvent) => event.stopPropagation();
+
 export type TaskQuestionProps = ThemedClassName<{
   thread: Task.QuestionThread;
-  /** Enables answering; absent renders the question read-only. */
-  onAnswer?: (answer: string) => void;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
@@ -30,13 +34,9 @@ export type TaskQuestionProps = ThemedClassName<{
   subgrid?: boolean;
   /** Cell placement for the glyph and the text, when `subgrid` — the host names its own tracks. */
   cells?: { icon?: string; body?: string };
+  /** Enables answering; absent renders the question read-only. */
+  onAnswer?: (answer: string) => void;
 }>;
-
-/**
- * Stops an event at the question: it sits inside a listbox row, whose click selects the task and
- * whose arrow keys move the selection, and typing an answer must do neither.
- */
-const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 /**
  * A question from a task's history: why it was asked, and the means to answer it. Answered, it
@@ -47,21 +47,22 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
  * the options are the asker's guesses, and making the reader hunt for the escape hatch pressures
  * them into picking a wrong one.
  */
+// TODO(burdon): Rewrite/move to react-ui-assistant widgets.
 export const TaskQuestion = ({
   classNames,
   thread: { question, answer },
-  onAnswer,
   busy,
   message,
   compact,
   subgrid,
   cells,
+  onAnswer,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
 
-  const submit = useCallback(
-    (value: string) => {
+  const handleSubmit = useCallback<NonNullable<TaskQuestionProps['onAnswer']>>(
+    (value) => {
       if (!busy && value.trim() !== '') {
         onAnswer?.(value);
       }
@@ -74,10 +75,10 @@ export const TaskQuestion = ({
       event.stopPropagation();
       if (event.key === 'Enter') {
         event.preventDefault();
-        submit(text);
+        handleSubmit(text);
       }
     },
-    [submit, text],
+    [handleSubmit, text],
   );
 
   if (compact) {
@@ -87,18 +88,18 @@ export const TaskQuestion = ({
       <div
         role='group'
         aria-label={question.text}
-        className={mx('flex flex-col gap-1 text-sm', classNames)}
+        className={mx('flex flex-col w-full gap-1 text-sm', classNames)}
         data-testid='task-question'
       >
         <div className='flex items-center gap-2 min-w-0'>
-          <Icon icon='ph--question--regular' classNames='shrink-0 text-amber-text' />
+          <Icon icon='ph--question--regular' classNames='text-warning-text' />
           <span className='font-medium truncate' title={question.text}>
             {question.text}
           </span>
         </div>
         {answer && (
           <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
-            <Icon icon='ph--check-circle--regular' classNames='shrink-0 text-success-text' />
+            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
             <span className='truncate' title={answer.answer}>
               {answer.answer}
             </span>
@@ -130,10 +131,10 @@ export const TaskQuestion = ({
       <span className={iconCell}>
         <Icon icon='ph--question--regular' classNames='text-amber-text' />
       </span>
-      <span className={mx('font-medium break-words', bodyCell)}>{question.text}</span>
+      <span className={mx('font-medium wrap-break-word', bodyCell)}>{question.text}</span>
 
       {question.context && !answer && (
-        <p className={mx('text-description break-words line-clamp-3', bodyCell)}>{question.context}</p>
+        <p className={mx('text-description wrap-break-word line-clamp-3', bodyCell)}>{question.context}</p>
       )}
 
       {answer ? (
@@ -141,7 +142,7 @@ export const TaskQuestion = ({
           <span className={iconCell}>
             <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
           </span>
-          <span className={mx('break-words', bodyCell)} data-testid='task-question.answer'>
+          <span className={mx('wrap-break-word', bodyCell)} data-testid='task-question.answer'>
             {answer.answer}
           </span>
         </>
@@ -157,13 +158,13 @@ export const TaskQuestion = ({
                 // to its text instead of clipping it.
                 classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
                 data-testid='task-question.option'
-                onClick={() => submit(option.title)}
+                onClick={() => handleSubmit(option.title)}
               >
                 {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
                 <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
-                  <div className='font-medium break-words'>{option.title}</div>
+                  <div className='font-medium wrap-break-word'>{option.title}</div>
                   {option.description && (
-                    <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
+                    <div className='text-xs text-description wrap-break-word leading-snug'>{option.description}</div>
                   )}
                 </div>
               </Button>
@@ -188,7 +189,7 @@ export const TaskQuestion = ({
                 variant='primary'
                 disabled={busy || text.trim() === ''}
                 data-testid='task-question.submit'
-                onClick={() => submit(text)}
+                onClick={() => handleSubmit(text)}
               >
                 {t('question-submit.label')}
               </Button>

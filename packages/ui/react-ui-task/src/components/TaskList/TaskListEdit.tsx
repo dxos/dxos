@@ -13,7 +13,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
+import { TaskQuestion } from '../TaskQuestion/index.ts';
 import { TaskHistory } from './TaskHistory.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
@@ -318,30 +318,32 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             reads under what the task says rather than beside it. Only when editing — a task being
             created has no history yet, and the add row must stay one line tall. */}
         {current && current.history && current.history.length > 0 && (
-          <TaskHistory
-            entries={current.history}
-            // On the pane's own tracks: an entry's glyph then sits in the same column as the pane's
-            // leading icon and its text under the title, rather than in a nested grid of its own
-            // that starts where the title does.
-            subgrid
-            cells={{
-              // Centred in its track, as the pane's own leading icon is, so the two sit on one axis.
-              icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
-              description: grid ? 'col-start-[title] -col-end-2' : 'col-start-2',
-              date: grid ? 'col-start-[-2] -col-end-1' : 'col-start-3',
-            }}
-            classNames={mx(
-              'min-w-0 pt-2 row-start-4',
-              grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
-            )}
-          />
+          <>
+            <Field.Label>History</Field.Label>
+            <TaskHistory
+              entries={current.history}
+              // On the pane's own tracks: an entry's glyph then sits in the same column as the pane's
+              // leading icon and its text under the title, rather than in a nested grid of its own
+              // that starts where the title does.
+              subgrid
+              cells={{
+                // Centred in its track, as the pane's own leading icon is, so the two sit on one axis.
+                icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
+                description: grid ? 'col-start-[title] -col-end-2' : 'col-start-2',
+                date: grid ? 'col-start-[-2] -col-end-1' : 'col-start-3',
+              }}
+              classNames={mx(
+                'min-w-0 pt-2 row-start-4',
+                grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
+              )}
+            />
+          </>
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
             explicitly what happens to the pending text. Both buttons keep focus where it is
             (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
             would commit before its own handler ran — and Cancel could never mean anything.
             Placed on the title line explicitly; its place in the DOM is what orders Tab.
-
             Hidden while the add row is untouched: with nothing typed there is nothing to save and
             nothing to cancel, and two dead controls on an empty row read as a form to fill in
             rather than a place to type. */}

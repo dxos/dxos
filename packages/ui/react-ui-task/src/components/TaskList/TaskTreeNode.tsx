@@ -421,8 +421,7 @@ const TaskTreeHeading = ({
             <TaskQuestion
               key={thread.question.id}
               thread={thread}
-              // One line each: answering takes the room of the detail pane, which a click on the
-              // row opens.
+              // One line each: answering takes the room of the detail pane, which a click on the row opens.
               compact
             />
           ))}
