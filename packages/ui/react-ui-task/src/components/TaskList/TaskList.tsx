@@ -776,8 +776,8 @@ export const TaskList = {
   Viewport: TaskListViewport,
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
-  Edit: TaskListEdit,
   Assignee: TaskListAssignee,
+  Edit: TaskListEdit,
 };
 
 export type {

@@ -75,6 +75,7 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
         }),
     [entries, limit],
   );
+
   if (visible.length === 0) {
     return null;
   }

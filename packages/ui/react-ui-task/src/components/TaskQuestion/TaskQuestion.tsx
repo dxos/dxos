@@ -26,13 +26,16 @@ export type TaskQuestionProps = ThemedClassName<{
    * One line for the question and one for its answer, with no context or controls — for a list row,
    * where the full prompt would crowd out the tasks; the host's detail surface renders it in full.
    */
+  // TODO(burdon): Remove. This should be a different component.
   compact?: boolean;
   /**
    * Lay the question out on the host's own columns (`grid-cols-subgrid`) rather than its own two, so
    * its glyph and text line up with the host's. The host must place this across the tracks it wants.
    */
+  // TODO(burdon): Remove.
   subgrid?: boolean;
   /** Cell placement for the glyph and the text, when `subgrid` — the host names its own tracks. */
+  // TODO(burdon): Remove.
   cells?: { icon?: string; body?: string };
   /** Enables answering; absent renders the question read-only. */
   onAnswer?: (answer: string) => void;

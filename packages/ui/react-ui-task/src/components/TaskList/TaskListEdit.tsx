@@ -232,6 +232,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             <Icon icon='ph--plus--regular' classNames='text-subdued' />
           </span>
         )}
+
         <Field.Root>
           <Field.Input
             variant='subdued'
@@ -247,6 +248,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             onBlur={handleTitleBlur}
           />
         </Field.Root>
+
         {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
           <div
             data-testid='taskList.edit.description'
@@ -286,6 +288,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             />
           </div>
         )}
+
         {/* The full question — context, options and the answer field — lives here rather than in the
             row, which shows only its one-line summary: the pane has the room a prompt needs. */}
         {openQuestions.length > 0 &&
@@ -304,16 +307,17 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   key={thread.question.id}
                   thread={thread}
                   subgrid
+                  classNames='col-span-full'
                   cells={{
                     icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
                     body: grid ? 'col-start-[title] -col-end-1' : 'col-start-2 -col-end-1',
                   }}
-                  classNames='col-span-full'
                   onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
                 />
               ))}
             </div>
           )}
+
         {/* The log, on the row below the description: it reports what has happened to the task, so it
             reads under what the task says rather than beside it. Only when editing — a task being
             created has no history yet, and the add row must stay one line tall. */}
@@ -339,6 +343,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             />
           </>
         )}
+
         {/* The description is held open with no blur to commit it, so the pane needs to say
             explicitly what happens to the pending text. Both buttons keep focus where it is
             (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
