@@ -10,9 +10,10 @@ import { describe, test } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EID, EntityId, URI } from '@dxos/keys';
-import { Task } from '@dxos/types';
+import { Milestone, Task } from '@dxos/types';
 
 import subAgentFixture from '../execution-graph/testing/sub-agent-delegation.json';
 import { buildSessionTimeline, readTaskStatusChanges } from './session-timeline.ts';
@@ -742,6 +743,50 @@ describe('buildSessionTimeline', () => {
   test('reads no status moves for a task outside a database, which keeps no history', ({ expect }) => {
     expect(readTaskStatusChanges(Task.make({ title: 'Loose', status: 'done' }))).toEqual([]);
   });
+});
+
+describe('readTaskStatusChanges', () => {
+  it.effect(
+    "reads the status moves a stored task's edit history records, and the chart bounds its lane by them",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const first = yield* Database.add(Task.make({ title: 'First', status: 'todo' }));
+        const second = yield* Database.add(Task.make({ title: 'Second', status: 'todo' }));
+        yield* Database.flush();
+        Task.setStatus(first, 'started');
+        // An edit to another field is no status move.
+        Task.update(first, { priority: 'high' });
+        Task.setStatus(first, 'done');
+        yield* Database.flush();
+
+        const changes = readTaskStatusChanges(first);
+        expect(changes.map(({ status, previousStatus }) => ({ status, previousStatus }))).toEqual([
+          { status: 'todo', previousStatus: undefined },
+          { status: 'started', previousStatus: 'todo' },
+          { status: 'done', previousStatus: 'started' },
+        ]);
+        expect(readTaskStatusChanges(second).map(({ status }) => status)).toEqual(['todo']);
+
+        const chat = makeChat('Stored', [first, second]);
+        const timeline = buildSessionTimeline({
+          traceMessages: [],
+          sessions: [chat.session],
+          tasks: [first, second],
+          taskStatusChanges: new Map([
+            [first.id, changes],
+            [second.id, readTaskStatusChanges(second)],
+          ]),
+        });
+        expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({
+          status: 'done',
+          start: changes[1]?.timestamp,
+          end: changes[2]?.timestamp,
+        });
+        expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)?.start).toBeUndefined();
+      },
+      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] })),
+    ),
+  );
 });
 
 const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
