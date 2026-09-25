@@ -5,7 +5,7 @@
 import * as Prompt from 'effect/unstable/ai/Prompt';
 import { describe, test } from 'vitest';
 
-import { countTurnsSincePrompt } from './scripted-assistant.ts';
+import { countTurnsSincePrompt } from './scripted-model.ts';
 
 const TOOL = 'space-query-objects';
 

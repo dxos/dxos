@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import type * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { SCRIPTED_QUERY_TURNS, countTurnsSincePrompt } from './scripted-assistant.ts';
-
 const { reasoning, text, toolCall } = ScriptedLanguageModel;
+
+/** Model calls per user prompt that query the database before the closing answer. */
+export const SCRIPTED_QUERY_TURNS = 20;
 
 const QUERY_TOOL = Operation.toolName(SpaceOperation.QueryObjects);
 
@@ -20,10 +22,30 @@ const QUERY_TOOL = Operation.toolName(SpaceOperation.QueryObjects);
 const QUERIES: readonly { label: string; input: Record<string, unknown> }[] = [
   { label: 'projects', input: { typename: 'org.dxos.type.project', includeContent: true } },
   { label: 'tasks', input: { typename: 'org.dxos.type.task', limit: 50 } },
-  { label: 'documents', input: { typename: 'org.dxos.type.markdown.document' } },
+  { label: 'documents', input: { typename: 'org.dxos.type.document' } },
   { label: 'tasks mentioning "zephyr"', input: { text: 'zephyr', limit: 25 } },
   { label: 'everything', input: { limit: 100 } },
 ];
+
+/**
+ * Tool calls to `toolName` since the user's latest prompt.
+ *
+ * A user message right after a tool result is a mid-loop injection (a reminder), not a new prompt,
+ * so it does not reset the count — otherwise one injection would restart the 20 turns forever.
+ */
+export const countTurnsSincePrompt = (prompt: Prompt.Prompt, toolName: string): number => {
+  let count = 0;
+  for (let index = prompt.content.length - 1; index >= 0; index--) {
+    const message = prompt.content[index];
+    if (message.role === 'user' && prompt.content[index - 1]?.role !== 'tool') {
+      break;
+    }
+    if (message.role === 'assistant') {
+      count += message.content.filter((part) => part.type === 'tool-call' && part.name === toolName).length;
+    }
+  }
+  return count;
+};
 
 /**
  * Gives a rendered turn time to be seen: a zero-latency model finishes 20 turns inside one frame,

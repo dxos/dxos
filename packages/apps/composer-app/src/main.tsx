@@ -45,12 +45,12 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
-import { PARAM_MODEL } from './testing/scripted-assistant.ts';
 import { initAutomergeWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
   PARAM_LOG_LEVEL,
+  PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   type Profiler,

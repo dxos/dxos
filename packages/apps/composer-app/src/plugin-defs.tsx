@@ -3,8 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import { type AiService } from '@dxos/ai';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
@@ -97,7 +99,6 @@ import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
-import { scriptedAiServiceMiddleware } from './testing/scripted-assistant.ts';
 
 export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
@@ -215,6 +216,18 @@ const codeModeTurnProducer =
       }),
     );
   };
+
+// Loaded on first model resolution: the script and the operation definitions it names stay out of the
+// boot graph, which `check-boot-budget` gates.
+const scriptedAiServiceMiddleware = (upstream: AiService.Service): AiService.Service => ({
+  ...upstream,
+  languageModel: () =>
+    Layer.unwrap(
+      Effect.promise(() => import('./testing/scripted-model.ts')).pipe(
+        Effect.flatMap(({ makeScriptedModel }) => makeScriptedModel()),
+      ),
+    ),
+});
 
 /** The two services the sandbox worker's ECHO client connects to, served from this tab's client. */
 const echoServices = (rpc: ClientServicesRpc) => {

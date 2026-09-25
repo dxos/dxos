@@ -88,6 +88,12 @@ const assistantPrompt = (page: Page): Locator =>
 const ASSISTANT_DONE = /ran 20 database queries/;
 
 /**
+ * Floor on the `assistant-turns` wait: twenty-one model turns at ~4 s each measured locally (250 ms of
+ * which is the script's own delay), well past the 60 s `measure` budget sized for a single render.
+ */
+const ASSISTANT_TIMEOUT = 300_000;
+
+/**
  * Records the page as `video/*.webm` in the run's artifact directory (`DX_PERF_VIDEO=1`), for a
  * reviewer who wants to watch the flow rather than read its rows. Off by default: the encoder runs
  * on the same cores the stages are measured on.
@@ -491,7 +497,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
         .getByTestId('deck.companion')
         .getByTestId('assistant.thread')
         .getByText(ASSISTANT_DONE)
-        .waitFor({ timeout: budget });
+        .waitFor({ timeout: Math.max(budget, ASSISTANT_TIMEOUT) });
     });
 
     const rows = runner.rows;
