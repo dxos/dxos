@@ -19,8 +19,11 @@ export class SpikeClientHandle extends EventEmitter<ClientDocHandleEvents<any>> 
   #heads: string[];
   #doc: any;
 
-  constructor(readonly tab: TabDoc) {
+  readonly tab: TabDoc;
+
+  constructor(tab: TabDoc) {
     super();
+    this.tab = tab;
     this.#heads = tab.heads();
     this.#doc = tab.doc();
     // Changes the worker delivers; local changes emit from `change` below with their own source.

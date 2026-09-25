@@ -246,8 +246,8 @@ export class TabDoc {
     options?: { time?: number; message?: string },
   ): string[] | undefined {
     const baseClock = this.clockOf(baseHeads);
-    const base = this.#model.materialize('_root', baseClock);
-    const recorder = new Draft.Recorder(freezeDeep(base));
+    const current = baseHeads.join(',') === this.#heads.join(',');
+    const recorder = new Draft.Recorder(current ? this.doc() : freezeDeep(this.#model.materialize('_root', baseClock)));
     fn(recorder.draft());
     if (recorder.ops.length === 0) {
       return undefined;
@@ -277,7 +277,7 @@ export class TabDoc {
     change.hash = hash;
     this.#model.registerChange(change);
     this.#own.push(hash);
-    this.#heads = reduceHeads(this.#model, [...this.#heads, hash]);
+    this.#heads = this.#model.heads();
     if (this.#send) {
       this.#pending.push(change);
       this.#bytes.set(hash, bytes);
@@ -299,7 +299,7 @@ export class TabDoc {
           return;
         }
         this.#model.applyChange(change);
-        this.#heads = reduceHeads(this.#model, [...this.#heads, change.hash]);
+        this.#heads = this.#model.heads();
         this.#emit();
         return;
       }
@@ -326,8 +326,7 @@ export class TabDoc {
         this.#pending.splice(0, this.#pending.length, ...this.#pending.filter((change) => !removed.has(change.hash)));
         dropped.forEach((change) => this.#bytes.delete(change.hash));
         this.#model.remove(dropped);
-        const restored = dropped.flatMap((change) => change.deps).filter((dep) => !removed.has(dep));
-        this.#heads = reduceHeads(this.#model, [...this.#heads.filter((head) => !removed.has(head)), ...restored]);
+        this.#heads = this.#model.heads();
         // This actor's dropped changes are a suffix of its chain, so their seqs are free again.
         const cut = this.#own.findIndex((hash) => removed.has(hash));
         if (cut >= 0) {
@@ -362,7 +361,7 @@ export class TabDoc {
       this.#send?.(structuredClone(change), encodeChange(change).bytes);
     }
     if (fresh.length > 0) {
-      this.#heads = reduceHeads(this.#model, [...this.#heads, ...fresh.map((change) => change.hash)]);
+      this.#heads = this.#model.heads();
       this.#emit();
     }
   }
@@ -402,7 +401,7 @@ export class TabDoc {
         this.#send?.(change, this.#bytes.get(hash) ?? encodeChange(change).bytes);
       }
     }
-    this.#heads = reduceHeads(this.#model, [...this.#heads, ...snapshot.heads]);
+    this.#heads = this.#model.heads();
     if (missing.length > 0) {
       this.#emit();
     }
@@ -451,12 +450,6 @@ const causalOrder = (changes: readonly Change[]): Change[] => {
     throw new Error('Changes form a cycle');
   }
   return out;
-};
-
-/** Keeps the heads no other head reaches, sorted as Automerge sorts heads. */
-export const reduceHeads = (model: Model, heads: readonly string[]): string[] => {
-  const unique = [...new Set(heads)];
-  return unique.filter((head) => !unique.some((other) => other !== head && model.reaches([other], head))).sort();
 };
 
 const freezeDeep = <T>(value: T): T => {

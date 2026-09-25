@@ -2,40 +2,55 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ChangeTable } from './changes.ts';
 import { encodeChange } from './encode.ts';
-import { type Change, type Clock, type DecodedOp, type OpId, compareIds, formatId, inClock, parseId } from './ids.ts';
+import { type Change, type Clock, type DecodedOp, parseId } from './ids.ts';
 import { immutableString } from './immutable-string.ts';
 import { readSaved } from './reader.ts';
 
 export type Patch =
-  | { action: 'put'; path: (string | number)[]; value: unknown }
+  | { action: 'put'; path: (string | number)[]; value: unknown; conflict?: boolean }
+  | { action: 'conflict'; path: (string | number)[] }
   | { action: 'del'; path: (string | number)[]; length?: number }
   | { action: 'insert'; path: (string | number)[]; values: unknown[] }
   | { action: 'splice'; path: (string | number)[]; value: string };
 
+/**
+ * One op. Ids are not stored as strings: an op points at the ops it relates to, and its id is its
+ * counter with an index into the model's actors. Every field is always set, so all ops share one shape.
+ */
 type Rec = {
-  key: string;
-  id: OpId;
-  obj: string;
+  counter: number;
+  actor: number;
+  /** The op that made the containing object; undefined for the root. */
+  obj: Rec | undefined;
   action: string;
   value: unknown;
-  datatype?: string;
-  /** The map key the op writes, or the element it inserts after or writes to. */
-  prop?: string;
-  elemId?: string;
+  datatype: string | undefined;
+  /** A map op's key. */
+  prop: string | undefined;
+  /** A sequence op's element: the one an insert follows (undefined for the head), or the one it writes. */
+  ref: Rec | undefined;
   insert: boolean;
   /** The ops it overwrote, which its change names; with `succ`, enough to write its change again. */
-  pred: string[];
-  succ: OpId[];
+  pred: Rec[] | undefined;
+  succ: Rec[] | undefined;
+  /** What a make op made. */
+  contents: MapObject | SeqObject | undefined;
+  /** An insert op's element: the values written to it after the insert. */
+  later: Rec[] | undefined;
 };
-
-type Elem = { id: OpId; key: string; origin: string; values: Rec[] };
 
 type MapObject = { type: 'map'; keys: Map<string, Rec[]> };
 
-type SeqObject = { type: 'list' | 'text'; elems: Elem[]; index: Map<string, Elem> };
+/** A sequence's elements are their insert ops, in document order. */
+type SeqObject = { type: 'list' | 'text'; elems: Rec[] };
 
-type ChangeMeta = {
+/** An element as the model hands it out. */
+export type Elem = { readonly key: string; readonly rec: Rec };
+
+/** A change's place in the history, as `A.getChangesMetaSince` describes it. */
+export type ChangeInfo = {
   actor: string;
   seq: number;
   startOp: number;
@@ -52,19 +67,141 @@ const OBJECT_TYPES: Record<string, 'map' | 'list' | 'text'> = {
   makeText: 'text',
 };
 
+const ACTIONS = new Map(
+  ['makeMap', 'set', 'makeList', 'del', 'makeText', 'inc', 'makeTable'].map((name) => [name, name]),
+);
+
+/** Most text values are one character; sharing them keeps a long text from holding a string per op. */
+const SHORT = new Map<string, string>();
+const share = (value: unknown): unknown => {
+  if (typeof value !== 'string' || value.length > 2) {
+    return value;
+  }
+  const shared = SHORT.get(value);
+  if (shared !== undefined) {
+    return shared;
+  }
+  SHORT.set(value, value);
+  return value;
+};
+
+const newRec = (counter: number, actor: number, obj: Rec | undefined, action: string): Rec => ({
+  counter,
+  actor,
+  obj,
+  action: ACTIONS.get(action) ?? action,
+  value: undefined,
+  datatype: undefined,
+  prop: undefined,
+  ref: undefined,
+  insert: false,
+  pred: undefined,
+  succ: undefined,
+  contents: undefined,
+  later: undefined,
+});
+
+const push = <T>(list: T[] | undefined, value: T): T[] => {
+  if (list) {
+    list.push(value);
+    return list;
+  }
+  return [value];
+};
+
 /**
  * A whole Automerge document as plain JS: every op with the ops that overwrote it, so the state at
  * any version, cursors, conflicts and diffs come out of one structure.
  */
 export class Model {
-  readonly #objects = new Map<string, MapObject | SeqObject>([['_root', { type: 'map', keys: new Map() }]]);
-  readonly #ops = new Map<string, Rec>();
-  readonly #changes = new Map<string, ChangeMeta>();
+  readonly #root: MapObject = { type: 'map', keys: new Map() };
+  readonly #actors: string[] = [];
+  readonly #actorIndex = new Map<string, number>();
+  /** Each actor's ops, sorted by counter: an array slot costs far less than a map entry. */
+  readonly #ops: Rec[][] = [];
+  readonly #changes = new ChangeTable();
   #maxOp = 0;
 
   /** The highest op counter the model holds. */
   get maxOp(): number {
     return this.#maxOp;
+  }
+
+  #actorOf(actor: string): number {
+    let index = this.#actorIndex.get(actor);
+    if (index === undefined) {
+      index = this.#actors.length;
+      this.#actors.push(actor);
+      this.#actorIndex.set(actor, index);
+      this.#ops.push([]);
+    }
+    return index;
+  }
+
+  #keyOf(rec: Rec): string {
+    return `${rec.counter}@${this.#actors[rec.actor]}`;
+  }
+
+  #find(id: string): Rec | undefined {
+    const [counter, actor] = parseId(id);
+    const index = this.#actorIndex.get(actor);
+    return index === undefined ? undefined : this.#at(index, counter);
+  }
+
+  /** The op of `actor` with `counter`, by bisection. */
+  #at(actor: number, counter: number): Rec | undefined {
+    const ops = this.#ops[actor];
+    const position = this.#position(ops, counter);
+    return ops[position]?.counter === counter ? ops[position] : undefined;
+  }
+
+  /** Where `counter` is, or would go, in a sorted list of ops. */
+  #position(ops: readonly Rec[], counter: number): number {
+    let low = 0;
+    let high = ops.length;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (ops[middle].counter < counter) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low;
+  }
+
+  #get(id: string, what: string): Rec {
+    const rec = this.#find(id);
+    if (!rec) {
+      throw new Error(`Unknown ${what} ${id}`);
+    }
+    return rec;
+  }
+
+  /** Keeps an op; `sorted: false` appends, for a load that sorts once at the end. */
+  #store(rec: Rec, sorted = true): void {
+    const ops = this.#ops[rec.actor];
+    if (!sorted || ops.length === 0 || ops[ops.length - 1].counter < rec.counter) {
+      ops.push(rec);
+    } else {
+      ops.splice(this.#position(ops, rec.counter), 0, rec);
+    }
+    this.#maxOp = Math.max(this.#maxOp, rec.counter);
+  }
+
+  /** Lamport order: counter first, then actor. */
+  #compare(left: Rec, right: Rec): number {
+    if (left.counter !== right.counter) {
+      return left.counter - right.counter;
+    }
+    const leftActor = this.#actors[left.actor];
+    const rightActor = this.#actors[right.actor];
+    return leftActor < rightActor ? -1 : leftActor > rightActor ? 1 : 0;
+  }
+
+  /** A clock as a limit per actor index, which the visibility checks read. */
+  #limits(clock: Clock): number[] {
+    return this.#actors.map((actor) => clock.get(actor) ?? 0);
   }
 
   /**
@@ -74,108 +211,119 @@ export class Model {
   static fromSaved(bytes: Uint8Array, hashes?: readonly string[]): Model {
     const model = new Model();
     const { actors, heads, changes, ops } = readSaved(bytes);
-    const id = ([actor, counter]: readonly [number, number]): OpId => [counter, actors[actor]];
-    const sequences = new Set<string>();
+    const actorIndex = actors.map((actor) => model.#actorOf(actor));
+    // Ops are appended as they are read and sorted once they all are, so lookups go through a map until then.
+    const loading = new Map<number, Rec>();
+    const loadKey = (actor: number, counter: number) => counter * 65536 + actor;
+    const find = ([actor, counter]: readonly [number, number]): Rec | undefined =>
+      loading.get(loadKey(actorIndex[actor], counter));
+    const successors: [Rec, (readonly [number, number])[]][] = [];
     for (const op of ops) {
-      const obj = op.obj ? formatId(id(op.obj)) : '_root';
-      const key = op.key === null ? undefined : typeof op.key === 'string' ? op.key : formatId(id(op.key));
-      const inSequence = obj !== '_root' && sequences.has(obj);
-      const rec: Rec = {
-        key: formatId(id(op.id)),
-        id: id(op.id),
-        obj,
-        action: op.action,
-        value: op.value,
-        datatype: op.datatype,
-        ...(inSequence ? { elemId: key ?? '_head' } : { prop: key }),
-        insert: op.insert,
-        pred: [],
-        succ: op.succ.map(id),
-      };
-      if (op.action === 'makeList' || op.action === 'makeText') {
-        sequences.add(rec.key);
+      const obj = op.obj ? find(op.obj) : undefined;
+      if (op.obj && !obj?.contents) {
+        throw new Error('A saved op names an object that is not made before it');
       }
-      model.#addRec(rec, key, op.insert);
+      const container = obj ? obj.contents : model.#root;
+      const rec = newRec(op.id[1], actorIndex[op.id[0]], obj, op.action);
+      rec.value = share(op.value);
+      rec.datatype = op.datatype;
+      rec.insert = op.insert;
+      if (container?.type === 'map') {
+        rec.prop = typeof op.key === 'string' ? op.key : undefined;
+      } else if (op.key !== null && typeof op.key !== 'string') {
+        rec.ref = find(op.key);
+      }
+      if (op.succ.length > 0) {
+        successors.push([rec, op.succ]);
+      }
+      loading.set(loadKey(rec.actor, rec.counter), rec);
+      // Saved documents store a sequence in document order.
+      model.#place(rec, false);
     }
     // A saved document keeps no delete ops: a successor that is not an op is one, and each op's preds
     // are the ops that name it as a successor.
-    for (const rec of [...model.#ops.values()]) {
-      for (const succ of rec.succ) {
-        const succKey = formatId(succ);
-        const existing = model.#ops.get(succKey);
-        if (existing) {
-          existing.pred.push(rec.key);
-          continue;
+    for (const [rec, succ] of successors) {
+      for (const [actor, counter] of succ) {
+        let target = find([actor, counter]);
+        if (!target) {
+          target = newRec(counter, actorIndex[actor], rec.obj, 'del');
+          target.prop = rec.prop;
+          target.ref = rec.prop === undefined ? (rec.insert ? rec : rec.ref) : undefined;
+          loading.set(loadKey(target.actor, counter), target);
+          model.#store(target, false);
         }
-        model.#ops.set(succKey, {
-          key: succKey,
-          id: succ,
-          obj: rec.obj,
-          action: 'del',
-          value: undefined,
-          ...(rec.prop !== undefined ? { prop: rec.prop } : { elemId: rec.insert ? rec.key : rec.elemId }),
-          insert: false,
-          pred: [rec.key],
-          succ: [],
-        });
-        model.#maxOp = Math.max(model.#maxOp, succ[0]);
+        target.pred = push(target.pred, rec);
+        rec.succ = push(rec.succ, target);
       }
     }
+    for (const ops of model.#ops) {
+      ops.sort((left, right) => left.counter - right.counter);
+    }
     // A change's ops are its actor's ops above the previous change's highest op.
-    const counters = new Map<string, number[]>();
-    for (const rec of model.#ops.values()) {
-      counters.set(rec.id[1], [...(counters.get(rec.id[1]) ?? []), rec.id[0]]);
-    }
-    for (const list of counters.values()) {
-      list.sort((left, right) => left - right);
-    }
-    const previousMax = new Map<number, number>();
+    const counters = model.#ops.map((ops) => ops.map((rec) => rec.counter));
     const bySeq = changes
       .map((change, index) => ({ change, index }))
       .sort((left, right) => left.change.actor - right.change.actor || left.change.seq - right.change.seq);
     const startOps = new Map<number, number>();
+    // Each actor's changes come in seq order and its counters ascending, so one pass per actor finds them.
+    const next = new Map<number, number>();
     for (const { change, index } of bySeq) {
-      const after = previousMax.get(change.actor) ?? 0;
-      const first = (counters.get(actors[change.actor]) ?? []).find((counter) => counter > after);
+      const list = counters[actorIndex[change.actor]] ?? [];
+      let position = next.get(change.actor) ?? 0;
+      const first = list[position];
+      while (position < list.length && list[position] <= change.maxOp) {
+        position++;
+      }
+      next.set(change.actor, position);
       startOps.set(index, first !== undefined && first <= change.maxOp ? first : change.maxOp + 1);
-      previousMax.set(change.actor, change.maxOp);
     }
     // Saved changes come in causal order, so each change's deps are hashed before it.
     const known: string[] = [];
     changes.forEach((change, index) => {
-      const meta: ChangeMeta = {
-        actor: actors[change.actor],
+      const actor = actorIndex[change.actor];
+      const startOp = startOps.get(index) ?? change.maxOp + 1;
+      const deps = change.deps.map((dep) => known[dep]);
+      const hash =
+        hashes?.[index] ??
+        encodeChange({
+          actor: actors[change.actor],
+          seq: change.seq,
+          startOp,
+          time: change.time,
+          message: change.message,
+          deps,
+          ops: model.#opsOf(actor, startOp, change.maxOp),
+        }).hash;
+      known.push(hash);
+      model.#changes.add({
+        hash,
+        actor,
         seq: change.seq,
-        startOp: startOps.get(index) ?? change.maxOp + 1,
+        startOp,
         maxOp: change.maxOp,
-        deps: change.deps.map((dep) => known[dep]),
         time: change.time,
         message: change.message,
-      };
-      const hash = hashes?.[index] ?? encodeChange({ ...meta, ops: model.#opsOf(meta) }).hash;
-      known.push(hash);
-      model.#changes.set(hash, meta);
+        deps,
+      });
     });
-    if (!hashes) {
-      const depended = new Set([...model.#changes.values()].flatMap((meta) => meta.deps));
-      const computed = known.filter((hash) => !depended.has(hash)).sort();
-      if (computed.join() !== [...heads].sort().join()) {
-        throw new Error('The saved heads do not match the changes read');
-      }
+    if (!hashes && model.#changes.heads().join() !== [...heads].sort().join()) {
+      throw new Error('The saved heads do not match the changes read');
     }
+    model.#changes.trim();
     return model;
   }
 
   /** Applies a change's ops in order; they must reference only ops the model already holds. */
   applyChange(change: Change): void {
-    change.ops.forEach((op, index) => this.applyOp(formatId([change.startOp + index, change.actor]), op));
+    change.ops.forEach((op, index) => this.applyOp(`${change.startOp + index}@${change.actor}`, op));
     this.registerChange(change);
   }
 
   /** Records a change's place in the history, so clocks can be computed from heads that name it. */
   registerChange(change: Omit<Change, 'ops'> & { ops: readonly unknown[] }): void {
-    this.#changes.set(change.hash, {
-      actor: change.actor,
+    this.#changes.add({
+      hash: change.hash,
+      actor: this.#actorOf(change.actor),
       seq: change.seq,
       startOp: change.startOp,
       maxOp: change.startOp + change.ops.length - 1,
@@ -186,43 +334,48 @@ export class Model {
   }
 
   hasChange(hash: string): boolean {
-    return this.#changes.has(hash);
+    return this.#changes.find(hash) >= 0;
+  }
+
+  #index(hash: string, what = 'change'): number {
+    const index = this.#changes.find(hash);
+    if (index < 0) {
+      throw new RangeError(what === 'heads' ? `Unknown heads: ${hash}` : `Unknown change ${hash}`);
+    }
+    return index;
   }
 
   /** A change as `A.decodeChange` gives it, rebuilt from the ops; it encodes to the bytes that carry its hash. */
   changeOf(hash: string): Change {
-    const meta = this.#changes.get(hash);
-    if (!meta) {
-      throw new RangeError(`Unknown change ${hash}`);
-    }
+    const row = this.#changes.row(this.#index(hash));
     return {
-      actor: meta.actor,
-      seq: meta.seq,
-      startOp: meta.startOp,
-      time: meta.time,
-      message: meta.message,
-      deps: [...meta.deps],
+      actor: this.#actors[row.actor],
+      seq: row.seq,
+      startOp: row.startOp,
+      time: row.time,
+      message: row.message,
+      deps: row.deps,
       hash,
-      ops: this.#opsOf(meta),
+      ops: this.#opsOf(row.actor, row.startOp, row.maxOp),
     };
   }
 
-  #opsOf(meta: ChangeMeta): DecodedOp[] {
+  #opsOf(actor: number, startOp: number, maxOp: number): DecodedOp[] {
     const ops: DecodedOp[] = [];
-    for (let counter = meta.startOp; counter <= meta.maxOp; counter++) {
-      const rec = this.#ops.get(formatId([counter, meta.actor]));
+    for (let counter = startOp; counter <= maxOp; counter++) {
+      const rec = this.#at(actor, counter);
       if (!rec) {
-        throw new Error(`Missing op ${counter}@${meta.actor}`);
+        throw new Error(`Missing op ${counter}@${this.#actors[actor]}`);
       }
       const scalar = rec.action === 'set' || rec.action === 'inc';
       ops.push({
         action: rec.action,
-        obj: rec.obj,
-        ...(rec.prop !== undefined ? { key: rec.prop } : { elemId: rec.elemId }),
+        obj: rec.obj ? this.#keyOf(rec.obj) : '_root',
+        ...(rec.prop !== undefined ? { key: rec.prop } : { elemId: rec.ref ? this.#keyOf(rec.ref) : '_head' }),
         ...(rec.insert ? { insert: true } : {}),
         ...(rec.action === 'set' && rec.datatype !== undefined ? { datatype: rec.datatype } : {}),
         ...(scalar ? { value: rec.value } : {}),
-        pred: [...rec.pred],
+        pred: (rec.pred ?? []).map((pred) => this.#keyOf(pred)),
       });
     }
     return ops;
@@ -230,191 +383,198 @@ export class Model {
 
   /** The hashes of the changes `heads` reach, in causal order. */
   changesIn(heads: readonly string[]): string[] {
-    const clock = this.clockOf(heads);
-    return this.changeHashes().filter((hash) => {
-      const meta = this.#changes.get(hash);
-      return meta !== undefined && (meta.maxOp < meta.startOp || inClock(clock, [meta.maxOp, meta.actor]));
-    });
+    const clock = this.#changes.clockOf(heads.map((head) => this.#index(head, 'heads')));
+    const out: string[] = [];
+    for (const index of this.#changes.live()) {
+      const maxOp = this.#changes.maxOpOf(index);
+      if (maxOp < this.#changes.startOpOf(index) || maxOp <= (clock.get(this.#changes.actorOf(index)) ?? 0)) {
+        out.push(this.#changes.hashOf(index));
+      }
+    }
+    return out;
   }
 
-  changeMeta(hash: string): ChangeMeta | undefined {
-    return this.#changes.get(hash);
+  changeMeta(hash: string): ChangeInfo | undefined {
+    const index = this.#changes.find(hash);
+    if (index < 0) {
+      return undefined;
+    }
+    const { hash: _hash, actor, ...row } = this.#changes.row(index);
+    return { ...row, actor: this.#actors[actor] };
   }
 
-  /** Every change hash the model knows, confirmed or not. */
+  /** Every change hash the model knows, confirmed or not, in causal order. */
   changeHashes(): string[] {
-    return [...this.#changes.keys()];
+    return [...this.#changes.live()].map((index) => this.#changes.hashOf(index));
+  }
+
+  /** The changes nothing depends on: the version that holds every change the model knows. */
+  heads(): string[] {
+    return this.#changes.heads();
   }
 
   /** Applies one op with its id. */
   applyOp(key: string, op: DecodedOp): void {
-    const obj = this.#objects.get(op.obj);
-    if (!obj) {
+    const [counter, actor] = parseId(key);
+    const obj = op.obj === '_root' ? undefined : this.#get(op.obj, 'object');
+    const container = obj ? obj.contents : this.#root;
+    if (!container) {
       throw new Error(`Unknown object ${op.obj}`);
     }
-    const rec: Rec = {
-      key,
-      id: parseId(key),
-      obj: op.obj,
-      action: op.action,
-      value: op.value,
-      datatype: op.datatype,
-      ...(op.key !== undefined ? { prop: op.key } : { elemId: op.elemId }),
-      insert: op.insert ?? false,
-      pred: [...op.pred],
-      succ: [],
-    };
-    for (const pred of op.pred) {
-      const target = this.#ops.get(pred);
-      if (!target) {
-        throw new Error(`Unknown pred ${pred}`);
+    const rec = newRec(counter, this.#actorOf(actor), obj, op.action);
+    rec.value = share(op.value);
+    rec.datatype = op.datatype;
+    rec.insert = op.insert ?? false;
+    if (container.type === 'map') {
+      rec.prop = op.key;
+    } else if (op.elemId !== undefined && op.elemId !== '_head') {
+      rec.ref = this.#get(op.elemId, 'element');
+    }
+    if (op.pred.length > 0) {
+      rec.pred = op.pred.map((pred) => this.#get(pred, 'pred'));
+      for (const target of rec.pred) {
+        target.succ = push(target.succ, rec);
       }
-      target.succ.push(rec.id);
     }
-    if (op.action === 'del') {
-      this.#ops.set(key, rec);
-      this.#maxOp = Math.max(this.#maxOp, rec.id[0]);
-      return;
-    }
-    this.#addRec(rec, obj.type === 'map' ? op.key : op.elemId, op.insert ?? false, true);
+    this.#place(rec, true);
   }
 
-  #addRec(rec: Rec, key: string | undefined, insert: boolean, place = false): void {
+  /** Stores an op and puts it in its object: at its key, in its sequence, or on its element. */
+  #place(rec: Rec, reorder: boolean): void {
+    this.#store(rec, reorder);
     const childType = OBJECT_TYPES[rec.action];
     if (childType) {
-      this.#objects.set(
-        rec.key,
-        childType === 'map' ? { type: 'map', keys: new Map() } : { type: childType, elems: [], index: new Map() },
-      );
+      rec.contents = childType === 'map' ? { type: 'map', keys: new Map() } : { type: childType, elems: [] };
     }
-    this.#ops.set(rec.key, rec);
-    this.#maxOp = Math.max(this.#maxOp, rec.id[0]);
     if (rec.action === 'del') {
       return;
     }
-    const obj = this.#objects.get(rec.obj);
-    if (!obj) {
-      throw new Error(`Unknown object ${rec.obj}`);
+    const container = rec.obj ? rec.obj.contents : this.#root;
+    if (!container) {
+      throw new Error('An op names an object that is not one');
     }
-    if (obj.type === 'map') {
-      const values = obj.keys.get(key!) ?? [];
-      values.push(rec);
-      obj.keys.set(key!, values);
-    } else if (insert) {
-      const elem: Elem = { id: rec.id, key: rec.key, origin: key ?? '_head', values: [rec] };
-      if (!place) {
-        // Saved documents store a sequence in document order.
-        obj.elems.push(elem);
+    if (container.type === 'map') {
+      const key = rec.prop ?? '';
+      const values = container.keys.get(key);
+      if (values) {
+        values.push(rec);
       } else {
-        let position = 0;
-        if (key !== undefined && key !== '_head') {
-          const origin = obj.index.get(key);
-          if (!origin) {
-            throw new Error(`Unknown element ${key}`);
-          }
-          position = obj.elems.indexOf(origin) + 1;
-        }
-        // RGA: move past every following element with a greater id, stop at the first smaller one.
-        while (position < obj.elems.length && compareIds(obj.elems[position].id, rec.id) > 0) {
-          position++;
-        }
-        obj.elems.splice(position, 0, elem);
+        container.keys.set(key, [rec]);
       }
-      obj.index.set(rec.key, elem);
+    } else if (!rec.insert) {
+      if (!rec.ref) {
+        throw new Error('A sequence op names no element');
+      }
+      rec.ref.later = push(rec.ref.later, rec);
+    } else if (!reorder) {
+      container.elems.push(rec);
     } else {
-      const elem = obj.index.get(key!);
-      if (!elem) {
-        throw new Error(`Unknown element ${key}`);
+      let position = rec.ref ? container.elems.indexOf(rec.ref) + 1 : 0;
+      // RGA: move past every following element with a greater id, stop at the first smaller one.
+      while (position < container.elems.length && this.#compare(container.elems[position], rec) > 0) {
+        position++;
       }
-      elem.values.push(rec);
+      container.elems.splice(position, 0, rec);
     }
   }
 
   /** Takes the ops of these changes back out, as if they had never been applied. */
   remove(changes: readonly Change[]): void {
-    const removed = new Set<string>();
+    const removed = new Set<Rec>();
     for (const change of changes) {
-      change.ops.forEach((_op, index) => removed.add(formatId([change.startOp + index, change.actor])));
+      const actor = this.#actorIndex.get(change.actor);
+      change.ops.forEach((_op, index) => {
+        const rec = actor === undefined ? undefined : this.#at(actor, change.startOp + index);
+        if (rec) {
+          removed.add(rec);
+        }
+      });
     }
-    for (const [key, obj] of this.#objects) {
-      if (removed.has(key)) {
-        this.#objects.delete(key);
-      } else if (obj.type === 'map') {
-        for (const [prop, values] of obj.keys) {
-          const kept = values.filter((rec) => !removed.has(rec.key));
+    const sequences = new Set<SeqObject>();
+    for (const rec of removed) {
+      for (const pred of rec.pred ?? []) {
+        pred.succ = pred.succ?.filter((succ) => succ !== rec);
+      }
+      const container = rec.obj ? rec.obj.contents : this.#root;
+      if (rec.action !== 'del' && container) {
+        if (container.type === 'map') {
+          const kept = (container.keys.get(rec.prop ?? '') ?? []).filter((value) => value !== rec);
           if (kept.length > 0) {
-            obj.keys.set(prop, kept);
+            container.keys.set(rec.prop ?? '', kept);
           } else {
-            obj.keys.delete(prop);
+            container.keys.delete(rec.prop ?? '');
           }
-        }
-      } else {
-        obj.elems = obj.elems.filter((elem) => !removed.has(elem.key));
-        for (const elemKey of [...obj.index.keys()]) {
-          if (removed.has(elemKey)) {
-            obj.index.delete(elemKey);
-          }
-        }
-        for (const elem of obj.elems) {
-          elem.values = elem.values.filter((rec) => !removed.has(rec.key));
+        } else if (rec.insert) {
+          sequences.add(container);
+        } else if (rec.ref) {
+          rec.ref.later = rec.ref.later?.filter((value) => value !== rec);
         }
       }
+      const ops = this.#ops[rec.actor];
+      ops.splice(this.#position(ops, rec.counter), 1);
     }
-    for (const [key, rec] of this.#ops) {
-      if (removed.has(key)) {
-        this.#ops.delete(key);
-      } else {
-        rec.succ = rec.succ.filter((id) => !removed.has(formatId(id)));
-      }
+    for (const sequence of sequences) {
+      sequence.elems = sequence.elems.filter((elem) => !removed.has(elem));
     }
-    for (const change of changes) {
-      this.#changes.delete(change.hash);
-    }
+    this.#changes.remove(changes.map((change) => this.#changes.find(change.hash)).filter((index) => index >= 0));
     this.#maxOp = 0;
-    for (const rec of this.#ops.values()) {
-      this.#maxOp = Math.max(this.#maxOp, rec.id[0]);
+    for (const ops of this.#ops) {
+      this.#maxOp = Math.max(this.#maxOp, ops[ops.length - 1]?.counter ?? 0);
     }
   }
 
   /** The clock of a version: the highest op counter per actor over the changes the heads reach. */
   clockOf(heads: readonly string[]): Map<string, number> {
-    const clock = new Map<string, number>();
-    const stack = [...heads];
-    const seen = new Set<string>();
-    while (stack.length > 0) {
-      const hash = stack.pop()!;
-      if (seen.has(hash)) {
-        continue;
-      }
-      seen.add(hash);
-      const meta = this.#changes.get(hash);
-      if (!meta) {
-        throw new RangeError(`Unknown heads: ${hash}`);
-      }
-      clock.set(meta.actor, Math.max(clock.get(meta.actor) ?? 0, meta.maxOp));
-      stack.push(...meta.deps);
-    }
-    return clock;
+    const byIndex = this.#changes.clockOf(heads.map((head) => this.#index(head, 'heads')));
+    return new Map([...byIndex].map(([actor, maxOp]) => [this.#actors[actor], maxOp]));
   }
 
   /** Whether `hash` is in the history of `heads`. */
   reaches(heads: readonly string[], hash: string): boolean {
-    const meta = this.#changes.get(hash);
-    return meta !== undefined && inClock(this.clockOf(heads), [meta.maxOp, meta.actor]);
+    const index = this.#changes.find(hash);
+    return (
+      index >= 0 &&
+      this.#changes.maxOpOf(index) <= (this.clockOf(heads).get(this.#actors[this.#changes.actorOf(index)]) ?? 0)
+    );
   }
 
-  #visible(values: readonly Rec[], clock: Clock): Rec[] {
-    return values
-      .filter((rec) => inClock(clock, rec.id) && !rec.succ.some((succ) => inClock(clock, succ)))
-      .sort((left, right) => compareIds(right.id, left.id));
+  //
+  // Reads at a version.
+  //
+
+  #alive(rec: Rec, limits: number[]): boolean {
+    return (
+      rec.counter <= (limits[rec.actor] ?? 0) && !rec.succ?.some((succ) => succ.counter <= (limits[succ.actor] ?? 0))
+    );
   }
 
-  #value(rec: Rec, clock: Clock, inText: boolean): unknown {
-    if (OBJECT_TYPES[rec.action]) {
-      return this.materialize(rec.key, clock);
+  /** The values of `values` alive at `limits`, the winner first. */
+  #visible(values: readonly Rec[], limits: number[]): Rec[] {
+    return values.filter((rec) => this.#alive(rec, limits)).sort((left, right) => this.#compare(right, left));
+  }
+
+  /** An element's values: the insert op, then what was written to the element after it. */
+  #elementValues(elem: Rec): Rec[] {
+    return elem.later ? [elem, ...elem.later] : [elem];
+  }
+
+  /** An element's winning value at `limits`, or undefined if it has none. */
+  #winner(elem: Rec, limits: number[]): Rec | undefined {
+    let best = this.#alive(elem, limits) ? elem : undefined;
+    for (const value of elem.later ?? []) {
+      if (this.#alive(value, limits) && (!best || this.#compare(value, best) > 0)) {
+        best = value;
+      }
+    }
+    return best;
+  }
+
+  #value(rec: Rec, limits: number[], inText: boolean): unknown {
+    if (rec.contents) {
+      return this.#materialize(rec.contents, limits);
     }
     if (rec.datatype === 'timestamp') {
-      return new Date(rec.value as number);
+      return new Date(Number(rec.value));
     }
     if (typeof rec.value === 'string' && !inText) {
       return immutableString(rec.value);
@@ -426,88 +586,107 @@ export class Model {
     return rec.value;
   }
 
-  /** The object as Automerge's `toJS` gives it at `clock`. */
-  materialize(objId = '_root', clock: Clock): unknown {
-    const obj = this.#object(objId);
-    if (obj.type === 'map') {
+  #materialize(container: MapObject | SeqObject, limits: number[]): unknown {
+    if (container.type === 'map') {
       const out: Record<string, unknown> = {};
-      for (const [key, values] of obj.keys) {
-        const [winner] = this.#visible(values, clock);
+      for (const [key, values] of container.keys) {
+        const [winner] = this.#visible(values, limits);
         if (winner) {
-          out[key] = this.#value(winner, clock, false);
+          out[key] = this.#value(winner, limits, false);
         }
       }
       return out;
     }
     const items: unknown[] = [];
-    for (const elem of obj.elems) {
-      const [winner] = this.#visible(elem.values, clock);
+    for (const elem of container.elems) {
+      const winner = this.#winner(elem, limits);
       if (winner) {
-        items.push(this.#value(winner, clock, obj.type === 'text'));
+        items.push(this.#value(winner, limits, container.type === 'text'));
       }
     }
-    return obj.type === 'text' ? items.join('') : items;
+    return container.type === 'text' ? items.join('') : items;
+  }
+
+  /** The object as Automerge's `toJS` gives it at `clock`. */
+  materialize(objId = '_root', clock: Clock): unknown {
+    return this.#materialize(this.#object(objId), this.#limits(clock));
   }
 
   #object(objId: string): MapObject | SeqObject {
-    const obj = this.#objects.get(objId);
-    if (!obj) {
+    const container = objId === '_root' ? this.#root : this.#find(objId)?.contents;
+    if (!container) {
       throw new RangeError(`Unknown object ${objId}`);
     }
-    return obj;
+    return container;
   }
 
   typeOf(objId: string): 'map' | 'list' | 'text' {
     return this.#object(objId).type;
   }
 
+  #elems(container: MapObject | SeqObject, limits: number[]): Rec[] {
+    if (container.type === 'map') {
+      throw new TypeError('A map has no elements');
+    }
+    return container.elems.filter((elem) => this.#winner(elem, limits) !== undefined);
+  }
+
+  #slot(container: MapObject | SeqObject, prop: string | number, limits: number[]): Rec[] {
+    if (container.type === 'map') {
+      return container.keys.get(String(prop)) ?? [];
+    }
+    const elem = this.#elems(container, limits)[Number(prop)];
+    return elem ? this.#elementValues(elem) : [];
+  }
+
   /** The object id `path` reaches at `clock`. */
   objectAt(path: readonly (string | number)[], clock: Clock): string | undefined {
+    const limits = this.#limits(clock);
+    let container: MapObject | SeqObject = this.#root;
     let objId = '_root';
     for (const prop of path) {
-      const [winner] = this.#visible(this.#slot(objId, prop, clock), clock);
-      if (!winner || !OBJECT_TYPES[winner.action]) {
+      const [winner] = this.#visible(this.#slot(container, prop, limits), limits);
+      if (!winner?.contents) {
         return undefined;
       }
-      objId = winner.key;
+      container = winner.contents;
+      objId = this.#keyOf(winner);
     }
     return objId;
   }
 
-  #slot(objId: string, prop: string | number, clock: Clock): Rec[] {
-    const obj = this.#object(objId);
-    if (obj.type === 'map') {
-      return obj.keys.get(String(prop)) ?? [];
-    }
-    return this.visibleElements(objId, clock)[Number(prop)]?.values ?? [];
-  }
-
   /** The values a write to `prop` would overwrite at `clock`, which it names as `pred`. */
   currentValueIds(objId: string, prop: string | number, clock: Clock): string[] {
-    return this.#visible(this.#slot(objId, prop, clock), clock).map((rec) => rec.key);
+    const limits = this.#limits(clock);
+    return this.#visible(this.#slot(this.#object(objId), prop, limits), limits).map((rec) => this.#keyOf(rec));
+  }
+
+  #elem(rec: Rec): Elem {
+    return { key: this.#keyOf(rec), rec };
   }
 
   visibleElements(objId: string, clock: Clock): Elem[] {
-    const obj = this.#object(objId);
-    if (obj.type === 'map') {
-      throw new TypeError(`${objId} is a map`);
-    }
-    return obj.elems.filter((elem) => this.#visible(elem.values, clock).length > 0);
+    return this.#elems(this.#object(objId), this.#limits(clock)).map((rec) => this.#elem(rec));
   }
 
   /** The visible value ids of the element `elemKey` at `clock`, or undefined if `clock` lacks it. */
   elementValueIdsOf(objId: string, elemKey: string, clock: Clock): string[] | undefined {
-    const obj = this.#objects.get(objId);
-    if (!obj || obj.type === 'map') {
+    const elem = this.#find(elemKey);
+    const limits = this.#limits(clock);
+    if (
+      !elem?.insert ||
+      (elem.obj ? this.#keyOf(elem.obj) : '_root') !== objId ||
+      elem.counter > (limits[elem.actor] ?? 0)
+    ) {
       return undefined;
     }
-    const elem = obj.index.get(elemKey);
-    return elem && inClock(clock, elem.id) ? this.#visible(elem.values, clock).map((rec) => rec.key) : undefined;
+    return this.#visible(this.#elementValues(elem), limits).map((rec) => this.#keyOf(rec));
   }
 
   /** The visible value ids of an element at `clock`. */
   elementValueIds(elem: Elem, clock: Clock): string[] {
-    return this.#visible(elem.values, clock).map((rec) => rec.key);
+    const limits = this.#limits(clock);
+    return this.#visible(this.#elementValues(elem.rec), limits).map((rec) => this.#keyOf(rec));
   }
 
   /** The element holding UTF-16 unit `position` of a text at `clock`, where it starts and its width. */
@@ -516,11 +695,20 @@ export class Model {
     position: number,
     clock: Clock,
   ): { elem: Elem; start: number; width: number } | undefined {
+    const container = this.#object(objId);
+    const limits = this.#limits(clock);
+    if (container.type === 'map') {
+      throw new TypeError(`${objId} is a map`);
+    }
     let offset = 0;
-    for (const elem of this.visibleElements(objId, clock)) {
-      const width = String(this.#visible(elem.values, clock)[0].value).length;
+    for (const elem of container.elems) {
+      const winner = this.#winner(elem, limits);
+      if (!winner) {
+        continue;
+      }
+      const width = String(winner.value).length;
       if (position < offset + width) {
-        return { elem, start: offset, width };
+        return { elem: this.#elem(elem), start: offset, width };
       }
       offset += width;
     }
@@ -529,11 +717,12 @@ export class Model {
 
   /** Automerge's `getConflicts` for a map key or list index at `clock`. */
   conflicts(objId: string, prop: string | number, clock: Clock): Record<string, unknown> | undefined {
-    const visible = this.#visible(this.#slot(objId, prop, clock), clock);
+    const limits = this.#limits(clock);
+    const visible = this.#visible(this.#slot(this.#object(objId), prop, limits), limits);
     if (visible.length < 2) {
       return undefined;
     }
-    return Object.fromEntries(visible.map((rec) => [rec.key, this.#value(rec, clock, false)]));
+    return Object.fromEntries(visible.map((rec) => [this.#keyOf(rec), this.#value(rec, limits, false)]));
   }
 
   /** Automerge's `getCursor` on a text: the id of the character at `position`. */
@@ -550,81 +739,95 @@ export class Model {
 
   /** Automerge's `getCursorPosition`, including characters deleted since. */
   cursorPosition(objId: string, cursor: string, clock: Clock): number {
-    const obj = this.#object(objId);
-    if (obj.type === 'map') {
+    const container = this.#object(objId);
+    if (container.type === 'map') {
       throw new TypeError(`${objId} is a map`);
     }
-    const widthOf = (elem: Elem): number => {
-      const [winner] = this.#visible(elem.values, clock);
+    const limits = this.#limits(clock);
+    const widthOf = (elem: Rec): number => {
+      const winner = this.#winner(elem, limits);
       return winner ? String(winner.value).length : 0;
     };
     if (cursor === 's') {
       return 0;
     }
     if (cursor === 'e') {
-      return obj.elems.reduce((sum, elem) => sum + widthOf(elem), 0);
+      return container.elems.reduce((sum, elem) => sum + widthOf(elem), 0);
     }
     const before = cursor.startsWith('-');
-    const key = before ? cursor.slice(1) : cursor;
-    const target = obj.index.get(key);
-    if (!target || !inClock(clock, target.id)) {
+    const target = this.#find(before ? cursor.slice(1) : cursor);
+    if (!target?.insert || target.obj?.contents !== container || target.counter > (limits[target.actor] ?? 0)) {
       throw new RangeError(`Cannot getCursorPosition: cursor ${cursor} is invalid`);
     }
-    const offsets = new Map<string, number>();
+    const offsets = new Map<Rec, number>();
     let offset = 0;
-    for (const elem of obj.elems) {
-      offsets.set(elem.key, offset);
+    for (const elem of container.elems) {
+      offsets.set(elem, offset);
       offset += widthOf(elem);
     }
     if (widthOf(target) > 0 || !before) {
-      return offsets.get(key)!;
+      return offsets.get(target) ?? 0;
     }
     // A deleted character resolves 'before' to the nearest visible character on its chain of origins.
-    let origin = target.origin;
-    while (origin !== '_head') {
-      const elem = obj.index.get(origin)!;
-      if (widthOf(elem) > 0) {
-        return offsets.get(origin)!;
+    for (let origin = target.ref; origin; origin = origin.ref) {
+      if (widthOf(origin) > 0) {
+        return offsets.get(origin) ?? 0;
       }
-      origin = elem.origin;
     }
     return 0;
   }
 
   /** Automerge-shaped patches that turn the document at `before` into the document at `after`. */
-  diff(before: Clock, after: Clock): Patch[] {
-    const buckets = new Map<string, Patch[]>();
+  diff(beforeClock: Clock, afterClock: Clock): Patch[] {
+    const before = this.#limits(beforeClock);
+    const after = this.#limits(afterClock);
+    const buckets = new Map<Rec | undefined, Patch[]>();
     const empty = (rec: Rec, inText: boolean): unknown => {
       const type = OBJECT_TYPES[rec.action];
       return type === 'map' ? {} : type === 'list' ? [] : type === 'text' ? '' : this.#value(rec, after, inText);
     };
-    const walk = (objId: string, path: (string | number)[], existed: boolean): void => {
-      const obj = this.#object(objId);
+    const walk = (
+      owner: Rec | undefined,
+      container: MapObject | SeqObject,
+      path: (string | number)[],
+      existed: boolean,
+    ): void => {
       const patches: Patch[] = [];
-      buckets.set(objId, patches);
-      const children: [string, (string | number)[], boolean][] = [];
-      if (obj.type === 'map') {
-        for (const key of [...obj.keys.keys()].sort()) {
-          const values = obj.keys.get(key)!;
-          const [was] = existed ? this.#visible(values, before) : [];
-          const [is] = this.#visible(values, after);
+      buckets.set(owner, patches);
+      const children: [Rec, (string | number)[], boolean][] = [];
+      if (container.type === 'map') {
+        for (const key of [...container.keys.keys()].sort()) {
+          const values = container.keys.get(key) ?? [];
+          const wasVisible = existed ? this.#visible(values, before) : [];
+          const isVisible = this.#visible(values, after);
+          const [was] = wasVisible;
+          const [is] = isVisible;
           if (!is) {
             if (was) {
               patches.push({ action: 'del', path: [...path, key] });
             }
-          } else if (was && was.key === is.key) {
-            if (OBJECT_TYPES[is.action]) {
-              children.push([is.key, [...path, key], true]);
+          } else if (was === is) {
+            // The value stayed but gained a concurrent one.
+            if (isVisible.length > 1 && wasVisible.length < 2) {
+              patches.push({ action: 'conflict', path: [...path, key] });
+            }
+            if (is.contents) {
+              children.push([is, [...path, key], true]);
             }
           } else {
-            patches.push({ action: 'put', path: [...path, key], value: empty(is, false) });
-            if (OBJECT_TYPES[is.action]) {
-              children.push([is.key, [...path, key], false]);
+            patches.push({
+              action: 'put',
+              path: [...path, key],
+              value: empty(is, false),
+              ...(isVisible.length > 1 ? { conflict: true } : {}),
+            });
+            if (is.contents) {
+              children.push([is, [...path, key], false]);
             }
           }
         }
       } else {
-        const text = obj.type === 'text';
+        const text = container.type === 'text';
         let index = 0;
         let pending: Patch | undefined;
         const flush = () => {
@@ -633,18 +836,31 @@ export class Model {
           }
           pending = undefined;
         };
-        for (const elem of obj.elems) {
-          const [was] = existed ? this.#visible(elem.values, before) : [];
-          const [is] = this.#visible(elem.values, after);
+        for (const elem of container.elems) {
+          const was = existed ? this.#winner(elem, before) : undefined;
+          const is = this.#winner(elem, after);
           if (was && is) {
             flush();
-            if (was.key !== is.key) {
-              patches.push({ action: 'put', path: [...path, index], value: empty(is, text) });
-              if (OBJECT_TYPES[is.action]) {
-                children.push([is.key, [...path, index], false]);
+            // Only an element written after its insert can hold concurrent values.
+            const isCount = elem.later ? this.#visible(this.#elementValues(elem), after).length : 1;
+            if (was !== is) {
+              patches.push({
+                action: 'put',
+                path: [...path, index],
+                value: empty(is, text),
+                ...(isCount > 1 ? { conflict: true } : {}),
+              });
+              if (is.contents) {
+                children.push([is, [...path, index], false]);
               }
-            } else if (OBJECT_TYPES[is.action]) {
-              children.push([is.key, [...path, index], true]);
+            } else {
+              const wasCount = elem.later ? this.#visible(this.#elementValues(elem), before).length : 1;
+              if (isCount > 1 && wasCount < 2) {
+                patches.push({ action: 'conflict', path: [...path, index] });
+              }
+              if (is.contents) {
+                children.push([is, [...path, index], true]);
+              }
             }
             index += text ? String(is.value).length : 1;
           } else if (is) {
@@ -661,8 +877,8 @@ export class Model {
                 pending = { action: 'insert', path: [...path, index], values: [] };
               }
               pending.values.push(empty(is, false));
-              if (OBJECT_TYPES[is.action]) {
-                children.push([is.key, [...path, index], false]);
+              if (is.contents) {
+                children.push([is, [...path, index], false]);
               }
               index += 1;
             }
@@ -677,30 +893,37 @@ export class Model {
         flush();
       }
       for (const [child, childPath, childExisted] of children) {
-        walk(child, childPath, childExisted);
+        if (child.contents) {
+          walk(child, child.contents, childPath, childExisted);
+        }
       }
     };
-    walk('_root', [], true);
+    walk(undefined, this.#root, [], true);
     // Automerge emits each object's patches in turn: the root first, then by object id.
-    const order = [...buckets.keys()].sort((left, right) =>
-      left === '_root' ? -1 : right === '_root' ? 1 : compareIds(parseId(left), parseId(right)),
-    );
-    return order
-      .flatMap((objId) => buckets.get(objId)!)
+    const objects = [...buckets.keys()]
+      .filter((owner): owner is Rec => owner !== undefined)
+      .sort((left, right) => this.#compare(left, right));
+    return [buckets.get(undefined) ?? [], ...objects.map((owner) => buckets.get(owner) ?? [])]
+      .flat()
       .map((patch) => (patch.action === 'del' && patch.length === 1 ? { action: 'del', path: patch.path } : patch));
   }
 
-  /** Every element and value op of an object that `clock` contains, for checks against a version. */
+  /** Whether `clock` contains the element `elemKey` of an object. */
   hasElement(objId: string, elemKey: string, clock: Clock): boolean {
-    const obj = this.#objects.get(objId);
-    if (!obj || obj.type === 'map') {
-      return false;
-    }
-    const elem = obj.index.get(elemKey);
-    return elem !== undefined && inClock(clock, elem.id);
+    const elem = this.#find(elemKey);
+    return (
+      elem !== undefined &&
+      elem.insert &&
+      (elem.obj ? this.#keyOf(elem.obj) : '_root') === objId &&
+      elem.counter <= (clock.get(this.#actors[elem.actor]) ?? 0)
+    );
   }
 
   hasObject(objId: string, clock: Clock): boolean {
-    return objId === '_root' || (this.#objects.has(objId) && inClock(clock, parseId(objId)));
+    if (objId === '_root') {
+      return true;
+    }
+    const rec = this.#find(objId);
+    return rec?.contents !== undefined && rec.counter <= (clock.get(this.#actors[rec.actor]) ?? 0);
   }
 }

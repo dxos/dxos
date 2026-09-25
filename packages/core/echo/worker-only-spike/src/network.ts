@@ -15,7 +15,11 @@ export class Network {
   readonly #queue: { tab: string; run: () => void }[] = [];
   #nextTab = 0;
 
-  constructor(readonly host: SpikeHost) {}
+  readonly host: SpikeHost;
+
+  constructor(host: SpikeHost) {
+    this.host = host;
+  }
 
   /** Opens `docId` in a new tab. */
   open(docId: string, options?: { actor?: string }): Tab {

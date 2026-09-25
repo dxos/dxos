@@ -42,6 +42,8 @@ describe('tab documents over a worker', () => {
       const tabs: Tab[] = [network.open('doc'), network.open('doc'), network.open('doc')];
       let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
       const minted: { cursor: string; tab: Tab }[] = [];
+      const initialHeads = A.getHeads(host.doc('doc'));
+      let midHeads = initialHeads;
 
       for (let step = 0; step < 80; step++) {
         const r = rand();
@@ -62,6 +64,9 @@ describe('tab documents over a worker', () => {
         } else if (r < 0.85) {
           host.flush();
           peer = A.merge(peer, A.clone(host.doc('doc')));
+          if (step < 40) {
+            midHeads = A.getHeads(host.doc('doc'));
+          }
         } else {
           network.deliver(1 + pick(network.pending + 1));
         }
@@ -82,6 +87,17 @@ describe('tab documents over a worker', () => {
         const id = A.getCursor(fresh, ['content'], position);
         for (const tab of tabs) {
           expect(tab.tab.cursor(tab.tab.heads(), ['content'], position)).toBe(id);
+        }
+      }
+      // Patches between versions, in Automerge's order.
+      for (const [from, to] of [
+        [initialHeads, A.getHeads(fresh)],
+        [midHeads, A.getHeads(fresh)],
+        [initialHeads, midHeads],
+      ]) {
+        const want = A.diff(fresh, from, to);
+        for (const tab of tabs) {
+          expect(tab.tab.diff(from, to)).toEqual(want);
         }
       }
       // Cursors minted the moment their text was typed resolve as Automerge resolves them.

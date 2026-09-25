@@ -10,7 +10,11 @@ import { type TabDoc } from './tab.ts';
 export class SpikeHandle implements Doc.Handle {
   readonly #unsubscribe = new Map<() => void, () => void>();
 
-  constructor(readonly tab: TabDoc) {}
+  readonly tab: TabDoc;
+
+  constructor(tab: TabDoc) {
+    this.tab = tab;
+  }
 
   doc(): any {
     return this.tab.doc();

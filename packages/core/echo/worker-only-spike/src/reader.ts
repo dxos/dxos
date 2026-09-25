@@ -13,11 +13,15 @@ const ACTIONS = ['makeMap', 'set', 'makeList', 'del', 'makeText', 'inc'];
 const decoder = new TextDecoder();
 
 class Cursor {
-  constructor(
-    readonly bytes: Uint8Array,
-    public offset = 0,
-    readonly end = bytes.length,
-  ) {}
+  readonly bytes: Uint8Array;
+  offset: number;
+  readonly end: number;
+
+  constructor(bytes: Uint8Array, offset = 0, end = bytes.length) {
+    this.bytes = bytes;
+    this.offset = offset;
+    this.end = end;
+  }
 
   done(): boolean {
     return this.offset >= this.end;

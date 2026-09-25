@@ -62,7 +62,11 @@ class RunLength<T> {
   #state: RunState<T> = { kind: 'empty' };
   #any = false;
 
-  constructor(readonly write: (writer: Writer, value: T) => void) {}
+  readonly write: (writer: Writer, value: T) => void;
+
+  constructor(write: (writer: Writer, value: T) => void) {
+    this.write = write;
+  }
 
   #flush(): void {
     const state = this.#state;
