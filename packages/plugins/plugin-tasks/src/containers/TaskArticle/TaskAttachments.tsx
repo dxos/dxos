@@ -7,13 +7,15 @@ import React, {
   type DragEvent,
   type PropsWithChildren,
   useCallback,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { Surface, useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
@@ -22,15 +24,34 @@ import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { TaskOperation } from '#types';
+
+/**
+ * Whether some plugin handles `FileOperation.Create`. Read from the registered handler sets rather
+ * than assumed from the dependency: a host (production, mobile) may run this plugin without
+ * plugin-file, and a drop it cannot store must not be offered at all.
+ */
+const useCanCreateFiles = (): boolean => {
+  const handlerSets = useCapabilities(Capabilities.OperationHandler);
+  return useMemo(
+    () =>
+      handlerSets.some((set) =>
+        set.definitions().some((definition) => definition.meta.key === FileOperation.Create.meta.key),
+      ),
+    [handlerSets],
+  );
+};
 
 /**
  * Stores dropped or pasted browser files as `File` objects and attaches them to the task. Each file
  * goes through `FileOperation.Create`, so the storage backend, MIME allow-list and size cap are the
- * same as any other upload's.
+ * same as any other upload's, and is attached through `TaskOperation.AddAttachment`, which logs it.
+ * Undefined when no plugin can store a file.
  */
-export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => Promise<void>) => {
+export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => Promise<void>) | undefined => {
   const { invokePromise } = useOperationInvoker();
-  return useCallback(
+  const canCreateFiles = useCanCreateFiles();
+  const attach = useCallback(
     async (files: globalThis.File[]) => {
       const db = Obj.getDatabase(task);
       if (!db) {
@@ -44,24 +65,32 @@ export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => 
           continue;
         }
 
-        db.add(data.object);
-        Task.addAttachment(task, data.object);
+        const object = db.add(data.object);
+        await invokePromise(
+          TaskOperation.AddAttachment,
+          { task: Ref.make(task), file: Ref.make(object) },
+          { spaceId: db.spaceId },
+        );
       }
     },
     [invokePromise, task],
   );
+
+  return canCreateFiles ? attach : undefined;
 };
 
 /** Whether a drag carries files from outside the page, rather than an element dragged within it. */
 const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 export type TaskAttachmentDropZoneProps = PropsWithChildren<{
-  onFiles: (files: globalThis.File[]) => void;
+  /** Omitted when files cannot be stored: the zone then neither shows nor takes a drop or paste. */
+  onFiles?: (files: globalThis.File[]) => void;
 }>;
 
 /**
  * Accepts files dropped or pasted anywhere over the task. Handled in the capture phase because the
- * description editor would otherwise take a dropped file and insert its bytes as text.
+ * description editor would otherwise take a dropped file and insert its bytes as text. The wrapper
+ * renders either way, so the editor inside is not remounted when file support arrives.
  */
 export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDropZoneProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -96,7 +125,7 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
       depth.current = 0;
       setOver(false);
       const files = Array.from(event.dataTransfer.files);
-      if (files.length > 0) {
+      if (onFiles && files.length > 0) {
         event.preventDefault();
         event.stopPropagation();
         onFiles(files);
@@ -109,7 +138,7 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
   const handlePaste = useCallback(
     (event: ClipboardEvent) => {
       const files = Array.from(event.clipboardData.files);
-      if (files.length > 0 && !event.clipboardData.types.includes('text/plain')) {
+      if (onFiles && files.length > 0 && !event.clipboardData.types.includes('text/plain')) {
         event.preventDefault();
         event.stopPropagation();
         onFiles(files);
@@ -121,12 +150,14 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
   return (
     <div
       className='relative flex flex-col min-h-full'
-      data-testid='tasksPlugin.attachments.dropZone'
-      onDragEnterCapture={handleDragEnter}
-      onDragLeaveCapture={handleDragLeave}
-      onDragOverCapture={handleDragOver}
-      onDropCapture={handleDrop}
-      onPasteCapture={handlePaste}
+      {...(onFiles && {
+        'data-testid': 'tasksPlugin.attachments.dropZone',
+        'onDragEnterCapture': handleDragEnter,
+        'onDragLeaveCapture': handleDragLeave,
+        'onDragOverCapture': handleDragOver,
+        'onDropCapture': handleDrop,
+        'onPasteCapture': handlePaste,
+      })}
     >
       {children}
       {over && (
@@ -156,17 +187,10 @@ export const TaskAttachments = ({ task }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
 
-  // The file is owned by the task, so detaching it is deleting it; the ref goes first so the list
-  // never points at a removed object.
-  const handleRemove = useCallback(
-    (ref: Ref.Ref<File.File>) => {
-      const file = ref.target;
-      Task.removeAttachment(task, ref);
-      if (file) {
-        Obj.getDatabase(file)?.remove(file);
-      }
-    },
-    [task],
+  const handleRemove = useOperation(
+    TaskOperation.RemoveAttachment,
+    (file: Ref.Ref<File.File>) => ({ task: Ref.make(task), file }),
+    { spaceId: Obj.getDatabase(task)?.spaceId },
   );
 
   if (!refs || refs.length === 0) {

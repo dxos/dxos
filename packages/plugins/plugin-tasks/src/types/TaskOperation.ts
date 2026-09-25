@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
 // the compiler name the operation types portably (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
+import { Actor, File, Milestone, type Person, Task, TaskSet } from '@dxos/types';
 
 /**
  * Linear-shaped task verbs (MILESTONE-5.md §7.2). Verbs enforce what models get wrong with raw
@@ -226,6 +226,55 @@ export const AddArtifact = Operation.make({
     task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
+
+/**
+ * Attaches a file to a task, which then owns it, and records the attachment in the task's history.
+ * Separate from {@link AddArtifact}: an artifact is something the task produced and belongs elsewhere.
+ */
+export const AddAttachment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.addAttachment'),
+    name: 'Add Task Attachment',
+    description:
+      'Attach an existing File (e.g. one created by file.createFromUpload) to a task. The task takes ' +
+      'ownership, so deleting the task deletes the file. Attaching the same file twice is a no-op.',
+    icon: 'ph--paperclip--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    file: Ref.Ref(File.File),
+    /** Who attached it; recorded on the history entry. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Detaches a file from a task and deletes it, since the task owned it, recording the removal in the
+ * task's history.
+ */
+export const RemoveAttachment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.removeAttachment'),
+    name: 'Remove Task Attachment',
+    description:
+      'Remove a file attached to a task, deleting the file. Removing a file that is not attached is a no-op.',
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    file: Ref.Ref(File.File),
+    /** Who removed it; recorded on the history entry. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('destructive'));
 
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's

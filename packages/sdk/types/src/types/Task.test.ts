@@ -267,19 +267,27 @@ describe('completion', () => {
       yield* Database.add(file);
       yield* Database.flush();
 
-      Task.addAttachment(task, file);
-      Task.addAttachment(task, file);
+      const entry = Task.addAttachment(task, file, { actor: { name: 'Rich', role: 'user' } });
+      expect(Task.addAttachment(task, file)).toBeUndefined();
       yield* Database.flush();
 
       expect(task.attachments).toHaveLength(1);
+      expect(entry?.description).toEqual('Attached "screenshot.png".');
+      expect(changes(task).map(({ description }) => description)).toEqual(['Attached "screenshot.png".']);
+      expect(changes(task)[0].actor?.name).toEqual('Rich');
       expect(Task.refEntityId(task.attachments?.[0])).toEqual(file.id);
       // Owned, so deleting the task deletes what was attached to it.
       expect(Obj.getParent(file)).toBe(task);
 
       const [ref] = task.attachments ?? [];
       Task.removeAttachment(task, ref);
+      expect(Task.removeAttachment(task, ref)).toBeUndefined();
       yield* Database.flush();
       expect(task.attachments).toHaveLength(0);
+      expect(changes(task).map(({ description }) => description)).toEqual([
+        'Attached "screenshot.png".',
+        'Removed attachment "screenshot.png".',
+      ]);
     }).pipe(Effect.provide(testLayer())),
   );
 });

@@ -56,39 +56,39 @@ const DefaultStory = () => {
   );
 };
 
+/** The article's plugins; `files` adds plugin-file, which is what makes a drop possible at all. */
+const withPlugins = ({ files }: { files: boolean }) =>
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin.make({
+        types: [Task.Task, File.File, Blob.Blob],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            const { defaultSpace } = yield* initializeIdentity(client);
+            yield* Effect.promise(async () => {
+              defaultSpace.db.add(
+                Task.make({
+                  title: 'Fix the toolbar overflow',
+                  status: 'started',
+                  description: 'The toolbar wraps below 480px; drop a screenshot here to attach it.',
+                }),
+              );
+              await defaultSpace.db.flush({ indexes: true });
+            });
+          }),
+      }),
+      StorybookPlugin.make({}),
+      TasksPlugin.make(),
+      // Handles `FileOperation.Create` and contributes the file card that previews an attachment.
+      ...(files ? [FilePlugin.make()] : []),
+    ],
+  });
+
 const meta = {
   title: 'plugins/plugin-tasks/containers/TaskArticle',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          types: [Task.Task, File.File, Blob.Blob],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(async () => {
-                defaultSpace.db.add(
-                  Task.make({
-                    title: 'Fix the toolbar overflow',
-                    status: 'started',
-                    description: 'The toolbar wraps below 480px; drop a screenshot here to attach it.',
-                  }),
-                );
-                await defaultSpace.db.flush({ indexes: true });
-              });
-            }),
-        }),
-        StorybookPlugin.make({}),
-        TasksPlugin.make(),
-        // Handles `FileOperation.Create` and contributes the file card that previews an attachment.
-        FilePlugin.make(),
-      ],
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -100,10 +100,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withPlugins({ files: true })],
+};
 
-/** A file dropped on the task becomes a `File` attachment that previews as an image, and can be removed. */
+/**
+ * A file dropped on the task becomes a `File` attachment that previews as an image, and can be
+ * removed; both are recorded in the task's history.
+ */
 export const DropAttachment: Story = {
+  decorators: [withPlugins({ files: true })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const zone = await canvas.findByTestId('tasksPlugin.attachments.dropZone', undefined, { timeout: 10_000 });
@@ -112,8 +118,20 @@ export const DropAttachment: Story = {
     const attachment = await canvas.findByTestId('tasksPlugin.attachment', undefined, { timeout: 10_000 });
     await expect(within(attachment).getByText('screenshot.png')).toBeInTheDocument();
     await waitFor(() => expect(attachment.querySelector('img')).not.toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Attached "screenshot.png".')).resolves.toBeInTheDocument();
 
     await userEvent.click(within(attachment).getByRole('button', { name: 'Remove attachment' }));
     await waitFor(() => expect(canvas.queryByTestId('tasksPlugin.attachment')).toBeNull());
+    await expect(canvas.findByText('Removed attachment "screenshot.png".')).resolves.toBeInTheDocument();
+  },
+};
+
+/** Without plugin-file nothing can store a file, so the article offers no drop at all. */
+export const WithoutFilePlugin: Story = {
+  decorators: [withPlugins({ files: false })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('taskList.edit', undefined, { timeout: 10_000 });
+    await expect(canvas.queryByTestId('tasksPlugin.attachments.dropZone')).toBeNull();
   },
 };

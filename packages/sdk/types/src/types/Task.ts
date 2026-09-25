@@ -569,34 +569,64 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
   });
 };
 
+/** How a file reads in a note: its name, else that it is unnamed. */
+const fileLabel = (file: File.File | undefined): string => (file?.name ? quote(file.name) : 'a file');
+
+/** An `updated` entry for an attachment change, so the log says what was attached or removed. */
+const attachmentEntry = (description: string, options: EditOptions): UpdatedEntry => ({
+  id: EntityId.random(),
+  date: options.date ?? new Date().toISOString(),
+  ...(options.actor ? { actor: { ...options.actor } } : {}),
+  event: 'updated',
+  description: options.description ?? description,
+});
+
 /**
- * Attaches a file to the task, which takes ownership of it (see {@link Task.attachments}). Attaching
- * the same file twice is a no-op, compared by entity id as for {@link addArtifact}.
+ * Attaches a file to the task, which takes ownership of it (see {@link Task.attachments}), and logs
+ * it. Attaching the same file twice is a no-op that records nothing, compared by entity id as for
+ * {@link addArtifact}.
  */
-export const addAttachment = (task: Task, file: File.File): void => {
+export const addAttachment = (task: Task, file: File.File, options: EditOptions = {}): UpdatedEntry | undefined => {
   const id = file.id;
   if ((task.attachments ?? []).some((ref) => refEntityId(ref) === id)) {
-    return;
+    return undefined;
   }
+
+  const entry = attachmentEntry(`Attached ${fileLabel(file)}.`, options);
   Obj.update(task, (task) => {
     task.attachments ??= [];
     task.attachments.push(Ref.make(file));
+    task.history ??= [];
+    task.history.push(entry);
   });
+
+  return entry;
 };
 
 /**
- * Detaches a file from the task. The file is left in the database: removing it is the caller's
- * decision, since only the caller knows whether the detach is an undoable edit.
+ * Detaches a file from the task and logs it; a file that is not attached records nothing. The file
+ * is left in the database: deleting it is the caller's decision, and needs the database this does not.
  */
-export const removeAttachment = (task: Task, file: File.File | Ref.Ref<File.File>): void => {
-  const id = Ref.isRef(file) ? refEntityId(file) : file.id;
-  const index = (task.attachments ?? []).findIndex((ref) => refEntityId(ref) === id);
+export const removeAttachment = (
+  task: Task,
+  file: File.File | Ref.Ref<File.File>,
+  options: EditOptions = {},
+): UpdatedEntry | undefined => {
+  const ref = Obj.isObject(file) ? Ref.make(file) : file;
+  const id = refEntityId(ref);
+  const index = (task.attachments ?? []).findIndex((attached) => refEntityId(attached) === id);
   if (index === -1) {
-    return;
+    return undefined;
   }
+
+  const entry = attachmentEntry(`Removed attachment ${fileLabel(ref.target)}.`, options);
   Obj.update(task, (task) => {
     task.attachments?.splice(index, 1);
+    task.history ??= [];
+    task.history.push(entry);
   });
+
+  return entry;
 };
 
 //
