@@ -223,7 +223,7 @@ const scriptedAiServiceMiddleware = (upstream: AiService.Service): AiService.Ser
   ...upstream,
   languageModel: () =>
     Layer.unwrap(
-      Effect.promise(() => import('./testing/scripted-model.ts')).pipe(
+      Effect.promise(() => import('./util/scripted-model.ts')).pipe(
         Effect.flatMap(({ makeScriptedModel }) => makeScriptedModel()),
       ),
     ),
@@ -248,10 +248,10 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make({
-      codeModeTurnProducer,
-      ...(config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : {}),
-    }),
+    AssistantPlugin.make(
+      // Code mode offers the model only its `eval` tool, which the script does not call.
+      config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : { codeModeTurnProducer },
+    ),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),

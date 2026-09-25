@@ -588,7 +588,10 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
-    scriptedModel: url.searchParams.get(PARAM_MODEL) === 'scripted',
+    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
+    scriptedModel:
+      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

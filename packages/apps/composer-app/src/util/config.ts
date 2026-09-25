@@ -21,7 +21,7 @@ export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
 /**
  * `?model=scripted` swaps every language model the assistant resolves for the offline script in
- * `testing/scripted-model.ts`, so the perf flow drives a whole agent loop without a provider.
+ * `util/scripted-model.ts`, so the perf flow drives a whole agent loop without a provider.
  */
 export const PARAM_MODEL = 'model';
 

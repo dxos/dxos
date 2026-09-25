@@ -235,8 +235,8 @@ test QA-1: A project with a large task set and long documents
       do: Send a prompt and wait for the assistant's closing answer.
       expect: twenty database-query tool calls, each preceded by thinking and a status line, then a final answer
       note: |
-        Booted with `?model=scripted`, which replaces every assistant language model with the offline
-        script in `src/testing/scripted-model.ts`: each turn emits a reasoning block, a `<status>`
+        Booted with `?model=scripted` (honoured on loopback hosts only), which replaces every assistant language model with the offline
+        script in `src/util/scripted-model.ts`: each turn emits a reasoning block, a `<status>`
         line and one `space-query-objects` call, rotating across query shapes, and the twenty-first
         answers. A live model's latency and variable tool use would otherwise be most of the number;
         this measures the app's side of an agent loop — streaming render, tool dispatch, the query

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Locator, type Page, expect, test } from '@playwright/test';
+import { type BrowserContext, type Locator, type Page, expect, test } from '@playwright/test';
 import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -82,7 +82,7 @@ const assistantPrompt = (page: Page): Locator =>
   page.getByTestId('deck.companion').getByTestId('assistant.prompt').locator('.cm-content');
 
 /**
- * The closing line of the scripted conversation (`src/testing/scripted-model.ts`), which the model
+ * The closing line of the scripted conversation (`src/util/scripted-model.ts`), which the model
  * emits only after its twentieth database query has returned.
  */
 const ASSISTANT_DONE = /ran 20 database queries/;
@@ -232,8 +232,10 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const instrumented = await launchInstrumentedBrowser();
   const { browser, browserCdp, debugPort } = instrumented;
 
+  // Outside the `try`, so a failed run still closes it: Playwright writes the video only on close.
+  let context: BrowserContext | undefined;
   try {
-    const context = await browser.newContext(
+    context = await browser.newContext(
       VIDEO ? { recordVideo: { dir: path.join(artifactDir, 'video'), size: { width: 1280, height: 720 } } } : {},
     );
     const page = await context.newPage();
@@ -553,9 +555,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // The only assertion: a stage that could not complete is a broken flow, not a slow one.
     const failed = rows.filter((row) => !row.ok);
     expect(failed.map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
-
-    await context.close();
   } finally {
+    await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
   }
 };
