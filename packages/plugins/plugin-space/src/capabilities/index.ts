@@ -40,6 +40,7 @@ export const Dashboard = Capability.lazyModule(
   },
   () => import('./dashboard.ts'),
 );
+export const DefaultParent = AppCapability.defaultParent(() => import('./default-parent.ts'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {

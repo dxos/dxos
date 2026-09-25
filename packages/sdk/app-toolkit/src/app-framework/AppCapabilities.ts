@@ -21,7 +21,7 @@ import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Type } from '@dxos/echo';
+import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Retention$ from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
@@ -364,6 +364,22 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
+ * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
+ * order and takes the first parent one returns.
+ * @category Capability
+ */
+export type DefaultParent = {
+  /** The `Annotation.UserType` tag this rule applies to. */
+  readonly tag: string;
+  /** The parent for the object; undefined passes to the next rule, as does a failure (which is logged). */
+  readonly resolve: (object: Obj.Unknown) => Effect$.Effect<Obj.Unknown | undefined, Error, Database.Service>;
+  readonly position?: Position.Position;
+};
+
+export const DefaultParent = Capability$.make<DefaultParent>()('org.dxos.app-framework.capability.defaultParent');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */

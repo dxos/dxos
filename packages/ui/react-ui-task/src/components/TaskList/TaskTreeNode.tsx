@@ -321,10 +321,6 @@ export const TaskTreeNode = ({
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
-      // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
-      // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
       virtualize
       debug={debug}
       renderHeading={renderHeading}

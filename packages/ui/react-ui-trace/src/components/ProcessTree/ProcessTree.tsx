@@ -130,6 +130,7 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
+              virtualize
               density='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'
