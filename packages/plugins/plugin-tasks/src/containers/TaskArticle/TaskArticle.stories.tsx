@@ -166,9 +166,9 @@ export const Default: Story = {
       canvas.findByText('Status changed from todo to started.', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
 
-    // The cards under the editor are `plugin-space`'s `cardMasonry` surface, which does not resolve
-    // in this package's storybook — asserting them here would only measure that. What they render
-    // from is asserted where it does resolve: `ProjectTaskCompanion.stories.tsx` in plugin-projects.
+    // The cards under the editor are `plugin-space`'s `cardMasonry` surface, which never mounts in
+    // this package's storybook (see the tracked item in plugin-projects' TASKS.md) — so assert what
+    // the article owns, and leave the cards to the companion story where they do render.
     const context = seeded;
     if (!context) {
       throw new Error('The story did not seed a task.');
@@ -183,8 +183,8 @@ export const Plain: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByDisplayValue(PLAIN_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // Nothing produced yet, so nothing is passed to the grid — and nothing is rendered under the
-    // editor whether or not the surface resolves.
+    // Nothing produced yet, so nothing is passed to the grid — and nothing renders under the editor
+    // whether or not the surface mounts.
     await waitFor(() => expect(canvasElement.querySelector('[data-testid="cardMasonry"]')).toBeNull(), {
       timeout: 10_000,
     });

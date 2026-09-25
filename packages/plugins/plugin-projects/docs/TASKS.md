@@ -1032,13 +1032,15 @@ companion).
       remains is removing it, which needs creation somewhere else — an inline new
       row in the list, or a toolbar action that creates the task and opens its
       plank (plugin-inbox's draft pattern).
-- [ ] **`cardMasonry` does not resolve in plugin-tasks' storybook** — `TaskArticle`
-      hands its artifacts to `plugin-space`'s `cardMasonry` surface, and that
-      surface renders nothing under plugin-tasks' own storybook even with
-      `SpacePlugin.make({})` registered and a direct
-      `Surface.Surface type={AppSurface.CardMasonry}` in the story: no module
-      error is logged, and the same article renders the grid under
-      plugin-projects' `ProjectTaskCompanion` story. So `TaskArticle.stories.tsx`
-      asserts the article's own content and leaves the cards to the companion
-      story. Worth finding, because a story that cannot mount a cross-plugin
-      surface cannot cover what the pane actually shows.
+- [ ] **`SpacePlugin` never activates under plugin-tasks' storybook** — `TaskArticle`
+      hands its artifacts to `plugin-space`'s `cardMasonry` surface, and that grid
+      never appears in plugin-tasks' own storybook even with `SpacePlugin.make({})`
+      registered and a direct `Surface.Surface type={AppSurface.CardMasonry}` in the
+      story, while the same article renders it under plugin-projects'
+      `ProjectTaskCompanion` story. Ruled out: a slow lazy body (a 45s wait changes
+      nothing) and a missing registration. The likely mechanism is the plugin's lazy
+      `#plugin` import failing under that package's vite graph — the dev server
+      reports exactly that (`Failed to fetch dynamically imported module
+    .../plugin-space/src/capabilities/operation-handler.ts`), and a failed lazy load
+      is cached, so nothing retries it (cf. #12709). Worth fixing: a story that cannot
+      mount a cross-plugin surface cannot cover what the pane actually shows.
