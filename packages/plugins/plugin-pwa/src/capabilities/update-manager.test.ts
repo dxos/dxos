@@ -81,6 +81,15 @@ describe('makeUpdateManager', () => {
     container.dispatchEvent(new Event('controllerchange'));
     expect(reload).toHaveBeenCalledOnce();
   });
+
+  test('a failed apply does not reload on a later controller change', async () => {
+    const { manager, container, skipWaiting, reload } = setup(Promise.resolve(new FakeRegistration()));
+    skipWaiting.mockRejectedValueOnce(new Error('no waiting worker'));
+
+    await expect(manager.apply()).rejects.toThrow('no waiting worker');
+    container.dispatchEvent(new Event('controllerchange'));
+    expect(reload).not.toHaveBeenCalled();
+  });
 });
 
 describe('progressStatus', () => {

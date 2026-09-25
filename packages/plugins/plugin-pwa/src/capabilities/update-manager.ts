@@ -23,7 +23,7 @@ export type UpdateManagerOptions = {
   /** Resolves once the worker registers; `undefined` when registration failed. */
   registration: Promise<RegistrationLike | undefined>;
   /** Where `controllerchange` fires once the waiting worker takes over. */
-  container: Pick<EventTarget, 'addEventListener'>;
+  container: Pick<EventTarget, 'addEventListener' | 'removeEventListener'>;
   /** Tells the waiting worker to activate. */
   skipWaiting: () => Promise<void>;
   reload: () => void;
@@ -94,8 +94,14 @@ export const makeUpdateManager = ({
     },
     apply: async () => {
       // vite-plugin-pwa reloads only a tab that was already controlled when it registered.
-      container.addEventListener('controllerchange', () => reload(), { once: true });
-      await skipWaiting();
+      const onControllerChange = () => reload();
+      container.addEventListener('controllerchange', onControllerChange, { once: true });
+      try {
+        await skipWaiting();
+      } catch (error) {
+        container.removeEventListener('controllerchange', onControllerChange);
+        throw error;
+      }
     },
   };
 };
