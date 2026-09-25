@@ -130,8 +130,8 @@ three documents open, one tab's Automerge linear memory matched the worker's (21
 which suggests a second copy per tab. The 2- and 3-tab runs have not been done.
 
 The worker's own cost is unmeasured. The sequencer keeps no copy of the document, so the worker
-evicts it a minute after its last call on it. It keeps up to 1,000 recent entries and 1,000 applied
-batch ids per followed document, about 0.7 MB at the full window.
+evicts it 30 s after its last call on it. It keeps up to 1,000 recent entries and 1,000 applied batch
+ids per followed document, about 0.7 MB at the full window.
 
 ## Drop-in compatibility
 
@@ -561,17 +561,15 @@ from the package. In the worker, `DataServiceImpl` serves the `Host.DocumentHost
 `MirrorRepo`'s `Repo.Host` adapter calls `DataService`; `Repo.ProxyRepo` and `Handle.DocHandle` did
 not change.
 
-The worker keeps a document a proxy tab uses resident for a minute after its last call on it, and
-lets it go sooner once no tab follows it live. The Automerge host then evicts it like any document
-nothing leases, and the tab's next edit, or a remote change, loads it again. `createProxyHost` sets
-the minute as `residentFor`: the Automerge host keeps a released document for its 30 s eviction
-delay, and `Host.Options.holdFor` holds it through `Host.Store.hold` for the rest. A replica
-subscription pins less, leasing a document only until its first send. A document followed through
-its index copy is never held, since the point is not to load it.
+The worker leases a document a proxy tab uses only for each call on it, as the replica synchronizer
+does after its first send. The Automerge host evicts a document 30 s after its last lease, so a tab
+that keeps editing keeps the document loaded, and one that stops lets it go. The next edit, or a
+remote change, loads it again. A document followed through its index copy is not loaded at all,
+since the point is not to load it.
 
 A document a proxy tab created used to stay leased in the worker for good: `createDocument` leases it
 until a client follows it, and only the byte protocol released that lease. Following it through
-`updateProxySubscription` now releases the creation lease, and the minute of residency takes over.
+`updateProxySubscription` now releases the creation lease, and the eviction delay decides from there.
 
 ### The switch
 

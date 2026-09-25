@@ -316,8 +316,6 @@ export class AutomergeHost extends Resource {
    */
   private readonly _leases: DocumentLeaseRegistry;
 
-  private readonly _evictionDelay: number;
-
   /**
    * Leases held for documents being replicated after a collection-sync diff, released when the
    * document settles: the trigger is fire-and-forget, so nothing else holds the document while its
@@ -342,7 +340,6 @@ export class AutomergeHost extends Resource {
     residency,
   }: AutomergeHostProps) {
     super();
-    this._evictionDelay = residency?.evictionDelay ?? EVICT_IDLE_DELAY;
     this._leases = new DocumentLeaseRegistry({
       open: (documentId) => {
         const query = this._repo.findWithProgress(documentId);
@@ -351,7 +348,7 @@ export class AutomergeHost extends Resource {
         return { query, handle };
       },
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
-      evictionDelay: this._evictionDelay,
+      evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
       minResidentDocuments: residency?.minResidentDocuments,
     });
     this._runtime = runtime;
@@ -749,11 +746,6 @@ export class AutomergeHost extends Resource {
   /** Documents currently leased — what the host holds because something is using it. */
   get leasedDocsCount(): number {
     return this._leases.size;
-  }
-
-  /** How long a document stays resident after its last lease is disposed, in milliseconds. */
-  get evictionDelay(): number {
-    return this._evictionDelay;
   }
 
   /** Settles pending evictions, for a caller measuring residency. */

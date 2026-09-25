@@ -16,10 +16,10 @@ import { createProxyHost } from './proxy-host.ts';
 type Doc = { title: string };
 
 describe('createProxyHost', () => {
-  test('keeps a document a client edits resident for `residentFor` after the last call, then lets it go', async () => {
+  test('leases a document only for each call, so one a client stops editing is evicted and loads again', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    const automergeHost = new AutomergeHost({ runtime, residency: { evictionDelay: 0 } });
+    const automergeHost = new AutomergeHost({ runtime, residency: { evictionDelay: 1_000 } });
     await automergeHost.open();
     onTestFinished(async () => {
       await automergeHost.close();
@@ -31,7 +31,7 @@ describe('createProxyHost', () => {
     await automergeHost.drainEvictions();
     expect(automergeHost.loadedDocumentIds).not.toContain(documentId);
 
-    const host = await createProxyHost({ automergeHost, residentFor: 300 }).open();
+    const host = await createProxyHost({ automergeHost }).open();
     onTestFinished(async () => {
       await host.close();
     });
@@ -49,10 +49,9 @@ describe('createProxyHost', () => {
       doc.title = 'final';
     });
     await repo.flush();
-    expect(automergeHost.loadedDocumentIds).toContain(documentId);
+    // The client still follows the document live, and the eviction delay alone decides.
     await expect.poll(() => automergeHost.loadedDocumentIds.includes(documentId), { timeout: 5_000 }).toBe(false);
 
-    // The client still follows the document, so its next edit loads it again.
     handle.change((doc: Doc) => {
       doc.title = 'again';
     });
