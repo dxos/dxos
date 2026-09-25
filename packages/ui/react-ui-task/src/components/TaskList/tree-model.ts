@@ -22,8 +22,49 @@ export type TaskNode = {
   task?: Task.Task;
   /** Set on a status group, whose children are the tasks in that status. */
   status?: Task.Status;
+  /** Set on a host-defined group (see {@link TaskGroup}), whose row is a collapsible header. */
+  group?: TaskGroupHeader;
   children: TaskNode[];
 };
+
+/**
+ * A section of a grouped task list, as the host computed it — by status, priority, assignee,
+ * milestone or anything else. The list only renders the partition; deciding it is the host's.
+ */
+export type TaskGroup = {
+  /** Unique among the list's groups. */
+  id: string;
+  label: Label;
+  icon?: string;
+  iconClassNames?: string;
+  /** The group's tasks, in the order they render; sub-tasks nest under a parent in the same group. */
+  tasks: readonly Task.Task[];
+};
+
+/** What a group's header row shows. */
+export type TaskGroupHeader = Omit<TaskGroup, 'tasks'> & { count: number };
+
+/** Prefix so a host group's node id cannot collide with a task's, nor with a status group's. */
+export const TASK_GROUP_ID_PREFIX = 'group:';
+
+/** The tree node id of a host group, which is also its key in the list's collapsed set. */
+export const taskGroupNodeId = (group: Pick<TaskGroup, 'id'>): string => `${TASK_GROUP_ID_PREFIX}${group.id}`;
+
+/**
+ * One collapsible header per non-empty group, its tasks beneath. Nested within a group when
+ * `hierarchical`: a sub-task whose parent landed in another group is a root of its own group, since
+ * the forest is built from the group's tasks alone.
+ */
+export const buildTaskGroups = (groups: readonly TaskGroup[], hierarchical = true): TaskNode => ({
+  id: TASK_TREE_ROOT_ID,
+  children: groups
+    .filter((group) => group.tasks.length > 0)
+    .map(({ tasks, ...header }) => ({
+      id: taskGroupNodeId(header),
+      group: { ...header, count: tasks.length },
+      children: (hierarchical ? buildTaskForest(tasks) : buildFlatList(tasks)).children,
+    })),
+});
 
 /** Synthetic root; the tree renders its children. */
 export const TASK_TREE_ROOT_ID = 'tasks';
@@ -77,6 +118,11 @@ export type TaskTreeModelOptions = {
    * group its parent does not belong to reads as a contradiction.
    */
   groupByStatus?: readonly Task.Status[];
+  /**
+   * Host-defined groups, rendered as collapsible headers with counts. Takes precedence over
+   * `groupByStatus`, and keeps the hierarchy within each group when `hierarchical`.
+   */
+  groups?: readonly TaskGroup[];
   /** Namespace for the group headers' labels; without it a header reads as a raw status id. */
   translationKey?: string;
   /**
@@ -109,10 +155,30 @@ export const buildStatusGroups = (tasks: readonly Task.Task[], order: readonly T
     .filter((group) => group.children.length > 0),
 });
 
-/** A task's title, a group's translated status, or the synthetic root's id. */
+/** The forest a list renders under `options` — shared by the model and the paths into it. */
+export const buildTaskTree = (
+  tasks: readonly Task.Task[],
+  {
+    groups,
+    groupByStatus,
+    hierarchical = true,
+  }: Pick<TaskTreeModelOptions, 'groups' | 'groupByStatus' | 'hierarchical'> = {},
+): TaskNode =>
+  groups
+    ? buildTaskGroups(groups, hierarchical)
+    : groupByStatus
+      ? buildStatusGroups(tasks, groupByStatus)
+      : hierarchical
+        ? buildTaskForest(tasks)
+        : buildFlatList(tasks);
+
+/** A task's title, a group's label or translated status, or the synthetic root's id. */
 const groupLabel = (node: TaskNode, translationKey?: string): Label => {
   if (node.task) {
     return node.task.title ?? node.id;
+  }
+  if (node.group) {
+    return node.group.label;
   }
   if (node.status) {
     // Without a namespace the key cannot resolve, so the raw status is the honest fallback.
@@ -130,32 +196,29 @@ const groupLabel = (node: TaskNode, translationKey?: string): Label => {
  */
 export const createTaskTreeModel = (
   tasks: readonly Task.Task[],
-  { collapsed, groupByStatus, translationKey, hierarchical = true }: TaskTreeModelOptions = {},
+  { collapsed, groups, groupByStatus, translationKey, hierarchical = true }: TaskTreeModelOptions = {},
 ): StaticTreeModel<TaskNode> =>
-  createStaticTreeModel(
-    groupByStatus
-      ? buildStatusGroups(tasks, groupByStatus)
-      : hierarchical
-        ? buildTaskForest(tasks)
-        : buildFlatList(tasks),
-    {
-      getChildren: (node) => node.children,
-      getProps: (node) => ({
-        label: groupLabel(node, translationKey),
-        // `group` makes `Tree` render a section header and splice the node out of the collection's
-        // topology, so the keyboard never lands on a header.
-        ...(node.status
-          ? { disposition: 'group' as const }
+  createStaticTreeModel(buildTaskTree(tasks, { groups, groupByStatus, hierarchical }), {
+    getChildren: (node) => node.children,
+    getProps: (node) => ({
+      label: groupLabel(node, translationKey),
+      // `group` makes `Tree` render a section header and splice the node out of the collection's
+      // topology, so the keyboard never lands on a header.
+      ...(node.status
+        ? { disposition: 'group' as const }
+        : node.group
+          ? // A branch (its children make it one) rather than a `group` disposition: a section
+            // header cannot be collapsed, and folding away the `Done` group is half the point.
+            { testId: 'taskList.group' }
           : {
               testId: 'taskList.item',
               // The selection fill already marks the row, so a focus ring on top of it reads as a
               // second, conflicting highlight; unselected rows keep the ring for keyboard travel.
               className: 'data-[selected]:ring-0',
             }),
-      }),
-      isOpen: (node) => !collapsed?.has(node.id),
-    },
-  );
+    }),
+    isOpen: (node) => !collapsed?.has(node.id),
+  });
 
 /**
  * Tasks in the order the tree shows them, a collapsed branch contributing only its own row.

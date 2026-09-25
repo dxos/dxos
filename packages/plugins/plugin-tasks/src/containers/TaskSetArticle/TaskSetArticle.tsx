@@ -24,15 +24,23 @@ import {
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
+import { type TaskGroup, TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { ALL_STATUSES, filterTasks, parseStatusTerms, writeStatusTerms } from '../../util/index.ts';
+import {
+  ALL_STATUSES,
+  filterTasks,
+  groupTasks,
+  parseStatusTerms,
+  sortTasks,
+  writeStatusTerms,
+} from '../../util/index.ts';
 import { TaskFilter } from './TaskFilter.tsx';
+import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /**
@@ -45,8 +53,8 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 
 /**
  * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
- * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
- * deliberately not rendered yet (see TASKS.md). CRUD flows through the
+ * describe, and restructurable by dragging a row or with `Alt`+arrow while it shows the set's own
+ * order. The toolbar can reorder it and group it (by milestone among others). CRUD flows through the
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
  * are what keep the array, the refs and `parentTask` consistent.
  */
@@ -74,7 +82,29 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     }
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
   }, [rest, tags]);
-  const tasks = useFilteredTasks(allTasks, filter, statuses);
+  // Order and grouping persist beside the query, per device and per set, for the same reason.
+  const { sort = TaskSetView.DEFAULT_SORT, group = 'none' } = useViewState(TaskSetView.aspect, taskSet.id);
+  const { update: updateView } = useViewStateActions(TaskSetView.aspect, taskSet.id);
+  const handleSortChange = useCallback(
+    (sort: TaskSetView.Sort) => updateView((view) => ({ ...view, sort })),
+    [updateView],
+  );
+  const handleGroupChange = useCallback(
+    (group: TaskSetView.GroupField) => updateView((view) => ({ ...view, group })),
+    [updateView],
+  );
+  const { tasks, groups } = useArrangedTasks(taskSet, allTasks, {
+    filter,
+    statuses,
+    sort,
+    group,
+    ns: meta.profile.key,
+  });
+  // Dragging writes the set's own order, so it is offered only while that is the order shown: under a
+  // sort the row would not land where it was dropped, and a group header is not a parent.
+  const arranged = sort.field !== 'manual' || !!groups;
+  // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
+  const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
     (next: readonly Task.Status[]) => setFilterText(writeStatusTerms(filterText, next)),
     [filterText, setFilterText],
@@ -155,7 +185,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     [openDetail],
   );
 
-  useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });
+  useArticleKeyboardNavigation({ articleId: attendableId, items: rows, currentId, onSelect: openDetail });
 
   const descriptionExtensions = useMarkdownExtensions(taskSet);
   const descriptionComponents = useDescriptionComponents();
@@ -170,12 +200,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onStatusesChange={handleStatusesChange}
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
-    />
+    >
+      <TaskSortMenu value={sort} onChange={handleSortChange} />
+      <TaskGroupMenu value={group} onChange={handleGroupChange} />
+    </TaskFilter>
   );
 
   const content = (
     <TaskList.Root
       tasks={tasks}
+      groups={groups}
       hierarchical
       selectable
       showDescription
@@ -187,7 +221,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       selected={currentId}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskMove={handleMove}
+      onTaskMove={arranged ? undefined : handleMove}
       onTaskSelect={handleOpen}
       onQuestionAnswer={handleQuestionAnswer}
     >
@@ -315,31 +349,47 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   return useAtomValue(atom);
 };
 
+type ArrangeOptions = {
+  filter: Filter.Any | undefined;
+  statuses: readonly Task.Status[] | undefined;
+  sort: TaskSetView.Sort;
+  group: TaskSetView.GroupField;
+  /** Namespace of the group labels for tasks with no value. */
+  ns: string;
+};
+
 /**
- * The tasks whose title or description contains `filter` (case-insensitive), with the ancestors
- * of every match kept so a matching sub-task still hangs off its branch. Empty filter: every task.
- * Read through atoms so a title edited in a row re-runs the match.
+ * The tasks the toolbar keeps (see `filterTasks`), in the order it asks for, and partitioned into
+ * its groups. Read through atoms so an edit re-runs all three: a title edited in a row can change
+ * whether it matches, and a priority changed in a row moves it under a priority sort or grouping.
  */
-const useFilteredTasks = (
+const useArrangedTasks = (
+  taskSet: TaskSet.TaskSet,
   tasks: readonly Task.Task[],
-  filter: Filter.Any | undefined,
-  statuses: readonly Task.Status[] | undefined,
-): readonly Task.Task[] => {
+  { filter, statuses, sort, group, ns }: ArrangeOptions,
+): { tasks: readonly Task.Task[]; groups?: TaskGroup[] } => {
   // A set, so the match is a lookup per task rather than a scan of the status list, and one the
   // atom below can depend on by identity.
   const statusSet = useMemo(() => statuses && new Set(statuses), [statuses]);
   const atom = useMemo(
     () =>
-      Atom.make((get): readonly Task.Task[] => {
+      Atom.make((get): { tasks: readonly Task.Task[]; groups?: TaskGroup[] } => {
         // Subscribed per task, so an edit that changes whether a row matches re-runs the filter
         // without a whole-list subscription.
         // The whole object, not the fields the text search reads: a filter can name any property
         // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
         // every term but the ones listed here.
         tasks.forEach((task) => get(Obj.atom(task)));
-        return filterTasks(tasks, { filter, statuses: statusSet });
+        const sorted = sortTasks(filterTasks(tasks, { filter, statuses: statusSet }), sort);
+        if (group === 'none') {
+          return { tasks: sorted };
+        }
+        // The set's milestone sequence orders the milestone groups.
+        get(Obj.atomProperty(taskSet, 'milestones'));
+        const milestones = group === 'milestone' ? TaskSet.resolveMilestones(taskSet) : [];
+        return { tasks: sorted, groups: groupTasks(sorted, group, { milestones, ns }) };
       }),
-    [tasks, filter, statusSet],
+    [taskSet, tasks, filter, statusSet, sort, group, ns],
   );
 
   return useAtomValue(atom);
