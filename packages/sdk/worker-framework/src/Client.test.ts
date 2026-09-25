@@ -728,8 +728,8 @@ describe('Worker displacement', () => {
     // Tabs 2 and 3: two more tabs listening on the same displacement channel. The escalation is
     // broadcast, so an issuer-only check has both of them kill their own healthy worker.
     const bystanders = [
-      startBystanderTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-1`, storageLockKey: keys.storageLockKey }),
-      startBystanderTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-2`, storageLockKey: keys.storageLockKey }),
+      startStubWorkerTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-1`, storageLockKey: keys.storageLockKey }),
+      startStubWorkerTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-2`, storageLockKey: keys.storageLockKey }),
     ];
     for (const bystander of bystanders) {
       onTestFinished(async () => {
@@ -758,6 +758,79 @@ describe('Worker displacement', () => {
     const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
     expect(reported).toHaveLength(1);
   }, 40_000);
+
+  test("an escalation a tab's own worker raised leaves that worker alone", async () => {
+    const keys = uniqueKeys();
+
+    // Neither worker answers a probe and both hold their liveness lock, so the escalation clears
+    // every other guard: only the issuer check stands between it and the issuer's own worker.
+    const issuerWorkerId = `issuer-${crypto.randomUUID()}`;
+    const issuer = startStubWorkerTab(
+      { leaderLockKey: `${keys.leaderLockKey}-issuer`, storageLockKey: keys.storageLockKey },
+      { workerId: issuerWorkerId, respondToPing: false },
+    );
+    const incumbent = startStubWorkerTab(
+      { leaderLockKey: `${keys.leaderLockKey}-incumbent`, storageLockKey: keys.storageLockKey },
+      { respondToPing: false },
+    );
+    for (const tab of [issuer, incumbent]) {
+      onTestFinished(async () => {
+        await tab.close();
+      });
+      await asyncTimeout(tab.open(), 10_000);
+    }
+
+    const escalation = new BroadcastChannel(displaceChannelFor(keys.storageLockKey));
+    onTestFinished(() => escalation.close());
+    escalation.postMessage({
+      action: 'terminate',
+      issuerId: issuerWorkerId,
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+
+    // The other tab is the barrier as well as the proof the escalation was armed: both checks start
+    // on the same broadcast, so a kill there means the issuer's tab has had its whole probe budget.
+    await waitForCondition({ condition: () => incumbent.wasTerminated(), timeout: 10_000 });
+    await sleep(200);
+    expect(issuer.wasTerminated()).to.be.false;
+  }, 30_000);
+
+  test('an escalation spares the tab whose worker still answers a probe', async () => {
+    const keys = uniqueKeys();
+
+    // Staged from stub tabs and a hand-posted escalation rather than from {@link startBareWorker},
+    // so the bystander guarantee survives whatever that helper is rewritten into.
+    const healthy = startStubWorkerTab({
+      leaderLockKey: `${keys.leaderLockKey}-healthy`,
+      storageLockKey: keys.storageLockKey,
+    });
+    const wedged = startStubWorkerTab(
+      { leaderLockKey: `${keys.leaderLockKey}-wedged`, storageLockKey: keys.storageLockKey },
+      { respondToPing: false },
+    );
+    for (const tab of [healthy, wedged]) {
+      onTestFinished(async () => {
+        await tab.close();
+      });
+      await asyncTimeout(tab.open(), 10_000);
+    }
+
+    const escalation = new BroadcastChannel(displaceChannelFor(keys.storageLockKey));
+    onTestFinished(() => escalation.close());
+    escalation.postMessage({
+      action: 'terminate',
+      issuerId: 'foreign-issuer',
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+
+    // The wedged tab is the barrier as well as the proof the escalation was armed: its kill costs a
+    // full probe timeout, which the healthy tab's answered probe has long since beaten.
+    await waitForCondition({ condition: () => wedged.wasTerminated(), timeout: 10_000 });
+    await sleep(200);
+    expect(healthy.wasTerminated()).to.be.false;
+  }, 30_000);
 
   test('a malformed escalation is ignored, and the well-formed one that follows still lands', async () => {
     const hub = createHub();
@@ -921,8 +994,8 @@ describe('Worker displacement', () => {
  * milestones the displacement handshake turns on: `listening` (this worker holds the storage lock
  * and serves) and the endpoint closing (it stood down).
  *
- * Built directly rather than through {@link createWorkerFactory}: a successor built by that factory
- * has its escalation reach only the incumbent's tab, which disarms the bystander assertions below.
+ * Built directly rather than through {@link createWorkerFactory}, whose global `BroadcastChannel`
+ * patch captures channels a later `wedge()` silences.
  */
 const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { displaceGraceTimeout?: number } = {}) => {
   const channel = new MessageChannel();
@@ -979,23 +1052,32 @@ const createWedgeableWorkerFactory = (storageLockKey: string, { terminable = tru
 };
 
 /**
- * A tab whose worker is ready and healthy but is not the one holding the storage lock — the
- * bystander an escalation reaches on any storage lock with three or more tabs.
+ * A tab whose worker is a stub with a known id, a liveness lock it can drop, and a probe it can
+ * decline to answer — the three facts an escalation is decided on, none of which {@link Worker.run}
+ * lets a test choose.
  *
  * Its worker is a stub rather than {@link Worker.run}, because a real worker advertises `ready` only
- * from inside the storage lock grant, so this state cannot be staged with the real loop; the tab
- * side under test — the displacement channel listener and what it does with an escalation — is the
- * production one.
+ * from inside the storage lock grant, so a healthy non-incumbent cannot be staged with the real loop;
+ * the tab side under test — the displacement channel listener and what it does with an escalation —
+ * is the production one.
  */
-const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string }) => {
-  const workerId = `bystander-${crypto.randomUUID()}`;
+const startStubWorkerTab = (
+  keys: { leaderLockKey: string; storageLockKey: string },
+  {
+    workerId = `stub-${crypto.randomUUID()}`,
+    holdLiveness = true,
+    respondToPing = true,
+  }: { workerId?: string; holdLiveness?: boolean; respondToPing?: boolean } = {},
+) => {
   const livenessLockKey = `${keys.storageLockKey}/liveness/${workerId}`;
   const releaseLiveness = new Trigger();
   const livenessHeld = new Trigger();
-  void navigator.locks.request(livenessLockKey, async () => {
-    livenessHeld.wake();
-    await releaseLiveness.wait();
-  });
+  if (holdLiveness) {
+    void navigator.locks.request(livenessLockKey, async () => {
+      livenessHeld.wake();
+      await releaseLiveness.wait();
+    });
+  }
   const ready = new Trigger();
   let terminated = false;
 
@@ -1017,10 +1099,12 @@ const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string
           ready.wake();
           break;
         case 'ping':
-          channel.port1.postMessage({
-            type: 'pong',
-            nonce: message.nonce,
-          } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          if (respondToPing) {
+            channel.port1.postMessage({
+              type: 'pong',
+              nonce: message.nonce,
+            } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          }
           break;
         case 'start-session':
           postStubSession(channel.port1, message.clientId);
@@ -1038,8 +1122,11 @@ const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string
   const { connection } = makeConnection(createHub(), keys, undefined, { createWorker });
   return {
     connection,
+    workerId,
     open: async () => {
-      await livenessHeld.wait();
+      if (holdLiveness) {
+        await livenessHeld.wait();
+      }
       await connection.open();
       await ready.wait();
     },
