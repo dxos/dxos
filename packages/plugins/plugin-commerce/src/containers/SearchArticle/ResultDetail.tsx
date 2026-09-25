@@ -5,8 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -25,7 +24,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
-    return <Empty label={t('no-result-selected.message')} />;
+    return <Banner.Empty label={t('no-result-selected.message')} />;
   }
 
   const properties = Object.entries(result.properties ?? {});

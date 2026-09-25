@@ -9,9 +9,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -46,7 +45,7 @@ export const TaskCompanion = ({ project, role, attendableId }: TaskCompanionProp
   const [artifacts] = useObject(task, 'artifacts');
 
   if (!task) {
-    return <Empty label={t('no-task-selected.message')} />;
+    return <Banner.Empty label={t('no-task-selected.message')} />;
   }
 
   return (

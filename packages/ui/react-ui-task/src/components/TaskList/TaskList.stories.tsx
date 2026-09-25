@@ -59,15 +59,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
-    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    // Longer than the pane shows, and all of it about the work: a text edit writes no entry, so a
+    // seeded "Description updated" would be history this app never produces.
     history: seedHistory(
       3,
       'Created this task',
-      'Description updated',
+      'Assigned to Scout',
       'Priority changed from medium to high',
       'Status changed from todo to started',
       'Estimate set to m',
-      'Description updated',
+      'Unassigned',
     ),
   }),
   Task.make({

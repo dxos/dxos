@@ -8,8 +8,8 @@ import { type ComponentFunction, type Density, type Surface, type Theme } from '
 import { withColumn } from '../Column/withColumn.ts';
 
 export type CardStyleProps = {
-  border?: boolean;
   fullWidth?: boolean;
+  border?: boolean;
   /** An explicit level, from `elevation`; the card then paints that level instead of `raised`. */
   surface?: Surface;
   srOnly?: boolean;

@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
 import {
+  Banner,
   Button,
   Field,
   Panel,
@@ -16,7 +17,6 @@ import {
   useThemeContext,
 } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Empty } from '@dxos/react-ui-list';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -204,7 +204,7 @@ export const InputPanel = ({
               <ScrollArea.Root padding>
                 <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
-                    <Empty label='No messages.' />
+                    <Banner.Empty label='No messages.' />
                   ) : (
                     dataset.messages.map((message) => (
                       <div

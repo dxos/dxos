@@ -23,10 +23,9 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
@@ -295,7 +294,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && <Empty label={t('no-task-set.message')} />}
+          {tab === 'tasks' && !taskSet && <Banner.Empty label={t('no-task-set.message')} />}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
           {tab === 'tasks' && taskSet && (

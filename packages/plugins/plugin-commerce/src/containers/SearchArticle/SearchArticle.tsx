@@ -9,9 +9,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Banner, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -156,7 +155,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Empty
+            <Banner.Empty
               classNames='h-full'
               label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
             />

@@ -3,16 +3,22 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type ComponentPropsWithRef, type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type PropsWithChildren,
+  type ReactNode,
+  forwardRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { createContext, useId } from '@dxos/react-hooks';
-import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
+import { type ComposableProps, type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
 import { IconButton } from '../Button/index.ts';
 import { Column } from '../Column/index.ts';
 import { Icon } from '../Icon/index.ts';
@@ -217,6 +223,48 @@ const BannerBody = forwardRef<HTMLParagraphElement, BannerBodyProps>(
 BannerBody.displayName = BANNER_BODY_NAME;
 
 //
+// Empty
+//
+
+const BANNER_EMPTY_NAME = 'Banner.Empty';
+
+type BannerEmptyProps = ComposableProps<{
+  /** Message to show; the caller translates it. Falls back to a generic message when omitted. */
+  label?: ReactNode;
+  /** Optional Phosphor icon name shown above the message. */
+  icon?: string;
+}>;
+
+/**
+ * A surface standing in for content that is not there: no list items, no selection, no result.
+ *
+ * A banner rather than a component of its own because it is the same statement — a message in place
+ * of content — but the one case that carries no valence and paints no surface: nothing has gone
+ * wrong, there is simply nothing to show. So it renders flat and centred, and announces itself as a
+ * status rather than an alert. It composes no `Banner.Root`: with no valence there is nothing for
+ * the context to carry.
+ */
+const BannerEmpty = composable<HTMLDivElement, BannerEmptyProps>(({ label, icon, ...props }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  // `defaultValue` keeps the fallback working even before a host registers the key, and leaves it translatable.
+  const message = label ?? t('empty.label', { defaultValue: 'No items' });
+  return (
+    <div
+      {...composableProps<HTMLDivElement>(props, {
+        classNames: 'flex flex-col items-center justify-center gap-2 p-trim-md text-sm text-center text-description',
+        role: 'status',
+      })}
+      ref={forwardedRef}
+    >
+      {icon && <Icon icon={icon} size={6} classNames='text-subdued' />}
+      <span>{message}</span>
+    </div>
+  );
+});
+
+BannerEmpty.displayName = BANNER_EMPTY_NAME;
+
+//
 // Banner
 //
 
@@ -225,6 +273,7 @@ export const Banner = {
   Content: BannerContent,
   Title: BannerTitle,
   Body: BannerBody,
+  Empty: BannerEmpty,
 };
 
-export type { BannerBodyProps, BannerContentProps, BannerRootProps, BannerTitleProps };
+export type { BannerBodyProps, BannerContentProps, BannerEmptyProps, BannerRootProps, BannerTitleProps };
