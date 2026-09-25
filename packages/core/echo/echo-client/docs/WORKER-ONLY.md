@@ -16,11 +16,11 @@ boundary in Chromium.
    code review found 13 defects in the code around the transforms, among them lost and duplicated
    edits after restarts. The transforms themselves held. Every defect now has a fix and a regression
    test (see [Review findings](#review-findings)).
-2. **ECHO runs on mirrors.** In mirror mode, 577 of the 608 existing echo-client tests pass, plus 7
-   tests marked as expected failures that still fail. The ones that fail are the
-   areas this design changes on purpose: branches, edit history, heads read in the same tick as a
-   write, `meta.updatedAt`, and tests that cut or inspect the byte protocol. In replica mode every
-   test passes, the new mirror tests included.
+2. **ECHO runs on mirrors.** With `DX_ECHO_DOCUMENT_MODE=proxy`, 633 of the 664 echo-client tests
+   that pass on replicas pass too. The 31 that fail are the areas this design changes on purpose:
+   branches and edit history (23 of them), heads read in the same tick as a write,
+   `meta.updatedAt`, tests that call Automerge on a proxied document, and tests that cut the byte
+   protocol. In replica mode every test passes, the proxy tests included.
 3. **A tab saves most of its Automerge memory.** In a Node model of one tab holding a space of 200
    tasks and three long documents, the replica costs 16 MB when typing arrives in 20-character
    changes and 72 MB when every keystroke is its own change. The editor writes one change per
@@ -50,9 +50,10 @@ boundary in Chromium.
    documents in about 10 s instead of 31 s with 4 documents in the worker
    ([Index reads in Composer's nav tree](#index-reads-in-composers-nav-tree)). Sync still loads a
    document that receives remote changes, so this saves loads for reading, not for changes.
-8. **Composer's e2e suite passes in mirror mode with index reads as it does today:** 28 passed and
-   15 skipped in both modes, and the one failure also fails on main. Getting there took nine fixes,
-   each with a unit test that reproduces its cause (see [E2E suites in mirror mode](#e2e-suites-in-mirror-mode)).
+8. **Composer's e2e suite passes on proxies with index reads, after the fold-in into `DataService`:**
+   28 passed and 15 skipped, and the one failure also fails on main. TodoMVC passes all 8 in both
+   modes. Getting there took nine fixes, each with a unit test that reproduces its cause (see
+   [E2E suites in mirror mode](#e2e-suites-in-mirror-mode)).
 9. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
@@ -69,7 +70,7 @@ boundary in Chromium.
 | Does a refused change stay contained?                            | In the two fuzzes above, about one change in 30 holds an op no document fits, which the worker refuses                                                                                      | Protocol: 14,277 refusals, each reported once by its tab, plus 6,301 later changes that only made sense on top of one; tabs still converge. Automerge: 6,220 refused markers are gone and reported, the rest land once |
 | Does it hold through the real client and service?                | 500 sessions of three mirror tabs with 1,801 worker restarts through `EchoTestPeer.restartHost`, with batches in flight and edits made while the worker was down                            | Every tab and the new worker's document converge; 13,924 edits, each in the list and the text exactly once                                                                                                             |
 | Do the failure paths the review found hold now?                  | One regression test each: a failed save, a refused change, a resync, an orphaned delivery, a refused creation, a document still fetching, a dropped stream, reconnecting to the same worker | See [Review findings](#review-findings)                                                                                                                                                                                |
-| Does ECHO run without Automerge in the tab?                      | The echo-client suite with `DX_ECHO_MIRROR=1`                                                                                                                                               | 577 of 608 pass, plus 7 expected failures; about 520 of them run through mirror clients                                                                                                                                |
+| Does ECHO run without Automerge in the tab?                      | The echo-client suite with `DX_ECHO_DOCUMENT_MODE=proxy`                                                                                                                                    | 633 of the 664 tests that pass on replicas pass; the 31 failures are areas the design changes on purpose                                                                                                               |
 | Can comments and presence keep synchronous cursor reads?         | A worker-minted cursor read synchronously through an unconfirmed edit, remote edits, and a list insert that moves its text                                                                  | Positions correct; the text's path follows list edits; a replaced text leaves the cursor unresolved                                                                                                                    |
 | Do replica clients and mirror tabs coexist?                      | A replica client writes, a mirror tab reads and writes back; one tab mixes mirrors with a replica                                                                                           | Both directions converge                                                                                                                                                                                               |
 | Does an unmodified Automerge editor plugin run on a mirror?      | `@automerge/automerge-codemirror` 0.2.0 with its `@automerge/automerge` import pointed at a small shim, two tabs, 40 random concurrent edits                                                | Both editors and both mirrors converge                                                                                                                                                                                 |
@@ -496,19 +497,28 @@ only listed, queried or shown.
 
 ## E2E suites in mirror mode
 
-`DX_ECHO_MODE=indexed` at build time turns on mirror tabs, index reads and SQL queries for a whole
-bundle (read in Composer's `main.tsx` and TodoMVC's `Root.tsx`), and `?echo=` still overrides it.
-Runs used Chromium in the cloud sandbox with 2 workers.
+`DX_ECHO_DOCUMENT_MODE=proxy` and `DX_ECHO_PROXY_INDEX_READS=true` at build time run a whole bundle on
+proxies with index reads; `Client` reads them from the build's env in config. These runs used
+Chromium in the cloud sandbox with 2 workers, after the fold-in into `DataService`.
 
-| Suite              | Today's mode                    | Mirror with index reads         |
+| Suite              | Replicas                        | Proxies with index reads        |
 | ------------------ | ------------------------------- | ------------------------------- |
-| Composer, 44 tests | 28 passed, 1 failed, 15 skipped | 28 passed, 1 failed, 15 skipped |
+| Composer, 44 tests | 26 passed, 3 failed, 15 skipped | 28 passed, 1 failed, 15 skipped |
 | TodoMVC, 8 tests   | 8 passed                        | 8 passed                        |
 
-Both mirror-mode runs were repeated after the proxy moved into `@dxos/automerge-proxy` and its
-property tests' three fixes landed, with the same results.
+A page of each TodoMVC bundle reported which repo its space uses (`{"proxy":true}` and
+`{"proxy":false}`), so the mode under test is the one the bundle was built with.
 
-The one Composer failure, "drag object into collection", fails in both modes and on main's own CI
+The replica run's two extra failures, "host and guest can see each others' changes in same document"
+and "settings sync across devices", pass alone, twice each. Both drive two peers and take 1 to 1.6
+minutes of their 90 s limit even alone, so a second worker on this 4-core sandbox pushes them over.
+The collaboration test failed the same way once on proxies. That it also fails on replicas, whose
+worker has always held the documents they sync, shows the flake is not the proxy's.
+
+Before the fold-in, the spike's runs gave 28 passed, 1 failed and 15 skipped in both modes, and
+TodoMVC passed all 8.
+
+The failure in both modes, "drag object into collection", also fails on main's own CI
 (the runs for `08cddf6a` and earlier): after the drag, Collection 1 shows both at the top level and
 inside Collection 2.
 
