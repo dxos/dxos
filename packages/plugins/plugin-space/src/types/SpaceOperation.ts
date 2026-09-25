@@ -790,7 +790,9 @@ export const SetArchived = Operation.make({
     archived: Schema.Boolean.annotate({ description: 'Whether the objects should be archived.' }),
   }),
   output: Schema.Struct({
-    objects: Schema.Array(Obj.Unknown),
+    objects: Schema.Array(Obj.Unknown).annotate({
+      description: 'The objects whose state changed; those already in the requested state are omitted.',
+    }),
   }),
 }).pipe(Operation.mutation('write'));
 
