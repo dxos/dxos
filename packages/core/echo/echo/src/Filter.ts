@@ -203,12 +203,13 @@ export const tag = (tag: string): Any => {
 
 /**
  * Filter by an annotation set on the entity with `Annotation.set`.
- * Matches entities that carry the annotation, or, given a value, entities whose value equals it.
  */
-export const annotation = <T extends string | number | boolean>(
-  annotation: Annotation.Annotation<T>,
-  value?: T,
-): Any => {
+export const annotation: {
+  /** Matches entities that carry the annotation, whatever its value. */
+  <T>(annotation: Annotation.Annotation<T>): Any;
+  /** Matches entities whose value equals `value`; only scalar values can be compared. */
+  <T extends string | number | boolean>(annotation: Annotation.Annotation<T>, value: T): Any;
+} = (annotation: Annotation.Annotation<unknown>, value?: string | number | boolean): Any => {
   return new FilterClass({
     type: 'annotation',
     key: annotation.key,
