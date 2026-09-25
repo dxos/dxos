@@ -940,7 +940,11 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
 
 1. **Does promotion need coordination?** Draining an overlay into a real property is idempotent and
    deterministic, so probably not — but it changes what queries return, so peers disagree until it
-   propagates. Is a half-promoted space acceptable, and for how long?
+   propagates. Is a half-promoted space acceptable, and for how long? — **DECIDED (2026-09-25):**
+   yes, uncoordinated. Promotion is a migration (explicit version step moving overlay values into a
+   real property) with all the fold-forward machinery. Lens views stay consistent (read the real
+   property, fall back to the overlay); only queries on the new field lag, like any migration
+   window. Fold-forward must also diff the overlay's annotations path, not just `data`.
 2. **How long is the fold-forward window?** Keeping migration heads and un-deleted old properties
    forever is a storage cost. When is it safe to compact, given a peer could always have been offline
    longer? — **ANSWERED (2026-08-02, ratified): the window is "until the next epoch".** Epochs
