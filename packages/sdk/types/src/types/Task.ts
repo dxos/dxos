@@ -14,6 +14,7 @@ import { EntityId } from '@dxos/echo/Key';
 import { type MakeRequired } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
+import * as File from './File.ts';
 import * as Milestone from './Milestone.ts';
 
 export type Option<T> = { id: T; title: string; color?: string; icon?: string };
@@ -307,6 +308,18 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       ),
     ),
 
+    /**
+     * Files a person attached to the task (a screenshot, a log). Unlike `artifacts` these exist only
+     * for the task, so the task owns them: deleting it deletes them.
+     */
+    attachments: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).pipe(
+        Annotation.SetParent.set(),
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Attachments' }),
+      ),
+    ),
+
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
     // backref here: enumeration stays one array read and a move stays one field write.
   }).pipe(
@@ -553,6 +566,36 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
   Obj.update(task, (task) => {
     task.artifacts ??= [];
     task.artifacts.push(Ref.make(artifact));
+  });
+};
+
+/**
+ * Attaches a file to the task, which takes ownership of it (see {@link Task.attachments}). Attaching
+ * the same file twice is a no-op, compared by entity id as for {@link addArtifact}.
+ */
+export const addAttachment = (task: Task, file: File.File): void => {
+  const id = file.id;
+  if ((task.attachments ?? []).some((ref) => refEntityId(ref) === id)) {
+    return;
+  }
+  Obj.update(task, (task) => {
+    task.attachments ??= [];
+    task.attachments.push(Ref.make(file));
+  });
+};
+
+/**
+ * Detaches a file from the task. The file is left in the database: removing it is the caller's
+ * decision, since only the caller knows whether the detach is an undoable edit.
+ */
+export const removeAttachment = (task: Task, file: File.File | Ref.Ref<File.File>): void => {
+  const id = Ref.isRef(file) ? refEntityId(file) : file.id;
+  const index = (task.attachments ?? []).findIndex((ref) => refEntityId(ref) === id);
+  if (index === -1) {
+    return;
+  }
+  Obj.update(task, (task) => {
+    task.attachments?.splice(index, 1);
   });
 };
 

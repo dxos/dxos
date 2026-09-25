@@ -15,6 +15,7 @@ import { TaskOperation } from '#types';
 
 import { useMarkdownExtensions } from '../../hooks/index.ts';
 import { TaskArtifacts } from './TaskArtifacts.tsx';
+import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
 
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
@@ -28,6 +29,8 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * `TaskList.Root` — here a root of exactly this task, held selected, so the pane is always editing
  * rather than dropping back to its create case.
  *
+ * A file dropped or pasted anywhere over the article is stored and attached (`Task.attachments`).
+ *
  * Edits go through {@link TaskOperation.UpdateTask} rather than writing fields directly, so the
  * article shares the history-writing path with the list and with agents.
  */
@@ -40,15 +43,19 @@ export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
+  const handleAttach = useAttachFiles(task);
 
   return (
     <Panel.Root role={role}>
       <Panel.Content>
-        {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
-        <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
-          <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
-        </TaskList.Root>
-        <TaskArtifacts task={task} />
+        <TaskAttachmentDropZone onFiles={handleAttach}>
+          {/* No `onTaskCreate`: creating belongs to the list, so the pane here only ever edits. */}
+          <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+            <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
+          </TaskList.Root>
+          <TaskAttachments task={task} />
+          <TaskArtifacts task={task} />
+        </TaskAttachmentDropZone>
       </Panel.Content>
     </Panel.Root>
   );

@@ -16796,6 +16796,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../plugin-file
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown

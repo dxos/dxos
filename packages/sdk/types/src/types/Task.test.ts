@@ -5,10 +5,11 @@
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EntityId } from '@dxos/echo/Key';
 
+import * as File from './File.ts';
 import * as Milestone from './Milestone.ts';
 import * as Task from './Task.ts';
 
@@ -258,6 +259,29 @@ describe('completion', () => {
       expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('owns its attachments, once per file, until detached', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Fix the layout' }));
+      const file = yield* File.fromBytes(new Uint8Array([1, 2, 3]), { name: 'screenshot.png', type: 'image/png' });
+      yield* Database.add(file);
+      yield* Database.flush();
+
+      Task.addAttachment(task, file);
+      Task.addAttachment(task, file);
+      yield* Database.flush();
+
+      expect(task.attachments).toHaveLength(1);
+      expect(Task.refEntityId(task.attachments?.[0])).toEqual(file.id);
+      // Owned, so deleting the task deletes what was attached to it.
+      expect(Obj.getParent(file)).toBe(task);
+
+      const [ref] = task.attachments ?? [];
+      Task.removeAttachment(task, ref);
+      yield* Database.flush();
+      expect(task.attachments).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
 });
 
 describe('mutations', () => {
@@ -390,7 +414,7 @@ describe('history', () => {
   );
 });
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] });
+const testLayer = () => TestDatabaseLayer({ types: [Blob.Blob, File.File, Milestone.Milestone, Task.Task] });
 
 const seedTree = () =>
   Effect.gen(function* () {

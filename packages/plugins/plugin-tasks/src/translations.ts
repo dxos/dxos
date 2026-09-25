@@ -49,6 +49,9 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Tasks',
         'task-artifacts.label': 'Artifacts',
+        'task-attachments.label': 'Attachments',
+        'task-attachments.drop.label': 'Drop to attach',
+        'task-attachment.remove.label': 'Remove attachment',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'filter.label': 'Filter tasks',
