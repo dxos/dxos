@@ -750,9 +750,9 @@ export const VANITY_PREFIX_MIN_LENGTH = 4;
 export const VANITY_PREFIX_MAX_LENGTH = 20;
 export const VANITY_SUFFIX_LENGTH = 4;
 export const VANITY_CODE_MAX_LENGTH = VANITY_PREFIX_MAX_LENGTH + 1 + VANITY_SUFFIX_LENGTH;
-/** 4-20 characters: letters and digits, with single dashes between them. */
+/** 4-20 characters, at least 4 of them letters or digits, with single dashes between them. */
 export const VANITY_PREFIX_PATTERN = new RegExp(
-  `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
+  `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)(?=(?:-?[A-Za-z0-9]){${VANITY_PREFIX_MIN_LENGTH}})[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
 );
 
 export const MAX_CODES_PER_REQUEST = 1000;

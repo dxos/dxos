@@ -11,18 +11,22 @@ import { type AdminListInvitationCodesResponse } from '@dxos/protocols';
 
 import { HubApiError, formatHubError, hubApiRequest } from '../util.ts';
 
-const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): string => {
+type CodeRow = AdminListInvitationCodesResponse['codes'][number];
+
+const redemptionsOf = (row: CodeRow): number =>
+  row.redemptionCount ?? (row.redeemedAt || row.redeemedByIdentityDid ? 1 : 0);
+
+const statusOf = (row: CodeRow): string => {
   if (row.revokedAt) {
     return 'revoked';
   }
-  if ((row.redemptionCount ?? (row.redeemedAt ? 1 : 0)) >= (row.maxRedemptions ?? 1)) {
+  if (redemptionsOf(row) >= (row.maxRedemptions ?? 1)) {
     return 'redeemed';
   }
   return 'available';
 };
 
-const usesOf = (row: AdminListInvitationCodesResponse['codes'][number]): string =>
-  `${row.redemptionCount ?? (row.redeemedAt ? 1 : 0)}/${row.maxRedemptions ?? 1}`;
+const usesOf = (row: CodeRow): string => `${redemptionsOf(row)}/${row.maxRedemptions ?? 1}`;
 
 export const list = Command.make(
   'list',

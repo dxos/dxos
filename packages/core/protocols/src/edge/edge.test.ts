@@ -57,6 +57,7 @@ describe('AdminCreateInvitationCodesRequestSchema', () => {
 
   test('rejects malformed prefixes and batches of vanity codes', () => {
     expect(() => decode({ count: 1, prefix: 'ab' })).toThrow();
+    expect(() => decode({ count: 1, prefix: 'a-b-c' })).toThrow();
     expect(() => decode({ count: 1, prefix: 'sf--meetup' })).toThrow();
     expect(() => decode({ count: 2, prefix: 'MEETUP' })).toThrow();
   });
