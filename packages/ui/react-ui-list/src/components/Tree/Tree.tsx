@@ -1111,6 +1111,12 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         );
       },
       getIsSticky: () => true,
+      // A native drag fires no mouseenter, so the hover prefetch runs here to load children before the hold opens the row.
+      onDragEnter: ({ source }) => {
+        if (source.data.id !== id) {
+          onItemHover?.({ item });
+        }
+      },
       onDrag: ({ self, source }) => {
         const desired = extractInstruction(self.data);
         const kind =
@@ -1169,6 +1175,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canDrop,
     getDropKind,
     onOpenChange,
+    onItemHover,
     onCancelExpand,
     shouldSeedNativeDragData,
   ]);
