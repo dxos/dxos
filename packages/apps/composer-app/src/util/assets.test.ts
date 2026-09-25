@@ -42,10 +42,10 @@ describe('isFileRequest', () => {
     expect(fileRequest({ secFetchMode: 'navigate', pathname: '/space/v1.2/doc' })).toBe(false);
   });
 
-  test('an HTML path is a route', () => {
-    for (const pathname of ['/index.html', '/recovery.html', '/missing.html']) {
-      expect(fileRequest({ pathname })).toBe(false);
-    }
+  test('a missing HTML file fetched as a subresource is a file request', () => {
+    // Real HTML entry points are served by the asset server and never get here.
+    expect(fileRequest({ pathname: '/missing.html' })).toBe(true);
+    expect(fileRequest({ pathname: '/missing.html', secFetchMode: 'navigate' })).toBe(false);
   });
 
   test('an extensionless path is a route', () => {

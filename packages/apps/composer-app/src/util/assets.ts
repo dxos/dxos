@@ -28,4 +28,4 @@ export const isHashedAssetPath = (pathname: string): boolean => HASHED_ASSET_PAT
  * no `Sec-Fetch-Mode` (curl, a non-browser client) counts as a subresource, so a probe sees the 404.
  */
 export const isFileRequest = ({ pathname, secFetchMode }: { pathname: string; secFetchMode: string | null }): boolean =>
-  secFetchMode !== 'navigate' && FILE_PATH.test(pathname) && !pathname.endsWith('.html');
+  secFetchMode !== 'navigate' && FILE_PATH.test(pathname);

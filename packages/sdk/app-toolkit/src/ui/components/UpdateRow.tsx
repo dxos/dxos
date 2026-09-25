@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Match from 'effect/Match';
 import React, { type ReactNode, useState } from 'react';
 
@@ -57,6 +57,7 @@ type Pending = null | 'check' | 'install' | 'apply';
  */
 export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent => {
   const status = useAtomValue(manager.status);
+  const setStatus = useAtomSet(manager.status);
 
   // The status atom can flip between `checking` and `up-to-date` faster than the user can perceive,
   // so the button is also gated on the click handler's lifetime — otherwise a check that resolves
@@ -69,6 +70,9 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
     setPending(kind);
     try {
       await action();
+    } catch (error) {
+      // Otherwise a rejected install or apply leaves the row unchanged, with no sign it failed.
+      setStatus({ kind: 'failed', error: error instanceof Error ? error.message : String(error) });
     } finally {
       setPending(null);
     }
