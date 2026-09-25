@@ -11,6 +11,9 @@ import { mx } from '@dxos/ui-theme';
 /** A description is a line in a row, not a document: no paragraph block, no heading scale. */
 export const DESCRIPTION_COMPONENTS = {
   p: ({ children }: PropsWithChildren) => <span>{children}</span>,
+  // Row leading and no vertical padding, so the clamp ends on a line boundary.
+  ul: ({ children }: PropsWithChildren) => <ul className='ps-5 list-disc'>{children}</ul>,
+  ol: ({ children }: PropsWithChildren) => <ol className='ps-5 list-decimal'>{children}</ol>,
 };
 
 export type TaskDescriptionProps = ThemedClassName<{
@@ -27,6 +30,7 @@ export type TaskDescriptionProps = ThemedClassName<{
  */
 export const TaskDescription = ({ content, components, classNames }: TaskDescriptionProps) => (
   <MarkdownView
+    data-testid='taskList.item.description'
     content={content}
     classNames={mx('text-sm text-description line-clamp-3', classNames)}
     // The row supplies the type scale and the clamp, so the description renders as one inline run
