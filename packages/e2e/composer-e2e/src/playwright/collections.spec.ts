@@ -51,28 +51,27 @@ test.describe('Collection tests', () => {
     });
   });
 
-  test.describe(() => {
-    test.skip(({ browserName }) => browserName !== 'chromium', 'TODO(wittjosiah): This test is quite flaky in webkit.');
+  test('drag object into collection', { tag: ['@QA-6'] }, async () => {
+    await host.createSpace();
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
+    await host.expandSection('spacePlugin.collectionsSection');
+    await host.renameObject('Collection 1', 0);
+    await host.renameObject('Collection 2', 1);
 
-    test('drag object into collection', { tag: ['@QA-6'] }, async () => {
-      await host.createSpace();
-      await host.createObject({ type: 'Collection' });
-      await host.createObject({ type: 'Collection' });
-      await host.expandSection('spacePlugin.collectionsSection');
-      await host.renameObject('Collection 1', 0);
-      await host.renameObject('Collection 2', 1);
-
-      // Selected first: an unvisited collection takes the drop beside it rather than inside it.
-      await host.getObject(1).click();
-      await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
-        instruction: 'make-child',
-      });
-      // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
-      // graph path, so Collection 1's parent path is exactly Collection 2's path.
-      const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
-      const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
-      expect(collection1?.split('/').slice(0, -1).join('/')).toEqual(collection2);
+    // Selected first: an unvisited collection takes the drop beside it rather than inside it.
+    await host.getObject(1).click();
+    // A row's `data-object-id` is the object's canonical graph path, so once Collection 1 is inside
+    // Collection 2 its path is Collection 2's path plus its own id.
+    const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
+    const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
+    const moved = `${collection2}/${collection1?.split('/').at(-1)}`;
+    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
+      instruction: 'make-child',
     });
+    // The drop writes the move asynchronously, so wait for the tree to render it.
+    await expect(host.getObjectLinks().and(host.page.locator(`[data-object-id="${moved}"]`))).toHaveCount(1);
+    await expect(host.getObjectByName('Collection 1')).toHaveCount(1);
   });
 
   test('delete a collection', { tag: ['@QA-6'] }, async () => {
