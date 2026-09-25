@@ -4,7 +4,7 @@
 
 import { Entity } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
-import { type AnyProperties, change, getMetaChecked } from '@dxos/echo/internal';
+import { type AnyProperties, ATTR_META, change, getMetaChecked } from '@dxos/echo/internal';
 import { FeedProtocol } from '@dxos/protocols';
 
 const canonicalStringify = (value: unknown): string => {
@@ -64,6 +64,25 @@ const positionOf = (entity: Entity.Unknown): number | undefined => {
   }
   const position = Number(key.id);
   return Number.isFinite(position) ? position : undefined;
+};
+
+/**
+ * Queue position of an inbound feed block, read from its JSON so a caller can test it before
+ * paying for a decode.
+ */
+export const positionOfJSON = (json: Record<string, unknown>): number | undefined => {
+  const meta = json[ATTR_META];
+  const keys = typeof meta === 'object' && meta !== null && 'keys' in meta ? meta.keys : undefined;
+  if (!Array.isArray(keys)) {
+    return undefined;
+  }
+  for (const key of keys) {
+    if (typeof key === 'object' && key !== null && key.source === FeedProtocol.KEY_QUEUE_POSITION) {
+      const position = Number(key.id);
+      return Number.isFinite(position) ? position : undefined;
+    }
+  }
+  return undefined;
 };
 
 /**
@@ -163,6 +182,15 @@ export class FeedObjectCore {
       this.#pendingAppend = undefined;
     }
     this.#dirty = true;
+  }
+
+  /**
+   * Whether {@link reconcile} would ignore an inbound block at `position` whatever its content: the
+   * core is dirty or deleted, or has already applied that exact block. Lets a caller re-reading the
+   * whole feed on every push skip decoding and digesting blocks that have not changed.
+   */
+  isSettledAt(position: number | undefined): boolean {
+    return this.#deleted || this.#dirty || (position !== undefined && position === this.#version);
   }
 
   /**
