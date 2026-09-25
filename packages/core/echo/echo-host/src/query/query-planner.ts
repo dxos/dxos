@@ -498,8 +498,9 @@ export class QueryPlanner {
         ]);
       }
 
-      // Mnemonic — a local predicate on the object's own id, so it runs as a filter step over
-      // a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      // Mnemonic and annotation — local predicates on the object's own id or meta, so they run as a
+      // filter step over a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      case 'annotation':
       case 'mnemonic': {
         const planned: QueryAST.Filter = context.selectionInverted ? { type: 'not', filter } : filter;
         return QueryPlan.Plan.make([
@@ -1553,13 +1554,14 @@ const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.S
 };
 
 /**
- * Returns true if the filter is `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
+ * Returns true if the filter is `annotation`, `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
  * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
  * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
  * limit must never be pushed past them.
  */
 const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
+    case 'annotation':
     case 'child-of':
     case 'has-parent':
     case 'mnemonic':
@@ -1773,6 +1775,7 @@ const isRootExecutable = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'object':
     case 'tag':
+    case 'annotation':
     case 'has-parent':
     case 'mnemonic':
       return true;

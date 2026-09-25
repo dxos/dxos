@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions.ts';
@@ -66,6 +67,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     Schema.annotate({ title: 'Project' }),
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'sky' }),
+    ArchivableAnnotation.set(true),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
     // the type does not depend on the plugin that owns the skill.

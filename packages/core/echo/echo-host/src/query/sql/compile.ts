@@ -405,6 +405,15 @@ export class SqlPlanCompiler {
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
           WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
       }
+      case 'annotation': {
+        // `m.annotations` holds the meta dictionary; `COALESCE` keeps an absent key (or a NULL column) a
+        // definite non-match, so `not` keeps entities that never carried the annotation.
+        const at = jsonPathLiteral(sql, [filter.key]);
+        const type = sql`COALESCE(json_type(m.annotations, ${at}), 'missing')`;
+        return filter.value === undefined
+          ? sql`(${type} != 'missing')`
+          : scalarEquals(sql, sql`json_extract(m.annotations, ${at})`, type, filter.value);
+      }
       case 'text-search':
         // The executors behind an index resolve text search in the select; a residual node
         // matches nothing, as the in-memory matcher's `noTextSearch` does.

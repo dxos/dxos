@@ -775,6 +775,23 @@ export const AddTag = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+export const SetArchived = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.setArchived'),
+    name: 'Set Archived',
+    description:
+      'Archive or unarchive objects. Archived objects are hidden from the navigation tree but stay in the database.',
+    icon: 'ph--archive--regular',
+  },
+  input: Schema.Struct({
+    objects: Schema.Array(Obj.Unknown).annotate({ description: 'The objects to archive or unarchive.' }),
+    archived: Schema.Boolean.annotate({ description: 'Whether the objects should be archived.' }),
+  }),
+  output: Schema.Struct({
+    objects: Schema.Array(Obj.Unknown),
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const RemoveTag = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.removeTag'),

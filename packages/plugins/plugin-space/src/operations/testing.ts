@@ -11,7 +11,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Collection, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { CollectionItemAnnotation } from '@dxos/schema';
+import { ArchivableAnnotation, CollectionItemAnnotation } from '@dxos/schema';
 
 export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
@@ -27,6 +27,10 @@ export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.exampl
 export class TestCollectionItem extends Type.makeObject<TestCollectionItem>(
   DXN.make('com.example.type.testCollectionItem', '0.1.0'),
 )(Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(CollectionItemAnnotation.set(true))) {}
+
+export class TestArchivable extends Type.makeObject<TestArchivable>(
+  DXN.make('com.example.type.testArchivable', '0.1.0'),
+)(Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(ArchivableAnnotation.set(true))) {}
 
 export class TestContainer extends Type.makeObject<TestContainer>(DXN.make('com.example.type.testContainer', '0.1.0'))(
   Schema.Struct({
@@ -69,6 +73,7 @@ export const makeTestLayer = (...handlers: Operation.WithHandler<Operation.Defin
       Collection.Collection,
       SpaceProperties,
       TestObject,
+      TestArchivable,
       TestCollectionItem,
       TestContainer,
       TestRelation,

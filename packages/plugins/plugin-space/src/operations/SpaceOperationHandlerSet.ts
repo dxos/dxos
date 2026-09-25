@@ -45,6 +45,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.RenameObject.pipe(Operation.lazyHandler(() => import('./rename-object.ts'))),
   SpaceOperation.RestoreField.pipe(Operation.lazyHandler(() => import('./restore-field.ts'))),
   SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects.ts'))),
+  SpaceOperation.SetArchived.pipe(Operation.lazyHandler(() => import('./set-archived.ts'))),
   SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share.ts'))),
   SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
 ]);

@@ -14,6 +14,7 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Annotation from './Annotation.ts';
 import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import type * as Feed from './Feed.ts';
@@ -197,6 +198,21 @@ export const tag = (tag: string): Any => {
   return new FilterClass({
     type: 'tag',
     tag,
+  });
+};
+
+/**
+ * Filter by an annotation set on the entity with `Annotation.set`.
+ * Matches entities that carry the annotation, or, given a value, entities whose value equals it.
+ */
+export const annotation = <T extends string | number | boolean>(
+  annotation: Annotation.Annotation<T>,
+  value?: T,
+): Any => {
+  return new FilterClass({
+    type: 'annotation',
+    key: annotation.key,
+    ...(value !== undefined ? { value } : {}),
   });
 };
 

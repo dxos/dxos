@@ -13,6 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 /**
@@ -62,6 +63,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    ArchivableAnnotation.set(true),
   ),
 ) {}
 

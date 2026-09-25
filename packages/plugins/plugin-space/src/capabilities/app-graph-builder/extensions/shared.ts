@@ -59,6 +59,7 @@ export const spaceRearrangeCache = new Map<string, (nextOrder: string[]) => void
 //
 
 export const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add-view-to-schema.label', META_NS];
+export const ARCHIVE_OBJECT_LABEL: Label = ['archive-object.label', META_NS];
 export const COPY_LINK_LABEL: Label = ['copy-link.label', META_NS];
 export const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create-object-in-collection.label', META_NS];
 export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.label', META_NS];
@@ -71,6 +72,7 @@ export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
 export const SHOW_ORIGINAL_LABEL: Label = ['show-original.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];
+export const UNARCHIVE_OBJECT_LABEL: Label = ['unarchive-object.label', META_NS];
 
 //
 // Helpers
