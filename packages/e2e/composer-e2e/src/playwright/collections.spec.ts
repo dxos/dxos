@@ -27,7 +27,7 @@ test.describe('Collection tests', () => {
 
   test.describe(() => {
     test.skip(
-      ({ browserName }) => browserName !== 'chromium' && browserName !== 'webkit',
+      ({ browserName }) => browserName !== 'chromium',
       'TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.',
     );
 

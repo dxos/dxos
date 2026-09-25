@@ -8,7 +8,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
-import { Tooltip, type TooltipSide } from './Tooltip.tsx';
+import { Tooltip, type TooltipSide, type TooltipTriggerProps } from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the
@@ -67,6 +67,17 @@ describe('Tooltip', () => {
     fireEvent.pointerLeave(first);
     fireEvent.pointerDown(first);
     await waitFor(() => expect(first.getAttribute('aria-describedby')).toEqual('own-description'));
+  });
+
+  test('a vetoed hover stays closed without cancelling the pointer event', async ({ expect }) => {
+    render(<Harness onInteract={() => false} />, { wrapper: Wrapper });
+    const [first] = screen.getAllByRole('button');
+
+    // WebKit starts no native drag after a cancelled pointermove, so a veto must leave the event alone.
+    expect(fireEvent.pointerMove(first, { pointerType: 'mouse' })).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(first.getAttribute('data-state')).toEqual('closed');
+    expect(first.getAttribute('aria-describedby')).toBeNull();
   });
 
   test('hovering one trigger does not re-render the others', async ({ expect }) => {
@@ -142,12 +153,22 @@ describe('Tooltip', () => {
   });
 });
 
-type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
+type HarnessProps = {
+  onRender?: (label: string) => void;
+  describedBy?: string;
+  onInteract?: TooltipTriggerProps['onInteract'];
+};
 
 // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
+const Harness = ({ onRender, describedBy, onInteract, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
   <Tooltip.Provider delayDuration={0} disableHoverableContent>
-    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} side={sides[0]} />
+    <CountingTrigger
+      label='first'
+      onRender={onRender}
+      describedBy={describedBy}
+      onInteract={onInteract}
+      side={sides[0]}
+    />
     <CountingTrigger label='second' onRender={onRender} side={sides[1]} />
   </Tooltip.Provider>
 );
@@ -158,9 +179,10 @@ const CountingTrigger = ({
   label,
   onRender,
   describedBy,
+  onInteract,
   side,
 }: { label: string; side?: TooltipSide } & HarnessProps) => (
-  <Tooltip.Trigger asChild content={`${label} tip`} side={side}>
+  <Tooltip.Trigger asChild content={`${label} tip`} side={side} onInteract={onInteract}>
     <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
   </Tooltip.Trigger>
 );

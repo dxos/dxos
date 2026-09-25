@@ -624,60 +624,12 @@ export class AppManager {
     }
     const startX = start.x + start.width / 2;
     const startY = start.y + start.height / 2;
-    // TEMP: trace the drag's DOM events for the WebKit investigation.
-    await this.page.evaluate(() => {
-      const w = window as any;
-      w.__dragEvents = [];
-      const describe = (event: Event) => {
-        const target = event.target as Element;
-        return `${event.type}@${Math.round((event as MouseEvent).clientY ?? -1)}:${target?.getAttribute?.('data-testid') ?? target?.nodeName}`;
-      };
-      for (const type of [
-        'pointerdown',
-        'mousedown',
-        'dragstart',
-        'selectstart',
-        'dragenter',
-        'dragend',
-        'pointercancel',
-        'mouseup',
-      ]) {
-        // Bubble phase on window runs after the app's own handlers, so it sees their preventDefault.
-        window.addEventListener(type, (event) =>
-          w.__dragEvents.push(
-            `${describe(event)} prevented=${event.defaultPrevented} buttons=${(event as MouseEvent).buttons}`,
-          ),
-        );
-        document.addEventListener(type, (event) => w.__dragEvents.push(`capture ${describe(event)}`), true);
-      }
-    });
     await active.hover();
     await this.page.mouse.down();
-    console.log(
-      `TEMP dragTo start=${JSON.stringify(start)} target=${JSON.stringify(initial)} hover=${await this.page.evaluate(
-        ({ x, y }) => {
-          const el = document.elementFromPoint(x, y);
-          const row = el?.closest('[draggable]');
-          return `${el?.nodeName}:${el?.getAttribute('data-testid')}:${row?.getAttribute('data-object-id')} draggable=${row?.getAttribute('draggable')} active=${document.activeElement?.getAttribute('data-testid') ?? document.activeElement?.nodeName}`;
-        },
-        { x: startX, y: startY },
-      )} events=${JSON.stringify(await this.page.evaluate(() => (window as any).__dragEvents.splice(0)))}`,
-    );
-    // Toward the target until the drag starts: a nudge away from it leaves the pointer over the row
-    // that slides into the dragged row's place. WebKit's threshold is 12-20px, Chromium's and Firefox's under 6.
-    const direction = initial.y < start.y ? -1 : 1;
-    let travel = 0;
-    await expect
-      .poll(async () => {
-        travel = Math.min(travel + 6, 30);
-        await this.page.mouse.move(startX, startY + direction * travel, { steps: 2 });
-        const hidden = await active.isHidden();
-        console.log(
-          `TEMP travel=${travel} hidden=${hidden} events=${JSON.stringify(await this.page.evaluate(() => (window as any).__dragEvents.splice(0)))}`,
-        );
-        return hidden;
-      })
-      .toBe(true);
+    // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
+    // it leaves the pointer over the row that slides into the dragged row's place.
+    await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
+    await expect(active).toBeHidden();
 
     const box = await over.boundingBox();
     if (!box) {

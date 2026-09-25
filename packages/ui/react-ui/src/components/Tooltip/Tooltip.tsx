@@ -253,8 +253,11 @@ type TooltipTriggerElement = ComponentRef<typeof ark.button>;
 type TooltipTriggerProps = Omit<ComponentPropsWithoutRef<typeof ark.button>, 'content'> & {
   content?: ReactNode;
   side?: TooltipSide;
-  /** Called as the pointer arrives; `preventDefault()` keeps the tooltip closed for this hover. */
-  onInteract?: (event: SyntheticEvent) => void;
+  /**
+   * Called as the pointer arrives; returning `false` keeps the tooltip closed for this hover.
+   * A return value rather than `preventDefault()`: WebKit starts no native drag after a cancelled pointermove.
+   */
+  onInteract?: (event: SyntheticEvent) => boolean | void;
   /** Accepted for compatibility; the provider owns the delay. */
   delayDuration?: number;
 };
@@ -294,8 +297,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           if (event.defaultPrevented) {
             return;
           }
-          onInteract?.(event);
-          if (event.defaultPrevented) {
+          if (onInteract?.(event) === false) {
             return;
           }
           machine()?.onPointerMove?.(event);
