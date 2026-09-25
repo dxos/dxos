@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -425,7 +425,7 @@ const TaskTreeHeading = ({
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
       {(description || questions.length > 0) && (
-        <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
+        <Flex column gap='sm' classNames='col-[title/chips-end] row-start-2 min-w-0 pb-1'>
           {description && <TaskDescription content={description} components={descriptionComponents} />}
           {questions.map((thread) => (
             <TaskQuestion
@@ -434,7 +434,7 @@ const TaskTreeHeading = ({
               onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
             />
           ))}
-        </div>
+        </Flex>
       )}
     </>
   );

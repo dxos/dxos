@@ -3,13 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Field, Flex, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -38,9 +38,11 @@ export const ProfileContainer = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
-  const [displayName, setDisplayNameDirectly] = useState(identity?.displayName ?? '');
-  const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
-  const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
+  // Resync from the live identity (e.g. a change from another device/session) while still allowing
+  // in-flight local edits, the same pattern `FunctionBinding`'s `binding` field uses.
+  const [displayName, setDisplayNameDirectly] = useControlledState(identity?.displayName ?? '');
+  const [emoji, setEmojiDirectly] = useControlledState(getEmojiValue(identity));
+  const [hue, setHueDirectly] = useControlledState(getHueValue(identity));
 
   const updateProfile = useMemo(
     () =>

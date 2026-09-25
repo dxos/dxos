@@ -20,7 +20,7 @@ import * as Trigger from './types/Trigger.ts';
  * Writes ephemeral or persistent events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export interface TraceWriter {
+export interface Writer {
   write<T>(eventType: EventType<T>, payload: NoInfer<T>): void;
 }
 
@@ -28,7 +28,7 @@ export interface TraceWriter {
  * Service that writes events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export class TraceService extends Context.Service<TraceService, TraceWriter>()('@dxos/functions/TraceService') {}
+export class TraceService extends Context.Service<TraceService, Writer>()('@dxos/functions/TraceService') {}
 
 /**
  * Writes an event to the trace.
@@ -374,7 +374,7 @@ export interface Sink {
 // TODO(dmaretskyi): Consider moving sink to the Process Manager.
 export class TraceSink extends Context.Service<TraceSink, Sink>()('@dxos/functions/TraceSink') {}
 
-export const noopWriter: TraceWriter = {
+export const noopWriter: Writer = {
   write: () => {},
 };
 

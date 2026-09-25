@@ -31,7 +31,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * Edits go through {@link TaskOperation.UpdateTask} rather than writing fields directly, so the
  * article shares the history-writing path with the list and with agents.
  */
-export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
+export const TaskArticle = ({ role, attendableId, subject: task }: TaskArticleProps) => {
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -48,7 +48,7 @@ export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
         <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
           <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
         </TaskList.Root>
-        <TaskArtifacts task={task} />
+        <TaskArtifacts task={task} attendableId={attendableId} />
       </Panel.Content>
     </Panel.Root>
   );

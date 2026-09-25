@@ -4,9 +4,8 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -66,87 +65,88 @@ export const TaskQuestion = ({
   );
 
   return (
-    <div
-      role='group'
-      aria-label={question.text}
-      className={mx('flex flex-col gap-1 text-sm', classNames)}
-      data-testid='task-question'
-      onClick={stop}
-      onPointerDown={stop}
-      onKeyDown={stop}
-    >
-      <div className='flex items-start gap-2'>
-        <Icon icon='ph--question--regular' classNames='mt-0.5 shrink-0 text-amber-text' />
-        <span className='font-medium break-words'>{question.text}</span>
-      </div>
+    <Flex column gap='xs' asChild classNames={['text-sm', classNames]}>
+      <div
+        role='group'
+        aria-label={question.text}
+        data-testid='task-question'
+        onClick={stop}
+        onPointerDown={stop}
+        onKeyDown={stop}
+      >
+        <Flex align='start' gap='sm'>
+          <Icon icon='ph--question--regular' classNames='mt-0.5 shrink-0 text-amber-text' />
+          <span className='font-medium break-words'>{question.text}</span>
+        </Flex>
 
-      {question.context && !answer && (
-        <p className='ps-6 text-description break-words line-clamp-3'>{question.context}</p>
-      )}
+        {question.context && !answer && (
+          <p className='ps-6 text-description break-words line-clamp-3'>{question.context}</p>
+        )}
 
-      {answer ? (
-        <div className='flex items-start gap-2' data-testid='task-question.answer'>
-          <Icon icon='ph--check-circle--regular' classNames='mt-0.5 shrink-0 text-success-text' />
-          <span className='break-words'>{answer.answer}</span>
-        </div>
-      ) : (
-        onAnswer && (
-          <div className='flex flex-col gap-1 ps-6'>
-            {question.options?.map((option) => (
-              <Button
-                key={option.title}
-                variant='default'
-                disabled={busy}
-                // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
-                // to its text instead of clipping it.
-                classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
-                data-testid='task-question.option'
-                onClick={() => submit(option.title)}
-              >
-                {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
-                <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
-                  <div className='font-medium break-words'>{option.title}</div>
-                  {option.description && (
-                    <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
-                  )}
+        {answer ? (
+          <Flex align='start' gap='sm' data-testid='task-question.answer'>
+            <Icon icon='ph--check-circle--regular' classNames='mt-0.5 shrink-0 text-success-text' />
+            <span className='break-words'>{answer.answer}</span>
+          </Flex>
+        ) : (
+          onAnswer && (
+            <Flex column gap='xs' classNames='ps-6'>
+              {question.options?.map((option) => (
+                <Button
+                  key={option.title}
+                  variant='default'
+                  disabled={busy}
+                  // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
+                  // to its text instead of clipping it.
+                  classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
+                  data-testid='task-question.option'
+                  onClick={() => submit(option.title)}
+                >
+                  {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
+                  <Flex column grow gap='xs' classNames='text-start'>
+                    <div className='font-medium break-words'>{option.title}</div>
+                    {option.description && (
+                      <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
+                    )}
+                  </Flex>
+                </Button>
+              ))}
+              {/* Wraps rather than squeezes: in a narrow host (a popover card) the field keeps a usable
+                  width and the button drops below it. */}
+              <Flex wrap gap='xs'>
+                <div className='flex-[1_1_10rem] min-w-0'>
+                  <Field.Root>
+                    <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
+                    <Field.Input
+                      value={text}
+                      disabled={busy}
+                      placeholder={t('question-answer.placeholder')}
+                      data-testid='task-question.input'
+                      onChange={(event) => setText(event.target.value)}
+                      onKeyDown={handleKeyDown}
+                    />
+                  </Field.Root>
                 </div>
-              </Button>
-            ))}
-            {/* Wraps rather than squeezes: in a narrow host (a popover card) the field keeps a usable
-                width and the button drops below it. */}
-            <div className='flex flex-wrap gap-1'>
-              <div className='flex-[1_1_10rem] min-w-0'>
-                <Field.Root>
-                  <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                  <Field.Input
-                    value={text}
-                    disabled={busy}
-                    placeholder={t('question-answer.placeholder')}
-                    data-testid='task-question.input'
-                    onChange={(event) => setText(event.target.value)}
-                    onKeyDown={handleKeyDown}
-                  />
-                </Field.Root>
-              </div>
-              <Button
-                variant='primary'
-                disabled={busy || text.trim() === ''}
-                data-testid='task-question.submit'
-                onClick={() => submit(text)}
-              >
-                {t('question-submit.label')}
-              </Button>
-            </div>
-          </div>
-        )
-      )}
+                <Button
+                  variant='primary'
+                  disabled={busy || text.trim() === ''}
+                  data-testid='task-question.submit'
+                  onClick={() => submit(text)}
+                >
+                  {t('question-submit.label')}
+                </Button>
+              </Flex>
+            </Flex>
+          )
+        )}
 
-      {message && (
-        <p className='ps-6 text-description' data-testid='task-question.message'>
-          {message}
-        </p>
-      )}
-    </div>
+        {message && (
+          <p className='ps-6 text-description' data-testid='task-question.message'>
+            {message}
+          </p>
+        )}
+      </div>
+    </Flex>
   );
 };
 

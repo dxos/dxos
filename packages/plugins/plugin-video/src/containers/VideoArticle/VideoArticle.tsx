@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Video } from '@dxos/types';
@@ -157,6 +157,34 @@ const TranscriptTabs = ({
   const { t } = useTranslation(meta.profile.key);
   // The selected tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
+
+  // One action (regenerate), hidden outside the summary tab: `disabled`/`spin` are read off the
+  // action's own properties (the same model `ActionToolbarItem` renders elsewhere) rather than
+  // wired by hand, so this toolbar composes the same way the outer one does.
+  const regenerateActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'regenerate',
+          {
+            label: ['regenerate.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            disposition: 'toolbar',
+            hidden: tab !== 'summary',
+            disabled: isRegenerateDisabled,
+            spin: isSummarizing,
+            // Ordered/pushed past the tablist (which renders first in DOM here): the toolbar shows
+            // graph items before its children, so the tablist has to come first in markup and this
+            // pair of classes restores the original left-tabs/right-button layout visually.
+            classNames: 'order-1 ms-auto',
+            testId: 'video.toolbar.regenerate',
+          },
+          () => onRegenerate(),
+        )
+        .build(),
+    [tab, isRegenerateDisabled, isSummarizing, onRegenerate],
+  );
+
   return (
     <Panel.Root asChild role={role}>
       <Tabs.Root
@@ -166,24 +194,12 @@ const TranscriptTabs = ({
         onValueChange={onTabChange}
       >
         <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Tabs.Tablist>
+          <ActionToolbar {...regenerateActions} attendableId={attendableId}>
+            <Tabs.Tablist classNames='order-0'>
               <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
               <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
             </Tabs.Tablist>
-            {tab === 'summary' && (
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--arrows-clockwise--regular'
-                label={t('regenerate.label')}
-                disabled={isRegenerateDisabled}
-                iconClassNames={isSummarizing ? 'animate-spin' : undefined}
-                classNames='ml-auto'
-                onClick={onRegenerate}
-              />
-            )}
-          </Toolbar.Root>
+          </ActionToolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
