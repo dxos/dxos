@@ -28,7 +28,7 @@ import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/re
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation, TaskSetView, TasksCapabilities } from '#types';
+import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
 import { ALL_STATUSES, filterTasks, parseStatusTerms, writeStatusTerms } from '../../util/index.ts';

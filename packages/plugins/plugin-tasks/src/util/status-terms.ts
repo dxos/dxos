@@ -67,7 +67,9 @@ export const parseStatusTerms = (text: string): StatusTerms => {
   }
 
   const kept: ReadonlySet<Task.Status> | undefined = statuses;
-  return { statuses: kept && ALL_STATUSES.filter((status) => kept.has(status)), rest: rest.join(' ') };
+  return kept
+    ? { statuses: ALL_STATUSES.filter((status) => kept.has(status)), rest: rest.join(' ') }
+    : { rest: rest.join(' ') };
 };
 
 /**
