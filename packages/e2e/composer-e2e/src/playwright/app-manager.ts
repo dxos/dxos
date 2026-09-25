@@ -615,7 +615,16 @@ export class AppManager {
   async dragTo(
     active: Locator,
     over: Locator,
-    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+    {
+      instruction,
+      offset = { x: 0, y: 0 },
+      holdUntil,
+    }: {
+      instruction: string;
+      offset?: { x: number; y: number };
+      /** Keeps the pointer in the zone until this holds, then drops. */
+      holdUntil?: () => Promise<boolean>;
+    },
   ): Promise<void> {
     const start = await active.boundingBox();
     const initial = await over.boundingBox();
@@ -648,13 +657,24 @@ export class AppManager {
         return over.getAttribute('data-instruction');
       })
       .toBe(instruction);
+    if (holdUntil) {
+      await expect
+        .poll(async () => {
+          nudge = 1 - nudge;
+          await this.page.mouse.move(x, y + nudge);
+          return holdUntil();
+        })
+        .toBe(true);
+    }
     await this.page.mouse.up();
   }
 
-  /** Drops `active` inside `collection`, then opens `collection`, which a quick drop leaves closed. */
-  async dragInto(active: Locator, collection: Locator, timeout = 15_000): Promise<void> {
-    await this.dragTo(active, collection, { instruction: 'make-child' });
-    await this.#expandRow(collection, timeout);
+  /** Drops `active` inside `collection`, holding over it until the tree opens it. */
+  async dragInto(active: Locator, collection: Locator): Promise<void> {
+    await this.dragTo(active, collection, {
+      instruction: 'make-child',
+      holdUntil: async () => (await collection.getAttribute('data-state')) === 'open',
+    });
   }
 
   //
