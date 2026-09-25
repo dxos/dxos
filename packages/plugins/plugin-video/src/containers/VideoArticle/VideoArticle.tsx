@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -158,12 +158,31 @@ const TranscriptTabs = ({
   // The selected tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
 
-  // One action (regenerate), hidden outside the summary tab: `disabled`/`spin` are read off the
-  // action's own properties (the same model `ActionToolbarItem` renders elsewhere) rather than
-  // wired by hand, so this toolbar composes the same way the outer one does.
+  // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
+  const tabs = useMemo(
+    () => (
+      <Tabs.Tablist>
+        <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
+        <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
+      </Tabs.Tablist>
+    ),
+    [t],
+  );
+
+  // Tabs first, then a growing gap, then the regenerate action: rendered through the same graph
+  // (rather than as `ActionToolbar`'s `children`) so DOM/focus order matches the visual left-to-right
+  // order — `ActionToolbar` always renders its graph items before its children slot. `disabled`/`spin`
+  // on `regenerate` are read off the action's own properties (the same model `ActionToolbarItem`
+  // renders elsewhere) rather than wired by hand, so this toolbar composes the same way the outer one does.
   const regenerateActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        .action(
+          'tabs',
+          { variant: 'custom', label: ['transcript.tab.label', { ns: meta.profile.key }], render: () => tabs },
+          () => {},
+        )
+        .separator()
         .action(
           'regenerate',
           {
@@ -173,16 +192,12 @@ const TranscriptTabs = ({
             hidden: tab !== 'summary',
             disabled: isRegenerateDisabled,
             spin: isSummarizing,
-            // Ordered/pushed past the tablist (which renders first in DOM here): the toolbar shows
-            // graph items before its children, so the tablist has to come first in markup and this
-            // pair of classes restores the original left-tabs/right-button layout visually.
-            classNames: 'order-1 ms-auto',
             testId: 'video.toolbar.regenerate',
           },
           () => onRegenerate(),
         )
         .build(),
-    [tab, isRegenerateDisabled, isSummarizing, onRegenerate],
+    [tabs, tab, isRegenerateDisabled, isSummarizing, onRegenerate],
   );
 
   return (
@@ -196,12 +211,7 @@ const TranscriptTabs = ({
         <Panel.Toolbar asChild>
           {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and `disabled`
               would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
-          <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive>
-            <Tabs.Tablist classNames='order-0'>
-              <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
-              <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
-            </Tabs.Tablist>
-          </ActionToolbar>
+          <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>

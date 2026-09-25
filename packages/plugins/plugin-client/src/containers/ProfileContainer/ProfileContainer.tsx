@@ -51,6 +51,9 @@ export const ProfileContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const pendingRef = useRef(false);
+  // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind
+  // it — a debounced call in flight when another edit lands is still the stale one once it settles.
+  const editIdRef = useRef(0);
   const [displayName, setDisplayNameDirectly] = usePendingGatedState(identity?.displayName ?? '', pendingRef.current);
   const [emoji, setEmojiDirectly] = usePendingGatedState(getEmojiValue(identity), pendingRef.current);
   const [hue, setHueDirectly] = usePendingGatedState(getHueValue(identity), pendingRef.current);
@@ -60,6 +63,7 @@ export const ProfileContainer = () => {
       debounce(
         // Merge onto the current profile data so unrelated metadata is preserved.
         (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) => {
+          const editId = editIdRef.current;
           void invokePromise(ClientOperation.UpdateProfile, {
             displayName: profile.displayName,
             data: {
@@ -68,7 +72,11 @@ export const ProfileContainer = () => {
               hue: profile.hue,
             },
           }).finally(() => {
-            pendingRef.current = false;
+            // Only clear the gate for the edit that's actually settling — otherwise a write that
+            // started before a newer edit landed would prematurely reopen the resync over it.
+            if (editIdRef.current === editId) {
+              pendingRef.current = false;
+            }
           });
         },
         2_000,
@@ -79,6 +87,7 @@ export const ProfileContainer = () => {
   const handleChange = useCallback(
     (profile: Partial<UserProfile>, meta: FormUpdateMeta<UserProfile>) => {
       pendingRef.current = true;
+      editIdRef.current += 1;
       for (const [path, changed] of Object.entries(meta.changed)) {
         if (changed) {
           switch (path) {
