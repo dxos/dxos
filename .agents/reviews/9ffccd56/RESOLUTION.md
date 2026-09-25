@@ -64,10 +64,10 @@
 - 9ffccd56-60 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx:308:5
 - 9ffccd56-61 - resolved - no-hand-rolled-lists - packages/ui/react-ui-task/src/components/TaskList/TaskHistory.tsx:86
 - 9ffccd56-62 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskTreeNode.tsx:428:9
-- 9ffccd56-63 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:69:5
-- 9ffccd56-64 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:78:7
-- 9ffccd56-65 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:88:9
-- 9ffccd56-66 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:94:11
-- 9ffccd56-67 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:107:17
-- 9ffccd56-68 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:117:13
+- 9ffccd56-63 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:69:5
+- 9ffccd56-64 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:78:7
+- 9ffccd56-65 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:88:9
+- 9ffccd56-66 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:94:11
+- 9ffccd56-67 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:107:17
+- 9ffccd56-68 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:117:13
 - 9ffccd56-69 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/components/Tooltip/Tooltip.stories.tsx:26:7
