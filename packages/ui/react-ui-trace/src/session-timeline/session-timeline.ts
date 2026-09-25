@@ -194,23 +194,18 @@ const historySpan = (
   return start === undefined || last === undefined ? undefined : { start, end: open ? undefined : end, last };
 };
 
-/** Whether an entry records a status change and nothing else, so a trace marker for it says it all. */
-const isStatusOnly = (entry: Task.HistoryEntry, change: Task.StatusChange): boolean =>
-  Task.isChangeEntry(entry) &&
-  (entry.description === undefined || entry.description === Task.statusNote(change.status, change.previousStatus));
-
 const historyMarker = (
   entry: Task.HistoryEntry,
   change: Task.StatusChange | undefined,
-  statusOnly: boolean,
   id: string,
   laneId: string,
+  pid: string | undefined,
 ): Marker | undefined => {
   const timestamp = change?.timestamp ?? Date.parse(entry.date);
   if (Number.isNaN(timestamp)) {
     return undefined;
   }
-  const base = { id, laneId, kind: 'task' as const, timestamp, detail: entry };
+  const base = { id, laneId, kind: 'task' as const, timestamp, pid, detail: entry };
   switch (entry.event) {
     case 'question':
       return { ...base, label: entry.text, level: 'warn' };
@@ -219,7 +214,7 @@ const historyMarker = (
     default:
       return {
         ...base,
-        label: (change && statusOnly ? undefined : entry.description) ?? `Task ${change?.status ?? entry.event}`,
+        label: entry.description ?? `Task ${change?.status ?? entry.event}`,
         level: change?.status === 'failed' ? 'error' : undefined,
       };
   }
@@ -495,10 +490,10 @@ export const buildSessionTimeline = ({
     );
   }
 
-  // Each entry in a task's log is a node on its lane. A status change the trace also drew is already
-  // there, with the pid, so an entry recording only that change is left out; one that also changed
-  // another field still gets its node. Only a trace event on a drawn lane counts as drawn.
-  const tracedChanges = new Map<string, { status: Task.Status; timestamp: number }[]>();
+  // Each entry in a task's log is a node on its lane. A status change the trace also recorded is drawn
+  // once, from the entry, which says everything the edit changed; the trace event lends it the pid and
+  // is not drawn. Only a trace event on a drawn lane is matched, so none is hidden that had a node.
+  const tracedChanges = new Map<string, Trace.FlatEvent[]>();
   for (const event of events) {
     const drawn =
       (event.meta.pid !== undefined && laneByPid.has(event.meta.pid)) ||
@@ -506,13 +501,11 @@ export const buildSessionTimeline = ({
     if (drawn && event.type === Trace.TaskStatusChanged.key) {
       const data = decode(Trace.TaskStatusChanged.schema, event.data);
       if (data) {
-        tracedChanges.set(data.taskId, [
-          ...(tracedChanges.get(data.taskId) ?? []),
-          { status: data.status, timestamp: event.timestamp },
-        ]);
+        tracedChanges.set(data.taskId, [...(tracedChanges.get(data.taskId) ?? []), event]);
       }
     }
   }
+  const mergedEvents = new Set<Trace.FlatEvent>();
   // A delegated task's lane is its child session, which carries the task id, so it gets the nodes too.
   for (const lane of lanes) {
     const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
@@ -522,18 +515,18 @@ export const buildSessionTimeline = ({
     const traced = tracedChanges.get(task.id) ?? [];
     for (const entry of task.history ?? []) {
       const change = Task.getStatusChange(entry);
-      const statusOnly = change !== undefined && isStatusOnly(entry, change);
-      if (
+      const match =
         change &&
-        statusOnly &&
-        traced.some(
-          (candidate) =>
-            candidate.status === change.status && Math.abs(candidate.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
-        )
-      ) {
-        continue;
+        traced.find(
+          (event) =>
+            !mergedEvents.has(event) &&
+            decode(Trace.TaskStatusChanged.schema, event.data)?.status === change.status &&
+            Math.abs(event.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
+        );
+      if (match) {
+        mergedEvents.add(match);
       }
-      const marker = historyMarker(entry, change, statusOnly, `${lane.id}:${markers.length}`, lane.id);
+      const marker = historyMarker(entry, change, `${lane.id}:${markers.length}`, lane.id, match?.meta.pid);
       if (marker) {
         markers.push(marker);
       }
@@ -564,7 +557,9 @@ export const buildSessionTimeline = ({
       event.type === Trace.AgentRequestBegin.key || event.type === Trace.AgentRequestEnd.key
         ? laneId
         : (segmentFor(segmentsBySession.get(laneId), event)?.laneId ?? laneId);
-    const marker = toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
+    const marker = mergedEvents.has(event)
+      ? undefined
+      : toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
       if (marker.kind === 'delegation') {

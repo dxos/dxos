@@ -647,9 +647,9 @@ describe('buildSessionTimeline', () => {
         .filter((marker) => marker.laneId === firstLane?.id)
         .map(({ label, timestamp, level }) => ({ label, timestamp, level })),
     ).toEqual([
-      { label: 'Task started', timestamp: 1_000, level: undefined },
+      { label: 'Status changed from todo to started.', timestamp: 1_000, level: undefined },
       { label: 'Which schema?', timestamp: 1_500, level: 'warn' },
-      { label: 'Task done', timestamp: 2_000, level: undefined },
+      { label: 'Status changed from started to done.', timestamp: 2_000, level: undefined },
     ]);
     expect(timeline.range).toEqual({ start: 1_000, end: 3_000 });
   });
@@ -680,22 +680,24 @@ describe('buildSessionTimeline', () => {
       const markers = timeline.markers
         .filter((marker) => marker.laneId === `task:${first.id}`)
         .toSorted((a, b) => a.timestamp - b.timestamp);
-      expect(markers.map((marker) => marker.label)).toEqual(['Task started', 'Priority set to high.']);
+      expect(markers.map((marker) => marker.label)).toEqual([
+        'Status changed from todo to started.',
+        'Priority set to high.',
+      ]);
+      // The trace event is drawn through the entry, which takes its pid.
       expect(markers[0]?.pid).toBe('agent');
     }, Effect.provide(TestTraceService.layer)),
   );
   test('closes a finished task whose log is missing its closing transition', ({ expect }) => {
-    // Logged before entries held the transition as data, with the closing note replaced.
-    const first = Task.make({
-      title: 'First',
-      status: 'done',
-      history: [
-        { date: at(1_000), event: 'updated', description: 'Status changed from todo to started.' },
-        { date: at(2_000), event: 'updated', description: 'Shipped.' },
-      ],
+    const first = Task.make({ title: 'First', status: 'todo' });
+    Task.setStatus(first, 'started', { date: at(1_000) });
+    Task.update(first, { priority: 'high' }, { date: at(2_000) });
+    // Finished by a direct write, which leaves no entry.
+    Obj.update(first, (first) => {
+      first.status = 'done';
     });
     const second = Task.make({ title: 'Second', status: 'todo' });
-    const chat = makeChat('Legacy', [first, second]);
+    const chat = makeChat('Unlogged', [first, second]);
 
     const timeline = buildSessionTimeline({ traceMessages: [], sessions: [chat.session], tasks: [first, second] });
 
@@ -703,7 +705,7 @@ describe('buildSessionTimeline', () => {
   });
 
   it.effect(
-    'keeps the node of an entry that changed more than the status the trace drew',
+    'draws an entry that changed more than the status once, with everything it changed',
     Effect.fnUntraced(function* ({ expect }) {
       const first = Task.make({ title: 'First', status: 'todo' });
       const second = Task.make({ title: 'Second', status: 'todo' });
@@ -724,12 +726,10 @@ describe('buildSessionTimeline', () => {
         tasks: [first, second],
       });
 
-      expect(
-        timeline.markers
-          .filter((marker) => marker.laneId === `task:${first.id}`)
-          .map((marker) => marker.label)
-          .toSorted(),
-      ).toEqual(['Status changed from todo to started. Priority set to high.', 'Task started']);
+      const markers = timeline.markers.filter((marker) => marker.laneId === `task:${first.id}`);
+      expect(markers.map(({ label, pid }) => ({ label, pid }))).toEqual([
+        { label: 'Status changed from todo to started. Priority set to high.', pid: 'agent' },
+      ]);
     }, Effect.provide(TestTraceService.layer)),
   );
 
@@ -754,8 +754,10 @@ describe('buildSessionTimeline', () => {
       });
 
       expect(
-        timeline.markers.filter((marker) => marker.laneId === `task:${first.id}`).map((marker) => marker.label),
-      ).toEqual(['Task started']);
+        timeline.markers
+          .filter((marker) => marker.laneId === `task:${first.id}`)
+          .map(({ label, pid }) => ({ label, pid })),
+      ).toEqual([{ label: 'Status changed from todo to started.', pid: undefined }]);
     }, Effect.provide(TestTraceService.layer)),
   );
 });

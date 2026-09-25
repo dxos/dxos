@@ -133,8 +133,8 @@ const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
     id: Schema.optional(HistoryEntryBase.id),
     event: Schema.Literal(event).annotate({ title: 'Event' }),
     description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-    // The transition the edit made, held as data because the note is prose a caller may replace.
-    // Optional: entries logged before these fields existed carry the transition only in the note.
+    // The transition the edit made, held as data so readers never parse the note, which is prose.
+    // Optional: an edit that left the status alone has none, nor does an entry logged before these fields.
     status: Schema.optional(Status.annotate({ title: 'Status' })),
     previousStatus: Schema.optional(Status.annotate({ title: 'Previous Status' })),
   }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });
@@ -454,7 +454,11 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     notes.push(changes.description === null ? 'Description cleared.' : 'Description updated.');
   }
   if (changes.status !== undefined && changes.status !== task.status) {
-    notes.push(statusNote(changes.status, task.status));
+    notes.push(
+      task.status === undefined
+        ? `Status set to ${changes.status}.`
+        : `Status changed from ${task.status} to ${changes.status}.`,
+    );
   }
   if (changes.priority !== undefined && (changes.priority ?? undefined) !== task.priority) {
     notes.push(
@@ -542,44 +546,21 @@ export type StatusChange = {
   entry: ChangeEntry;
 };
 
-/** The note {@link update} writes for a status transition. */
-export const statusNote = (status: Status, previousStatus?: Status): string =>
-  previousStatus === undefined ? `Status set to ${status}.` : `Status changed from ${previousStatus} to ${status}.`;
-
-// Only for entries logged before change entries carried `status`. A status note starts the
-// description or follows another note, and the last one wins because a title note, whose quoted
-// value is free text, always comes first.
-const STATUS_NOTE = /(?:^|\. )Status (?:changed from (\w+) to (\w+)|set to (\w+))\.(?= |$)/g;
-
-const isStatus = Schema.is(Status);
-
-/** The status transition an entry records, if it records one. */
+/** The status transition an entry records; an entry logged before entries held one records none. */
 export const getStatusChange = (entry: HistoryEntry): StatusChange | undefined => {
-  if (!isChangeEntry(entry)) {
+  if (!isChangeEntry(entry) || entry.status === undefined) {
     return undefined;
   }
   const timestamp = Date.parse(entry.date);
   if (Number.isNaN(timestamp)) {
     return undefined;
   }
-  if (entry.status !== undefined) {
-    return {
-      timestamp,
-      status: entry.status,
-      ...(entry.previousStatus !== undefined ? { previousStatus: entry.previousStatus } : {}),
-      entry,
-    };
-  }
-  const match = [...(entry.description ?? '').matchAll(STATUS_NOTE)].at(-1);
-  if (!match) {
-    return undefined;
-  }
-  const [, from, to, set] = match;
-  const status = to ?? set;
-  if (!isStatus(status)) {
-    return undefined;
-  }
-  return { timestamp, status, ...(isStatus(from) ? { previousStatus: from } : {}), entry };
+  return {
+    timestamp,
+    status: entry.status,
+    ...(entry.previousStatus !== undefined ? { previousStatus: entry.previousStatus } : {}),
+    entry,
+  };
 };
 
 /** The status transitions a task's log records, oldest first. */

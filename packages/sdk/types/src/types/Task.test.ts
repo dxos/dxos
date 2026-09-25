@@ -394,7 +394,7 @@ describe('history', () => {
     Task.setStatus(task, 'todo', { date: '2026-08-01T09:00:00.000Z' });
     Task.update(task, { status: 'started', priority: 'high' }, { date: '2026-08-01T10:00:00.000Z' });
     Task.setAssignee(task, { name: 'Scout' }, { date: '2026-08-01T10:30:00.000Z' });
-    // A title reading like a status note is quoted inside the title note, not a transition.
+    // A title reading like a status note records no transition.
     Task.update(task, { title: 'Status set to done.' }, { date: '2026-08-01T10:45:00.000Z' });
     // A replaced note still carries the transition, which the entry holds as data.
     Task.setStatus(task, 'done', { date: '2026-08-01T11:00:00.000Z', description: 'Shipped.' });
@@ -412,19 +412,14 @@ describe('history', () => {
     ]);
   });
 
-  test('reads the transition out of the note of an entry logged before entries held it', ({ expect }) => {
-    const entry = (description: string): Task.HistoryEntry => ({
-      date: '2026-08-01T09:00:00.000Z',
-      event: 'updated',
-      description,
-    });
-
-    expect(Task.getStatusChange(entry('Status changed from todo to started.'))?.status).toEqual('started');
+  test('reads no transition from an entry that holds none, whatever its note says', ({ expect }) => {
     expect(
-      Task.getStatusChange(entry('Title changed to "Status set to done.". Status changed from todo to review.'))
-        ?.status,
-    ).toEqual('review');
-    expect(Task.getStatusChange(entry('Title changed to "Status set to done.".'))).toBeUndefined();
+      Task.getStatusChange({
+        date: '2026-08-01T09:00:00.000Z',
+        event: 'updated',
+        description: 'Status changed from todo to started.',
+      }),
+    ).toBeUndefined();
   });
 });
 
