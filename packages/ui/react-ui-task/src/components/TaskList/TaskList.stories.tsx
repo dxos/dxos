@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Blob, Obj, Ref } from '@dxos/echo';
+import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
@@ -462,6 +462,31 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
 };
 
 /** The default story under a preview host that knows the seed's artifacts. */
+/** {@link seedArtifacts} with tags on most rows, so tags sit beside artifact and assignee chips. */
+const seedTagged = (): Task.Task[] => {
+  const tags = {
+    launch: Tag.make({ label: 'launch', hue: 'rose' }),
+    design: Tag.make({ label: 'design', hue: 'sky' }),
+    frontend: Tag.make({ label: 'frontend', hue: 'violet' }),
+    content: Tag.make({ label: 'content', hue: 'lime' }),
+  };
+  const byTitle: Record<string, Tag.Tag[]> = {
+    'Choose the launch roast': [tags.launch],
+    'Render artifacts in the task list': [tags.frontend],
+    'Design the new label': [tags.design, tags.launch],
+    'Prepare the launch post': [tags.content, tags.launch],
+  };
+  const tasks = seedArtifacts();
+  for (const task of tasks) {
+    Obj.update(task, (task) => {
+      for (const tag of byTitle[task.title] ?? []) {
+        Obj.addTag(task, Ref.make(tag));
+      }
+    });
+  }
+  return tasks;
+};
+
 const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   const tasks = useMemo(() => (props.seed ?? seedArtifacts)(), [props.seed]);
   const artifacts = useMemo(
@@ -863,6 +888,21 @@ export const WithArtifacts: Story = {
     seed: seedArtifacts,
     showGroupLabels: false,
     showDescription: true,
+  },
+};
+
+/** Tags render as chips in the same cell as the task's artifacts and assignee. */
+export const WithTags: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedTagged,
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.tag"]')).toHaveLength(6);
+    });
   },
 };
 
