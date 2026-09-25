@@ -5,15 +5,13 @@
 import React, { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Column, Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
-import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { TaskQuestion } from '../TaskQuestion/index.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
@@ -21,8 +19,8 @@ import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './Task
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
 //
 
-export type TaskListEditProps = ComposableProps<{
-  /** Placeholder for the title field when nothing is selected (the create case). */
+export type TaskListEditorProps = ComposableProps<{
+  /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
   placeholder?: string;
   /**
    * Edit a description under the title — the selected task's, or the new task's when creating, so a
@@ -30,7 +28,7 @@ export type TaskListEditProps = ComposableProps<{
    * field is several rows tall wherever it appears, which a single-line strip has no room for.
    */
   showDescription?: boolean;
-  /** Placeholder for the description field. */
+  /** Placeholder for the description field; translated by default. */
   descriptionPlaceholder?: string;
   /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
   descriptionExtensions?: MarkdownEditableProps['extensions'];
@@ -53,12 +51,6 @@ export type TaskListEditProps = ComposableProps<{
    * rest of the host's content does.
    */
   showControls?: boolean;
-  /**
-   * Render the open questions under the fields. Off for a host that lays out the task's sections
-   * itself — a detail article, where a question is a section beside the properties and the history
-   * rather than a tail on the editor.
-   */
-  showSections?: boolean;
 }>;
 
 /**
@@ -66,18 +58,21 @@ export type TaskListEditProps = ComposableProps<{
  *
  * Editing lives here rather than in the row because a row is 32px of shared subgrid — a field
  * opening inside it moves everything around it. A pane below the list has room to be a field.
+ *
+ * The fields, and nothing else. A task's questions and its history belong to the surface that has
+ * room to answer and to read — the detail article — and under a list they grew the strip by a line
+ * per entry, pushing the list itself off the screen.
  */
-export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
+export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
   (
     {
-      placeholder = 'Add task',
+      placeholder,
       showDescription = false,
-      descriptionPlaceholder = 'Add a description',
+      descriptionPlaceholder,
       descriptionExtensions,
       grid,
       createOnly = false,
       showControls = true,
-      showSections = true,
       ...props
     },
     forwardedRef,
@@ -85,17 +80,8 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     const { t } = useTranslation(translationKey);
     const { className, ...rest } = composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const {
-      tasks,
-      selected,
-      gridTemplateColumns,
-      showEstimates,
-      showQuestions,
-      onTaskCreate,
-      onTaskUpdate,
-      onTaskSelect,
-      onQuestionAnswer,
-    } = useTaskListContext('TaskList.Edit');
+    const { tasks, selected, gridTemplateColumns, showEstimates, onTaskCreate, onTaskUpdate, onTaskSelect } =
+      useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
       () => (createOnly ? undefined : tasks.find(({ id }) => id === selected)),
@@ -105,21 +91,16 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
 
-    // Open questions only: an answered one is already a line in the history below.
-    const openQuestions = useMemo(
-      () => (showQuestions && current ? Task.getQuestions(current.history).filter(({ answer }) => !answer) : []),
-      [showQuestions, current],
-    );
-
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
+    const [draft, setDraft] = useState('');
+
     // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
     // creating (there is no task to read from), so clearing it means remounting it.
     const [createEpoch, setCreateEpoch] = useState(0);
 
-    const [draft, setDraft] = useState('');
     // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
     // holds rather than carrying the previous one's across. The description ref is cleared here too:
     // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
@@ -212,14 +193,13 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       // description → buttons rather than stopping at a button on the way to the text.
       <div
         {...rest}
-        data-testid='taskList.edit'
-        // Three rows, placed explicitly rather than by flow: header (icon, title, toolbar),
-        // description, open questions. Auto-placement drops a cell into whatever track is free,
-        // which put the description in the icon column whenever the toolbar was absent.
+        // Two rows, placed explicitly rather than by flow: header (icon, title, toolbar) and
+        // description. Auto-placement drops a cell into whatever track is free, which put the
+        // description in the icon column whenever the toolbar was absent.
         className={mx(
           // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
           // repeated on every cell that might start a row, and is missed by whichever one is added next.
-          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto] gap-y-2',
+          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto] gap-y-2',
           // No leading control means no icon track: the title then starts where the host's own
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
@@ -233,6 +213,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         // variable says "the content track", and `Field.Root` hands it to the field it wraps — which
         // in THIS grid names a different column, and put the title in the controls' track.
         style={{ ...(grid ? { gridTemplateColumns } : {}), '--dx-col': 'auto' } as CSSProperties}
+        data-testid='taskList.edit'
         ref={forwardedRef}
       >
         {/* Placed explicitly: with a gutter the pane leaves that track empty, and implicit placement
@@ -265,7 +246,9 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
               grid ? 'col-start-[title] -col-end-2' : showControls ? 'col-start-2' : 'col-start-1',
             )}
             data-testid='taskList.edit.title'
-            placeholder={current ? t('task-title.placeholder') : placeholder}
+            // A host may name the row ("Add a step"), but the default is the package's own string:
+            // an English literal in the component is a string no translation can reach.
+            placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleTitleKeyDown}
@@ -299,7 +282,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
               classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
               editing
               multiline
-              placeholder={descriptionPlaceholder}
+              placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
               extensions={descriptionExtensions}
               // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
               // land the reader in the description instead of the list.
@@ -316,39 +299,6 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
           </div>
         )}
 
-        {/* The full question — context, options and the answer field — lives here rather than in the
-            row, which shows only its one-line summary: the pane has the room a prompt needs. The
-            history does NOT: a log of what has already happened is what the reader opens the task
-            to read, and under a row it pushed the next task off the screen. */}
-        {showSections &&
-          openQuestions.length > 0 &&
-          task && (
-            // A Column of its own, placed across the host's span, so the questions lay themselves out
-            // the same way here as in a detail pane rather than being handed the host's column names.
-            <Column.Root
-              gutter='md'
-              gap='lg'
-              data-testid='taskList.edit.questions'
-              classNames={mx('min-w-0 row-start-3', grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full')}
-            >
-              {openQuestions.map((thread) => (
-                <TaskQuestion
-                  key={thread.question.id}
-                  thread={thread}
-                  onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
-                />
-              ))}
-            </Column.Root>
-          )}
-
-        {/* The description is held open with no blur to commit it, so the pane needs to say
-            explicitly what happens to the pending text. Both buttons keep focus where it is
-            (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
-            would commit before its own handler ran — and Cancel could never mean anything.
-            Placed on the title line explicitly; its place in the DOM is what orders Tab.
-            Hidden while the add row is untouched: with nothing typed there is nothing to save and
-            nothing to cancel, and two dead controls on an empty row read as a form to fill in
-            rather than a place to type. */}
         {/* Save and Cancel belong to creating: the held-open description has no blur to commit it, so
             the add row needs both. Editing, the fields commit themselves — and a host carrying the
             task's controls in its own toolbar (`showControls` off) has no use for a second bar of
@@ -392,4 +342,4 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   },
 );
 
-TaskListEdit.displayName = 'TaskList.Edit';
+TaskListEditor.displayName = 'TaskList.Editor';

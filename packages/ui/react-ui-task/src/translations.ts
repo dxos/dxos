@@ -38,6 +38,8 @@ export const translations = [
         'task-actions.label': 'Task actions',
         'task-check.label': 'Select task',
         'task-title.placeholder': 'Untitled',
+        'add-task.placeholder': 'Add task',
+        'task-description.placeholder': 'Add a description',
         'save-task.label': 'Save',
         'task-history.label': 'Activity',
         'cancel-edit.label': 'Cancel',

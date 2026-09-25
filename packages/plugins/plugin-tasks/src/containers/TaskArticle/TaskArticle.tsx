@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskHistory, TaskList, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import { TaskHistory, TaskList, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -28,7 +28,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * questions, the history and the artifacts, each starting at the same edge with its glyphs in the
  * gutter beside it (see `react-ui-task/docs/DETAIL-LAYOUT.md`).
  *
- * The fields are the list's own editor (`TaskList.Edit`) rather than a schema form, so a task reads
+ * The fields are the list's own editor (`TaskList.Editor`) rather than a schema form, so a task reads
  * and edits the same way wherever it is opened: one title field and a markdown description, with the
  * host's contributed extensions live in it. Edits go through {@link TaskOperation.UpdateTask} rather
  * than writing fields directly, so the article shares the history-writing path with the list and
@@ -64,13 +64,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
   return (
     // Headless, and outside the panel: the toolbar's controls read the task's update handler from
     // this context, as the list's rows do, so status and estimate are set the same way in both.
-    <TaskList.Root
-      tasks={[task]}
-      selected={task.id}
-      showDescription
-      onTaskUpdate={handleUpdate}
-      onQuestionAnswer={handleQuestionAnswer}
-    >
+    <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
           <Toolbar.Root classNames='dx-document'>
@@ -88,12 +82,11 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   hangs outside it. */}
               <Column.Root gutter='md' gap='lg' classNames='py-2'>
                 <Column.Center>
-                  <TaskList.Edit
+                  <TaskList.Editor
                     showDescription
-                    // The status glyph and the estimate are in the toolbar above, and the sections
-                    // below are the article's own — the editor here is the fields and nothing else.
+                    // The task's controls are the properties list below; the editor here is the
+                    // title and the description.
                     showControls={false}
-                    showSections={false}
                     descriptionExtensions={descriptionExtensions}
                     classNames='dx-document'
                   />
@@ -102,7 +95,11 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                     pane has the width to wrap them, and a chip that wraps is a chip the reader can
                     see without dragging the row sideways. */}
-                <Column.Center classNames='flex flex-wrap gap-1' data-testid='tasksPlugin.tags'>
+                <Column.Center classNames='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
+                  {/* First, and always present: the mnemonic is what the task is called when it is
+                      referred to elsewhere, so the chip that copies it leads the flow whether or not
+                      the task carries anything else. */}
+                  <TaskMnemonic task={task} />
                   <TaskTags task={task} />
                 </Column.Center>
 
