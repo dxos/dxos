@@ -11,7 +11,8 @@ hang on patchless merges (echo-host, changeset) and local-only test-replicator d
 remote reorder (ECHO investigation); (4) DESIGN §10.7 all DECIDED 2026-09-25 (q1 promotion uncoordinated; q3 keep migrations indefinitely,
 retirement planned not default; q4 view = shortest lens path, migrate = explicit steps; q5 whole-set
 validation with the type switch; q7 overlay now, unified lens/branch/migration as long-term target).
-PENDING: strict-schema validation bench test (in progress); late-overlay-write-after-promotion test. Previously:
+PENDING: strict-schema validation bench test (in progress); late-overlay-write-after-promotion test.
+IMPLEMENTATION: see [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) (phases A-E; supersedes M1/M2 lists below). Previously:
 PR #12420 MERGED (squash `f8637f1d`), lens PHASES 1-4 DONE; stories/gotchas for stories-lens in
 older resume history (git log of this file)._
 
