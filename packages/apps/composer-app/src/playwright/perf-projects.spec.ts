@@ -193,8 +193,9 @@ const FIXTURE_MS_PER_TASK = 700;
 /** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
+// The assistant wait on top of the stage allowance, which earlier stages may already have spent.
 const testBudget = (scale: Scale): number =>
-  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS;
+  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS + ASSISTANT_TIMEOUT;
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
