@@ -56,6 +56,10 @@ export class WebSocketMuxer {
   private _inMessageAccumulatedBytes = 0;
   private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
   private readonly _outMessageChannelByService = new Map<string, number>();
+  /** Channels whose last sent segment left the receiver mid-sequence. */
+  private readonly _outOpenSequences = new Set<number>();
+  /** Never reused, so a service moved off a channel cannot land on one a receiver still holds a sequence for. */
+  private _nextOutChannelId = 1;
 
   private _sendTimeout: any | undefined;
 
@@ -70,8 +74,9 @@ export class WebSocketMuxer {
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
-   * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing first, or
-   * with the error the socket's `send` throws; either failure drops every queued segmented message, not just this one.
+   * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing or the muxer is
+   * destroyed first, or with the error the socket's `send` throws; any of these drops every queued segmented message,
+   * not just this one.
    */
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
@@ -213,10 +218,7 @@ export class WebSocketMuxer {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
     }
-    for (const channelChunks of this._outMessageChunks.values()) {
-      channelChunks.forEach((chunk) => chunk.trigger?.wake());
-    }
-    this._outMessageChunks.clear();
+    this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
     this._inMessageAccumulator.clear();
     this._inMessageAccumulatorBytes.clear();
     this._inMessageAccumulatedBytes = 0;
@@ -277,6 +279,11 @@ export class WebSocketMuxer {
             return;
           }
           messages.shift();
+          if ((nextMessage.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
+            this._outOpenSequences.add(channelId);
+          } else {
+            this._outOpenSequences.delete(channelId);
+          }
           nextMessage.trigger?.wake();
         } else {
           emptyChannels.push(channelId);
@@ -294,12 +301,23 @@ export class WebSocketMuxer {
     this._sendTimeout = setTimeout(send);
   }
 
-  /** Rejects every queued segmented send and drops the chunks they had yet to send. */
+  /**
+   * Rejects every queued segmented send and drops the chunks they had yet to send.
+   *
+   * A service whose message was cut off mid-sequence moves to a fresh channel: the wire format has no abort, so the
+   * receiver keeps that message's first segments and would prepend them to the next message on the channel.
+   */
   private _rejectPendingSends(error: Error): void {
     for (const channelChunks of this._outMessageChunks.values()) {
       channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
     }
     this._outMessageChunks.clear();
+    for (const [serviceId, channelId] of this._outMessageChannelByService) {
+      if (this._outOpenSequences.has(channelId)) {
+        this._outMessageChannelByService.delete(serviceId);
+      }
+    }
+    this._outOpenSequences.clear();
   }
 
   private _resolveChannel(message: Message): number | undefined {
@@ -308,7 +326,7 @@ export class WebSocketMuxer {
     }
     let id = this._outMessageChannelByService.get(message.serviceId);
     if (!id) {
-      id = this._outMessageChannelByService.size + 1;
+      id = this._nextOutChannelId++;
       this._outMessageChannelByService.set(message.serviceId, id);
     }
     return id;
@@ -330,8 +348,8 @@ export class SegmentedMessageLimitError extends Error {
 }
 
 /**
- * Rejects a segmented send whose remaining segments were dropped because the socket began closing
- * before they could be handed to it.
+ * Rejects a segmented send whose remaining segments were dropped because the socket began closing, or the muxer was
+ * destroyed, before they could be handed to it.
  */
 export class WebSocketClosedError extends Error {
   constructor(public readonly readyState: number) {
@@ -351,7 +369,7 @@ type WebSocketCompat = {
 type MessageChunk = {
   payload: Uint8Array;
   /**
-   * Wakes when the payload is enqueued by WebSocket, or throws if the socket fails first.
+   * Wakes when the payload is enqueued by WebSocket, or throws if the socket fails or the muxer is destroyed first.
    */
   trigger?: Trigger;
 };

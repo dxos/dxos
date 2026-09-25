@@ -177,6 +177,39 @@ describe('WebSocketMuxerTest', () => {
     const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
     expect(received.map(textOf)).toEqual(['delivered'.repeat(8)]);
   });
+
+  test('a message that fails mid-sequence does not corrupt the next one from the same service', async ({ expect }) => {
+    const socket = new TestSocket();
+    const failure = new Error("Can't call WebSocket send() after close()");
+    socket.onFrame = () => {
+      socket.sendError = failure;
+    };
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    await expect(muxer.send(textMessage('dropped'.repeat(8)))).rejects.toBe(failure);
+    expect(socket.frames).toHaveLength(1);
+
+    socket.onFrame = undefined;
+    socket.sendError = undefined;
+    await muxer.send(textMessage('delivered'.repeat(8)));
+
+    // The receiver keeps the failed message's first segment, so the next message must not extend it.
+    const receiver = new WebSocketMuxer(new TestSocket());
+    const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
+    expect(received.map(textOf)).toEqual(['delivered'.repeat(8)]);
+  });
+
+  test('rejects queued segmented sends when the muxer is destroyed', async ({ expect }) => {
+    const socket = new TestSocket();
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    const sent = muxer.send(textMessage(SEGMENTED_CONTENT));
+
+    // The order `EdgeWsConnection` tears down in: close the socket, then destroy the muxer.
+    socket.readyState = WS_CLOSING;
+    muxer.destroy();
+
+    await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
+    expect(socket.frames).toHaveLength(0);
+  });
 });
 
 /** The socket side of the muxer; `send` throws `sendError` while it is set and runs `onFrame` after each frame. */
