@@ -496,6 +496,9 @@ Runs used Chromium in the cloud sandbox with 2 workers.
 | Composer, 44 tests | 28 passed, 1 failed, 15 skipped | 28 passed, 1 failed, 15 skipped |
 | TodoMVC, 8 tests   | 8 passed                        | 8 passed                        |
 
+Both mirror-mode runs were repeated after the proxy moved into `@dxos/automerge-proxy` and its
+property tests' three fixes landed, with the same results.
+
 The one Composer failure, "drag object into collection", fails in both modes and on main's own CI
 (the runs for `08cddf6a` and earlier): after the drag, Collection 1 shows both at the top level and
 inside Collection 2.
@@ -540,12 +543,19 @@ The proposal makes `DataService` proxy-first and moves the byte protocol out of 
 The service payloads are the proxy package's `Contract` schemas. `MirrorService` already builds its
 RPCs from them, so the RPC schema cannot drift from the package.
 
+The package makes the move small on both sides. In the worker, `DataService`'s proxy methods delegate
+to the `Host.DocumentHost` that `MirrorServiceImpl` wraps today, with the same `Host.Store` over the
+Automerge host and the index as its `Host.CopySource`. In the tab, `MirrorRepo`'s `Repo.Host` adapter
+calls `DataService` instead of `MirrorService`; `Repo.ProxyRepo` and `Handle.DocHandle` do not change.
+
 Before the proxy becomes the only way the ECHO client works, each of these has to hold:
 
 1. CI runs the e2e suites in both modes, with a `DX_ECHO_MODE` axis for composer-e2e and todomvc.
 2. The worker serves branches, merges, history and migrations over RPC; until then those features
    need a replica.
-3. The proxy package's fuzz suites cover the contract, including worker restarts and reconnects.
+3. The proxy package's property suites cover the contract, including worker restarts, reconnects
+   and lost responses. They do today for one document per repo; several documents per repo, copy
+   following and cursors under load are next.
 4. Measurements at scale with EDGE sync on: memory and write latency for 1, 2 and 3 tabs.
 5. Composer dogfoods the proxy behind a setting, and refused edits go to telemetry, since every
    refusal is a bug.

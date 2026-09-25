@@ -64,7 +64,7 @@ const setup = async (clients: number, random: Random) => {
         await Promise.all(repos.map((repo) => repo.flush()));
         break;
       } catch (err) {
-        // A submit that raced a restart fails the flush waiting on it; its batch is resent.
+        // A call that raced a restart or lost its response fails the flush waiting on it; the repo sends it again.
         if (attempt >= 5) {
           throw err;
         }
