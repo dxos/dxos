@@ -684,6 +684,80 @@ describe('buildSessionTimeline', () => {
       expect(markers[0]?.pid).toBe('agent');
     }, Effect.provide(TestTraceService.layer)),
   );
+  test('closes a finished task whose log is missing its closing transition', ({ expect }) => {
+    // Logged before entries held the transition as data, with the closing note replaced.
+    const first = Task.make({
+      title: 'First',
+      status: 'done',
+      history: [
+        { date: at(1_000), event: 'updated', description: 'Status changed from todo to started.' },
+        { date: at(2_000), event: 'updated', description: 'Shipped.' },
+      ],
+    });
+    const second = Task.make({ title: 'Second', status: 'todo' });
+    const chat = makeChat('Legacy', [first, second]);
+
+    const timeline = buildSessionTimeline({ traceMessages: [], sessions: [chat.session], tasks: [first, second] });
+
+    expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 1_000, end: 1_000 });
+  });
+
+  it.effect(
+    'keeps the node of an entry that changed more than the status the trace drew',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'todo' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Mixed', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+        }),
+      );
+      Task.update(first, { status: 'started', priority: 'high' }, { date: at(2) });
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+      });
+
+      expect(
+        timeline.markers
+          .filter((marker) => marker.laneId === `task:${first.id}`)
+          .map((marker) => marker.label)
+          .toSorted(),
+      ).toEqual(['Status changed from todo to started. Priority set to high.', 'Task started']);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'draws a history status change the trace recorded off the chart',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'todo' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Elsewhere', [first, second]);
+      // A process belonging to no session on this chart moved the task.
+      yield* TestTraceService.withMeta(
+        { pid: 'stranger' },
+        Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }), // 1.
+      );
+      Task.setStatus(first, 'started', { date: at(1) });
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+      });
+
+      expect(
+        timeline.markers.filter((marker) => marker.laneId === `task:${first.id}`).map((marker) => marker.label),
+      ).toEqual(['Task started']);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 });
 
 const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({

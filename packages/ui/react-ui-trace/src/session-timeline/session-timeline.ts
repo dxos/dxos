@@ -172,9 +172,12 @@ const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.F
 
 /**
  * The stretch a task's own log says it was worked: from its first move to `started` to the last move
- * out of it. Open while the log leaves it `started`; absent when the task was never started.
+ * out of it. `end` is absent while the log leaves it `started`; `last` is the log's last transition.
+ * Absent when the task was never started.
  */
-const historySpan = (changes: readonly Task.StatusChange[]): { start: number; end?: number } | undefined => {
+const historySpan = (
+  changes: readonly Task.StatusChange[],
+): { start: number; end?: number; last: number } | undefined => {
   let start: number | undefined;
   let end: number | undefined;
   let open = false;
@@ -187,12 +190,19 @@ const historySpan = (changes: readonly Task.StatusChange[]): { start: number; en
       open = false;
     }
   }
-  return start === undefined ? undefined : { start, end: open ? undefined : end };
+  const last = changes.at(-1)?.timestamp;
+  return start === undefined || last === undefined ? undefined : { start, end: open ? undefined : end, last };
 };
+
+/** Whether an entry records a status change and nothing else, so a trace marker for it says it all. */
+const isStatusOnly = (entry: Task.HistoryEntry, change: Task.StatusChange): boolean =>
+  Task.isChangeEntry(entry) &&
+  (entry.description === undefined || entry.description === Task.statusNote(change.status, change.previousStatus));
 
 const historyMarker = (
   entry: Task.HistoryEntry,
   change: Task.StatusChange | undefined,
+  statusOnly: boolean,
   id: string,
   laneId: string,
 ): Marker | undefined => {
@@ -207,9 +217,11 @@ const historyMarker = (
     case 'answer':
       return { ...base, label: `Answered: ${entry.answer}` };
     default:
-      return change
-        ? { ...base, label: `Task ${change.status}`, level: change.status === 'failed' ? 'error' : undefined }
-        : { ...base, label: entry.description ?? `Task ${entry.event}` };
+      return {
+        ...base,
+        label: (change && statusOnly ? undefined : entry.description) ?? `Task ${change?.status ?? entry.event}`,
+        level: change?.status === 'failed' ? 'error' : undefined,
+      };
   }
 };
 
@@ -417,18 +429,22 @@ export const buildSessionTimeline = ({
     }
 
     // The task's own log bounds its lane too, so a task worked where the trace does not reach (another
-    // device, a pruned feed, a person's edit) still gets a span; the log holds the task's current state,
-    // so it decides whether the lane is open.
+    // device, a pruned feed, a person's edit) still gets a span. The lane stays open only while the task
+    // itself is `started`: a log missing its closing transition must not reopen finished work.
     for (const task of chatTasks) {
       const taskLane = taskLanes.get(task.id);
       const span = historySpan(Task.getStatusChanges(task.history));
       if (!taskLane || !span) {
         continue;
       }
-      const traced = taskLane.start !== undefined && taskLane.end !== undefined;
+      const tracedEnd = taskLane.start === undefined ? undefined : taskLane.end;
       taskLane.start = Math.min(taskLane.start ?? span.start, span.start);
-      taskLane.end =
-        span.end === undefined ? undefined : traced ? Math.max(taskLane.end ?? span.end, span.end) : span.end;
+      if (span.end === undefined && task.status === 'started') {
+        taskLane.end = undefined;
+      } else {
+        const end = span.end ?? tracedEnd ?? span.last;
+        taskLane.end = tracedEnd === undefined ? end : Math.max(tracedEnd, end);
+      }
     }
 
     for (const subPid of subAgentPids) {
@@ -479,11 +495,15 @@ export const buildSessionTimeline = ({
     );
   }
 
-  // Each entry in a task's log is a node on its lane. A status change the trace also recorded is
-  // already drawn from the trace, which carries the pid, so only the log's other entries are added.
+  // Each entry in a task's log is a node on its lane. A status change the trace also drew is already
+  // there, with the pid, so an entry recording only that change is left out; one that also changed
+  // another field still gets its node. Only a trace event on a drawn lane counts as drawn.
   const tracedChanges = new Map<string, { status: Task.Status; timestamp: number }[]>();
   for (const event of events) {
-    if (event.type === Trace.TaskStatusChanged.key) {
+    const drawn =
+      (event.meta.pid !== undefined && laneByPid.has(event.meta.pid)) ||
+      (event.meta.parentPid !== undefined && laneByPid.has(event.meta.parentPid));
+    if (drawn && event.type === Trace.TaskStatusChanged.key) {
       const data = decode(Trace.TaskStatusChanged.schema, event.data);
       if (data) {
         tracedChanges.set(data.taskId, [
@@ -502,8 +522,10 @@ export const buildSessionTimeline = ({
     const traced = tracedChanges.get(task.id) ?? [];
     for (const entry of task.history ?? []) {
       const change = Task.getStatusChange(entry);
+      const statusOnly = change !== undefined && isStatusOnly(entry, change);
       if (
         change &&
+        statusOnly &&
         traced.some(
           (candidate) =>
             candidate.status === change.status && Math.abs(candidate.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
@@ -511,7 +533,7 @@ export const buildSessionTimeline = ({
       ) {
         continue;
       }
-      const marker = historyMarker(entry, change, `${lane.id}:${markers.length}`, lane.id);
+      const marker = historyMarker(entry, change, statusOnly, `${lane.id}:${markers.length}`, lane.id);
       if (marker) {
         markers.push(marker);
       }
