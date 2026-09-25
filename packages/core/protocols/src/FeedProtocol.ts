@@ -9,12 +9,19 @@ export {
   type GetSyncStateRequest,
   type GetSyncStateResponse,
   type InsertIntoFeedRequest,
+  type InsertIntoFeedResponse,
   type QueryFeedRequest,
   type FeedQueryResult as QueryResult,
   type SyncFeedRequest,
 } from './FeedService.ts';
 
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
+
+/**
+ * Foreign-key source for the block an object was read from (`<sequence>@<actorId>`), which names
+ * that block within its feed before and after it is positioned.
+ */
+export const KEY_FEED_BLOCK = 'org.dxos.key.feed-block';
 
 import * as Schema from 'effect/Schema';
 import * as Tuple from 'effect/Tuple';
