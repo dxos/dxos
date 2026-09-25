@@ -381,6 +381,20 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
+    ...(container
+      ? [
+          AppGraphNode.makeAction({
+            id: 'removeFromContainer',
+            data: () => Effect.sync(() => ContainerModel.release({ container, object })),
+            properties: {
+              label: container.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
+              icon: 'ph--minus-circle--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.removeFromContainer',
+            },
+          }),
+        ]
+      : []),
     ...(linkedFrom
       ? [
           AppGraphNode.makeAction({
@@ -400,16 +414,6 @@ const constructObjectActions = ({
               icon: 'ph--arrow-square-out--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.showOriginal',
-            },
-          }),
-          AppGraphNode.makeAction({
-            id: 'removeFromContainer',
-            data: () => Effect.sync(() => ContainerModel.unlink({ container: linkedFrom, object })),
-            properties: {
-              label: linkedFrom.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
-              icon: 'ph--minus-circle--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.removeFromContainer',
             },
           }),
         ]
