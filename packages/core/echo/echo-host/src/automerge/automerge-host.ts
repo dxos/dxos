@@ -153,6 +153,24 @@ const NON_CONVERGENCE_WARN_INTERVAL = 30;
 const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
 
 /**
+ * How long a diverged document's resync round is given before another is issued at the same heads.
+ *
+ * A round is not guaranteed to arrive: EDGE drops a batch whose send times out and logs
+ * `subduction: outbound send failed`, then relies on the client's heal to re-drive it. With one
+ * round per head pair and no retry, a lost round strands the document until either side writes
+ * again or the connection drops — the terminal state the nightly soak keeps reaching.
+ */
+const DIVERGED_RESYNC_RETRY_MS = 5_000;
+
+/**
+ * Ceiling on the doubling of {@link DIVERGED_RESYNC_RETRY_MS}.
+ *
+ * Retries stay spaced far enough apart not to pin Subduction's own heal backoff at zero (which is
+ * what one call per diff pass did), and a pair that never reconciles costs one round a minute.
+ */
+const DIVERGED_RESYNC_MAX_RETRY_MS = 60_000;
+
+/**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
  *
  * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
@@ -286,17 +304,28 @@ export class AutomergeHost extends Resource {
    * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
-   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
-   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
-   * rather than a plain "already tried" flag so that a genuine change on either side (the peer
-   * advanced, or we committed again) re-opens the retry.
+   * backoff, so calling it on every diff pass would reset that backoff to zero and pin it there —
+   * hence at most one call per {@link DIVERGED_RESYNC_RETRY_MS} window, doubling per attempt.
+   * Retried rather than issued once per head pair because a round can be lost in transit and
+   * neither side's heads move when it is, which left the document stranded for good. Keyed by the
+   * heads so that a genuine change on either side (the peer advanced, or we committed again)
+   * restarts the schedule from the first attempt.
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
   private _divergedResyncHeads = new Map<
     string,
-    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
+    {
+      collectionId: string;
+      peerId: PeerId;
+      documentId: DocumentId;
+      heads: string;
+      /** Rounds issued at these heads; sets the interval before the next one. */
+      attempts: number;
+      /** Earliest time another round may be issued at these heads. */
+      nextAttemptAt: number;
+    }
   >();
 
   /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
@@ -1599,7 +1628,7 @@ export class AutomergeHost extends Resource {
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
 
     // Whether this pass has anything left for the classical share policy to act on. Only a pass
-    // consisting entirely of diverged documents whose resync is already spent has nothing: for
+    // consisting entirely of diverged documents inside their retry window has nothing: for
     // those the policy is provably a no-op (`shareConfigChanged` revives only `all-failed` /
     // `no-peers` entries, and a diverged-but-settled entry is neither), while re-arming it
     // re-probes every document against every connection. The answering peer reports heads for
@@ -1624,35 +1653,47 @@ export class AutomergeHost extends Resource {
       if (this._useSubduction && differentSet.has(documentId)) {
         if (isDocumentLoaded(this._repo, documentId as DocumentId)) {
           const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
-          // Both sides' heads: a round already spent against this exact pair cannot do better, but
-          // either side advancing means the situation changed and is worth another.
+          // Both sides' heads: either side advancing means the situation changed and the schedule
+          // starts over, while an unchanged pair only earns another round once its window elapses.
           const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-          if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
+          const previous = this._divergedResyncHeads.get(resyncKey);
+          const pending = previous?.heads === heads ? previous : undefined;
+          const now = Date.now();
+          if (pending && now < pending.nextAttemptAt) {
+            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+            // so at warn level it floods the console without indicating a real fault.
+            log.verbose('diverged document resynced at these heads; waiting out the retry window', {
+              collectionId,
+              peerId,
+              documentId,
+              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+              attempts: pending.attempts,
+              retryInMs: pending.nextAttemptAt - now,
+            });
+          } else {
+            const attempts = (pending?.attempts ?? 0) + 1;
             this._divergedResyncHeads.set(resyncKey, {
               collectionId,
               peerId,
               documentId: documentId as DocumentId,
               heads,
+              attempts,
+              nextAttemptAt:
+                now + Math.min(DIVERGED_RESYNC_MAX_RETRY_MS, DIVERGED_RESYNC_RETRY_MS * 2 ** (attempts - 1)),
             });
             log('resyncing diverged document', {
               collectionId,
               peerId,
               documentId,
               sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+              attempt: attempts,
               localHeads: localState.documents[documentId],
               remoteHeads: remoteState.documents[documentId],
             });
             this.resyncDocument(documentId as DocumentId);
+            // Only an issued round re-arms the kick, so its rate is the retry schedule's rather
+            // than the diff loop's.
             sharePolicyCanHelp = true;
-          } else {
-            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-            // so at warn level it floods the console without indicating a real fault.
-            log.verbose('diverged document already resynced at these heads', {
-              collectionId,
-              peerId,
-              documentId,
-              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-            });
           }
         }
       } else {
