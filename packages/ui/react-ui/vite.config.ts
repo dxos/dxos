@@ -11,5 +11,9 @@ export default defineConfig({
     translations: 'src/translations.ts',
   },
   jsx: 'react',
+  // First package on the React Compiler: these primitives take scalars and render props, and the
+  // package depends on no ECHO/client code, so the one hazard the compiler carries — memoizing a
+  // component that lies about a reactive read — cannot arise here.
+  reactCompiler: true,
   test: { node: { environment: 'happy-dom' }, storybook: true },
 });
