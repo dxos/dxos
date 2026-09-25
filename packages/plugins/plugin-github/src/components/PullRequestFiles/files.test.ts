@@ -35,6 +35,13 @@ describe('buildFileTree', () => {
   });
 });
 
+describe('buildFileTree, replaced paths', () => {
+  test('keeps a directory that replaced a file of the same name', ({ expect }) => {
+    const files = parsePatch([patch('docs/a', 'x'), patch('docs/a/b.md', 'y')].join('\n'));
+    expect(flattenFiles(buildFileTree(files)).map((file) => file.path)).toEqual(['docs/a/b.md', 'docs/a']);
+  });
+});
+
 describe('diffFence', () => {
   test('outgrows any backtick run in the body', ({ expect }) => {
     const [file] = parsePatch(patch('docs/README.md', '````ts'));

@@ -38,7 +38,8 @@ export const buildFileTree = (files: readonly PatchFile[]): FileNode => {
     let parent = root;
     for (let index = 0; index < segments.length - 1; index++) {
       const path = segments.slice(0, index + 1).join('/');
-      let directory = parent.children.find((child) => child.path === path);
+      // Directories only: a change can replace a file with a directory of the same name.
+      let directory = parent.children.find((child) => !child.file && child.path === path);
       if (!directory) {
         directory = { id: nextId(), path, name: segments[index], children: [], added: 0, removed: 0 };
         parent.children.push(directory);

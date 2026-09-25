@@ -18,11 +18,18 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetPullRequestDiff> 
       Effect.fn(function* ({ pullRequest: ref }) {
         const { pullRequest, credentials } = yield* resolvePullRequest(ref);
         const { owner, repo, number } = pullRequest;
-        const [pull, diff] = yield* Effect.all(
-          [GitHubApi.fetchPullRequest(owner, repo, number), GitHubApi.fetchPullRequestDiff(owner, repo, number)],
-          { concurrency: 2 },
+        const [before, diff, after] = yield* Effect.all(
+          [
+            GitHubApi.fetchPullRequest(owner, repo, number),
+            GitHubApi.fetchPullRequestDiff(owner, repo, number),
+            GitHubApi.fetchPullRequest(owner, repo, number),
+          ],
+          { concurrency: 1 },
         ).pipe(Effect.provide(credentials));
-        return { diff, ...(pull.head?.sha ? { commit: pull.head.sha } : {}) };
+        // A push between the reads would pair the diff with another commit's line numbers, so the
+        // commit is only reported when the head held still across the diff.
+        const commit = before.head?.sha;
+        return { diff, ...(commit && commit === after.head?.sha ? { commit } : {}) };
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );

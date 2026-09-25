@@ -59,12 +59,16 @@ export const Default: Story = {
   args: { ...REAL_PULL_REQUEST },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const body = await canvas.findByTestId('pull-request.body');
+    // The first story boots the plugin manager and the masonry reveals its tiles only once measured,
+    // so both waits are longer than the default second.
+    const body = await canvas.findByTestId('pull-request.body', {}, { timeout: 10_000 });
     await expect(body).not.toHaveTextContent('Generated with');
     await expect(body).not.toHaveTextContent('Composer preview');
     await expect(canvas.getAllByTestId('pull-request.artifact.pill')).toHaveLength(3);
-    await expect(canvas.getByTestId('pull-request.related.preview')).toHaveTextContent('pr-13348-composer-dev');
-    await expect(canvas.getByTestId('pull-request.related.claude')).toHaveTextContent(
+    await expect(await canvas.findByTestId('pull-request.related.preview', {}, { timeout: 10_000 })).toHaveTextContent(
+      'pr-13348-composer-dev',
+    );
+    await expect(await canvas.findByTestId('pull-request.related.claude')).toHaveTextContent(
       'session_016GM9fXXzbrr6JGNeeQBCmj',
     );
     await expect(canvas.getAllByTestId('pull-request.check')).toHaveLength(PULL_REQUEST_13348_RUNS.length);

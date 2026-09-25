@@ -17,8 +17,10 @@ import PULL_REQUEST_13363_PATCH from '../testing/pull-request-13363.patch?raw';
 
 type StoryArgs = { diff: string };
 
+const STORAGE_KEY = 'story.reviewed.dxos/dxos#13363';
+
 const DefaultStory = ({ diff }: StoryArgs) => {
-  const files = usePullRequestFiles(diff, 'story.reviewed.dxos/dxos#13363');
+  const files = usePullRequestFiles(diff, STORAGE_KEY);
   return (
     <Panel.Root>
       <Panel.Content>
@@ -54,11 +56,14 @@ export const Default: Story = {
 /** Checking a file off in the tree counts it as reviewed without opening it. */
 export const Reviewed: Story = {
   args: { diff: PULL_REQUEST_13363_PATCH },
+  beforeEach: () => {
+    localStorage.removeItem(STORAGE_KEY);
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const [first, second] = await canvas.findAllByTestId('pull-request.files.reviewed');
-    await userEvent.click(first);
-    await userEvent.click(second);
+    // Re-queried per click: checking a file off re-renders the tree, which replaces the rows.
+    await userEvent.click((await canvas.findAllByTestId('pull-request.files.reviewed'))[0]);
+    await userEvent.click((await canvas.findAllByTestId('pull-request.files.reviewed'))[1]);
     await expect(await canvas.findByText('2 of 50 files reviewed')).toBeInTheDocument();
   },
 };
