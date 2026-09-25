@@ -626,10 +626,17 @@ export class AppManager {
     const startY = start.y + start.height / 2;
     await active.hover();
     await this.page.mouse.down();
-    // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
-    // it leaves the pointer over the row that slides into the dragged row's place.
-    await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toBeHidden();
+    // Toward the target until the drag starts: a nudge away from it leaves the pointer over the row
+    // that slides into the dragged row's place. WebKit's threshold is 12-20px, Chromium's and Firefox's under 6.
+    const direction = initial.y < start.y ? -1 : 1;
+    let travel = 0;
+    await expect
+      .poll(async () => {
+        travel = Math.min(travel + 6, 30);
+        await this.page.mouse.move(startX, startY + direction * travel, { steps: 2 });
+        return active.isHidden();
+      })
+      .toBe(true);
 
     const box = await over.boundingBox();
     if (!box) {
