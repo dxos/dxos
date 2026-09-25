@@ -4,9 +4,11 @@
 
 import React, { type ReactNode } from 'react';
 
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
-import { Task } from '@dxos/types';
+import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -23,6 +25,9 @@ import {
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
+
+/** The glyph for an assignee: a person, whoever they turn out to be. */
+const ASSIGNEE_ICON = 'ph--user--regular';
 
 export type TaskPropertiesProps = ThemedClassName<{
   task: Task.Task;
@@ -44,6 +49,18 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
   const status = task.status ?? 'todo';
   const priority = task.priority ?? undefined;
   const estimate = task.estimate ?? undefined;
+  const assignee = task.assignee ?? undefined;
+
+  // The people the space knows, for the picker. Queried rather than read off refs: a contact's
+  // target is not in memory on a cold load, and the picker must offer everyone, not only whoever
+  // some task already points at.
+  const db = Obj.getDatabase(task);
+  const people = useQuery(onTaskUpdate ? db : undefined, Filter.type(Person.Person));
+  const [contact] = useObject(assignee?.contact);
+  // An assistant's actor stands for a session rather than a person, which is why the name falls
+  // back through the actor's own fields before it gives up.
+  const assigneeLabel =
+    contact?.fullName ?? assignee?.name ?? assignee?.email ?? (assignee?.role === 'assistant' ? 'Agent' : undefined);
 
   return (
     <Column.Section
@@ -88,6 +105,35 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
                 checked: (priority ?? 'none') === id,
               }),
             ))
+        }
+      />
+
+      <TaskProperty
+        icon={assignee ? ASSIGNEE_ICON : UNSET_ICON}
+        label={assigneeLabel ?? t('set-assignee.label')}
+        unset={!assignee}
+        testId='taskList.property.assignee'
+        actions={
+          onTaskUpdate &&
+          (() => [
+            createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
+              label: t('assignee-none.label'),
+              checked: !assignee,
+            }),
+            // The space's people, by the label their schema names — the picker offers what the field
+            // accepts, as the status and priority pickers do.
+            ...people.map((person) =>
+              createMenuAction(
+                `assignee-${person.id}`,
+                () => onTaskUpdate(task, { assignee: { contact: Ref.make(person) } }),
+                {
+                  label: Obj.getLabel(person) ?? person.id,
+                  icon: ASSIGNEE_ICON,
+                  checked: Task.refEntityId(assignee?.contact) === person.id,
+                },
+              ),
+            ),
+          ])
         }
       />
 

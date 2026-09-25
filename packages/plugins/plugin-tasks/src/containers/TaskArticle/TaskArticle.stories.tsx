@@ -169,6 +169,21 @@ export const Default: Story = {
     // The cards under the editor are `plugin-space`'s `cardMasonry` surface, which never mounts in
     // this package's storybook (see the tracked item in plugin-projects' TASKS.md) — so assert what
     // the article owns, and leave the cards to the companion story where they do render.
+    // The properties read as a list, each row naming the value its glyph stands for — including the
+    // assignee, which is a person in the space rather than a literal on the task.
+    const properties = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.properties"]');
+    await waitFor(() => expect(properties).toBeTruthy(), { timeout: 10_000 });
+    await expect(properties?.querySelector('[data-testid="taskList.property.status"]')?.textContent).toContain(
+      'Started',
+    );
+    await waitFor(
+      async () =>
+        await expect(properties?.querySelector('[data-testid="taskList.property.assignee"]')?.textContent).toContain(
+          'Kai Watanabe',
+        ),
+      { timeout: 10_000 },
+    );
+
     const context = seeded;
     if (!context) {
       throw new Error('The story did not seed a task.');

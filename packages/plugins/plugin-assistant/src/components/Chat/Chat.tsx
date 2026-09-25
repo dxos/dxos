@@ -33,12 +33,13 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList } from '@dxos/react-ui-task';
+import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
@@ -832,6 +833,10 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
+        {/* What the agent is blocked on, under the list it asked about: the list itself carries no
+            questions — a row replaying them grew by a line each — but a chat is where the asking
+            happened, so the answer is given here rather than in a pane the reader has to open. */}
+        <ChatTaskQuestions tasks={tasks} />
         <TaskList.Editor grid />
       </div>
     </TaskList.Root>
@@ -839,6 +844,60 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
+
+/**
+ * The open questions across the chat's tasks, each with the means to answer it.
+ *
+ * Answers go through the operation rather than `Task.answer`, so the conversation that asked is
+ * resumed — which is the whole point of answering here instead of on the task.
+ */
+const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
+  const { invokePromise } = useOperationInvoker();
+  const threads = useMemo(
+    () =>
+      tasks.flatMap((task) =>
+        Task.getQuestions(task.history)
+          .filter(({ answer }) => !answer)
+          .map((thread) => ({ task, thread })),
+      ),
+    [tasks],
+  );
+
+  const handleAnswer = useCallback(
+    (task: Task.Task, questionId: string, answer: string) => {
+      const spaceId = Obj.getDatabase(task)?.spaceId;
+      if (spaceId) {
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
+      }
+    },
+    [invokePromise],
+  );
+
+  if (threads.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className='flex flex-col gap-2 p-2' data-testid='chat.taskQuestions'>
+      {threads.map(({ task, thread }) => (
+        <TaskQuestion
+          key={thread.question.id}
+          thread={thread}
+          onAnswer={(answer) => handleAnswer(task, thread.question.id, answer)}
+        />
+      ))}
+    </div>
+  );
+};
+
+ChatTaskQuestions.displayName = 'Chat.TaskQuestions';
 
 //
 // Queue

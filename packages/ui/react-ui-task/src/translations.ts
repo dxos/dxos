@@ -30,6 +30,8 @@ export const translations = [
         'task-properties.label': 'Properties',
         'set-priority.label': 'Set priority',
         'set-estimate.label': 'Set estimate',
+        'set-assignee.label': 'Set assignee',
+        'assignee-none.label': 'Unassigned',
         'estimate-none.label': 'None',
         'priority-low.label': 'Low',
         'priority-medium.label': 'Medium',
