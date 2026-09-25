@@ -7,13 +7,20 @@ import { create } from '@bufbuild/protobuf';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, waitForCondition } from '@dxos/async';
+import { Event, Trigger, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { EdgeService } from '@dxos/protocols';
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
+import {
+  EdgeService,
+  MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+  type PeerId,
+  type SubductionConnectionMessage,
+} from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
@@ -123,6 +130,64 @@ describe('EchoEdgeSubductionReplicator', () => {
     await replicator.disconnect();
   });
 
+  describe('while the edge is offline', () => {
+    test('a send returns promptly and warns instead of erroring', { timeout: 20_000 }, async () => {
+      const { client, server, admitConnection } = await createClientServer({ gatedAdmission: true });
+
+      const spaceId = SpaceId.random();
+      const { context, connectionOpen, openConnections } = createMockContext();
+      const replicator = await connectReplicator(client, context);
+
+      const waitForOpen = connectionOpen.waitForCount(1);
+      await replicator.connectToSpace(Context.default(), spaceId);
+      await waitForOpen;
+
+      await goOffline(client, server, admitConnection);
+      const logs = captureLogs();
+
+      const startedAt = performance.now();
+      await writeFrame(openConnections[0]);
+      const elapsed = performance.now() - startedAt;
+
+      expect(elapsed).toBeLessThan(1_000);
+      expect(logs.filter((entry) => entry.level === LogLevel.ERROR).map((entry) => entry.message)).toEqual([]);
+      expect(logs.some((entry) => entry.level === LogLevel.WARN)).toBe(true);
+    });
+
+    test('a dropped send is recovered by the fresh connection after reconnect', { timeout: 20_000 }, async () => {
+      const { client, server, admitConnection } = await createClientServer({ gatedAdmission: true });
+
+      const spaceId = SpaceId.random();
+      const { context, connectionOpen, openConnections } = createMockContext();
+      const replicator = await connectReplicator(client, context);
+
+      const waitForOpen = connectionOpen.waitForCount(1);
+      await replicator.connectToSpace(Context.default(), spaceId);
+      await waitForOpen;
+      const staleConnection = openConnections[0];
+
+      await goOffline(client, server, admitConnection);
+      const offlineWrite = writeFrame(staleConnection);
+
+      // A blip shorter than the edge client's 10 s send timeout.
+      const waitForReopen = connectionOpen.waitForCount(1);
+      admitConnection.wake();
+      await waitForReopen;
+      await offlineWrite;
+
+      // Reopening is the re-sync: `onConnectionOpen` makes the host query every collection on the new peer.
+      const freshConnection = openConnections[openConnections.length - 1];
+      expect(freshConnection).not.toBe(staleConnection);
+      expect(freshConnection.peerId).not.toBe(staleConnection.peerId);
+
+      await writeFrame(freshConnection);
+      await waitForCondition({ condition: () => server.messageSink.some(sentOn(freshConnection)) });
+      expect(server.messageSink.filter(sentOn(staleConnection))).toEqual([]);
+
+      await replicator.disconnect();
+    });
+  });
+
   describe('shouldAdvertise', () => {
     test('true if space document belongs to connection space', async () => {
       const { client } = await createClientServer();
@@ -175,12 +240,17 @@ describe('EchoEdgeSubductionReplicator', () => {
     return replicator;
   };
 
-  const createClientServer = async () => {
-    const server = await createTestEdgeWsServer(await getRandomPort());
+  const createClientServer = async ({ gatedAdmission = false }: { gatedAdmission?: boolean } = {}) => {
+    const admitConnection = new Trigger();
+    admitConnection.wake();
+    const server = await createTestEdgeWsServer(await getRandomPort(), {
+      admitConnection: gatedAdmission ? admitConnection : undefined,
+      payloadDecoder: (payload) => cbor.decode(payload),
+    });
     onTestFinished(server.cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: server.endpoint });
     await openAndClose(client);
-    return { client, server };
+    return { client, server, admitConnection };
   };
 });
 
@@ -214,6 +284,50 @@ const createMockContext = (args?: {
     peerId: PublicKey.random().toHex(),
   };
   return { context, openConnections, connectionOpen, transportResets };
+};
+
+/** Drop the socket and hold the reconnect at admission, as a device that lost its network. */
+const goOffline = async (
+  client: EdgeClient,
+  server: Awaited<ReturnType<typeof createTestEdgeWsServer>>,
+  admitConnection: Trigger,
+): Promise<void> => {
+  admitConnection.reset();
+  await server.closeConnection();
+  await waitForCondition({ condition: () => client.status.state !== EdgeStatus_ConnectionState.CONNECTED });
+};
+
+/** Push one subduction transport frame through the connection, as automerge-repo's transport would. */
+const writeFrame = async (connection: AutomergeReplicatorConnection): Promise<void> => {
+  // `PeerId` is a nominal brand with no constructor; the replicator overwrites `targetId` on send anyway.
+  const peerId = connection.peerId as PeerId;
+  const frame: SubductionConnectionMessage = {
+    type: MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+    senderId: peerId,
+    targetId: peerId,
+    data: new Uint8Array([1, 2, 3]),
+  };
+  const writer = connection.writable.getWriter();
+  try {
+    await writer.write(frame);
+  } finally {
+    writer.releaseLock();
+  }
+};
+
+/** Matches envelopes carrying the connection's `connectionId`, which is the suffix of its peer id. */
+const sentOn =
+  (connection: AutomergeReplicatorConnection) =>
+  (payload: { connectionId?: string }): boolean =>
+    payload.connectionId !== undefined && connection.peerId.endsWith(`-${payload.connectionId}`);
+
+const captureLogs = () => {
+  const entries: { level: LogLevel; message?: string }[] = [];
+  const record: LogProcessor = (_, entry) => {
+    entries.push({ level: entry.level, message: entry.message });
+  };
+  onTestFinished(log.addProcessor(record));
+  return entries;
 };
 
 /** Deliver an edge `error` frame carrying the current connection's `_connectionId`, which the client matches before acting. */
