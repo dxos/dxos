@@ -320,13 +320,13 @@ describe('WorkingSetQueryExecutor', () => {
     expect(ids).toContain(manages.id);
   });
 
-  test('reads every loaded core once per execution, and not at all for a relation-to-endpoint hop', async ({
+  test('children and relation traversals read the reverse-link index, never the whole working set', async ({
     expect,
   }) => {
     const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
     const manages = db.add(Relation.make(TestSchema.HasManager, { [Relation.Source]: alice, [Relation.Target]: bob }));
-    db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: alice, name: 'Child' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: alice, name: 'Child' }));
     await db.flush();
 
     const provider = makeProvider(db);
@@ -339,52 +339,32 @@ describe('WorkingSetQueryExecutor', () => {
       },
     });
     const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+    const run = (query: Query.Any) => executor.tryExecute(planner.createPlan(query.ast))?.map((item) => item.objectId);
 
-    const union = Query.all(
-      Query.select(Filter.everything()).from(db),
-      Query.select(Filter.id(alice.id)).from(db).sourceOf(),
-      Query.select(Filter.id(alice.id)).from(db).children(),
-    );
-    expect(executor.tryExecute(planner.createPlan(union.ast))).not.toBeNull();
-    expect(scans).toEqual(1);
-
-    scans = 0;
-    const toSource = Query.select(Filter.id(manages.id)).from(db).source();
-    expect(executor.tryExecute(planner.createPlan(toSource.ast))?.map((item) => item.objectId)).toEqual([alice.id]);
+    expect(run(Query.select(Filter.id(alice.id)).from(db).sourceOf())).toEqual([manages.id]);
+    expect(run(Query.select(Filter.id(bob.id)).from(db).targetOf())).toEqual([manages.id]);
+    expect(run(Query.select(Filter.id(alice.id)).from(db).children())).toEqual([child.id]);
     expect(scans).toEqual(0);
   });
 
-  test('reads again when a lookup re-creates a core the cached read did not include', async ({ expect }) => {
-    const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
-    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+  test('the reverse-link index follows re-parenting and removal', async ({ expect }) => {
+    const first = db.add(Obj.make(TestSchema.Expando, { name: 'First' }));
+    const second = db.add(Obj.make(TestSchema.Expando, { name: 'Second' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: first, name: 'Child' }));
     await db.flush();
 
-    // Stands in for a core collected and then re-created by an id lookup mid-execution.
-    const provider = makeProvider(db);
-    let rehydrated = false;
-    let scans = 0;
-    const executor = new WorkingSetQueryExecutor({
-      ...provider,
-      allCores: () => {
-        scans++;
-        return provider.allCores().filter((core) => rehydrated || core.id !== child.id);
-      },
-      getCoreById: (id, load) => {
-        rehydrated ||= id === child.id;
-        return provider.getCoreById(id, load);
-      },
-    });
+    const childrenOf = (parent: Obj.Any) =>
+      planAndExecute(db, Query.select(Filter.id(parent.id)).children()).map((item) => item.objectId);
+    expect(childrenOf(first)).toEqual([child.id]);
 
-    const union = Query.all(
-      Query.select(Filter.everything()).from(db),
-      Query.select(Filter.id(child.id)).from(db),
-      Query.select(Filter.id(parent.id)).from(db).children(),
-    );
-    const ids = executor.tryExecute(
-      new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(union.ast),
-    );
-    expect(ids?.map((item) => item.objectId)).toContain(child.id);
-    expect(scans).toEqual(2);
+    Obj.setParent(child, second);
+    await db.flush();
+    expect(childrenOf(first)).toEqual([]);
+    expect(childrenOf(second)).toEqual([child.id]);
+
+    db.remove(child);
+    await db.flush();
+    expect(childrenOf(second)).toEqual([]);
   });
 
   test('filter-deleted step filters out deleted objects', async ({ expect }) => {
@@ -602,6 +582,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
     return db.spaceId;
   },
   allCores: () => db.allObjectCores(),
+  coresLinkedTo: (link, ids) => db.coresLinkedTo(link, ids),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
   areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),

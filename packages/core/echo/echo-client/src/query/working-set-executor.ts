@@ -22,7 +22,7 @@ import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db/index.ts';
+import type { ObjectCore, WorkingSetLink } from '../core-db/index.ts';
 import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
@@ -92,6 +92,8 @@ const WorkingSetItem = Object.freeze({
 export type WorkingSetDataProvider = {
   spaceId: SpaceId;
   allCores(): ObjectCore[];
+  /** Loaded cores whose parent, or relation source or target, is one of `ids`, found without a scan. */
+  coresLinkedTo(link: WorkingSetLink, ids: Iterable<EntityId>): ObjectCore[];
   getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
   areStrongDepsResolved(core: ObjectCore): boolean;
@@ -104,13 +106,6 @@ export type WorkingSetDataProvider = {
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
-  /**
-   * Every loaded core with a body, read once per {@link tryExecute}: a plan's selectors, unions and
-   * traversals would otherwise each rescan the whole database. Dropped by {@link #getCore} when a
-   * lookup re-creates a core the read did not include.
-   */
-  #allItems: { items: WorkingSetItem[]; cores: Set<ObjectCore> } | undefined;
-
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
   /**
@@ -118,11 +113,7 @@ export class WorkingSetQueryExecutor {
    * Returns null if the plan requires SQL index access.
    */
   tryExecute(plan: QueryPlan.Plan): WorkingSetItem[] | null {
-    try {
-      return this._execPlan(plan, []);
-    } finally {
-      this.#allItems = undefined;
-    }
+    return this._execPlan(plan, []);
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -208,12 +199,13 @@ export class WorkingSetQueryExecutor {
         case 'WildcardSelector':
         case 'TypeSelector': {
           // Enumerate all loaded cores; FilterStep enforces any type predicate.
-          newItems.push(...this._allCoreItems().filter((item) => this._provider.areStrongDepsSatisfied(item.core)));
+          const cores = this._provider.allCores().filter((core) => this._provider.areStrongDepsSatisfied(core));
+          newItems.push(...cores.flatMap((core) => this._coreToItem(core) ?? []));
           break;
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this.#getCore(id, true);
+            const core = this._provider.getCoreById(id, true);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
@@ -318,7 +310,7 @@ export class WorkingSetQueryExecutor {
     }
 
     // Recurse up the parent chain.
-    const parentCore = this.#getCore(parentId);
+    const parentCore = this._provider.getCoreById(parentId);
     const parentItem = parentCore && this._coreToItem(parentCore);
     if (!parentItem) {
       return false;
@@ -433,30 +425,8 @@ export class WorkingSetQueryExecutor {
 
       case 'source-to-relation':
       case 'target-to-relation': {
-        const wsIds = new Set(ws.map((item) => item.objectId));
-        const result: WorkingSetItem[] = [];
-        for (const candidate of this._allCoreItems()) {
-          if (EntityStructure.getEntityKind(candidate.structure) !== 'relation') {
-            continue;
-          }
-          const ref =
-            traversal.direction === 'source-to-relation'
-              ? EntityStructure.getRelationSource(candidate.structure)
-              : EntityStructure.getRelationTarget(candidate.structure);
-          const raw = ref?.['/'];
-          if (!raw) {
-            continue;
-          }
-          const eid = EID.tryParse(raw);
-          if (!eid) {
-            continue;
-          }
-          const id = EID.getEntityId(eid);
-          if (id && wsIds.has(id)) {
-            result.push(candidate);
-          }
-        }
-        return result;
+        const link = traversal.direction === 'source-to-relation' ? 'source' : 'target';
+        return this._itemsLinkedTo(link, ws);
       }
     }
   }
@@ -484,24 +454,7 @@ export class WorkingSetQueryExecutor {
       }
       return result;
     } else {
-      // to-children: scan all cores for those whose parent is in the working set.
-      const wsIds = new Set(ws.map((item) => item.objectId));
-      const result: WorkingSetItem[] = [];
-      for (const candidate of this._allCoreItems()) {
-        const ref = EntityStructure.getParent(candidate.structure);
-        if (!ref || !EncodedReference.isEncodedReference(ref)) {
-          continue;
-        }
-        const eid = EID.tryParse(EncodedReference.toURI(ref));
-        if (!eid) {
-          continue;
-        }
-        const id = EID.getEntityId(eid);
-        if (id && wsIds.has(id)) {
-          result.push(candidate);
-        }
-      }
-      return result;
+      return this._itemsLinkedTo('parent', ws);
     }
   }
 
@@ -587,25 +540,18 @@ export class WorkingSetQueryExecutor {
 
   /** Every loaded core that has a body to read. */
   private _allCoreItems(): WorkingSetItem[] {
-    if (!this.#allItems) {
-      const cores = this._provider.allCores();
-      this.#allItems = { items: cores.flatMap((core) => this._coreToItem(core) ?? []), cores: new Set(cores) };
-    }
-    return this.#allItems.items;
+    return this._provider.allCores().flatMap((core) => this._coreToItem(core) ?? []);
+  }
+
+  /** Loaded objects whose `link` points into the working set, read from the reverse-link index. */
+  private _itemsLinkedTo(link: WorkingSetLink, ws: WorkingSetItem[]): WorkingSetItem[] {
+    const ids = new Set(ws.map((item) => item.objectId));
+    return this._provider.coresLinkedTo(link, ids).flatMap((core) => this._coreToItem(core) ?? []);
   }
 
   private _itemById(id: EntityId): WorkingSetItem | undefined {
-    const core = this.#getCore(id);
+    const core = this._provider.getCoreById(id);
     return core && this._coreToItem(core);
-  }
-
-  /** A lookup can re-create a collected core, which a cached {@link _allCoreItems} read would then miss. */
-  #getCore(id: EntityId, load?: boolean): ObjectCore | undefined {
-    const core = this._provider.getCoreById(id, load);
-    if (core && this.#allItems && !this.#allItems.cores.has(core)) {
-      this.#allItems = undefined;
-    }
-    return core;
   }
 
   /**

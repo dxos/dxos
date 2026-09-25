@@ -63,6 +63,7 @@ import {
   type SpaceDocumentHeads,
 } from './types.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
+import { WorkingSetIndex, type WorkingSetLink } from './working-set-index.ts';
 
 const TRACE_LOADING = false;
 
@@ -127,6 +128,9 @@ export class EntityManager implements IDatabaseBinding {
    * {@link _releaseObject}.
    */
   private readonly _objects = new ObjectCoreRegistry({ onRelease: (id) => this._releaseObject(id) });
+
+  /** Reverse links of {@link _objects}, updated wherever a core is bound, changed or dropped. */
+  readonly #workingSetIndex = new WorkingSetIndex();
 
   /**
    * Device-local, non-synced: object id -> currently-selected branch name (`'main'` omitted).
@@ -404,6 +408,7 @@ export class EntityManager implements IDatabaseBinding {
     this._unsubscribeFromHandles();
     this._clearHandleReferences();
     this._objects.clear();
+    this.#workingSetIndex.clear();
     this._unavailableObjects.clear();
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
@@ -440,6 +445,15 @@ export class EntityManager implements IDatabaseBinding {
   /** @deprecated Return only loaded objects. */
   allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
+  }
+
+  /**
+   * Loaded cores whose `link` (parent, or relation source or target) points at any of `ids`, without
+   * scanning the working set. Only resident cores: like {@link allObjectCores}, a collected one is
+   * not re-created.
+   */
+  coresLinkedTo(link: WorkingSetLink, ids: Iterable<string>): ObjectCore[] {
+    return this.#workingSetIndex.linkedTo(link, ids).flatMap((id) => this._objects.get(id) ?? []);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -748,6 +762,7 @@ export class EntityManager implements IDatabaseBinding {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
+    this.#workingSetIndex.update(core);
 
     this._markObjectAvailable(core.id);
   }
@@ -1947,7 +1962,10 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
 
-    objectsToRemove.forEach((oid) => this._objects.delete(oid));
+    for (const oid of objectsToRemove) {
+      this._objects.delete(oid);
+      this.#workingSetIndex.remove(oid);
+    }
     this._createInlineObjects(spaceRootDocHandle, objectsToCreate);
     for (const { handle, objectIds } of objectsToRebind.values()) {
       this._rebindObjects(handle, objectIds);
@@ -1970,6 +1988,7 @@ export class EntityManager implements IDatabaseBinding {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
+          this.#workingSetIndex.update(objCore);
           objCore.notifyUpdate();
         }
       }
@@ -2024,6 +2043,7 @@ export class EntityManager implements IDatabaseBinding {
    * object mounted in it, and never the space root), since it is the document that holds the payload.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
+    this.#workingSetIndex.remove(objectId);
     // Never dropped while still resolving, because aborting one releases its load ops and cancels
     // the IO a reader is waiting on; it is dropped when it settles instead.
     const request = this._satisfactionRequests.get(objectId as EntityId);
@@ -2166,6 +2186,7 @@ export class EntityManager implements IDatabaseBinding {
       path: ['objects', core.id],
       assignFromLocalState: false,
     });
+    this.#workingSetIndex.update(core);
 
     return core;
   }
@@ -2268,6 +2289,7 @@ export class EntityManager implements IDatabaseBinding {
         path: objectCore.mountPath,
         assignFromLocalState: false,
       });
+      this.#workingSetIndex.update(objectCore);
       this._onObjectBoundToDocument(docHandle, objectId);
     }
   }
@@ -2285,6 +2307,13 @@ export class EntityManager implements IDatabaseBinding {
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
     this._objectsForNextDbUpdate.clear();
+    // Ahead of the emit, which re-runs queries; `_emitObjectUpdateEvent` reaches these ids only after it.
+    for (const id of fullUpdateIds) {
+      const core = this._objects.get(id);
+      if (core) {
+        this.#workingSetIndex.update(core);
+      }
+    }
 
     batchEvents(() => {
       if (allDbUpdates.size > 0) {
