@@ -218,7 +218,10 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         <Field.Root>
           <Field.Input
             variant='subdued'
-            classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
+            // An input clips its overflow rather than wrapping it, so a long title ends mid-word
+            // against the trailing controls with nothing to say it continues; the ellipsis says so.
+            // (Shown while the field is not focused, which is how a pane holds it open.)
+            classNames={mx('px-0 text-ellipsis', grid && 'col-start-[title] -col-end-2')}
             data-testid='taskList.edit.title'
             placeholder={current ? t('task-title.placeholder') : placeholder}
             value={draft}
