@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
@@ -16,8 +16,11 @@ import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
+  useManagerOptional,
   useSelection,
   useSelectionActions,
+  useViewState,
+  useViewStateActions,
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
@@ -25,12 +28,11 @@ import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/re
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation, TasksCapabilities } from '#types';
+import { TaskOperation, TaskSetView, TasksCapabilities } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { filterTasks } from '../../util/index.ts';
+import { ALL_STATUSES, filterTasks, parseStatusTerms, writeStatusTerms } from '../../util/index.ts';
 import { TaskFilter } from './TaskFilter.tsx';
-import { ALL_STATUSES } from './TaskStatusFilter.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /**
@@ -56,31 +58,28 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   const db = Obj.getDatabase(taskSet);
   const allTasks = useTasks(taskSet);
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
-  // reader edits, its parse is what the list is narrowed by. Held per mount — a filter is a glance,
-  // not a property of the set.
-  const [filterText, setFilterText] = useState('');
-  // Which statuses the ledger shows. Held beside the text for the same reason — a glance, not a
-  // property of the set — and starting at every status, so the list opens unfiltered.
-  const [statuses, setStatuses] = useState<readonly Task.Status[]>(ALL_STATUSES);
+  // reader edits, its parse is what the list is narrowed by. The status menu is a second view over
+  // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted
+  // per device and per set (see {@link TaskSetView.aspect}).
+  const [filterText, setFilterText] = useFilterQuery(taskSet.id, filterEditorRef);
+  const { statuses, rest } = useMemo(() => parseStatusTerms(filterText), [filterText]);
   const tags = useTagMap(db);
   // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
   // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
   // that does not parse is a query that matches nothing rather than one that matches everything.
   const filter = useMemo(() => {
-    const text = filterText.trim();
+    const text = rest.trim();
     if (text.length === 0) {
       return undefined;
     }
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
-  }, [filterText, tags]);
+  }, [rest, tags]);
   const tasks = useFilteredTasks(allTasks, filter, statuses);
-  // Clears both terms: a reader who hid a status and typed a query asked one question of the list,
-  // and clearing half of it leaves rows missing with nothing in the toolbar saying why.
-  const handleClearFilter = useCallback(() => {
-    filterEditorRef.current?.setText('');
-    setFilterText('');
-    setStatuses(ALL_STATUSES);
-  }, []);
+  const handleStatusesChange = useCallback(
+    (next: readonly Task.Status[]) => setFilterText(writeStatusTerms(filterText, next)),
+    [filterText, setFilterText],
+  );
+  const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
   const handleCreate = useOperation(
@@ -166,9 +165,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       db={db}
       tags={tags}
       value={filterText}
-      statuses={statuses}
+      statuses={statuses ?? ALL_STATUSES}
       onChange={setFilterText}
-      onStatusesChange={setStatuses}
+      onStatusesChange={handleStatusesChange}
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     />
@@ -240,6 +239,41 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
+ * The set's filter query, held in {@link TaskSetView.aspect} and mirrored into the query editor.
+ *
+ * The editor takes its text once, as `initialValue`, so a write that did not come from typing — the
+ * status menu, clear, another view of the same set, another tab — is pushed into it here. Pushed from
+ * the subscription rather than from a render effect: the subscription fires as the value is written,
+ * when the editor already holds whatever was just typed, whereas an effect can run for a render that
+ * trails fast typing and rewrite the document back to older text.
+ */
+const useFilterQuery = (
+  contextId: string,
+  editorRef: RefObject<EditorController | null>,
+): [string, (query: string) => void] => {
+  const manager = useManagerOptional();
+  const { query } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  useEffect(
+    () =>
+      manager?.subscribe(TaskSetView.aspect, contextId, ({ query }) => {
+        const editor = editorRef.current;
+        if (editor && editor.getText() !== query) {
+          editor.setText(query);
+        }
+      }),
+    [manager, contextId, editorRef],
+  );
+
+  // Unchanged text keeps the same value, so the editor echoing a pushed text back is not a write.
+  const setQuery = useCallback(
+    (query: string) => update((view) => (view.query === query ? view : { ...view, query })),
+    [update],
+  );
+  return [query, setQuery];
+};
+
+/**
  * The checked rows, as the multi-selection `react-ui-attention` holds for this set.
  *
  * Keyed by the task set's object id, not by the attendable: two task lists on one deck would
@@ -289,11 +323,11 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
 const useFilteredTasks = (
   tasks: readonly Task.Task[],
   filter: Filter.Any | undefined,
-  statuses: readonly Task.Status[],
+  statuses: readonly Task.Status[] | undefined,
 ): readonly Task.Task[] => {
   // A set, so the match is a lookup per task rather than a scan of the status list, and one the
   // atom below can depend on by identity.
-  const statusSet = useMemo(() => new Set(statuses), [statuses]);
+  const statusSet = useMemo(() => statuses && new Set(statuses), [statuses]);
   const atom = useMemo(
     () =>
       Atom.make((get): readonly Task.Task[] => {

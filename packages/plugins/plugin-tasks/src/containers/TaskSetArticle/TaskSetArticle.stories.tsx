@@ -307,6 +307,53 @@ export const StatusFilter: Story = {
 };
 
 /**
+ * The status menu and the query text are two views over one value: picking a status in the menu
+ * rewrites the text, and editing the text re-checks the menu. The value is persisted per device,
+ * under the set's id, through the `local` view-state backend.
+ */
+export const SharedFilterState: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    const editor = () => canvasElement.querySelector<HTMLElement>('[role="toolbar"] .cm-content');
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
+    const item = (status: string) =>
+      document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
+    const stored = () => globalThis.localStorage.getItem(`dxos:view-state:tasks-task-set-view:${context.taskSet.id}`);
+
+    // Menu → text: hiding a status writes it into the query.
+    await clickElement(trigger());
+    await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(item('done'));
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(editor()).toHaveTextContent('NOT status:done'), { timeout: 10_000 });
+    await expect(stored()).toContain('NOT status:done');
+    await userEvent.keyboard('{Escape}');
+
+    // Text → menu: replacing the query with a single status re-checks the menu to match.
+    await clickElement(editor());
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    await waitFor(() => expect(stored()).toContain('"query":""'), { timeout: 10_000 });
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await userEvent.keyboard('status:started');
+    await waitFor(() => expect(canvas.queryByText('Design label')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+
+    await clickElement(trigger());
+    await waitFor(() => expect(item('started')).toHaveAttribute('aria-checked', 'true'), { timeout: 10_000 });
+    await expect(item('todo')).toHaveAttribute('aria-checked', 'false');
+    await expect(item('done')).toHaveAttribute('aria-checked', 'false');
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+/**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
  *
@@ -409,3 +456,10 @@ const flushRender = (): Promise<void> =>
     const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
     tick();
   });
+
+const clickElement = async (element: HTMLElement | null): Promise<void> => {
+  if (!element) {
+    throw new Error('The element to click is not rendered.');
+  }
+  await userEvent.click(element);
+};

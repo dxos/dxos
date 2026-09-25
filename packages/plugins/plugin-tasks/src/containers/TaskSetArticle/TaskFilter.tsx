@@ -12,13 +12,13 @@ import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { ALL_STATUSES, TaskStatusFilter } from './TaskStatusFilter.tsx';
+import { TaskStatusFilter } from './TaskStatusFilter.tsx';
 
 export type TaskFilterProps = {
   db?: Database.Database;
   tags: Tag.Map;
   value: string;
-  /** The statuses the list shows; every status is the unfiltered state. */
+  /** The statuses `value`'s status terms keep; every status is the unfiltered state. */
   statuses: readonly Task.Status[];
   onChange: (value: string) => void;
   onStatusesChange: (statuses: readonly Task.Status[]) => void;
@@ -27,9 +27,9 @@ export type TaskFilterProps = {
 };
 
 /**
- * Filter row for a task list's toolbar — the query editor, the status selector and a clear button,
- * as the mailbox toolbar composes `MailboxFilter`. No save action: a task set has no saved views to
- * file one in.
+ * Filter row for a task list's toolbar — the query editor, the status selector over the same query,
+ * and a clear button, as the mailbox toolbar composes `MailboxFilter`. No save action: a task set has
+ * no saved views to file one in.
  */
 export const TaskFilter = ({
   db,
@@ -56,9 +56,8 @@ export const TaskFilter = ({
       <IconButton
         icon='ph--x--regular'
         iconOnly
-        // Live while either term is set, since clearing resets both: a reader who only hid a status
-        // would otherwise have no way to undo the one filter they had applied.
-        disabled={value.length === 0 && statuses.length === ALL_STATUSES.length}
+        // The status choice is written into the text, so an empty text is the unfiltered list.
+        disabled={value.trim().length === 0}
         label={t('filter-clear.label')}
         data-testid='tasks.filter.clear'
         onClick={onClear}

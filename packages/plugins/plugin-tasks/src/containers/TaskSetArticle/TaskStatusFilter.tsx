@@ -11,8 +11,7 @@ import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-/** Every status the schema offers, in the order the schema lists them. */
-export const ALL_STATUSES: readonly Task.Status[] = Task.StatusOptions.map(({ id }) => id);
+import { ALL_STATUSES } from '../../util/index.ts';
 
 export type TaskStatusFilterProps = {
   /** The statuses the list shows. Every status is the unfiltered state. */
@@ -27,9 +26,9 @@ export type TaskStatusFilterProps = {
  * a decision a reader makes once and reads off the trigger afterwards. Multi-select, so the menu
  * stays open across several toggles — picking one value and closing is single-select behaviour.
  *
- * Separate from the query editor rather than written into its text as `status:` terms: the terms are
- * one value each, so hiding two statuses cannot be said in the query language the editor parses, and
- * a reader narrowing by text should not have their status choice rewritten under them.
+ * A view over the query rather than state of its own: the caller derives `value` from the query's
+ * `status:` terms and writes a change back into them (see `parseStatusTerms`), so the menu and the
+ * text cannot disagree about what the list is showing.
  */
 export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
