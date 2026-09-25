@@ -1032,3 +1032,13 @@ companion).
       remains is removing it, which needs creation somewhere else — an inline new
       row in the list, or a toolbar action that creates the task and opens its
       plank (plugin-inbox's draft pattern).
+- [ ] **`cardMasonry` does not resolve in plugin-tasks' storybook** — `TaskArticle`
+      hands its artifacts to `plugin-space`'s `cardMasonry` surface, and that
+      surface renders nothing under plugin-tasks' own storybook even with
+      `SpacePlugin.make({})` registered and a direct
+      `Surface.Surface type={AppSurface.CardMasonry}` in the story: no module
+      error is logged, and the same article renders the grid under
+      plugin-projects' `ProjectTaskCompanion` story. So `TaskArticle.stories.tsx`
+      asserts the article's own content and leaves the cards to the companion
+      story. Worth finding, because a story that cannot mount a cross-plugin
+      surface cannot cover what the pane actually shows.
