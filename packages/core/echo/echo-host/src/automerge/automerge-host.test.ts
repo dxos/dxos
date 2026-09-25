@@ -311,7 +311,7 @@ describe('AutomergeHost', () => {
   // neither Subduction retry path covers: `findWithProgress` resolves from the existing query, and
   // `shareConfigChanged()` skips entries whose last sync succeeded. `_handleCollectionSync` is the
   // only place that sees the divergence, so it has to be the place that acts on it.
-  test('a diverged ready document is resynced once per head pair', async () => {
+  test('a diverged ready document is resynced once per retry window', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime, useSubduction: true });
@@ -352,15 +352,24 @@ describe('AutomergeHost', () => {
     await sleep(500);
     expect(resynced).toEqual([documentId]);
 
+    // A round can be lost in flight — EDGE drops a batch whose send times out — and neither side's
+    // heads move when it is, so the same pair has to earn another round once its window elapses.
+    // Expiring the window by hand rather than waiting it out keeps the test at its own timescale.
+    const resyncHeads: Map<string, { documentId: string; nextAttemptAt: number }> = (host as any)._divergedResyncHeads;
+    for (const entry of resyncHeads.values()) {
+      entry.nextAttemptAt = Date.now() - 1;
+    }
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
+
     // Clearing the collection drops its budget, so registering it again earns a fresh resync rather
     // than being suppressed by the stale entry.
     await host.clearLocalCollectionState(collectionId);
     await host.updateLocalCollectionState(collectionId, [documentId]);
     synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
-    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(3);
 
     // A removed document never converges, so its retry budget has to go with it.
-    const resyncHeads: Map<string, { documentId: string }> = (host as any)._divergedResyncHeads;
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
     await host.removeDocument(documentId);
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
