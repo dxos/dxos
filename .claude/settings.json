@@ -1,6 +1,28 @@
 {
   "permissions": {
-    "allow": ["mcp__Trunk__search-test", "mcp__Trunk__investigate-ci-failure", "mcp__Trunk__detect-frameworks"]
+    "allow": [
+      "mcp__Trunk__search-test",
+      "mcp__Trunk__investigate-ci-failure",
+      "mcp__Trunk__detect-frameworks",
+      "mcp__claude_ai_PostHog",
+      "mcp__9af42fb9-d23b-472c-ac72-b2138a8a2722",
+      "mcp__claude_ai_Signoz__signoz_aggregate_*",
+      "mcp__claude_ai_Signoz__signoz_check_*",
+      "mcp__claude_ai_Signoz__signoz_execute_builder_query",
+      "mcp__claude_ai_Signoz__signoz_fetch_doc",
+      "mcp__claude_ai_Signoz__signoz_get_*",
+      "mcp__claude_ai_Signoz__signoz_list_*",
+      "mcp__claude_ai_Signoz__signoz_query_*",
+      "mcp__claude_ai_Signoz__signoz_search_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_aggregate_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_check_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_execute_builder_query",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_fetch_doc",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_get_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_list_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_query_*",
+      "mcp__ad4f602b-ace3-4927-99a4-25f466d3c56c__signoz_search_*"
+    ]
   },
   "hooks": {
     "PreToolUse": [
