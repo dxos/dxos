@@ -982,7 +982,18 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    Cost still to be measured there.
 7. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
-   better home for in-flight migration state than the overlay.
+   better home for in-flight migration state than the overlay. — **DECIDED (2026-09-25):** not now. Start
+   with the overlay; migration state is not held on branches, and branch-based migration preview is
+   a possible later opt-in. **Long-term target (a mental model, deliberately not committed):** one
+   system where a _lens_ is the transformation, a _branch_ is a shared alternate timeline where data
+   is materialized, and a _migration_ is a lens applied at one of three levels — view (read/write
+   through it, base untouched), preview (materialize onto a branch the whole space can see and edit),
+   commit (merge that branch into main). Branch creation already records its fork heads, which are
+   the pre-migration heads fold-forward needs. Unverified points before committing to it: merge-back
+   must be merge + fold-forward (main keeps taking old-shape writes during a preview); a space-wide
+   preview forks every affected document; whether a branch can hold objects main lacks (fan-out /
+   fan-in); peers offline across the commit still fold forward. Deferred because branching itself
+   is not fully fleshed out, and unifying early would constrain exploration and slow implementation.
 
 ## 11. Cross-object lenses
 
