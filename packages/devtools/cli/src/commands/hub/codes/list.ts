@@ -15,11 +15,14 @@ const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): strin
   if (row.revokedAt) {
     return 'revoked';
   }
-  if (row.redeemedByIdentityDid) {
+  if ((row.redemptionCount ?? (row.redeemedAt ? 1 : 0)) >= (row.maxRedemptions ?? 1)) {
     return 'redeemed';
   }
   return 'available';
 };
+
+const usesOf = (row: AdminListInvitationCodesResponse['codes'][number]): string =>
+  `${row.redemptionCount ?? (row.redeemedAt ? 1 : 0)}/${row.maxRedemptions ?? 1}`;
 
 export const list = Command.make(
   'list',
@@ -44,7 +47,7 @@ export const list = Command.make(
       const issuer = row.issuedByIdentityDid ? row.issuedByIdentityDid.slice(0, 20) + '…' : 'bootstrap';
       const created = new Date(row.createdAt).toLocaleString();
       yield* Console.log(
-        `  ${row.code}  ${status.padEnd(10)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,
+        `  ${row.code}  ${status.padEnd(10)} ${usesOf(row).padEnd(8)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,
       );
     }
   }),
