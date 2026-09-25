@@ -30,7 +30,8 @@ const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth, surface },
     // narrower than --spacing-card-min-width (phones).
     fullWidth ? 'w-full min-w-0' : 'dx-card-min-width dx-card-max-width',
     'group/card relative shrink-0 overflow-hidden',
-    border && 'border-2 border-subdued-separator rounded-md dx-focus-ring-group-y-indicator',
+    border && 'shadow-md rounded-md',
+    // border && 'border-2 border-subdued-separator rounded-md dx-focus-ring-group-y-indicator',
     ...etc,
   );
 

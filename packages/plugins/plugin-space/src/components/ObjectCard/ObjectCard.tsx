@@ -13,13 +13,19 @@ import { ActionMenu } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-export type RelatedObjectCardProps = {
+export type ObjectCardProps = {
   data: Entity.Unknown;
   classNames?: string;
 };
 
-/** Masonry tile renderer for a related entity. */
-export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCardProps) => {
+/**
+ * One entity as a card: its depiction and label from the schema's annotations, its body from the
+ * type's own `CardContent` surface, and the object's graph actions in the header menu.
+ *
+ * Nothing here is type-specific, and the props are the masonry tile signature, so the same card
+ * renders a related object, a record's reference or a tile in a `CardMasonry`.
+ */
+export const ObjectCard = ({ data: subject, classNames }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
@@ -56,4 +62,4 @@ export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCa
   );
 };
 
-RelatedObjectCard.displayName = 'RelatedObjectCard';
+ObjectCard.displayName = 'ObjectCard';
