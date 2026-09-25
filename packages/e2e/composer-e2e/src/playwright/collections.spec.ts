@@ -51,29 +51,28 @@ test.describe('Collection tests', () => {
     });
   });
 
-  for (let i = 0; i < 10; i++)
-    test(`drag object into collection ${i}`, { tag: ['@QA-6'] }, async () => {
-      await host.createSpace();
-      await host.createObject({ type: 'Collection' });
-      await host.createObject({ type: 'Collection' });
-      await host.expandSection('spacePlugin.collectionsSection');
-      await host.renameObject('Collection 1', 0);
-      await host.renameObject('Collection 2', 1);
+  test('drag object into collection', { tag: ['@QA-6'] }, async () => {
+    await host.createSpace();
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
+    await host.expandSection('spacePlugin.collectionsSection');
+    await host.renameObject('Collection 1', 0);
+    await host.renameObject('Collection 2', 1);
 
-      // Selected first: an unvisited collection takes the drop beside it rather than inside it.
-      await host.getObject(1).click();
-      // A row's `data-object-id` is the object's canonical graph path, so once Collection 1 is inside
-      // Collection 2 its path is Collection 2's path plus its own id.
-      const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
-      const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
-      const moved = `${collection2}/${collection1?.split('/').at(-1)}`;
-      await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
-        instruction: 'make-child',
-      });
-      // Collection 2 had no children when the drag began, so the drop does not open it.
-      await host.expandCollection(0);
-      await expect(host.getObjectLinks().and(host.page.locator(`[data-object-id="${moved}"]`))).toHaveCount(1);
+    // Selected first: an unvisited collection takes the drop beside it rather than inside it.
+    await host.getObject(1).click();
+    // A row's `data-object-id` is the object's canonical graph path, so once Collection 1 is inside
+    // Collection 2 its path is Collection 2's path plus its own id.
+    const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
+    const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
+    const moved = `${collection2}/${collection1?.split('/').at(-1)}`;
+    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
+      instruction: 'make-child',
     });
+    // Collection 2 had no children when the drag began, so the drop does not open it.
+    await host.expandCollection(0);
+    await expect(host.getObjectLinks().and(host.page.locator(`[data-object-id="${moved}"]`))).toHaveCount(1);
+  });
 
   test('delete a collection', { tag: ['@QA-6'] }, async () => {
     await host.createSpace();

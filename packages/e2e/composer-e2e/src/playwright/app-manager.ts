@@ -629,12 +629,50 @@ export class AppManager {
     // Toward the target until the drag starts: a nudge away from it leaves the pointer over the row
     // that slides into the dragged row's place. WebKit's threshold is 12-20px, Chromium's and Firefox's under 6.
     const direction = initial.y < start.y ? -1 : 1;
+    // TEMP: trace the drag's DOM events for the WebKit investigation.
+    await this.page.evaluate(() => {
+      const w = window as any;
+      w.__dragEvents = [];
+      for (const type of [
+        'pointerdown',
+        'mousedown',
+        'pointermove',
+        'dragstart',
+        'dragenter',
+        'dragover',
+        'dragend',
+        'pointercancel',
+        'mouseup',
+      ]) {
+        document.addEventListener(
+          type,
+          (event) =>
+            w.__dragEvents.push(
+              `${type}@${Math.round((event as MouseEvent).clientY)}:${(event.target as Element)?.getAttribute?.('data-testid') ?? (event.target as Element)?.nodeName}`,
+            ),
+          true,
+        );
+      }
+    });
+    console.log(
+      `TEMP dragTo start=${JSON.stringify(start)} target=${JSON.stringify(initial)} hover=${await this.page.evaluate(
+        ({ x, y }) => {
+          const el = document.elementFromPoint(x, y);
+          return `${el?.nodeName}:${el?.getAttribute('data-testid')}:${el?.closest('[draggable]')?.getAttribute('data-object-id')}`;
+        },
+        { x: startX, y: startY },
+      )}`,
+    );
     let travel = 0;
     await expect
       .poll(async () => {
         travel = Math.min(travel + 6, 30);
         await this.page.mouse.move(startX, startY + direction * travel, { steps: 2 });
-        return active.isHidden();
+        const hidden = await active.isHidden();
+        console.log(
+          `TEMP travel=${travel} hidden=${hidden} events=${JSON.stringify(await this.page.evaluate(() => (window as any).__dragEvents.splice(0)))}`,
+        );
+        return hidden;
       })
       .toBe(true);
 
