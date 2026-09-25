@@ -150,7 +150,8 @@ message Runtime {
     /// How a client holds the documents it opens.
     enum DocumentMode {
       UNSPECIFIED_DOCUMENT_MODE = 0;
-      /// An Automerge replica of each document, synced over `ReplicaService`. The default.
+      /// An Automerge replica of each document, synced over `DataService`'s byte protocol.
+      /// The default.
       REPLICA = 1;
       /// A proxy from `@dxos/automerge-proxy`, served over `DataService`: only the services run
       /// Automerge, and the client sends op batches.
