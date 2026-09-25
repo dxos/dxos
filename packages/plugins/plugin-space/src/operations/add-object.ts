@@ -3,6 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
+import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
@@ -38,13 +39,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // The union's two branches: a live entity passes through, a description is instantiated.
       const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
-      // An instantiated draft is detached, and the branch of `ContainerModel.add` that files into
-      // a collection only pushes a ref — so without this the object is never persisted and that
-      // ref dangles. A live entity arrives already in a database.
-      if (!Obj.getDatabase(object)) {
-        yield* Database.add(object);
+      // Without a target, the object's type tags decide its parent (e.g. a document files into the root
+      // collection); an explicit target always wins.
+      const parent = target ?? (yield* DefaultParent.resolve(object));
+      // A caller error, so a failure with the reason rather than the defect `ContainerModel.add` raises.
+      if (!ContainerModel.canAdd({ object, target: parent })) {
+        return yield* Effect.fail(
+          new SpaceOperationError({ message: `A collection does not take ${Obj.getTypename(object)} objects.` }),
+        );
       }
-      yield* ContainerModel.add({ object, target });
+      yield* ContainerModel.add({ object, target: parent });
 
       return {
         id: Obj.getURI(object),

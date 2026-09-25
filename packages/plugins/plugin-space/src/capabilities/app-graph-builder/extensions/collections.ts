@@ -12,6 +12,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -34,6 +35,7 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
+  ADD_TO_COLLECTION_LABEL,
   ARCHIVE_OBJECT_LABEL,
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
@@ -450,6 +452,20 @@ const constructObjectActions = ({
             },
           }),
         ]),
+    ...(TypeOptions.isUserObject(object)
+      ? [
+          AppGraphNode.makeAction({
+            id: CollectionOperation.OpenAddToCollection.meta.key,
+            data: () => Operation.invoke(CollectionOperation.OpenAddToCollection, { object }),
+            properties: {
+              label: ADD_TO_COLLECTION_LABEL,
+              icon: CollectionOperation.OpenAddToCollection.meta.icon,
+              disposition: 'list-item',
+              testId: 'spacePlugin.addToCollection',
+            },
+          }),
+        ]
+      : []),
     ...(archived !== undefined
       ? [
           AppGraphNode.makeAction({

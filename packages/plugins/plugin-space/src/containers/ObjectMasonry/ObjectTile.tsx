@@ -5,13 +5,15 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -36,6 +38,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);
@@ -73,6 +76,16 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             },
           ]
         : []),
+      // Offered where the tile is interactive, which is where it can be opened.
+      ...(onOpen && TypeOptions.isUserObject(object)
+        ? [
+            {
+              icon: CollectionOperation.OpenAddToCollection.meta.icon,
+              label: t('add-to-collection.label', { ns: osTranslations }),
+              onClick: () => void invokePromise(CollectionOperation.OpenAddToCollection, { object }),
+            },
+          ]
+        : []),
       ...(onDelete
         ? [
             {
@@ -87,7 +100,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
         : []),
       ...(archiveItem ? [archiveItem] : []),
     ],
-    [t, typename, onOpen, onDelete, archiveItem, object],
+    [t, typename, onOpen, onDelete, archiveItem, object, invokePromise],
   );
 
   return (

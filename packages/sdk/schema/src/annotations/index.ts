@@ -7,7 +7,6 @@ export * from './archive.ts';
 export * from './atproto-record.ts';
 export * from './atproto-visibility.ts';
 export * from './card.ts';
-export * from './collection-item.ts';
 export * from './factory.ts';
 export * from './feed.ts';
 export * from './icon.ts';

@@ -72,6 +72,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
     // the type does not depend on the plugin that owns the skill.
     Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
+    Annotation.UserType.set(),
   ),
 ) {}
 
