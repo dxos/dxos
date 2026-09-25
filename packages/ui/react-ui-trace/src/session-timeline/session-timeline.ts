@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Task } from '@dxos/types';
 
@@ -27,16 +27,42 @@ export interface BuildSessionTimelineInput {
   /** The sessions to draw; each contributes a lane and its checklist's task lanes. */
   sessions?: readonly Session[];
   tasks?: readonly Task.Task[];
+  /** Per task id, the status moves its edit history records, oldest first (see {@link readTaskStatusChanges}). */
+  taskStatusChanges?: ReadonlyMap<string, readonly TaskStatusChange[]>;
   /** Reference time; extends the range past open lanes. */
   now?: number;
 }
+
+/** One move of a task's status, as its edit history records it. */
+export type TaskStatusChange = {
+  /** Epoch ms. */
+  timestamp: number;
+  status: Task.Status;
+  /** Absent when the task held no status before. */
+  previousStatus?: Task.Status;
+};
+
+const isStatus = Schema.is(Task.Status);
+
+/**
+ * The status moves in a task's edit history, oldest first; none for a task not stored in a database,
+ * which keeps no history.
+ */
+export const readTaskStatusChanges = (task: Task.Task): TaskStatusChange[] =>
+  Obj.getDatabase(task) === undefined
+    ? []
+    : Obj.getChanges(task, { property: 'status' }).flatMap(({ time, before, after }) =>
+        isStatus(after)
+          ? [{ timestamp: time, status: after, ...(isStatus(before) ? { previousStatus: before } : {}) }]
+          : [],
+      );
 
 const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
 
 /** How long an open lane may be silent before the axis stops following `now`. */
 const OPEN_LANE_STALE_MS = 10 * 60_000;
 
-/** How far apart a task's history entry and the trace event recording the same transition may land. */
+/** How far apart a task's recorded status move and the trace event recording the same move may land. */
 const HISTORY_MATCH_MS = 5_000;
 
 const TASK_STATUS: Partial<Record<Task.Status, LaneStatus>> = {
@@ -171,12 +197,12 @@ const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.F
 };
 
 /**
- * The stretch a task's own log says it was worked: from its first move to `started` to the last move
- * out of it. `end` is absent while the log leaves it `started`; `last` is the log's last transition.
+ * The stretch a task's edit history says it was worked: from its first move to `started` to the last
+ * move out of it. `end` is absent while the history leaves it `started`; `last` is its last move.
  * Absent when the task was never started.
  */
 const historySpan = (
-  changes: readonly Task.StatusChange[],
+  changes: readonly TaskStatusChange[],
 ): { start: number; end?: number; last: number } | undefined => {
   let start: number | undefined;
   let end: number | undefined;
@@ -194,29 +220,20 @@ const historySpan = (
   return start === undefined || last === undefined ? undefined : { start, end: open ? undefined : end, last };
 };
 
-const historyMarker = (
-  entry: Task.HistoryEntry,
-  change: Task.StatusChange | undefined,
-  id: string,
-  laneId: string,
-  pid: string | undefined,
-): Marker | undefined => {
-  const timestamp = change?.timestamp ?? Date.parse(entry.date);
+/** A question or answer in the task's log; other entries are edits the edit history already holds. */
+const exchangeMarker = (entry: Task.HistoryEntry, id: string, laneId: string): Marker | undefined => {
+  const timestamp = Date.parse(entry.date);
   if (Number.isNaN(timestamp)) {
     return undefined;
   }
-  const base = { id, laneId, kind: 'task' as const, timestamp, pid, detail: entry };
+  const base = { id, laneId, kind: 'task' as const, timestamp, detail: entry };
   switch (entry.event) {
     case 'question':
       return { ...base, label: entry.text, level: 'warn' };
     case 'answer':
       return { ...base, label: `Answered: ${entry.answer}` };
     default:
-      return {
-        ...base,
-        label: entry.description ?? `Task ${change?.status ?? entry.event}`,
-        level: change?.status === 'failed' ? 'error' : undefined,
-      };
+      return undefined;
   }
 };
 
@@ -235,6 +252,7 @@ export const buildSessionTimeline = ({
   processes = [],
   sessions,
   tasks = [],
+  taskStatusChanges,
   now,
 }: BuildSessionTimelineInput): SessionTimeline => {
   const root = buildSpanTree(traceMessages);
@@ -423,12 +441,12 @@ export const buildSessionTimeline = ({
       taskLane.end = segment.end === undefined ? undefined : Math.max(taskLane.end ?? segment.end, segment.end);
     }
 
-    // The task's own log bounds its lane too, so a task worked where the trace does not reach (another
-    // device, a pruned feed, a person's edit) still gets a span. The lane stays open only while the task
-    // itself is `started`: a log missing its closing transition must not reopen finished work.
+    // The task's edit history bounds its lane too, so a task worked where the trace does not reach
+    // (another device, a pruned feed, a person's edit) still gets a span. The lane stays open only while
+    // the task itself is `started`, whatever the history last says.
     for (const task of chatTasks) {
       const taskLane = taskLanes.get(task.id);
-      const span = historySpan(Task.getStatusChanges(task.history));
+      const span = historySpan(taskStatusChanges?.get(task.id) ?? []);
       if (!taskLane || !span) {
         continue;
       }
@@ -490,9 +508,9 @@ export const buildSessionTimeline = ({
     );
   }
 
-  // Each entry in a task's log is a node on its lane. A status change the trace also recorded is drawn
-  // once, from the entry, which says everything the edit changed; the trace event lends it the pid and
-  // is not drawn. Only a trace event on a drawn lane is matched, so none is hidden that had a node.
+  // Each status move in a task's edit history is a node on its lane, and so is each question and answer
+  // in its log. A move the trace also recorded is drawn once, from the history, taking the trace event's
+  // pid. Only a trace event on a drawn lane is matched, so none is hidden that had a node.
   const tracedChanges = new Map<string, Trace.FlatEvent[]>();
   for (const event of events) {
     const drawn =
@@ -513,20 +531,29 @@ export const buildSessionTimeline = ({
       continue;
     }
     const traced = tracedChanges.get(task.id) ?? [];
-    for (const entry of task.history ?? []) {
-      const change = Task.getStatusChange(entry);
-      const match =
-        change &&
-        traced.find(
-          (event) =>
-            !mergedEvents.has(event) &&
-            decode(Trace.TaskStatusChanged.schema, event.data)?.status === change.status &&
-            Math.abs(event.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
-        );
+    for (const change of taskStatusChanges?.get(task.id) ?? []) {
+      const match = traced.find(
+        (event) =>
+          !mergedEvents.has(event) &&
+          decode(Trace.TaskStatusChanged.schema, event.data)?.status === change.status &&
+          Math.abs(event.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
+      );
       if (match) {
         mergedEvents.add(match);
       }
-      const marker = historyMarker(entry, change, `${lane.id}:${markers.length}`, lane.id, match?.meta.pid);
+      markers.push({
+        id: `${lane.id}:${markers.length}`,
+        laneId: lane.id,
+        kind: 'task',
+        timestamp: change.timestamp,
+        label: `Task ${change.status}`,
+        level: change.status === 'failed' ? 'error' : undefined,
+        pid: match?.meta.pid,
+        detail: change,
+      });
+    }
+    for (const entry of task.history ?? []) {
+      const marker = exchangeMarker(entry, `${lane.id}:${markers.length}`, lane.id);
       if (marker) {
         markers.push(marker);
       }

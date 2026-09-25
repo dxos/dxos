@@ -388,39 +388,6 @@ describe('history', () => {
       expect(task.history?.[0].actor).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
   );
-
-  test('reads back the status transitions the edits recorded', ({ expect }) => {
-    const task = Task.make({ title: 'Migrate schema' });
-    Task.setStatus(task, 'todo', { date: '2026-08-01T09:00:00.000Z' });
-    Task.update(task, { status: 'started', priority: 'high' }, { date: '2026-08-01T10:00:00.000Z' });
-    Task.setAssignee(task, { name: 'Scout' }, { date: '2026-08-01T10:30:00.000Z' });
-    // A title reading like a status note records no transition.
-    Task.update(task, { title: 'Status set to done.' }, { date: '2026-08-01T10:45:00.000Z' });
-    // A replaced note still carries the transition, which the entry holds as data.
-    Task.setStatus(task, 'done', { date: '2026-08-01T11:00:00.000Z', description: 'Shipped.' });
-
-    expect(
-      Task.getStatusChanges(task.history).map(({ timestamp, status, previousStatus }) => ({
-        timestamp,
-        status,
-        previousStatus,
-      })),
-    ).toEqual([
-      { timestamp: Date.parse('2026-08-01T09:00:00.000Z'), status: 'todo', previousStatus: undefined },
-      { timestamp: Date.parse('2026-08-01T10:00:00.000Z'), status: 'started', previousStatus: 'todo' },
-      { timestamp: Date.parse('2026-08-01T11:00:00.000Z'), status: 'done', previousStatus: 'started' },
-    ]);
-  });
-
-  test('reads no transition from an entry that holds none, whatever its note says', ({ expect }) => {
-    expect(
-      Task.getStatusChange({
-        date: '2026-08-01T09:00:00.000Z',
-        event: 'updated',
-        description: 'Status changed from todo to started.',
-      }),
-    ).toBeUndefined();
-  });
 });
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] });

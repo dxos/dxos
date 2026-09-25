@@ -1,5 +1,5 @@
 ---
-'@dxos/types': minor
+'@dxos/react-ui-trace': minor
 ---
 
-The session timeline now bounds task lanes by the task's own history (first move to `started` to the last move out of it) and draws each history entry as a node, so tasks worked outside the trace still show on the pipeline chart. Task change entries record their status transition as `status` / `previousStatus`, which `Task.getStatusChanges` reads back; entries logged before these fields carry no transition.
+The session timeline now bounds task lanes by each task's own edit history (first move to `started` to the last move out of it, read with `Obj.getChanges`) and draws its status moves, questions and answers as nodes, so tasks worked outside the trace still show on the pipeline chart.

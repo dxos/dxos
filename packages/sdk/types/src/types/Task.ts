@@ -133,10 +133,6 @@ const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
     id: Schema.optional(HistoryEntryBase.id),
     event: Schema.Literal(event).annotate({ title: 'Event' }),
     description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-    // The transition the edit made, held as data so readers never parse the note, which is prose.
-    // Optional: an edit that left the status alone has none, nor does an entry logged before these fields.
-    status: Schema.optional(Status.annotate({ title: 'Status' })),
-    previousStatus: Schema.optional(Status.annotate({ title: 'Previous Status' })),
   }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });
 
 export const CreatedEntry = makeChangeEntry('created');
@@ -486,9 +482,6 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     ...(options.actor ? { actor: options.actor } : {}),
     event: 'updated',
     description: options.description ?? notes.join(' '),
-    ...(changes.status !== undefined && changes.status !== task.status
-      ? { status: changes.status, ...(task.status !== undefined ? { previousStatus: task.status } : {}) }
-      : {}),
   };
 
   // One transaction: the fields and the entry that explains them are never separately observable.
@@ -535,37 +528,6 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
 
   return entry;
 };
-
-/** A status transition read back out of a task's log. */
-export type StatusChange = {
-  /** Epoch ms of the entry. */
-  timestamp: number;
-  status: Status;
-  /** Absent when the task held no status before. */
-  previousStatus?: Status;
-  entry: ChangeEntry;
-};
-
-/** The status transition an entry records; an entry logged before entries held one records none. */
-export const getStatusChange = (entry: HistoryEntry): StatusChange | undefined => {
-  if (!isChangeEntry(entry) || entry.status === undefined) {
-    return undefined;
-  }
-  const timestamp = Date.parse(entry.date);
-  if (Number.isNaN(timestamp)) {
-    return undefined;
-  }
-  return {
-    timestamp,
-    status: entry.status,
-    ...(entry.previousStatus !== undefined ? { previousStatus: entry.previousStatus } : {}),
-    entry,
-  };
-};
-
-/** The status transitions a task's log records, oldest first. */
-export const getStatusChanges = (history: readonly HistoryEntry[] | undefined): StatusChange[] =>
-  (history ?? []).map(getStatusChange).filter((change): change is StatusChange => change !== undefined);
 
 /** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
 export const setStatus = (task: Task, status: Status, options?: EditOptions): ChangeEntry | undefined =>

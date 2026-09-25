@@ -12,43 +12,50 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
 import { Gantt } from '../components/index.ts';
-import { buildSessionTimeline } from './session-timeline.ts';
+import { type TaskStatusChange, buildSessionTimeline } from './session-timeline.ts';
 import { type Session } from './types.ts';
 
 const T0 = Date.UTC(2026, 8, 25, 12, 5, 22);
 const MINUTE = 60_000;
-const at = (minutes: number): string => new Date(T0 + minutes * MINUTE).toISOString();
+const minute = (minutes: number): number => T0 + minutes * MINUTE;
+const at = (minutes: number): string => new Date(minute(minutes)).toISOString();
 
 /**
- * One session's checklist. With `history`, each task carries the log its edits wrote; without, it
- * holds only its final status — all a timeline built from the trace alone could see.
+ * One session's checklist, and the status moves each task's edit history records — the story's tasks
+ * live in no database, so their moves are given rather than read. With `history` off, the chart sees
+ * only the trace.
  */
-const makeTasks = (history: boolean): Task.Task[] => {
-  const audit = Task.make({ title: 'Audit current artifact storage', status: history ? 'todo' : 'done' });
-  const design = Task.make({ title: 'Design history entry schema', status: history ? 'todo' : 'done' });
-  const migrate = Task.make({ title: 'Write the migration', status: history ? 'todo' : 'done' });
+const makeTasks = (history: boolean) => {
+  const audit = Task.make({ title: 'Audit current artifact storage', status: 'done' });
+  const design = Task.make({ title: 'Design history entry schema', status: 'done' });
+  const migrate = Task.make({ title: 'Write the migration', status: 'done' });
   const backfill = Task.make({
     title: 'Backfill existing tasks',
     status: 'todo',
     dependsOn: [Ref.make(migrate), Ref.make(design)],
   });
+  const worked = (start: number, end: number): TaskStatusChange[] => [
+    { timestamp: minute(start), status: 'started', previousStatus: 'todo' },
+    { timestamp: minute(end), status: 'done', previousStatus: 'started' },
+  ];
   if (history) {
-    const agent = { name: 'Scout', role: 'assistant' as const };
-    Task.setStatus(audit, 'started', { actor: agent, date: at(1) });
-    Task.update(audit, { priority: 'high' }, { actor: agent, date: at(9) });
-    Task.setStatus(audit, 'done', { actor: agent, date: at(26) });
-    Task.setStatus(design, 'started', { actor: agent, date: at(28) });
     const question = Task.ask(design, {
       text: 'Keep artifacts as refs or fold them into history?',
-      actor: agent,
+      actor: { name: 'Scout', role: 'assistant' },
       date: at(36),
     });
     Task.answer(design, question.id, 'Keep refs', { date: at(47) });
-    Task.setStatus(design, 'done', { actor: agent, date: at(55) });
-    Task.setStatus(migrate, 'started', { actor: agent, date: at(57) });
-    Task.setStatus(migrate, 'done', { actor: agent, date: at(111) });
   }
-  return [audit, design, migrate, backfill];
+  const taskStatusChanges = new Map<string, TaskStatusChange[]>(
+    history
+      ? [
+          [audit.id, worked(1, 26)],
+          [design.id, worked(28, 55)],
+          [migrate.id, worked(57, 111)],
+        ]
+      : [],
+  );
+  return { tasks: [audit, design, migrate, backfill], taskStatusChanges };
 };
 
 /** The session's own trace: two requests and the tool calls between them, with no task status events. */
@@ -84,7 +91,7 @@ const makeTrace = (feed: Ref.Ref<Feed.Feed>): Trace.Message[] => {
 const Timeline = ({ title, history }: { title: string; history: boolean }) => {
   const timeline = useMemo(() => {
     const feed = Feed.make();
-    const tasks = makeTasks(history);
+    const { tasks, taskStatusChanges } = makeTasks(history);
     const id = EntityId.random();
     const session: Session = {
       id,
@@ -93,7 +100,12 @@ const Timeline = ({ title, history }: { title: string; history: boolean }) => {
       feedId: feed.id,
       taskIds: tasks.map((task) => task.id),
     };
-    return buildSessionTimeline({ traceMessages: makeTrace(Ref.make(feed)), sessions: [session], tasks });
+    return buildSessionTimeline({
+      traceMessages: makeTrace(Ref.make(feed)),
+      sessions: [session],
+      tasks,
+      taskStatusChanges,
+    });
   }, [history]);
 
   return (
@@ -111,7 +123,7 @@ const Timeline = ({ title, history }: { title: string; history: boolean }) => {
 const DefaultStory = () => (
   <div className='flex flex-col gap-6 p-4'>
     <Timeline title='Trace only — task lanes have no span' history={false} />
-    <Timeline title='With task history — begin, end and every entry as a node' history={true} />
+    <Timeline title='With edit history — begin, end, status moves and questions as nodes' history={true} />
   </div>
 );
 
