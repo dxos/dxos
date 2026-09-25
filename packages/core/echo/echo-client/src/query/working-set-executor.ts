@@ -106,9 +106,10 @@ export type WorkingSetDataProvider = {
 export class WorkingSetQueryExecutor {
   /**
    * Every loaded core with a body, read once per {@link tryExecute}: a plan's selectors, unions and
-   * traversals would otherwise each rescan the whole database, and it cannot change mid-execution.
+   * traversals would otherwise each rescan the whole database. Dropped by {@link #getCore} when a
+   * lookup re-creates a core the read did not include.
    */
-  #allItems: WorkingSetItem[] | undefined;
+  #allItems: { items: WorkingSetItem[]; cores: Set<ObjectCore> } | undefined;
 
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
@@ -212,7 +213,7 @@ export class WorkingSetQueryExecutor {
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this._provider.getCoreById(id, true);
+            const core = this.#getCore(id, true);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
@@ -317,7 +318,7 @@ export class WorkingSetQueryExecutor {
     }
 
     // Recurse up the parent chain.
-    const parentCore = this._provider.getCoreById(parentId);
+    const parentCore = this.#getCore(parentId);
     const parentItem = parentCore && this._coreToItem(parentCore);
     if (!parentItem) {
       return false;
@@ -586,12 +587,25 @@ export class WorkingSetQueryExecutor {
 
   /** Every loaded core that has a body to read. */
   private _allCoreItems(): WorkingSetItem[] {
-    return (this.#allItems ??= this._provider.allCores().flatMap((core) => this._coreToItem(core) ?? []));
+    if (!this.#allItems) {
+      const cores = this._provider.allCores();
+      this.#allItems = { items: cores.flatMap((core) => this._coreToItem(core) ?? []), cores: new Set(cores) };
+    }
+    return this.#allItems.items;
   }
 
   private _itemById(id: EntityId): WorkingSetItem | undefined {
-    const core = this._provider.getCoreById(id);
+    const core = this.#getCore(id);
     return core && this._coreToItem(core);
+  }
+
+  /** A lookup can re-create a collected core, which a cached {@link _allCoreItems} read would then miss. */
+  #getCore(id: EntityId, load?: boolean): ObjectCore | undefined {
+    const core = this._provider.getCoreById(id, load);
+    if (core && this.#allItems && !this.#allItems.cores.has(core)) {
+      this.#allItems = undefined;
+    }
+    return core;
   }
 
   /**

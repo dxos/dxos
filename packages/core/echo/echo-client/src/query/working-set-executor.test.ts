@@ -354,6 +354,39 @@ describe('WorkingSetQueryExecutor', () => {
     expect(scans).toEqual(0);
   });
 
+  test('reads again when a lookup re-creates a core the cached read did not include', async ({ expect }) => {
+    const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+    await db.flush();
+
+    // Stands in for a core collected and then re-created by an id lookup mid-execution.
+    const provider = makeProvider(db);
+    let rehydrated = false;
+    let scans = 0;
+    const executor = new WorkingSetQueryExecutor({
+      ...provider,
+      allCores: () => {
+        scans++;
+        return provider.allCores().filter((core) => rehydrated || core.id !== child.id);
+      },
+      getCoreById: (id, load) => {
+        rehydrated ||= id === child.id;
+        return provider.getCoreById(id, load);
+      },
+    });
+
+    const union = Query.all(
+      Query.select(Filter.everything()).from(db),
+      Query.select(Filter.id(child.id)).from(db),
+      Query.select(Filter.id(parent.id)).from(db).children(),
+    );
+    const ids = executor.tryExecute(
+      new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(union.ast),
+    );
+    expect(ids?.map((item) => item.objectId)).toContain(child.id);
+    expect(scans).toEqual(2);
+  });
+
   test('filter-deleted step filters out deleted objects', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
