@@ -144,7 +144,7 @@ const SelectedTask = ({ select }: StoryArgs) => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <ProjectTaskCompanion role='article' attendableId={ATTENDABLE_ID} project={project} />
+      <ProjectTaskCompanion role='article' attendableId={ATTENDABLE_ID} companionTo={project} />
     </AttendableContainer>
   );
 };

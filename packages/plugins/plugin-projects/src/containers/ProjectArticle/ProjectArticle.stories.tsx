@@ -226,7 +226,7 @@ const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
                 selection itself, renders the article through the surface (so plugin-tasks'
                 `article.task` registration is still what resolves), and adds the task's artifacts
                 as cards beneath it. */}
-            <ProjectTaskCompanion role={role} attendableId={attendableId} project={project} />
+            <ProjectTaskCompanion role={role} attendableId={attendableId} companionTo={project} />
           </TestGrid.Panel>
         )}
       </TestGrid.Stack>

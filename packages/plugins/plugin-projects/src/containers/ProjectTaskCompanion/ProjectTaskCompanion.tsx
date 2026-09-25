@@ -15,12 +15,15 @@ import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ProjectTaskCompanionProps = {
-  project: Project.Project;
-  role: string;
-  /** The plank this companion is anchored to — the project's, and the context its selection lives in. */
-  attendableId: string;
-};
+/**
+ * The surface's own contract, narrowed to what this component reads: the registration matches a
+ * companion node (`subject: 'task'`) on a project's article, so the project arrives as `companionTo`
+ * and `attendableId` is the host plank's — the context the ledger's selection lives in.
+ */
+export type ProjectTaskCompanionProps = Pick<
+  AppSurface.ArticleProps<'task', {}, Project.Project>,
+  'companionTo' | 'attendableId' | 'role'
+>;
 
 /**
  * The selected task, beside the project rather than in place of it.
@@ -30,7 +33,7 @@ export type ProjectTaskCompanionProps = {
  * its own. It renders the task through the article surface, so the detail is the same component the
  * deck mounts when a task is opened as a plank on a narrow screen.
  */
-export const ProjectTaskCompanion = ({ project, role, attendableId }: ProjectTaskCompanionProps) => {
+export const ProjectTaskCompanion = ({ companionTo: project, role, attendableId }: ProjectTaskCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolved through the hook: on a cold load the ref has no target yet, and a direct read would
   // leave the companion on its empty state once it arrives.
