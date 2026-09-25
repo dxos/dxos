@@ -31,6 +31,7 @@ export default defineConfig({
     'operations/LayoutOperation': 'src/operations/LayoutOperation.ts',
     'operations/NavigationOperation': 'src/operations/NavigationOperation.ts',
     'operations/SettingsOperation': 'src/operations/SettingsOperation.ts',
+    'operations/SpaceInvitationOperation': 'src/operations/SpaceInvitationOperation.ts',
     'types/AppSettings': 'src/types/AppSettings.ts',
     'types/ConnectorSync': 'src/types/ConnectorSync.ts',
     'types/ContainerModel': 'src/types/ContainerModel.ts',

@@ -38,11 +38,13 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { loadSpaceMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -80,11 +82,6 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs, called on each turn.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -117,7 +114,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // registers exactly these with the process's database, and a typed query for a type it does
       // not know matches nothing. Without them a hosted agent reads its own skill bindings back
       // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AiContext.Binding, Skill.Skill],
+      // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+      types: [
+        Chat.Chat,
+        Feed.Feed,
+        Message.Message,
+        Alarm.Alarm,
+        AiContext.Binding,
+        Skill.Skill,
+        McpServer.McpServer,
+        AccessToken.AccessToken,
+      ],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -480,7 +487,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
+                  mcpServers: yield* loadSpaceMcpServers(),
                 })
                 .pipe(
                   Effect.onExit((exit) =>

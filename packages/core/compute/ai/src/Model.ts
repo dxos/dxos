@@ -148,6 +148,29 @@ export const deepseekV4Pro: Model = make('com.deepseek.model.deepseek-v4-pro.def
   characteristics: { thinking: true, tools: true },
 });
 
+//
+// Decision models: TypeSafe's jev, which answers typed questions rather than generating text, as
+// served by each provider. Distinct ids so `AiService.decisionModel(id)` picks the provider; not in
+// `all`, which lists language models for pickers.
+//
+
+/** jev on TypeSafe's own API. */
+export const typesafeJev: Model = make('ai.typesafe.model.jev.latest', {
+  provider: Provider.typesafe.id,
+  backend: 'jev-latest',
+  label: 'Jev (TypeSafe)',
+});
+
+/**
+ * jev on Cloudflare Workers AI (`typesafe/jev`). EDGE fronts it with the System One wire, so the
+ * back-end name is the System One one.
+ */
+export const cloudflareJev: Model = make('com.cloudflare.model.typesafe-jev.default', {
+  provider: Provider.workersAi.id,
+  backend: 'jev-latest',
+  label: 'Jev (Cloudflare Workers AI)',
+});
+
 /**
  * Curated model catalog. Each entry is a model AS SERVED BY ONE PROVIDER; the same `id` appearing
  * under multiple providers (e.g. `gptOss20b` via Ollama and LM Studio) is intentional — they are the

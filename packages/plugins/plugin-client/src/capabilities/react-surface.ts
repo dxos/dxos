@@ -12,6 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
   AccountContainer,
+  CliLoginDialog,
   ContactPickerContainer,
   ContactsContainer,
   DevicesContainer,
@@ -21,11 +22,12 @@ import {
   RecoveryCodeDialog,
   RecoveryCredentialsContainer,
   ResetDialog,
+  SpaceInvitationsContainer,
   UsageContainer,
 } from '#containers';
 import { Account, ClientOptions } from '#types';
 
-import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants.ts';
+import { CLI_LOGIN_DIALOG, JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants.ts';
 
 type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'identityTestActions'> & {
   createInvitationUrl: (invitationCode: string) => string;
@@ -49,6 +51,11 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         id: Account.Contacts,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Contacts)),
         component: ContactsContainer,
+      }),
+      Surface.create({
+        id: 'spaceInvitations',
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.SpaceInvitations)),
+        component: SpaceInvitationsContainer,
       }),
       Surface.create({
         id: Account.Security,
@@ -75,6 +82,12 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         filter: Surface.makeFilter(AppSurface.ContactPicker),
         component: ContactPickerContainer,
         props: ({ data }) => data,
+      }),
+      Surface.create({
+        id: CLI_LOGIN_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof CliLoginDialog>>(AppSurface.Dialog, CLI_LOGIN_DIALOG),
+        component: CliLoginDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: JOIN_DIALOG,

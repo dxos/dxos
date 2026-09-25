@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
+
+import { type SchemaAST } from '@dxos/effect';
 
 /**
  * Property name for typename when object is serialized to JSON.
@@ -18,6 +20,12 @@ export const TypeId = Symbol.for('@dxos/echo/Type');
  * Reference to the object schema.
  */
 export const SchemaId = Symbol.for('@dxos/echo/Schema');
+
+/**
+ * The schema AST a nested value of a typed object follows, carried instead of a schema of its own.
+ * @internal
+ */
+export const SchemaAstId = Symbol.for('@dxos/echo/SchemaAst');
 
 /**
  * Property name for parent when object is serialized to JSON.
@@ -47,7 +55,8 @@ export const TypeEntityId = Symbol.for('@dxos/echo/TypeEntity');
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Codec<any, any> | undefined => {
   if (obj) {
-    return (obj as any)[SchemaId];
+    const ast: SchemaAST.AST | undefined = (obj as any)[SchemaAstId];
+    return ast ? Schema.make(ast) : (obj as any)[SchemaId];
   }
 };
 

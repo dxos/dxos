@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Event, Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 import * as Client from '../Client.ts';
+import { displaceChannelFor } from '../internal/displace-channel.ts';
 import * as Worker from '../Worker.ts';
 import * as WorkerProtocol from '../WorkerProtocol.ts';
 
@@ -160,6 +162,8 @@ export type WorkerHandle = {
   readonly wedged: boolean;
   /** True once the worker's endpoint closed (shutdown) or the leader terminated it. */
   readonly closed: boolean;
+  /** The id the worker advertised in `ready`, which its tab matches an escalation's issuer against. */
+  readonly workerId: string | undefined;
 };
 
 type WorkerFactoryOptions = {
@@ -216,6 +220,7 @@ export const createWorkerFactory =
 
     let paused = false;
     let wedged = false;
+    let workerId: string | undefined;
     const outbox: Array<() => void> = [];
     const inbox: Array<() => void> = [];
     const listeners = new Map<(ev: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => void, EventListener>();
@@ -249,6 +254,9 @@ export const createWorkerFactory =
       get closed() {
         return closed;
       },
+      get workerId() {
+        return workerId;
+      },
     };
     onCreate?.(handle);
 
@@ -257,18 +265,25 @@ export const createWorkerFactory =
         return;
       }
       // `Worker.run` builds its displacement channel synchronously, so this window captures that one
-      // channel and nothing else — there is no handle on it otherwise.
+      // channel — there is no handle on it otherwise. Matched by name so a channel some other code
+      // opens inside the window is not silenced by `wedge()`.
+      const displaceChannelName = displaceChannelFor(storageLockKey);
       const OriginalBroadcastChannel = globalThis.BroadcastChannel;
       globalThis.BroadcastChannel = class extends OriginalBroadcastChannel {
         constructor(name: string) {
           super(name);
-          displaceChannels.push(this);
+          if (name === displaceChannelName) {
+            displaceChannels.push(this);
+          }
         }
       };
       try {
         Worker.run({
           endpoint: {
             postMessage: (message, transfer) => {
+              if (message.type === 'ready') {
+                workerId = message.workerId;
+              }
               const send = () => channel.port1.postMessage(message, transfer ? { transfer } : undefined);
               if (paused) {
                 outbox.push(send);
@@ -311,6 +326,9 @@ export const createWorkerFactory =
       } finally {
         globalThis.BroadcastChannel = OriginalBroadcastChannel;
       }
+      // A capture that misses turns `wedge()` into a no-op, and every test built on it into one that
+      // exercises the cooperative path while claiming to exercise the forced one.
+      invariant(displaceChannels.length === 1, 'the worker must open exactly one displacement channel synchronously');
     });
     // Stands in for `Worker.terminate()`: closing the leader's end aborts the worker's signal, which
     // stands it down and releases its Web Locks without needing it to service its event loop.

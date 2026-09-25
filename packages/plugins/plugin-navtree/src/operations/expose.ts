@@ -21,14 +21,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOper
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
 
-      const prefixes = Attention.expandAttendableId(subject);
+      const ancestors = Attention.expandAttendableId(subject).slice(0, -1);
 
-      for (const qualifiedId of prefixes) {
+      for (const [index, qualifiedId] of ancestors.entries()) {
         AppGraph.expandSync(graph, qualifiedId, 'child');
 
-        const treePath = prefixes.slice(0, prefixes.indexOf(qualifiedId) + 1);
-        const state = getItem(treePath);
-        if (!state.open) {
+        const treePath = ancestors.slice(0, index + 1);
+        if (!getItem(treePath).open) {
           setItem(treePath, 'open', true);
         }
       }

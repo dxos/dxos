@@ -48,6 +48,7 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
@@ -75,6 +76,7 @@ import {
   IdentityLifecycleLayer,
   IdentityManagerLayer,
   IdentityServiceLayer,
+  InboxServiceLayer,
 } from '../identity/index.ts';
 import {
   InvitationFactoriesLayer,
@@ -598,6 +600,26 @@ export const ContactsServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(ContactsService.Rpcs, ContactsService.Tag),
 );
 
+// The edge tags are required only when configured, so the service is built after them rather than
+// finding them absent; without them it still serves an empty inbox.
+export const InboxServiceSpec = (options: ServiceStackServices) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [
+        IdentityContract.ManagerService,
+        ...(options.edgeAvailable ? [EdgeHttpClientService, EdgeConnectionService] : []),
+      ],
+      provides: [InboxService.Tag],
+    },
+    () => InboxServiceLayer,
+  );
+
+export const InboxServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [InboxService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(InboxService.Rpcs, InboxService.Tag),
+);
+
 export const InvitationsServiceSpec = LayerSpec.make(
   { affinity: 'application', requires: [InvitationsContract.ManagerService], provides: [InvitationsService.Tag] },
   () => InvitationsServiceLayer,
@@ -794,6 +816,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   IdentityServiceRegistrationSpec,
   ContactsServiceSpec,
   ContactsServiceRegistrationSpec,
+  InboxServiceSpec(options),
+  InboxServiceRegistrationSpec,
   InvitationsServiceSpec,
   InvitationsServiceRegistrationSpec,
   DevicesServiceSpec,

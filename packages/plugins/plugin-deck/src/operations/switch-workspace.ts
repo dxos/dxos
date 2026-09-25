@@ -94,7 +94,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      yield* withViewTransition(applyWorkspace(input.subject));
+      const { activeDeck } = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+      const entering = activeDeck !== input.subject;
+      yield* entering ? withViewTransition(applyWorkspace(input.subject)) : applyWorkspace(input.subject);
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (!workspace) {
         return;
