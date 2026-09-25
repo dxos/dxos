@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Tabs, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
@@ -30,6 +30,7 @@ import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
+import { PullRequestOverview } from '../../components/PullRequestOverview/index.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
@@ -52,7 +53,15 @@ const ciHue: Record<GitHubOperation.CiState, string> = {
   none: 'neutral',
 };
 
-type Status = { state: PullRequest.State; ci: GitHubOperation.CiState; checks: GitHubOperation.CheckCounts };
+type Status = {
+  state: PullRequest.State;
+  body?: string;
+  ci: GitHubOperation.CiState;
+  checks: GitHubOperation.CheckCounts;
+  runs: readonly GitHubOperation.CheckRun[];
+};
+
+type Tab = 'overview' | 'walkthrough';
 
 export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.PullRequest>;
 
@@ -80,6 +89,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   // The live state where it has arrived, the stored one until then — an absent status is unknown,
   // not "open", and GitHub accepts an approval on a merged pull request rather than rejecting it.
   const state = status?.state ?? pullRequest.state;
+  const [tab, setTab] = useState<Tab>('overview');
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [composing, setComposing] = useState(false);
@@ -131,7 +141,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       return;
     }
     if (data) {
-      setStatus({ state: data.state, ci: data.ci, checks: data.checks });
+      setStatus({ state: data.state, body: data.body, ci: data.ci, checks: data.checks, runs: data.runs });
     }
   }, [invokePromise, pullRequestRef, spaceId]);
 
@@ -173,6 +183,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
 
   /** `force` is what makes the toolbar's entry a REgeneration: the same head would otherwise no-op. */
   const handleGenerate = useCallback(async () => {
+    setTab('walkthrough');
     setGenerating(true);
     const { error } = await invokePromise(
       GitHubOperation.GenerateWalkthrough,
@@ -247,9 +258,34 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     await toast('comment', 'comment-success.title', true);
   }, [comment, lineTarget, invokePromise, pullRequestRef, spaceId, toast, handleCloseComposer]);
 
+  // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
+  const tabs = useMemo(
+    () => (
+      <Tabs.Tablist>
+        <Tabs.Button value='overview' data-testid='pull-request.tab.overview'>
+          {t('overview-tab.label')}
+        </Tabs.Button>
+        <Tabs.Button value='walkthrough' data-testid='pull-request.tab.walkthrough'>
+          {t('walkthrough-tab.label')}
+        </Tabs.Button>
+      </Tabs.Tablist>
+    ),
+    [t],
+  );
+
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        .action(
+          'tabs',
+          {
+            variant: 'custom',
+            label: ['views.label', { ns: meta.profile.key }],
+            render: () => tabs,
+          },
+          () => {},
+        )
+        .separator()
         .action(
           'approve',
           {
@@ -313,6 +349,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         )
         .build(),
     [
+      tabs,
       busy,
       generating,
       walkthrough,
@@ -337,8 +374,9 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     ],
     [themeMode, handleLineComment],
   );
-  // The body is replaced wholesale on regeneration, so the editor is rebuilt rather than patched.
-  const { parentRef } = useTextEditor({ initialValue: body ?? '', extensions }, [extensions, body]);
+  // The body is replaced wholesale on regeneration, so the editor is rebuilt rather than patched; the
+  // tab is a dependency because the editor's element only exists while the walkthrough tab is shown.
+  const { parentRef } = useTextEditor({ initialValue: body ?? '', extensions }, [extensions, body, tab]);
 
   const composerProps = {
     value: comment,
@@ -349,50 +387,69 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   };
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col'>
-        <div className='flex flex-wrap items-center gap-2 px-4 py-2 border-b border-separator text-sm'>
-          <span className='text-description whitespace-nowrap'>
-            {pullRequest.owner}/{pullRequest.repo}#{pullRequest.number}
-          </span>
-          {state && (
-            <span className='dx-tag' data-hue={stateHue[state]}>
-              {state}
+    <Tabs.Root
+      asChild
+      orientation='horizontal'
+      value={tab}
+      onValueChange={(value) => setTab(value === 'walkthrough' ? 'walkthrough' : 'overview')}
+    >
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild classNames='dx-expand'>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
+        </Panel.Toolbar>
+        <Panel.Content classNames='flex flex-col'>
+          <div className='flex flex-wrap items-center gap-2 px-4 py-2 border-b border-separator text-sm'>
+            <span className='text-description whitespace-nowrap'>
+              {pullRequest.owner}/{pullRequest.repo}#{pullRequest.number}
             </span>
-          )}
-          <span className='dx-tag' data-hue={status ? ciHue[status.ci] : 'neutral'}>
-            {t(status ? `ci-status.${status.ci}.label` : 'ci-status.unknown.label')}
-            {status && status.checks.total > 0 && ` ${status.checks.passed}/${status.checks.total}`}
-          </span>
-          <span className='truncate'>{pullRequest.title}</span>
-        </div>
-        {composing && !lineTarget && (
-          <div className='flex flex-col gap-2 px-4 py-2 border-b border-separator'>
-            <CommentComposer {...composerProps} />
-          </div>
-        )}
-        <LineCommentPopover
-          {...composerProps}
-          open={composing && !!lineTarget}
-          anchorRef={lineAnchorRef}
-          target={lineTarget?.target}
-        />
-        {walkthrough ? (
-          <div ref={parentRef} className='dx-fill overflow-auto' />
-        ) : (
-          <div className='flex flex-col items-center justify-center gap-2 dx-fill text-description'>
-            <p>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</p>
-            {!generating && (
-              <Button variant='primary' onClick={() => void handleGenerate()}>
-                {t('generate-walkthrough.label')}
-              </Button>
+            {state && (
+              <span className='dx-tag' data-hue={stateHue[state]}>
+                {state}
+              </span>
             )}
+            <span className='dx-tag' data-hue={status ? ciHue[status.ci] : 'neutral'}>
+              {t(status ? `ci-status.${status.ci}.label` : 'ci-status.unknown.label')}
+              {status && status.checks.total > 0 && ` ${status.checks.passed}/${status.checks.total}`}
+            </span>
+            <span className='truncate'>{pullRequest.title}</span>
           </div>
-        )}
-      </Panel.Content>
-    </Panel.Root>
+          {composing && !lineTarget && (
+            <div className='flex flex-col gap-2 px-4 py-2 border-b border-separator'>
+              <CommentComposer {...composerProps} />
+            </div>
+          )}
+          <LineCommentPopover
+            {...composerProps}
+            open={composing && !!lineTarget}
+            anchorRef={lineAnchorRef}
+            target={lineTarget?.target}
+          />
+          {/* Rendered by hand rather than through `Tabs.Panel`, so the walkthrough editor's element exists
+            only while its tab is shown and the editor is built against a visible, measured element. */}
+          {tab === 'overview' ? (
+            <div className='dx-fill overflow-auto px-4'>
+              <PullRequestOverview
+                body={status?.body ?? pullRequest.description}
+                url={pullRequest.url}
+                baseBranch={pullRequest.baseBranch}
+                headBranch={pullRequest.headBranch}
+                runs={status?.runs}
+              />
+            </div>
+          ) : walkthrough ? (
+            <div ref={parentRef} className='dx-fill overflow-auto' />
+          ) : (
+            <div className='flex flex-col items-center justify-center gap-2 dx-fill text-description'>
+              <p>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</p>
+              {!generating && (
+                <Button variant='primary' onClick={() => void handleGenerate()}>
+                  {t('generate-walkthrough.label')}
+                </Button>
+              )}
+            </div>
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };

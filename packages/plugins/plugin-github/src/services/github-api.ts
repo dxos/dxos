@@ -652,6 +652,11 @@ const GitHubCheckRunSchema = Schema.Struct({
   status: Schema.String,
   /** Set once `completed`: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`. */
   conclusion: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** The provider's own page for the run (Depot, say), which GitHub's `html_url` only links back to. */
+  details_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  started_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  completed_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 export type GitHubCheckRun = Schema.Schema.Type<typeof GitHubCheckRunSchema>;
 
