@@ -1,24 +1,25 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, SettingsScope, useUpdateRow } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, Settings } from '#types';
+import { Settings } from '#types';
 
-export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type PwaSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
-/** Update status comes from the update-manager capability, so this panel takes no settings props. */
-export const NativeSettings = () => {
+/** The web counterpart of NativeSettings: same row, same capability, whichever platform contributed it. */
+export const PwaSettings = () => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = useCapability(NativeCapabilities.UpdateManager);
+  const manager = useCapability(AppCapabilities.UpdateManager);
   const { description, button } = useUpdateRow({ manager, t });
 
   return (
@@ -39,4 +40,4 @@ export const NativeSettings = () => {
   );
 };
 
-NativeSettings.displayName = 'NativeSettings';
+PwaSettings.displayName = 'PwaSettings';
