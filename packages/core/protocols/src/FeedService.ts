@@ -67,6 +67,21 @@ export const FeedQueryResult = Schema.Struct({
    */
   nextCursor: Schema.String,
   prevCursor: Schema.String,
+  /**
+   * Set on a `subscribeFeed` push that carries only what changed since the previous push: `objects`
+   * then holds just the blocks written since, and {@link positions} and {@link removed} describe the
+   * blocks sent before. Absent on a full snapshot, which replaces everything the reader holds.
+   */
+  delta: Schema.optional(Schema.Boolean),
+  /**
+   * On a delta: blocks sent earlier whose position was assigned, moved or cleared, by the block id
+   * stamped into each object's `@meta`.
+   */
+  positions: Schema.optional(
+    mutableArray(Schema.Struct({ block: Schema.String, position: Schema.NullOr(Schema.Number) })),
+  ),
+  /** On a delta: ids of blocks sent earlier that the store no longer holds. */
+  removed: Schema.optional(mutableArray(Schema.String)),
 });
 export interface FeedQueryResult extends Schema.Schema.Type<typeof FeedQueryResult> {}
 
@@ -80,6 +95,16 @@ export const InsertIntoFeedRequest = Schema.Struct({
   objects: Schema.optional(mutableArray(Schema.String)),
 });
 export interface InsertIntoFeedRequest extends Schema.Schema.Type<typeof InsertIntoFeedRequest> {}
+
+export const InsertIntoFeedResponse = Schema.Struct({
+  /**
+   * Id of the block each object was written to, in request order, as stamped into the `@meta` of
+   * objects read back. Lets a writer recognise its own blocks without comparing their content;
+   * absent from a store that does not stamp block ids.
+   */
+  blocks: Schema.optional(mutableArray(Schema.String)),
+});
+export interface InsertIntoFeedResponse extends Schema.Schema.Type<typeof InsertIntoFeedResponse> {}
 
 export const DeleteFromFeedRequest = Schema.Struct({
   subspaceTag: Schema.String,
@@ -160,6 +185,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('insertIntoFeed', {
     payload: InsertIntoFeedRequest,
+    success: InsertIntoFeedResponse,
     error: serviceError,
   }),
   Rpc.make('deleteFromFeed', {

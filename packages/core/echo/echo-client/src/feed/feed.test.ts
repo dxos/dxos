@@ -6,15 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event, sleep } from '@dxos/async';
-import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Event, Trigger, sleep } from '@dxos/async';
+import { Database, Entity, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { EID, PublicKey } from '@dxos/keys';
+import { EID, EntityId, PublicKey } from '@dxos/keys';
 import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
@@ -344,6 +347,52 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    test('subscription deltas reposition and remove blocks without re-reading them', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      const pushes = Effect.runSync(Queue.unbounded<FeedService.FeedQueryResult>());
+      const push = (result: Partial<FeedService.FeedQueryResult>) =>
+        Queue.offerUnsafe(pushes, { objects: [], nextCursor: '', prevCursor: '', ...result });
+      db._setFeedService(
+        await makeFeedClient({ ...peer.host.feedService, 'FeedService.subscribeFeed': () => Stream.fromQueue(pushes) }),
+      );
+
+      const feed = db.add(Feed.make({ name: 'pushed' }));
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri, 'Expected the feed to have a URI once added to the database.');
+      const handle = db._getFeedHandleIfAvailable(feedUri);
+      invariant(handle, 'Expected a feed handle.');
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const block = EchoFeedCodec.blockId('remote-actor', 0);
+      const json = {
+        ...Entity.toJSON(alice),
+        '@meta': { keys: [{ source: FeedProtocol.KEY_FEED_BLOCK, id: block }] },
+      };
+
+      const stop = handle.beginPolling();
+      const snapshot = handle.updated.waitForCount(1);
+      push({ objects: [JSON.stringify(json)] });
+      await snapshot;
+      const received = handle.getCachedObjectById<TestSchema.Person>(EntityId.make(alice.id));
+      invariant(received, 'Expected the pushed object to be held.');
+      expect(received.name).toEqual('alice');
+
+      const repositioned = new Trigger();
+      const unsubscribe = Obj.subscribe(received, () => repositioned.wake());
+      push({ delta: true, positions: [{ block, position: 3 }] });
+      await repositioned.wait();
+      expect(Feed.getPosition(received)).toEqual(3);
+      unsubscribe();
+
+      const removed = handle.updated.waitForCount(1);
+      push({ delta: true, removed: [block] });
+      await removed;
+      expect(handle.toJSON().objects).toEqual(0);
+      stop();
     });
 
     test('append stops retrying once the rpc endpoint is closed', async ({ expect }) => {
