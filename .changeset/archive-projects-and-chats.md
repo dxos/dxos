@@ -14,5 +14,5 @@
 Projects and chat sessions can be archived. An archived object leaves the navigation tree but stays
 listed in the space's Database section, where its card shows an "Archived" badge and an Unarchive
 action. Types opt in with `ArchivableAnnotation`; the archive state is `ArchivedAnnotation` in the
-object's meta. `Filter.annotation(annotation, value?)` queries any meta annotation, in memory and
-in SQL.
+object's meta. `Filter.annotation(annotation)` matches entities carrying any meta annotation, and
+`Filter.annotation(annotation, value)` those whose scalar value is equal, in memory and in SQL.
