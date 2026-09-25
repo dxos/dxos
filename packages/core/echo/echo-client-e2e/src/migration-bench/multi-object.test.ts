@@ -23,7 +23,7 @@ import {
   foldValue,
   headsOf,
   recordConflict,
-} from './harness';
+} from './harness.ts';
 
 //
 // E2: definitive proof that N→N multi-object migration works exactly like the single-object case

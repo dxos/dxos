@@ -26,7 +26,7 @@ import {
   createPartitionedPair,
   foldValue,
   headsOf,
-} from './harness';
+} from './harness.ts';
 
 //
 // M0 migration research follow-up: verifies the directive in `.agents/projects/lenses/DESIGN.md`

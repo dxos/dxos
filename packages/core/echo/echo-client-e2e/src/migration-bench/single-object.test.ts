@@ -24,7 +24,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
-} from './harness';
+} from './harness.ts';
 
 //
 // E1: definitive proof that single-object fold-forward migration is solved. Consolidates

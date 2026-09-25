@@ -21,7 +21,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
-} from './harness';
+} from './harness.ts';
 
 //
 // E4: definitive port of `migration-research-merge.test.ts`'s baseline-aware three-way merge

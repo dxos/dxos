@@ -21,7 +21,7 @@ import {
   foldInto,
   headsOf,
   writesSince,
-} from './harness';
+} from './harness.ts';
 
 //
 // E5: definitive proof that multi-object non-atomicity is a REAL but TEMPORARY window, not

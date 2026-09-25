@@ -21,7 +21,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
-} from './harness';
+} from './harness.ts';
 
 //
 // E3: definitive proof (or disproof) that fan-in (N children -> 1 parent absorption) is "fine" per
