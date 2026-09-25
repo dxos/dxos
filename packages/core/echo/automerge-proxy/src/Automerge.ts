@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Cursor, type Heads, type Prop, next as A } from '@automerge/automerge';
+import { next as A, type Cursor, type Heads, type Prop } from '@automerge/automerge';
 
 import * as Draft from './Draft.ts';
 import * as Handle from './Handle.ts';
