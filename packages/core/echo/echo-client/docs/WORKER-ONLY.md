@@ -617,21 +617,31 @@ user content.
 
 ### Order of work
 
-| Step | Change                                                                                               | With the switch off                      | State    |
-| ---- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------- |
-| 1    | `document_mode` and `proxy_index_reads`; `Client` resolves them; the spike's options and `?echo=` go | Nothing changes                          | done     |
-| 2    | `DataService` gains the proxy RPCs over `Host.DocumentHost`; `MirrorService` goes                    | Nothing calls the new RPCs               | done     |
-| 3    | `QueryService` results carry index copies when the client asks                                       | Queries ask for none                     | done     |
-| 4    | `ReplicaService` takes the byte protocol                                                             | Would move replica tabs to a new service | deferred |
-| 5    | Composer offers the modes as a setting, and refused edits go to telemetry                            | Only tabs that opt in run the proxy      | done     |
-| 6    | The default flips to `PROXY` once the conditions below hold                                          | `REPLICA` is the off position            |          |
-| 7    | After two releases on the new default, `REPLICA` goes as a mode for tabs                             | Replicas remain on lease and for EDGE    |          |
+| Step | Change                                                                                               | With the switch off                            | State   |
+| ---- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------- |
+| 1    | `document_mode` and `proxy_index_reads`; `Client` resolves them; the spike's options and `?echo=` go | Nothing changes                                | done    |
+| 2    | `DataService` gains the proxy RPCs over `Host.DocumentHost`; `MirrorService` goes                    | Nothing calls the new RPCs                     | done    |
+| 3    | `QueryService` results carry index copies when the client asks                                       | Queries ask for none                           | done    |
+| 4    | `ReplicaService` takes the byte protocol                                                             | Would have moved replica tabs to a new service | dropped |
+| 5    | Composer offers the modes as a setting, and refused edits go to telemetry                            | Only tabs that opt in run the proxy            | done    |
+| 6    | The default flips to `PROXY` once the conditions below hold                                          | `REPLICA` is the off position                  |         |
+| 7    | After two releases on the new default, `REPLICA` goes as a mode for tabs                             | Replicas remain on lease and for EDGE          |         |
 
-Step 4 waits for step 6. It was the only step that changed the off path, and it would break edge on
-its next bump: edge's operation-service builds its own `FunctionContext`, and its tests connect ECHO
-with only `dataService` and `queryService`. Moving the byte protocol off the default path pays only
-once `PROXY` is the default, so until then the byte protocol keeps its names, and the proxy RPCs take
-names that do not clash with them.
+Step 4 is dropped, and both protocols stay on `DataService` for good. Against main, the fold-in only
+adds five RPCs and optional fields, so edge needs no change.
+
+A separate `ReplicaService` would only have fixed the names. Once `PROXY` is the default, most
+clients subscribe with `subscribeProxy` and the exception with `subscribe`. That is not worth what
+the split costs:
+
+- Every replica tab would move to a new service, the plan's only change to the off path.
+- Edge would break on its next bump. Its operation-service builds its own `FunctionContext`, and its
+  tests connect ECHO with only `dataService` and `queryService`, so neither would pass the new
+  service.
+- `createDocument`, `flush`, heads and sync state serve both protocols, so the split would duplicate
+  them or give them to one side.
+- The byte protocol would stay anyway, since EDGE and the replicas a proxy tab leases still use it
+  after step 7.
 
 Before the default flips, each of these has to hold:
 
