@@ -215,7 +215,7 @@ const seedDrag = (): Task.Task[] => {
 /**
  * Tasks an agent stopped on to ask something: one question still open with options to pick from,
  * one open with nothing but the free-form field, and one already answered — so the three shapes a
- * question takes sit side by side.
+ * question takes in a row sit side by side.
  */
 const seedQuestions = (): Task.Task[] => {
   const agent = { role: 'assistant' as const, name: 'Scout' };
@@ -300,7 +300,7 @@ const seedArtifacts = (): Task.Task[] => {
     data: Ref.make(Blob.make({ type: 'video/webm', size: 554_058, data: Blob.externalData(SAMPLE_VIDEO_URL) })),
   });
 
-  // A question is a history entry, not an artifact: the row previews it under the title.
+  // A question is a history entry, not an artifact: the row shows it under the title.
   const blocked = Task.make({
     title: 'Choose the launch roast',
     status: 'blocked',
@@ -644,6 +644,62 @@ const DefaultStory = ({
   );
 };
 
+/**
+ * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
+ * carry each question as one line, and the detail — its own root holding just the selected task, as
+ * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ */
+const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
+  const [tasks] = useState<Task.Task[]>(seed);
+  const [selected, setSelected] = useState<string | undefined>(() => tasks[0]?.id);
+  const task = tasks.find(({ id }) => id === selected);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+  }, []);
+
+  // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+  }, []);
+
+  return (
+    <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
+      <div className='flex flex-col min-w-0 min-h-0' data-testid='story.list'>
+        <TaskList.Root
+          tasks={tasks}
+          selected={selected}
+          selectable
+          showGroupLabels={false}
+          onTaskUpdate={handleUpdate}
+          onTaskSelect={(task) => setSelected(task?.id)}
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </TaskList.Root>
+      </div>
+      <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
+        {task ? (
+          <TaskList.Root
+            tasks={[task]}
+            selected={task.id}
+            showDescription
+            onTaskUpdate={handleUpdate}
+            onQuestionAnswer={handleQuestionAnswer}
+          >
+            <TaskList.Edit showDescription classNames='p-2' />
+          </TaskList.Root>
+        ) : (
+          <p className='p-4 text-subdued'>No task selected.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
 const titleCell = (row: Element): HTMLElement =>
   row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
@@ -714,8 +770,8 @@ export const WithQuestions: Story = {
 };
 
 /**
- * Rows only preview a question; selecting the task opens it in full in the pane, where picking an
- * option records it as the answer and the question collapses to the question and its answer.
+ * A row shows its questions one line each; selecting it opens the full question in the edit pane,
+ * where picking an option or typing records the answer, which then shows under the row's question.
  */
 export const TestAnswerQuestion: Story = {
   args: {
@@ -735,9 +791,9 @@ export const TestAnswerQuestion: Story = {
       await userEvent.click(row);
     };
 
-    // Every question previews in its row, one line each, with nothing to answer it with.
+    // The rows carry no controls: answering belongs to the pane.
     await waitFor(async () => {
-      await expect(canvasElement.querySelectorAll('[data-testid="task-question.compact"]')).toHaveLength(3);
+      await expect(canvasElement.querySelectorAll('[data-testid="task-question"]').length).toBeGreaterThan(0);
     });
     await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
 
@@ -767,7 +823,40 @@ export const TestAnswerQuestion: Story = {
     await waitFor(async () => {
       await expect(answers()).toContain('Tuesday');
     });
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
+    await expect(canvasElement.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
+  },
+};
+
+export const ListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+};
+
+/** Answering in the detail lands under the row's one-line question, and the row itself has no controls. */
+export const TestListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+  play: async ({ canvasElement }) => {
+    const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
+    const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
+    await waitFor(async () => {
+      await expect(detail()?.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    await expect(list()?.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    const option = detail()?.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(
+        [...(list()?.querySelectorAll('[data-testid="task-question.answer"]') ?? [])].map(
+          (answer) => answer.textContent,
+        ),
+      ).toContain('30 days');
+    });
+    await expect(detail()?.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
   },
 };
 

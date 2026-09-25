@@ -111,8 +111,9 @@ type TaskListRootProps = PropsWithChildren<{
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
   /**
-   * Preview the questions in each task's history under its title, one line each. On by default: an
-   * open question is why a task is blocked, so it should not need opening anything to find.
+   * Render the questions in each task's history under its title, one line each, and the open ones in
+   * full in `TaskList.Edit`. On by default: an open question is why a task is blocked, so the row
+   * should say so without opening anything.
    */
   showQuestions?: boolean;
 
@@ -154,8 +155,8 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
   /**
-   * Enables answering the selected task's open questions in `Edit`; called with the question entry's
-   * id and the answer. Without it the questions render read-only. Rows only preview them.
+   * Enables answering the selected task's open questions in `TaskList.Edit`; called with the question
+   * entry's id and the answer. Without it the questions render read-only.
    */
   onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;

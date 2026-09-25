@@ -70,7 +70,7 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /** Preview the questions in each task's history under its title, one line each. */
+  /** Render the questions in each task's history under its title. */
   showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
@@ -421,9 +421,14 @@ const TaskTreeHeading = ({
       {(description || questions.length > 0) && (
         <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
           {description && <TaskDescription content={description} components={descriptionComponents} />}
-          {/* One line each: answering needs room, so it happens in the task's detail, not the row. */}
           {questions.map((thread) => (
-            <TaskQuestion key={thread.question.id} thread={thread} compact />
+            <TaskQuestion
+              key={thread.question.id}
+              thread={thread}
+              // One line each: answering takes the room of the detail pane, which a click on the
+              // row opens.
+              compact
+            />
           ))}
         </div>
       )}
