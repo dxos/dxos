@@ -40,9 +40,10 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   const checkSummary = useCheckSummary(runs);
 
   return (
-    <ScrollArea.Root thin>
-      <ScrollArea.Viewport>
-        <Flex column gap='form-section' classNames='w-full max-w-[min(72rem,100%-3rem)] mx-auto py-4'>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='px-8'>
+        {/* Document width, so the description reads like a markdown document and the sections under it share its column. */}
+        <Flex column gap='form-section' classNames='dx-document py-4'>
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
