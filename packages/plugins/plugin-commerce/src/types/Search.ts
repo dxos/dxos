@@ -32,6 +32,7 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

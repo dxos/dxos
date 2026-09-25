@@ -30,6 +30,7 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ac
   }).pipe(
     Annotation.LabelAnnotation.set(['displayName']),
     Annotation.IconAnnotation.set({ icon: 'ph--identification-card--regular', hue: 'teal' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

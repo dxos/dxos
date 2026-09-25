@@ -50,10 +50,7 @@ export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.t
      * consumers resolve it to a `PipelineConfig`.
      */
     pipeline: Schema.optional(Ref.Ref(Obj.Unknown)),
-  }).pipe(
-    Annotation.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' })),
 ) {}
 
 /**

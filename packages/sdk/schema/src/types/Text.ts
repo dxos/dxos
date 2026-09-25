@@ -14,7 +14,6 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.text', '
     content: Schema.String,
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--text-t--regular', hue: 'green' }),
   ),
 ) {}

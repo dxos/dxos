@@ -11,23 +11,11 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import {
-  Annotation,
-  Collection,
-  Database,
-  type Error as EchoError,
-  Entity,
-  Filter,
-  Obj,
-  Query,
-  Scope,
-  Type,
-} from '@dxos/echo';
+import { Database, type Error as EchoError, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
@@ -67,12 +55,6 @@ export const add: Command.Command<
         return entry ?? undefined;
       };
 
-      const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
-      const rootCollectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
-        Option.getOrUndefined,
-      );
-      const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
-
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
         onSome: (t) => Effect.succeed(t),
@@ -82,7 +64,7 @@ export const add: Command.Command<
         return yield* Effect.fail(new SpaceOperationError({ message: `Unknown typename: ${selectedTypename}` }));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection });
+      const result = yield* metadata.createObject({}, { db });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new SpaceOperationError({ message: `Invalid object: ${object}` }));
@@ -111,8 +93,7 @@ const selectTypename = Effect.fn(function* (
   const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
     .run;
   const types = allTypes
-    .filter((schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-    .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
+    .filter((schema) => TypeOptions.isUserType(schema))
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = types.map((schema) => ({
