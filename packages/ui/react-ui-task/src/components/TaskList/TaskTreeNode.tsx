@@ -70,14 +70,13 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /** Render the questions in each task's history under its title. */
+  /** Preview the questions in each task's history under its title, one line each. */
   showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
   /** Class list from `TaskList.Content`, merged onto the tree's own. */
@@ -107,7 +106,6 @@ export const TaskTreeNode = ({
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-  onQuestionAnswer,
 }: TaskTreeNodeProps) => {
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
@@ -180,7 +178,6 @@ export const TaskTreeNode = ({
           showQuestions,
           onTaskCheck,
           onTaskUpdate,
-          onQuestionAnswer,
         }}
       />
     ),
@@ -194,7 +191,6 @@ export const TaskTreeNode = ({
       showQuestions,
       onTaskCheck,
       onTaskUpdate,
-      onQuestionAnswer,
     ],
   );
 
@@ -356,7 +352,6 @@ const TaskTreeHeading = ({
   showQuestions,
   onTaskCheck,
   onTaskUpdate,
-  onQuestionAnswer,
 }: {
   node: TaskNode;
   showGutter: boolean;
@@ -368,7 +363,6 @@ const TaskTreeHeading = ({
   showQuestions: boolean;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }) => {
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
@@ -427,12 +421,9 @@ const TaskTreeHeading = ({
       {(description || questions.length > 0) && (
         <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
           {description && <TaskDescription content={description} components={descriptionComponents} />}
+          {/* One line each: answering needs room, so it happens in the task's detail, not the row. */}
           {questions.map((thread) => (
-            <TaskQuestion
-              key={thread.question.id}
-              thread={thread}
-              onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
-            />
+            <TaskQuestion key={thread.question.id} thread={thread} compact />
           ))}
         </div>
       )}

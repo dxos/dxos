@@ -18,6 +18,8 @@ export type TaskQuestionProps = ThemedClassName<{
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
   message?: string;
+  /** One line — the question, truncated, and whether it was answered — for a list row; takes no answer. */
+  compact?: boolean;
 }>;
 
 /**
@@ -41,6 +43,7 @@ export const TaskQuestion = ({
   onAnswer,
   busy,
   message,
+  compact,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
@@ -64,6 +67,22 @@ export const TaskQuestion = ({
     },
     [submit, text],
   );
+
+  if (compact) {
+    return (
+      <div
+        className={mx('flex min-w-0 items-center gap-2 text-sm', classNames)}
+        title={question.text}
+        data-testid='task-question.compact'
+      >
+        <Icon
+          icon={answer ? 'ph--check-circle--regular' : 'ph--question--regular'}
+          classNames={mx('shrink-0', answer ? 'text-success-text' : 'text-amber-text')}
+        />
+        <span className={mx('truncate', answer && 'text-description')}>{question.text}</span>
+      </div>
+    );
+  }
 
   return (
     <div

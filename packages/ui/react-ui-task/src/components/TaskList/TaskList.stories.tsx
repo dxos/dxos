@@ -215,7 +215,7 @@ const seedDrag = (): Task.Task[] => {
 /**
  * Tasks an agent stopped on to ask something: one question still open with options to pick from,
  * one open with nothing but the free-form field, and one already answered — so the three shapes a
- * question takes in a row sit side by side.
+ * question takes sit side by side.
  */
 const seedQuestions = (): Task.Task[] => {
   const agent = { role: 'assistant' as const, name: 'Scout' };
@@ -300,7 +300,7 @@ const seedArtifacts = (): Task.Task[] => {
     data: Ref.make(Blob.make({ type: 'video/webm', size: 554_058, data: Blob.externalData(SAMPLE_VIDEO_URL) })),
   });
 
-  // A question is a history entry, not an artifact: the row shows it under the title.
+  // A question is a history entry, not an artifact: the row previews it under the title.
   const blocked = Task.make({
     title: 'Choose the launch roast',
     status: 'blocked',
@@ -713,7 +713,10 @@ export const WithQuestions: Story = {
   },
 };
 
-/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
+/**
+ * Rows only preview a question; selecting the task opens it in full in the pane, where picking an
+ * option records it as the answer and the question collapses to the question and its answer.
+ */
 export const TestAnswerQuestion: Story = {
   args: {
     seed: seedQuestions,
@@ -722,7 +725,23 @@ export const TestAnswerQuestion: Story = {
   play: async ({ canvasElement }) => {
     const answers = () =>
       [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const selectRow = async (title: string) => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]')].find(
+        (element) => element.textContent === title,
+      );
+      if (!row) {
+        throw new Error(`no row titled ${title}`);
+      }
+      await userEvent.click(row);
+    };
 
+    // Every question previews in its row, one line each, with nothing to answer it with.
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="task-question.compact"]')).toHaveLength(3);
+    });
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    await selectRow('Draft the refund reply');
     await waitFor(async () => {
       await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
     });
@@ -735,7 +754,11 @@ export const TestAnswerQuestion: Story = {
       await expect(answers()).toContain('30 days');
     });
 
-    // Typing in the free-form field must not reach the row: its keys would move the selection.
+    // Typing in the free-form field must not reach the list: its keys would move the selection.
+    await selectRow('Schedule the launch post');
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).not.toBeNull();
+    });
     const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
     if (!input) {
       throw new Error('the open question has no answer field');

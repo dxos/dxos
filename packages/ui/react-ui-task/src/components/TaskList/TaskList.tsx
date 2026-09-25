@@ -111,8 +111,8 @@ type TaskListRootProps = PropsWithChildren<{
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
   /**
-   * Render the questions in each task's history under its title; rows grow to fit. On by default:
-   * an open question is why a task is blocked, so it should not need opening anything to find.
+   * Preview the questions in each task's history under its title, one line each. On by default: an
+   * open question is why a task is blocked, so it should not need opening anything to find.
    */
   showQuestions?: boolean;
 
@@ -154,8 +154,8 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
   /**
-   * Enables answering a task's open questions in its row; called with the question entry's id and
-   * the answer. Without it the questions render read-only.
+   * Enables answering the selected task's open questions in `Edit`; called with the question entry's
+   * id and the answer. Without it the questions render read-only. Rows only preview them.
    */
   onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;
@@ -383,7 +383,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
-    onQuestionAnswer,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
   const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
@@ -431,7 +430,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
-      onQuestionAnswer={onQuestionAnswer}
       // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
       // and `Tree` takes a plain list.
       classNames={mx(classNames)}
