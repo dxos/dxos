@@ -95,7 +95,10 @@ export interface FeedServicePromise {
     request: RpcFeedService.QueryFeedRequest,
     options?: RequestOptions,
   ) => Promise<RpcFeedService.FeedQueryResult>;
-  insertIntoFeed: (request: RpcFeedService.InsertIntoFeedRequest, options?: RequestOptions) => Promise<void>;
+  insertIntoFeed: (
+    request: RpcFeedService.InsertIntoFeedRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcFeedService.InsertIntoFeedResponse>;
   deleteFromFeed: (request: RpcFeedService.DeleteFromFeedRequest, options?: RequestOptions) => Promise<void>;
   syncFeed: (request: RpcFeedService.SyncFeedRequest, options?: RequestOptions) => Promise<void>;
   getSyncState: (

@@ -28,7 +28,8 @@ export const Color = Schema.Literals([
 ]);
 export type Color = Schema.Schema.Type<typeof Color>;
 
-export const Fill = Schema.Literals(['none', 'solid', 'pattern']);
+/** `tint` is a light wash of the element's color, for backdrops such as group frames that text sits on. */
+export const Fill = Schema.Literals(['none', 'solid', 'pattern', 'tint']);
 export type Fill = Schema.Schema.Type<typeof Fill>;
 
 export const Stroke = Schema.Literals(['sketchy', 'solid', 'dashed', 'dotted']);

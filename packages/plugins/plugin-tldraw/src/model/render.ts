@@ -50,6 +50,8 @@ const fillToFill: Record<Scene.Fill, Fill> = {
   none: 'none',
   solid: 'solid',
   pattern: 'pattern',
+  // tldraw has no wash of a color; its semi-transparent fill keeps a backdrop light.
+  tint: 'semi',
 };
 
 const boxKindToGeo = {

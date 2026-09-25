@@ -13,4 +13,5 @@ export const IllustratorOperationHandlerSet = OperationHandlerSet.lazy([
   DrawingOperation.Edit.pipe(Operation.lazyHandler(() => import('./edit.ts'))),
   DrawingOperation.Generate.pipe(Operation.lazyHandler(() => import('./generate.ts'))),
   DrawingOperation.Read.pipe(Operation.lazyHandler(() => import('./read.ts'))),
+  DrawingOperation.Score.pipe(Operation.lazyHandler(() => import('./score.ts'))),
 ]);
