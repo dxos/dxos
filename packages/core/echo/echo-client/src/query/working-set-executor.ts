@@ -104,6 +104,12 @@ export type WorkingSetDataProvider = {
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
+  /**
+   * Every loaded core with a body, read once per {@link tryExecute}: a plan's selectors, unions and
+   * traversals would otherwise each rescan the whole database, and it cannot change mid-execution.
+   */
+  #allItems: WorkingSetItem[] | undefined;
+
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
   /**
@@ -111,7 +117,11 @@ export class WorkingSetQueryExecutor {
    * Returns null if the plan requires SQL index access.
    */
   tryExecute(plan: QueryPlan.Plan): WorkingSetItem[] | null {
-    return this._execPlan(plan, []);
+    try {
+      return this._execPlan(plan, []);
+    } finally {
+      this.#allItems = undefined;
+    }
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -197,8 +207,7 @@ export class WorkingSetQueryExecutor {
         case 'WildcardSelector':
         case 'TypeSelector': {
           // Enumerate all loaded cores; FilterStep enforces any type predicate.
-          const cores = this._provider.allCores().filter((core) => this._provider.areStrongDepsSatisfied(core));
-          newItems.push(...cores.flatMap((core) => this._coreToItem(core) ?? []));
+          newItems.push(...this._allCoreItems().filter((item) => this._provider.areStrongDepsSatisfied(item.core)));
           break;
         }
         case 'IdSelector': {
@@ -392,8 +401,6 @@ export class WorkingSetQueryExecutor {
   }
 
   private _execRelationTraversal(traversal: QueryPlan.RelationTraversal, ws: WorkingSetItem[]): WorkingSetItem[] {
-    const all = this._allCoreItems();
-
     switch (traversal.direction) {
       case 'relation-to-source':
       case 'relation-to-target': {
@@ -427,7 +434,7 @@ export class WorkingSetQueryExecutor {
       case 'target-to-relation': {
         const wsIds = new Set(ws.map((item) => item.objectId));
         const result: WorkingSetItem[] = [];
-        for (const candidate of all) {
+        for (const candidate of this._allCoreItems()) {
           if (EntityStructure.getEntityKind(candidate.structure) !== 'relation') {
             continue;
           }
@@ -579,7 +586,7 @@ export class WorkingSetQueryExecutor {
 
   /** Every loaded core that has a body to read. */
   private _allCoreItems(): WorkingSetItem[] {
-    return this._provider.allCores().flatMap((core) => this._coreToItem(core) ?? []);
+    return (this.#allItems ??= this._provider.allCores().flatMap((core) => this._coreToItem(core) ?? []));
   }
 
   private _itemById(id: EntityId): WorkingSetItem | undefined {

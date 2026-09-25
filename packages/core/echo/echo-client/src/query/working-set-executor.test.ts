@@ -320,6 +320,40 @@ describe('WorkingSetQueryExecutor', () => {
     expect(ids).toContain(manages.id);
   });
 
+  test('reads every loaded core once per execution, and not at all for a relation-to-endpoint hop', async ({
+    expect,
+  }) => {
+    const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+    const manages = db.add(Relation.make(TestSchema.HasManager, { [Relation.Source]: alice, [Relation.Target]: bob }));
+    db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: alice, name: 'Child' }));
+    await db.flush();
+
+    const provider = makeProvider(db);
+    let scans = 0;
+    const executor = new WorkingSetQueryExecutor({
+      ...provider,
+      allCores: () => {
+        scans++;
+        return provider.allCores();
+      },
+    });
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+
+    const union = Query.all(
+      Query.select(Filter.everything()).from(db),
+      Query.select(Filter.id(alice.id)).from(db).sourceOf(),
+      Query.select(Filter.id(alice.id)).from(db).children(),
+    );
+    expect(executor.tryExecute(planner.createPlan(union.ast))).not.toBeNull();
+    expect(scans).toEqual(1);
+
+    scans = 0;
+    const toSource = Query.select(Filter.id(manages.id)).from(db).source();
+    expect(executor.tryExecute(planner.createPlan(toSource.ast))?.map((item) => item.objectId)).toEqual([alice.id]);
+    expect(scans).toEqual(0);
+  });
+
   test('filter-deleted step filters out deleted objects', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
