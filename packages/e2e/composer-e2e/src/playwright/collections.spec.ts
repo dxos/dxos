@@ -51,7 +51,7 @@ test.describe('Collection tests', () => {
     });
   });
 
-  test('drag object into collection', { tag: ['@QA-6'] }, async () => {
+  for (let i = 0; i < 10; i++) test(`drag object into collection ${i}`, { tag: ['@QA-6'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
     await host.createObject({ type: 'Collection' });
