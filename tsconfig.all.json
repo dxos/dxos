@@ -181,6 +181,9 @@
       "path": "packages/core/echo/echo-solid/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
