@@ -323,13 +323,6 @@ const main = async () => {
   startupMark('config:end');
   startupMeasure('config', 'config:start', 'config:end');
 
-  // Experimental ECHO backends: `mirror` keeps a JSON mirror of each document in the tab while only
-  // the worker runs Automerge, and `indexed` also shows objects from the worker's index until the tab
-  // writes to them. Both answer queries in SQL. `?echo=` overrides the `DX_ECHO_MODE` build default.
-  const echoMode = url.searchParams.get('echo') ?? getEnvString(config, 'DX_ECHO_MODE');
-  const echoMirror =
-    echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
-
   const isTauri = isTauri$();
   if (isTauri) {
     const platform = getHostPlatform();
@@ -516,7 +509,6 @@ const main = async () => {
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
           storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
-          ...(echoMirror ? { queryExecutor: defs.Runtime_Client_QueryExecutor.SQL } : {}),
         },
       },
     },
@@ -559,7 +551,7 @@ const main = async () => {
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
-  const client = new Client({ config, services, echoMirror });
+  const client = new Client({ config, services });
   void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —

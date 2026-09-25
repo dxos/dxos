@@ -6,7 +6,6 @@ import { next as A, type Heads } from '@automerge/automerge';
 
 import * as Draft from '@dxos/automerge-proxy/Draft';
 import * as Handle from '@dxos/automerge-proxy/Handle';
-import * as Op from '@dxos/automerge-proxy/Op';
 
 //
 // The Automerge calls the database layer makes directly, routed to the proxy when the document is
@@ -45,19 +44,4 @@ export const updateText = (draft: object, path: readonly (string | number)[], te
   if (!Draft.updateText(draft, path, text)) {
     A.updateText(draft, path.slice(), text);
   }
-};
-
-/** A document for an object not yet added to a database. */
-export const createLocalDoc = <T extends Record<string, unknown>>(value: T, mirror: boolean): A.Doc<T> =>
-  mirror ? Handle.register(Op.freeze(value), []) : A.from<T>(value);
-
-/** `A.change` for a local document of either kind. */
-export const changeLocalDoc = <T>(doc: A.Doc<T>, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): A.Doc<T> => {
-  if (!isMirrorDoc(doc)) {
-    return options ? A.change(doc, options, callback) : A.change(doc, callback);
-  }
-  const recorder = new Draft.Recorder(doc);
-  // The draft emulates the document the callback expects; its type cannot be derived from a Proxy.
-  callback(recorder.draft() as T);
-  return Handle.register(recorder.current, []);
 };

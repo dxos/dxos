@@ -27,6 +27,7 @@ import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
+import { type DocumentMode } from '../automerge/index.ts';
 import { EchoClient } from '../client/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
@@ -45,6 +46,13 @@ type PeerOptions = {
   storagePath?: string;
   /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `sql`. */
   queryExecutor?: QueryExecutorMode;
+} & PeerClientOptions;
+
+type PeerClientOptions = {
+  /** How the peer's clients hold documents; defaults to the environment's `DX_ECHO_DOCUMENT_MODE`, else `replica`. */
+  documentMode?: DocumentMode;
+  /** With `proxy` documents, read objects from the index; defaults to `DX_ECHO_PROXY_INDEX_READS`. */
+  proxyIndexReads?: boolean;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -89,9 +97,8 @@ export class EchoTestPeer extends Resource {
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
+  private readonly _clientOptions: PeerClientOptions;
   private readonly _clients = new Set<EchoClient>();
-  /** Clients served JSON mirrors; a restarted host hands them its new mirror service. */
-  private readonly _mirrorClients = new WeakSet<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   /** Owns the in-process effect-rpc clients bridged from the host handlers. */
@@ -126,9 +133,18 @@ export class EchoTestPeer extends Resource {
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor }: PeerOptions = {}) {
+  constructor({
+    types,
+    registry,
+    assignQueuePositions,
+    storagePath,
+    queryExecutor,
+    documentMode,
+    proxyIndexReads,
+  }: PeerOptions = {}) {
     super();
     this._queryExecutor = queryExecutor;
+    this._clientOptions = { documentMode, proxyIndexReads };
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -194,13 +210,8 @@ export class EchoTestPeer extends Resource {
    * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
-  private async _connectServices(client: EchoClient, mirror = Boolean(process.env.DX_ECHO_MIRROR)): Promise<void> {
-    const { mirrorService, ...services } = await this._makeServiceClients();
-    if (mirror) {
-      this._mirrorClients.add(client);
-    }
-    // DX_ECHO_MIRROR runs every test client on JSON mirrors instead of Automerge replicas.
-    client.connectToService({ ...services, ...(mirror ? { mirrorService } : {}) });
+  private async _connectServices(client: EchoClient, options: PeerClientOptions = this._clientOptions): Promise<void> {
+    client.connectToService({ ...(await this._makeServiceClients()), ...options });
   }
 
   private async _makeServiceClients() {
@@ -238,8 +249,7 @@ export class EchoTestPeer extends Resource {
     this._serviceScope = Effect.runSync(Scope.make());
     await this._echoHost.open(this._ctx);
     for (const client of this._clients) {
-      const { mirrorService, ...services } = await this._makeServiceClients();
-      client._updateServices({ ...services, ...(this._mirrorClients.has(client) ? { mirrorService } : {}) });
+      client._updateServices(await this._makeServiceClients());
       await client._notifyReconnect();
     }
   }
@@ -305,12 +315,12 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  /** @param options.mirror Serve documents to this client as JSON mirrors; defaults to `DX_ECHO_MIRROR`. */
-  async createClient({ mirror }: { mirror?: boolean } = {}): Promise<EchoClient> {
+  /** Creates another client of this peer's host, as another tab would be; options default to the peer's. */
+  async createClient(options: PeerClientOptions = {}): Promise<EchoClient> {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    await this._connectServices(client, mirror);
+    await this._connectServices(client, { ...this._clientOptions, ...options });
     await client.open();
     return client;
   }
@@ -318,7 +328,6 @@ export class EchoTestPeer extends Resource {
   /** Closes a client this peer created and stops reconnecting it after a host restart. */
   async closeClient(client: EchoClient): Promise<void> {
     this._clients.delete(client);
-    this._mirrorClients.delete(client);
     await client.close();
   }
 

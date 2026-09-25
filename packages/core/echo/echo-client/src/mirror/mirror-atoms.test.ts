@@ -59,7 +59,7 @@ describe('mirror snapshot atoms', () => {
   });
 
   const openTab = async (): Promise<EchoDatabase> =>
-    peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ documentMode: 'proxy' }) });
 
   test('a snapshot read from the document matches Obj.atom', async () => {
     const db = await openTab();

@@ -10,7 +10,7 @@ import * as AutomergeOps from '@dxos/automerge-proxy/AutomergeOps';
 import * as Op from '@dxos/automerge-proxy/Op';
 import { createRandom } from '@dxos/automerge-proxy/testing';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Text } from '@dxos/echo';
+import { Filter, Obj, Ref, Text } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -36,12 +36,12 @@ describe('mirror mode', () => {
 
   const openTabs = async (count: number) => {
     const spaceKey = PublicKey.random();
-    const first = await peer.createClient({ mirror: true });
+    const first = await peer.createClient({ documentMode: 'proxy' });
     const db = await peer.createDatabase(spaceKey, { client: first });
     const rootUrl = db.getSpaceRootDocHandle().url;
     const others = await Promise.all(
       Array.from({ length: count - 1 }, async () => {
-        const client = await peer.createClient({ mirror: true });
+        const client = await peer.createClient({ documentMode: 'proxy' });
         return peer.openDatabase(spaceKey, rootUrl, { client });
       }),
     );
@@ -151,12 +151,41 @@ describe('mirror mode', () => {
     cursors.dispose();
   });
 
+  test('an object made before it joins a database is written whole to a proxy database', async () => {
+    const [db] = await openTabs(1);
+    const other = db.add(Obj.make(TestSchema.Expando, { title: 'other' }));
+    // No database is known when an object is made, so its document is Automerge until it joins.
+    const obj = Obj.make(TestSchema.Expando, {
+      title: 'made first',
+      nested: { list: [1, 'two', { three: true }], empty: {} },
+      ref: Ref.make(other),
+    });
+    Obj.update(obj, (obj) => {
+      obj.nested.list.push('four');
+    });
+    db.add(obj);
+    await db.flush();
+
+    expect(getObjectCore(obj).docHandle).toBeInstanceOf(MirrorDocHandle);
+    expect(obj.nested.list).toEqual([1, 'two', { three: true }, 'four']);
+    expect(obj.ref.target?.title).toBe('other');
+    const documentId = getObjectCore(obj).docHandle?.documentId;
+    invariant(documentId, 'object has no document');
+    const data = Op.getAt(await hostValue(documentId), ['objects', obj.id, 'data']);
+    expect(data).toEqual(
+      expect.objectContaining({
+        title: 'made first',
+        nested: { list: [1, 'two', { three: true }, 'four'], empty: {} },
+      }),
+    );
+  });
+
   test('writes from a replica client reach mirror tabs through the worker', async () => {
     const spaceKey = PublicKey.random();
-    const mirror = await peer.createClient({ mirror: true });
+    const mirror = await peer.createClient({ documentMode: 'proxy' });
     const tab = await peer.createDatabase(spaceKey, { client: mirror });
     const replica = await peer.openDatabase(spaceKey, tab.getSpaceRootDocHandle().url, {
-      client: await peer.createClient({ mirror: false }),
+      client: await peer.createClient({ documentMode: 'replica' }),
     });
     const obj = replica.add(Obj.make(TestSchema.Expando, { title: 'from replica' }));
     await replica.flush();

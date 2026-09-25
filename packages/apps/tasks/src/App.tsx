@@ -98,15 +98,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-/**
- * Experimental ECHO backends, chosen with `?echo=`: `mirror` keeps a JSON mirror of each document in
- * the tab while only the worker runs Automerge, and `indexed` also shows objects from the worker's
- * index until the tab writes to them. Both answer queries in SQL. Anything else is today's replica.
- */
-const echoMode = new URLSearchParams(location.search).get('echo');
-const echoMirror =
-  echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
-
 /** Adds tasks until the first space holds `count`, to measure a list of that size (`?seed=count`). */
 const seedTasks = async (client: Client, count: number) => {
   const [space] = client.spaces.get();
@@ -126,14 +117,7 @@ const seedTasks = async (client: Client, count: number) => {
 const createServices = (config?: Config) =>
   createClientServices(
     new Config(
-      {
-        runtime: {
-          client: {
-            servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER,
-            ...(echoMirror ? { queryExecutor: defs.Runtime_Client_QueryExecutor.SQL } : {}),
-          },
-        },
-      },
+      { runtime: { client: { servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER } } },
       ...(config ? [config.values] : []),
     ),
     {
@@ -160,7 +144,6 @@ export const App = () => {
       services={createServices}
       shell='./shell.html'
       types={[Task]}
-      echoMirror={echoMirror}
       onInitialized={async (client) => {
         const searchProps = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {

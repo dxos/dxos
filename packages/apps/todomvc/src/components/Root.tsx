@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
-import { Config, Defaults, defs, getEnvString } from '@dxos/config';
+import { Config, defs } from '@dxos/config';
 import { Annotation, Obj, Ref } from '@dxos/echo';
 import { AtomEx } from '@dxos/effect';
 import { type Client, ClientProvider, createClientServices } from '@dxos/react-client';
@@ -16,30 +16,12 @@ import { getConfig } from '../config.ts';
 import { Todo, TodoList, TodoListAnnotation, createTodoList } from '../types.ts';
 import { Main } from './Main.tsx';
 
-/**
- * Experimental ECHO backends, chosen with `?echo=` or the `DX_ECHO_MODE` build default: `mirror` keeps
- * a JSON mirror of each document in the tab while only the worker runs Automerge, and `indexed` also
- * shows objects from the worker's index until the tab writes to them. Both answer queries in SQL.
- * Anything else is today's replica.
- */
-const echoMode =
-  new URLSearchParams(location.search).get('echo') ?? getEnvString(new Config(Defaults()), 'DX_ECHO_MODE');
-const echoMirror =
-  echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
-
 // Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
 // the dedicated Worker hosting the ECHO services; follower tabs proxy through it.
 const createServices = (config?: Config) =>
   createClientServices(
     new Config(
-      {
-        runtime: {
-          client: {
-            servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER,
-            ...(echoMirror ? { queryExecutor: defs.Runtime_Client_QueryExecutor.SQL } : {}),
-          },
-        },
-      },
+      { runtime: { client: { servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER } } },
       ...(config ? [config.values] : []),
     ),
     {
@@ -86,7 +68,6 @@ export const Root = () => {
       services={createServices}
       shell='./shell.html'
       types={[TodoList, Todo]}
-      echoMirror={echoMirror}
       onInitialized={async (client) => {
         const searchProps = new URLSearchParams(location.search);
         const deviceInvitationCode = searchProps.get('deviceInvitationCode');

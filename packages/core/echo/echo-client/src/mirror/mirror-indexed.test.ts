@@ -19,7 +19,6 @@ import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 import { MirrorDocHandle } from './mirror-doc-handle.ts';
 import { MirrorRepo } from './mirror-repo.ts';
-import { setMirrorIndexedReads } from './mode.ts';
 
 /** Paths at which two JSON trees differ, with both values. */
 const differences = (left: unknown, right: unknown, path: string[] = []): string[] => {
@@ -46,7 +45,6 @@ describe('objects read from the index', () => {
   });
 
   afterEach(async () => {
-    setMirrorIndexedReads(false);
     await builder.close();
   });
 
@@ -82,10 +80,10 @@ describe('objects read from the index', () => {
     return obj;
   };
 
-  const openTab = async (spaceKey: PublicKey, rootUrl: string, { indexed }: { indexed: boolean }) => {
-    setMirrorIndexedReads(indexed);
-    return peer.openDatabase(spaceKey, rootUrl, { client: await peer.createClient({ mirror: true }) });
-  };
+  const openTab = async (spaceKey: PublicKey, rootUrl: string, { indexed }: { indexed: boolean }) =>
+    peer.openDatabase(spaceKey, rootUrl, {
+      client: await peer.createClient({ documentMode: 'proxy', proxyIndexReads: indexed }),
+    });
 
   /**
    * A space of objects in their own documents, indexed, on a host restarted afterwards so that it has
@@ -93,7 +91,7 @@ describe('objects read from the index', () => {
    */
   const setup = async (count: number) => {
     const spaceKey = PublicKey.random();
-    const writerClient = await peer.createClient({ mirror: true });
+    const writerClient = await peer.createClient({ documentMode: 'proxy' });
     const writer = await peer.createDatabase(spaceKey, { client: writerClient });
     const objects = Array.from({ length: count }, (_, index) =>
       writer.add(
@@ -242,7 +240,7 @@ describe('objects read from the index', () => {
 
   test('the index copy of a document matches the worker copy', async () => {
     const spaceKey = PublicKey.random();
-    const writerClient = await peer.createClient({ mirror: true });
+    const writerClient = await peer.createClient({ documentMode: 'proxy' });
     const writer = await peer.createDatabase(spaceKey, { client: writerClient });
     const plain = writer.add(
       Obj.make(TestSchema.Expando, {

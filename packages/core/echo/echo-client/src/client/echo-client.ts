@@ -12,9 +12,9 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type DocumentMode, parseDocumentMode } from '../automerge/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
-import { setMirrorMode } from '../mirror/mode.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
 
@@ -27,8 +27,17 @@ export type ConnectToServiceProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  /** Serve documents as JSON mirrors: the client then loads no Automerge documents. */
+  /** Serves proxies of documents; the `proxy` document mode needs it. */
   mirrorService?: MirrorService.Client;
+
+  /** Defaults to `DX_ECHO_DOCUMENT_MODE` in the process environment, else `replica`. */
+  documentMode?: DocumentMode;
+
+  /**
+   * With `proxy` documents, show objects from the services' index until this client writes to them.
+   * Defaults to `DX_ECHO_PROXY_INDEX_READS` in the process environment, else off.
+   */
+  proxyIndexReads?: boolean;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
   runtime?: EffectContext.Context<never>;
@@ -78,6 +87,8 @@ export class EchoClient extends Resource {
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
+  private _documentMode: DocumentMode = 'replica';
+  private _proxyIndexReads = false;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -97,16 +108,31 @@ export class EchoClient extends Resource {
     return this._databases.values();
   }
 
+  /** How this client holds documents, settled by {@link connectToService}. */
+  get documentMode(): DocumentMode {
+    return this._documentMode;
+  }
+
   /**
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService, mirrorService, runtime }: ConnectToServiceProps): this {
-    this._mirrorService = mirrorService;
-    if (mirrorService) {
-      setMirrorMode(true);
-    }
+  connectToService({
+    dataService,
+    queryService,
+    feedService,
+    mirrorService,
+    documentMode,
+    proxyIndexReads,
+    runtime,
+  }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
+    // Resolved here, where the setting enters, so nothing below reads the environment.
+    this._documentMode = documentMode ?? parseDocumentMode(processEnv('DX_ECHO_DOCUMENT_MODE')) ?? 'replica';
+    this._proxyIndexReads =
+      this._documentMode === 'proxy' && (proxyIndexReads ?? processEnv('DX_ECHO_PROXY_INDEX_READS') === 'true');
+    invariant(this._documentMode === 'replica' || mirrorService, 'The proxy document mode needs a mirror service.');
+    this._mirrorService = mirrorService;
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
@@ -165,6 +191,8 @@ export class EchoClient extends Resource {
     const db = new DatabaseImpl({
       dataService: this._dataService!,
       mirrorService: this._mirrorService,
+      documentMode: this._documentMode,
+      proxyIndexReads: this._proxyIndexReads,
       queryService: this._queryService!,
       feedService: this._feedService,
       runtime: this._runtime,
@@ -329,3 +357,6 @@ export class EchoClient extends Resource {
     });
   }
 }
+
+/** A process environment variable, where there is a process; browsers and workers have none. */
+const processEnv = (key: string): string | undefined => (typeof process === 'undefined' ? undefined : process.env[key]);

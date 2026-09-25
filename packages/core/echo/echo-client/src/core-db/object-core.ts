@@ -33,7 +33,6 @@ import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/
 import * as Doc from '../automerge/Doc.ts';
 import { type ClientDocHandle } from '../automerge/index.ts';
 import * as DocOps from '../mirror/doc-ops.ts';
-import { isMirrorMode } from '../mirror/mode.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -254,19 +253,18 @@ export class ObjectCore {
 
     initialProps ??= {};
 
-    this.doc = DocOps.createLocalDoc<EntityStructure>(
-      {
-        data: this.encode(initialProps),
-        meta: this.encode({
-          ...opts?.meta,
-          keys: opts?.meta?.keys ?? [],
-          tags: opts?.meta?.tags ?? [],
-          annotations: opts?.meta?.annotations ?? {},
-        }),
-        system: { createdAt: Date.now() },
-      },
-      isMirrorMode(),
-    );
+    // An Automerge document whichever mode the database it joins holds, since no database is known
+    // yet; binding to a proxy handle copies its value (see `bind`).
+    this.doc = A.from<EntityStructure>({
+      data: this.encode(initialProps),
+      meta: this.encode({
+        ...opts?.meta,
+        keys: opts?.meta?.keys ?? [],
+        tags: opts?.meta?.tags ?? [],
+        annotations: opts?.meta?.annotations ?? {},
+      }),
+      system: { createdAt: Date.now() },
+    });
   }
 
   bind(options: BindOptions): void {
@@ -337,7 +335,11 @@ export class ObjectCore {
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     if (this.doc) {
-      this.doc = DocOps.changeLocalDoc(this.doc, changeFn, options);
+      if (options) {
+        this.doc = A.change(this.doc!, options, changeFn);
+      } else {
+        this.doc = A.change(this.doc!, changeFn);
+      }
 
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
@@ -357,9 +359,7 @@ export class ObjectCore {
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     let result: Heads | undefined;
-    if (this.doc && DocOps.isMirrorDoc(this.doc)) {
-      throw new Error('changeAt needs Automerge history, which a mirrored local document does not have');
-    } else if (this.doc) {
+    if (this.doc) {
       if (options) {
         const { newDoc, newHeads } = A.changeAt(this.doc!, heads, options, callback);
         this.doc = newDoc;

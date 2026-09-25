@@ -37,9 +37,9 @@ describe('replica on demand', () => {
   test('the full Automerge API works on a replica and mirrors converge with it', async () => {
     const peer = await builder.createPeer();
     const spaceKey = PublicKey.random();
-    const tabA = await peer.createDatabase(spaceKey, { client: await peer.createClient({ mirror: true }) });
+    const tabA = await peer.createDatabase(spaceKey, { client: await peer.createClient({ documentMode: 'proxy' }) });
     const tabB = await peer.openDatabase(spaceKey, tabA.getSpaceRootDocHandle().url, {
-      client: await peer.createClient({ mirror: true }),
+      client: await peer.createClient({ documentMode: 'proxy' }),
     });
     const doc = tabA.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
     const other = tabA.add(Obj.make(TestSchema.Expando, { title: 'stays a mirror' }));
@@ -80,7 +80,9 @@ describe('replica on demand', () => {
 
   test('a lease shares one replica, and cursors on a mirrored accessor resolve through it', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
     await tab.flush();
     const accessor = getObjectCore(doc).getDocAccessor(['content']);
@@ -112,7 +114,9 @@ describe('replica on demand', () => {
 
   test('a lease on a document this tab just created opens once the worker names it', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'fresh' }));
     const accessor = getObjectCore(doc).getDocAccessor(['content']);
 
@@ -127,7 +131,9 @@ describe('replica on demand', () => {
 
   test('cursors map positions while the replica trails the mirror', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
     await tab.flush();
     const accessor = getObjectCore(doc).getDocAccessor(['content']);
@@ -151,7 +157,9 @@ describe('replica on demand', () => {
 
   test('leases taken at the same moment on different documents all open', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const docs = ['one', 'two', 'three'].map((content) => tab.add(Obj.make(TestSchema.Expando, { content })));
     await tab.flush();
 

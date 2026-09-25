@@ -62,11 +62,11 @@ describe('mirror repo and worker', () => {
 
   const openTabs = async (count: number) => {
     const spaceKey = PublicKey.random();
-    const db = await peer.createDatabase(spaceKey, { client: await peer.createClient({ mirror: true }) });
+    const db = await peer.createDatabase(spaceKey, { client: await peer.createClient({ documentMode: 'proxy' }) });
     const rootUrl = db.getSpaceRootDocHandle().url;
     const others = await Promise.all(
       Array.from({ length: count - 1 }, async () =>
-        peer.openDatabase(spaceKey, rootUrl, { client: await peer.createClient({ mirror: true }) }),
+        peer.openDatabase(spaceKey, rootUrl, { client: await peer.createClient({ documentMode: 'proxy' }) }),
       ),
     );
     return { spaceKey, rootUrl, tabs: [db, ...others] };
@@ -262,7 +262,9 @@ describe('mirror repo and worker', () => {
     const obj = tabC.add(Obj.make(TestSchema.Expando, { title: 'c0', count: 0 }));
     await tabC.flush();
     const documentId = documentOf(obj);
-    const tabB = await peer.openDatabase(spaceKey, rootUrl, { client: await peer.createClient({ mirror: true }) });
+    const tabB = await peer.openDatabase(spaceKey, rootUrl, {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const repoB = tabB._repo;
     const repoC = tabC._repo;
     invariant(repoB instanceof MirrorRepo && repoC instanceof MirrorRepo, 'not mirror repos');
@@ -328,7 +330,7 @@ describe('mirror repo and worker', () => {
 
   test('flush rejects when the worker keeps refusing a creation, and a later flush lands it', async () => {
     const spaceKey = PublicKey.random();
-    const client = await peer.createClient({ mirror: true });
+    const client = await peer.createClient({ documentMode: 'proxy' });
     const db = await peer.createDatabase(spaceKey, { client });
     await db.flush();
 

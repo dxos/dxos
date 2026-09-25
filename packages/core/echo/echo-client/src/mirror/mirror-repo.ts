@@ -29,7 +29,6 @@ import { toDocumentId } from '../automerge/document-id.ts';
 import { RepoProxy } from '../automerge/repo-proxy.ts';
 import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
-import { isMirrorIndexedReads } from './mode.ts';
 
 /** Builds the RawStrings the wire tags, since the proxy package does not run Automerge. */
 const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
@@ -37,6 +36,16 @@ const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 const RPC_TIMEOUT = 30_000;
 
 type Services = { mirrorService: MirrorService.Client; dataService: DataService.Client };
+
+export type MirrorRepoProps = Services & {
+  runtime: Context.Context<never>;
+  spaceId: SpaceId;
+  /**
+   * Show documents of objects from the services' index while this repo only reads them (see
+   * {@link MirrorRepo.findIndexed}).
+   */
+  indexReads?: boolean;
+};
 
 /**
  * A repo whose documents are proxies served by the worker's `MirrorService`: the tab loads no
@@ -59,19 +68,21 @@ export class MirrorRepo extends Resource implements ClientRepo {
     },
   };
 
-  constructor(
-    mirrorService: MirrorService.Client,
-    dataService: DataService.Client,
-    private readonly _runtime: Context.Context<never>,
-    private readonly _spaceId: SpaceId,
-  ) {
+  readonly #runtime: Context.Context<never>;
+  readonly #spaceId: SpaceId;
+  readonly #indexReads: boolean;
+
+  constructor({ mirrorService, dataService, runtime, spaceId, indexReads = false }: MirrorRepoProps) {
     super();
+    this.#runtime = runtime;
+    this.#spaceId = spaceId;
+    this.#indexReads = indexReads;
     this.#services = { mirrorService, dataService };
     this.#repo = new Repo.ProxyRepo({
       host: this.#createHost(),
       createHandle: (options) => new MirrorDocHandle({ ...options, replicas: this.#replicaSource }),
       errors: {
-        closed: (documentId) => new RepoClosedError({ spaceId: this._spaceId, documentId }),
+        closed: (documentId) => new RepoClosedError({ spaceId: this.#spaceId, documentId }),
         refused: (documentId, changes) => new EditsRejectedError({ documentId, changes }),
       },
     });
@@ -95,12 +106,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
   }
 
   /**
-   * Finds a document of objects, read from the worker's index while the tab only shows it: the
-   * worker loads its Automerge copy only once the tab writes. Not for the space root, whose links the
-   * index does not hold.
+   * Finds a document of objects. With index reads on, it is read from the worker's index while the
+   * tab only shows it, and the worker loads its Automerge copy once the tab writes. Not for the space
+   * root, whose links the index does not hold.
    */
   findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
-    return this.#find(id, isMirrorIndexedReads());
+    return this.#find(id, this.#indexReads);
   }
 
   create<T>(initialValue?: T): ClientDocHandle<T> {
@@ -216,12 +227,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
   /** The proxy repo opens a step before this one and closes a step after, so this lifecycle decides. */
   #requireOpen(documentId?: DocumentId): void {
     if (!this.isOpen) {
-      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+      throw new RepoClosedError({ spaceId: this.#spaceId, documentId });
     }
   }
 
   async #openReplicas(): Promise<RepoProxy> {
-    const replicas = new RepoProxy(this.#services.dataService, this._runtime, this._spaceId);
+    const replicas = new RepoProxy(this.#services.dataService, this.#runtime, this.#spaceId);
     this.#replicas = replicas;
     try {
       await replicas.open();
@@ -239,12 +250,12 @@ export class MirrorRepo extends Resource implements ClientRepo {
   #createHost(): Repo.Host<DocumentId> {
     const services = this.#services;
     const call = <A>(effect: Effect.Effect<A, unknown>) =>
-      runServiceCall(this._runtime, effect, { timeout: RPC_TIMEOUT });
+      runServiceCall(this.#runtime, effect, { timeout: RPC_TIMEOUT });
     return {
       subscribe: ({ subscriptionId, clientId }, { onEvents, onError, onClose }) =>
         subscribeStream(
-          this._runtime,
-          services.mirrorService['MirrorService.subscribe']({ subscriptionId, clientId, spaceId: this._spaceId }),
+          this.#runtime,
+          services.mirrorService['MirrorService.subscribe']({ subscriptionId, clientId, spaceId: this.#spaceId }),
           {
             onData: ({ events }) => onEvents(events.map((event) => Wire.decodeEvent(event, WIRE))),
             onError,
@@ -266,7 +277,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
       createDocument: async (initialValue) => {
         const { documentId } = await call(
           services.dataService['DataService.createDocument']({
-            spaceId: this._spaceId,
+            spaceId: this.#spaceId,
             initialValue: toInitialValue(initialValue),
           }),
         );

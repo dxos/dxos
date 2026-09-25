@@ -55,7 +55,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
+import type { DocumentMode, EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
 import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
@@ -188,8 +188,12 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.Branch
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
-  /** Serve documents as JSON mirrors instead of Automerge replicas when set. */
+  /** Serves proxies of documents; the `proxy` document mode needs it. */
   mirrorService?: MirrorService.Client;
+  /** How this database holds its documents. */
+  documentMode: DocumentMode;
+  /** With `proxy` documents, show objects from the services' index until this database writes to them. */
+  proxyIndexReads?: boolean;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
   runtime: EffectContext.Context<never>;
@@ -334,6 +338,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       graph: params.graph,
       dataService: params.dataService,
       mirrorService: params.mirrorService,
+      documentMode: params.documentMode,
+      proxyIndexReads: params.proxyIndexReads,
       queryService: params.queryService,
       runtime: params.runtime,
       spaceId: params.spaceId,

@@ -43,6 +43,7 @@ import {
   type ChangeEvent,
   type ClientDocHandle,
   type ClientRepo,
+  type DocumentMode,
   type EditsRejectedEvent,
   RepoProxy,
   type SaveStateChangedEvent,
@@ -99,8 +100,11 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  /** Serve documents as JSON mirrors instead of Automerge replicas when set. */
+  /** Serves proxies of documents; the `proxy` document mode needs it. */
   mirrorService?: MirrorService.Client;
+  documentMode: DocumentMode;
+  /** With `proxy` documents, show objects from the services' index until this database writes to them. */
+  proxyIndexReads?: boolean;
   runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
@@ -249,9 +253,18 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
-    this._repoProxy = options.mirrorService
-      ? new MirrorRepo(options.mirrorService, this._dataService, this._runtime, this._spaceId)
-      : new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    if (options.documentMode === 'proxy') {
+      invariant(options.mirrorService, 'The proxy document mode needs a mirror service.');
+      this._repoProxy = new MirrorRepo({
+        mirrorService: options.mirrorService,
+        dataService: this._dataService,
+        runtime: this._runtime,
+        spaceId: this._spaceId,
+        indexReads: options.proxyIndexReads,
+      });
+    } else {
+      this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    }
     this.saveStateChanged = this._repoProxy.saveStateChanged;
     this.editsRejected =
       this._repoProxy instanceof MirrorRepo ? this._repoProxy.editsRejected : new Event<EditsRejectedEvent>();

@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-// Measures an app under each ECHO backend: replica (today), mirror, and mirror with index reads.
-// Usage: [APP=todomvc|tasks] [CHROMIUM=<path>] node measure-echo.mjs <baseUrl> <count> <rounds>
+// Measures an app in the ECHO document mode it was built with: set `DX_ECHO_DOCUMENT_MODE` (and
+// `DX_ECHO_PROXY_INDEX_READS`) for the build, and `MODE` to label the results.
+// Usage: [APP=todomvc|tasks] [MODE=<label>] [CHROMIUM=<path>] node measure-echo.mjs <baseUrl> <count> <rounds>
 import { chromium } from '@playwright/test';
 
 const [base = 'http://127.0.0.1:9006/', countArg = '200', roundsArg = '3'] = process.argv.slice(2);
 const count = Number(countArg);
 const rounds = Number(roundsArg);
-const MODES = ['replica', 'mirror', 'indexed'];
+const mode = process.env.MODE ?? 'as built';
 
 /** Where each app renders its list: TodoMVC walks refs from a list object, Tasks runs a query. */
 const APPS = {
@@ -99,9 +100,9 @@ const shown = () => page.locator(app.item).count();
 const waitForItems = (n, timeout = 300_000) =>
   page.waitForFunction(([selector, n]) => document.querySelectorAll(selector).length >= n, [app.item, n], { timeout });
 
-const open = async (mode, extra = '') => {
+const open = async (search = '') => {
   const started = Date.now();
-  await page.goto(`${base}?echo=${mode}${extra}`);
+  await page.goto(`${base}${search}`);
   await page.locator(app.ready).or(page.getByTestId('app-error')).first().waitFor({ timeout: 120_000 });
   if (await page.getByTestId('app-error').isVisible()) {
     throw new Error(`app error: ${await page.getByTestId('app-error').innerText()}`);
@@ -109,10 +110,10 @@ const open = async (mode, extra = '') => {
   return started;
 };
 
-// Seed once in today's mode, then give the worker time to index what it wrote.
+// Seed once, then give the worker time to index what it wrote.
 phase = 'seed';
 {
-  const started = await open('replica', `&seed=${count}`);
+  const started = await open(`?seed=${count}`);
   await waitForItems(count);
   console.log(`seeded ${await shown()} items in ${Date.now() - started} ms`);
   await page.waitForTimeout(5_000);
@@ -120,28 +121,26 @@ phase = 'seed';
 
 const rows = [];
 for (let round = 0; round < rounds; round++) {
-  for (const mode of MODES) {
-    phase = `round ${round} ${mode}`;
-    const started = await open(mode);
-    await waitForItems(count);
-    const elapsed = Date.now() - started;
-    await page.waitForTimeout(1_500);
-    rows.push({
-      round,
-      mode,
-      'shown (ms)': elapsed,
-      'items': await shown(),
-      'worker docs': await loadedDocs(),
-      ...(await heaps()),
-    });
-  }
+  phase = `round ${round}`;
+  const started = await open();
+  await waitForItems(count);
+  const elapsed = Date.now() - started;
+  await page.waitForTimeout(1_500);
+  rows.push({
+    round,
+    mode,
+    'shown (ms)': elapsed,
+    'items': await shown(),
+    'worker docs': await loadedDocs(),
+    ...(await heaps()),
+  });
 }
 console.table(rows);
 
-// A write in index-read mode loads only the document written.
+// With index reads, a write loads only the document written.
 phase = 'write';
 {
-  await open('indexed');
+  await open();
   await waitForItems(count);
   await page.waitForTimeout(1_500);
   const before = await loadedDocs();
@@ -150,22 +149,20 @@ phase = 'write';
   await page.waitForTimeout(2_000);
   const after = await loadedDocs();
   const checked = await toggle.isChecked();
-  await open('replica');
+  await open();
   await waitForItems(count);
   const persisted = await page.locator(app.item).nth(3).locator(app.toggle).isChecked();
-  console.log({
-    write: { docsBefore: before, docsAfter: after, checkedInIndexed: checked, persistedInReplica: persisted },
-  });
+  console.log({ write: { docsBefore: before, docsAfter: after, checked, persistedAfterReload: persisted } });
 }
 
-// Two tabs reading from the index: the second proxies through the first tab's worker.
+// Two tabs: the second proxies through the first tab's worker.
 phase = 'two tabs';
 {
-  await open('indexed');
+  await open();
   await waitForItems(count);
   const second = await context.newPage();
   second.on('pageerror', (err) => errors.push(`second page: ${err.message}`));
-  await second.goto(`${base}?echo=indexed`);
+  await second.goto(base);
   await second.waitForFunction(([selector, n]) => document.querySelectorAll(selector).length >= n, [app.item, count], {
     timeout: 120_000,
   });

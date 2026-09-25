@@ -33,9 +33,9 @@ describe('mirror editor binding', () => {
   const openDocs = async () => {
     const peer = await builder.createPeer();
     const spaceKey = PublicKey.random();
-    const tabA = await peer.createDatabase(spaceKey, { client: await peer.createClient({ mirror: true }) });
+    const tabA = await peer.createDatabase(spaceKey, { client: await peer.createClient({ documentMode: 'proxy' }) });
     const tabB = await peer.openDatabase(spaceKey, tabA.getSpaceRootDocHandle().url, {
-      client: await peer.createClient({ mirror: true }),
+      client: await peer.createClient({ documentMode: 'proxy' }),
     });
     const docA = tabA.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
     await tabA.flush();
@@ -133,7 +133,9 @@ describe('mirror editor binding', () => {
 
   test('an editor opened on a document the tab just created gets cursors once the worker names it', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const doc = tab.add(Obj.make(TestSchema.Expando, { content: '' }));
     const view = editor(doc, automerge);
 
@@ -149,7 +151,9 @@ describe('mirror editor binding', () => {
 
   test('a comment made before the replica has the typed text is anchored once it does', async () => {
     const peer = await builder.createPeer();
-    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const tab = await peer.createDatabase(PublicKey.random(), {
+      client: await peer.createClient({ documentMode: 'proxy' }),
+    });
     const doc = tab.add(Obj.make(TestSchema.Expando, { content: '' }));
     const created: { cursor: string; from: number }[] = [];
     const view = new EditorView({

@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-// Measures how fast Composer's nav tree shows a space of N markdown documents under each ECHO
-// backend: replica (today), mirror, and mirror with index reads (`?echo=`).
-// Usage: [CHROMIUM=<path>] node measure-navtree.mjs <baseUrl> <count> <rounds> <profileDir>
+// Measures how fast Composer's nav tree shows a space of N markdown documents in the ECHO document
+// mode the app was built with: set `DX_ECHO_DOCUMENT_MODE` (and `DX_ECHO_PROXY_INDEX_READS`) for the
+// build, and `MODE` to label the results.
+// Usage: [MODE=<label>] [CHROMIUM=<path>] node measure-navtree.mjs <baseUrl> <count> <rounds> <profileDir>
 import { chromium } from '@playwright/test';
 import { rmSync } from 'node:fs';
 
@@ -12,7 +13,7 @@ const [base = 'http://127.0.0.1:4173/', countArg = '200', roundsArg = '3', profi
   process.argv.slice(2);
 const count = Number(countArg);
 const rounds = Number(roundsArg);
-const MODES = ['replica', 'mirror', 'indexed'];
+const mode = process.env.MODE ?? 'as built';
 const BATCH = 25;
 
 const errors = [];
@@ -125,7 +126,7 @@ rmSync(profile, { recursive: true, force: true });
 let spaceId;
 {
   const { context, page } = await launch();
-  await page.goto(`${base}?echo=replica`);
+  await page.goto(base);
   await waitForApp(page);
   const started = Date.now();
   // The ids are read in the page: an operation's output carries the space object, which holds BigInts
@@ -151,7 +152,7 @@ let spaceId;
     { count, batch: BATCH },
   );
   // A new identity's first run navigates to its default space, so open the seeded one directly.
-  await page.goto(`${base}w/${spaceId}/home?echo=replica`);
+  await page.goto(`${base}w/${spaceId}/home`);
   await waitForApp(page);
   await page.evaluate(
     (id) =>
@@ -167,24 +168,22 @@ let spaceId;
 
 const results = [];
 for (let round = 0; round < rounds; round++) {
-  for (const mode of MODES) {
-    phase = `round ${round} ${mode}`;
-    const { context, page } = await launch();
-    const started = Date.now();
-    await page.goto(`${base}w/${spaceId}/home?echo=${mode}`);
-    const { firstAt, allAt } = await waitForRows(page, count);
-    await page.waitForTimeout(2_000);
-    results.push({
-      round,
-      mode,
-      'first row (ms)': firstAt - started,
-      'all rows (ms)': allAt - started,
-      'rows': await rows(page).count(),
-      'worker docs': await loadedDocs(page),
-      ...(await heaps(context, page)),
-    });
-    await context.close();
-  }
+  phase = `round ${round}`;
+  const { context, page } = await launch();
+  const started = Date.now();
+  await page.goto(`${base}w/${spaceId}/home`);
+  const { firstAt, allAt } = await waitForRows(page, count);
+  await page.waitForTimeout(2_000);
+  results.push({
+    round,
+    mode,
+    'first row (ms)': firstAt - started,
+    'all rows (ms)': allAt - started,
+    'rows': await rows(page).count(),
+    'worker docs': await loadedDocs(page),
+    ...(await heaps(context, page)),
+  });
+  await context.close();
 }
 console.table(results);
 console.log({ errors: errors.slice(0, 25), errorCount: errors.length });

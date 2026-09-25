@@ -147,6 +147,16 @@ message Runtime {
       SQL = 2;
     }
 
+    /// How a client holds the documents it opens.
+    enum DocumentMode {
+      UNSPECIFIED_DOCUMENT_MODE = 0;
+      /// An Automerge replica of each document, synced over `ReplicaService`. The default.
+      REPLICA = 1;
+      /// A proxy from `@dxos/automerge-proxy`, served over `DataService`: only the services run
+      /// Automerge, and the client sends op batches.
+      PROXY = 2;
+    }
+
     message Log {
       optional string filter = 1 [ (env_var) = "LOG_FILTER" ];
       optional string prefix = 2 [ (env_var) = "LOG_PREFIX" ];
@@ -231,6 +241,16 @@ message Runtime {
     /// suspected regression is bisected against the pre-compiler path. `DX_ECHO_QUERY_EXECUTOR`
     /// overrides it when unset.
     optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
+
+    /// How this client holds documents; defaults to REPLICA. The client reads it, not the services,
+    /// which serve both kinds of client at once. `DX_ECHO_DOCUMENT_MODE` (`replica` or `proxy`)
+    /// overrides it when unset.
+    optional DocumentMode document_mode = 19 [ (env_var) = "DX_ECHO_DOCUMENT_MODE" ];
+
+    /// With PROXY documents, show objects from the services' index until the client writes to them,
+    /// so the services load no document only to be read. `DX_ECHO_PROXY_INDEX_READS` overrides it
+    /// when unset.
+    optional bool proxy_index_reads = 20 [ (env_var) = "DX_ECHO_PROXY_INDEX_READS" ];
   }
 
   message App {
