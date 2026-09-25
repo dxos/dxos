@@ -10,14 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import {
-  TaskEstimateControl,
-  TaskHistory,
-  TaskList,
-  TaskPriorityIcon,
-  TaskQuestion,
-  TaskStatusControl,
-} from '@dxos/react-ui-task';
+import { TaskHistory, TaskList, TaskProperties, TaskQuestion } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -107,15 +100,9 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 </Column.Center>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
-                    they read after the description rather than as chrome above it. Each is a menu,
-                    so the row holds no bare action buttons. */}
-                <Column.Center>
-                  <Toolbar.Root density='sm' classNames='p-0 bg-transparent justify-start'>
-                    <TaskStatusControl task={task} onTaskUpdate={handleUpdate} />
-                    <TaskEstimateControl task={task} />
-                    <TaskPriorityIcon task={task} />
-                  </Toolbar.Root>
-                </Column.Center>
+                    they read after the description rather than as chrome above it — and with the
+                    room a pane has, each says what its glyph means. */}
+                <TaskProperties task={task} onTaskUpdate={handleUpdate} />
 
                 {openQuestions.map((thread) => (
                   <TaskQuestion
