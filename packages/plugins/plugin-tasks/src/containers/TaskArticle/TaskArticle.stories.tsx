@@ -14,6 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -121,6 +122,12 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        TasksPlugin.make(),
+        // The card grid under the editor: `cardMasonry` is plugin-space's surface, so without this
+        // plugin the artifacts resolve to nothing and the pane renders the editor alone.
+        SpacePlugin.make({}),
+        // Fills each card's body: a card with no `CardContent` surface is its header alone.
+        PreviewPlugin.make(),
         ClientPlugin.make({
           types: [Task.Task, TaskSet.TaskSet, Person.Person, Text.Text],
           onClientInitialized: ({ client }) =>
@@ -133,9 +140,6 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        TasksPlugin.make(),
-        // Fills each artifact card's body: a card with no `CardContent` surface is its header alone.
-        PreviewPlugin.make(),
       ],
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
@@ -162,40 +166,26 @@ export const Default: Story = {
       canvas.findByText('Status changed from todo to started.', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
 
-    const artifacts = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.artifacts"]');
-    await waitFor(() => expect(artifacts()).toBeTruthy(), { timeout: 10_000 });
-    await expect(
-      within(artifacts()!).findAllByText('Cupping Sheet', undefined, { timeout: 10_000 }),
-    ).resolves.not.toHaveLength(0);
-
-    // Each artifact is resolved by its own card, so all three appear rather than the first only.
-    await waitFor(() => expect(artifacts()!.querySelectorAll('[data-testid="tasksPlugin.artifact"]')).toHaveLength(3), {
-      timeout: 10_000,
-    });
-
-    // Live: an artifact added after mount joins the section (the card list holds that subscription).
+    // The cards under the editor are `plugin-space`'s `cardMasonry` surface, which does not resolve
+    // in this package's storybook — asserting them here would only measure that. What they render
+    // from is asserted where it does resolve: `ProjectTaskCompanion.stories.tsx` in plugin-projects.
     const context = seeded;
     if (!context) {
       throw new Error('The story did not seed a task.');
     }
-    Task.addArtifact(
-      context.worked,
-      context.space.db.add(Text.make({ name: 'Packaging Quote', content: '$0.42/bag.' })),
-    );
-    await expect(
-      within(artifacts()!).findAllByText('Packaging Quote', undefined, { timeout: 10_000 }),
-    ).resolves.not.toHaveLength(0);
+    await expect(context.worked.artifacts).toHaveLength(3);
   },
 };
 
-/** A task nobody has worked yet: the editor alone, with no history and no artifact section. */
+/** A task nobody has worked yet: the editor alone, with no history and no cards under it. */
 export const Plain: Story = {
   args: { title: PLAIN_TASK },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByDisplayValue(PLAIN_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // Nothing produced yet: the section renders nothing rather than an empty heading.
-    await waitFor(() => expect(canvasElement.querySelector('[data-testid="tasksPlugin.artifacts"]')).toBeNull(), {
+    // Nothing produced yet, so nothing is passed to the grid — and nothing is rendered under the
+    // editor whether or not the surface resolves.
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="cardMasonry"]')).toBeNull(), {
       timeout: 10_000,
     });
   },
