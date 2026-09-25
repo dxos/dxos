@@ -268,10 +268,13 @@ export, migrations, change times for `meta.updatedAt`.
 `change()` call) with `Op.apply` and `Op.invert`; `Transform.pair`, `Transform.lists` and
 `Transform.changes`; `Sync.ClientState` (the tab's confirmed state, one batch in flight and a
 buffer) and `Sync.Sequencer`; `Draft.Recorder`, the draft a `change()` callback writes through;
-and the `Contract` schemas `MirrorService` carries. Text splices
-transform as in ot.js,
-the operational-transformation library CodeMirror's collaboration model follows. Map and list ops
+and the `Contract` schemas `MirrorService` carries. Text splices transform as in ot.js, the
+operational-transformation library CodeMirror's collaboration model follows. Map and list ops
 transform by path, as in ShareDB's json0 type.
+
+The package's property tests run clients against a real host through lost responses and restarts.
+They and the three defects they found are in its
+[design doc](../../automerge-proxy/docs/DESIGN.md#tests-at-the-boundary).
 
 ## What changes for app code
 

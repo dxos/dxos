@@ -68,14 +68,32 @@ its Automerge host and a `Host.CopySource` over the SQLite index.
 
 ## Tests at the boundary
 
-1. N clients and host-side writers apply random edits under random delivery delays; every client,
-   the host and a plain Automerge replica end with the same value.
-2. The draft against `A.change`: the same calls give the same document or the same refusal.
-3. Transforms: applying a pair in either order converges.
-4. The wire codec round-trips every value Automerge stores.
-5. Cursors: positions minted and resolved through a trailing replica land on the same character.
-6. Restart: the host loses its sequencer state mid-run; clients recover without losing or doubling
-   edits.
+`Repo.test.ts` runs `Repo.ProxyRepo` clients against a real `Host.DocumentHost`. `/testing` supplies
+a `MemoryStore` of Automerge documents and a `Transport` that carries every call and event through
+JSON with `Wire`, after a random delay, and can lose responses the host already acted on.
 
-Seeded random tests already cover 1 and 3 inside the package and in `echo-host`; fast-check
-arbitraries would add shrinking, so a failure reduces to a few ops.
+| Property                                                                                                                                  | Where                                          | How                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------- |
+| Clients, a remote peer merging into the host's store, lost responses and host restarts end with every client equal to the host's document | `Repo.test.ts`                                 | fast-check, 25 runs  |
+| Every edit lands exactly once through lost responses and restarts: each token appended by a client or the peer is in the result once      | `Repo.test.ts`                                 | fast-check, 25 runs  |
+| The wire codec round-trips any value Automerge stores, including objects that look like its tags                                          | `Wire.test.ts`                                 | fast-check, 500 runs |
+| The draft against `A.change`: the same calls give the same document or the same refusal                                                   | `Draft.test.ts`                                | seeded, and 67 cases |
+| Transforms converge in either order; tabs and a remote writer converge                                                                    | `Transform.test.ts`, `Transform.cases.test.ts` | seeded, and 22 cases |
+| Tabs, a remote peer and host restarts converge with every edit applied once, at the protocol level                                        | `host/Sequencing.test.ts`                      | seeded               |
+| Cursors created on one client resolve on another                                                                                          | `Repo.test.ts`, `Cursors.test.ts`              | cases                |
+
+Disabling the host's check for a resent batch makes the exactly-once property fail on its first run,
+shrunk to about ten steps. The convergence property alone cannot see that: clients follow the host,
+so they agree with it even when it applied a batch twice.
+
+The properties found three defects, each fixed at its cause and pinned by a case:
+
+1. A lost `updateSubscription` response made the repo ask again, so the host answered twice. A batch
+   sent between the two answers was settled by both: requeued by the second, and applied twice. The
+   repo now replaces the subscription instead of asking again (`Repo.ts`), and a handle ignores a
+   snapshot no newer than what it holds (`Handle.test.ts`).
+2. The subscription id was fixed per repo, so a request made for one stream and delayed past a
+   reconnect was answered on the next, from what the client held before. Each stream now has its own
+   id (`Repo.test.ts`: a subscription request held past a reconnect).
+3. JSON carries neither NaN, the infinities nor negative zero, all of which Automerge stores: a
+   document holding NaN read `null` on a client. `Wire` now tags them (`Wire.test.ts`).

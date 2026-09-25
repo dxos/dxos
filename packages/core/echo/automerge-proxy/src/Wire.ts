@@ -13,18 +13,25 @@ const IMMUTABLE_STRING = Symbol.for('_am_immutableString');
 const RAW_STRING = '/rawString';
 const BYTES = '/bytes';
 const DATE = '/date';
+/** A number JSON cannot carry: NaN, the infinities and negative zero, which Automerge stores. */
+const NUMBER = '/number';
 /** Wraps a plain object that happens to look like a tag, so that it is not read as one. */
 const ESCAPE = '/escape';
-const TAGS = new Set([RAW_STRING, BYTES, DATE, ESCAPE]);
+const TAGS = new Set([RAW_STRING, BYTES, DATE, NUMBER, ESCAPE]);
 
 /** Builds the values this package cannot construct without Automerge. */
 export type DecodeOptions = { rawString: (text: string) => unknown };
 
 /**
- * Copies a mirror value with its RawString, byte and date leaves replaced by tags, since the worker
- * transport sends values as JSON. Returns the value itself when nothing in it needs a tag.
+ * Copies a proxy value with the leaves JSON cannot carry (RawStrings, bytes, dates and numbers
+ * outside JSON) replaced by tags. Returns the value itself when nothing in it needs a tag.
  */
 export const encode = (value: unknown): unknown => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && !Object.is(value, -0)
+      ? value
+      : { [NUMBER]: Object.is(value, -0) ? '-0' : String(value) };
+  }
   if (typeof value !== 'object' || value === null) {
     return value;
   }
@@ -72,6 +79,9 @@ export const decode = (value: unknown, options: DecodeOptions): unknown => {
     }
     if (key === DATE && typeof entry === 'number') {
       return new Date(entry);
+    }
+    if (key === NUMBER && typeof entry === 'string') {
+      return Number(entry);
     }
     if (key === ESCAPE && typeof entry === 'object' && entry !== null && !Array.isArray(entry)) {
       return restoreEntries(Object.entries(entry), options);

@@ -335,6 +335,11 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
   }
 
   #applySnapshot(event: Extract<Contract.DocumentEvent, { type: 'snapshot' }>): void {
+    if (this.#client && event.epoch === this.#epoch && event.version <= this.#client.version) {
+      // A second answer to a subscription sent again: the entries before it arrived first on the
+      // stream, so it holds nothing new, and a reset would forget the batch in flight.
+      return;
+    }
     const before = this.doc();
     // Structured-clone data from the host; T is the caller's promise about its shape.
     const value = Op.freeze(event.value as T);

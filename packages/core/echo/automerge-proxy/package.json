@@ -43,5 +43,8 @@
     "@dxos/log": "workspace:*",
     "effect": "catalog:",
     "eventemitter3": "catalog:"
+  },
+  "devDependencies": {
+    "fast-check": "catalog:"
   }
 }

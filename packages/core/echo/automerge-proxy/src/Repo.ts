@@ -54,6 +54,10 @@ export type Options<Id extends string, H extends Handle.DocHandle<any, Id>> = {
   createHandle: (options: Handle.Options<any, Id>) => H;
   /** Tags this client's batches; random by default. */
   clientId?: string;
+  /** Most submit passes a second; edits made between passes go out as one batch per document. */
+  maxSubmitRate?: number;
+  /** First delay in milliseconds before replacing a subscription that failed; doubles per failed attempt. */
+  resubscribeDelay?: number;
   /** The errors the repo throws, so a caller can use its own types. */
   errors?: {
     /** Thrown by {@link ProxyRepo.find} and {@link ProxyRepo.create} while the repo is not open. */
@@ -65,7 +69,8 @@ export type Options<Id extends string, H extends Handle.DocHandle<any, Id>> = {
 
 const SUBSCRIBE_TIMEOUT = 30_000;
 const FLUSH_TIMEOUT = 30_000;
-const MAX_SUBMIT_FREQ = 20; // [batches/sec]
+/** Default submit passes a second; see {@link Options.maxSubmitRate}. */
+const MAX_SUBMIT_RATE = 20;
 
 /** Attempts {@link ProxyRepo.flushCreations} makes before a creation the host refused fails it. */
 const FLUSH_ATTEMPTS = 3;
@@ -73,10 +78,10 @@ const FLUSH_ATTEMPTS = 3;
 /** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
 const FLUSH_RETRY_DELAY_MS = 50;
 
-/** First delay before replacing a subscription whose stream ended; doubles per failed attempt. */
+/** Default first delay before replacing a subscription that failed; see {@link Options.resubscribeDelay}. */
 const RESUBSCRIBE_DELAY_MS = 250;
 
-/** Cap on the {@link RESUBSCRIBE_DELAY_MS} backoff, so a host that stays down is still retried. */
+/** Cap on the resubscribe backoff, so a host that stays down is still retried. */
 const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
 /** Events that answer a (re)subscription to a document. */
@@ -92,11 +97,14 @@ export class ProxyRepo<
   H extends Handle.DocHandle<any, Id> = Handle.DocHandle<any, Id>,
 > extends Resource {
   readonly #clientId: string;
-  readonly #subscriptionId = randomId();
+  /** New for each stream, so a request made for an earlier stream is never answered on a later one. */
+  #subscriptionId = randomId();
   readonly #host: Host<Id>;
   readonly #createHandle: (options: Handle.Options<any, Id>) => H;
   readonly #closedError: (documentId?: Id) => Error;
   readonly #refusedError: (documentId: Id, changes: number) => Error;
+  readonly #maxSubmitRate: number;
+  readonly #resubscribeDelay: number;
   readonly #handles: Record<string, H> = {};
   readonly #pendingCreations = new Map<string, Promise<void>>();
   /** Creations the host did not take; {@link flushCreations} requests them again. */
@@ -129,11 +137,20 @@ export class ProxyRepo<
   /** Edits the host refused; each one is also logged, and fails a flush waiting for it. */
   readonly editsRejected = new Event<EditsRejectedEvent<Id>>();
 
-  constructor({ host, createHandle, clientId, errors }: Options<Id, H>) {
+  constructor({
+    host,
+    createHandle,
+    clientId,
+    maxSubmitRate = MAX_SUBMIT_RATE,
+    resubscribeDelay = RESUBSCRIBE_DELAY_MS,
+    errors,
+  }: Options<Id, H>) {
     super();
     this.#host = host;
     this.#createHandle = createHandle;
     this.#clientId = clientId ?? randomId();
+    this.#maxSubmitRate = maxSubmitRate;
+    this.#resubscribeDelay = resubscribeDelay;
     this.#closedError = errors?.closed ?? ((documentId) => new Error(`Repo is closed (document ${documentId})`));
     this.#refusedError =
       errors?.refused ?? ((documentId, changes) => new Error(`Host refused ${changes} changes to ${documentId}`));
@@ -396,6 +413,7 @@ export class ProxyRepo<
     const generation = this.#generation;
     const ready = new Trigger();
     this.#subscriptionReady = ready;
+    this.#subscriptionId = randomId();
     this.#unsubscribe = this.#host.subscribe(
       { subscriptionId: this.#subscriptionId, clientId: this.#clientId },
       {
@@ -426,15 +444,16 @@ export class ProxyRepo<
   }
 
   /**
-   * Replaces a stream that ended without this repo closing it: the host forgets the subscription
-   * with its stream, so every document is followed again and caught up, after a backoff.
+   * Replaces a subscription whose stream ended without this repo closing it, or whose update failed:
+   * the host forgets the subscription with its stream, so every document is followed again and caught
+   * up, after a backoff.
    */
   #onSubscriptionDropped(generation: number, err?: Error): void {
     if (!this.isOpen || generation !== this.#generation) {
       return;
     }
     log.warn('proxy subscription dropped, re-subscribing', { err });
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this.#resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    const delay = Math.min(this.#resubscribeDelay * 2 ** this.#resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
     scheduleTask(
       this._ctx,
       async () => {
@@ -462,7 +481,7 @@ export class ProxyRepo<
           log('sync pass for a replaced connection failed', { err });
         }
       },
-      { maxFrequency: MAX_SUBMIT_FREQ },
+      { maxFrequency: this.#maxSubmitRate },
     );
   }
 
@@ -495,18 +514,11 @@ export class ProxyRepo<
         if (!current()) {
           return;
         }
-        // Asked again on the next pass; until answered, those documents send nothing.
-        for (const { documentId } of add) {
-          if (this.#catchingUp.has(documentId)) {
-            this.#pendingAdd.add(documentId);
-          }
-        }
-        for (const documentId of remove) {
-          if (!this.#handles[documentId]) {
-            this.#pendingRemove.add(documentId);
-          }
-        }
-        this.#failed.emit(err instanceof Error ? err : new Error(String(err)));
+        // The host may have taken the request, so asking again could bring two answers, and a batch
+        // sent between them would be settled by both. A new subscription drops the old stream's answers.
+        const error = err instanceof Error ? err : new Error(String(err));
+        this.#failed.emit(error);
+        this.#onSubscriptionDropped(this.#generation, error);
         return;
       }
       if (!current()) {

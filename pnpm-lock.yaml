@@ -5515,6 +5515,10 @@ importers:
       eventemitter3:
         specifier: 'catalog:'
         version: 5.0.1
+    devDependencies:
+      fast-check:
+        specifier: 'catalog:'
+        version: 3.23.2
 
   packages/core/echo/blob:
     dependencies:

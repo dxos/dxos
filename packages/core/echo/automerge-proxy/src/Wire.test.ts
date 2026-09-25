@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as fc from 'fast-check';
 import { describe, expect, test } from 'vitest';
 
 import * as Contract from './Contract.ts';
@@ -43,6 +44,19 @@ describe('mirror values on the wire', () => {
     expect(Reflect.get(Object(restored), 'long')).toBeInstanceOf(TestRawString);
   });
 
+  test('numbers JSON cannot carry survive', () => {
+    const value = {
+      nan: Number.NaN,
+      up: Number.POSITIVE_INFINITY,
+      down: Number.NEGATIVE_INFINITY,
+      zero: -0,
+      list: [-0],
+    };
+    const restored = acrossTheWire(value);
+    expect(restored).toEqual(value);
+    expect(Object.is(Reflect.get(Object(restored), 'zero'), -0)).toBe(true);
+  });
+
   test('an object that looks like a tag is not read as one', () => {
     const value = { data: { '/bytes': 'not bytes' }, other: { '/escape': { '/date': 1 } } };
     expect(acrossTheWire(value)).toEqual(value);
@@ -51,6 +65,36 @@ describe('mirror values on the wire', () => {
   test('bytes larger than one encoding chunk survive', () => {
     const bytes = Uint8Array.from({ length: 100_000 }, (_, index) => index % 256);
     expect(acrossTheWire({ bytes })).toEqual({ bytes });
+  });
+
+  test('any value Automerge stores survives JSON', () => {
+    const TAGS = ['/rawString', '/bytes', '/date', '/escape'];
+    // Keys include the tag names, so objects that look like tags are generated too.
+    const key = fc.oneof(fc.string({ maxLength: 4 }), fc.constantFrom(...TAGS));
+    const leaf = fc.oneof(
+      fc.string(),
+      fc.double(),
+      fc.constantFrom(-0, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY),
+      fc.boolean(),
+      fc.constant(null),
+      fc.string().map((text) => new TestRawString(text)),
+      fc.uint8Array({ maxLength: 16 }),
+      fc.date({ noInvalidDate: true }),
+    );
+    const { value } = fc.letrec<{ value: unknown }>((tie) => ({
+      value: fc.oneof(
+        { depthSize: 'small' },
+        leaf,
+        fc.array(tie('value'), { maxLength: 4 }),
+        fc.dictionary(key, tie('value'), { maxKeys: 4 }),
+      ),
+    }));
+    fc.assert(
+      fc.property(value, (input) => {
+        expect(acrossTheWire(input)).toEqual(input);
+      }),
+      { numRuns: 500 },
+    );
   });
 
   test('an event crosses the JSON codec the worker transport encodes with', () => {

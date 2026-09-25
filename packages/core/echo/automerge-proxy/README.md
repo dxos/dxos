@@ -22,7 +22,9 @@ The package holds the parts with no dependency on ECHO:
 implements `Repo.Host` over a `Host.Store` of Automerge documents, with `Sequencing` and
 `AutomergeOps` beneath it.
 
-`@dxos/automerge-proxy/testing` has a seeded random generator and random ops for property tests.
+`@dxos/automerge-proxy/testing` has what the package's property tests use: a seeded random generator,
+random ops, a `MemoryStore` of Automerge documents, and a `Transport` that carries calls through JSON
+after random delays and can lose responses.
 
 ECHO uses it through `MirrorService` (`@dxos/protocols`), `MirrorRepo` and `MirrorDocHandle`
 (`@dxos/echo-client`) and the worker's `MirrorServiceImpl` (`@dxos/echo-host`). [docs/DESIGN.md](./docs/DESIGN.md) covers what is
