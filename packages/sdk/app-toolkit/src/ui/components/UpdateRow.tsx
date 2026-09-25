@@ -40,7 +40,8 @@ const relativeTime = (timestamp: number): string => {
         : Math.abs(seconds) < 86_400
           ? (['hour', 3600] as const)
           : (['day', 86_400] as const);
-  return format.format(Math.round(seconds / perUnit), unit);
+  // Truncated so 59m30s reads "59 minutes ago", not "60 minutes ago".
+  return format.format(Math.trunc(seconds / perUnit), unit);
 };
 
 /** Which action the user last triggered, so the button can show a busy state the status alone cannot. */
