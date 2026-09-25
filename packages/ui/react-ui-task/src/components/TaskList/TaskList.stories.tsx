@@ -1226,8 +1226,9 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 };
 
 /**
- * Mod-Enter in the description saves, as the Save button does: for an edit it writes the pending
- * text and leaves, and for a create it adds the task — without CodeMirror inserting a line first.
+ * Cmd/Ctrl-Enter in the description saves, as the Save button does: for an edit it writes the
+ * pending text and leaves, and for a create it adds the task — without CodeMirror inserting a line
+ * first. With no title to create from, the key does nothing.
  */
 export const TestSaveDescriptionWithModEnter: Story = {
   args: {
@@ -1261,7 +1262,7 @@ export const TestSaveDescriptionWithModEnter: Story = {
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
     first.click();
     await waitFor(async () => expect(content().textContent).toContain('SAVED'));
-    // No line was inserted: CodeMirror never saw the key.
+    // No line was inserted: the save binding outranks the markdown keymap's own Mod-Enter.
     await expect(lines()).toEqual(linesBefore);
     first.focus();
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
@@ -1280,6 +1281,15 @@ export const TestSaveDescriptionWithModEnter: Story = {
     );
     await expect(created.textContent).toContain('From the keyboard');
     await expect(title().value).toEqual('');
+
+    // With no title there is nothing to create: the key does nothing, but still inserts no line.
+    const count = rows().length;
+    await userEvent.click(content());
+    const untitledLines = lines();
+    await userEvent.keyboard('Untitled{Control>}{Enter}{/Control}{Meta>}{Enter}{/Meta}');
+    await expect(rows()).toHaveLength(count);
+    await expect(content().textContent).toContain('Untitled');
+    await expect(lines()).toEqual(untitledLines);
   },
 };
 
