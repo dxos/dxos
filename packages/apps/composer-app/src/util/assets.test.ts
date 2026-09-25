@@ -4,16 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { isHashedAssetPath, isMissingAsset } from './assets.ts';
+import { isFileRequest, isHashedAssetPath } from './assets.ts';
 
-const missing = (overrides: Partial<Parameters<typeof isMissingAsset>[0]> = {}) =>
-  isMissingAsset({
-    status: 200,
-    pathname: '/assets/async-D15Zo-_P.js',
-    secFetchMode: 'cors',
-    contentType: 'text/html',
-    ...overrides,
-  });
+const fileRequest = (overrides: Partial<Parameters<typeof isFileRequest>[0]> = {}) =>
+  isFileRequest({ pathname: '/assets/async-D15Zo-_P.js', secFetchMode: 'cors', ...overrides });
 
 describe('isHashedAssetPath', () => {
   test('flat build output is content-hashed', () => {
@@ -36,46 +30,32 @@ describe('isHashedAssetPath', () => {
   });
 });
 
-describe('isMissingAsset', () => {
-  test('an asset request answered with the SPA fallback is a miss', () => {
-    expect(missing()).toBe(true);
+describe('isFileRequest', () => {
+  test('a subresource naming a missing file is a file request', () => {
+    expect(fileRequest()).toBe(true);
+    expect(fileRequest({ pathname: '/assets/plugin-tldraw/fonts/gone.woff2' })).toBe(true);
   });
 
-  test('a navigation keeps the fallback, whatever the URL looks like', () => {
+  test('a navigation is a route, whatever the URL looks like', () => {
     // The client-side router owns these, and a route is allowed to contain a dot.
-    expect(missing({ secFetchMode: 'navigate' })).toBe(false);
-    expect(missing({ secFetchMode: 'navigate', pathname: '/space/v1.2/doc' })).toBe(false);
+    expect(fileRequest({ secFetchMode: 'navigate' })).toBe(false);
+    expect(fileRequest({ secFetchMode: 'navigate', pathname: '/space/v1.2/doc' })).toBe(false);
   });
 
-  test('a real asset is not a miss', () => {
-    expect(missing({ contentType: 'text/javascript' })).toBe(false);
-    expect(missing({ contentType: 'application/wasm' })).toBe(false);
-  });
-
-  test('an HTML entry point serving HTML is not a miss', () => {
-    for (const pathname of ['/index.html', '/recovery.html', '/reset.html', '/devtools.html']) {
-      expect(missing({ pathname })).toBe(false);
+  test('an HTML path is a route', () => {
+    for (const pathname of ['/index.html', '/recovery.html', '/missing.html']) {
+      expect(fileRequest({ pathname })).toBe(false);
     }
   });
 
-  test('an extensionless client-side route is not a miss', () => {
-    // These legitimately resolve to index.html; only paths naming a file can be missing.
-    expect(missing({ pathname: '/BUZEPQGWWI6IHVKINC4AVBC74SSG7RL5F/types/document' })).toBe(false);
-    expect(missing({ pathname: '/' })).toBe(false);
-  });
-
-  test('a non-200 is left alone', () => {
-    expect(missing({ status: 304 })).toBe(false);
-    expect(missing({ status: 404 })).toBe(false);
+  test('an extensionless path is a route', () => {
+    expect(fileRequest({ pathname: '/BUZEPQGWWI6IHVKINC4AVBC74SSG7RL5F/types/document' })).toBe(false);
+    expect(fileRequest({ pathname: '/' })).toBe(false);
   });
 
   test('a client sending no Sec-Fetch-Mode is treated as a subresource', () => {
     // curl and other non-browser clients send none. Treating them as navigations would hide the
-    // failure from exactly the probe used to verify this behaviour.
-    expect(missing({ secFetchMode: null })).toBe(true);
-  });
-
-  test('a charset on the fallback content type still matches', () => {
-    expect(missing({ contentType: 'text/html; charset=utf-8' })).toBe(true);
+    // 404 from exactly the probe used to verify this behaviour.
+    expect(fileRequest({ secFetchMode: null })).toBe(true);
   });
 });

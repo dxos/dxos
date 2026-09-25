@@ -1,6 +1,5 @@
-# Applied by Workers Static Assets to assets it serves directly, which is every live asset: the Worker
-# only runs on a miss (`run_worker_first` covers /api and /.well-known alone). Rules here do not reach
-# responses the Worker builds, so the archive fallback in `src/functions/_worker.ts` sets its own.
+# Applied to every live asset, which the asset server serves without the Worker. Misses go to the
+# Worker, whose responses these rules do not reach, so the archive fallback sets its own.
 
 # Vite's output is content-hashed, so a URL names the same bytes forever.
 /assets/*

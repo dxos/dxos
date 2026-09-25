@@ -31,9 +31,10 @@
   "assets": {
     "directory": "./out/composer",
     "binding": "ASSETS",
-    // Unmatched routes return index.html (client-side router owns them)...
-    "not_found_handling": "single-page-application",
-    // ...except these, which must reach the Worker before the SPA fallback swallows them.
+    // Misses reach the Worker, which serves the SPA itself: "single-page-application" would answer a
+    // missing chunk with index.html before the Worker could 404 it or serve it from ASSET_ARCHIVE.
+    "not_found_handling": "none",
+    // These must reach the Worker even where an asset would match.
     "run_worker_first": ["/api/*", "/.well-known/*"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,

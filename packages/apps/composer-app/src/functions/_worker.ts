@@ -5,7 +5,7 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
-import { IMMUTABLE_CACHE_CONTROL, isHashedAssetPath, isMissingAsset } from '../util/assets.ts';
+import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
 
@@ -309,32 +309,21 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
 };
 
 /**
- * Serve an asset the asset server did not match. Live assets never reach the Worker (only `/api/*`
- * and `/.well-known/*` run it first), so this sees misses alone; their cache headers live in
- * `public/_headers`.
+ * Serve a request the asset server did not match: it serves live files itself, so the Worker sees only
+ * misses and the `run_worker_first` routes no handler above claimed.
  *
- * `not_found_handling: "single-page-application"` answers EVERY unmatched path with `index.html` and a
- * 200, asset paths included. A chunk dropped by a later deploy therefore resolves to an HTML document
- * with a success status, and the browser reports a module parse or MIME failure rather than a missing
- * file — which is why a stale tab's lazy import reads as an unrelated crash. Subresource requests that
- * name a file get a real 404 instead.
- *
- * The check is gated on `Sec-Fetch-Mode` rather than on the path alone: a navigation must keep the SPA
- * fallback whatever its URL looks like, so a client-side route containing a dot cannot be mistaken for
- * a missing file.
+ * A request naming a file gets the archived copy or a real 404, never `index.html` with a 200, which a
+ * stale tab's lazy import would report as a MIME error instead of a missing file. Everything else is a
+ * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
  */
 const serveAsset = async (request: Request, env: Env): Promise<Response> => {
-  const url = new URL(request.url);
   const response = await env.ASSETS.fetch(request);
+  if (response.status !== 404) {
+    return response;
+  }
 
-  if (
-    isMissingAsset({
-      status: response.status,
-      pathname: url.pathname,
-      secFetchMode: request.headers.get('Sec-Fetch-Mode'),
-      contentType: response.headers.get('Content-Type'),
-    })
-  ) {
+  const url = new URL(request.url);
+  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
     const archived = await serveArchivedAsset(request, env, url);
     return (
       archived ??
@@ -345,7 +334,7 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
-  return response;
+  return env.ASSETS.fetch(new Request(new URL('/', url), request));
 };
 
 const OTEL_PREFIX = '/api/otel';
