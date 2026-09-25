@@ -155,5 +155,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
