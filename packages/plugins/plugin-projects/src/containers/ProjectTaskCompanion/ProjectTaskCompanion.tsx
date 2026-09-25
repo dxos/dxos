@@ -47,6 +47,7 @@ export const ProjectTaskCompanion = ({ companionTo: project, role, attendableId 
     return <Banner.Empty label={t('no-task-selected.message')} />;
   }
 
+  // The article shows the task's artifacts itself, so the companion adds nothing beside it.
   return (
     <Surface.Surface
       type={AppSurface.Article}

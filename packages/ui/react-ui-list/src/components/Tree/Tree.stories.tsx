@@ -28,6 +28,14 @@ const groupsTree = createTree(4, 4, { groups: true });
 const emptyTree = createTree(3, 1);
 // Flat and long, which is the shape `virtualize` is for.
 const longTree = createTree(120, 1);
+const branchTree = createTree(30, 2);
+// Windowed with everything at once: two sections inside the first branch, levels of different
+// sizes, and one item under two branches.
+const shared = createTree(1, 0);
+const featuresTree = createTree(25, 1);
+featuresTree.items[0].items = [0, 1].map(() => ({ ...createTree(10, 1), disposition: 'group', icon: undefined }));
+featuresTree.items[1].items = [shared, createTree(1, 0)];
+featuresTree.items[2].items = [shared];
 
 const DefaultStory = ({
   draggable,
@@ -37,6 +45,8 @@ const DefaultStory = ({
   disabledRows,
   selectionMode = 'single',
   virtualize,
+  branches,
+  features,
 }: {
   draggable?: boolean;
   groups?: boolean;
@@ -48,8 +58,20 @@ const DefaultStory = ({
   selectionMode?: 'single' | 'multiple';
   /** Render a long list in a short scroller, windowed to what is in view. */
   virtualize?: boolean;
+  branches?: boolean;
+  features?: boolean;
 }) => {
-  const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize
+    ? features
+      ? featuresTree
+      : branches
+        ? branchTree
+        : longTree
+    : emptyBranches
+      ? emptyTree
+      : groups
+        ? groupsTree
+        : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -248,6 +270,7 @@ const DefaultStory = ({
       selectionMode={selectionMode}
       canSelect={handleCanSelect}
       virtualize={virtualize}
+      dropAtEnd={features}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -467,7 +490,7 @@ export const TestWindowMountsAVisibleSlice: Story = {
   play: async ({ canvasElement }) => {
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
-    const indices = () => rows().map((row) => Number(row.dataset.index));
+    const indices = () => rows().map((row) => Number(row.closest<HTMLElement>('[data-index]')?.dataset.index));
 
     // Only the rows in view exist: the rest are extent in the sizer, not elements.
     await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
@@ -487,5 +510,103 @@ export const TestWindowMountsAVisibleSlice: Story = {
 
     scroller.scrollTo({ top: 0 });
     await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
+  },
+};
+
+export const TestWindowFlattensOpenBranches: Story = {
+  args: { virtualize: true, branches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const indices = () => rows().map((row) => Number(row.closest<HTMLElement>('[data-index]')?.dataset.index));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(30), { timeout: 5_000 });
+    await expect(indices().every((index) => Number.isInteger(index))).toBe(true);
+
+    const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
+    await userEvent.click(toggle);
+    await waitFor(async () => expect(rows()[1]?.getAttribute('aria-level')).toEqual('2'), { timeout: 5_000 });
+    await expect(indices()[1]).toEqual(1);
+
+    await expect([rows()[0].getAttribute('aria-posinset'), rows()[0].getAttribute('aria-setsize')]).toEqual([
+      '1',
+      '30',
+    ]);
+    await expect([rows()[2].getAttribute('aria-posinset'), rows()[2].getAttribute('aria-setsize')]).toEqual([
+      '2',
+      '30',
+    ]);
+
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[indices().length - 1]).toEqual(59), { timeout: 5_000 });
+  },
+};
+
+export const TestWindowedTreeInFull: Story = {
+  args: { virtualize: true, branches: true, features: true, draggable: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const row = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-object-id="${id}"]`);
+    const toggle = (id: string) => row(id)!.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const focused = () => document.activeElement?.getAttribute('data-object-id');
+    const [first, second, third] = featuresTree.items;
+    const last = featuresTree.items.at(-1)!;
+    const lastChild = first.items[1].items.at(-1)!;
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(25);
+
+    // The end strip is the window's last unit, after the last row.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(canvasElement.querySelector('[data-window-id="end:"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+    const ends = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-index]'));
+    await expect(ends.at(-1)!.dataset.windowId).toEqual('end:');
+
+    // `Home` and `End` land on rows the window had not mounted.
+    row(last.id)!.focus();
+    await userEvent.keyboard('{Home}');
+    await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
+    await userEvent.keyboard('{End}');
+    await waitFor(async () => expect(focused()).toEqual(last.id), { timeout: 5_000 });
+
+    // Sections are spliced out of the set a row is counted in, so the levels differ in size.
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(row(first.id)).not.toBeNull(), { timeout: 5_000 });
+    await userEvent.click(toggle(first.id));
+    const child = first.items[0].items[0].id;
+    await waitFor(async () => expect(row(child)).not.toBeNull(), { timeout: 5_000 });
+    await expect(row(child)!.getAttribute('aria-setsize')).toEqual('20');
+    await expect(row(first.id)!.closest('[role="treeitem"]')!.getAttribute('aria-setsize')).toEqual('25');
+
+    // `ArrowLeft` from a child reaches its parent after the parent has left the window.
+    await waitFor(
+      async () => {
+        scroller.scrollBy({ top: 40 });
+        await expect(row(lastChild.id)).not.toBeNull();
+        await expect(row(first.id)).toBeNull();
+      },
+      { timeout: 5_000 },
+    );
+    row(lastChild.id)!.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(async () => expect(row(lastChild.id)).toBeNull(), { timeout: 5_000 });
+
+    // An item under two open branches is two rows, and the tree stays windowed.
+    await userEvent.click(toggle(second.id));
+    await userEvent.click(toggle(third.id));
+    await waitFor(
+      async () => expect(canvasElement.querySelectorAll(`[data-object-id="${shared.id}"]`)).toHaveLength(2),
+      {
+        timeout: 5_000,
+      },
+    );
+    await expect(rows().length).toBeLessThan(25);
   },
 };

@@ -312,6 +312,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

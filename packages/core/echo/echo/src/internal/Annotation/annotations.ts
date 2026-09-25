@@ -286,14 +286,6 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
- */
-// TODO(wittjosiah): Invert the default? Hide every type unless it opts in, so a new type is
-//   invisible until someone marks it as user-facing rather than visible until someone hides it.
-export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
-export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
-
-/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
@@ -634,6 +626,35 @@ export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotation
 } = {
   ...setParentAnnotation,
   set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
+};
+
+/** Value of {@link UserTypeAnnotation}. */
+export type UserTypeAnnotationValue = {
+  /** Keys a surface filters on (e.g. which types a collection's create dialog offers); opaque to ECHO. */
+  readonly tags?: readonly string[];
+};
+
+const userTypeAnnotation = makeUserAnnotation<UserTypeAnnotationValue>({
+  id: 'org.dxos.annotation.userType',
+  schema: Schema.Struct({ tags: Schema.optional(Schema.Array(Schema.String)) }),
+});
+
+/**
+ * Marks a static type as user-facing, so it shows in pickers, the nav tree, and collections. Absent, the
+ * type is internal (like a dotfile, visible only via an advanced setting); a new type stays out of sight
+ * until someone opts it in. Stored as property meta, so it survives persisting the schema.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set());
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set({ tags: [Collection.ItemTag] }));
+ * ```
+ */
+export const UserTypeAnnotation: Omit<Annotation.Annotation<UserTypeAnnotationValue>, 'set'> & {
+  set: (value?: UserTypeAnnotationValue) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...userTypeAnnotation,
+  set: (value: UserTypeAnnotationValue = {}) => userTypeAnnotation.set(value),
 };
 
 /**

@@ -28,7 +28,7 @@ export class StateMap extends Type.makeObject<StateMap>(DXN.make('org.dxos.type.
   Schema.Struct({
     /** Per-object state keyed by object id. Values are open records projected to `S` by accessors. */
     state: Schema.Record(Obj.ID, Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 /** Creates an empty StateMap object. */

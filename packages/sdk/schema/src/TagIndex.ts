@@ -27,7 +27,7 @@ export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.
   Schema.Struct({
     /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
     index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(Annotation.FormInputAnnotation.set(false)),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 /** Creates an empty TagIndex object. */
