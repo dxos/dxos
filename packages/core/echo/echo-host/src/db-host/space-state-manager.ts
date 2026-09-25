@@ -231,6 +231,9 @@ export class SpaceStateManager extends Resource {
 
     await this._saveSpace(spaceId, root.url);
 
+    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing.
+    let retiredRootId = prevRootId !== root.documentId ? prevRootId : undefined;
+
     const ctx = new Context();
 
     this._perSpaceContext.set(spaceId, ctx);
@@ -251,9 +254,10 @@ export class SpaceStateManager extends Resource {
         ];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
-          this.spaceDocumentListUpdated.emit(
-            new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, prevRootId, documentIds),
-          );
+          const event = new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, retiredRootId, documentIds);
+          // Reported once: listeners tear down the retired root's sync state, which must not repeat per list change.
+          retiredRootId = undefined;
+          this.spaceDocumentListUpdated.emit(event);
         }
       },
       { maxFrequency: 50 },
@@ -341,6 +345,7 @@ export class SpaceDocumentListUpdatedEvent {
   constructor(
     public readonly spaceId: SpaceId,
     public readonly spaceRootId: DocumentId,
+    /** The directory `spaceRootId` replaced; set only on the first update after the swap. */
     public readonly previousRootId: DocumentId | undefined,
     public readonly documentIds: DocumentId[],
   ) {}
