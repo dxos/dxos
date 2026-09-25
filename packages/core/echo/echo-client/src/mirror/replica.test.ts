@@ -10,9 +10,13 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { getDeep } from '@dxos/util';
 
+import type * as Doc from '../automerge/Doc.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
+import { heldReplica, leaseReplica } from '../replica.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
+import { fromCursor, getTextInRange, toCursor, updateText } from '../text.ts';
 import { MirrorRepo } from './mirror-repo.ts';
 
 /**
@@ -73,4 +77,94 @@ describe('replica on demand', () => {
     expect(getObjectCore(other).docHandle?.constructor.name).toBe('MirrorDocHandle');
     expect(repo.releaseReplica(core.docHandle.documentId)).toBe(true);
   });
+
+  test('a lease shares one replica, and cursors on a mirrored accessor resolve through it', async () => {
+    const peer = await builder.createPeer();
+    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
+    await tab.flush();
+    const accessor = getObjectCore(doc).getDocAccessor(['content']);
+
+    // A mirror has no op ids, so cursors need a replica someone holds.
+    expect(() => toCursor(accessor, 6)).toThrow(/replica/);
+
+    const first = leaseReplica(accessor);
+    const second = leaseReplica(accessor);
+    invariant(first && second, 'a mirrored accessor should lease a replica');
+    const replica = await first.ready;
+    invariant(replica, 'the replica should open');
+    expect(await second.ready).toMatchObject({ handle: replica.handle });
+    await expect.poll(() => first.inStep()).toBe(true);
+
+    const cursor = toCursor(accessor, 6);
+    replica.handle.change((draft) => A.splice(draft, [...replica.path], 0, 0, 'Say: '));
+    await tab.flush();
+    await expect.poll(() => doc.content).toBe('Say: hello world');
+    expect(fromCursor(accessor, cursor)).toBe(11);
+    expect(getTextInRange(accessor, toCursor(accessor, 5), cursor)).toBe('hello ');
+
+    // The replica stays while any lease holds it.
+    first.release();
+    expect(heldReplica(accessor)).toBeDefined();
+    second.release();
+    expect(heldReplica(accessor)).toBeUndefined();
+  });
+
+  test('a lease on a document this tab just created opens once the worker names it', async () => {
+    const peer = await builder.createPeer();
+    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'fresh' }));
+    const accessor = getObjectCore(doc).getDocAccessor(['content']);
+
+    const lease = leaseReplica(accessor);
+    invariant(lease, 'a mirrored accessor should lease a replica');
+    // The object's body reaches the replica once the worker applies the tab's first batch.
+    const replica = await lease.ready;
+    invariant(replica, 'the replica should open');
+    await expect.poll(() => textOf(replica)).toBe('fresh');
+    lease.release();
+  });
+
+  test('cursors map positions while the replica trails the mirror', async () => {
+    const peer = await builder.createPeer();
+    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const doc = tab.add(Obj.make(TestSchema.Expando, { content: 'hello world' }));
+    await tab.flush();
+    const accessor = getObjectCore(doc).getDocAccessor(['content']);
+    const lease = leaseReplica(accessor);
+    invariant(lease, 'a mirrored accessor should lease a replica');
+    const replica = await lease.ready;
+    invariant(replica, 'the replica should open');
+
+    // The mirror has the edit at once; the replica only after the worker's round trip.
+    updateText(doc, ['content'], 'XYZ hello world');
+    expect(textOf(replica)).toBe('hello world');
+    const cursor = toCursor(accessor, 10);
+    expect(fromCursor(accessor, cursor)).toBe(10);
+    expect(getTextInRange(accessor, toCursor(accessor, 4), cursor)).toBe('hello ');
+
+    await tab.flush();
+    await expect.poll(() => textOf(replica)).toBe('XYZ hello world');
+    expect(fromCursor(accessor, cursor)).toBe(10);
+    lease.release();
+  });
+
+  test('leases taken at the same moment on different documents all open', async () => {
+    const peer = await builder.createPeer();
+    const tab = await peer.createDatabase(PublicKey.random(), { client: await peer.createClient({ mirror: true }) });
+    const docs = ['one', 'two', 'three'].map((content) => tab.add(Obj.make(TestSchema.Expando, { content })));
+    await tab.flush();
+
+    const leases = docs.map((doc) => leaseReplica(getObjectCore(doc).getDocAccessor(['content'])));
+    const replicas = await Promise.all(
+      leases.map((lease) => {
+        invariant(lease, 'a mirrored accessor should lease a replica');
+        return lease.ready;
+      }),
+    );
+    expect(replicas.map((replica) => replica && textOf(replica))).toEqual(['one', 'two', 'three']);
+    leases.forEach((lease) => lease?.release());
+  });
 });
+
+const textOf = (accessor: Doc.Accessor): unknown => getDeep(accessor.handle.doc(), accessor.path);

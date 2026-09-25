@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { getRangeFromCursor } from '@dxos/echo-client';
+import { DocOps, getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { revertHunk } from '@dxos/ui-editor/headless';
 import { Branch } from '@dxos/versioning';
@@ -59,7 +58,7 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.RejectChange>
           const replaced = branchText.content.slice(splice.from, splice.from + splice.del);
           const branchAccessor = Doc.createAccessor(branchText, ['content']);
           branchAccessor.handle.change((doc) => {
-            A.splice(doc, branchAccessor.path.slice(), splice.from, splice.del, splice.insert);
+            DocOps.splice(doc, branchAccessor.path, splice.from, splice.del, splice.insert);
           });
           return { undo: { from: splice.from, del: splice.insert.length, insert: replaced } };
         } finally {

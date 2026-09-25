@@ -25,7 +25,7 @@ import { toDocumentId } from '../automerge/document-id.ts';
 import { RepoProxy } from '../automerge/repo-proxy.ts';
 import { EditsRejectedError, RepoClosedError } from '../errors.ts';
 import { MirrorCursors } from './mirror-cursors.ts';
-import { MirrorDocHandle } from './mirror-doc-handle.ts';
+import { MirrorDocHandle, type ReplicaSource } from './mirror-doc-handle.ts';
 import { isMirrorIndexedReads } from './mode.ts';
 
 /** Builds the RawStrings the wire tags, since echo-protocol does not run Automerge. */
@@ -83,6 +83,15 @@ export class MirrorRepo extends Resource implements ClientRepo {
   #subscriptionReady = new Trigger();
   /** Real Automerge replicas of documents handed to Automerge libraries, created on first use. */
   #replicas?: RepoProxy = undefined;
+  /** The opening of {@link #replicas}, which every {@link replica} call made meanwhile waits on. */
+  #replicasOpening?: Promise<RepoProxy> = undefined;
+  /** How each handle opens a replica of its document for {@link MirrorDocHandle.leaseReplica}. */
+  readonly #replicaSource: ReplicaSource = {
+    open: <T>(documentId: DocumentId) => this.replica<T>(documentId),
+    close: (documentId) => {
+      this.releaseReplica(documentId);
+    },
+  };
   /** Batches whose submit failed, resent as they were: the worker ignores one it already applied. */
   readonly #retry = new Map<string, MirrorService.SubmitRequest['batches'][number]>();
   /** Submit failures, so a flush can tell that writes it waits for may never land. */
@@ -234,13 +243,26 @@ export class MirrorRepo extends Resource implements ClientRepo {
    * browser the first call would load the wasm.
    */
   async replica<T>(documentId: DocumentId): Promise<DocHandleProxy<T>> {
-    if (!this.#replicas) {
-      this.#replicas = new RepoProxy(this._dataService, this._runtime, this._spaceId);
-      await this.#replicas.open();
-    }
-    const handle = this.#replicas.find<T>(documentId);
+    this.#replicasOpening ??= this.#openReplicas();
+    const replicas = await this.#replicasOpening;
+    const handle = replicas.find<T>(documentId);
     await handle.whenReady();
     return handle;
+  }
+
+  async #openReplicas(): Promise<RepoProxy> {
+    const replicas = new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    this.#replicas = replicas;
+    try {
+      await replicas.open();
+      return replicas;
+    } catch (err) {
+      if (this.#replicas === replicas) {
+        this.#replicas = undefined;
+        this.#replicasOpening = undefined;
+      }
+      throw err;
+    }
   }
 
   /** Drops a replica once nothing uses it; the document stays mirrored. */
@@ -339,8 +361,11 @@ export class MirrorRepo extends Resource implements ClientRepo {
       handle._failReady(error);
     }
     this.#failedCreations.clear();
-    await this.#replicas?.close();
+    const replicas = this.#replicasOpening;
     this.#replicas = undefined;
+    this.#replicasOpening = undefined;
+    // One still opening is closed once it has opened.
+    await (await replicas?.catch(() => undefined))?.close();
     this.#unsubscribe?.();
     this.#unsubscribe = undefined;
     await this.#submitJob?.join();
@@ -401,6 +426,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
     const handle: MirrorDocHandle<T> = new MirrorDocHandle<T>({
       ...options,
       clientId: this.#clientId,
+      replicas: this.#replicaSource,
       onDelete: () => {
         if (!handle.documentId) {
           this.#failedCreations.delete(handle._internalId);

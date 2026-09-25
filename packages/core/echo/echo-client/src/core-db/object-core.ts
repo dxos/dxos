@@ -62,6 +62,15 @@ const SYSTEM_NAMESPACE = 'system';
  */
 const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updatedAt: number | undefined }>();
 
+/** The core behind each accessor handle, so text helpers can reach the document an accessor mirrors. */
+const accessorCores = new WeakMap<Doc.Handle, ObjectCore>();
+
+/**
+ * The object core an accessor from {@link ObjectCore.getDocAccessor} reads through.
+ * @internal
+ */
+export const getAccessorCore = (accessor: Doc.Accessor): ObjectCore | undefined => accessorCores.get(accessor.handle);
+
 export type ObjectCoreOptions = {
   type?: EncodedReference;
   meta?: EntityMeta;
@@ -376,30 +385,32 @@ export class ObjectCore {
   getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {
     assertArgument(Doc.isKeyPath(path), 'path');
     const self = this;
-    return {
-      handle: {
-        doc: () => this.getDoc(),
-        change: (callback, options) => {
-          this.change(callback, options);
-        },
-        changeAt: (heads, callback, options) => {
-          return this.changeAt(heads, callback, options);
-        },
-        addListener: (event, listener) => {
-          if (event === 'change') {
-            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.on('change', listener);
-            this.updates.on(listener);
-          }
-        },
-        removeListener: (event, listener) => {
-          if (event === 'change') {
-            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.off('change', listener);
-            this.updates.off(listener);
-          }
-        },
+    const handle: Doc.Handle = {
+      doc: () => this.getDoc(),
+      change: (callback, options) => {
+        this.change(callback, options);
       },
+      changeAt: (heads, callback, options) => {
+        return this.changeAt(heads, callback, options);
+      },
+      addListener: (event, listener) => {
+        if (event === 'change') {
+          // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
+          this.docHandle?.on('change', listener);
+          this.updates.on(listener);
+        }
+      },
+      removeListener: (event, listener) => {
+        if (event === 'change') {
+          // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
+          this.docHandle?.off('change', listener);
+          this.updates.off(listener);
+        }
+      },
+    };
+    accessorCores.set(handle, this);
+    return {
+      handle,
       get path() {
         return [...self.mountPath, 'data', ...path];
       },

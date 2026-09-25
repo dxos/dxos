@@ -4,9 +4,7 @@
 
 // @import-as-namespace
 
-import { next as A } from '@automerge/automerge';
-
-import { Doc, createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
+import { Doc, DocOps, createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
 import { type AnyProperties, isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 
@@ -41,9 +39,10 @@ export const createAccessor = <T extends AnyProperties>(
 };
 
 /**
- * Sets the text value at the given path, applying the change as a minimal Automerge delta (via
- * `A.updateText`) rather than replacing the whole string. This preserves cursors/anchors and merges
- * cleanly with concurrent edits — use it to write an edited string back into a collaborative text field.
+ * Sets the text value at the given path, applying the change as a minimal text delta (via
+ * `DocOps.updateText`, which is `A.updateText` on an Automerge document) rather than replacing the
+ * whole string. This preserves cursors/anchors and merges cleanly with concurrent edits — use it to
+ * write an edited string back into a collaborative text field.
  */
 export const updateText = <T extends AnyProperties>(
   obj: T,
@@ -52,7 +51,7 @@ export const updateText = <T extends AnyProperties>(
 ): T => {
   const accessor = createAccessor(obj, path);
   accessor.handle.change((doc) => {
-    A.updateText(doc, accessor.path.slice(), newText);
+    DocOps.updateText(doc, accessor.path, newText);
   });
   return obj;
 };

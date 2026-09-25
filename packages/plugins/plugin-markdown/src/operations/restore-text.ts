@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
+import { DocOps } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
@@ -18,7 +18,7 @@ import { Markdown } from '#types';
 const splice = (text: Text.Text, from: number, del: number, insert: string) => {
   const accessor = Doc.createAccessor(text, ['content']);
   accessor.handle.change((doc) => {
-    A.splice(doc, accessor.path.slice(), from, del, insert);
+    DocOps.splice(doc, accessor.path, from, del, insert);
   });
 };
 

@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
+
+import { DocOps } from '@dxos/echo-client';
 
 import * as Doc from './Doc.ts';
 
@@ -38,11 +39,10 @@ export const applyEdits = (accessor: Doc.Accessor, edits: readonly Edit[]): stri
 
     accessor.handle.change((doc) => {
       const text = Doc.getValue<string>(accessor);
-      // Automerge's `splice` types the path as mutable `Prop[]`; our `KeyPath` is readonly and is not mutated here.
       if (edit.replaceAll) {
         let idx = text.indexOf(edit.oldString);
         while (idx !== -1) {
-          A.splice(doc, accessor.path as A.Prop[], idx, edit.oldString.length, edit.newString);
+          DocOps.splice(doc, accessor.path, idx, edit.oldString.length, edit.newString);
           const updated = Doc.getValue<string>(accessor);
           idx = updated.indexOf(edit.oldString, idx + edit.newString.length);
         }
@@ -51,7 +51,7 @@ export const applyEdits = (accessor: Doc.Accessor, edits: readonly Edit[]): stri
         if (idx === -1) {
           throw new Error(`Edit not found: ${JSON.stringify(edit.oldString)}`);
         }
-        A.splice(doc, accessor.path as A.Prop[], idx, edit.oldString.length, edit.newString);
+        DocOps.splice(doc, accessor.path, idx, edit.oldString.length, edit.newString);
       }
     });
   }

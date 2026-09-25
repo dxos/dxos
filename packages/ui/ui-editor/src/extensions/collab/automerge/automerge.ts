@@ -8,18 +8,24 @@ import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
+import { DocOps } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 
 import { Cursor } from '../../../util/index.ts';
+import { mirrorSync } from '../mirror/mirror.ts';
 import { cursorConverter } from './cursor.ts';
 import { type State, initialSync, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs.ts';
 import { Syncer } from './sync.ts';
 
 /**
  * CodeMirror extension that two-way syncs the editor with the string the {@link Doc.Accessor} points
- * at, reconciling local edits and remote document mutations via Automerge.
+ * at, reconciling local edits and remote document mutations via Automerge. A mirrored document takes
+ * the mirror binding, which writes to the mirror and takes cursors from a replica.
  */
-export const automerge = (accessor: Doc.Accessor): Extension => {
+export const automerge = (accessor: Doc.Accessor): Extension =>
+  DocOps.isMirrorDoc(accessor.handle.doc()) ? mirrorSync(accessor) : automergeBinding(accessor);
+
+const automergeBinding = (accessor: Doc.Accessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => {
       return {

@@ -81,16 +81,16 @@ const RemoteSelectionChangedAnnotation = Annotation.define();
  */
 export class RemoteSelectionsDecorator implements PluginValue {
   private readonly _ctx = new Context();
-  private readonly _cursorConverter: CursorConverter;
   private readonly _provider: AwarenessProvider;
 
   private _lastAnchor?: number;
   private _lastHead?: number;
+  /** Read from the state on each use: the editor's binding, and with it the converter, can change. */
+  private _lastConverter?: CursorConverter;
 
   public decorations: DecorationSet = RangeSet.of([]);
 
   constructor(view: EditorView) {
-    this._cursorConverter = view.state.facet(Cursor.converter);
     this._provider = view.state.facet(awarenessProvider);
     this._provider.open();
     this._provider.remoteStateChange.on(this._ctx, () => {
@@ -111,18 +111,20 @@ export class RemoteSelectionsDecorator implements PluginValue {
   private _updateLocalSelection(view: EditorView): void {
     const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
     const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
-    if (this._lastAnchor === anchor && this._lastHead === head) {
+    const converter = view.state.facet(Cursor.converter);
+    if (this._lastAnchor === anchor && this._lastHead === head && this._lastConverter === converter) {
       return;
     }
 
     this._lastAnchor = anchor;
     this._lastHead = head;
+    this._lastConverter = converter;
 
     this._provider.update(
       anchor !== undefined && head !== undefined
         ? {
-            anchor: this._cursorConverter.toCursor(anchor),
-            head: this._cursorConverter.toCursor(head, -1),
+            anchor: converter.toCursor(anchor),
+            head: converter.toCursor(head, -1),
           }
         : undefined,
     );
@@ -138,10 +140,11 @@ export class RemoteSelectionsDecorator implements PluginValue {
       // },
     ];
 
+    const converter = view.state.facet(Cursor.converter);
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
-      const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
-      const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
+      const anchor = state.position?.anchor ? converter.fromCursor(state.position.anchor) : null;
+      const head = state.position?.head ? converter.fromCursor(state.position.head) : null;
       if (anchor == null || head == null) {
         continue;
       }

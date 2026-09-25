@@ -67,6 +67,7 @@ export * from './mirror/index.ts';
 export * from './proxy-db/index.ts';
 export * from './query/index.ts';
 export * from './registry/index.ts';
+export * from './replica.ts';
 export * from './serialized-space.ts';
 export * from './serializer.ts';
 export * from './text.ts';

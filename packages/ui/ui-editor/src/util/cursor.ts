@@ -27,6 +27,11 @@ export const overlap = (a: Range, b: Range): boolean => a.from <= b.to && a.to >
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1): string;
   fromCursor(cursor: string): number;
+  /**
+   * Resolves once `toCursor` places every position the editor shows; absent where it always can. An
+   * editor over a mirrored document waits for its replica to hold what this tab typed.
+   */
+  whenExact?: () => Promise<void>;
 }
 
 const defaultCursorConverter: CursorConverter = {
