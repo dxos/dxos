@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { type PluginManager } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import { createContext } from '@dxos/react-hooks';
 import { useMediaQuery } from '@dxos/react-ui';
 
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
-import { type DeckStateHook } from '../../hooks/useDeckState';
-import { resolveSidebarState } from '../../util';
+import { type DeckStateHook } from '../../hooks/useDeckState.ts';
+import { resolveSidebarState } from '../../util/index.ts';
 
 const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';

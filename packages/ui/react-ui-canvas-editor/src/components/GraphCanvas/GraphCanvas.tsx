@@ -26,9 +26,9 @@ import { log } from '@dxos/log';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { EditorContext } from '../../hooks';
-import { type CanvasGraphModel, type Polygon } from '../../types';
-import { GraphNode } from './GraphNode';
+import { EditorContext } from '../../hooks/index.ts';
+import { type CanvasGraphModel, type Polygon } from '../../types/index.ts';
+import { GraphNode } from './GraphNode.tsx';
 
 const nodeTypes: NodeTypes = {
   custom: GraphNode,
@@ -135,7 +135,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }:
 
   return (
     <ReactFlow
-      className={mx('dx-expander', classNames)}
+      className={mx('dx-expand', classNames)}
       colorMode={themeMode}
       edges={edges}
       fitView={true}

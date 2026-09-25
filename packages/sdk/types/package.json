@@ -1,6 +1,6 @@
 {
   "name": "@dxos/types",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Common data types and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,9 +29,9 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -41,12 +41,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "fast-check": "catalog:",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

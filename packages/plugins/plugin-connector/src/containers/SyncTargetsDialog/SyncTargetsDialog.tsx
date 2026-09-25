@@ -5,25 +5,24 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { ConnectorCoordinator, type RemoteTarget } from '#types';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import { type Connection } from '../../types';
-import { isCursorForConnection } from '../../util';
+import * as Binding from '../../Binding.ts';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
-  availableTargets: ReadonlyArray<RemoteTarget>;
+  availableTargets: ReadonlyArray<ConnectorSpec.RemoteTarget>;
   /** Existing local object to attach to the first newly-selected target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 };
@@ -31,7 +30,7 @@ export type SyncTargetsDialogProps = {
 /**
  * Dialog body for picking which remote targets are synced into a {@link Connection}.
  * On submit it reconciles the connection's external-sync cursors through
- * the {@link ConnectorCoordinator}.
+ * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -43,7 +42,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
     for (const cursor of allCursors) {
-      if (isCursorForConnection(cursor, connection) && cursor.spec.externalId) {
+      if (Binding.isForConnection(cursor, connection) && cursor.spec.externalId) {
         ids.add(cursor.spec.externalId);
       }
     }
@@ -85,7 +84,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
       const chosen = availableTargets
         .filter((target) => selected.has(target.id))
         .map((target) => ({ externalId: target.id, name: target.name }));
-      const coordinator = manager.capabilities.get(ConnectorCoordinator);
+      const coordinator = manager.capabilities.get(ConnectorCoordination.ConnectorCoordinator);
       await EffectEx.runAndForwardErrors(
         coordinator.setCursors({
           db,
@@ -115,18 +114,18 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <div className='flex gap-2 py-form-gap'>
+          <Flex gap='sm' classNames='py-form-gap'>
             <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
             </Button>
             <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
             </Button>
-          </div>
+          </Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty label={t('no-available-targets.message')} />
+          <Banner.Empty label={t('no-available-targets.message')} />
         ) : (
           <ScrollArea.Root padding>
             <ScrollArea.Viewport>
@@ -137,10 +136,10 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                     const checkboxId = `sync-target-${target.id}`;
                     return (
                       <Listbox.Item key={target.id} id={target.id}>
-                        <Input.Root>
+                        <Field.Root>
                           <Listbox.ItemContent
                             icon={
-                              <Input.Checkbox
+                              <Field.Checkbox
                                 id={checkboxId}
                                 checked={selected.has(target.id)}
                                 onCheckedChange={() => handleToggle(target.id)}
@@ -149,13 +148,13 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                               />
                             }
                             title={
-                              <Input.Label htmlFor={checkboxId} classNames='text-base text-base-text'>
+                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
                                 {target.name}
-                              </Input.Label>
+                              </Field.Label>
                             }
                             description={target.description}
                           />
-                        </Input.Root>
+                        </Field.Root>
                       </Listbox.Item>
                     );
                   })}

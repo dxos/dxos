@@ -4,23 +4,32 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { Input } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
-import { useFormContext, useFormFieldState } from '../../../hooks';
-import { formTheme } from '../Form.theme';
-import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps, presentationFor } from '../FormField';
-import { type LayoutNode, LayoutParseError, parseLayout } from './parser';
+import { useFormFieldState } from '../../../hooks/index.ts';
+import {
+  FormFieldDispatch,
+  type FormFieldDispatchProps,
+  FormFieldErrorBoundary,
+  FormFieldRow,
+} from '../FormField/index.ts';
+import { type LayoutNode, LayoutParseError, parseLayout } from './parser.ts';
+import { resolveLayoutField } from './resolve-layout-field.ts';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
+
+type FormFieldSetSubset = Pick<
+  FormFieldDispatchProps,
+  'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'
+> & {
+  schema: Schema.Schema<AnyProperties>;
+};
 
 export type FormLayoutProps = {
   /**
@@ -35,13 +44,6 @@ export type FormLayoutProps = {
    */
   name?: string;
 } & Pick<FormFieldSetSubset, 'schema' | 'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'>;
-
-type FormFieldSetSubset = Pick<
-  FormFieldProps,
-  'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'
-> & {
-  schema: Schema.Schema<AnyProperties>;
-};
 
 /**
  * Lays out schema fields according to a `FormLayout` DSL template. The template
@@ -130,96 +132,11 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
             layout={props.layout}
           />
         ) : (
-          <FormField type={type} name={leafName} path={path} required={required} {...props} />
+          <FormFieldDispatch type={type} name={leafName} path={path} required={required} {...props} />
         )}
       </FormFieldErrorBoundary>
     </div>
   );
-};
-
-export type ResolvedLayoutField = {
-  /** Resolved leaf AST node for the field. */
-  type: SchemaAST.AST;
-  /** Path segments (dotted names split on `.`). */
-  segments: string[];
-  /** Last path segment; used to derive the field label when there is no `title` annotation. */
-  leafName: string;
-  /** Resolved `title` annotation for the field, if any. */
-  title?: string;
-  /**
-   * Set when the field resolves to a nested struct carrying a `LabelAnnotation` —
-   * the type literal whose computed label should render in place of the struct's
-   * sub-fields. Undefined for ordinary (non-auto-labelled) fields.
-   */
-  labelType?: SchemaAST.AST;
-  /** Whether the resolved property is required (non-optional). */
-  required: boolean;
-};
-
-/**
- * Walks a dotted path of property names through nested struct ASTs, returning the
- * leaf `PropertySignature` (or `undefined` if any segment is missing).
- */
-const resolvePropertySignature = (ast: SchemaAST.AST, segments: string[]): SchemaAST.PropertySignature | undefined => {
-  let node: SchemaAST.AST = ast;
-  for (let index = 0; index < segments.length; index++) {
-    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isTypeLiteral);
-    if (!typeLiteral) {
-      return undefined;
-    }
-    const prop = SchemaAST.getPropertySignatures(typeLiteral).find(
-      (p) => globalThis.String(p.name) === segments[index],
-    );
-    if (!prop) {
-      return undefined;
-    }
-    if (index === segments.length - 1) {
-      return prop;
-    }
-    node = prop.type;
-  }
-
-  return undefined;
-};
-
-/**
- * Resolves a (possibly dotted) layout field name against a schema.
- * - `origin.code` drills through nested structs to the leaf field.
- * - A name resolving to a nested struct with a `LabelAnnotation` is flagged via
- *   `labelType` so the layout can auto-convert it to a single read-only label.
- * Returns `undefined` when the name does not resolve to a property.
- */
-export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): ResolvedLayoutField | undefined => {
-  const segments = name.split('.');
-  const prop = resolvePropertySignature(schema.ast, segments);
-  if (!prop) {
-    return undefined;
-  }
-
-  // Normalized leaf type (optional unwrapped, refinements stripped, signature-level
-  // annotations merged) — matches how `getProperties` feeds `FormField`.
-  const { type: baseType } = SchemaEx.getBaseType(prop);
-  const type =
-    prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
-      ? ({ ...baseType, annotations: { ...baseType.annotations, ...prop.annotations } } as SchemaAST.AST)
-      : baseType;
-
-  const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-
-  // Label detection reads the *raw* property type: `SchemaEx.getBaseType`'s `encodedBoundAST`
-  // strips annotations from non-keyword inner types (e.g. nested structs), which would
-  // drop the `LabelAnnotation` we rely on here.
-  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isTypeLiteral);
-  const labelled = labelType != null && Option.isSome(Annotation.LabelAnnotation.getFromAst(labelType));
-
-  return {
-    type,
-    segments,
-    leafName: segments[segments.length - 1],
-    title,
-    labelType: labelled ? labelType : undefined,
-    required: !prop.isOptional,
-  };
 };
 
 type LabelFieldProps = {
@@ -230,13 +147,10 @@ type LabelFieldProps = {
 };
 
 /**
- * Renders a nested struct value as its computed label (via `LabelAnnotation`),
- * as a single read-only text. Empty values are omitted, mirroring the static
- * presentation of regular fields.
+ * Renders a nested struct value as its computed label (via `LabelAnnotation`), as a single
+ * read-only row. Empty values are omitted, mirroring the static presentation of regular fields.
  */
 const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
-  const { variant = 'default' } = useFormContext(FORM_LAYOUT_NAME);
-  const styles = formTheme.styles({ variant });
   const { getValue } = useFormFieldState(FORM_LAYOUT_NAME, path);
   const value = getValue();
   const text = value == null ? undefined : Annotation.getLabelWithSchema(schema, value);
@@ -244,19 +158,11 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
     return null;
   }
 
-  const presentation = presentationFor(layout);
   return (
-    <Input.Root>
-      <div className={styles.field()}>
-        {presentation.showLabel && (
-          <FormFieldLabel variant={variant} readonly label={label} path={SchemaEx.createJsonPath(path)} />
-        )}
-        <div className={styles.fieldControl()}>
-          <p className='truncate min-w-0' title={text}>
-            {text}
-          </p>
-        </div>
-      </div>
-    </Input.Root>
+    <FormFieldRow label={label} readonly standalone presentation={layout}>
+      <p className='truncate min-w-0' title={text}>
+        {text}
+      </p>
+    </FormFieldRow>
   );
 };

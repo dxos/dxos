@@ -2,11 +2,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import { getSpace } from '@dxos/client/echo';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { TranscriptOperation } from '@dxos/plugin-transcription/types';
-import { getSpace } from '@dxos/react-client/echo';
+import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
 import { Text } from '@dxos/schema';
 
 import { Meeting, MeetingOperation } from '#types';

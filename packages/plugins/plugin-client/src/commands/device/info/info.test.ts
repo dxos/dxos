@@ -8,8 +8,9 @@ import * as Effect from 'effect/Effect';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
+import { toPublicKey } from '@dxos/protocols/buf';
 
-import { handler } from './info';
+import { handler } from './info.ts';
 
 describe('device info', () => {
   it('should show device info', () =>
@@ -23,6 +24,6 @@ describe('device info', () => {
       const parsed = TestConsole.parseJson<{ deviceKey: string; profile: unknown }>(logs[0]);
       expect(parsed).toHaveProperty('deviceKey');
       expect(parsed).toHaveProperty('profile');
-      expect(parsed.deviceKey).toBe(client.halo.device?.deviceKey.toHex());
+      expect(parsed.deviceKey).toBe(toPublicKey(client.halo.device?.deviceKey)?.toHex());
     }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

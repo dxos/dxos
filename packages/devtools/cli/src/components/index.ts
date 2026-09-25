@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './render';
+export * from './render.tsx';
 
-export * from './App';
-export * from './Table';
+export * from './App.tsx';
+export * from './Table.tsx';

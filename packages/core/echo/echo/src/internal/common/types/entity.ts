@@ -54,11 +54,11 @@ const isBrandCarrier = (value: unknown): boolean =>
  * Returns `undefined` for raw schemas (no slot) and inputs that cannot carry a brand.
  * Single point-of-cast for the slot lookup.
  */
-export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
+export const getStaticTypeSchema = (value: unknown): Schema.Codec<any, any> | undefined => {
   if (!isBrandCarrier(value)) {
     return undefined;
   }
-  return (value as { [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext })[StaticTypeSchemaSlot];
+  return (value as { [StaticTypeSchemaSlot]?: Schema.Codec<any, any> })[StaticTypeSchemaSlot];
 };
 
 /**
@@ -114,7 +114,7 @@ export type UnknownTypeSchemaBrandId = typeof UnknownTypeSchemaBrandId;
  * can pattern-match on it; arbitrary `Schema.Schema` values do not satisfy
  * this shape.
  */
-export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Schema<A, any, never> {
+export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Codec<A, any, never> {
   readonly [UnknownTypeSchemaBrandId]: K;
 }
 
@@ -127,7 +127,7 @@ export enum EntityKind {
   Type = 'type',
 }
 
-export const EntityKindSchema = Schema.Enums(EntityKind);
+export const EntityKindSchema = Schema.Enum(EntityKind);
 
 /**
  * Typename for generic object references (Type.Obj / Ref.Ref(Obj.Unknown)).

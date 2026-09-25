@@ -3,7 +3,7 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -26,13 +26,13 @@ import {
   useLayout,
   useSelectionEvents,
   useShortcuts,
-} from '../../hooks';
-import { rectContains } from '../../layout';
-import { type TestId } from '../defs';
-import { eventsNone, styles } from '../styles';
-import { Frame } from './Frame';
-import { getShapeBounds } from './Shape';
-import { Shapes } from './Shapes';
+} from '../../hooks/index.ts';
+import { rectContains } from '../../layout/index.ts';
+import { type TestId } from '../defs.ts';
+import { eventsNone, styles } from '../styles.tsx';
+import { Frame } from './Frame.tsx';
+import { getShapeBounds } from './shape-defs.ts';
+import { Shapes } from './Shapes.tsx';
 
 /**
  * Main canvas component.

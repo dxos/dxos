@@ -20,8 +20,6 @@
     "@storybook/addon-docs": "catalog:",
     "@storybook/addon-links": "catalog:",
     "@storybook/addon-themes": "catalog:",
-    "@storybook/addon-vitest": "catalog:",
-    "@storybook/builder-vite": "catalog:",
     "@storybook/web-components-vite": "catalog:",
     "lit": "catalog:",
     "storybook": "catalog:",

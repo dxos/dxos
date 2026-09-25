@@ -1,3 +1,4 @@
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2026 DXOS.org
 //
@@ -5,8 +6,10 @@
 // Two contexts (Item / Input) instead of one — performance optimization
 // from the original SearchList: items don't subscribe to query / input
 // state, so typing in the input doesn't re-render every option.
-
-import { createContext } from '@radix-ui/react-context';
+//
+// Kept out of `Picker.tsx` (and not re-exported from it): react-refresh only fast-refreshes a module
+// whose exports are all components, so contexts and hooks exported beside them force a full page
+// reload on every edit.
 
 /** Stable: items subscribe to selection, registry. Doesn't change on query. */
 export type PickerItemContextValue = {

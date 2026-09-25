@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { trim } from '@dxos/util';
 
-import { SemanticIndexError } from '../../errors';
-import { DEFAULT_MODEL } from '../stages/extract';
-import { type SemanticQuery } from './query-builder';
+import { SemanticIndexError } from '../../errors.ts';
+import { DEFAULT_MODEL } from '../stages/extract.ts';
+import { type SemanticQuery } from './query-builder.ts';
 
 const QueryShape = Schema.Struct({
   subjectEntity: Schema.optional(Schema.String),
@@ -59,6 +59,6 @@ export const generateQuery = (
 
     return value;
   }).pipe(
-    Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
+    Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to generate query', cause })),
   );

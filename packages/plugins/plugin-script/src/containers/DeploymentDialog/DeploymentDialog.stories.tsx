@@ -15,7 +15,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeploymentDialog } from './DeploymentDialog';
+import { DeploymentDialog } from './DeploymentDialog.tsx';
 
 const DeploymentDialogStory = () => {
   const accessToken = useMemo(
@@ -51,7 +51,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin.make({})],
     }),
   ],
 } satisfies Meta<typeof DeploymentDialogStory>;

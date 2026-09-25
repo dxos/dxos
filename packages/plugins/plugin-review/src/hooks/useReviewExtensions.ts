@@ -5,16 +5,15 @@
 import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { getSpace } from '@dxos/react-client/echo';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
@@ -27,11 +26,12 @@ import {
 } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { versionDiff } from '../extensions';
-import { ReviewCapabilities } from '../types';
-import { authorHue, hueColour } from '../util';
-import { type VersionedEditor } from './useVersionedEditor';
-import { type useVersioning } from './useVersioning';
+import { ReviewCapabilities } from '#types';
+
+import { versionDiff } from '../extensions/index.ts';
+import { authorHue, hueColour } from '../util/index.ts';
+import { type VersionedEditor } from './useVersionedEditor.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;
@@ -147,11 +147,11 @@ export const useReviewExtensions = ({
   );
 
   // Live-resolved suggestion sources for the ambient overlay, fed by the (invisible) provider
-  // bridge in the container; empty until a provider is contributed (plugin-comments) — the overlay
+  // bridge in the container; empty until a provider is contributed — the overlay
   // then simply renders nothing.
   const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([]);
 
-  // The ambient multi-author suggestion overlay (shared with plugin-comments via `@dxos/ui-editor`,
+  // The ambient multi-author suggestion overlay (shared with the markdown editor via `@dxos/ui-editor`,
   // the leaf both depend on) lives in its own compartment, reconfigured live as the resolved sources
   // or the review mode change — it must never remount the editor (which would rebind automerge and
   // lose scroll/selection).
@@ -185,7 +185,7 @@ export const useReviewExtensions = ({
 
   // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
   // the inline markers attribute the change by colour. Resolved against the space members.
-  const members = useMembers(getSpace(object)?.id);
+  const members = useMembers(Obj.getDatabase(object)?.spaceId);
   const suggestColour = useMemo(
     () => (activeBranch ? hueColour(authorHue(activeBranch, members)) : undefined),
     [activeBranch, members],

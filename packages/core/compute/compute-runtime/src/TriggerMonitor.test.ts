@@ -2,28 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService } from '@dxos/ai';
-import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger, type TriggerEvent } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
+import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person } from '@dxos/types';
 
-import * as ProcessManager from './ProcessManager';
-import * as RemoteTriggerManager from './RemoteTriggerManager';
-import { credentialsLayerConfig } from './services/credentials';
-import * as TriggerMonitor from './TriggerMonitor';
-import { TriggerDispatcher } from './triggers/trigger-dispatcher';
-import { TriggerStateStore } from './triggers/trigger-state-store';
+import * as ProcessManager from './ProcessManager.ts';
+import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
+import { credentialsLayerConfig } from './services/credentials.ts';
+import * as TriggerMonitor from './TriggerMonitor.ts';
+import { TriggerDispatcher } from './triggers/trigger-dispatcher.ts';
+import { TriggerStateStore } from './triggers/trigger-state-store.ts';
 
 /**
  * Environment providing the {@link TriggerMonitorLayer}'s dependencies
@@ -307,13 +314,36 @@ describe('TriggerMonitor', () => {
           yield* Database.add(trigger);
           yield* dispatcher.refreshTriggers();
 
-          // The subscription re-derives on the default runtime via `Effect.runPromise`, so poll in
-          // real time (bounded to ~3s). `it.effect` installs a `TestClock`, so `Effect.sleep` would
-          // never advance here; `setTimeout` waits against the wall clock instead.
-          const waitReal = Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 20)));
-          for (let attempt = 0; attempt < 150 && registry.get(monitor.triggers).length === 0; attempt++) {
-            yield* waitReal;
-          }
+          // The subscription re-derives on the default runtime via `Effect.runPromise`, so subscribe
+          // to the atom itself and wait for the derivation to land, rather than guessing how long it
+          // takes. `it.effect` installs a `TestClock`, so `Effect.sleep` would never advance here.
+          yield* Effect.callback<void>((resume) => {
+            // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
+            // returns — reading `unsubscribe` there would hit the temporal dead zone, and a
+            // synchronous `resume` skips Effect's returned-finalizer path entirely (it only runs
+            // on interruption), so an immediate match unsubscribes directly instead of relying on it.
+            let unsubscribe: (() => void) | undefined;
+            let matchedBeforeSubscribeReturned = false;
+            unsubscribe = registry.subscribe(
+              monitor.triggers,
+              (states) => {
+                if (states.length > 0) {
+                  if (unsubscribe) {
+                    unsubscribe();
+                  } else {
+                    matchedBeforeSubscribeReturned = true;
+                  }
+                  resume(Effect.void);
+                }
+              },
+              { immediate: true },
+            );
+            if (matchedBeforeSubscribeReturned) {
+              unsubscribe();
+              return;
+            }
+            return Effect.sync(() => unsubscribe?.());
+          }).pipe(Effect.timeout(Duration.seconds(3)));
 
           const states = registry.get(monitor.triggers);
           expect(states.length).toBe(1);

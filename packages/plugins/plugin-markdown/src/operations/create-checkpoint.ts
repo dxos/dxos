@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { Version } from '@dxos/versioning';
 
-import { Markdown, MarkdownOperation } from '../types';
+import { Markdown, MarkdownOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.CreateCheckpoint> =
   MarkdownOperation.CreateCheckpoint.pipe(

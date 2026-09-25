@@ -17,7 +17,7 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 

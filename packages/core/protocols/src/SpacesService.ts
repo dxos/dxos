@@ -2,20 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import {
+  ContactSchema,
+  CreateEpochResponseSchema,
+  JoinSpaceResponseSchema,
+  QuerySpacesResponseSchema,
+  SpaceSchema,
+} from './buf/proto/gen/dxos/client/services_pb.ts';
+import { CredentialSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
+import { GossipMessageSchema } from './buf/proto/gen/dxos/mesh/teleport/gossip_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, publicKey } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
-export const MembershipPolicy = Schema.Enums({
+export const MembershipPolicy = Schema.Enum({
   INVITE: 0,
   LOCKED: 1,
 });
@@ -27,7 +37,7 @@ export const CreateSpaceRequest = Schema.Struct({
 });
 export interface CreateSpaceRequest extends Schema.Schema.Type<typeof CreateSpaceRequest> {}
 
-export const SpaceState = Schema.Enums({
+export const SpaceState = Schema.Enum({
   INVALID: 0,
   SPACE_CLOSED: 1,
   SPACE_INACTIVE: 2,
@@ -41,7 +51,7 @@ export const SpaceState = Schema.Enums({
 });
 export type SpaceState = Schema.Schema.Type<typeof SpaceState>;
 
-export const EdgeReplicationSetting = Schema.Enums({
+export const EdgeReplicationSetting = Schema.Enum({
   DISABLED: 0,
   ENABLED: 1,
 });
@@ -60,7 +70,9 @@ export interface UpdateSpaceRequest extends Schema.Schema.Type<typeof UpdateSpac
 export const PostMessageRequest = Schema.Struct({
   spaceKey: publicKey,
   channel: Schema.String,
-  message: protoMessage('google.protobuf.Any'),
+  // Callers post arbitrary payloads keyed by '@type'; the proxy packs them, since the legacy codec
+  // silently wrote an empty Any here (see `buf/shape-compat.test.ts`).
+  message: bufMessage(AnySchema),
 });
 export interface PostMessageRequest extends Schema.Schema.Type<typeof PostMessageRequest> {}
 
@@ -70,9 +82,16 @@ export const SubscribeMessagesRequest = Schema.Struct({
 });
 export interface SubscribeMessagesRequest extends Schema.Schema.Type<typeof SubscribeMessagesRequest> {}
 
+export const SubscribeMessagesResponse = Schema.Union([
+  /** Sent once the channel listener is registered; messages posted earlier may have been dropped. */
+  Schema.TaggedStruct('Ready', {}),
+  Schema.TaggedStruct('Message', { message: bufMessage(GossipMessageSchema) }),
+]);
+export type SubscribeMessagesResponse = Schema.Schema.Type<typeof SubscribeMessagesResponse>;
+
 export const WriteCredentialsRequest = Schema.Struct({
   spaceKey: publicKey,
-  credentials: Schema.optional(mutableArray(protoMessage('dxos.halo.credentials.Credential'))),
+  credentials: Schema.optional(mutableArray(bufMessage(CredentialSchema))),
 });
 export interface WriteCredentialsRequest extends Schema.Schema.Type<typeof WriteCredentialsRequest> {}
 
@@ -90,7 +109,7 @@ export interface QueryCredentialsRequest extends Schema.Schema.Type<typeof Query
  * - REPLACE_AUTOMERGE_ROOT: Replace the current automerge root with a new one specified by the user.
  * - MIGRATE_REFERENCES_TO_DXN: Upgrade references data structure.
  */
-export const Migration = Schema.Enums({
+export const Migration = Schema.Enum({
   NONE: 0,
   INIT_AUTOMERGE: 1,
   PRUNE_AUTOMERGE_ROOT_HISTORY: 2,
@@ -110,11 +129,7 @@ export const CreateEpochRequest = Schema.Struct({
 });
 export interface CreateEpochRequest extends Schema.Schema.Type<typeof CreateEpochRequest> {}
 
-// `CreateEpochResponse.controlTimeframe` embeds the `Timeframe` proto substitution (a class with a
-// `frames()` accessor), which cannot be modeled as an inline Effect struct, so the response stays
-// protobuf-encoded (`protoMessage`).
-
-export const SpaceMemberRole = Schema.Enums({
+export const SpaceMemberRole = Schema.Enum({
   INVALID: 0,
   ADMIN: 1,
   EDITOR: 2,
@@ -132,7 +147,7 @@ export const UpdateMemberRoleRequest = Schema.Struct({
 export interface UpdateMemberRoleRequest extends Schema.Schema.Type<typeof UpdateMemberRoleRequest> {}
 
 export const AdmitContactRequest = Schema.Struct({
-  contact: protoMessage('dxos.client.services.Contact'),
+  contact: bufMessage(ContactSchema),
   role: SpaceMemberRole,
   spaceKey: publicKey,
 });
@@ -148,7 +163,7 @@ export interface JoinBySpaceKeyRequest extends Schema.Schema.Type<typeof JoinByS
  * - BINARY: Tar-based binary archive (default).
  * - JSON: JSON encoding of {@link dxos.echo.db.SerializedSpace}.
  */
-export const SpaceArchiveFormat = Schema.Enums({
+export const SpaceArchiveFormat = Schema.Enum({
   BINARY: 0,
   JSON: 1,
 });
@@ -199,7 +214,7 @@ export interface ImportSpaceResponse extends Schema.Schema.Type<typeof ImportSpa
 export class Rpcs extends RpcGroup.make(
   Rpc.make('createSpace', {
     payload: CreateSpaceRequest,
-    success: protoMessage('dxos.client.services.Space'),
+    success: bufMessage(SpaceSchema),
     error: serviceError,
   }),
   Rpc.make('updateSpace', {
@@ -207,7 +222,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('querySpaces', {
-    success: protoMessage('dxos.client.services.QuerySpacesResponse'),
+    success: bufMessage(QuerySpacesResponseSchema),
     error: serviceError,
     stream: true,
   }),
@@ -221,7 +236,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('joinBySpaceKey', {
     payload: JoinBySpaceKeyRequest,
-    success: protoMessage('dxos.client.services.JoinSpaceResponse'),
+    success: bufMessage(JoinSpaceResponseSchema),
     error: serviceError,
   }),
   /**
@@ -236,7 +251,7 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('subscribeMessages', {
     payload: SubscribeMessagesRequest,
-    success: protoMessage('dxos.mesh.teleport.gossip.GossipMessage'),
+    success: SubscribeMessagesResponse,
     error: serviceError,
     stream: true,
   }),
@@ -252,13 +267,13 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('queryCredentials', {
     payload: QueryCredentialsRequest,
-    success: protoMessage('dxos.halo.credentials.Credential'),
+    success: bufMessage(CredentialSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('createEpoch', {
     payload: CreateEpochRequest,
-    success: protoMessage('dxos.client.services.CreateEpochResponse'),
+    success: bufMessage(CreateEpochResponseSchema),
     error: serviceError,
   }),
   Rpc.make('exportSpace', {
@@ -280,4 +295,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `SpacesService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/SpacesService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/SpacesService') {}

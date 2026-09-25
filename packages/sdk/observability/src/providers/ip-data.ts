@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { type DataProvider } from '../observability';
+import * as Observability from '../Observability.ts';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -37,7 +37,10 @@ const getIPData = Effect.fn(function* (config: Config) {
   const httpClient = yield* HttpClient.HttpClient;
 
   // Disable tracing to avoid CORS errors from traceparent header on cross-origin requests.
-  const httpClientNoTrace = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+  // v4 dropped the combinator; the predicate is a context reference provided around the response.
+  const httpClientNoTrace = httpClient.pipe(
+    HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+  );
 
   // Check cache first.
   // v2 key discards entries cached by the previous schema (which used `country` instead of `country_name`).
@@ -56,9 +59,9 @@ const getIPData = Effect.fn(function* (config: Config) {
   const data = yield* HttpClientRequest.get(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`).pipe(
     httpClientNoTrace.execute,
     Effect.flatMap((res) => res.json),
-    Effect.flatMap(Schema.decodeUnknown(IPData)),
+    Effect.flatMap(Schema.decodeUnknownEffect(IPData)),
     // On failure fall back to stale cache rather than emitting no tags.
-    Effect.catchAll((err) =>
+    Effect.catch((err) =>
       Effect.sync(() => {
         log.warn('ipdata fetch failed; IP geolocation tags will be absent or stale', { err });
         return cachedData?.data;
@@ -75,7 +78,7 @@ const getIPData = Effect.fn(function* (config: Config) {
 
 /** Fetches IP geolocation data and sets city/region/country tags on the observability instance. */
 export const provider =
-  (config: Config): DataProvider =>
+  (config: Config): Observability.DataProvider =>
   (observability) =>
     Effect.gen(function* () {
       const ipData = yield* getIPData(config);
@@ -92,7 +95,7 @@ export const provider =
       });
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         Effect.sync(() => {
           log.warn('ipdata provider failed', { err });
         }),

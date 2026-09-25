@@ -1,0 +1,343 @@
+#!/usr/bin/env node
+//
+// Copyright 2026 DXOS.org
+//
+
+// Creates one annotated git tag and one GitHub Release per Changesets `fixed` group, replacing the
+// per-package tag+release fan-out that `changesets/action` performs. Both groups are lockstep, so every
+// member's tag named the identical commit — one tag per group is the same information in 2 refs instead of
+// ~300, and GitHub's ref backend rejected roughly half of those ~300 single-ref pushes with
+// `remote: fatal error in commit_refs`.
+//
+// Tag lines: Group A (core/SDK) is `v<version>`, continuing the pre-Changesets `v0.10.0` series; Group B
+// (plugins + CLI) is `plugins-v<version>` on its own independent line.
+//
+// Release bodies are assembled from the member packages' `CHANGELOG.md` `## <version>` sections, deduped by
+// changeset commit so each entry appears once per group rather than once per package that recorded it.
+//
+// Usage:
+//   node scripts/release-groups.mjs               # tag + push + create releases (CI)
+//   node scripts/release-groups.mjs --dry-run     # print tags and bodies, write nothing
+//   node scripts/release-groups.mjs --ref <sha>   # tag a commit other than HEAD (backfill)
+//   node scripts/release-groups.mjs --no-release  # tag and push only, skip the GitHub API
+
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+const DRY_RUN = process.argv.includes('--dry-run');
+const NO_RELEASE = process.argv.includes('--no-release');
+const REF = argValue('--ref') ?? 'HEAD';
+
+const REPO = process.env.GITHUB_REPOSITORY ?? 'dxos/dxos';
+const TOKEN = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+
+// GitHub rejects a release body over 125,000 characters; truncate below that rather than lose the release.
+const MAX_BODY = 120_000;
+
+// Deadlines for the two outbound operations, so a hung API request or git transport fails the step with a
+// diagnosable error instead of burning the job's 90-minute budget.
+const API_TIMEOUT = 60_000;
+const PUSH_TIMEOUT = 300_000;
+
+const BUMP_ORDER = ['patch', 'minor', 'major'];
+
+// stderr is captured, not inherited, so git's own diagnostics don't precede this script's error line.
+const git = (...args) =>
+  execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+
+function argValue(flag) {
+  const index = process.argv.indexOf(flag);
+  return index > 0 ? process.argv[index + 1] : undefined;
+}
+
+/**
+ * Group A holds core/SDK, Group B every `@dxos/plugin-*` plus `@dxos/cli` — identified by membership rather
+ * than by position, so a regenerated `.changeset/config.json` cannot silently swap the two tag lines.
+ */
+const labelGroup = (members) =>
+  members.includes('@dxos/cli')
+    ? { id: 'plugins', title: 'Plugins + CLI', tagPrefix: 'plugins-v' }
+    : { id: 'core', title: 'Core/SDK', tagPrefix: 'v' };
+
+/** Every workspace `package.json`, keyed by package name. */
+function readWorkspacePackages() {
+  const packages = new Map();
+  for (const file of git('ls-files', '*package.json').split('\n')) {
+    if (!file || file.includes('node_modules')) {
+      continue;
+    }
+    let manifest;
+    try {
+      manifest = JSON.parse(readFileSync(join(ROOT, file), 'utf8'));
+    } catch {
+      continue; // Malformed fixtures are not release members.
+    }
+    if (manifest.name) {
+      packages.set(manifest.name, { version: manifest.version, dir: join(ROOT, dirname(file)) });
+    }
+  }
+  return packages;
+}
+
+/**
+ * Splits a `CHANGELOG.md` `## <version>` section into its changeset entries. An entry is a `- <sha>: <text>`
+ * block plus any indented continuation; `- Updated dependencies` and bare `- @dxos/pkg@version` blocks are
+ * dependency bookkeeping that every member repeats, so they are dropped.
+ */
+function parseChangelog(text, version) {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line.trim() === `## ${version}`);
+  if (start < 0) {
+    return [];
+  }
+
+  const entries = [];
+  let bump = 'patch';
+  let block = null;
+
+  const flush = () => {
+    if (!block) {
+      return;
+    }
+    const body = block.lines.join('\n').replace(/\s+$/, '');
+    entries.push({ sha: block.sha, bump: block.bump, body });
+    block = null;
+  };
+
+  for (let index = start + 1; index < lines.length; index++) {
+    const line = lines[index];
+    if (line.startsWith('## ')) {
+      break;
+    }
+
+    const heading = /^### (Major|Minor|Patch) Changes\s*$/.exec(line);
+    if (heading) {
+      flush();
+      bump = heading[1].toLowerCase();
+      continue;
+    }
+
+    if (line.startsWith('- ')) {
+      flush();
+      const entry = /^- ([0-9a-f]{7,40}): (.*)$/.exec(line);
+      if (entry) {
+        block = { sha: entry[1], bump, lines: [`- ${entry[2]}`] };
+      }
+      continue; // A non-changeset bullet ends the previous block without starting one.
+    }
+
+    block?.lines.push(line);
+  }
+  flush();
+
+  return entries;
+}
+
+/** Highest `v`-prefixed tag on this group's line below `version`, for the release's compare link. */
+function previousTag(tagPrefix, version) {
+  const candidates = git('tag', '-l', `${tagPrefix}*`)
+    .split('\n')
+    .filter(Boolean)
+    .map((tag) => ({ tag, parts: tag.slice(tagPrefix.length).split('.').map(Number) }))
+    .filter(({ parts }) => parts.length === 3 && parts.every((part) => Number.isInteger(part)));
+
+  const current = version.split('.').map(Number);
+  const compare = (left, right) => left[0] - right[0] || left[1] - right[1] || left[2] - right[2];
+
+  return candidates
+    .filter(({ parts }) => compare(parts, current) < 0)
+    .sort((left, right) => compare(left.parts, right.parts))
+    .at(-1)?.tag;
+}
+
+function buildBody({ group, version, tag, members, packages, date }) {
+  const entries = new Map();
+  for (const name of members) {
+    const changelog = join(packages.get(name).dir, 'CHANGELOG.md');
+    if (!existsSync(changelog)) {
+      continue;
+    }
+    for (const entry of parseChangelog(readFileSync(changelog, 'utf8'), version)) {
+      // The same changeset lands in every member's changelog; keep one copy at its highest bump level.
+      const existing = entries.get(entry.sha);
+      if (!existing || BUMP_ORDER.indexOf(entry.bump) > BUMP_ORDER.indexOf(existing.bump)) {
+        entries.set(entry.sha, entry);
+      }
+    }
+  }
+
+  const previous = previousTag(group.tagPrefix, version);
+  const heading = previous
+    ? `## [${group.title} ${version}](https://github.com/${REPO}/compare/${previous}...${tag}) (${date})`
+    : `## ${group.title} ${version} (${date})`;
+
+  const sections = [heading, ''];
+  for (const bump of ['major', 'minor', 'patch']) {
+    const matching = [...entries.values()].filter((entry) => entry.bump === bump);
+    if (!matching.length) {
+      continue;
+    }
+    sections.push(`### ${bump[0].toUpperCase()}${bump.slice(1)} Changes`, '');
+    for (const entry of matching) {
+      sections.push(`${entry.body} ([${entry.sha}](https://github.com/${REPO}/commit/${entry.sha}))`, '');
+    }
+  }
+
+  if (entries.size === 0) {
+    sections.push('_No changeset entries recorded for this release._', '');
+  }
+
+  const manifest = members.map((name) => `${name}@${packages.get(name).version}`).join('\n');
+  sections.push(
+    `<details><summary>${members.length} packages in this release</summary>`,
+    '',
+    '```',
+    manifest,
+    '```',
+    '',
+    '</details>',
+  );
+
+  const body = sections.join('\n');
+  if (body.length <= MAX_BODY) {
+    return body;
+  }
+  const notice = `\n\n_Changelog truncated — see the [full diff](https://github.com/${REPO}/compare/${previous ?? tag}...${tag})._`;
+  return body.slice(0, MAX_BODY - notice.length) + notice;
+}
+
+async function api(method, path, body, { allow404 = false } = {}) {
+  if (!TOKEN) {
+    throw new Error('GITHUB_TOKEN (or GH_TOKEN) is required to create releases; pass --no-release to skip');
+  }
+  const response = await fetch(`https://api.github.com${path}`, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: body && JSON.stringify(body),
+    signal: AbortSignal.timeout(API_TIMEOUT),
+  });
+  if (allow404 && response.status === 404) {
+    return undefined;
+  }
+  if (!response.ok) {
+    throw new Error(`${method} ${path} → ${response.status} ${await response.text()}`);
+  }
+  return response.status === 204 ? undefined : response.json();
+}
+
+/** Re-runs after a partial failure must converge, so an existing release is updated rather than duplicated. */
+async function upsertRelease({ tag, body, sha }) {
+  // Only a 404 means "no such release" — letting any other error fall through to the create path would
+  // turn a transient 5xx into a 422 `already_exists` and break the converging re-run.
+  const existing = await api('GET', `/repos/${REPO}/releases/tags/${encodeURIComponent(tag)}`, undefined, {
+    allow404: true,
+  });
+  if (existing) {
+    await api('PATCH', `/repos/${REPO}/releases/${existing.id}`, { name: tag, body });
+    console.log(`Updated release ${tag}`);
+    return;
+  }
+  // `target_commitish` pins the release to REF: when the tag ref is missing, GitHub creates it from the
+  // default branch head instead, which would silently name a different commit than the one published.
+  await api('POST', `/repos/${REPO}/releases`, { tag_name: tag, name: tag, body, target_commitish: sha });
+  console.log(`Created release ${tag}`);
+}
+
+async function pushTags(tags) {
+  const refs = tags.map((tag) => `refs/tags/${tag}`);
+  // Authenticate `origin` with a header instead of pushing to a credential-bearing URL. git-lfs treats an
+  // ad-hoc URL as an unknown remote, so it cannot tell which objects the remote already holds and re-uploads
+  // them — 46 MB for a push whose own payload is 194 bytes — and warns that the remote carries credentials.
+  // Scoped to this one invocation via `-c`, so nothing is written to the repo config.
+  const auth = TOKEN
+    ? ['-c', `http.extraheader=AUTHORIZATION: basic ${Buffer.from(`x-access-token:${TOKEN}`).toString('base64')}`]
+    : [];
+  for (let attempt = 1; ; attempt++) {
+    try {
+      execFileSync('git', [...auth, 'push', 'origin', ...refs], {
+        cwd: ROOT,
+        stdio: 'inherit',
+        timeout: PUSH_TIMEOUT,
+      });
+      return;
+    } catch (err) {
+      if (attempt >= 3) {
+        throw err;
+      }
+      console.warn(`Tag push failed (attempt ${attempt}); retrying...`);
+      await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
+    }
+  }
+}
+
+try {
+  const config = JSON.parse(readFileSync(join(ROOT, '.changeset/config.json'), 'utf8'));
+  const packages = readWorkspacePackages();
+  const sha = git('rev-parse', REF);
+  const date = git('show', '-s', '--format=%cs', sha);
+
+  const releases = [];
+  for (const members of config.fixed ?? []) {
+    const group = labelGroup(members);
+    // Fail before any tag or release exists: a member missing from the workspace would otherwise surface as
+    // a TypeError inside buildBody, after `changeset publish` has already pushed to npm.
+    const missing = members.filter((name) => !packages.get(name));
+    if (missing.length) {
+      throw new Error(`Group ${group.id} lists packages absent from the workspace: ${missing.join(', ')}`);
+    }
+    const versions = new Set(members.map((name) => packages.get(name).version));
+    if (versions.size !== 1) {
+      throw new Error(`Group ${group.id} is not in lockstep: found versions ${[...versions].join(', ')}`);
+    }
+    const version = [...versions][0];
+    const tag = `${group.tagPrefix}${version}`;
+    releases.push({ group, version, tag, body: buildBody({ group, version, tag, members, packages, date }) });
+  }
+
+  if (releases.length !== 2 || new Set(releases.map(({ group }) => group.id)).size !== 2) {
+    throw new Error(`Expected one core and one plugins group, got: ${releases.map(({ tag }) => tag).join(', ')}`);
+  }
+
+  if (DRY_RUN) {
+    for (const { tag, body } of releases) {
+      console.log(`\n${'='.repeat(80)}\n${tag} at ${sha} (${body.length} chars)\n${'='.repeat(80)}\n${body}`);
+    }
+    process.exit(0);
+  }
+
+  for (const { tag } of releases) {
+    if (git('tag', '-l', tag)) {
+      // Reusing a tag is only safe if it is the tag this run would have written: a stale one names the wrong
+      // commit, and a lightweight one breaks the annotated-tag contract. Either would be pushed and then
+      // preserved by the release upsert.
+      if (git('cat-file', '-t', `refs/tags/${tag}`) !== 'tag' || git('rev-parse', `${tag}^{commit}`) !== sha) {
+        throw new Error(`Existing tag ${tag} is not an annotated tag at ${sha} — delete it or pick another ref`);
+      }
+      console.log(`Tag ${tag} already exists locally`);
+    } else {
+      git('tag', '-a', tag, '-m', tag, sha);
+      console.log(`Tagged ${sha.slice(0, 9)} as ${tag}`);
+    }
+  }
+  // Every group tag is pushed, including ones that already existed locally: a previous run may have created
+  // a tag and failed before it reached the remote. Pushing a ref the remote already has is a no-op, while a
+  // tag that disagrees with the remote is rejected rather than silently moved.
+  await pushTags(releases.map(({ tag }) => tag));
+
+  if (!NO_RELEASE) {
+    for (const { tag, body } of releases) {
+      await upsertRelease({ tag, body, sha });
+    }
+  }
+} catch (err) {
+  console.error(`::error::release-groups failed: ${err.message}`);
+  process.exit(1);
+}

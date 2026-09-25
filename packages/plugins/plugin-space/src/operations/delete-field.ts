@@ -2,19 +2,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceOperation.DeleteField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const view = input.view as any;
+      const view = yield* Database.load(input.view);
       const db = Obj.getDatabase(view);
       invariant(db);
       const typeUri = getTypeURIFromQuery(view.query.ast);

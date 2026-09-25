@@ -6,18 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { type FunctionNotFoundError, type Operation, Template } from '@dxos/compute';
-import { Database, Obj, type Registry } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-client';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type FunctionNotFoundError } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
+import * as Template from '@dxos/compute/Template';
+import { Database, type Error, Obj, type Registry } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AiAssistantError } from '../util';
-import type * as AiRequest from './AiRequest';
-import { ArtifactDiffResolver } from './artifact-diff';
+import { AiAssistantError } from '../util/index.ts';
+import type * as AiRequest from './AiRequest.ts';
+import { ArtifactDiffResolver } from './artifact-diff.ts';
 
 /**
  * Formats the system prompt.
@@ -30,7 +30,7 @@ export const formatSystemPrompt = ({
   instructions = [],
 }: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
   string,
-  FunctionNotFoundError | EntityNotFoundError,
+  FunctionNotFoundError | Error.EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
@@ -132,7 +132,8 @@ export const formatUserPrompt = ({
 
       log('version', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
-        if (ObjectVersion.equals(version, versions.get(id)!)) {
+        const lastVersion = versions.get(id);
+        if (lastVersion && Obj.compareVersions(version, lastVersion) === 'equal') {
           artifactDiff.delete(id);
           continue;
         }
@@ -152,12 +153,13 @@ export const formatUserPrompt = ({
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));
 
-const gatherObjectVersions = (messages: Message.Message[]): Map<EntityId, ObjectVersion> => {
-  const artifactIds = new Map<EntityId, ObjectVersion>();
+const gatherObjectVersions = (messages: Message.Message[]): Map<EntityId, Obj.Version> => {
+  const artifactIds = new Map<EntityId, Obj.Version>();
   for (const message of messages) {
     for (const block of message.blocks) {
-      if (block._tag === 'anchor') {
-        artifactIds.set(block.objectId, block.version as ObjectVersion);
+      // An anchor's `version` is persisted as `Schema.Unknown`, so narrow rather than assume the shape.
+      if (block._tag === 'anchor' && Obj.isVersion(block.version)) {
+        artifactIds.set(block.objectId, block.version);
       }
     }
   }
@@ -166,7 +168,7 @@ const gatherObjectVersions = (messages: Message.Message[]): Map<EntityId, Object
 };
 
 const createArtifactUpdateBlock = (
-  artifactDiff: Map<EntityId, { version: ObjectVersion; diff?: string }>,
+  artifactDiff: Map<EntityId, { version: Obj.Version; diff?: string }>,
 ): ContentBlock.Any => {
   return {
     _tag: 'text',

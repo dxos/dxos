@@ -3,24 +3,24 @@
 //
 
 import { it } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { URI } from '@dxos/keys';
 
-import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime } from '../testing';
-import { ComputeGraphModel, DEFAULT_OUTPUT, ValueBag } from '../types';
+import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { TestRuntime } from '../testing/index.ts';
+import { ComputeGraphModel, DEFAULT_OUTPUT, ValueBag } from '../types/index.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(
@@ -39,7 +39,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
-  it.scoped(
+  it.effect(
     'text output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -62,7 +62,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 
   // (Template + Chat) ==(systemPrompt + prompt)==> GPT ===> output.
   // The chat input maps to the graph input node in headless execution; the template supplies the system prompt.
-  it.scoped(
+  it.effect(
     'template system prompt + chat prompt -> gpt -> output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -84,7 +84,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'stream output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -104,9 +104,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           [
             Effect.flatMap(output.values.tokenStream, (tokenStream) =>
               tokenStream.pipe(
-                Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
+                Stream.filterMap((part) => (part.type === 'text-delta' ? Result.succeed(part.delta) : Result.failVoid)),
                 Stream.runCollect,
-                Effect.map(Chunk.toArray),
               ),
             ),
             output.values.text,
@@ -138,7 +137,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //             prompt: 'What is the meaning of life?',
   //           }),
   //         )
-  //         .pipe(Scope.extend(scope));
+  //         .pipe(Scope.provide(scope));
   //
   //       const text: ValueEffect<string> = computeResult.values.text;
   //       const llmTextOutput = yield* text;
@@ -163,7 +162,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //             prompt: 'What is the meaning of life?',
   //           }),
   //         )
-  //         .pipe(Scope.extend(scope));
+  //         .pipe(Scope.provide(scope));
   //
   //       // log.info('text in test', { text: getDebugName(text) });
   //
@@ -173,7 +172,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   //       const tokens = yield* outputs.values.tokenStream.pipe(
   //         Stream.unwrap,
-  //         Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
+  //         Stream.filterMap((part) => (part.type === 'text-delta' ? Result.succeed(part.delta) : Result.failVoid)),
   //         Stream.tap((token) => Console.log(token)),
   //         Stream.runCollect,
   //         Effect.map(Chunk.toArray),
@@ -189,44 +188,41 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 });
 const gpt1 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'gpt1-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'gpt1-GPT', type: 'gpt' })
-    .createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' })
-    .createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
+  model.createNode({ id: 'gpt1-INPUT', type: NODE_INPUT });
+  model.createNode({ id: 'gpt1-GPT', type: 'gpt' });
+  model.createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' });
+  model.createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
 
   return model;
 };
 
 const templateGpt = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'tg-INPUT', type: NODE_INPUT })
-    .createNode({
-      id: 'tg-TEMPLATE',
-      type: 'template',
-      valueType: 'string',
-      value: 'You are a helpful assistant. Always reply concisely.',
-    })
-    .createNode({ id: 'tg-GPT', type: 'gpt' })
-    .createNode({ id: 'tg-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'tg-INPUT', property: 'prompt' }, { node: 'tg-GPT', property: 'prompt' })
-    .createEdge({ node: 'tg-TEMPLATE', property: DEFAULT_OUTPUT }, { node: 'tg-GPT', property: 'systemPrompt' })
-    .createEdge({ node: 'tg-GPT', property: 'text' }, { node: 'tg-OUTPUT', property: 'text' });
+  model.createNode({ id: 'tg-INPUT', type: NODE_INPUT });
+  model.createNode({
+    id: 'tg-TEMPLATE',
+    type: 'template',
+    valueType: 'string',
+    value: 'You are a helpful assistant. Always reply concisely.',
+  });
+  model.createNode({ id: 'tg-GPT', type: 'gpt' });
+  model.createNode({ id: 'tg-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'tg-INPUT', property: 'prompt' }, { node: 'tg-GPT', property: 'prompt' });
+  model.createEdge({ node: 'tg-TEMPLATE', property: DEFAULT_OUTPUT }, { node: 'tg-GPT', property: 'systemPrompt' });
+  model.createEdge({ node: 'tg-GPT', property: 'text' }, { node: 'tg-OUTPUT', property: 'text' });
 
   return model;
 };
 
 const gpt2 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'gpt2-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'gpt2-GPT', type: 'gpt' })
-    .createNode({ id: 'gpt2-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' })
-    .createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' })
-    .createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });
+  model.createNode({ id: 'gpt2-INPUT', type: NODE_INPUT });
+  model.createNode({ id: 'gpt2-GPT', type: 'gpt' });
+  model.createNode({ id: 'gpt2-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' });
+  model.createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' });
+  model.createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });
 
   return model;
 };

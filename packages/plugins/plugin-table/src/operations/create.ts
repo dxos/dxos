@@ -2,11 +2,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { TableOperation } from '../types';
+import { TableOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TableOperation.Create> = TableOperation.Create.pipe(
   Operation.withHandler(

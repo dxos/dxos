@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,27 +43,23 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./esbuild-plugin": {
-      "source": "./src/plugin/esbuild-plugin.ts",
       "types": "./dist/types/src/plugin/esbuild-plugin.d.ts",
       "import": "./dist/lib/plugin/esbuild-plugin.mjs"
     },
     "./rollup-plugin": {
-      "source": "./src/plugin/rollup-plugin.ts",
       "types": "./dist/types/src/plugin/rollup-plugin.d.ts",
       "import": "./dist/lib/plugin/rollup-plugin.mjs"
     },
     "./vite-plugin": {
-      "source": "./src/plugin/vite-plugin.ts",
       "types": "./dist/types/src/plugin/vite-plugin.d.ts",
       "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
   },
-  "main": "dist/lib/node/index.cjs",
+  "main": "dist/lib/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -73,14 +69,13 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:",
     "lodash.defaultsdeep": "catalog:",
@@ -89,9 +84,10 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@effect/platform-node": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.ismatch": "catalog:",
-    "webpack": "catalog:"
+    "@types/lodash.ismatch": "catalog:"
   },
   "publishConfig": {
     "access": "public"

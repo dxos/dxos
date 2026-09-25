@@ -5,12 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionManagerImpl } from '../transcription-manager';
+import { TranscriptionManagerImpl } from '../transcription-manager.ts';
 
 /**
  * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it
@@ -21,7 +23,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
       messageEnricher,
@@ -29,7 +31,9 @@ export default Capability.makeModule(
       const client = capabilities.get(ClientCapabilities.Client);
       const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({
-        edgeClient: client.edge.http,
+        // Deliberately no `client.edge`: its getter invariants when EDGE is unconfigured, which
+        // would preempt the transcription endpoint's own (actionable) error.
+        transcriptionEndpoint: getEdgeServiceEndpoint(client.config, EdgeServiceName.Transcription),
         messageEnricher,
         registry,
       });
@@ -42,8 +46,6 @@ export default Capability.makeModule(
       return transcriptionManager;
     };
 
-    return [
-      Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
-    ];
+    return Capability.contribute(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider);
   }),
 );

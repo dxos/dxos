@@ -7,12 +7,25 @@ projects:
   - tools/*/moon.yml
   - vendor/*/moon.yml
 
+experiments:
+  # Required by `cache.unstable_sharedWorktreeCache`.
+  casOutputsCache: true
+
+cache:
+  # One CAS per machine, shared by every worktree: tools/moon-cache/README.md.
+  unstable_sharedWorktreeCache: true
+  cas:
+    # Roughly twenty full builds, evicted LRU. Unset means unbounded.
+    maxSize: '10gb'
+
+# Self-hosted bazel-remote: tools/moon-cache/README.md. Fallback for what the local CAS misses.
 remote:
-  host: 'grpcs://cache.depot.dev'
-  auth:
-    token: 'DEPOT_TOKEN'
-    headers:
-      'X-Depot-Org': 't8fblrl00n'
+  host: 'grpcs://cache.dxos.network:9092'
+  mtls:
+    caCert: '.moon/certs/ca.pem'
+    clientCert: '.moon/certs/client.pem'
+    clientKey: '.moon/certs/client.key'
+    domain: 'cache.dxos.network'
 
 vcs:
   client: git

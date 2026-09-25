@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { defaultMap } from './map';
+import { defaultMap } from './map.ts';
 
 export const symbolSingleton = Symbol('singleton');
 

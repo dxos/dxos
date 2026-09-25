@@ -5,7 +5,7 @@
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { REPLY_REGEXP } from '../util';
+import { REPLY_REGEXP } from '../util/index.ts';
 
 const quotedLineDecoration = Decoration.line({ class: 'text-subdued' });
 

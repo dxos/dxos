@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as AgentSkillOperations from './definitions';
+import { GetContext, Relay, SyncAutomation } from './definitions.ts';
 
-export const AgentSkillHandlers = OperationHandlerSet.lazy(
-  () => import('./get-context'),
-  () => import('./relay'),
-);
+export * as AgentSkillOperations from './definitions.ts';
+
+export const AgentSkillHandlers = OperationHandlerSet.lazy([
+  GetContext.pipe(Operation.lazyHandler(() => import('./get-context.ts'))),
+  Relay.pipe(Operation.lazyHandler(() => import('./relay.ts'))),
+  SyncAutomation.pipe(Operation.lazyHandler(() => import('./sync-automation.ts'))),
+]);

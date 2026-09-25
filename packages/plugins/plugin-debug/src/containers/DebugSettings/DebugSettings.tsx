@@ -4,13 +4,14 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
+import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
@@ -18,14 +19,16 @@ import { setDeep } from '@dxos/util';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
+import { DebugPortSettings } from '../DebugPortSettings/index.ts';
+
 type Toast = {
   title: string;
   description?: string;
 };
 
 const StorageAdapters = {
-  opfs: defs.Runtime.Client.Storage.StorageDriver.WEBFS,
-  idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
+  opfs: defs.Runtime_Client_Storage_StorageDriver.WEBFS,
+  idb: defs.Runtime_Client_Storage_StorageDriver.IDB,
 } as const;
 
 export type DebugSettingsProps = AppSurface.SettingsProps<
@@ -36,11 +39,11 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
   }
 >;
 
-export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onUpload }: DebugSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
-  const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
+  const [storageConfig, setStorageConfig] = useState<ConfigInit>({});
   const client = useClient();
 
   useEffect(() => {
@@ -65,12 +68,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      if (!personalSpace) {
-        log.error('no personal space available for upload');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        log.error('no default space available for upload');
         return;
       }
-      const info = await onUpload(personalSpace.db, new File([file], fileName));
+      const info = await onUpload(defaultSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;
@@ -154,30 +157,31 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Input.Root>
-                <Input.Switch
-                  disabled={!onSettingsChange}
-                  checked={settings.wireframe}
-                  onCheckedChange={handleWireframeChange}
-                />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Input.Root>
-                <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.tracing-panel.label')} description={t('settings.tracing-panel.description')}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
+            <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
+              <Field.Switch
+                disabled={!onSettingsChange}
+                checked={settings.wireframe}
+                onCheckedChange={handleWireframeChange}
+              />
+            </Form.Field>
+            <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
+              <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('settings.tracing-panel.label')}
+              description={t('settings.tracing-panel.description')}
+            >
               <IconButton
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
                 onClick={handleOpenTracingPanel}
               />
-            </Form.Row>
-            <Form.Row
+            </Form.Field>
+            <Form.Field
+              standalone
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
@@ -187,23 +191,27 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                 label={t('settings.download-diagnostics.label')}
                 onClick={handleDownload}
               />
-            </Form.Row>
-            <Form.Row label={t('settings.download-logs.label')} description={t('settings.download-logs.description')}>
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('settings.download-logs.label')}
+              description={t('settings.download-logs.description')}
+            >
               <IconButton
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
                 onClick={handleDownloadLogs}
               />
-            </Form.Row>
-            <Form.Row label={t('settings.repair.label')} description={t('settings.repair.description')}>
+            </Form.Field>
+            <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
               <IconButton
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}
                 onClick={handleRepair}
               />
-            </Form.Row>
+            </Form.Field>
 
             {/* TODO(burdon): Move to layout? */}
             {toast && (
@@ -215,7 +223,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               </Toast.Root>
             )}
 
-            <Form.Row
+            <Form.Field
               label={t('settings.choose-storage-adaptor.label')}
               description={t('settings.choose-storage-adaptor.description')}
             >
@@ -238,19 +246,20 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                         </Select.Option>
                       ))}
                     </Select.Viewport>
-                    <Select.Arrow />
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
+
+          <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
   );
 };
 
-const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) => void, path: string[], value: any) => {
+const updateConfig = (config: ConfigInit, setConfig: (newConfig: ConfigInit) => void, path: string[], value: any) => {
   const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
   setDeep(storageConfigCopy, path, value);
   setConfig(storageConfigCopy);

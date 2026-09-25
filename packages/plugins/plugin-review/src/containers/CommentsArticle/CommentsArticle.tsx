@@ -2,37 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { Markdown, MarkdownOperation } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
+import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
-import { CommentOperation } from '#types';
-import { CommentCapabilities } from '#types';
+import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
-import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, useStatus } from '../../hooks';
-import { getMessageMetadata } from '../../util';
+import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
+import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -76,7 +76,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
 
   return (
-    <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
+    <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
         type={AppSurface.CardContent}
         limit={1}
@@ -221,40 +221,63 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [setCommentsView],
   );
 
-  const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
-  const isAttended = hasAttention || isAncestor || isRelated;
-  const currentId = isAttended ? state.current : undefined;
+  // Membership, not attention: an attention gate closes in the window between a click recording
+  // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
+  // from `anchors` + `state.current`, both reactive, involves no timing.
+  const currentThreadId = currentObjectId(state.current);
 
+  // Attention (a thread taking focus) records it as current and brings its plank into view without taking
+  // focus from the thread; the anchored content is left alone, since focus lands there unasked.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
+      // Recorded unconditionally, so a freshly persisted comment's new spelling shows the marker. A reveal
+      // re-scrolls the deck, so only a newly current thread asks for one.
+      const sameThread = currentObjectId(state.current) === thread.id;
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      if (sameThread) {
+        return;
+      }
 
-      if (state.current !== threadId) {
-        registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId, focus: false });
+    },
+    [state.current, invokePromise, registry, stateAtom, attendableId],
+  );
 
-        // Scroll plank into view (deck handler).
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+  // A deliberate click additionally reveals and highlights the thread in the anchored content. Not
+  // gated on `state.current`: the editor tracks its own current comment (by cursor proximity), so it
+  // can already differ from the app's — gating here would leave the previous comment highlighted.
+  const handleActivate = useCallback(
+    (anchor: AnchoredTo.AnchoredTo) => {
+      handleAttend(anchor);
+      if (!anchor.anchor) {
+        return;
+      }
 
-        // Scroll within content to anchor (comment config per typename).
-        if (anchor.anchor && attendableId) {
-          const typename = Obj.getTypename(subject);
-          const commentConfig = commentConfigs.find(({ id }) => id === typename);
-          if (commentConfig?.scrollToAnchor) {
-            void invokePromise(commentConfig.scrollToAnchor, {
-              subject: attendableId,
-              cursor: anchor.anchor,
-              id: threadId,
-            });
-          }
-        }
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+
+      // This is what tells the editor which thread is current, so skipping it leaves the previous
+      // comment highlighted while the app selection moves on.
+      const typename = Obj.getTypename(subject);
+      const commentConfig = commentConfigs.find(({ id }) => id === typename);
+      if (commentConfig?.scrollToAnchor) {
+        void invokePromise(commentConfig.scrollToAnchor, {
+          subject: attendableId ?? subjectId,
+          cursor: anchor.anchor,
+          id: Ref.make(thread),
+        });
       }
     },
-    [state.current, invokePromise, registry, stateAtom, attendableId, subject, commentConfigs],
+    [handleAttend, invokePromise, attendableId, subjectId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
+      // Persisting spans an await, and the reader can click another thread while it runs. Re-assert
+      // the selection only if nothing moved it in the meantime, so a submit cannot drag the marker
+      // back off the thread they have since chosen.
+      const selectionBefore = registry.get(stateAtom).current;
       await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
@@ -262,17 +285,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         text,
       });
 
+      const latest = registry.get(stateAtom);
+      if (latest.current !== selectionBefore) {
+        return;
+      }
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
+      // Direct write, not a queued Select: this is a compare-and-set, and its guard is only sound
+      // while the read and the write share one synchronous turn.
+      registry.set(stateAtom, { ...latest, current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(CommentOperation.ToggleResolved, {
-        thread: Relation.getSource(anchor) as Thread.Thread,
-      }),
+    (anchor: AnchoredTo.AnchoredTo) => {
+      // The control flips, so it reads the thread's status and states the one it wants.
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      return invokePromise(CommentOperation.SetResolved, { thread, resolved: thread.status !== 'resolved' });
+    },
     [invokePromise],
   );
 
@@ -282,11 +312,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
+    (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<MessageType.Message>) =>
       invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
-        messageId,
+        message,
       }),
     [invokePromise, subject],
   );
@@ -306,7 +336,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.SetResolved, { thread, resolved: true });
     },
     [invokePromise, subject],
   );
@@ -325,15 +355,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         branch,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+      await invokePromise(CommentOperation.SetResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+        resolved: true,
+      });
     },
     [invokePromise, subject, reviewBranch],
   );
 
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
-  const mainText = markdownDoc?.content.target;
-  const [base = ''] = useObject(markdownDoc?.content, 'content');
+  const mainText = useResolveRef(markdownDoc?.content);
 
   const routeSuggestion = useCallback(
     async (
@@ -394,10 +426,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
-    if (currentId) {
-      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (!currentThreadId) {
+      return;
     }
-  }, [currentId]);
+    // The rendered element is keyed by URI, so scroll by whichever spelling is in the DOM now rather
+    // than by a remembered one.
+    const target = anchors
+      .map((anchor) => {
+        try {
+          return Relation.getSource(anchor);
+        } catch {
+          return undefined;
+        }
+      })
+      .find((thread) => thread?.id === currentThreadId);
+    if (target && Obj.instanceOf(Thread.Thread, target)) {
+      document.getElementById(Obj.getURI(target))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [currentThreadId, anchors]);
 
   const filteredAnchors = showResolvedThreads
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
@@ -419,7 +465,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           const threadId = Obj.getURI(thread);
           return (
             <CommentThreadItem
-              key={threadId}
+              // Keyed by the stable object id, NOT the URI: a draft thread's URI changes when its
+              // first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by
+              // URI remounted the whole thread subtree at exactly that moment — a reply being typed
+              // in the composer was destroyed and Enter fired on the fresh empty instance.
+              key={thread.id}
               space={space}
               threadUri={threadId}
               anchor={anchor}
@@ -427,8 +477,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
-              current={currentId === threadId}
+              current={currentThreadId === thread.id}
               onAttend={handleAttend}
+              onActivate={handleActivate}
               onComment={handleComment}
               onResolve={handleResolve}
               onMessageDelete={handleMessageDelete}
@@ -440,9 +491,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <div className='p-form-padding'>
-        <Message.Root>
-          <Message.Content>
+      <Banner.Root>
+        <Banner.Content classNames='m-trim-md'>
+          <Banner.Body>
             <span>
               <Trans
                 {...{
@@ -455,9 +506,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </Message.Content>
-        </Message.Root>
-      </div>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
 
   return (
@@ -469,7 +520,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Tabs.Tablist classNames='p-0'>
+            <Tabs.Tablist>
               <Tabs.Button classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
               </Tabs.Button>
@@ -484,7 +535,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
-                base={base}
+                base={mainText}
                 authorLabels={authorLabels}
                 authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}

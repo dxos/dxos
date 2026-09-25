@@ -13,12 +13,12 @@ import { IconButton, Panel, SystemIconButton, type ThemedClassName, Toolbar } fr
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Discord bot token',
   }),
-  channel: Schema.String.annotations({ title: 'Channel' }),
-  maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
-  descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
+  channel: Schema.String.annotate({ title: 'Channel' }),
+  maxDays: Schema.Number.annotate({ title: 'Lookback (days)' }),
+  descendThreads: Schema.Boolean.annotate({ title: 'Crawl threads' }),
 });
 export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
@@ -113,11 +113,11 @@ export const CrawlPanel = ({
           <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='dx-container'>
+      <Panel.Content>
         <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.Fields />
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
@@ -125,9 +125,7 @@ export const CrawlPanel = ({
       {(error || status) && (
         <Panel.Statusbar asChild>
           <Toolbar.Root classNames='bg-transparent'>
-            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued-text']}>
-              {error ?? status}
-            </Toolbar.Text>
+            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued']}>{error ?? status}</Toolbar.Text>
           </Toolbar.Root>
         </Panel.Statusbar>
       )}

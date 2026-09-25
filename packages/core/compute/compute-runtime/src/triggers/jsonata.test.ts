@@ -5,7 +5,8 @@
 import jsonata from 'jsonata';
 import { assert, describe, test } from 'vitest';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';

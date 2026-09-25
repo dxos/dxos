@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
-import * as Plugin from './plugin';
-import * as PluginAssetCache from './plugin-asset-cache';
-import * as PluginManifest from './plugin-manifest';
+import * as PluginAssetCache from './plugin-asset-cache.ts';
+import * as PluginManifest from './plugin-manifest.ts';
+import * as Plugin from './plugin.ts';
 
 const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
 
@@ -140,6 +140,20 @@ export const getRemoteEntries = (options: Options = {}): readonly RemotePluginVi
   const storage = options.storage ?? defaultStorage();
   const key = options.key ?? DEFAULT_KEY;
   return getPersistedRemotePlugins(storage, key);
+};
+
+/**
+ * Replaces the persisted remote plugin entries wholesale. Entries are read during {@link preload},
+ * so a replacement takes effect on the next reload.
+ */
+export const setRemoteEntries = (entries: readonly RemotePluginView[], options: Options = {}): void => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  try {
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to replace remote plugin entries', { error });
+  }
 };
 
 /**

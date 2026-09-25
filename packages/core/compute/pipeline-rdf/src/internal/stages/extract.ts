@@ -2,38 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SemanticIndexError } from '../../errors';
-import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types';
+import { SemanticIndexError } from '../../errors.ts';
+import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 // Optional enrichment field: models routinely emit `null` (not omission) for "not present", so
 // accept null as absent. A plain `Schema.optional(String)` rejects null and would discard the whole
 // fact over an empty date/quote.
-const OptionalString = Schema.optionalWith(Schema.String, { nullable: true });
+// v4 split `optionalWith`: the `{ nullable: true }` behaviour (decode `null` as absent) is an
+// explicit transformation now.
+const nullableAsAbsent = <A>(schema: Schema.Codec<A, A>) =>
+  Schema.optional(
+    Schema.NullOr(schema).pipe(
+      Schema.decodeTo(
+        Schema.UndefinedOr(schema),
+        SchemaTransformation.transform<A | undefined, A | null>({
+          decode: (value) => value ?? undefined,
+          encode: (value) => value ?? null,
+        }),
+      ),
+    ),
+  );
+
+const OptionalString = nullableAsAbsent(Schema.String);
 
 // Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
 // null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
 const softEnum = <const A extends string>(...values: readonly A[]) =>
   Schema.optional(
-    Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal(...values)), {
-      strict: false,
-      decode: (value) =>
-        typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
-      encode: (value) => value,
-    }),
+    Schema.Unknown.pipe(
+      Schema.decodeTo(
+        Schema.UndefinedOr(Schema.Literals(values)),
+        SchemaTransformation.transform({
+          decode: (value) =>
+            typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
+          encode: (value) => value,
+        }),
+      ),
+    ),
   );
 
 const Nature = softEnum('epistemic', 'aleatory');
@@ -55,8 +75,8 @@ export const ExtractedFact = Schema.Struct({
   validFrom: OptionalString,
   validTo: OptionalString,
   factuality: FactualityValue,
-  polarity: Schema.Literal('+', '-', '?'),
-  confidence: Schema.optionalWith(Schema.Number, { nullable: true }),
+  polarity: Schema.Literals(['+', '-', '?']),
+  confidence: nullableAsAbsent(Schema.Number),
   nature: Nature,
   force: Force,
   mood: Mood,
@@ -188,7 +208,7 @@ export const extractChunk = (
     const [strictDuration, strict] = yield* Effect.timed(
       LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
         Effect.map((response) => Option.some(response.value)),
-        Effect.catchAll(() => Effect.succeed(Option.none<ExtractPayload>())),
+        Effect.catch(() => Effect.succeed(Option.none<ExtractPayload>())),
       ),
     );
     const strictMs = Math.round(Duration.toMillis(strictDuration));
@@ -217,9 +237,9 @@ const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.model(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.model(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
 };

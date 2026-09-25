@@ -5,23 +5,28 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { GraphBuilder, type NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { getBooksPath } from '../paths';
+import { LIBRARY_KEY, getBooksPath } from '../paths.ts';
 
 /** The companion segment/variant for the notes editor — shared with its surface binding. */
 export const NOTES_COMPANION_VARIANT = 'notes';
 
 /** Matches a Book object node, so its notes companion appears alongside the book article. */
-const whenBook: NodeMatcher.NodeMatcher<Book.Book> = (node) =>
+const whenBook: GraphNodeMatcher.NodeMatcher<Book.Book> = (node) =>
   Book.instanceOf(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
@@ -30,11 +35,11 @@ export default Capability.makeModule(
       // Book type section in the content group.
       TypeSection.createTypeSectionExtension(Book.Book, {
         urlKey: 'book',
-        sectionUrlKey: 'library',
+        sectionUrlKey: LIBRARY_KEY,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: Type.getTypename(Book.Book),
             targetNodeId: getBooksPath(space.db.spaceId),
@@ -42,8 +47,9 @@ export default Capability.makeModule(
       }),
 
       // Private notes companion (a markdown editor over the book's notes document).
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'bookNotesCompanion',
+        relation: AppNode.companion,
         match: whenBook,
         connector: (book) =>
           Effect.succeed([
@@ -57,6 +63,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

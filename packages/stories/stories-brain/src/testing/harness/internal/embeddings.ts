@@ -5,7 +5,7 @@
 // Local text embeddings via Ollama's `nomic-embed-text` (768-dim). Kept dependency-light (a direct
 // fetch to the Ollama HTTP API) so the vector-index experiment needs no cloud embedding key; run
 // `ollama pull nomic-embed-text` first. Endpoint/model come from defs (OLLAMA_ENDPOINT / EMBED_MODEL).
-import { EMBED_MODEL, OLLAMA_ENDPOINT } from '../config';
+import { EMBED_MODEL, OLLAMA_ENDPOINT } from '../config.ts';
 
 const requestEmbedding = async (
   text: string,

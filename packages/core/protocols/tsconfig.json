@@ -9,7 +9,10 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/effect"
@@ -24,10 +27,10 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/protobuf-compiler"
+      "path": "../../common/timeframe"
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/util"
     }
   ]
 }

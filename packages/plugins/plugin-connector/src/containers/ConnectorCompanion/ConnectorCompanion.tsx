@@ -2,25 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Cursor } from '@dxos/link';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { Connection, Cursor } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection } from '#types';
 
-import { connectionDeckSubject } from '../../constants';
+import { connectionDeckSubject } from '../../constants.ts';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};
@@ -71,8 +71,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   }, [invokePromise, connection, db]);
 
   const handleRemoveBinding = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
-  }, [invokePromise, subject]);
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }, { spaceId: db?.spaceId });
+  }, [invokePromise, subject, db]);
 
   // Seed the options form from the cursor's current options.
   const optionsDefaultValues = useMemo(() => ({ ...(externalSpec?.options ?? {}) }), [externalSpec]);
@@ -112,15 +112,12 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
             <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Section title={title} description={source}>
-                    <Form.Row
+                  <Form.FieldSet label={title} description={source}>
+                    <Form.Field
+                      standalone
                       label={t('sync-target.label')}
                       description={status}
-                      validation={
-                        !targetMissing && !sourceMissing && subject.lastError ? (
-                          <span className='text-sm text-error-text'>{subject.lastError}</span>
-                        ) : undefined
-                      }
+                      error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
                     >
                       {targetMissing || sourceMissing ? (
                         <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
@@ -133,19 +130,19 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                           onValuesChanged={handleOptionsChanged}
                         >
                           <Form.Content>
-                            <Form.FieldSet />
+                            <Form.Fields />
                           </Form.Content>
                         </Form.Root>
                       )}
-                    </Form.Row>
+                    </Form.Field>
 
                     {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
                     {!sourceMissing && (
-                      <Form.Row label={t('open-connection.label')}>
+                      <Form.Field standalone label={t('open-connection.label')}>
                         <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
-                  </Form.Section>
+                  </Form.FieldSet>
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>

@@ -10,23 +10,24 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import * as Err from './Err';
-import * as internal from './internal';
-import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
-import * as objInternal from './internal/Obj';
-import * as Ref from './Ref';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import type * as Change from './Change.ts';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils.ts';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import * as Ref from './Ref.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 /**
  * Base type for all ECHO objects.
@@ -72,11 +73,11 @@ export interface Unknown extends BaseObj {}
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Object,
       typename: internal.ANY_OBJECT_TYPENAME,
@@ -201,7 +202,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     }
   }
 
-  return internal.makeObject(
+  const obj = internal.makeObject(
     schema,
     filterUndefined,
     {
@@ -210,6 +211,9 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     },
     input,
   );
+
+  internal.propagateParentAnnotations(obj);
+  return obj;
 }
 
 /**
@@ -263,15 +267,15 @@ export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objIntern
  * );
  * ```
  */
-export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Err.GetReactiveError> =>
+export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Error.GetReactiveError> =>
   Effect.gen(function* () {
     const db = internal.getDatabase(snapshot);
     if (!db) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
     }
     const obj = db.getObjectById(snapshot.id);
     if (!obj) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
     }
     return obj as T;
   });
@@ -286,7 +290,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
-    Effect.catchAll(() => Effect.succeed(Option.none())),
+    Effect.catch(() => Effect.succeed(Option.none())),
   );
 
 /**
@@ -295,7 +299,7 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  *
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns The reactive object.
- * @throws {Err.GetReactiveError} When the object cannot be resolved.
+ * @throws {Error.GetReactiveError} When the object cannot be resolved.
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
@@ -382,6 +386,7 @@ export type Mutable<T> = internal.Mutable<T>;
  */
 export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
+  internal.propagateParentAnnotations(obj);
   return obj;
 };
 
@@ -518,7 +523,7 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
-export type { GetURIOptions } from './internal';
+export type { GetURIOptions } from './internal/index.ts';
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
@@ -531,6 +536,19 @@ export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOpti
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
   return internal.getUri(entity, options);
 };
+
+/**
+ * Get the object's mnemonic: the last 6 characters of its id, uppercased.
+ * Short enough to read out or type, and stable for the life of the object, so it is how a
+ * person names a particular object — in a log line, a UI chip, or `Filter.mnemonic(...)`.
+ * Accepts both reactive objects and snapshots.
+ *
+ * @example
+ * ```ts
+ * Obj.getMnemonic(task); // '7QK2ZB'
+ * ```
+ */
+export const getMnemonic = (entity: Unknown | Snapshot): string => EntityId.getMnemonic(entity.id);
 
 /**
  * @returns The DXN of the object's type.
@@ -594,6 +612,42 @@ export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]):
   invariant(db, 'object is not bound to a database');
   return db.getVersion(obj, heads);
 };
+
+/**
+ * Options for {@link getChanges}.
+ */
+export type GetChangesOptions<K extends string = string> = {
+  /** Narrow the history to the changes that touched this property; `before`/`after` then hold its value. */
+  property?: K;
+};
+
+/**
+ * The object's edit history, oldest first: one {@link Change.Change} per document change that
+ * touched the object, carrying its snapshot before and after. Given `property`, only the changes that
+ * touched that property, carrying its value. Pass an entry's `heads` to {@link getVersion} to read the
+ * whole object as that change left it.
+ *
+ * Changes belong to the object's Automerge document, so `time`, `actor` and `ops` describe the whole
+ * change, which may also have written other objects in the same document. Edits to the content of a
+ * referenced object (e.g. a `Ref<Text>`) are that object's history, not this one's.
+ *
+ * @example
+ * ```ts
+ * for (const { time, before, after } of Obj.getChanges(task, { property: 'status' })) {
+ *   console.log(new Date(time), before, '→', after);
+ * }
+ * ```
+ */
+export function getChanges<T extends Unknown>(obj: T): Change.Change<Snapshot<T>>[];
+export function getChanges<T extends Unknown, K extends Exclude<keyof Snapshot<T> & string, 'id'>>(
+  obj: T,
+  opts: GetChangesOptions<K> & { property: K },
+): Change.Change<Snapshot<T>[K]>[];
+export function getChanges<T extends Unknown>(obj: T, opts?: GetChangesOptions): Change.ValueChange<unknown>[] {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getChanges(obj, opts);
+}
 
 //
 // Meta
@@ -761,13 +815,50 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 };
 
 /**
+ * Whether the parent's own data or meta annotations hold a ref to the child. A parent edge without
+ * one leaves the child reachable only by index query (no graph path reaches it), and the child
+ * would not read as owned content of the parent.
+ */
+const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
+  let found = false;
+  const visit = (value: unknown, recurse: (value: unknown) => unknown): unknown => {
+    if (found) {
+      return value;
+    }
+    if (Ref.isRef(value)) {
+      const eid = EID.tryParse(value.uri);
+      if (eid && EID.getEntityId(eid) === childId) {
+        found = true;
+      }
+      return value;
+    }
+    return recurse(value);
+  };
+  deepMapValues(parent, visit);
+  if (!found) {
+    deepMapValues(getMeta(parent).annotations, visit);
+  }
+  return found;
+};
+
+/**
  * Sets the parent of an object.
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
  * Only objects are allowed to have a parent.
+ *
+ * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
+ * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
  */
+// TODO(burdon): Promote the ref-less-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
+  if (parent !== undefined && !parentRefsChild(parent, entity.id)) {
+    log.warn('parent edge without a ref from parent to child', {
+      child: internal.getTypename(entity),
+      parent: internal.getTypename(parent),
+    });
+  }
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;
@@ -787,7 +878,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;
@@ -903,8 +994,13 @@ export type JSON = internal.ObjectJSON;
  * Converts object to its JSON representation.
  * Accepts both reactive objects and snapshots.
  *
- * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
+ * `JSON.stringify(obj)` gives the same result for an in-memory object, which shares this serializer.
+ * A database-backed object carries its own `toJSON`, which reads the document rather than the target
+ * and still differs in two ways: it omits `@uri`, and it leaves `Uint8Array` values unencoded.
+ * Prefer this function where the two must agree.
  */
+// TODO(dmaretskyi): Unify with the echo-handler serializer (`echo-prototypes.ts`) so the divergence
+//   above goes away; changes what `JSON.stringify` emits for every database object.
 export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectToJSON(entity);
 
 /**
@@ -979,3 +1075,4 @@ export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;
 export const labelAtom = objInternal.makeLabelAtom;
 export const labelProperty = internal.getLabelProperty;
+export const parentAtom = objInternal.makeParentAtom;

@@ -4,28 +4,28 @@
 
 import type { FC } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
-import type { NavTreeItemGraphNode } from '#types';
+import { NavTreeNode } from '#types';
 
-import type { L1PanelProps } from './Sidebar';
+import type { L1PanelProps } from './Sidebar/index.ts';
 
 export type NavTreeContextValue = {
-  model: TreeModel<NavTreeItemGraphNode>;
+  model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;
   popoverAnchorId?: string;
-  renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
-  onTabChange?: (node: NavTreeItemGraphNode) => void;
+  renderItemEnd?: FC<{ node: AppGraphNode.Node; open: boolean }>;
+  onTabChange?: (node: NavTreeNode.NavTreeItemGraphNode) => void;
 } & Pick<
-  TreeProps<NavTreeItemGraphNode>,
-  'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'onItemHover'
+  TreeProps<NavTreeNode.NavTreeItemGraphNode>,
+  'canDrop' | 'canSelect' | 'getDropKind' | 'onOpenChange' | 'onSelect' | 'onItemHover'
 > &
   Pick<L1PanelProps, 'onBack'>;
 
 export type NavTreeItemColumnsProps = {
   path: string[];
-  item: Node.Node;
+  item: AppGraphNode.Node;
   open: boolean;
   density?: Density;
 };

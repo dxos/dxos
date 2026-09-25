@@ -5,14 +5,20 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Instructions, Project, Routine, Skill, Trigger } from '@dxos/compute';
-import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import { mailboxFacts } from './mailbox-facts';
+import { BrainOperation } from '#types';
+
+import { mailboxFacts } from './mailbox-facts.ts';
 
 describe('mailbox facts project template', () => {
   let builder: EchoTestBuilder;
@@ -32,7 +38,6 @@ describe('mailbox facts project template', () => {
         Instructions.Instructions,
         Routine.Routine,
         Trigger.Trigger,
-        Collection.Collection,
         Mailbox.Mailbox,
         Feed.Feed,
         TagIndex.TagIndex,
@@ -67,13 +72,14 @@ describe('mailbox facts project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.brain').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
 
-    // Routine: a deterministic operation action (no instructions), owned + linked.
-    expect(project.routines).toHaveLength(1);
-    const routine = await project.routines[0].tryLoad();
-    expect(Obj.getParent(routine!)?.id).toBe(project.id);
+    // Routine: a deterministic operation action (no instructions), persisted standalone rather than
+    // owned by the project.
+    const routines = await db.query(Filter.type(Routine.Routine)).run();
+    expect(routines).toHaveLength(1);
+    const routine = routines[0];
     expect(routine!.spec?.kind).toBe('runnable');
     expect(routine!.spec?.kind === 'runnable' && routine!.spec.runnable.uri.toString()).toBe(
-      InboxOperation.AnalyzeMailbox.meta.key.toString(),
+      BrainOperation.AnalyzeMailbox.meta.key.toString(),
     );
 
     // Timer trigger, off by default, with the mailbox ref baked into the operation input.

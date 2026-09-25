@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Dialog';
-export * from './AlertDialog';
+export * from './Dialog.tsx';
+export * from './AlertDialog.tsx';

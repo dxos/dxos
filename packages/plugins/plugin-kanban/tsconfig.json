@@ -34,19 +34,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -55,10 +46,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/echo/echo-react"
+      "path": "../../core/halo/halo-adapter-client"
     },
     {
       "path": "../../sdk/app-framework"
@@ -107,9 +98,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

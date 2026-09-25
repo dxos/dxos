@@ -2,20 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-type EditorPreviewPopoverValue = Partial<{
-  link: PreviewLinkRef;
-  target: PreviewLinkTarget;
-  pending: boolean;
-}>;
-
-const [EditorPreviewContextProvider, useEditorPreview] = createContext<EditorPreviewPopoverValue>('PreviewPopover', {});
+import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
 
 export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
@@ -30,28 +23,55 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
   const triggerRef = useRef<HTMLElement | null>(null);
   const [value, setValue] = useState<EditorPreviewPopoverValue>({});
   const [open, setOpen] = useState(false);
+  // Monotonic activation token: only the most recent open may commit its async lookup result, so a
+  // slow lookup for a closed/superseded anchor cannot fill the popover for a later one.
+  const activationRef = useRef(0);
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      const { dxn, label, trigger } = event;
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card — after
+      // a grace period, so the pointer may already have opened another anchor by then. Only the
+      // anchor currently shown may close the popover; a stale close from the one just left is dropped.
+      if (event.state === false) {
+        if (event.trigger !== triggerRef.current) {
+          return;
+        }
+        activationRef.current++;
+        setOpen(false);
+        return;
+      }
+
+      const sequence = ++activationRef.current;
+      const { eid, label, trigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, dxn },
+        link: { label, eid },
         pending: true,
       }));
 
       triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, dxn }).then((target) =>
+      void onLookup?.({ label, eid }).then((target) => {
+        if (sequence !== activationRef.current) {
+          return;
+        }
         setValue((value) => ({
           ...value,
           target: target ?? undefined,
           pending: false,
-        })),
-      );
+        }));
+      });
     },
     [onLookup],
   );
+
+  // Dismissals from the popover itself (Escape, outside click) also invalidate in-flight lookups.
+  const handleOpenChange = useCallback((next: boolean) => {
+    if (!next) {
+      activationRef.current++;
+    }
+    setOpen(next);
+  }, []);
 
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -67,7 +87,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   return (
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
         <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
         <div className='contents' ref={setRoot}>
           {children}
@@ -76,5 +96,3 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
     </EditorPreviewContextProvider>
   );
 };
-
-export { useEditorPreview };

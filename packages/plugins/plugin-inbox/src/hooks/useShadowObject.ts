@@ -8,7 +8,7 @@ import { type Database, Filter, Obj, type Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 
-import { SHADOW_KEY_SOURCE, findShadowObject } from './shadow';
+import { SHADOW_KEY_SOURCE, findShadowObject } from './shadow.ts';
 
 /**
  * Find a shadow object for the given object and type.

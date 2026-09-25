@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -14,8 +14,8 @@ import { RecordBuilder } from '#model';
 import { data } from '#testing';
 import { Tldraw } from '#types';
 
-import { migrateCanvas } from '../../migrations';
-import { CanvasComponent } from './Canvas';
+import { migrateCanvas } from '../../migrations/index.ts';
+import { CanvasComponent } from './Canvas.tsx';
 
 const DefaultStory = () => {
   const [canvas, setCanvas] = useState(

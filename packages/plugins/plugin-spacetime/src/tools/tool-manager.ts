@@ -6,9 +6,9 @@ import { PointerEventTypes, type PointerInfo } from '@babylonjs/core';
 
 import { log } from '@dxos/log';
 
-import { type ActionHandler } from './action';
-import { type Tool } from './tool';
-import { type ToolContext } from './tool-context';
+import { type ActionHandler } from './action.ts';
+import { type ToolContext } from './tool-context.ts';
+import { type Tool } from './tool.ts';
 
 /** Manages registered tools and dispatches pointer events to the active tool. */
 export class ToolManager {

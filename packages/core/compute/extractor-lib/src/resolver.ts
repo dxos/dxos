@@ -16,7 +16,7 @@ import {
 } from '@dxos/extractor';
 import { type Organization, type Person } from '@dxos/types';
 
-import { identitySpecs } from './identity';
+import { identitySpecs } from './identity.ts';
 
 export type HasEmail = { email: string };
 

@@ -5,11 +5,13 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Connector } from '@dxos/plugin-connector';
-import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
+import { Button, ButtonGroup, Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
@@ -22,7 +24,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const connectors = useCapabilities(Connector);
+  const connectors = useCapabilities(ConnectorSpec.Connector);
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
@@ -31,17 +33,17 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      subject: [getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
-      <Input.Root>
-        <Input.Label>{t('calendar-sync.label')}</Input.Label>
-        {/* TODO(burdon): Replace custom components with Input.Switch. */}
-        <div className='flex gap-1'>
+    <Form.FieldSet>
+      <Field.Root>
+        <Field.Label>{t('calendar-sync.label')}</Field.Label>
+        {/* TODO(burdon): Replace custom components with Field.Switch. */}
+        <Flex gap='xs'>
           <ButtonGroup>
             <Button onClick={handleToggleSync} disabled={pending}>
               {pending
@@ -59,9 +61,9 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
               />
             )}
           </ButtonGroup>
-        </div>
-      </Input.Root>
-    </Form.Section>
+        </Flex>
+      </Field.Root>
+    </Form.FieldSet>
   );
 };
 

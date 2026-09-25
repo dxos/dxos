@@ -6,9 +6,8 @@ import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemedClassName } from '../../util';
-
-export type MediaKind = 'video' | 'audio';
+import { type ThemedClassName } from '../../util/index.ts';
+import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
 export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -21,41 +20,8 @@ const FIT_CLASS: Record<MediaFit, string> = {
   'scale-down': 'object-scale-down',
 };
 
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogv', '.mov', '.m4v'];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
-
 /** iframe sandbox flags compatible with typical oEmbed-style players. */
 const DEFAULT_IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
-
-/**
- * Best-effort detection of `video` vs `audio` from a media URL.
- * Inspects the pathname's extension (ignoring query/hash). Returns `undefined`
- * when the URL doesn't look like a recognised media file — callers should
- * default to 'video' or render a fallback (e.g. iframe / img).
- */
-export const detectMediaKind = (src: string): MediaKind | undefined => {
-  // Strip query and hash, then take the last path segment's extension.
-  const pathname = src.split(/[?#]/, 1)[0]!;
-  const lower = pathname.toLowerCase();
-  if (VIDEO_EXTENSIONS.some((extension) => lower.endsWith(extension))) {
-    return 'video';
-  }
-  if (AUDIO_EXTENSIONS.some((extension) => lower.endsWith(extension))) {
-    return 'audio';
-  }
-
-  return undefined;
-};
-
-/**
- * Heuristic match for URLs that should render as native `<video>` / `<audio>`
- * (i.e. URLs ending in a recognised media extension).
- *
- * NB: Cloudflare Stream embed URLs serve an HTML player page, **not** a media
- * stream, so they cannot be loaded via `<video>`. Those are detected by
- * {@link isCloudflareStreamEmbed} and rendered via `<iframe>` instead.
- */
-export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
 
 /**
  * Match Cloudflare Stream `/iframe` embed URLs of the form
@@ -83,6 +49,8 @@ export type MediaPlayerProps = ThemedClassName<{
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
   fit?: MediaFit;
+  /** Playback reached the end (`<video>`/`<audio>` only) — what a playlist advances on. */
+  onEnded?: () => void;
 }>;
 
 /**
@@ -103,6 +71,7 @@ export const MediaPlayer = ({
   alt,
   crossOrigin,
   fit = 'cover',
+  onEnded,
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];
   // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
@@ -119,6 +88,7 @@ export const MediaPlayer = ({
           muted={muted}
           crossOrigin={crossOrigin}
           aria-label={alt}
+          onEnded={onEnded}
         />
       );
     }
@@ -134,6 +104,7 @@ export const MediaPlayer = ({
           muted={muted}
           crossOrigin={crossOrigin}
           aria-label={alt}
+          onEnded={onEnded}
         />
       </div>
     );
@@ -169,10 +140,7 @@ const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
         src={src}
         title={alt ?? 'Embedded media'}
         loading='lazy'
-        className={mx(
-          'border-none w-full h-full transition-opacity duration-150',
-          loaded ? 'opacity-100' : 'opacity-0',
-        )}
+        className={mx('border-none dx-fill transition-opacity duration-150', loaded ? 'opacity-100' : 'opacity-0')}
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}
         referrerPolicy='no-referrer'

@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { Blog } from '#types';
 
-import { AddPost } from './definitions';
+import { AddPost } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
   Operation.withHandler(
@@ -23,13 +23,14 @@ const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
       const db = targetIsDatabase ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');
 
-      yield* CollectionModel.add({
+      yield* DefaultParent.add({
         object: post,
         target: targetIsDatabase ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
 
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
 
       return Ref.make(post);

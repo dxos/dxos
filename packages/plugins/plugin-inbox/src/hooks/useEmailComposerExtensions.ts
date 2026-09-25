@@ -2,22 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { type Capabilities } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/compute';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { type AssistantOptions, assistant } from '@dxos/ui-editor';
 
 import { type EditMessageProps } from '#components';
 
-import { email } from '../extensions';
-import { stripQuotedMessage } from '../util';
+import { email } from '../extensions/index.ts';
+import { stripQuotedMessage } from '../util/index.ts';
 
 /**
  * The email-aware editor extensions (AI draft-assist + email formatting) for the composer, shared by
@@ -43,7 +43,7 @@ export const useEmailComposerExtensions = (
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+            AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

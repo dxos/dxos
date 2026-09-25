@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Terra } from '../types';
-import { angleBetween } from './geo';
-import { buildNavGrid, isPassable } from './nav-grid';
+import { Terra } from '#types';
+
+import { angleBetween } from './geo.ts';
+import { buildNavGrid, isPassable } from './nav-grid.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'nav-1' } }));
 

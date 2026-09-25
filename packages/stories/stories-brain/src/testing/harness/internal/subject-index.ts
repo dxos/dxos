@@ -10,7 +10,7 @@ import { messageSource } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import { slugify } from './fact-store';
+import { slugify } from './fact-store.ts';
 
 export type SubjectMessage = {
   readonly source: string;
@@ -38,7 +38,9 @@ export type SubjectRetrieval = {
  * returns those source messages (verbatim) alongside the facts. The agent then grounds its answer in
  * real message text, with the fact store doing precise entity-based retrieval.
  */
-export class SubjectIndex extends Context.Tag('@dxos/stories-brain/SubjectIndex')<SubjectIndex, SubjectIndexApi>() {}
+export class SubjectIndex extends Context.Service<SubjectIndex, SubjectIndexApi>()(
+  '@dxos/stories-brain/SubjectIndex',
+) {}
 
 export interface SubjectIndexApi {
   readonly retrieve: (subject: string, limit: number) => SubjectRetrieval;

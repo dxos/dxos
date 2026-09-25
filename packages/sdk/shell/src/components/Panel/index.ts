@@ -4,10 +4,10 @@
 
 // TODO(burdon): Remove these/port to react-ui.
 
-export * from './Action';
-export * from './CloseButton';
-export * from './Emoji';
-export * from './Heading';
-export * from './InputLabel';
-export * from './Label';
-export * from './TextInput';
+export * from './Action.tsx';
+export * from './CloseButton.tsx';
+export * from './Emoji.tsx';
+export * from './Heading.tsx';
+export * from './InputLabel.tsx';
+export * from './Label.tsx';
+export * from './TextInput.tsx';

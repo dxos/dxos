@@ -5,8 +5,8 @@
 import { type DevtoolsHook, mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type CompactDocumentsResult } from '@dxos/migrations';
 
-import { type RecoveryDiagnosticsResult } from './diagnostics';
-import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics';
+import { type RecoveryDiagnosticsResult } from './diagnostics.ts';
+import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics.ts';
 
 /** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
 export const installDxosGlobals = (): DevtoolsHook => {
@@ -31,8 +31,8 @@ export type RecoveryHelpers = {
   /** OPFS pool + SQLite only — no client boot (safe when feed open hangs). */
   sqlDiagnostics: () => Promise<SqlStorageDiagnosticsResult>;
   /** Raw OPFS SQLite export (`DXOS.sqlite`). */
-  exportProfile: () => Promise<{ byteLength: number }>;
-  downloadLogs: () => Promise<{ byteLength: number }>;
+  exportProfile: () => Promise<{ byteLength: number; saved: boolean }>;
+  downloadLogs: () => Promise<{ byteLength: number; saved: boolean }>;
   importSqlite: () => Promise<{ byteLength: number }>;
   importProfileFromUrl: (url: string) => Promise<{ byteLength: number; opfsFilename: string }>;
   reset: () => Promise<void>;
@@ -43,7 +43,7 @@ export type RecoveryHelpers = {
     objectIds?: string[];
   }) => Promise<CompactDocumentsResult & { spaceId: string }>;
   /** @deprecated Use {@link exportProfile}. */
-  exportSqlite: () => Promise<{ byteLength: number }>;
+  exportSqlite: () => Promise<{ byteLength: number; saved: boolean }>;
   inspectOpfsPool: () => Promise<
     Array<{ name: string; associatedPath: string; totalBytes: number; payloadBytes: number }>
   >;

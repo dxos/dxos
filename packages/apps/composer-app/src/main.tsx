@@ -11,57 +11,126 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode, useCallback } from 'react';
+import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { bootLoader, useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
+import {
+  FIRST_INTERACTIVE_EVENT,
+  STARTUP_ACTIVATED_EVENT,
+  STARTUP_FAILED_EVENT,
+  bootLoader,
+  useApp,
+} from '@dxos/app-framework/ui';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+// Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
+// boot path uses.
+import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { ResetDialog } from './components';
-import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
+import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
+import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
   PARAM_LOG_LEVEL,
+  PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  type Profiler,
+  WorkerLogProcessor,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
   isFalse,
   isTrue,
+  readBootAssetFailure,
+  reportBootAssetFailure,
+  reportWebProcessTerminations,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
   shouldRunStorageResetMigration,
   showDevRssBanner,
+  startupMark,
+  startupMeasure,
   startupProfiler,
   translations,
-} from './util';
+} from './util/index.ts';
+
+// Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
+// (react-ui-form, editor, pickers) which must stay out of the static boot graph.
+const ResetDialog = lazy(() => import('./components/index.ts').then((module) => ({ default: module.ResetDialog })));
+
+const startupTimeout = (() => {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+  const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
+  // The CONVERTED value is checked, not the input: 1e308 is finite and 1e308 * 1_000 is not.
+  const timeout = seconds * 1_000;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
+})();
+
+/**
+ * Whether the boot loader logs each plugin's activation ("Activating Markdown").
+ * Off by default: the default log is the host's own phases, which is what a user booting the app
+ * is asking about. Opt in with `VITE_DX_BOOT_VERBOSE=true` or `?boot-verbose` on the URL, which
+ * makes it reachable on a deployed origin when diagnosing a slow or stalled boot.
+ */
+const verboseStatus =
+  import.meta.env.VITE_DX_BOOT_VERBOSE === 'true' || new URLSearchParams(window.location.search).has('boot-verbose');
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
+
+// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// rather than declared fresh — a second `declare global { var composer }` here would collide with
+// its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
+declare module '@dxos/app-framework' {
+  interface ComposerDevtools {
+    profiler?: Profiler;
+    otel?: {
+      enableDebugLogs: () => void;
+      disableDebugLogs: () => void;
+      getLogLevel: () => Promise<string | null>;
+    };
+  }
+}
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
+    /** Vite HMR API — present only in dev, `undefined` in production bundles. */
+    hot?: { dispose(cb: () => void): void };
   }
 
   interface ImportMetaEnv {
     DEV: string;
+    /** Startup stall window override in SECONDS; dev only. */
+    VITE_DX_STARTUP_TIMEOUT?: string;
+    /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
+    VITE_DX_BOOT_VERBOSE?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -83,9 +152,8 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
-  const importMeta = import.meta as any;
-  if (importMeta.hot) {
-    importMeta.hot.dispose(() => {
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }
@@ -120,11 +188,11 @@ if (import.meta.env?.DEV) {
  */
 const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
-    const { createTauriAssetCache } = await import('./asset-cache/tauri');
+    const { createTauriAssetCache } = await import('./asset-cache/tauri.ts');
     return createTauriAssetCache();
   }
   if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker.ts');
     return createServiceWorkerAssetCache();
   }
   return PluginAssetCache.noop();
@@ -151,7 +219,12 @@ const main = async () => {
   // The startup profiler is on by default in dev so every devloop produces
   // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
   // opts in (or out) via the URL parameter.
-  const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
+  // `isTrue`'s second argument is a strictness flag, not a default, so the absent-parameter
+  // case has to be handled here — passing the default through it silently disabled the dev
+  // profiler (strict mode requires the parameter, which is exactly what is missing).
+  const profilerParam = url.searchParams.get(PARAM_PROFILER);
+  const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
+  startupMark('main:start');
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
@@ -162,27 +235,41 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
-  log.addProcessor(logStore.processor);
+  // Log persistence runs in its own worker so lines survive main-thread saturation: each
+  // pre-serialized line is handed off via postMessage inside the log call, and the worker
+  // flushes to IDB while this thread is still blocked. This store is the read handle for
+  // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
+  // so the read handle's own sweep is disabled.
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
+  const observabilityWorker = new Worker(new URL('./workers/observability-worker.ts', import.meta.url), {
+    type: 'module',
+    name: 'dxos-observability',
+  });
+  const logProcessor = new WorkerLogProcessor({
+    worker: observabilityWorker,
+    traceContext: ObservabilityExtension.Otel.activeTraceContext,
+  });
+  log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
   globalThis.downloadLogs = () => downloadLogs(logStore);
 
-  profiler?.mark('dynamic-imports:start');
+  startupMark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
-  // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+  // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
+  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
+  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
     await Promise.all([
       import('@dxos/config'),
       import('@dxos/react-client'),
-      import('@dxos/migrations'),
-      import('./migrations'),
+      import('@dxos/app-toolkit/AppMigrations'),
+      initAutomergeWasm(),
     ]);
 
-  profiler?.mark('dynamic-imports:end');
-  profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
+  startupMark('dynamic-imports:end');
+  startupMeasure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
   const otel = {
@@ -203,15 +290,15 @@ const main = async () => {
       return level;
     },
   };
-  (window as any).composer = { profiler, otel };
+  globalThis.composer = { profiler, otel };
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  AppMigrations.define();
 
-  profiler?.mark('config:start');
+  startupMark('config:start');
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+  if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
     return;
@@ -226,15 +313,15 @@ const main = async () => {
     await SaveConfig({
       runtime: {
         client: {
-          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+          storage: { dataStore: defs.Runtime_Client_Storage_StorageDriver.IDB },
         },
       },
     });
     config = await setupConfig();
   }
 
-  profiler?.mark('config:end');
-  profiler?.measure('config', 'config:start', 'config:end');
+  startupMark('config:end');
+  startupMeasure('config', 'config:start', 'config:end');
 
   const isTauri = isTauri$();
   if (isTauri) {
@@ -252,18 +339,14 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled);
+  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
+    post: (message) => observabilityWorker.postMessage(message),
+  });
 
-  // Capture a one-shot `composer.startup` event when the framework dispatches
-  // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
-  // slowest modules, transferred bytes (best-effort), and the boot-loader
-  // visibility mark. Reads `performance.getEntriesByType` directly so production
-  // builds without `?profiler=1` still get data.
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
-    const firstInteractive = performance.getEntriesByName('app-framework:first-interactive')[0];
     const phaseDuration = (name: string): number =>
       Math.round(measures.find((measure) => measure.name === `startup:${name}`)?.duration ?? 0);
     const moduleEntries = measures
@@ -282,7 +365,6 @@ const main = async () => {
       servicesMs: phaseDuration('services'),
       pluginsInitMs: phaseDuration('plugins-init'),
       bootLoaderVisibleMs: bootMark ? Math.round(bootMark.startTime) : undefined,
-      firstInteractiveMs: firstInteractive ? Math.round(firstInteractive.startTime) : undefined,
       domContentLoadedMs: navigation ? Math.round(navigation.domContentLoadedEventEnd) : undefined,
       transferredBytes,
       moduleCount: moduleEntries.length,
@@ -293,19 +375,57 @@ const main = async () => {
     });
     return summary;
   };
+  let startupActivated = false;
+  let startupFailureReported = false;
+  const captureStartup = (
+    event: string,
+    endMark: 'ready' | 'aborted',
+    extra?: Record<string, string | number | boolean | undefined>,
+  ) => {
+    startupMark(endMark);
+    startupMeasure('total', 'main:start', endMark);
+    const summary = { ...captureStartupSummary(), ...extra };
+    void observability
+      .then((obs) => {
+        obs.events.captureEvent(event, summary);
+        log.info(event, summary);
+      })
+      .catch((error) => log.catch(error));
+  };
+
+  const captureStartupFailure = (extra?: Record<string, string | number | boolean | undefined>) => {
+    if (startupFailureReported) {
+      return;
+    }
+    startupFailureReported = true;
+    captureStartup('composer.startup.failed', 'aborted', { ...extra, startupActivated });
+  };
+
   window.addEventListener(
-    'app-framework:startup-activated',
+    STARTUP_ACTIVATED_EVENT,
     () => {
-      const summary = captureStartupSummary();
+      startupActivated = true;
+      // The scheduler carries on with independent modules after one fails, so activation can still
+      // arrive once the boot is recorded as failed. Counting it in both buckets would inflate the
+      // success rate this event exists to measure.
+      if (startupFailureReported) {
+        return;
+      }
+      captureStartup('composer.startup', 'ready');
+    },
+    { once: true },
+  );
+  window.addEventListener(
+    FIRST_INTERACTIVE_EVENT,
+    (event) => {
+      const firstInteractiveMs = event.detail;
       void observability
-        .then((obs) => {
-          obs.events.captureEvent('composer.startup', summary);
-          log.info('startup', summary);
-        })
+        .then((obs) => obs.events.captureEvent('composer.first-interactive', { firstInteractiveMs }))
         .catch((error) => log.catch(error));
     },
     { once: true },
   );
+  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -321,6 +441,27 @@ const main = async () => {
     EffectEx.runPromise,
   );
 
+  // The popover shares storage and the host's termination queue with the main window, which reports them.
+  if (!isPopover) {
+    window.addEventListener(
+      STARTUP_ACTIVATED_EVENT,
+      () => {
+        const failure = readBootAssetFailure();
+        void observability
+          .then(async (obs) => {
+            if (failure) {
+              reportBootAssetFailure(obs, failure);
+            }
+            if (isTauri) {
+              await reportWebProcessTerminations(obs);
+            }
+          })
+          .catch((error) => log.catch(error));
+      },
+      { once: true },
+    );
+  }
+
   // Detect mobile operating systems (phones only, not tablets).
   const isMobile = await Match.value(isTauri).pipe(
     Match.when(
@@ -331,7 +472,7 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.when(false, () => Effect.sync(() => isTrue(getEnvString(config, 'DX_MOBILE')) || isMobile$())),
     Match.exhaustive,
     EffectEx.runPromise,
   );
@@ -341,7 +482,7 @@ const main = async () => {
   // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
 
-  profiler?.mark('services:start');
+  startupMark('services:start');
   bootStatus('Starting services…');
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
@@ -349,10 +490,14 @@ const main = async () => {
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
   // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
   // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
-  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
   const servicesMode = useLocalServices
-    ? defs.Runtime.Client.ServicesMode.HOST
-    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+    ? defs.Runtime_Client_ServicesMode.HOST
+    : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
+  if (useLocalServices) {
+    // Echo runs in this page, and its Repo constructs Subduction; a worker-mode tab never does.
+    await initEchoHostWasm();
+  }
 
   config = new Config(
     {
@@ -363,7 +508,7 @@ const main = async () => {
           singleClientMode: useSingleClientMode,
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
-          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
+          storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
         },
       },
     },
@@ -371,12 +516,12 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
         // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts, so suffix the name
         // with the server boot id — a restarted server then gets a fresh coordinator instead of
@@ -399,27 +544,58 @@ const main = async () => {
     },
   });
 
-  profiler?.mark('services:end');
-  profiler?.measure('services', 'services:start', 'services:end');
+  startupMark('services:end');
+  startupMeasure('services', 'services:start', 'services:end');
 
-  profiler?.mark('plugins:start');
+  // Started here so the handshake and storage open overlap plugin loading, which plugin-client's
+  // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
+  // has to not reject unhandled.
+  performance.mark('milestone:client-initialize:start');
+  const client = new Client({ config, services });
+  void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
 
-  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // tying the flag to it would make the flag silently do nothing.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
+
+  startupMark('plugins:start');
+
+  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
+  // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
+  // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
+  // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
+  let raiseFatalError: (error: unknown) => void = (error) =>
+    log.error('client initialization failed before render', { error: String(error) });
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
     services,
+    client,
     observability,
     logStore,
+    onFatalError: (error) => {
+      // The phase reaches PostHog on the exception itself; this event carries only the timings.
+      captureStartupFailure();
+      raiseFatalError(error);
+    },
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
-    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
+    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
+    scriptedModel:
+      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only
@@ -449,7 +625,7 @@ const main = async () => {
     }),
   );
 
-  bootStatus('Starting Composer…');
+  bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
   bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
@@ -457,13 +633,27 @@ const main = async () => {
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const defaults = getDefaults(conf);
-  const setupEvents = [AppActivationEvents.SetupSettings];
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
-  profiler?.mark('plugins:end');
-  profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
+  startupMark('plugins:end');
+  startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
+
+  // The fatal dialog renders outside the plugin manager, so it cannot resolve the support service
+  // itself; it gets a bound submit, or nothing when there is no service to file against.
+  const supportEndpoint = SupportService.supportEndpoint(config);
+  const submitReport = supportEndpoint
+    ? async (report: SupportOperation.SupportRequest) => {
+        await EffectEx.runPromise(
+          SupportService.submitSupportReport({
+            endpoint: supportEndpoint,
+            observability: await observability,
+            report,
+          }),
+        );
+      }
+    : undefined;
 
   const Fallback = ({ error }: { error: Error }) => {
     const {
@@ -492,16 +682,27 @@ const main = async () => {
         }
         fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
       >
-        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+        {/* `react-ui`'s own namespace ships with no plugin to register it, unlike every sibling
+            (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
+            keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
+            icon-only button. */}
+        <ThemeProvider
+          tx={defaultTx}
+          resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
+        >
           <Tooltip.Provider>
-            <ResetDialog
-              error={error}
-              logStore={logStore}
-              observability={observability}
-              needRefresh={needRefresh}
-              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-              onReset={import.meta.env.DEV ? handleReset : undefined}
-            />
+            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+                fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
+            <Suspense fallback={null}>
+              <ResetDialog
+                error={error}
+                logStore={logStore}
+                onSubmitReport={submitReport}
+                needRefresh={needRefresh}
+                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+                onReset={import.meta.env.DEV ? handleReset : undefined}
+              />
+            </Suspense>
           </Tooltip.Provider>
         </ThemeProvider>
       </ErrorBoundary>
@@ -509,6 +710,11 @@ const main = async () => {
   };
 
   const Main = () => {
+    const [fatalError, setFatalError] = useState<Error>();
+    useEffect(() => {
+      raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
+    }, []);
+
     const App = useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
@@ -519,19 +725,29 @@ const main = async () => {
       pluginRegistryProvider,
       plugins,
       defaults,
-      setupEvents,
       cacheEnabled: true,
       safeMode,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
+      // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
+      // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
+      timeout: startupTimeout,
+      verboseStatus,
     });
 
-    return <App />;
+    // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
+    // throw here would escape React entirely and blank the page.
+    return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
-  const root = document.getElementById('root')!;
+  const root = document.getElementById('root');
+  if (!root) {
+    // `index.html` always ships a `#root` element — its absence means the document itself
+    // failed to load correctly, which no in-tree fallback can recover from.
+    throw new Error('composer main: #root element not found');
+  }
   log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(

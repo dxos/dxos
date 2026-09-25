@@ -6,15 +6,15 @@
 
 // Code copied from @effect/sql-sqlite-wasm/OpfsWorker.ts and augmented with logging.
 
-/**
- * @since 1.0.0
- */
-/// <reference lib="webworker" />
-import * as SqlError from '@effect/sql/SqlError';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
 import * as Effect from 'effect/Effect';
+/**
+ * @since 1.0.0
+ */
+/// <reference lib="webworker" />
+import * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { log } from '@dxos/log';
 // @ts-ignore
@@ -27,7 +27,10 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './internal/opfs-pragmas';
+} from './internal/opfs-pragmas.ts';
+import { recordSqliteQueryMetrics } from './internal/query-log.ts';
+import { readRow } from './internal/row-decode.ts';
+import { instantiateSqliteModule } from './internal/sqlite-module.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -64,7 +67,7 @@ export interface OpfsWorkerConfig {
  */
 export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.SqlError> =>
   Effect.gen(function* () {
-    const factory = yield* Effect.promise(() => SQLiteESMFactory());
+    const factory = yield* Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory));
     const sqlite3 = WaSqlite.Factory(factory);
     const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create('opfs', factory));
     sqlite3.vfs_register(vfs as any, false);
@@ -79,7 +82,10 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           });
           return handle;
         },
-        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+        catch: (cause) =>
+          new SqlError.SqlError({
+            reason: SqlError.classifySqliteError(cause, { message: 'Failed to open database' }),
+          }),
       }),
       (handle) =>
         Effect.sync(() => {
@@ -90,7 +96,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
         }),
     );
 
-    return yield* Effect.async<void>((resume) => {
+    return yield* Effect.callback<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
         let lastSql: string | undefined;
@@ -150,35 +156,21 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
               lastParams = params;
               const results: Array<any> = [];
               const begin = performance.now();
-              let columns: Array<string> | undefined;
+              // Column names ride per row rather than once per reply: a multi-statement query returns
+              // rows from statements with different columns, and the client pairs them by index.
+              const columns: Array<Array<string>> = [];
               for (const stmt of sqlite3.statements(db, sql)) {
+                let statementColumns: Array<string> | undefined;
                 sqlite3.bind_collection(stmt, params as any);
                 while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                  columns = columns ?? sqlite3.column_names(stmt);
-                  const row = sqlite3.row(stmt);
-                  results.push(row);
+                  const decoded = readRow(sqlite3, stmt, sql, statementColumns);
+                  statementColumns = decoded.columns;
+                  results.push(decoded.row);
+                  columns.push(statementColumns);
                 }
               }
               options.port.postMessage([id, undefined, [columns, results]]);
-              const end = performance.now();
-              log('sqlite query', { sql, params, results: results.length, time: end - begin });
-              performance.measure(sql.slice(0, 128), {
-                start: begin,
-                end: end,
-                detail: {
-                  devtools: {
-                    dataType: 'track-entry',
-                    track: 'Query',
-                    trackGroup: 'SQlite',
-                    color: 'tertiary-dark',
-                    properties: [
-                      ['sql', sql],
-                      ['params', params],
-                      ['resultCount', results.length],
-                    ],
-                  },
-                },
-              });
+              recordSqliteQueryMetrics(sql, params, results.length, begin);
               return;
             }
           }
@@ -187,7 +179,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
           log('sqlite error', { error: e, sql: lastSql, params: lastParams });
           const message = 'message' in e ? e.message : String(e);
-          options.port.postMessage([messageId!, message, undefined]);
+          // The client classifies SqlError reasons from `code`, which a bare string would drop.
+          const error = typeof e.code === 'number' ? { message, code: e.code } : message;
+          options.port.postMessage([messageId!, error, undefined]);
         }
       };
       options.port.addEventListener('message', onMessage);

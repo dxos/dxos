@@ -2,28 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { GraphBuilder } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Selection } from '@dxos/react-ui-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Magazine, Subscription } from '#types';
+import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { getMagazinesPath } from '../paths';
+import { getMagazinesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
         const selection = get(viewState.atom(Selection.aspect, nodeId));
@@ -38,7 +41,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: Type.getTypename(Magazine.Magazine),
             targetNodeId: getMagazinesPath(space.db.spaceId),
@@ -46,7 +49,7 @@ export default Capability.makeModule(
       }),
 
       // Feeds as children under each Magazine node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'magazineFeeds',
         match: (node) => (Magazine.instanceOf(node.data) ? Option.some(node.data as Magazine.Magazine) : Option.none()),
         connector: (magazine, get) => {
@@ -67,8 +70,9 @@ export default Capability.makeModule(
       }),
 
       // Companion panel: resolve the selected Post under a Magazine node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'magazinePost',
+        relation: AppNode.companion,
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })
@@ -98,7 +102,7 @@ export default Capability.makeModule(
       }),
 
       // Actions on each Subscription.Subscription node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'feedActions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
@@ -122,6 +126,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

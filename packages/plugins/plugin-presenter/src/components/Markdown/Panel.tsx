@@ -35,8 +35,8 @@ export const Panel = ({ children, classNames }: PanelProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention-surface', classNames)}>
-      <div className={mx('dx-container absolute')} style={props}>
+    <div ref={containerRef} className={mx('flex grow relative overflow-hidden dx-attention-surface', classNames)}>
+      <div className={mx('dx-expand absolute')} style={props}>
         {width && height && children}
       </div>
     </div>

@@ -2,23 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Decorator, type StoryContext } from '@storybook/react';
+import { type Decorator, type StoryContext } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { ErrorFallback } from '@dxos/react-error-boundary';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
-import { type UseAppOptions, useApp } from '../ui';
-import { StorybookErrorFallback } from './StorybookErrorFallback';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core/index.ts';
+import { type UseAppOptions, useApp } from '../ui/index.ts';
+import { activateDemandGatedModules } from './demand-gated.ts';
 
 /**
- * @internal
+ * The fallback a crashed story renders, overridable per story via `withPluginManager({ fallback })`.
+ * A global because importing `./testing` from the storybook preview drags the plugin core into every
+ * project's dependency pre-bundle.
+ */
+declare global {
+  // eslint-disable-next-line no-var
+  var __STORY_ERROR_FALLBACK__: NonNullable<UseAppOptions['fallback']> | undefined;
+}
+
+/**
+ * Builds a plugin manager for test hosts. Stories go through {@link withPluginManager}; headless
+ * hook tests use this directly to supply the `PluginManagerProvider` value their wrapper needs.
  */
 export const setupPluginManager = ({
   capabilities,
@@ -37,14 +49,33 @@ export const setupPluginManager = ({
     ...options,
   });
 
+  // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
+  // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
+  // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
+  // on the startup pass (attention, graph, the process manager).
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.PluginManager,
+    implementation: pluginManager,
+    module: 'org.dxos.app-framework.plugin-manager',
+  });
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.AtomRegistry,
+    implementation: pluginManager.registry,
+    module: 'org.dxos.app-framework.atom-registry',
+  });
+
   if (capabilities) {
-    getProviderValue(capabilities, pluginManager.capabilities).forEach((capability) => {
-      pluginManager.capabilities.contribute({
-        interface: capability.interface,
-        implementation: capability.implementation,
-        module: 'story',
-      });
-    });
+    // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
+    // interface/implementation entries the manager ingests — the same path module activation uses.
+    CapabilityManager.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach(
+      (capability) => {
+        pluginManager.capabilities.contribute({
+          interface: capability.interface,
+          implementation: capability.implementation,
+          module: 'story',
+        });
+      },
+    );
   }
 
   return pluginManager;
@@ -60,7 +91,7 @@ type ManagedPluginManagerState = {
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
+  capabilities?: MaybeProvider<Capability.AnyContribution[], CapabilityManager.CapabilityManager>;
   /** @deprecated */
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
@@ -82,13 +113,16 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-      const capability = Capability.contributes(Capabilities.ReactRoot, {
-        id: storyId,
-        root: () => <Story />,
-      });
+      const [capability] = CapabilityManager.expandContributions([
+        Capability.contribute(Capabilities.ReactRoot, {
+          id: storyId,
+          root: () => <Story />,
+        }),
+      ]);
 
       pluginManager.capabilities.contribute({
-        ...capability,
+        interface: capability.interface,
+        implementation: capability.implementation,
         module: 'org.dxos.app-framework.with-plugin-manager',
       });
 
@@ -102,7 +136,9 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
+        // A story switch tears down while the start-event trickle is still activating, which
+        // interrupts the shutdown fiber — expected; real failures still surface.
+        EffectEx.runDetached(pluginManager.shutdown());
       };
     }, [storyId, init]);
 
@@ -122,15 +158,40 @@ const WithPluginManagerApp = ({
   setupEvents,
   storyId,
 }: ManagedPluginManagerState) => {
-  // Fire deprecated events only after the effect-owned manager for this story exists.
-  useAsyncEffect(async () => {
-    await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-  }, [fireEvents, pluginManager, storyId]);
+  // Gates the first render: rendering before the start events land lets a component read a
+  // capability that has not been contributed yet, which strict `useCapability` throws on.
+  const [activated, setActivated] = useState(false);
 
-  // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
-  // callers can override via `withPluginManager({ fallback })`.
-  const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? StorybookErrorFallback });
-  return <App />;
+  // Fire deprecated events only after the effect-owned manager for this story exists.
+  useAsyncEffect(
+    async (controller) => {
+      await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+      // In the app plugins start on demand (surface render), but stories render one surface in
+      // isolation — fire every start event so start-gated modules are present regardless of
+      // which plugin's surface the story exercises. A story switch shuts the manager down
+      // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
+      EffectEx.runDetached(
+        activateDemandGatedModules(pluginManager).pipe(
+          // Interruption skips this, so a torn-down story never flips the gate.
+          Effect.andThen(
+            Effect.sync(() => {
+              if (!controller.signal.aborted) {
+                setActivated(true);
+              }
+            }),
+          ),
+        ),
+      );
+    },
+    [fireEvents, pluginManager, storyId],
+  );
+
+  const App = useApp({
+    pluginManager,
+    setupEvents,
+    fallback: fallback ?? globalThis.__STORY_ERROR_FALLBACK__ ?? ErrorFallback,
+  });
+  return activated ? <App /> : <></>;
 };
 
 const storyMeta = Plugin.makeMeta({

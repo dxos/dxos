@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import {
   CommandConfig,
@@ -19,7 +19,7 @@ import {
 } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
 import { type Key } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({
@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = space.share({
-    authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    authMethod: Invitation_AuthMethod.SHARED_SECRET,
     persistent: true,
     multiUse: multiple,
   });
@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
 
           if (!json) {
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
@@ -64,7 +64,7 @@ export const handler = Effect.fn(function* ({
           if (open) {
             const url = new URL(host);
             url.searchParams.append('spaceInvitationCode', invitationCode);
-            yield* openBrowser(url.toString()).pipe(Effect.catchAll(() => Effect.void));
+            yield* openBrowser(url.toString()).pipe(Effect.catch(() => Effect.void));
           } else if (!json) {
             yield* Console.log(`\nInvitation: ${invitationCode}\n`);
           }
@@ -79,7 +79,7 @@ export const handler = Effect.fn(function* ({
         {
           invitationCode: InvitationEncoder.encode(invitation),
           authCode: invitation.authCode,
-          state: Invitation.State[invitation.state],
+          state: Invitation_State[invitation.state],
         },
         null,
         2,
@@ -89,7 +89,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'Space Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state]),
+      FormBuilder.set('state', Invitation_State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }
@@ -99,11 +99,15 @@ export const share = Command.make(
   'share',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    multiple: Options.boolean('multiple', { ifPresent: true }).pipe(
+    multiple: Options.Boolean('multiple').pipe(
+      Options.withDefault(false),
       Options.withDescription('Create a multi-use invitation.'),
     ),
-    open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.text('host').pipe(
+    open: Options.Boolean('open').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Open browser with invitation.'),
+    ),
+    host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as PlanningOperations from './definitions';
+import { AskQuestion, PlanReminder, UpdateTasks } from './definitions.ts';
 
-export const PlanningHandlers = OperationHandlerSet.lazy(
-  () => import('./update-tasks'),
-  () => import('./plan-reminder'),
-);
+export * as PlanningOperations from './definitions.ts';
+
+export const PlanningHandlers = OperationHandlerSet.lazy([
+  UpdateTasks.pipe(Operation.lazyHandler(() => import('./update-tasks.ts'))),
+  AskQuestion.pipe(Operation.lazyHandler(() => import('./ask-question.ts'))),
+  PlanReminder.pipe(Operation.lazyHandler(() => import('./plan-reminder.ts'))),
+]);

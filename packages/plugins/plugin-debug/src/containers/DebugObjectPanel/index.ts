@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { DebugObjectPanel as default } from './DebugObjectPanel';
+export { DebugObjectPanel as default } from './DebugObjectPanel.tsx';

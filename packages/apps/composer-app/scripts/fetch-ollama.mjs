@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-// Fetches a pinned Ollama macOS runtime for the Tauri sidecar.
+// Fetches a pinned Ollama macOS runtime for the native app.
 //
 // Modern Ollama is not a single binary: the `ollama` launcher loads sibling `llama-server` and
 // `libggml*/libllama*/mlx_metal_*` libraries relative to its own executable path, ignoring
-// `OLLAMA_LIBRARY_PATH` (see capabilities/ollama.ts). The launcher is bundled as a Tauri sidecar
-// (signed, in the app's MacOS dir); the libraries ship as bundle resources at the exact relative
-// path it looks up. The runtime is large and version-specific, so it is downloaded at build time
-// (gitignored) rather than committed.
+// `OLLAMA_LIBRARY_PATH`. Launcher and libraries both ship through `bundle.macOS.files` rather than
+// as a Tauri sidecar; plugin-native's capabilities/ollama.ts explains why. The runtime is large and
+// version-specific, so it is downloaded at build time (gitignored) rather than committed.
 //
 // Pinned to an exact version + SHA-256 for reproducibility and supply-chain integrity. To bump:
 // update VERSION and SHA256 together (compute via `shasum -a 256 ollama-darwin.tgz`).
@@ -27,9 +26,6 @@ const VERSION = 'v0.30.11';
 const SHA256 = '4620272018aa974fb146741e51fa69dbecd141922143354d4643a45381faf2e6';
 const ASSET = 'ollama-darwin.tgz';
 const URL = `https://github.com/ollama/ollama/releases/download/${VERSION}/${ASSET}`;
-
-// Tauri matches sidecars by `<name>-<target-triple>`; the universal launcher serves both arches.
-const SIDECAR_TARGETS = ['aarch64-apple-darwin', 'x86_64-apple-darwin'];
 
 // Metal shader libraries (mlx.metallib) aren't Mach-O, so codesign can only attach their
 // signature via an extended attribute. Tauri's macOS bundler strips all extended attributes from
@@ -63,7 +59,7 @@ const frameworkLibrariesDir = join(frameworkDir, 'Libraries');
 // runtime via Tauri's normal per-file framework signing.
 const frameworkInfoPlist = join(frameworkDir, 'Info.plist');
 
-// Packaged builds place the runtime at `Contents/MacOS/lib/ollama` and the framework at
+// Packaged builds place the runtime at `Contents/Resources/lib/ollama` and the framework at
 // `Contents/Frameworks/ollama-metal.framework` (4 levels up, then down into Frameworks/); local
 // dev runs the runtime directly out of `sidecar/ollama-runtime`, 2 levels from the framework (a
 // sibling directory, see ensureDevRuntimeLink). Pass `--packaged` (done by deploy-tauri.yaml) to
@@ -109,15 +105,6 @@ const ensureRuntime = async () => {
   await rm(tmp, { force: true });
   await writeFile(marker, `${VERSION}\n`);
   console.log(`[ollama] runtime ${VERSION} ready at ${runtimeDir}`);
-};
-
-// Place the launcher as triple-named sidecars so Tauri bundles + signs it.
-const ensureSidecars = async () => {
-  for (const target of SIDECAR_TARGETS) {
-    const sidecar = join(sidecarDir, `ollama-${target}`);
-    await copyFile(launcher, sidecar);
-    await chmod(sidecar, 0o755);
-  }
 };
 
 // Move each variant's mlx.metallib into the framework and leave a symlink in its place, so the
@@ -169,21 +156,25 @@ const ensureMetalFramework = async () => {
   }
 };
 
-// Dev only: Tauri runs the sidecar from `target/<profile>/` and `bundle.macOS.files` is not applied,
-// so Ollama (which finds llama-server relative to its own exe) can't see the runtime. Symlink it
-// into `target/<profile>/lib/ollama` — the location the launcher searches. Packaged builds use
-// `bundle.macOS.files` instead (Contents/MacOS/lib/ollama).
-const ensureDevRuntimeLink = async () => {
+// Dev only: `bundle.macOS.files` is not applied and `$RESOURCE` (the scoped command's path, see
+// capabilities/desktop.json) resolves to `target/<profile>/`, so stage the launcher there with the
+// runtime symlinked into `target/<profile>/lib/ollama` — the location it searches. The launcher is
+// copied rather than symlinked because it resolves its libraries against its own executable path.
+const ensureDevRuntime = async () => {
   for (const profile of ['debug', 'release']) {
-    const libDir = join(srcTauriDir, 'target', profile, 'lib');
+    const profileDir = join(srcTauriDir, 'target', profile);
+    const libDir = join(profileDir, 'lib');
     await mkdir(libDir, { recursive: true });
     const link = join(libDir, 'ollama');
     await rm(link, { recursive: true, force: true });
     await symlink(runtimeDir, link, 'dir');
+
+    const exe = join(profileDir, 'ollama');
+    await copyFile(launcher, exe);
+    await chmod(exe, 0o755);
   }
 };
 
 await ensureRuntime();
-await ensureSidecars();
 await ensureMetalFramework();
-await ensureDevRuntimeLink();
+await ensureDevRuntime();

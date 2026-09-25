@@ -4,8 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
-import { FILTER } from '../constants';
-import { AppManager } from './app-manager';
+import { FILTER } from '../constants.ts';
+import { AppManager } from './app-manager.ts';
 
 enum Groceries {
   Eggs = 'eggs',
@@ -19,31 +19,26 @@ test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  test.beforeEach(async ({ browser, browserName }) => {
+  test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser);
 
     await host.init();
-    // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //  https://github.com/microsoft/playwright/issues/2973
-    guest = browserName === 'chromium' ? new AppManager(browser) : host;
-    if (browserName === 'chromium') {
-      await guest.init();
-      await host.openShareSpace();
-      const invitationCode = await host.shell.createSpaceInvitation();
-      const authCode = await host.shell.getAuthCode();
+    guest = new AppManager(browser);
+    await guest.init();
+    await host.openShareSpace();
+    const invitationCode = await host.shell.createSpaceInvitation();
+    const authCode = await host.shell.getAuthCode();
 
-      await guest.openJoinSpace();
-      await guest.shell.acceptSpaceInvitation(invitationCode);
-      await guest.shell.authenticate(authCode);
-      await host.shell.closeShell();
+    await guest.openJoinSpace();
+    await guest.shell.acceptSpaceInvitation(invitationCode);
+    await guest.shell.authenticate(authCode);
+    await host.shell.closeShell();
 
-      await guest.page.waitForURL(await host.page.url());
-    }
+    await guest.page.waitForURL(await host.page.url());
   });
 
   test.afterEach(async () => {
-    await host.page.close();
-    await guest.page.close();
+    await Promise.all([host.close(), guest.close()]);
   });
 
   test.describe('Default space', () => {

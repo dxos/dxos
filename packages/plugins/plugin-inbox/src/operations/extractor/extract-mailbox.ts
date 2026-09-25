@@ -5,12 +5,12 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import { InboxOperation } from '#types';
 
 const DEFAULT_CONCURRENCY = InboxOperation.DEFAULT_EXTRACT_MAILBOX_CONCURRENCY;
 
@@ -42,14 +42,14 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = Inb
                 stats.updated += result.updated;
               }),
             ),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Effect.sync(() => {
                 stats.failed++;
                 log.warn('extract mailbox: message failed after retry', {
                   err: Cause.squash(cause),
                   messageId: message.id,
                   extractorId,
-                  isDefect: !Cause.isFailure(cause),
+                  isDefect: !Cause.hasFails(cause),
                 });
               }),
             ),

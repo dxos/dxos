@@ -2,42 +2,69 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Account from '@dxos/app-toolkit/Account';
+import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
+import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
-import { HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
+import { CliLogin } from '#types';
 
-import { printIdentity, waitForState } from '../../halo/util';
+import { CommandError } from '../../errors.ts';
+import { printIdentity, waitForState } from '../../halo/util.ts';
+import {
+  ATMOSPHERE_INPUT_PROMPT,
+  ATMOSPHERE_METHOD,
+  ATMOSPHERE_METHOD_TITLE,
+  METHOD_ALIASES,
+  hubClient,
+  methodOption,
+} from '../util.ts';
 
-type LoginMethod = 'email' | 'atproto' | 'device-invitation' | 'recovery-code';
+type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'composer' | 'device-invitation' | 'recovery-code';
 
-const LOGIN_METHODS: LoginMethod[] = ['email', 'atproto', 'device-invitation', 'recovery-code'];
+const LOGIN_METHODS: LoginMethod[] = [
+  'email',
+  'passkey',
+  ATMOSPHERE_METHOD,
+  'composer',
+  'device-invitation',
+  'recovery-code',
+];
 
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
-  { title: 'AT Protocol', value: 'atproto' as const },
+  { title: 'Passkey', value: 'passkey' as const },
+  { title: ATMOSPHERE_METHOD_TITLE, value: ATMOSPHERE_METHOD },
+  { title: 'Approve in Composer', value: 'composer' as const },
   { title: 'Device invitation', value: 'device-invitation' as const },
   { title: 'Recovery code', value: 'recovery-code' as const },
 ];
 
-const INPUT_PROMPT: Record<LoginMethod, string> = {
+/**
+ * Absent for `passkey`, which identifies the holder from the credential rather than from input, and
+ * for `composer`, whose optional input (the Composer URL) has a default.
+ */
+const INPUT_PROMPT: Partial<Record<LoginMethod, string>> = {
   'email': 'Email address',
-  'atproto': 'atproto handle or DID (e.g. alice.bsky.social)',
+  [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
   'device-invitation': 'Invitation code or URL',
   'recovery-code': 'Recovery code (seed phrase)',
 };
@@ -45,14 +72,16 @@ const INPUT_PROMPT: Record<LoginMethod, string> = {
 export const login = Command.make(
   'login',
   {
-    method: Options.choice('method', LOGIN_METHODS).pipe(
+    method: methodOption(LOGIN_METHODS, METHOD_ALIASES).pipe(
       Options.withDescription(
-        'Login method (email | atproto | device-invitation | recovery-code). Prompted if omitted.',
+        'Login method (email | passkey | atmosphere | composer | device-invitation | recovery-code). Prompted if omitted.',
       ),
       Options.optional,
     ),
-    input: Args.text({ name: 'input' }).pipe(
-      Args.withDescription('Method input: email address / atproto handle / invitation code / recovery code.'),
+    input: Args.String('input').pipe(
+      Args.withDescription(
+        'Method input: email address / Atmosphere handle / Composer URL / invitation code / recovery code. Unused by passkey.',
+      ),
       Args.optional,
     ),
   },
@@ -66,15 +95,20 @@ export const login = Command.make(
 
     const resolvedMethod: LoginMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
+    const inputPrompt = INPUT_PROMPT[resolvedMethod];
     const resolvedInput = Option.isSome(input)
       ? input.value
-      : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
+      : inputPrompt
+        ? yield* Prompt.String({ message: `${inputPrompt}:` }).pipe(Prompt.run)
+        : '';
 
     const identity = yield* Match.value(resolvedMethod).pipe(
-      Match.when('atproto', () => loginWithAtproto(client, resolvedInput)),
+      Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput)),
       Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
+      Match.when('passkey', () => loginWithPasskey(client)),
+      Match.when('composer', () => loginWithComposer(client, resolvedInput)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -92,10 +126,11 @@ export const login = Command.make(
 ).pipe(Command.withDescription('Log in to an existing DXOS identity (same methods as Composer).'));
 
 /**
- * atproto / Bluesky OAuth login: runs the gate recovery flow (local server + browser) and redeems
- * the resulting one-time `recoveryProof` to admit this device into the existing identity's HALO.
+ * Atmosphere (atproto / Bluesky) OAuth login: runs the gate recovery flow (local server + browser)
+ * and redeems the resulting one-time `recoveryProof` to admit this device into the existing
+ * identity's HALO.
  */
-const loginWithAtproto = (client: Client, handle: string) =>
+const loginWithAtmosphere = (client: Client, handle: string) =>
   Effect.gen(function* () {
     const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
     invariant(edgeBaseUrl, 'Edge services not configured (runtime.services.edge.url).');
@@ -113,64 +148,219 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
   Effect.tryPromise(() => client.halo.recoverIdentity({ recoveryCode }));
 
 /**
+ * Path the hub's sign-in page hands the login token back on: it navigates to the root of the
+ * callback origin with the token in the query string.
+ */
+const PASSKEY_CALLBACK_PATH = '/';
+
+/**
+ * Passkey login, with the prompt running on a hub-served page rather than here.
+ *
+ * A CLI cannot run it itself: WebAuthn scopes a credential to a relying party, and a page served
+ * from a loopback port can only ever name `localhost`, so a `composer.space` passkey is never
+ * offered to one. The hub verifies the assertion and mints the same login token the emailed link
+ * mints, which is why this ends in the same `recoverIdentity({ token })` call the email method
+ * makes. Nothing about the passkey reaches this process.
+ *
+ * What stops a link to this page from authorizing someone else's terminal is the callback rule: the
+ * hub only ever sends the token to a loopback origin, so a stranger who phishes an approval has it
+ * delivered to the victim's own machine, where nothing of theirs is listening.
+ */
+const loginWithPasskey = (client: Client) =>
+  Effect.gen(function* () {
+    const server = yield* startLocalCallbackServer(PASSKEY_CALLBACK_PATH, {
+      successMessage: 'Signed in. You can close this window and return to your terminal.',
+    });
+
+    return yield* Effect.gen(function* () {
+      const url = new URL('/auth/verify', Account.getAuthUrl(client));
+      url.searchParams.set('purpose', 'device');
+      url.searchParams.set('callback', server.origin);
+
+      yield* openBrowser(url.href).pipe(
+        Effect.catch(() => Console.log(`Could not open a browser. Open this on this machine:\n\n  ${url.href}\n`)),
+      );
+      yield* Console.log('Waiting for you to approve the sign-in in your browser...');
+
+      const { token } = yield* server.waitForResult();
+      if (!token) {
+        return yield* Effect.fail(new CommandError({ message: 'The sign-in completed without returning a token.' }));
+      }
+
+      return yield* Effect.tryPromise({
+        try: () => client.halo.recoverIdentity({ token }),
+        catch: (cause) =>
+          new CommandError({
+            message:
+              'Passkey login failed. EDGE admits a passkey only when it is registered as a recovery credential; ' +
+              'add one from Composer before logging in here.',
+            cause,
+          }),
+      });
+    }).pipe(Effect.ensuring(server.stop()));
+  });
+
+/**
+ * Path the emailed link lands on. The hub's activation route rewrites its redirect to the root of
+ * the redirect origin, so the local server has to answer there.
+ */
+const LOGIN_CALLBACK_PATH = '/';
+
+/** Matches the hub's login-token TTL. There is nothing left to wait for once the token expires. */
+const LOGIN_TIMEOUT_MS = 15 * 60 * 1000;
+
+/**
+ * Resolves when the browser lands on the local callback server after the emailed link is clicked.
+ * The link only ever redirects to this machine's loopback origin, so that is the one place a token
+ * can arrive.
+ */
+const awaitLoginToken = (server: LocalCallbackServer) =>
+  server
+    .waitForResult(LOGIN_TIMEOUT_MS)
+    .pipe(
+      Effect.flatMap(({ token }) =>
+        token ? Effect.succeed(token) : Effect.fail(new CommandError({ message: 'The login link carried no token.' })),
+      ),
+    );
+
+/**
  * Email login, mirroring the gate's login tab (`WelcomeScreen.handleLogin`). Hub-service answers in
- * one of three ways:
+ * one of two ways:
  *
  * - `needsIdentity`: the address may bind a fresh Account but has no identity yet. Create one
  *   locally and retry with its DID; the hub then admits it directly — there is no token because
  *   there is nothing to recover — and we provision the agent as the gate does.
- * - `token`: an Account exists and the hub returned a one-time recovery token inline.
- * - neither: the link went out by email, so prompt for the token from the message.
+ * - otherwise: the link went out by email (a token is never returned inline). Clicking it finishes
+ *   the login here, because the hub redirects the browser to the local callback server rather than
+ *   to the web app.
  */
 const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-    invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
-    const hub = new HubHttpClient(hubUrl);
-    const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
+    const hub = yield* hubClient;
+    // The redirect target is named on the call that mints the token, so the server starts before
+    // the hub says whether an email is sent at all. A bind failure is swallowed rather than raised
+    // here because the `needsIdentity` path below completes without a callback.
+    const server = yield* startLocalCallbackServer(LOGIN_CALLBACK_PATH, {
+      successMessage: 'Logged in. You can close this window and return to the terminal.',
+    }).pipe(Effect.option, Effect.map(Option.getOrUndefined));
 
-    if (result.needsIdentity) {
-      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
-      yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
-      const identity = client.halo.identity.get();
-      invariant(identity, 'identity should exist after create');
-      // The local identity outlives any failure from here on, and the `Already logged in` guard
-      // above rejects a plain retry, so a rejected request and a non-admitting response both need
-      // the same recovery guidance.
-      const notAdmitted = (detail: string) =>
-        new Error(
-          `Hub did not admit ${email} (${detail}). A local identity was created and remains bound to ` +
-            'this profile; run `dx account logout` to clear it before retrying.',
-        );
+    return yield* Effect.gen(function* () {
+      const result = yield* Effect.tryPromise(() =>
+        hub.login(DxContext.default(), { email, redirectUrl: server?.origin }),
+      );
 
-      const retry = yield* Effect.tryPromise({
-        try: () =>
-          hub.login(DxContext.default(), {
-            email,
-            identityDid: identity.did,
-            identityKey: identity.identityKey.toHex(),
-          }),
-        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
-      });
-      if (!retry.admitted) {
-        return yield* Effect.fail(notAdmitted('no admission granted'));
+      if (result.needsIdentity) {
+        // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
+        yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
+        const identity = client.halo.identity.get();
+        invariant(identity, 'identity should exist after create');
+        // The local identity outlives any failure from here on, and the `Already logged in` guard
+        // above rejects a plain retry, so every failure below carries the same recovery step.
+        const recovery =
+          'A local identity was created and remains bound to this profile; run `dx account logout` ' +
+          'to clear it before retrying.';
+
+        const retry = yield* Effect.tryPromise({
+          try: () =>
+            hub.login(DxContext.default(), {
+              email,
+              identityDid: identity.did,
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
+            }),
+          catch: (cause) =>
+            new CommandError({ message: `Login request failed. ${recovery}`, context: { email }, cause }),
+        });
+        if (!retry.admitted) {
+          return yield* Effect.fail(
+            new CommandError({
+              message:
+                `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+                'run `dx account signup <ACCESS-CODE>` to create one. ' +
+                recovery,
+            }),
+          );
+        }
+        yield* invoke(ClientOperation.CreateAgent);
+        return identity;
       }
-      yield* invoke(ClientOperation.CreateAgent);
-      return identity;
-    }
 
-    let token = result.token;
-    if (!token) {
-      yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
-      token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);
-    }
-    return yield* Effect.tryPromise(() => client.halo.recoverIdentity({ token }));
+      yield* Console.log(`A login link was sent to ${email}.`);
+      // Only reachable when the port bind failed above: the hub then minted a token with no
+      // redirect, so the link lands on the web app and this command has nothing to wait for.
+      if (!server) {
+        return yield* Effect.fail(
+          new CommandError({
+            message:
+              'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
+              'Free a loopback port and run the command again.',
+          }),
+        );
+      }
+      yield* Console.log('Open it on this machine to finish signing in.');
+      const token = yield* awaitLoginToken(server);
+      return yield* Effect.tryPromise(() => client.halo.recoverIdentity({ token }));
+    }).pipe(Effect.ensuring(server?.stop() ?? Effect.void));
+  });
+
+/** Composer origin opened when `--method composer` names none; `DX_COMPOSER_URL` overrides it. */
+const DEFAULT_COMPOSER_URL = 'https://composer.space';
+
+/** How long the terminal waits for the user to approve in the browser. */
+const COMPOSER_APPROVAL_TIMEOUT_MS = 10 * 60 * 1000;
+
+/**
+ * Approve-in-Composer login: joins the identity already open in a Composer tab on this machine.
+ *
+ * The CLI opens Composer with a loopback callback and a one-time state; Composer shows the state,
+ * and on approval creates a known-public-key device invitation and hands its code to the callback.
+ * The keypair travels inside the code, so the join needs no auth code — which is also why Composer
+ * only ever sends it to a loopback address (see {@link CliLogin.parseCallback}).
+ *
+ * The Composer tab hosts the invitation, so it has to stay open until this command finishes.
+ */
+const loginWithComposer = (client: Client, composerUrl: string) =>
+  Effect.gen(function* () {
+    const state = CliLogin.createState();
+    const server = yield* startLocalCallbackServer(CliLogin.CALLBACK_PATH, {
+      successMessage: 'Invitation received. Return to your terminal; keep the Composer tab open until it finishes.',
+      accept: (params) => params[CliLogin.RESPONSE_STATE_PARAM] === state,
+    });
+
+    return yield* Effect.gen(function* () {
+      const url = yield* Effect.try({
+        try: () =>
+          CliLogin.createAuthorizeUrl(
+            composerUrl || process.env.DX_COMPOSER_URL || DEFAULT_COMPOSER_URL,
+            // The literal address the server binds, so a host resolving `localhost` to `::1` still reaches it.
+            `http://127.0.0.1:${server.port}${CliLogin.CALLBACK_PATH}`,
+            state,
+          ),
+        catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),
+      });
+
+      // Printed whether or not a browser opens: the approving tab may belong to another browser
+      // profile than the system default, and it has to be the one holding the identity.
+      yield* Console.log(`Open this on this machine to approve the login:\n\n  ${url.href}\n`);
+      yield* Console.log(`Composer should show the code: ${state}`);
+      yield* openBrowser(url.href).pipe(Effect.catch(() => Effect.void));
+
+      const params = yield* server.waitForResult(COMPOSER_APPROVAL_TIMEOUT_MS);
+      const code = params[CliLogin.INVITATION_CODE_PARAM];
+      if (!code) {
+        return yield* Effect.fail(new CommandError({ message: 'Composer returned no invitation code.' }));
+      }
+
+      yield* Console.log('Joining the identity...');
+      const invitation = client.halo.join(InvitationEncoder.decode(code));
+      yield* waitForState(invitation, Invitation_State.SUCCESS);
+      const identity = client.halo.identity.get();
+      invariant(identity, 'Device invitation completed but no identity is present.');
+      return identity;
+    }).pipe(Effect.ensuring(server.stop()));
   });
 
 /**
  * Device-invitation login: joins an existing identity from another authorized device.
- *
- * NOTE: p2p networking does not work in bun — this method will likely hang waiting for the peer.
  */
 const loginWithDeviceInvitation = (client: Client, encoded: string) =>
   Effect.gen(function* () {
@@ -179,10 +369,10 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
       code = new URL(code).searchParams.get('deviceInvitationCode') ?? code;
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
-    yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
-    const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
+    yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
+    const authCode = yield* Prompt.String({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
-    yield* waitForState(invitation, Invitation.State.SUCCESS);
+    yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();
     invariant(identity, 'Device invitation completed but no identity is present.');
     return identity;

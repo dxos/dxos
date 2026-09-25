@@ -2,23 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { type MeetingCapabilities as MC, MeetingCapabilities } from '#types';
+import { MeetingCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = Atom.make<MC.MeetingState>({}).pipe(Atom.keepAlive);
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = Atom.make<MeetingCapabilities.MeetingState>({}).pipe(Atom.keepAlive);
 
-    const updateState = (updater: (current: MC.MeetingState) => MC.MeetingState) => {
+    const updateState = (updater: (current: MeetingCapabilities.MeetingState) => MeetingCapabilities.MeetingState) => {
       registry.set(stateAtom, updater(registry.get(stateAtom)));
     };
 
-    return Capability.contributes(MeetingCapabilities.State, {
+    return Capability.contribute(MeetingCapabilities.State, {
       stateAtom,
       get state() {
         return registry.get(stateAtom);

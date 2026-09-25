@@ -15,7 +15,7 @@ import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
-import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text';
+import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';
 
 //
 // A basic ProseMirror editor driven entirely by the lens. It never sees markdown: it reads a block
@@ -254,7 +254,7 @@ export const RichTextEditor = ({ text }: { text: Text.Text }) => {
     }
   }, [signature, reconcile]);
 
-  return <div ref={parentRef} className='min-h-0 overflow-auto' data-testid='rich-text-editor' />;
+  return <div ref={parentRef} className='overflow-auto' data-testid='rich-text-editor' />;
 };
 
 /**

@@ -3,6 +3,12 @@
 # Resolve directory of this script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# This wrapper only exists in the monorepo checkout — the published binary has its own
+# entrypoint — so a fresh profile bootstrapped here should default to the `main` (staging) edge
+# worker Composer's local dev server talks to, not production. Set DX_LOCAL_DEV=0 to opt out.
+: "${DX_LOCAL_DEV:=1}"
+export DX_LOCAL_DEV
+
 #
 # Use exec -a to set process name for easy signal targeting.
 # NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:

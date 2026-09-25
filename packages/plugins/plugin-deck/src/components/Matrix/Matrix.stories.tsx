@@ -5,13 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type Node } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
@@ -19,7 +20,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -27,21 +28,16 @@ import { Organization, Person } from '@dxos/types';
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import type { DeckCapabilities } from '#types';
 
-import { Plank } from '../Plank';
-import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { Plank } from '../Plank/index.ts';
+import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix.tsx';
 
 random.seed(123);
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckState),
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: () => DeckState(),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
+const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
+  Plugin.addModule(DeckState),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 
@@ -59,15 +55,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
               <p>{Obj.getLabel(props.data)}</p>
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Syntax.Root data={props.data}>
-            <Panel.Content asChild>
-              <Syntax.Content>
-                <Syntax.Viewport>
-                  <Syntax.Code />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Panel.Content>
-          </Syntax.Root>
+          <Panel.Content asChild>
+            <JsonHighlighter data={props.data} />
+          </Panel.Content>
         </Panel.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -78,7 +68,7 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
  * Tile that renders a node-bound Plank (sigil/title + content Surface).
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
-  const node = useMemo<Node.Node>(
+  const node = useMemo<AppGraphNode.Node>(
     () => ({ id: props.data.id, type: 'test', data: props.data, properties: { label: Obj.getLabel(props.data) } }),
     [props.data],
   );
@@ -89,7 +79,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
   );
 };
 
-const TestExtension = Capability.contributes(
+const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',
@@ -99,15 +89,7 @@ const TestExtension = Capability.contributes(
         return <Loading />;
       }
 
-      return (
-        <Syntax.Root data={subject}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
-      );
+      return <JsonHighlighter data={subject} />;
     },
   }),
 );

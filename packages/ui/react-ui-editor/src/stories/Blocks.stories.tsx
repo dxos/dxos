@@ -18,7 +18,7 @@ import {
 
 import { translations } from '#translations';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 random.seed(123);
 
@@ -41,7 +41,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   return (
     <Editor.Root>
-      <Editor.View {...props} classNames='dx-container' extensions={extensions} />
+      <Editor.View {...props} classNames='dx-expand' extensions={extensions} />
     </Editor.Root>
   );
 };

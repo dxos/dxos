@@ -5,16 +5,17 @@
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
+import { Button, Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '#meta';
 
@@ -35,13 +36,13 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     // TODO(burdon): Factor out commonality with shortcut dialog.
     const allActions = useMemo(() => {
       // TODO(burdon): Get from navtree (not keyboard).
-      const current = Keyboard.singleton.getCurrentContext();
+      const current = getHotkeyScope() ?? '';
       const actionMap = new Set<string>();
-      const actions: Node.ActionLike[] = [];
-      Graph.traverse(graph, {
+      const actions: AppGraphNode.ActionLike[] = [];
+      AppGraph.traverse(graph, {
         relation: ['child', 'action'],
         visitor: (node, path) => {
-          const isActionLike = Node.isAction(node) || Node.isActionGroup(node);
+          const isActionLike = AppGraphNode.isAction(node) || AppGraphNode.isActionGroup(node);
           const parentId = path.at(-2) ?? '';
           const matches = current === parentId || current.startsWith(parentId + '/');
           if (isActionLike && !actionMap.has(node.id) && matches) {
@@ -62,7 +63,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const group = allActions.find(({ id }) => id === selected);
     const groupActions = useActions(graph, group?.id);
-    const actions = Node.isActionGroup(group) ? groupActions : allActions;
+    const actions = AppGraphNode.isActionGroup(group) ? groupActions : allActions;
 
     const { results, handleSearch } = useSearchListResults({
       items: actions,
@@ -73,14 +74,19 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       <Dialog.Content ref={forwardedRef}>
         <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
         <Dialog.Body>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input placeholder={t('command-list-input.placeholder')} />
+          <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
+            {/* Focused on mount, and marked so the dialog's own focus pass agrees: without either, the
+                caret stays outside the palette and Enter reaches the action bar's close button
+                instead of running the highlighted command. */}
+            <SearchList.Input
+              autoFocus
+              placeholder={t('command-list-input.placeholder')}
+              escapeBehavior='dismiss'
+              {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            />
             <SearchList.Viewport>
               {results.map((action) => {
-                const shortcut =
-                  typeof action.properties.keyBinding === 'string'
-                    ? action.properties.keyBinding
-                    : action.properties.keyBinding?.[getHostPlatform()];
+                const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
                 return (
                   <SearchList.Item
@@ -94,7 +100,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         return;
                       }
 
-                      if (Node.isActionGroup(action)) {
+                      if (AppGraphNode.isActionGroup(action)) {
                         setSelected(action.id);
                         return;
                       }
@@ -102,8 +108,12 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const lookupId = group?.id ?? action.id;
-                        const node = Graph.getConnections(graph, lookupId, Node.actionRelation('inbound'))[0];
-                        if (node && Node.isAction(action)) {
+                        const node = AppGraph.getConnections(
+                          graph,
+                          lookupId,
+                          AppGraph.inverseRelation(AppGraphNode.action),
+                        )[0];
+                        if (node && AppGraphNode.isAction(action)) {
                           void runAction(action, { parent: node, caller: KEY_BINDING });
                         }
                       });

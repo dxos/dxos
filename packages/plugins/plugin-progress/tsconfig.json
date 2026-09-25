@@ -22,9 +22,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -34,9 +31,6 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/progress"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -44,6 +38,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/ui-theme"

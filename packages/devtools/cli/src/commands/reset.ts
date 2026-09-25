@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import * as fs from 'node:fs/promises';
 
 import { CommandConfig } from '@dxos/cli-util';
@@ -18,6 +18,8 @@ import {
   getProfileConfigPath,
   getProfilePath,
 } from '@dxos/client-protocol';
+
+import { CliError } from '../util/errors.ts';
 
 /**
  * Remove a directory and return whether it existed.
@@ -74,7 +76,8 @@ const collectPathsToDelete = (profile: string): string[] => {
 export const reset = Command.make(
   'reset',
   {
-    hard: Options.boolean('hard', { ifPresent: true }).pipe(
+    hard: Options.Boolean('hard').pipe(
+      Options.withDefault(false),
       Options.withDescription('Required — deletes ALL local data for the current profile. No remote state is touched.'),
     ),
   },
@@ -86,7 +89,7 @@ export const reset = Command.make(
         yield* Console.error(
           `Refusing to run without --hard. This command deletes all local data for profile "${profile}".`,
         );
-        return yield* Effect.fail(new Error('Missing --hard flag.'));
+        return yield* Effect.fail(new CliError({ message: 'Missing --hard flag.' }));
       }
 
       const candidates = collectPathsToDelete(profile);
@@ -97,7 +100,7 @@ export const reset = Command.make(
         const isFile = p.endsWith('.yml');
         const existed = yield* Effect.tryPromise({
           try: () => (isFile ? removeFileIfExists(p) : removeIfExists(p)),
-          catch: (cause) => new Error(`Failed to delete ${p}: ${String(cause)}`),
+          catch: (cause) => new CliError({ message: 'Failed to delete path.', context: { path: p }, cause }),
         });
         if (existed) {
           deleted.push(p);

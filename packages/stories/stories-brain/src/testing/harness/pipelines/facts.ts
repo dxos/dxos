@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -10,11 +11,11 @@ import { Database, type Feed, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
-import { type ModelVariant } from '../models';
+import { type ModelVariant } from '../models.ts';
 
 export type MessageFactsResult = {
   readonly facts: number;
@@ -47,7 +48,7 @@ export const extractDocFactsForMessages = (
           strict: variant.strict,
         }).pipe(
           Effect.timeout('120 seconds'),
-          Effect.orElse(() => Effect.succeed(noFacts)),
+          Effect.catch(() => Effect.succeed(noFacts)),
         );
         facts += extracted.length;
         onMessage?.();
@@ -93,7 +94,7 @@ export const extractFactsForVariant = (
           }).pipe(
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('120 seconds'),
-            Effect.orElse(() => Effect.succeed(noFacts)),
+            Effect.catch(() => Effect.succeed(noFacts)),
             Effect.tap(() => Effect.sync(() => onMessage?.())),
           ),
         );
@@ -107,8 +108,11 @@ export const extractFactsForVariant = (
       const facts = yield* store.query({});
       return { processed, facts } satisfies FactsRunResult;
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStore.layerMemory),
-      Effect.provide(AiServiceTestingPreset(variant.preset)),
+      Effect.provide(
+        Database.layer(db).pipe(
+          Layer.provideMerge(FactStoreLive.layerMemory),
+          Layer.provideMerge(AiServiceTestingPreset(variant.preset)),
+        ),
+      ),
     ),
   );

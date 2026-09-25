@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Vec2 } from '../../util';
+import { Vec2 } from '../../util/index.ts';
 
 /**
  * One body in the flocking simulation.
@@ -47,7 +48,7 @@ export class FlockModel {
   readonly #boidsAtom: Atom.Writable<readonly FlockBoid[]>;
 
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     initial: readonly FlockBoid[] = [],
   ) {
     this.#boidsAtom = Atom.make<readonly FlockBoid[]>(initial);

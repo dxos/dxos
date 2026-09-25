@@ -9,6 +9,7 @@
     ]
   },
   "exclude": [
+    "**/*.tst.ts",
     "*.t.ts"
   ],
   "include": [
@@ -52,6 +53,9 @@
     },
     {
       "path": "../ai"
+    },
+    {
+      "path": "../link"
     }
   ]
 }

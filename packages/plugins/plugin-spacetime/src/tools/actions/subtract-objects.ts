@@ -7,10 +7,11 @@ import type { Manifold } from 'manifold-3d';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { serializeManifold, subtractSolids } from '../../engine';
-import { Model } from '../../types';
-import { type ActionHandler, disposeSceneObject } from '../action';
-import { type ToolContext, getSelectedObjectIds } from '../tool-context';
+import { Model } from '#types';
+
+import { serializeManifold, subtractSolids } from '../../engine/index.ts';
+import { type ActionHandler, disposeSceneObject } from '../action.ts';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context.ts';
 
 /** Subtracts selected objects from the first selected object (A - B - C). */
 export class SubtractObjectsAction implements ActionHandler {
@@ -66,7 +67,6 @@ export class SubtractObjectsAction implements ActionHandler {
       }
       scene.objects.push(Ref.make(newObject));
     });
-    Obj.setParent(newObject, scene);
 
     for (const objId of objectsToDelete) {
       disposeSceneObject(ctx, objId);

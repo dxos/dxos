@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type Kanban } from '#types';
+import { Kanban } from '#types';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`

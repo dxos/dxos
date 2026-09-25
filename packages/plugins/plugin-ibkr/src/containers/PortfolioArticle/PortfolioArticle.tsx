@@ -5,24 +5,25 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { IBKR_CONNECTOR_ID } from '../../constants';
-import { meta } from '../../meta';
-import { parseCash, parsePositions, parseTrades } from '../../services';
-import { Ibkr, IbkrOperation } from '../../types';
-import { PortfolioImportAction } from './PortfolioImportAction';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { IBKR_CONNECTOR_ID } from '../../constants.ts';
+import { meta } from '../../meta.ts';
+import { parseCash, parsePositions, parseTrades } from '../../services/index.ts';
+import { PortfolioImportAction } from './PortfolioImportAction.tsx';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
 
@@ -147,11 +148,10 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, formatSpace, printSpace } from '@dxos/cli-util';
 import { printList } from '@dxos/cli-util';
@@ -31,7 +31,7 @@ export const handler = Effect.fn(function* ({ wait }: { wait: Option.Option<numb
 export const list = Command.make(
   'list',
   {
-    wait: Options.integer('wait').pipe(
+    wait: Options.Int('wait').pipe(
       Options.withDescription(
         'Wait up to this many seconds for each space to reach SPACE_READY before reading. Default 0 — print whatever state is available immediately so a stuck space cannot hang the command.',
       ),

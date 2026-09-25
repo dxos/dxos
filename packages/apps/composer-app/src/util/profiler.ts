@@ -26,11 +26,37 @@ export type ProfilerSnapshot = {
   events: Array<{ name: string; duration: number; startTime: number }>;
   /** Module activation timings (`module:org.dxos.plugin.x.module.y`). */
   modules: Array<{ name: string; duration: number; startTime: number }>;
+  /** Scheduling delay per module (`module-wait:` — in-flight providers + requires resolution). */
+  moduleWaits: Array<{ name: string; duration: number; startTime: number }>;
+  /** Activate execution per module (`module-run:` — chunk import + body). */
+  moduleRuns: Array<{ name: string; duration: number; startTime: number }>;
+  /** Lazy chunk import per module (`module-import:` — fetch + parse of the module's chunk). */
+  moduleImports: Array<{ name: string; duration: number; startTime: number }>;
+  /** Plugin-definition chunk imports (`plugin-load:` — precede all module activation). */
+  pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
+  /** Which event activated each module (`module-cause:<module>:<event>` marks). */
+  moduleCauses: Array<{ module: string; event: string; startTime: number }>;
+  /** Graph-builder extension bodies that ran, first run only (`graph-body:<kind>:<id>` marks). */
+  graphBodies: Array<{ id: string; kind: string; startTime: number }>;
+};
+
+/** Emits a `startup:<name>` performance mark. */
+export const startupMark = (name: string): void => {
+  performance.mark(`startup:${name}`);
+};
+
+/**
+ * Emits a `startup:<name>` measure between two `startup:` marks.
+ *
+ * `performance.measure` throws when either mark is missing.
+ */
+export const startupMeasure = (name: string, startMark: string, endMark: string): void => {
+  try {
+    performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`);
+  } catch {}
 };
 
 export type Profiler = {
-  mark: (name: string) => void;
-  measure: (name: string, startMark: string, endMark: string) => void;
   /** Returns a JSON snapshot of timings (works before or after `dump`). */
   snapshot: () => ProfilerSnapshot;
   /** Finalizes the profile, logs to console, persists to localStorage. */
@@ -42,13 +68,12 @@ export type Profiler = {
  * Tree-shaken in production when VITE_DEBUG is not set.
  */
 export const startupProfiler = (): Profiler => {
-  performance.mark('startup:main:start');
-
   let complete = false;
   let finishedAt: string | undefined;
 
   const collect = (): ProfilerSnapshot => {
     const measures = performance.getEntriesByType('measure');
+    const marks = performance.getEntriesByType('mark');
     const totalEntry = measures
       .slice()
       .reverse()
@@ -79,17 +104,52 @@ export const startupProfiler = (): Profiler => {
         .filter((entry) => entry.name.startsWith('module:'))
         .sort((first, second) => second.duration - first.duration)
         .map((entry) => toRow(entry, 'module:')),
+      moduleWaits: measures
+        .filter((entry) => entry.name.startsWith('module-wait:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-wait:')),
+      moduleRuns: measures
+        .filter((entry) => entry.name.startsWith('module-run:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-run:')),
+      moduleImports: measures
+        .filter((entry) => entry.name.startsWith('module-import:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-import:')),
+      pluginLoads: measures
+        .filter((entry) => entry.name.startsWith('plugin-load:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'plugin-load:')),
+      // Instants, so marks rather than measures. `detail` carries only what the name cannot: a
+      // trailing DXN has colons of its own and would be unparseable inside the mark name.
+      moduleCauses: marks
+        .filter((entry) => entry.name.startsWith('module-cause:'))
+        .map((entry) => ({
+          module: entry.name.slice('module-cause:'.length),
+          event: ((entry as PerformanceMark).detail as { event?: string } | null)?.event ?? '',
+          startTime: Math.round(entry.startTime),
+        })),
+      graphBodies: marks
+        .filter((entry) => entry.name.startsWith('graph-body:'))
+        .map((entry) => {
+          const [kind, ...rest] = entry.name.slice('graph-body:'.length).split(':');
+          return { kind, id: rest.join(':'), startTime: Math.round(entry.startTime) };
+        }),
     };
   };
 
   return {
-    mark: (name: string) => performance.mark(`startup:${name}`),
-    measure: (name: string, startMark: string, endMark: string) =>
-      performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`),
     snapshot: collect,
     dump: () => {
-      performance.mark('startup:ready');
-      performance.measure('startup:total', 'startup:main:start', 'startup:ready');
+      // A manual dump after a failed boot must not invent a `ready` mark: that would add a second
+      // `startup:total` spanning main:start to dump time and bury the abort's real duration.
+      if (
+        performance.getEntriesByName('startup:ready').length === 0 &&
+        performance.getEntriesByName('startup:aborted').length === 0
+      ) {
+        startupMark('ready');
+        startupMeasure('total', 'main:start', 'ready');
+      }
       complete = true;
       finishedAt = new Date().toISOString();
 

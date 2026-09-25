@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -18,9 +20,10 @@ import { meta } from '#meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'neighborhoodCompanion',
-        match: NodeMatcher.whenEchoObjectMatches,
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObjectMatches,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -34,6 +37,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

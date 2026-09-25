@@ -6,7 +6,7 @@
 
 import { DXN } from '@dxos/keys';
 
-import * as Provider from './Provider';
+import * as Provider from './Provider.ts';
 
 /** Characteristics of a model, which may differ between providers serving the same model. */
 export type Characteristics = {
@@ -108,6 +108,69 @@ const LOCAL_MODELS = [
 const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS)[number]) => string): Model[] =>
   LOCAL_MODELS.map((model) => make(model.id, { provider, backend: backend(model), label: model.label }));
 
+//
+// The models served through EDGE, named so a caller — an eval, a preset, a picker's default —
+// binds the catalog entry itself rather than restating its DXN as a string.
+//
+
+export const claudeOpus5: Model = make('com.anthropic.model.claude-opus-5.default', {
+  provider: Provider.edge.id,
+  backend: 'claude-opus-5',
+  label: 'Claude Opus 5',
+  characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+});
+
+export const claudeSonnet5: Model = make('com.anthropic.model.claude-sonnet-5.default', {
+  provider: Provider.edge.id,
+  backend: 'claude-sonnet-5',
+  label: 'Claude Sonnet 5',
+  characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+});
+
+export const claudeHaiku45: Model = make('com.anthropic.model.claude-haiku-4-5.default', {
+  provider: Provider.edge.id,
+  backend: 'claude-haiku-4-5',
+  label: 'Claude Haiku',
+  characteristics: { maxTokens: 16_384, tools: true },
+});
+
+export const deepseekV4Flash: Model = make('com.deepseek.model.deepseek-v4-flash.default', {
+  provider: Provider.edge.id,
+  backend: 'deepseek-v4-flash',
+  label: 'DeepSeek V4 Flash',
+  characteristics: { thinking: true, tools: true },
+});
+
+export const deepseekV4Pro: Model = make('com.deepseek.model.deepseek-v4-pro.default', {
+  provider: Provider.edge.id,
+  backend: 'deepseek-v4-pro',
+  label: 'DeepSeek V4 Pro',
+  characteristics: { thinking: true, tools: true },
+});
+
+//
+// Decision models: TypeSafe's jev, which answers typed questions rather than generating text, as
+// served by each provider. Distinct ids so `AiService.decisionModel(id)` picks the provider; not in
+// `all`, which lists language models for pickers.
+//
+
+/** jev on TypeSafe's own API. */
+export const typesafeJev: Model = make('ai.typesafe.model.jev.latest', {
+  provider: Provider.typesafe.id,
+  backend: 'jev-latest',
+  label: 'Jev (TypeSafe)',
+});
+
+/**
+ * jev on Cloudflare Workers AI (`typesafe/jev`). EDGE fronts it with the System One wire, so the
+ * back-end name is the System One one.
+ */
+export const cloudflareJev: Model = make('com.cloudflare.model.typesafe-jev.default', {
+  provider: Provider.workersAi.id,
+  backend: 'jev-latest',
+  label: 'Jev (Cloudflare Workers AI)',
+});
+
 /**
  * Curated model catalog. Each entry is a model AS SERVED BY ONE PROVIDER; the same `id` appearing
  * under multiple providers (e.g. `gptOss20b` via Ollama and LM Studio) is intentional — they are the
@@ -116,24 +179,15 @@ const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS
  */
 export const all: readonly Model[] = [
   // Edge — Anthropic Claude via the DXOS edge intermediary.
-  make('com.anthropic.model.claude-opus-4-8.default', {
-    provider: Provider.edge.id,
-    backend: 'claude-opus-4-8',
-    label: 'Claude Opus',
-    characteristics: { maxTokens: 16_384, thinking: true, tools: true },
-  }),
-  make('com.anthropic.model.claude-sonnet-4-6.default', {
-    provider: Provider.edge.id,
-    backend: 'claude-sonnet-4-6',
-    label: 'Claude Sonnet',
-    characteristics: { maxTokens: 16_384, tools: true },
-  }),
-  make('com.anthropic.model.claude-haiku-4-5.default', {
-    provider: Provider.edge.id,
-    backend: 'claude-haiku-4-5',
-    label: 'Claude Haiku',
-    characteristics: { maxTokens: 16_384, tools: true },
-  }),
+  claudeOpus5,
+  claudeSonnet5,
+  claudeHaiku45,
+
+  // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4
+  // models serve thinking and non-thinking mode from one back-end name; the legacy `deepseek-chat`
+  // and `deepseek-reasoner` names were discontinued on 2026-07-24.
+  deepseekV4Flash,
+  deepseekV4Pro,
 
   // Local models — the same catalog served by the bundled sidecar, an external Ollama server, and
   // LM Studio, each under its own back-end name.
@@ -151,6 +205,14 @@ export const all: readonly Model[] = [
   }),
 ];
 
+/**
+ * The developer authority an id belongs to: the leading reverse-DNS segments of the NSID
+ * (`com.deepseek.model.deepseek-v4-flash.default` → `com.deepseek`). A provider that fronts several
+ * upstreams — `edge` serves both Anthropic and DeepSeek — has each resolver claim its own models by
+ * this, so the catalog entry needs no separate marker.
+ */
+export const developer = (id: DXN.DXN): string => DXN.getName(id).split('.').slice(0, 2).join('.');
+
 /** Models served by a given provider. */
 export const forProvider = (provider: DXN.DXN): Model[] => all.filter((model) => model.provider === provider);
 
@@ -162,7 +224,7 @@ export const get = (provider: DXN.DXN, id: DXN.DXN): Model | undefined =>
 export const byId = (id: DXN.DXN): Model[] => all.filter((model) => model.id === id);
 
 // Default model per provider, used when no explicit selection is configured.
-export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama-3-2-1b.instruct');
 export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama-3-2-3b.instruct');
 

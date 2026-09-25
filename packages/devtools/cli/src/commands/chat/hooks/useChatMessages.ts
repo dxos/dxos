@@ -4,7 +4,7 @@
 
 import { type SetStoreFunction, createStore, produce } from 'solid-js/store';
 
-import { type Message } from '../types';
+import { type Message } from '../types.ts';
 
 export type MessagesStore = {
   data: Message[];

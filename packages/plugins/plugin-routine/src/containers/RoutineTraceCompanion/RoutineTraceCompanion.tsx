@@ -4,26 +4,28 @@
 
 import React from 'react';
 
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';
+import { Accordion, Banner, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
-import { type RoutineRun, type RunStatus } from './runs';
-import { useRoutineRuns } from './useRoutineRuns';
+import { type RoutineRun, type RunStatus } from './runs.ts';
+import { useRoutineRuns } from './useRoutineRuns.ts';
 
 const STATUS_ICONS: Record<RunStatus, string> = {
   success: 'ph--check-circle--regular',
   failure: 'ph--x-circle--regular',
+  incomplete: 'ph--arrows-clockwise--regular',
   pending: 'ph--clock--regular',
 };
 
 const STATUS_CLASSES: Record<RunStatus, string> = {
   success: 'text-success-text',
   failure: 'text-error-text',
+  incomplete: 'text-warning-text',
   pending: 'text-description',
 };
 
@@ -47,13 +49,13 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Empty label={t('history.empty.message')} />
+              <Banner.Empty label={t('history.empty.message')} />
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
-                  <div className='flex flex-col'>
+                  <Flex column>
                     {items.map((run) => (
-                      <Accordion.Item key={run.pid} item={run} classNames='border-b border-subdued-separator'>
+                      <Accordion.Item key={run.pid} item={run}>
                         <Accordion.ItemHeader hover>
                           <Listbox.ItemContent
                             icon={
@@ -72,7 +74,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                         </Accordion.ItemBody>
                       </Accordion.Item>
                     ))}
-                  </div>
+                  </Flex>
                 )}
               </Accordion.Root>
             )}

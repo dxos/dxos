@@ -3,17 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, JsonSchema, Obj } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';
 import { type InterpreterState } from '@dxos/vendor-hyperformula';
 import { CellError, ErrorType, FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
-import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
+import { type AsyncFunction, AsyncFunctionPlugin } from './async-function.ts';
 
 export const EDGE_FUNCTION_NAME = 'DX';
 

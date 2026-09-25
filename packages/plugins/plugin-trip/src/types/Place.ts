@@ -12,17 +12,17 @@ import { Format } from '@dxos/echo/Format';
  * Uniform across modes so Table and Map views work without per-variant branching.
  */
 export const Place = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
   code: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Code',
       description: 'IATA / IBNR / port / property code',
       examples: ['JFK', 'CDG', 'LAX', 'BKK'],
     }),
   ),
   // TODO(burdon): Change to Address (short format).
-  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
-  country: Schema.optional(Schema.String.annotations({ title: 'Country' })),
+  city: Schema.optional(Schema.String.annotate({ title: 'City' })),
+  country: Schema.optional(Schema.String.annotate({ title: 'Country' })),
   // Coordinates are set by geocoding (PlanRoute), not user-editable.
   geo: Format.GeoPoint.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 }).pipe(Annotation.LabelAnnotation.set(['name']));

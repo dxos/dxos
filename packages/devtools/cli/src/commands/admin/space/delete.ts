@@ -2,33 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type DeleteSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { CliError } from '../../../util/errors.ts';
+import { AdminApiError, adminRequest, formatAdminError } from '../util.ts';
 
 export const del = Command.make(
   'delete',
   {
-    spaceId: Args.text({ name: 'spaceId' }),
-    force: Options.boolean('force').pipe(
+    spaceId: Args.String('spaceId'),
+    force: Options.Boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
       Options.withDefault(false),
     ),
   },
   Effect.fn(function* ({ spaceId, force }) {
     if (!force) {
-      yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
+      return yield* Effect.fail(new CliError({ message: 'This action is irreversible. Pass --force to confirm.' }));
     }
 
     const result = yield* adminRequest<DeleteSpaceResponse>('DELETE', `/admin/spaces/${spaceId}`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { TriggerId } from './options';
-import { printTriggerRemoved, selectTrigger } from './util';
+import { TriggerId } from './options.ts';
+import { printTriggerRemoved, selectTrigger } from './util.ts';
 
 export const remove = Command.make(
   'remove',

@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Agent } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Journal } from '@dxos/plugin-tasks';
+import * as Journal from '@dxos/plugin-tasks/Journal';
 
 /**
  * Represents a Sidekick instance. Manages an Agent and a Journal.
@@ -19,7 +19,7 @@ export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.type.si
     agent: Ref.Ref(Agent.Agent),
     journal: Ref.Ref(Journal.Journal),
     journalEnabled: Schema.optional(Schema.Boolean),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'violet' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'violet' }), Annotation.UserType.set()),
 ) {}
 
 /** Creates a Sidekick profile with journal enabled by default. */

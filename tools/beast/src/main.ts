@@ -9,8 +9,8 @@ import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
 
-import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
-import { getBaseDir } from './util';
+import { PackageDependencyBuilder, WorkspaceProcessor } from './nx/index.ts';
+import { getBaseDir } from './util.ts';
 
 // NOTE: Currently deprecated and not a part of the moon workspace as it was built on top of Nx.
 // TODO(wittjosiah): Consider folding this into toolbox.

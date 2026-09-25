@@ -5,29 +5,31 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const getHistoryProvider = (typename: string) =>
-      capabilities.getAll(ReviewCapabilities.HistoryProvider).find(({ id }) => id === typename);
+    // Read through the atom: a provider contributed after the relation expands has to reach the matcher.
+    const historyProvidersAtom = yield* Capability.atom(ReviewCapabilities.HistoryProvider);
 
     // Version history plank companion, gated per-type by a HistoryProvider contribution.
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'history',
-      match: (node) => {
+      relation: AppNode.companion,
+      match: (node, get) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();
         }
         const typename = Obj.getTypename(node.data);
-        return typename && getHistoryProvider(typename) ? Option.some(node) : Option.none();
+        const provider = typename && get(historyProvidersAtom).find(({ id }) => id === typename);
+        return provider ? Option.some(node) : Option.none();
       },
       connector: () =>
         Effect.succeed([
@@ -40,6 +42,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extension);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extension);
   }),
 );

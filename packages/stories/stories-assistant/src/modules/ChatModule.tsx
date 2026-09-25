@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
-import { Assistant } from '@dxos/plugin-assistant';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
@@ -23,14 +24,23 @@ export const ChatModule = () => {
 };
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
-  const { preset, ...chatProps } = usePresets({});
+  const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
+  // The newest chat until the reader picks another; a template switch drops the id and lands on the
+  // new space's own chat.
+  const [selected, setSelected] = useState<string>();
+  const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
 
-  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
-  const chat = chats.at(-1);
+  // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
+  const { preset, ...chatProps } = usePresets({}, chat);
+
+  // Every chat in the space, not the companion chats of one object: the story is a tour of the
+  // space, and its chats are the thing worth moving between.
+  const onSelect = useCallback((chat: ChatSchema.Chat) => setSelected(chat.id), []);
+  const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, space, chat, preset, registry });
+  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
@@ -45,7 +55,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
     <Chat.Root chat={chat} processor={processor}>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <Chat.Toolbar attendableId={chat.id} alwaysActive>
+          <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
             <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
@@ -63,8 +73,11 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
+            <div className='flex flex-col gap-1 p-1'>
+              <Chat.Queue />
+              <Chat.Activity />
+              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+            </div>
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>

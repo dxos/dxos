@@ -9,9 +9,10 @@ import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { DeviceListItem } from './DeviceListItem';
-import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
+import { translationKey } from '../../translations.ts';
+import { DeviceListItem } from './DeviceListItem.tsx';
+import { type AgentFormProps, type DeviceListProps } from './DeviceListProps.ts';
+import { toShellDevice } from './toShellDevice.ts';
 
 export const DeviceList = ({
   devices,
@@ -31,10 +32,11 @@ export const DeviceList = ({
         <Listbox.Root>
           <Listbox.Content aria-label={t('device-list.heading')}>
             {devices.map((device: Device) => {
+              const shellDevice = toShellDevice(device);
               return (
                 <DeviceListItem
-                  key={device.deviceKey.toHex()}
-                  device={device}
+                  key={shellDevice.key}
+                  device={shellDevice}
                   onClickEdit={() => onClickEdit?.(device)}
                   {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
                 />

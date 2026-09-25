@@ -8,7 +8,7 @@ import { extractContact } from '@dxos/extractor-lib';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { EmailPipelineCtx } from './context';
+import { EmailPipelineCtx } from './context.ts';
 
 /** Extract a Person (+ Organization) from the sender and persist to the ECHO space; pass message through. */
 export const extractContactsStage: Stage.Stage<Message.Message, Message.Message, never, EmailPipelineCtx> = Stage.map(

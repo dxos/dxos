@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-// Import from the focused constants module rather than the `../util` barrel: the barrel re-exports
+// Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
-// esbuild cannot load. The Worker only needs this one constant.
-import { LOG_STORE_MAX_BYTES } from '../util/constants';
+// esbuild cannot load.
+import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
 
 type Env = {
   ASSETS: Fetcher;
+  APPLE_TEAM_ID?: string;
   ENVIRONMENT?: string;
   FEEDBACK_LOGS?: R2Bucket;
   SIGNOZ_INGEST_URL?: string;
@@ -18,33 +20,32 @@ type Env = {
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
-const ALLOWED_ORIGINS = new Set([
-  'https://composer.space',
-  'https://staging.composer.space',
-  'https://labs.composer.space',
-  'https://main.composer.space',
-]);
-
-const corsHeaders = (origin: string | null): Record<string, string> => ({
-  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
-  'Vary': 'Origin',
-});
-
-/** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */
+/**
+ * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
+ *
+ * Admits `nativeOrigins`, whose uploads are necessarily cross-origin, and carries the CORS headers on
+ * every response, since the client reads the returned key.
+ */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
   const origin = request.headers.get('Origin');
+  const allowed = nativeOrigins(env.ENVIRONMENT);
+  const cors = corsHeaders(request.url, origin, allowed);
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: cors });
   }
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', { status: 405, headers: cors });
+  }
+
+  // Rejected server-side, not just via CORS headers; a missing `Origin` means a client no
+  // same-origin policy is holding back, on a route that writes megabytes to storage.
+  if (!origin || !isAllowedOrigin(request.url, origin, allowed)) {
+    return new Response('Forbidden', { status: 403, headers: cors });
   }
 
   if (!env.FEEDBACK_LOGS) {
-    return new Response('Feedback logs storage not configured', { status: 503 });
+    return new Response('Feedback logs storage not configured', { status: 503, headers: cors });
   }
 
   // R2 only accepts a known-length stream, so Content-Length is required rather than advisory: it
@@ -52,19 +53,19 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const contentLengthHeader = request.headers.get('content-length');
   const contentLength = contentLengthHeader === null ? Number.NaN : Number(contentLengthHeader);
   if (!Number.isInteger(contentLength) || contentLength < 0) {
-    return new Response('Content-Length required', { status: 411 });
+    return new Response('Content-Length required', { status: 411, headers: cors });
   }
 
   if (contentLength === 0) {
-    return new Response('Empty body', { status: 400 });
+    return new Response('Empty body', { status: 400, headers: cors });
   }
 
   if (contentLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
+    return new Response('Payload too large', { status: 413, headers: cors });
   }
 
   if (!request.body) {
-    return new Response('Empty body', { status: 400 });
+    return new Response('Empty body', { status: 400, headers: cors });
   }
 
   const date = new Date().toISOString().slice(0, 10);
@@ -80,12 +81,12 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     });
   } catch {
     // R2 rejects a body that does not match Content-Length, as well as its own failures.
-    return new Response('Failed to store feedback logs', { status: 502 });
+    return new Response('Failed to store feedback logs', { status: 502, headers: cors });
   }
 
   return new Response(JSON.stringify({ key }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...cors },
   });
 };
 
@@ -111,10 +112,9 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Restrict to same-origin / known origins to avoid being abused as an open proxy.
-  // Same-origin GETs typically omit Origin; allow when absent or when a known origin is set.
+  // Restrict to same-origin, to avoid being abused as an open proxy.
   const origin = request.headers.get('Origin');
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  if (!isAllowedOrigin(request.url, origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -187,31 +187,115 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
   }
 };
 
+/**
+ * Origins permitted to assert the `composer.space` relying party via WebAuthn Related Origin
+ * Requests.
+ *
+ * Composer registers passkeys with `rp: { id: location.hostname }` (plugin-client
+ * `create-passkey.ts`), so production credentials are permanently scoped to the `composer.space`
+ * relying party. WebAuthn otherwise only lets a page assert an RP ID that is a registrable-domain
+ * suffix of its own origin, which would confine every ceremony to `*.composer.space`. Listing an
+ * origin here is what lets the MCP passkey ceremony — served from the `hub-service` worker on
+ * `auth.dxos.network` — reach those existing credentials without re-registration.
+ *
+ * `composer.space` itself is deliberately absent: same-origin assertions are always permitted.
+ *
+ * Clients are only required to support 5 unique eTLD+1 labels, so entries are not free — but every
+ * `*.composer.space` origin shares one label, and `dxos` covers `auth.dxos.network`.
+ *
+ * https://w3c.github.io/webauthn/#sctn-related-origins
+ */
+const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
+
+/**
+ * The native app's bundle id. Qualified by `APPLE_TEAM_ID` (wrangler.jsonc) into the `<team id>.<bundle
+ * id>` form that `src-tauri/Entitlements.plist` also carries — its `associated-domains` list is the other
+ * half of this handshake: a domain is only claimed when the app names it *and* the domain serves the app
+ * back here.
+ */
+const BUNDLE_ID = 'org.dxos.composer';
+
+/**
+ * The well-known documents that verify this domain, keyed by path.
+ *
+ * These are Worker routes rather than static assets because both must be served as
+ * `application/json` and the paths carry no extension for the asset server to infer that from. They
+ * are covered by `run_worker_first` for the same reason the SPA fallback must not reach them.
+ *
+ * Asset routing and these routes alike ignore the hostname, so every domain mapped to this Worker —
+ * composer.space and composer.dxos.org — is verified by the same documents. That is what replaced the
+ * standalone `composer-dxos-org` Worker.
+ */
+const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
+  // Universal Links (`applinks`) and passkeys (`webcredentials`) for the native app.
+  '/.well-known/apple-app-site-association': (env) => {
+    if (!env.APPLE_TEAM_ID) {
+      return undefined;
+    }
+
+    const appId = `${env.APPLE_TEAM_ID}.${BUNDLE_ID}`;
+    return {
+      applinks: { details: [{ appIDs: [appId], components: [{ '/': '/*' }] }] },
+      webcredentials: { apps: [appId] },
+    };
+  },
+  // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.
+  '/.well-known/webauthn': () => ({ origins: WEBAUTHN_RELATED_ORIGINS }),
+};
+
+/** Serve a well-known verification document. */
+const handleWellKnown = (request: Request, document: object | undefined): Response => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    // RFC 9110 §15.5.6 requires a 405 to advertise the methods the resource does support.
+    return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  }
+
+  // Fail loudly on missing config: a document built around an undefined team id would parse, and
+  // silently un-verify the domain.
+  if (!document) {
+    return new Response('Verification document not configured', { status: 503 });
+  }
+
+  const body = JSON.stringify(document);
+  return new Response(request.method === 'HEAD' ? null : body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=300',
+    },
+  });
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
 /** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
   const origin = request.headers.get('Origin');
+  // Native builds export here cross-origin; their own asset server has no `/api` routes.
+  const allowed = nativeOrigins(env.ENVIRONMENT);
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders(origin) });
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    return new Response('Forbidden', { status: 403, headers: corsHeaders(origin) });
+  if (!isAllowedOrigin(request.url, origin, allowed)) {
+    return new Response('Forbidden', { status: 403, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
-    return new Response('OTel proxy not configured', { status: 503, headers: corsHeaders(origin) });
+    return new Response('OTel proxy not configured', {
+      status: 503,
+      headers: corsHeaders(request.url, origin, allowed),
+    });
   }
 
   if (!request.body) {
-    return new Response('Empty body', { status: 400, headers: corsHeaders(origin) });
+    return new Response('Empty body', { status: 400, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   const upstreamHeaders: Record<string, string> = {
@@ -261,18 +345,18 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   await pipePromise;
 
   if (sizeExceeded) {
-    return new Response('Payload too large', { status: 413, headers: corsHeaders(origin) });
+    return new Response('Payload too large', { status: 413, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (!upstreamResponse) {
-    return new Response('Bad gateway', { status: 502, headers: corsHeaders(origin) });
+    return new Response('Bad gateway', { status: 502, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
     headers: {
       'Content-Type': upstreamResponse.headers.get('Content-Type') ?? 'application/json',
-      ...corsHeaders(origin),
+      ...corsHeaders(request.url, origin, allowed),
     },
   });
 };
@@ -286,8 +370,14 @@ const handler: ExportedHandler<Env> = {
   fetch: async (request, env, _context) => {
     const url = new URL(request.url);
 
+    // Domain-verification documents (must precede the SPA fallback).
+    const wellKnown = WELL_KNOWN_DOCUMENTS[url.pathname];
+    if (wellKnown) {
+      return handleWellKnown(request, wellKnown(env));
+    }
+
     // API routes.
-    if (url.pathname === '/api/feedback-logs') {
+    if (url.pathname === FEEDBACK_LOGS_PATH) {
       return handleFeedbackLogs(request, env);
     }
 

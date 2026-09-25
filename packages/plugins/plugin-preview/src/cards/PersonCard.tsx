@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Avatar } from '@dxos/react-ui';
-import { Card, Icon } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Avatar, Card, Icon } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -64,7 +64,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           <Card.Block>
             <Icon icon='ph--at--regular' />
           </Card.Block>
-          <Card.Text truncate className='text-sky-text text-sm'>
+          <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>
             ))}

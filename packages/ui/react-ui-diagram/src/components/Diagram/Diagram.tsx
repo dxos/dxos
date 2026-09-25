@@ -4,7 +4,6 @@
 
 import '@xyflow/react/dist/base.css';
 
-import { createContext } from '@radix-ui/react-context';
 import {
   Background as BackgroundPrimitive,
   BackgroundVariant,
@@ -20,12 +19,12 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, createContext, useThemeContext } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { GRID, layout } from '../../model';
-import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types';
-import { DiagramGroup, DiagramNode } from './DiagramNode';
+import { GRID, layout } from '../../model/index.ts';
+import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types/index.ts';
+import { DiagramGroup, DiagramNode } from './DiagramNode.tsx';
 
 /**
  * Flow type keys, deliberately not `input`/`default`/`output`/`group`: React Flow styles those four
@@ -164,7 +163,7 @@ const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children,
 
   return (
     <ReactFlow
-      {...composableProps(props, { classNames: 'dx-expander' })}
+      {...composableProps(props, { classNames: 'dx-expand' })}
       ref={forwardedRef}
       colorMode={themeMode}
       nodes={nodes}

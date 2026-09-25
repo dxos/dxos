@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
 import {
   type CellAddress,
@@ -10,18 +10,12 @@ import {
   type CompleteCellRange,
   type ComputeGraph,
 } from '@dxos/compute-hyperformula';
-import { raise } from '@dxos/debug';
-import {
-  Grid,
-  type GridContentProps,
-  type GridEditing,
-  type GridScopedProps,
-  useGridContext,
-} from '@dxos/react-ui-grid';
+import { Grid, type GridContentProps, type GridEditing, useGridContext } from '@dxos/react-ui-grid';
 
-import { type Sheet } from '#types';
+import { Sheet } from '#types';
 
-import { type SheetModel, useSheetModel } from '../../model';
+import { type SheetModel, useSheetModel } from '../../model/index.ts';
+import { SheetContext } from './SheetContext.ts';
 
 export type SheetContextValue = {
   id: string;
@@ -50,13 +44,6 @@ export type SheetContextValue = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
-};
-
-// TODO(burdon): Use radix context.
-const SheetContext = createContext<SheetContextValue | undefined>(undefined);
-
-export const useSheetContext = (): SheetContextValue => {
-  return useContext(SheetContext) ?? raise(new Error('Missing SheetContext'));
 };
 
 export type SheetRootProps = {
@@ -91,16 +78,13 @@ export const SheetRoot = ({
 };
 
 const SheetProviderImpl = ({
-  __gridScope,
   children,
   attendableId,
   ignoreAttention,
   model,
   onInfo,
-}: GridScopedProps<
-  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>
->) => {
-  const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
+}: PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>) => {
+  const { id, editing, setEditing } = useGridContext('SheetProvider');
 
   const [cursor, setCursorInternal] = useState<CellAddress>();
   const [range, setRangeInternal] = useState<CellRange>();

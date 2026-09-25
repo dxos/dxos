@@ -25,6 +25,6 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
     // TODO(wittjosiah): Needs new screenshots.
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-calls-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-calls-dark.png' }],
   },
 });

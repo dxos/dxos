@@ -2,23 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
-import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
+import { RoutineCommandError } from '../../errors.ts';
+import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util.ts';
 
 export const subscription = Command.make(
   'subscription',
@@ -43,7 +45,7 @@ export const subscription = Command.make(
       const dxn = EID.make({ entityId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
-        return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Invalid trigger type: ${trigger.spec?.kind}` }));
       }
 
       const currentFn = yield* updateFunction(trigger, options.functionId);
@@ -78,8 +80,8 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
       Match.value(q.filter).pipe(
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
-          Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
+          Option.fromNullishOr(f.typename).pipe(
+            Option.flatMap((dxn) => Option.fromNullishOr(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
           ),
         ),
         Match.orElse(() => Option.none()),
@@ -104,7 +106,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
   const shouldChangeFunction = yield* Option.match(functionIdOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the function${currentFunctionName ? ` (current: ${currentFunctionName})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -118,7 +120,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
-      return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+      return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
     }
     Obj.update(trigger, (trigger) => {
       trigger.runnable = Ref.make(foundFn);
@@ -128,7 +130,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 
   if (!currentFn) {
     const runnableId = trigger.runnable?.uri.toString() ?? 'unknown';
-    return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
+    return yield* Effect.fail(new RoutineCommandError({ message: `Invalid reference for ${runnableId}` }));
   }
 
   return currentFn;
@@ -164,14 +166,14 @@ const updateSpec = Effect.fn(function* (
   const hasSpecOption = Option.isSome(typenameOption) || Option.isSome(deepOption) || Option.isSome(delayOption);
   const shouldChangeSpec = yield* hasSpecOption
     ? Effect.succeed(true)
-    : Prompt.confirm({
+    : Prompt.Confirm({
         message: `Change the trigger spec (current: ${currentSpecStr})?`,
         initial: false,
       }).pipe(Prompt.run);
   if (shouldChangeSpec) {
     const typename = yield* Option.match(typenameOption, {
       onNone: () =>
-        Prompt.text({
+        Prompt.String({
           message: `Enter type name${currentTypenameStr ? ` (current: ${currentTypenameStr})` : ''}:`,
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
@@ -180,7 +182,7 @@ const updateSpec = Effect.fn(function* (
 
     const deepOptionValue = yield* Option.match(deepOption, {
       onNone: () =>
-        Prompt.confirm({
+        Prompt.Confirm({
           message: 'Watch changes to nested properties (deep)?',
           initial: currentSpec?.options?.deep ?? false,
         }).pipe(
@@ -194,7 +196,7 @@ const updateSpec = Effect.fn(function* (
       onNone: () =>
         Effect.gen(function* () {
           const currentDelay = currentSpec?.options?.delay;
-          const delayStr = yield* Prompt.text({
+          const delayStr = yield* Prompt.String({
             message: `Debounce delay in milliseconds (optional, press Enter to skip)${currentDelay ? ` (current: ${currentDelay})` : ''}:`,
           }).pipe(Prompt.run);
           return delayStr === '' ? Option.none<number>() : Option.some(parseInt(delayStr, 10));
@@ -236,7 +238,7 @@ const updateInput = Effect.fn(function* (
     onNone: () =>
       Effect.gen(function* () {
         yield* Console.log(`Current input: ${currentInputStr}`);
-        return yield* Prompt.confirm({
+        return yield* Prompt.Confirm({
           message: 'Change input?',
           initial: false,
         }).pipe(Prompt.run);
@@ -266,7 +268,7 @@ const updateEnabled = Effect.fn(function* (
 ) {
   const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),

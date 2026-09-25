@@ -12,7 +12,7 @@ export type TemplatePanelProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object, attendableId: _attendableId }: TemplatePanelProps) => {
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content>
         <span>{Obj.getURI(object)}</span>
       </Panel.Content>

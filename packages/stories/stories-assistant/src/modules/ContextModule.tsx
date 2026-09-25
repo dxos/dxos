@@ -6,14 +6,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
-import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const ContextModule = () => {
   const space = useActiveSpace();
@@ -27,17 +27,15 @@ export const ContextModule = () => {
 const ContextModuleContainer = ({ space }: { space: Space }) => {
   // Objects bound to the feed (the agent-independent context: `session.addContext` → `binder.bind`).
   // TODO(burdon): Reconcile objects vs. artifacts.
-  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space.db, Filter.type(Chat.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const binder = useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);
 
-  // Durable artifacts live on a Project's collection (the agent stores none): surface the first
-  // project's collection alongside the bound context objects, resolving refs reactively.
+  // Durable artifacts live on the Project (the agent stores none): surface the first project's
+  // artifacts alongside the bound context objects.
   const [project] = useQuery(space.db, Filter.type(Project.Project));
-  const [collectionSnapshot] = useObject(project?.artifacts);
-  const collection = Obj.getReactiveOrUndefined(collectionSnapshot);
-  const artifacts = collection?.objects ?? [];
+  const artifacts = project?.artifacts ?? [];
 
   const items = useMemo<ContextItem[]>(
     () => [
@@ -54,7 +52,7 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
         data: ref,
       })),
     ],
-    [objects, artifacts, collectionSnapshot],
+    [objects, artifacts],
   );
 
   return (
@@ -130,13 +128,7 @@ const DebugTile = ({ data }: { data: ContextItem }) => {
     <Card.Root>
       <Card.Body>
         <Card.Row fullWidth classNames='max-h-50'>
-          <Syntax.Root data={data}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
+          <JsonHighlighter data={data} classNames='text-xs' />
         </Card.Row>
       </Card.Body>
     </Card.Root>

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
 /** Foreign-key source for Chess.com account and game objects. */
@@ -24,30 +23,31 @@ export const normalizeUsername = (username: string): string => username.trim().t
  */
 export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.chessCom.account', '0.1.0'))(
   Schema.Struct({
-    username: Schema.String.annotations({
+    username: Schema.String.annotate({
       title: 'Username',
       description: 'Chess.com username.',
     }),
-    playerId: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    profileUrl: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    followers: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    country: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    lastOnline: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    joined: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    status: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    isStreamer: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-    verified: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-    league: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    playerId: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    profileUrl: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    followers: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    country: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    lastOnline: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    joined: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    status: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    isStreamer: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    verified: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    league: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     streamingPlatforms: Schema.mutable(Schema.Array(Schema.String)).pipe(
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
     /** Backing queue of synced {@link org.dxos.type.game} objects. */
-    games: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    games: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['username']),
+    Annotation.LabelAnnotation.set(['username']),
     Annotation.IconAnnotation.set({ icon: 'ph--horse--regular', hue: 'green' }),
     FactoryAnnotation.set(((values) => makeAccount(values)) as FactoryFn),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -70,13 +70,13 @@ export type AccountProfile = Pick<
 export const makeAccount = (props: Omit<Obj.MakeProps<typeof Account>, 'games'> & { username: string }): Account => {
   const gamesFeed = Feed.make();
   const username = normalizeUsername(props.username);
+  // `SetParent` on `games` makes the feed a child, cascading with the account.
   const account = Obj.make(Account, {
     ...props,
     username,
     games: Ref.make(gamesFeed),
     [Obj.Meta]: { keys: [{ source: CHESS_COM_SOURCE, id: username }] },
   });
-  Obj.setParent(gamesFeed, account);
   return account;
 };
 
@@ -91,7 +91,7 @@ export const applyProfile = (account: Account, profile: AccountProfile): void =>
 };
 
 export const CreateAccountSchema = Schema.Struct({
-  username: Schema.String.annotations({
+  username: Schema.String.annotate({
     title: 'Username',
     description: 'Your Chess.com username.',
   }),

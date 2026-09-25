@@ -7,20 +7,21 @@
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Node } from '@dxos/app-graph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
-import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
-import { NotFound } from '../app';
-import { Translations } from '../app';
-import { AppAnnotation } from '../echo';
+import { NotFound } from '../app/index.ts';
+import { Translations } from '../app/index.ts';
+import { AppAnnotation } from '../echo/index.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
+import * as DeckSpec from './DeckSpec.ts';
 
 //
 //
@@ -69,111 +70,86 @@ export const getDynamicLabel = createFactory(
 // Constants and stable callbacks.
 //
 
+/**
+ * Whether a workspace sits in the rail's pinned region rather than among the space tabs. Declared by
+ * the workspace itself through its disposition, so any workspace opts in by placing itself there.
+ */
+export const isPinnedWorkspace = (node: Pick<AppGraphNode.Node, 'properties'>): boolean =>
+  AppGraphNode.hasDisposition(node, ['pin-end', 'pin-start', 'user-account']);
+
 export const CACHEABLE_PROPS: string[] = ['label', 'icon', 'role'];
 export const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
 
 /** Stable Set instances keyed by spaceId. */
 export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Set([spaceId]));
 
-export const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
-
-/**
- * Returns true when the object is eligible to live inside a collection:
- * collections are always eligible; other types require {@link CollectionItemAnnotation}.
- */
-export const isCollectionItem = (object: Obj.Unknown): boolean => {
-  if (Obj.instanceOf(Collection.Collection, object)) {
-    return true;
-  }
-  const type = Obj.getType(object);
-  if (!type) {
-    return false;
-  }
-  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
-};
-
-/** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
-export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
-  Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
+export const CAN_DROP_OBJECT = (source: TreeData) =>
+  AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
 //
 // Module-level caches.
 //
 
-export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
-export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
+const containerKey = (container: ContainerModel.Container): string =>
+  `${Obj.getURI(container.object)}#${container.property}`;
 
-/** Stable rearrange callback that reorders a Collection's objects array. Keyed by collection URI. */
-export const makeCollectionRearrangeCallback = createFactory(
-  (collection: Collection.Collection) => (nextOrder: unknown[]) => {
-    Obj.update(collection, (collection) => {
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    });
-  },
-  (collection) => Obj.getURI(collection),
+const rearrangeCallback = createFactory(
+  (container: ContainerModel.Container) => (nextOrder: unknown[]) =>
+    ContainerModel.reorder({ container, objects: nextOrder.filter(Obj.isObject) }),
+  containerKey,
 );
 
-//
-// Collection partials.
-//
+const canDropInto = createFactory(
+  (container: ContainerModel.Container) =>
+    (source: TreeData): boolean =>
+      AppGraphNode.isGraphNode(source.item) &&
+      Obj.isObject(source.item.data) &&
+      container.accepts?.(source.item.data) !== false,
+  containerKey,
+);
 
-/** Build collection partials for drag/drop behavior. */
-export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
-  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-  role: 'branch' as const,
-  canDrop: CAN_DROP_COLLECTION_ITEM,
-  onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
-    if (!isCollectionItem(child.data)) {
-      return;
-    }
-    Obj.update(collection, (collection) => {
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
-        }
-      }
-    });
-  },
-  onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
-    Obj.update(collection, (collection) => {
-      const idx = collection.objects.findIndex((object) => object.target === child.data);
-      if (idx > -1) {
-        collection.objects.splice(idx, 1);
-      }
-    });
-  },
-  // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
-  // onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
-  //   const newObject = await cloneObject(child.data, resolve, db);
-  //   db.add(newObject);
-  //   Obj.update(collection, (collection) => {
-  //     if (typeof index !== 'undefined') {
-  //       collection.objects.splice(index, 0, Ref.make(newObject));
-  //     } else {
-  //       collection.objects.push(Ref.make(newObject));
-  //     }
-  //   });
-  // },
-});
+/** Node property: the container an item dropped onto the node joins. */
+const DROP_INTO_PROPERTY = 'dropInto';
 
-export const getCollectionGraphNodePartials = ({
-  db,
-  collection,
-}: {
-  db: Database.Database;
-  collection: Collection.Collection;
-}) => {
-  const id = Obj.getURI(collection);
-  let cached = collectionPartialsCache.get(id);
-  if (!cached) {
-    cached = buildCollectionPartials(collection, db);
-    collectionPartialsCache.set(id, cached);
-  }
-  return cached;
-};
+/** Node property: the container whose members are the node's children. */
+const LIST_OF_PROPERTY = 'listOf';
+
+const getDropInto = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[DROP_INTO_PROPERTY];
+
+export const getListOf = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[LIST_OF_PROPERTY];
+
+/** Partials for a node that items can be dropped onto to join `container`. */
+export const getDropTargetPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    role: 'branch' as const,
+    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+    moveScope: container.moveScope,
+    canDrop: canDropInto(container),
+    isLink: (child: AppGraphNode.Node<Obj.Unknown>, from?: AppGraphNode.Node) =>
+      ContainerModel.wouldLink({ container, object: child.data, from: getListOf(from) }),
+    onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    [DROP_INTO_PROPERTY]: container,
+  }),
+  containerKey,
+);
+
+/** Partials for a node whose children are `container`'s members; it is also a drop target for it. */
+export const getListPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    ...getDropTargetPartials(container, db),
+    onRearrange: rearrangeCallback(container),
+    onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) =>
+      ContainerModel.release({ container, object: child.data, to: getDropInto(destination) }),
+    [LIST_OF_PROPERTY]: container,
+  }),
+  containerKey,
+);
 
 //
 // makeObject.
@@ -188,37 +164,46 @@ export const makeObject = ({
   draggable = true,
   droppable = true,
   navigable = false,
-  onRearrange,
+  deck,
+  dropInto,
   canDrop: canDropOverride,
+  blockInstruction,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
-  get: Atom.Context;
+  get: Atom.AtomContext;
   db: Database.Database;
   object: Obj.Unknown;
   disposition?: string | string[];
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
-  /** Rearrange callback invoked with the next sibling order on drop. */
-  onRearrange?: (nextOrder: unknown[]) => void;
+  /**
+   * How the deck should behave when this object is its root, for types whose answer depends on the
+   * enabled plugins rather than the type alone (a collection opens its own article when one exists,
+   * else the deck seeded with its contents). Types with a fixed answer use
+   * {@link AppAnnotation.DeckAnnotation} instead.
+   */
+  deck?: DeckSpec.DeckSpec;
+  /** The container an object dropped onto the row joins. */
+  dropInto?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
+  /** Blocks a drop instruction, for a row whose answer depends on the source. */
+  blockInstruction?: (source: TreeData, instruction: Instruction) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
     return null;
   }
 
+  // Read through the atom because `Obj.getType` is a live but non-reactive lookup, so a node built
+  // before its schema registered would keep the fallback icon.
+  const registered = get(Registry.typeAtom(db.graph.registry, typename));
   // Obj.getType uses the stored type URI to look up the schema. For database-registered
   // (dynamic) schemas the stored TypeSchema jsonSchema.$id is the echo:/<objectId> EID, so an
-  // id-based lookup can miss. Fall back to a typename query against the registry which matches
+  // id-based lookup can miss. Fall back to the typename-keyed registry entry, which matches
   // the TypeSchema.typename field.
-  const type =
-    Obj.getType(object) ??
-    db.graph.registry
-      .list()
-      .filter(Type.isType)
-      .find((t) => Type.getTypename(t) === typename);
+  const type = Obj.getType(object) ?? registered;
   const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
@@ -235,9 +220,11 @@ export const makeObject = ({
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
+  // The caller wins: it knows the enabled plugins, which the schema annotation cannot.
+  const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ db, collection: object })
+    ? getListPartials(ContainerModel.collection(object), db)
     : graphProps;
 
   const label =
@@ -245,13 +232,6 @@ export const makeObject = ({
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
-
-  const objectUri = Obj.getURI(object);
-  let blockInstruction = blockInstructionCache.get(objectUri);
-  if (!blockInstruction) {
-    blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectUri, blockInstruction);
-  }
 
   const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
@@ -274,9 +254,10 @@ export const makeObject = ({
       selectable,
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
-      onRearrange,
       blockInstruction,
       canDrop,
+      ...(dropInto && droppable ? getDropTargetPartials(dropInto, db) : {}),
+      [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },
   };
@@ -286,11 +267,14 @@ export const makeObject = ({
 // Companion helpers.
 //
 
+/** The relation companions hang off their plank or the root through. */
+export const companion: AppGraphNode.Relation = AppGraphNode.relation('companion');
+
 /**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
- * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
- * nodes (the declared `linked` tier).
+ * addressable as `companion/<variant>` in the URL. Return it from an extension declared with
+ * {@link companion}.
  */
 export const makeCompanion = <TData = string>({
   variant,
@@ -304,7 +288,7 @@ export const makeCompanion = <TData = string>({
   icon: string;
   data: TData;
   position?: Position.Position;
-}): Node.NodeArg<TData> => ({
+}): AppGraphNode.NodeArg<TData> => ({
   id: Attention.linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
@@ -316,7 +300,13 @@ export const makeCompanion = <TData = string>({
   },
 });
 
-/** Build a deck-level (workspace-wide) companion panel node. */
+/**
+ * When the deck mounts a companion's surface: `always`, only while it is the `selected` companion
+ * (the default), or only while selected in an expanded sidebar (`open`).
+ */
+export type DeckCompanionMount = 'always' | 'selected' | 'open';
+
+/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with {@link companion}. */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,
@@ -324,6 +314,7 @@ export const makeDeckCompanion = <TData = any>({
   data,
   position,
   joyride,
+  mount,
 }: {
   id: string;
   label: Translations.Label;
@@ -331,7 +322,8 @@ export const makeDeckCompanion = <TData = any>({
   data: TData;
   position?: Position.Position;
   joyride?: string;
-}): Node.NodeArg<TData> => ({
+  mount?: DeckCompanionMount;
+}): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
   data,
@@ -341,6 +333,7 @@ export const makeDeckCompanion = <TData = any>({
     disposition: 'hidden',
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
+    ...(mount !== undefined && { mount }),
   },
 });
 
@@ -358,20 +351,25 @@ export const makeGroup = ({
   id,
   type,
   label,
+  icon,
   space,
   position,
 }: {
   id: string;
   type: string;
   label: Translations.Label;
+  /** Mobile renders a group as a NavBranch list row (desktop shows only the dense label), so an
+   * omitted icon falls back to a letter avatar there. */
+  icon?: string;
   space: Space;
   position?: Position.Position;
-}): Node.NodeArg<null> => ({
+}): AppGraphNode.NodeArg<null> => ({
   id,
   type,
   data: null,
   properties: {
     label,
+    ...(icon !== undefined && { icon }),
     disposition: 'group',
     draggable: false,
     droppable: false,
@@ -403,7 +401,7 @@ export const makeSection = ({
   space: Space;
   position?: Position.Position;
   testId?: string;
-}): Node.NodeArg<null> => ({
+}): AppGraphNode.NodeArg<null> => ({
   id,
   type,
   data: null,
@@ -443,7 +441,7 @@ export const makeSettingsPanel = ({
   /** Hue for the panel's icon. Omit to leave unset (default rendering). */
   iconHue?: string;
   position?: Position.Position;
-}): Node.NodeArg<string> => ({
+}): AppGraphNode.NodeArg<string> => ({
   id,
   type,
   data: type,
@@ -467,11 +465,11 @@ const MENU_SEPARATOR_TYPE = '@dxos/react-ui-toolbar/separator';
 /**
  * Build a toolbar action node — a graph action that opts into the object toolbar
  * (`disposition: 'toolbar'`) instead of context-menu-only placement. Return these from a
- * `GraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
+ * `AppGraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
  *
  * @idiom org.dxos.app-toolkit.toolbarGraphAction
  *   applies: Contributing a toolbar action from an app-graph-builder extension
- *   instead-of: Hand-rolling `Node.makeAction({ ..., properties: { disposition: 'toolbar', ... } })`
+ *   instead-of: Hand-rolling `AppGraphNode.makeAction({ ..., properties: { disposition: 'toolbar', ... } })`
  *   uses: {@link makeToolbarAction}
  *   related: org.dxos.react-ui-menu.graphActionsToolbar
  */
@@ -487,19 +485,21 @@ export const makeToolbarAction = <R = never>({
   id: string;
   label: Translations.Label;
   icon?: string;
-  data: Node.ActionData<R>;
+  data: AppGraphNode.ActionData<R>;
   disabled?: boolean;
   testId?: string;
   keyBinding?: string;
-}): Node.NodeArg<Node.ActionData<R>> =>
-  Node.makeAction({
+}): AppGraphNode.NodeArg<AppGraphNode.ActionData<R>> =>
+  AppGraphNode.makeAction({
     id,
     data,
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties and an omitted
+      // `disabled` cannot clear an earlier `true`; the identity fields below never need clearing.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
       ...(testId !== undefined && { testId }),
       ...(keyBinding !== undefined && { keyBinding }),
     },
@@ -508,9 +508,9 @@ export const makeToolbarAction = <R = never>({
 /**
  * Build a toolbar action-GROUP node (a dropdown of child actions) that opts into the object
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
- * extension callback — not `actions:`, which always stamps `type: Node.ActionType` on every
+ * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
  * returned node and would clobber the group's type — with the extension's `relation` set to
- * `Node.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * `AppGraphNode.action` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
  */
@@ -519,6 +519,7 @@ export const makeToolbarActionGroup = ({
   label,
   icon,
   iconOnly = true,
+  disabled,
   testId,
   actions,
 }: {
@@ -528,11 +529,14 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
    * toolbars; set `false` to show the label text next to the icon. */
   iconOnly?: boolean;
+  /** Render the trigger disabled, so the toolbar can keep showing an affordance that currently has
+   * nothing to offer (paired with an empty `actions`) rather than dropping the control entirely. */
+  disabled?: boolean;
   /** Test id for the group's dropdown trigger. */
   testId?: string;
-  actions: Node.NodeArg<Node.ActionData<any>>[];
-}): Node.NodeArg<typeof Node.actionGroupSymbol> =>
-  Node.makeActionGroup({
+  actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<any>>[];
+}): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol> =>
+  AppGraphNode.makeActionGroup({
     id,
     actions,
     properties: {
@@ -543,6 +547,9 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties (see `addNode`) and
+      // an omitted `disabled` cannot clear an earlier `true`.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
     },
@@ -554,7 +561,7 @@ export const makeToolbarActionGroup = ({
 export const makeToolbarSeparator = (
   id: string,
   variant: 'gap' | 'line' = 'line',
-): Node.NodeArg<Node.ActionData<any>> => ({
+): AppGraphNode.NodeArg<AppGraphNode.ActionData<any>> => ({
   id,
   type: MENU_SEPARATOR_TYPE,
   properties: { variant, disposition: TOOLBAR_DISPOSITION },
@@ -565,7 +572,7 @@ export const makeToolbarSeparator = (
 //
 
 /** Build the not-found sentinel node. */
-export const makeNotFound = (): Node.NodeArg<null> => ({
+export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
   id: NotFound.NOT_FOUND_NODE_ID,
   type: NotFound.NOT_FOUND_NODE_TYPE,
   data: null,

@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
 import '@dxos/lit-ui/dx-avatar.pcss';
@@ -18,18 +16,11 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { useId } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 
-import { useIconHref, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useIconHref, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { type AvatarContextValue, AvatarProvider, useAvatarContext } from './AvatarContext.ts';
 
 export type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
-
-type AvatarContextValue = {
-  labelId: string;
-  descriptionId: string;
-};
-
-const AVATAR_NAME = 'Avatar';
-const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
 
 const AvatarRoot = ({ children, labelId: propsLabelId, descriptionId: propsDescriptionId }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
@@ -56,32 +47,39 @@ const AvatarContent = forwardRef<NaturalDxAvatar, AvatarContentProps>(
   },
 );
 
-type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
+type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return <Comp {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
+    return (
+      <ark.span
+        asChild={asChild}
+        {...props}
+        id={labelId}
+        ref={forwardedRef}
+        className={tx('avatar.label', { srOnly }, classNames)}
+      />
+    );
   },
 );
 
-type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
+type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
     return (
-      <Comp
+      <ark.span
+        asChild={asChild}
         {...props}
         id={descriptionId}
         ref={forwardedRef}
@@ -97,8 +95,6 @@ export const Avatar = {
   Label: AvatarLabel,
   Description: AvatarDescription,
 };
-
-export { useAvatarContext };
 
 export type {
   AvatarAnimation,

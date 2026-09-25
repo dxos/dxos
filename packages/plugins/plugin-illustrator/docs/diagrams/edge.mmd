@@ -1,0 +1,56 @@
+%% EDGE service architecture (dxos/edge) — the edge worker is the front door; storage and compute live in bound services.
+flowchart LR
+  Client[Client: Composer]
+  subgraph EdgeWorker [edge worker]
+    EdgeApi[edge Hono API]
+    RouterDO[RouterObject DO]
+  end
+  subgraph DbService [db-service]
+    Replicators[Replicator DOs]
+    Indexer[Indexer DO]
+    FeedSpace[FeedSpace queue DO]
+    DoStorage[DO KV + SQLite]
+  end
+  subgraph ComputeService [compute-service]
+    TriggersDO[TriggersDispatcher]
+    FnRuntime[Function runtimes]
+  end
+  AiService[ai-service]
+  IdentityAgent[Agent DO + D1]
+  KmsSecrets[SpaceSecrets / KeyReg]
+  HubAccounts[hub accounts D1]
+  FnStores[R2 assets + D1 reg]
+  Client -->|HTTPS + WS| EdgeApi
+  EdgeApi -->|/ws upgrade| RouterDO
+  EdgeApi -->|edgeAuth lookup| HubAccounts
+  EdgeApi -->|/db, /spaces| Replicators
+  EdgeApi -->|/identity| IdentityAgent
+  EdgeApi -->|/kms, /oauth| KmsSecrets
+  EdgeApi -->|/compute| FnRuntime
+  EdgeApi -->|/ai| AiService
+  RouterDO -->|sync frames| Replicators
+  RouterDO -->|queue msgs| FeedSpace
+  Replicators --> DoStorage
+  Indexer --> DoStorage
+  Replicators -->|docs changed| Indexer
+  Indexer -->|objects changed| TriggersDO
+  FeedSpace -->|items inserted| TriggersDO
+  FeedSpace -->|DEK lookup| KmsSecrets
+  Replicators -->|sign / admit| IdentityAgent
+  TriggersDO -->|invoke| FnRuntime
+  FnRuntime -->|deploy + load| FnStores
+  FnRuntime -->|prompt| AiService
+  %% ref Client https://github.com/dxos/edge/tree/main/packages/sdk/messenger-client/src/client.ts
+  %% ref EdgeApi https://github.com/dxos/edge/tree/main/packages/services/edge/src/api.ts
+  %% ref RouterDO https://github.com/dxos/edge/tree/main/packages/services/router/src/worker/router.ts
+  %% ref Replicators https://github.com/dxos/edge/tree/main/packages/services/db-service/src/worker/automerge/automerge-replicator.ts
+  %% ref Indexer https://github.com/dxos/edge/tree/main/packages/services/db-service/src/worker/indexer/indexer.ts
+  %% ref FeedSpace https://github.com/dxos/edge/tree/main/packages/services/db-service/src/worker/feed-space/feed-space.ts
+  %% ref DoStorage https://github.com/dxos/edge/tree/main/packages/services/db-service/src/worker/subduction/do-sedimentree-storage.ts
+  %% ref TriggersDO https://github.com/dxos/edge/tree/main/packages/services/compute-service/src/triggers/trigger-dispatcher-object.ts
+  %% ref FnRuntime https://github.com/dxos/edge/tree/main/packages/services/compute-service/src/runtime/workers-for-platforms-runtime.ts
+  %% ref FnStores https://github.com/dxos/edge/tree/main/packages/services/compute-service/wrangler.jsonc
+  %% ref AiService https://github.com/dxos/edge/tree/main/packages/services/ai-service/src/entrypoint/ai-service.ts
+  %% ref IdentityAgent https://github.com/dxos/edge/tree/main/packages/services/identity-service/src/agent/agent.ts
+  %% ref KmsSecrets https://github.com/dxos/edge/tree/main/packages/services/kms-service/wrangler.jsonc
+  %% ref HubAccounts https://github.com/dxos/edge/tree/main/packages/sdk/hub-protocol/src/middleware.ts

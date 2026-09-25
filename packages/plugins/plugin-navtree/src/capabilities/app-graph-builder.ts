@@ -4,21 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { COMMANDS_DIALOG, meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: COMMANDS_DIALOG,
             data: () =>
               Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -29,14 +32,14 @@ export default Capability.makeModule(
               label: ['open-commands.label', { ns: meta.profile.key }],
               icon: 'ph--magnifying-glass--regular',
               keyBinding: {
-                macos: 'meta+k',
-                windows: 'ctrl+k',
+                macos: 'shift+meta+k',
+                windows: 'ctrl+shift+k',
               },
             },
           }),
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

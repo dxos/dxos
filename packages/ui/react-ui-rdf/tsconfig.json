@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {

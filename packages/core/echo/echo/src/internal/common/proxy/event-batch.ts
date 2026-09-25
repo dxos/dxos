@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EventId } from './symbols';
+import { EventId } from './symbols.ts';
 
 /**
  * Simple batching mechanism for EventId emissions.

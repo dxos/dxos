@@ -17,9 +17,6 @@
       "path": "../async"
     },
     {
-      "path": "../codec-protobuf"
-    },
-    {
       "path": "../crypto"
     },
     {
@@ -39,9 +36,6 @@
     },
     {
       "path": "../random-access-storage"
-    },
-    {
-      "path": "../tracing"
     },
     {
       "path": "../typings"

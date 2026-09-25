@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-preferred-audio-input"
+description = "Enables the set_preferred_audio_input command without any pre-configured scope."
+commands.allow = ["set_preferred_audio_input"]
+
+[[permission]]
+identifier = "deny-set-preferred-audio-input"
+description = "Denies the set_preferred_audio_input command without any pre-configured scope."
+commands.deny = ["set_preferred_audio_input"]

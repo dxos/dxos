@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
 import { Event } from '@dxos/async';
@@ -27,7 +27,7 @@ import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
  */
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  private _scope?: Scope.CloseableScope;
+  private _scope?: Scope.Closeable;
   private _rpc?: ClientServicesRpc;
   private _services?: Partial<ClientServices>;
 
@@ -58,14 +58,16 @@ export class ClientServicesProxy implements ClientServicesProvider {
     try {
       this._rpc = await EffectEx.runPromise(
         makeClientServicesRpc(this._port).pipe(
-          Scope.extend(scope),
-          Effect.timeoutFail({
+          Scope.provide(scope),
+          Effect.timeoutOrElse({
             duration: this._timeout,
-            onTimeout: () =>
-              new RemoteServiceConnectionTimeout({
-                message: 'Failed to establish rpc connection',
-                context: { timeout: this._timeout },
-              }),
+            orElse: () =>
+              Effect.fail(
+                new RemoteServiceConnectionTimeout({
+                  message: 'Failed to establish rpc connection',
+                  context: { timeout: this._timeout },
+                }),
+              ),
           }),
         ),
       );
@@ -73,7 +75,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
       await EffectEx.runPromise(Scope.close(scope, Exit.void));
       throw err;
     }
-    this._services = makeServicesFromRpc(this._rpc, Runtime.defaultRuntime);
+    this._services = makeServicesFromRpc(this._rpc, Context.empty());
     this._scope = scope;
     log('client-services-proxy: opened');
   }

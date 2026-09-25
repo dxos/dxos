@@ -6,10 +6,14 @@ import { describe, test } from 'vitest';
 
 import { Position } from '@dxos/util';
 
-import * as Role from '../../../common/Role';
-import { useIsSurfaceAvailable } from './SurfaceComponent';
-import { indexByRole } from './SurfaceManager';
-import { type Filter, create, isFilter, makeFilter } from './types';
+import * as Role from '../../../common/Role.ts';
+import { useIsSurfaceAvailable } from './SurfaceComponent.tsx';
+import { indexByRole } from './SurfaceManager.ts';
+import { type Filter, create, isFilter, makeFilter } from './types.ts';
+
+// Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
+// authoring site, and these cases exercise the computed ids it deliberately lets through.
+const INVALID_ID: string = 'gallery-article';
 
 describe('isFilter', () => {
   test('distinguishes filter objects from predicate functions', ({ expect }) => {
@@ -64,7 +68,7 @@ describe('create', () => {
   test('does not throw on an invalid local id (dropped at dispatch instead)', ({ expect }) => {
     const token = Role.make<Record<string, any>>('org.dxos.test.role.article');
     const filter = makeFilter(token, () => true);
-    expect(() => create({ id: 'gallery-article', filter, component: () => null })).not.toThrow();
+    expect(() => create({ id: INVALID_ID, filter, component: () => null })).not.toThrow();
   });
 });
 
@@ -80,7 +84,7 @@ describe('indexByRole', () => {
 
   test('does not filter on id validity (SurfaceManager is responsible for that)', ({ expect }) => {
     const valid = create({ id: 'valid', filter, component: () => null });
-    const invalid = create({ id: 'gallery-article', filter, component: () => null });
+    const invalid = create({ id: INVALID_ID, filter, component: () => null });
     const index = indexByRole([valid, invalid]);
     expect(index.get(token.role)).toEqual([valid, invalid]);
   });

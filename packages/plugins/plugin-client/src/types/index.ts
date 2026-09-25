@@ -1,8 +1,12 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './account-cache';
-export * from './capabilities';
-export * from './events';
-export * from './schema';
+export * as Account from './Account.ts';
+export * as AccountCache from './AccountCache.ts';
+export * as CliLogin from './CliLogin.ts';
+export * as ClientAction from './ClientAction.ts';
+export * as ClientCapabilities from './ClientCapabilities.ts';
+export * as ClientEvents from './ClientEvents.ts';
+export * as ClientOptions from './ClientOptions.ts';
+export * as PasskeyError from './PasskeyError.ts';

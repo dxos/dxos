@@ -24,7 +24,7 @@ body {
 }
 
 /* Pre-CSS color fallbacks so text is readable before and during Vite HMR. */
-/* Values are intentionally kept in sync with @theme tokens in semantic.css:
+/* Values are intentionally kept in sync with @theme tokens in theme/surfaces.css:
  *   color            ← --color-base-fg      = light-dark(neutral-950, neutral-150)
  *   background-color ← --color-base-surface = elevation-3 = light-dark(neutral-125, neutral-850)
  * The literals carry the ramp tint (chroma 0.001, hue 190) so first paint matches the loaded theme. */

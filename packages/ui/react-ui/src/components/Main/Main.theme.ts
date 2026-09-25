@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { mainPaddingTransitions } from './constants';
+import { mainPaddingTransitions } from './constants.ts';
 
 const padding = 'dx-main-content-padding';
 
@@ -14,16 +14,37 @@ export type MainStyleProps = Partial<{
   handlesFocus: boolean;
 }>;
 
+// The app canvas is the base zone: it paints the level and publishes `--surface-bg`, which every
+// aspect inside it (bars, wells, hover/current rows) derives from.
 const content: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
-  mx(padding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
+  mx(
+    'dx-main-content',
+    padding,
+    mainPaddingTransitions,
+    bounce && 'dx-main-bounce-layout',
+    'dx-base-surface',
+    'dx-focus-ring-main',
+    ...etc,
+  );
 
 const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);
 
 const overlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
+const swipeArea: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-drawer__swipe-area', 'dx-main-swipe-area', ...etc);
+
+const drawer: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-main-drawer', 'dx-focus-ring-inset-over-all', ...etc);
+
+const drawerHandle: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-drawer-handle', ...etc);
+
 export const mainTheme = {
   content,
   sidebar,
   overlay,
+  swipeArea,
+  drawer,
+  drawerHandle,
 };

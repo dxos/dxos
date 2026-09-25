@@ -6,7 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type FC,
   type MouseEventHandler,
@@ -23,14 +23,15 @@ import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
-import { type Polygon } from '../../types';
-import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
-import { styles } from '../styles';
-import { type TextBoxProps } from '../TextBox';
-import { AnchorComponent } from './Anchor';
-import { type ShapeComponentProps, shapeAttrs } from './Shape';
+import { type DragDropPayload, useEditorContext } from '../../hooks/index.ts';
+import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout/index.ts';
+import { type Polygon } from '../../types/index.ts';
+import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors.ts';
+import { styles } from '../styles.tsx';
+import { type TextBoxProps } from '../TextBox/index.ts';
+import { AnchorComponent } from './Anchor.tsx';
+import { shapeAttrs } from './shape-defs.ts';
+import { type ShapeComponentProps } from './Shape.tsx';
 
 // Border around frame for preview snapshot.
 const previewBorder = 8;

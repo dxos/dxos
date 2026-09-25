@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { turnToward } from '../sim';
-import { type TerraObject } from '../types';
+import { TerraObject } from '#types';
+
+import { turnToward } from '../sim/index.ts';
 
 /**
  * Max degrees a rendered heading may turn per real second, per kind — a heavy hull turning this

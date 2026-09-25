@@ -9,10 +9,10 @@ import * as Schema from 'effect/Schema';
  * normalized slug (the join key — `DXOS` and `dxos` collapse to `dxos`); `label` keeps the original
  * surface form for display so casing/acronyms survive (`DXOS`, not `Dxos`).
  */
-export const Term = Schema.Union(
+export const Term = Schema.Union([
   Schema.Struct({ entity: Schema.String, label: Schema.optional(Schema.String) }),
   Schema.Struct({ literal: Schema.String }),
-);
+]);
 export type Term = Schema.Schema.Type<typeof Term>;
 
 export const Assertion = Schema.Struct({

@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
@@ -13,44 +14,47 @@ import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
+    const schemas = yield* AppCapabilities.Schema;
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previousDxns = new Set<string>();
-    const cancel = registry.subscribe(
-      schemasAtom,
-      async (schemas) => {
-        const seenSchemaDxns = new Set<string>();
-        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
-        for (const schema of schemas.flat()) {
-          const uri = Type.getURI(schema);
-          if (!uri) {
-            log.warn('skipping schema without uri');
-            continue;
-          }
-
-          const key = uri.toString();
-          if (seenSchemaDxns.has(key)) {
-            log('skipping duplicate schema for echo registration', { uri: key });
-            continue;
-          }
-
-          seenSchemaDxns.add(key);
-          batch.push({ schema, dxnKey: key });
+    const previousDxns = new Set<string>();
+    const register = async (contributions: readonly AppCapabilities.Schema[]) => {
+      const seenSchemaDxns = new Set<string>();
+      const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
+      for (const schema of contributions.flat()) {
+        const uri = Type.getURI(schema);
+        if (!uri) {
+          log.warn('skipping schema without uri');
+          continue;
         }
 
-        const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
-
-        await client.addTypes(toRegister.map(({ schema }) => schema));
-        for (const { dxnKey } of toRegister) {
-          previousDxns.add(dxnKey);
+        const key = uri.toString();
+        if (seenSchemaDxns.has(key)) {
+          log('skipping duplicate schema for echo registration', { uri: key });
+          continue;
         }
-      },
-      { immediate: true },
-    );
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
+        seenSchemaDxns.add(key);
+        batch.push({ schema, dxnKey: key });
+      }
+
+      const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
+
+      await client.addTypes(toRegister.map(({ schema }) => schema));
+      for (const { dxnKey } of toRegister) {
+        previousDxns.add(dxnKey);
+      }
+    };
+
+    // Awaited here so `SchemaRegistered` means the types are registered, not that a subscriber exists.
+    yield* Effect.tryPromise(() => register(schemas.get()));
+
+    // `previousDxns` is populated, so the immediate pass is a no-op.
+    const cancel = registry.subscribe(schemas.atom, register, { immediate: true });
+
+    yield* Effect.addFinalizer(() => Effect.sync(() => cancel()));
+    return Capability.contribute(ClientCapabilities.SchemaRegistered, true);
   }),
 );

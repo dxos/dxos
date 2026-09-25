@@ -5,7 +5,21 @@
 .claude/scheduled_tasks.lock
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.mode
+# The focus pin that rides alongside it — a task, so even less repo policy.
+.claude/.focus
+# Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
+
+# Autonomous-mode run state: the pinned task, its definition of done, and the
+# block budget the Stop hook spends. Per-worktree runtime, like the mode.
+.claude/.autonomous
+.claude/.autonomous-dod
+.claude/.autonomous-reminders
+# Its two logs. Both are session evidence, not source: the user log is a verbatim
+# transcript of what the user typed, the decision log is what the agent chose.
+.claude/.autonomous-user.md
+.claude/.autonomous-log.md
 
 # Logs
 logs/
@@ -15,12 +29,15 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
-# vite-plugin-log dev file sink (default filename is `app.log`).
+# vite-plugin-log dev file sink (default filename is `app.log`), plus rotated captures.
 app.log
-# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+app.log.*
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`), plus rotated captures.
 test.log
-# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test.log.*
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`), plus rotated captures.
 test-browser.log
+test-browser.log.*
 
 # Vitest
 vitest-results.json
@@ -62,6 +79,10 @@ build/Release
 node_modules/
 jspm_packages/
 
+# pnpm store, when it resolves inside the checkout instead of a global cache dir (observed on Depot
+# CI's sandbox — see .oxfmtrc.json's ignorePatterns for why this also needs to be there).
+.pnpm-store/
+
 # Optional npm cache directory
 .npm
 
@@ -97,6 +118,9 @@ oclif.manifest.json
 dist
 out
 lib
+# Keep agent skill source trees named `lib/` (not TS emit).
+!.agents/**/lib/
+!.agents/**/lib/**
 build
 out
 tmp
@@ -140,6 +164,17 @@ packages/sdk/observability/src/cli-observability-secrets.json
 .benchmark
 *.cpuprofile
 
+# DX_PROFILE_TESTS / DX_DEBUG_LEAKS test-instrumentation output (see .agents/projects/test-profiling-leaks).
+# `*.cpuprofile` is already ignored above; these cover custom DX_DEBUG_LEAKS_DIR locations too.
+*.heapsnapshot
+heap-samples.ndjson
+profiles/
+
+# Memory-harness results. Both scripts hardcode their output next to themselves, so a
+# re-run overwrites whatever a previous run left; nothing reads either file.
+packages/apps/composer-app/scripts/memory/boot-census.json
+packages/apps/composer-app/scripts/memory/soak-run.json
+
 # Debug logging for require hooks
 .trace-compiled
 
@@ -156,7 +191,13 @@ packages/sdk/observability/src/cli-observability-secrets.json
 # Bot temp files
 dxos-tmp
 build
+
+# Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
+# credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
+# `git add -f` still stages these, and a path already in the index stays tracked.
 .secrets
+.secrets/
+**/.secrets/
 
 # Custom git hooks
 .husky/post-applypatch
@@ -194,6 +235,9 @@ typedoc
 # aider assistant temp files
 .aider*
 
+# Per-machine Claude Code settings (permission grants, env) — never shared.
+.claude/settings.local.json
+
 # codex agent local state
 .codex/
 
@@ -212,3 +256,36 @@ node_modules
 .dxos-introspect/
 
 .superpowers/
+
+# Development fixtures: real, PII-bearing corpora pulled by `moon run fixtures:pull`, plus any
+# encrypted archive staged for upload (see tools/fixtures). Never commit.
+/testing/fixtures/
+*.age
+
+# moon remote-cache mTLS material — never committed (tools/moon-cache/README.md).
+.moon/certs/
+
+# Remote-cache benchmark output (tools/moon-cache/bench).
+.moon-bench/
+
+# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# (STAGING.md / groups.json / groups/ are deleted on finalize).
+.agents/reviews/*/STAGING.md
+.agents/reviews/*/groups.json
+.agents/reviews/*/groups/
+
+# Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
+# "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
+dummy-non-existing-folder/
+tools/vscode/vscode-mdl/dist
+
+# Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
+**/src/capabilities/gen/
+
+# Stryker mutation testing (evaluation).
+.stryker-tmp/
+reports/mutation/
+
+# Bun writes its cache under `$HOME/Library` on macOS, which lands in the package directory when a
+# command runs with HOME unset — as an MCP server spawned by a client can.
+**/Library/Caches/

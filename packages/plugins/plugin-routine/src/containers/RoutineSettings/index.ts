@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { RoutineSettings as default } from './RoutineSettings';
+export { RoutineSettings as default } from './RoutineSettings.tsx';

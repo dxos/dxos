@@ -9,18 +9,18 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
 import { OperationTestLayer } from '#testing';
-
-import { MarkdownOperation } from '../types';
+import { MarkdownOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -34,7 +34,7 @@ class TestOutline extends Type.makeObject<TestOutline>(DXN.make('com.example.typ
 
 /** `OperationTestLayer` plus the outline-shaped type. */
 const OutlineTestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [
     SpaceProperties,
     Collection.Collection,
@@ -137,12 +137,14 @@ describe('Update', () => {
         });
         yield* Database.add(outline);
 
-        const { newContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+        const { applied, length } = yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(outline),
           edits: [{ newString: '\n- [ ] Added from the operation' }],
         });
 
-        expect(newContent).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
+        // A receipt rather than the document; the text itself is read back below.
+        expect(applied).toBe(1);
+        expect(length).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation'.length);
         const text = yield* Database.load(outline.content);
         expect(text.content).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
       },

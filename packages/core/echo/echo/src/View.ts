@@ -10,12 +10,12 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, PublicKey } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import * as Type from './Type.ts';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -31,7 +31,7 @@ export const FieldSchema = Schema.Struct({
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
 
-export const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
+export const KeyValueProps = Schema.Record(Schema.String, Schema.Any);
 
 export const createFieldId = () => PublicKey.random().truncate();
 
@@ -75,10 +75,7 @@ export class View extends Type.makeObject<View>(DXN.make('org.dxos.type.view', '
      * Projection of the data returned from the query.
      */
     projection: Projection,
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' })),
 ) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof View>>): Type.InstanceType<typeof View> => {

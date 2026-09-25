@@ -15,7 +15,16 @@ declare global {
        */
       range?: { index: number; total: number };
     }) => void;
+    /** Register plugin icons for the loader's activation row; draws nothing until `activated(...)`. */
+    plugins?: (entries: { id: string; icon?: string }[]) => void;
+    /** Add the registered plugin with this id to the activation row. */
+    activated?: (id: string) => void;
     progress: (fraction?: number) => void;
+    /**
+     * Report that startup has outrun its budget without failing it, offering `onAbort` as the way
+     * out. Dev-only — see the canonical doc on `BootLoaderApi.stalled`.
+     */
+    stalled: (onAbort: () => void) => void;
     ready: () => void;
     dismiss: () => void;
   }

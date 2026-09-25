@@ -4,19 +4,19 @@
 
 import React from 'react';
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Tree } from '@dxos/devtools';
-import { Graph } from '@dxos/plugin-graph';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 
-export type DebugGraphProps = { graph: Graph.Graph; root: string };
+export type DebugGraphProps = { role?: string; graph: AppGraph.Graph; root: string };
 
-export const DebugGraph = ({ graph, root }: DebugGraphProps) => {
+export const DebugGraph = ({ role, graph, root }: DebugGraphProps) => {
   return (
-    <Panel.Root>
+    <Panel.Root role={role}>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='all'>
           <ScrollArea.Viewport>
-            <Tree data={Graph.toJSON(graph, root)} />
+            <Tree data={AppGraph.toJSON(graph, root)} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

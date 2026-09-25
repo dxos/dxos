@@ -4,13 +4,14 @@
 
 /* eslint-disable no-console */
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
@@ -75,7 +76,7 @@ export const SyncBench = () => {
     }
     const invitation = space.share({
       multiUse: true,
-      authMethod: Invitation.AuthMethod.NONE,
+      authMethod: Invitation_AuthMethod.NONE,
     });
     const code = InvitationEncoder.encode(invitation.get());
     const url = new URL(`?spaceInvitation=${code}`, location.href);

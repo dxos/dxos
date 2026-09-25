@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './types';
-export * from './Root';
-export * from './useContainerId';
+export * from './types.ts';
+export * from './DndRootContext.ts';
+export * from './resolve-drop.ts';
+
+export * from './Root.tsx';
+export * from './useContainerId.ts';

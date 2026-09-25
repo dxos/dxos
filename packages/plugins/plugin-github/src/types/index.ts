@@ -2,4 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as GitHubOperation from './GitHubOperation';
+export * as GitHubCapabilities from './GitHubCapabilities.ts';
+export * as GitHubEvents from './GitHubEvents.ts';
+export * as GitHubOperation from './GitHubOperation.ts';
+export * as Walkthrough from './Walkthrough.ts';

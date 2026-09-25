@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type AsyncEvents, TimeoutError } from './errors';
+import { type AsyncEvents, TimeoutError } from './errors.ts';
 import {
   type CancellableObservable,
   type CancellableObservableEvents,
   CancellableObservableProvider,
-} from './observable-value';
-import { latch } from './trigger';
+} from './observable-value.ts';
+import { latch } from './trigger.ts';
 
 interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
   onConnected(connectionId: string): void;

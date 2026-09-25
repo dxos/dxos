@@ -12,7 +12,7 @@ import {
   isJsonPath,
   setValue,
   splitJsonPath,
-} from './internal/json-path';
+} from './internal/json-path.ts';
 
 describe('createJsonPath', () => {
   test('supported path subset', () => {

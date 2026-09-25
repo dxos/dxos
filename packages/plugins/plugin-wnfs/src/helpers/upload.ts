@@ -12,12 +12,12 @@ import type { Space } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type WnfsCapabilities } from '#types';
+import { WnfsCapabilities } from '#types';
 
-import { WnfsStateAnnotation } from '../annotations';
-import { Rng, filePath, store } from './common';
-import { loadWnfs } from './load';
-import { wnfsUrl } from './wnfs-url';
+import { WnfsStateAnnotation } from '../annotations.ts';
+import { Rng, filePath, store } from './common.ts';
+import { loadWnfs } from './load.ts';
+import { wnfsUrl } from './wnfs-url.ts';
 
 export const upload = async ({
   file,

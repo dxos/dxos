@@ -4,9 +4,9 @@
 
 import { useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 
-import { useRegistryPlugins } from './useRegistryPlugins';
+import { useRegistryPlugins } from './useRegistryPlugins.ts';
 
 /**
  * Resolves the registry catalog entry for a plugin by id, plus the `moduleUrl`

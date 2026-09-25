@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { joinTables } from './join-tables';
+import { joinTables } from './join-tables.ts';
 
 describe('joinTables', () => {
   test('smoke', () => {

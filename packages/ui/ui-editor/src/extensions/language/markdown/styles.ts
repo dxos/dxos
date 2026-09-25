@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { fontBody, fontMono } from '../../../styles';
+import { fontBody, fontMono } from '../../../styles/index.ts';
 
 export const bulletListIndentationWidth = 24;
 export const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
@@ -86,11 +86,12 @@ export const formattingStyles = EditorView.theme({
   '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
-    // display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
     whiteSpace: 'nowrap',
+    padding: '0 0.25rem',
     color: 'var(--color-cm-code-inline)',
+    backgroundColor: 'var(--color-cm-codeblock)',
   },
   '& .cm-code-mark': {
     fontFamily: fontMono,
@@ -141,7 +142,7 @@ export const formattingStyles = EditorView.theme({
     fontFamily: fontMono,
   },
   '.cm-table-head': {
-    padding: '4px 8px',
+    padding: '8px 8px',
     paddingRight: '24px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
@@ -151,8 +152,7 @@ export const formattingStyles = EditorView.theme({
     fontSize: 'small',
     textTransform: 'uppercase',
     color: 'var(--color-description)',
-    backgroundColor: 'var(--color-input-surface)',
-    // borderBottom: '1px solid var(--color-cm-separator)',
+    backgroundColor: 'var(--color-group-alt-surface)',
   },
   '.cm-table-cell': {
     padding: '4px 8px',
@@ -160,7 +160,7 @@ export const formattingStyles = EditorView.theme({
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
-    backgroundColor: 'var(--color-base-surface)',
+    backgroundColor: 'var(--color-group-surface)',
     fontVariantNumeric: 'tabular-nums',
   },
 

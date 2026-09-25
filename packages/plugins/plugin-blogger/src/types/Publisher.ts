@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { type Ref } from '@dxos/echo';
-import { type Connection } from '@dxos/plugin-connector/types';
+import { BaseError } from '@dxos/errors';
+import { Connection } from '@dxos/link';
 
 // Provider-neutral draft DTO exchanged across the publisher capability boundary.
 // NOT an ECHO object — a plain Effect schema.
@@ -45,17 +46,17 @@ export interface PublisherService {
 }
 
 /** Thrown by a `PublisherService` when publish/import/unpublish fails against the remote backend. */
-export class PublisherError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PublisherError';
-  }
-}
+export class PublisherError extends BaseError.extend('PublisherError', 'Publishing failed.') {}
 
 /** Thrown by a `PublisherService` when its credentials (e.g. a Connection's access token) are missing. */
-export class MissingCredentialError extends PublisherError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'MissingCredentialError';
-  }
-}
+export class MissingCredentialError extends BaseError.extend(
+  'MissingCredentialError',
+  'Publisher credentials are missing.',
+) {}
+
+/** Any failure a `PublisherService` raises. */
+export type Failure = PublisherError | MissingCredentialError;
+
+/** `instanceof` across every publisher failure, for a boundary that passes them through. */
+export const isFailure = (error: unknown): error is Failure =>
+  error instanceof PublisherError || error instanceof MissingCredentialError;

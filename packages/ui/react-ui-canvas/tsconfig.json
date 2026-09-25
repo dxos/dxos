@@ -15,25 +15,31 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/diagram"
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/test-utils"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/util"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { TimeoutError } from '@dxos/async';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { IconButton } from '@dxos/react-ui';
 

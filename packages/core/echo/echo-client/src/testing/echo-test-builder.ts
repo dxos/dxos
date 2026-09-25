@@ -3,20 +3,19 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import isEqual from 'fast-deep-equal';
 
-import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
-import { EchoHost } from '@dxos/echo-host';
+import { EchoHost, type QueryExecutorMode } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -26,12 +25,11 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
-import { EchoClient } from '../client';
-import { type BranchStore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
+import { EchoClient } from '../client/index.ts';
+import { type BranchStore } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -45,6 +43,8 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
+  /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `sql`. */
+  queryExecutor?: QueryExecutorMode;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -88,11 +88,12 @@ export class EchoTestPeer extends Resource {
   private readonly _registry: Entity.Unknown[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
+  private readonly _queryExecutor?: QueryExecutorMode;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   /** Owns the in-process effect-rpc clients bridged from the host handlers. */
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
@@ -121,13 +122,11 @@ export class EchoTestPeer extends Resource {
   }
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  >;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor }: PeerOptions = {}) {
     super();
+    this._queryExecutor = queryExecutor;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -135,10 +134,7 @@ export class EchoTestPeer extends Resource {
     this._storagePath = storagePath;
   }
 
-  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  > {
+  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never> {
     if (this._persistentRuntime == null) {
       const baseLayer = this._storagePath ? layerFile(this._storagePath) : layerMemory;
       this._persistentRuntime = ManagedRuntime.make(baseLayer.pipe(Layer.orDie));
@@ -147,30 +143,27 @@ export class EchoTestPeer extends Resource {
     // Keep the same SQLite-backed services across peer reloads by reading them from the
     // persistent runtime context, then provide those services into a new runtime that
     // recreates only the transaction layer.
-    const persistedSqlLayer = Layer.unwrapEffect(
-      this._persistentRuntime.runtimeEffect.pipe(
-        Effect.map((runtime) =>
+    const persistedSqlLayer = Layer.unwrap(
+      this._persistentRuntime.contextEffect.pipe(
+        Effect.map((context) =>
           Layer.merge(
-            Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
-            Layer.succeed(SqlExport.SqlExport, EffectContext.get(runtime.context, SqlExport.SqlExport)),
+            Layer.succeed(SqlClient.SqlClient, EffectContext.get(context, SqlClient.SqlClient)),
+            Layer.succeed(SqlExport.SqlExport, EffectContext.get(context, SqlExport.SqlExport)),
           ),
         ),
       ),
     );
 
-    return ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(persistedSqlLayer), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    );
+    return ManagedRuntime.make(persistedSqlLayer.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
   }
 
   private _initEcho(): void {
     this._managedRuntime = this._createManagedRuntime();
 
     this._echoHost = new EchoHost({
-      runtime: this._managedRuntime.runtimeEffect,
+      runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
+      queryExecutor: this._queryExecutor,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();
@@ -394,15 +387,6 @@ export const createDataAssertion = ({
         db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
       );
       await db.flush();
-    },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({
-        breakOnError: true,
-        condition: async () => {
-          const { received } = await findSeedObject(db);
-          return received.every((obj) => obj != null);
-        },
-      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);

@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import * as Schema from 'effect/Schema';
 import React, {
   type PropsWithChildren,
   useCallback,
@@ -14,12 +12,12 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 
-import { LogLevel, logFileRegistry } from '@dxos/log';
+import { logFileRegistry } from '@dxos/log';
 import {
   ErrorStack,
+  Field,
   Icon,
   IconButton,
-  Input,
   Panel,
   Popover,
   ScrollArea,
@@ -32,20 +30,18 @@ import {
   parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
-import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { translationKey } from '../../translations';
-import { formatLogEntry, packageName } from './format';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
-import { type LevelName, LEVELS, composeFilter } from './recorder';
+import { translationKey } from '#translations';
 
-export { LEVELS, composeFilter, startLogRecording } from './recorder';
-export type { LevelName, LogRecorder } from './recorder';
-export { type LogRow, logBuffer } from './log-buffer';
+import { formatLogEntry, packageName } from './format.ts';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
+import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
 // Shared
@@ -53,60 +49,6 @@ export { type LogRow, logBuffer } from './log-buffer';
 
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
-
-/**
- * Per-file log level overrides, keyed by source path. Persisted (localStorage) via react-ui-attention
- * view state so the levels a developer dials in survive reloads; requires a `ViewStateProvider` ancestor
- * to persist (degrades to session defaults without one).
- */
-export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
-  key: 'debug-logger-levels',
-  backend: 'local',
-  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
-  defaultValue: () => ({}),
-});
-
-export const levelColor = (level: LogLevel) =>
-  level > LogLevel.WARN
-    ? 'text-error-text'
-    : level > LogLevel.INFO
-      ? 'text-warning-text'
-      : level > LogLevel.VERBOSE
-        ? 'text-info-text'
-        : 'text-success-text';
-
-// Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
-export const copyToClipboard = (text: string): void => {
-  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
-};
-
-//
-// Context
-//
-
-type LoggerContextValue = {
-  rows: LogRow[];
-  filter: string;
-  setFilter: (filter: string) => void;
-  textFilter: string;
-  setTextFilter: (value: string) => void;
-  recording: boolean;
-  setRecording: (fn: (value: boolean) => boolean) => void;
-  files: string[];
-  fileLevels: Map<string, LevelName>;
-  setFileLevel: (file: string, level: LevelName | undefined) => void;
-  clearFileLevels: () => void;
-  expanded: Set<number>;
-  toggleExpand: (id: number) => void;
-  current: number | undefined;
-  setCurrent: (id: number) => void;
-  checked: Set<number>;
-  toggleChecked: (id: number) => void;
-  clear: () => void;
-  copyAll: () => void;
-};
-
-const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');
 
 //
 // Root
@@ -116,6 +58,14 @@ type LoggerRootProps = PropsWithChildren<{
   maxLines?: number;
   initialFilter?: string;
   defaultRecording?: boolean;
+  /**
+   * Narrows which captured rows this instance displays, for a panel scoped to one subsystem.
+   *
+   * Distinct from `initialFilter`, which sets what the process-wide buffer *captures*: a scoped
+   * panel must not narrow capture, or it starves every other panel reading the same buffer.
+   * Must be stable across renders — hoist it or memoize it.
+   */
+  rowFilter?: (row: LogRow) => boolean;
 }>;
 
 const LoggerRoot = ({
@@ -123,6 +73,7 @@ const LoggerRoot = ({
   maxLines = DEFAULT_MAX_LINES,
   initialFilter = 'info',
   defaultRecording = true,
+  rowFilter,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
@@ -140,7 +91,10 @@ const LoggerRoot = ({
 
   // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
   // companion, so mounting is not the lifetime we want recording to follow.
-  const rows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
+  // same set — a scoped panel should never copy out rows it never showed.
+  const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
   const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
   const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
 
@@ -279,20 +233,19 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setFilter(ev.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <Select.Root value={selectedLevel} onValueChange={setFilter}>
         <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LEVELS.map((level) => (
                 <Select.Option key={level} value={level} classNames='text-sm'>
@@ -300,8 +253,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -354,15 +305,15 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
             <Panel.Root>
               <Panel.Toolbar asChild>
                 <Toolbar.Root>
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Field.Input
                       placeholder={t('levels.filter.placeholder')}
                       value={fileFilter}
                       autoComplete='off'
                       spellCheck={false}
                       onChange={(ev) => setFileFilter(ev.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                   <Toolbar.IconButton
                     icon='ph--trash--regular'
                     iconOnly
@@ -382,7 +333,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                     )}
                     {visibleFiles.length > 0 && (
                       <Listbox.Root>
-                        <Listbox.Content>
+                        <Listbox.Content classNames='dx-density-sm'>
                           {visibleFiles.map((file) => {
                             const basename = file.split('/').pop() ?? file;
                             const pkg = packageName(file);
@@ -393,8 +344,12 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                 id={file}
                                 classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
                               >
-                                <Listbox.ItemLabel classNames='flex flex-col text-xs' title={file}>
-                                  {pkg && <div className='text-subdued'>{pkg}</div>}
+                                {/* One line so the row can honour the compact density; the package
+                                    and full path are carried in the tooltip instead of a second line. */}
+                                <Listbox.ItemLabel
+                                  classNames='truncate text-xs'
+                                  title={pkg ? `${pkg} · ${file}` : file}
+                                >
                                   {basename}
                                 </Listbox.ItemLabel>
                                 <Select.Root
@@ -409,7 +364,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                   />
                                   <Select.Portal>
                                     <Select.Content>
-                                      <Select.ScrollUpButton />
                                       <Select.Viewport>
                                         <Select.Option value='inherit' classNames='text-sm'>
                                           {t('levels.inherit.label')}
@@ -420,8 +374,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                           </Select.Option>
                                         ))}
                                       </Select.Viewport>
-                                      <Select.ScrollDownButton />
-                                      <Select.Arrow />
                                     </Select.Content>
                                   </Select.Portal>
                                 </Select.Root>
@@ -464,7 +416,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>
@@ -517,7 +469,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           }
         }}
       >
-        <Listbox.Content classNames={mx(classNames)}>
+        <Listbox.Content classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
@@ -532,14 +484,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
               >
                 <div className='flex items-center pl-2'>
-                  <Input.Root>
-                    <Input.Checkbox
+                  <Field.Root>
+                    <Field.Checkbox
                       tabIndex={-1}
                       size={3}
                       checked={checked.has(id)}
                       onCheckedChange={() => toggleChecked(id)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
@@ -554,7 +506,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <IconButton
                   icon='ph--clipboard--regular'
                   iconOnly
-                  density='xs'
+                  density='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'
@@ -563,15 +515,18 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 />
                 {isExpanded && (
                   <div className='col-span-full'>
-                    <JsonHighlighter
-                      classNames='p-2'
-                      data={{
-                        file: record.line ? `${record.file}:${record.line}` : record.file,
-                        message: record.message,
-                        context: record.context,
-                      }}
-                    />
-                    {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
+                    {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
+                    <Syntax.Viewport>
+                      <JsonHighlighter
+                        classNames='p-2 overflow-visible'
+                        data={{
+                          file: record.line ? `${record.file}:${record.line}` : record.file,
+                          message: record.message,
+                          context: record.context,
+                        }}
+                      />
+                    </Syntax.Viewport>
+                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>
@@ -596,9 +551,9 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
+      <Field.Root>
+        <Field.Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
@@ -606,7 +561,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
           onChange={(ev) => setTextFilter(ev.target.value)}
           start={<Icon icon='ph--magnifying-glass--regular' />}
         />
-      </Input.Root>
+      </Field.Root>
       {textFilter.length > 0 && (
         <Toolbar.IconButton
           icon='ph--x--regular'
@@ -633,8 +588,6 @@ export const Logger = {
   Levels: LoggerLevels,
   Filter: LoggerFilter,
 };
-
-export { useLoggerContext };
 
 export type {
   LoggerContentProps,

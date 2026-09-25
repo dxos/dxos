@@ -8,7 +8,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import * as Progress from './Progress';
+import * as Progress from './Progress.ts';
 
 /**
  * Overflow policy applied when a consumer cannot keep pace, mapped onto `Stream.buffer` strategies.
@@ -114,10 +114,13 @@ export const window = <In, Out, E, R>(
 
   return <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
     self.pipe(
-      Stream.mapAccum([] as readonly In[], (buffer, item) => {
-        const next = [...buffer, item].slice(-size);
-        return [next, next];
-      }),
+      Stream.mapAccum(
+        () => [] as readonly In[],
+        (buffer, item) => {
+          const next = [...buffer, item].slice(-size);
+          return [next, [next]];
+        },
+      ),
       Stream.mapEffect((buffer) => fn(buffer).pipe(Effect.withSpan(id)), { concurrency: 1 }),
       withBuffer(options),
       Stream.filter((item): item is Exclude<Out, undefined> => item !== undefined),
@@ -148,9 +151,9 @@ export const track =
         return Stream.concat(
           self.pipe(
             Stream.tap(() => Effect.sync(() => handle.advance())),
-            Stream.tapErrorCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
+            Stream.tapCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
           ),
-          Stream.execute(Effect.sync(() => handle.done())),
+          Stream.drain(Stream.fromEffect(Effect.sync(() => handle.done()))),
         );
       }),
     );

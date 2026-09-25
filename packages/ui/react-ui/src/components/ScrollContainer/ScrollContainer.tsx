@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -21,10 +20,11 @@ import { useMergeRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -35,21 +35,6 @@ export interface ScrollController {
   scrollToTop: (behavior?: ScrollBehavior) => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
 }
-
-type ScrollContainerContextValue = {
-  controller?: ScrollController;
-  pinned?: boolean;
-  overflow?: boolean;
-  /** Called by Viewport to register/unregister the scroll element. */
-  setViewport: (el: HTMLDivElement | null) => void;
-  /** Called by Viewport on wheel events to update pinned state. */
-  setPinned: (value: boolean) => void;
-  /** Called by Viewport on scroll events to update overflow state. */
-  setOverflow: (value: boolean) => void;
-};
-
-const [ScrollContainerProvider, useScrollContainerContext] =
-  createContext<ScrollContainerContextValue>('ScrollContainer');
 
 //
 // Root
@@ -271,9 +256,10 @@ const ScrollContainerPinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTML
 
 const FADE_NAME = 'ScrollContainer.Fade';
 
-type ScrollContainerFadeProps = {};
+/** `classNames` sizes the gradient; a list of short rows wants a fade of about one row, not the default. */
+type ScrollContainerFadeProps = ThemedClassName;
 
-function ScrollContainerFade() {
+function ScrollContainerFade({ classNames }: ScrollContainerFadeProps) {
   const { overflow } = useScrollContainerContext(FADE_NAME);
 
   return (
@@ -284,6 +270,7 @@ function ScrollContainerFade() {
         'z-10 absolute top-0 inset-x-0 h-24 w-full',
         'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
         'bg-gradient-to-b from-(--color-base-surface) to-transparent pointer-events-none',
+        classNames,
       )}
     />
   );
@@ -327,8 +314,6 @@ ScrollContainerScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 //
 // ScrollContainer
 //
-
-export { useScrollContainerContext };
 
 export const ScrollContainer = {
   Root: ScrollContainerRoot,

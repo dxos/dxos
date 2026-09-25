@@ -7,46 +7,44 @@ import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageM
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
 import { describe, expect, it } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as EffectFunction from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
+import * as Chat from 'effect/unstable/ai/Chat';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 import {
   AiServiceTestingPreset,
   CalculatorLayer,
   CalculatorToolkit,
-  MemoizedAiService,
+  LanguageModelFixture,
   hasToolCall,
   testingLayer,
-} from './index';
+} from './index.ts';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
 // https://discord.com/channels/795981131316985866/1338871274398679130
 
 const OpenAiLayer = OpenAiClient.layerConfig({
-  apiKey: Config.redacted('OPENAI_API_KEY'),
+  apiKey: Config.Redacted('OPENAI_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('DX_ANTHROPIC_API_KEY'),
+  apiKey: Config.Redacted('DX_ANTHROPIC_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {
@@ -108,7 +106,7 @@ describe('LanguageModel', () => {
           }).pipe(
             // Effect.tap((response) => Console.log(response)),
             Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-            Effect.retry(EffectFunction.pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
+            Effect.retry(Schedule.max([Schedule.exponential('1 second'), Schedule.recurs(2)])),
             Effect.timeout('30 seconds'),
           );
 
@@ -126,12 +124,14 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
-          Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-          Effect.provide(OpenAiLayer),
-          Effect.provide(CalculatorLayer),
+          Effect.provide(
+            OpenAiLanguageModel.model('gpt-4o').pipe(
+              Layer.provideMerge(OpenAiLayer),
+              Layer.provideMerge(CalculatorLayer),
+            ),
+          ),
         );
 
       const result = yield* createProgram('What is six times seven?');
@@ -143,12 +143,14 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
-          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-          Effect.provide(AnthropicLayer),
-          Effect.provide(CalculatorLayer),
+          Effect.provide(
+            AnthropicLanguageModel.model('claude-3-5-sonnet-latest').pipe(
+              Layer.provideMerge(AnthropicLayer),
+              Layer.provideMerge(CalculatorLayer),
+            ),
+          ),
         );
 
       const result = yield* createProgram('What is six times seven?');
@@ -170,8 +172,7 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest'), AnthropicLayer)),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -191,8 +192,12 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } }),
+          AnthropicLayer,
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -222,9 +227,12 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Layer.provideMerge(AnthropicLayer),
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -255,9 +263,12 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
+          Layer.provideMerge(AnthropicLayer),
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -284,16 +295,19 @@ describe('LanguageModel', () => {
           const stream = chat.streamText({ prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = Prompt.empty;
 
-          const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));
+          const result = yield* Stream.runCollect(stream);
           log.info('result', { result });
           log.break();
         } while (yield* hasToolCall(chat));
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Layer.provideMerge(AnthropicLayer),
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -316,8 +330,7 @@ describe('LanguageModel', () => {
         const result = yield* LanguageModel.generateText({ toolkit, prompt });
         log.info('result', { result });
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(Layer.provideMerge(AnthropicLanguageModel.model('claude-opus-4-0'), AnthropicLayer)),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -327,8 +340,8 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
-).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
+  AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
+).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.
 describe('Toolkit', () => {

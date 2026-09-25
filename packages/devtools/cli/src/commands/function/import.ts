@@ -2,27 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/edge-compute';
 
-import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
+import { CliError } from '../../util/errors.ts';
+import { getFunctionStatus, printFunction, selectDeployedFunction } from './util.ts';
 
 export const importCommand = Command.make(
   'import',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('Function key'), Args.optional),
+    key: Args.String('key').pipe(Args.withDescription('Function key'), Args.optional),
   },
   ({ key }) =>
     Effect.gen(function* () {
@@ -35,7 +36,7 @@ export const importCommand = Command.make(
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(Context.default(), client, true));
       if (fns.length === 0) {
-        return yield* Effect.fail(new Error('No deployed functions available'));
+        return yield* Effect.fail(new CliError({ message: 'No deployed functions available' }));
       }
 
       // If key is not provided, prompt interactively
@@ -48,7 +49,7 @@ export const importCommand = Command.make(
       // TODO(dmaretskyi): Should we make the keys unique?
       const fn = fns.findLast((fn) => Obj.getMeta(fn).key === selectedKey);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${selectedKey}`));
+        return yield* Effect.fail(new CliError({ message: `Function not found: ${selectedKey}` }));
       }
 
       // Query database for existing functions with the same key

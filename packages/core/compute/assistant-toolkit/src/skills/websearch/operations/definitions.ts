@@ -4,13 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const Fetch = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.web-search.fetch'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.fetch'),
     name: 'Fetch web page',
     icon: 'ph--globe-simple--regular',
     description: trim`
@@ -19,7 +19,7 @@ export const Fetch = Operation.make({
     `,
   },
   input: Schema.Struct({
-    url: Schema.String.annotations({
+    url: Schema.String.annotate({
       description: 'The URL of the web page to fetch.',
     }),
   }),

@@ -7,16 +7,17 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
-import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
+import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry.ts';
+import { TestBuilder, createMockedComputeRuntimeProvider } from './testing/index.ts';
 
 const AddDefinition = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.test.compute.add'),
+    key: DXN.make('com.example.operation.test.compute.add'),
     name: 'add',
     description: 'Adds two numbers',
   },

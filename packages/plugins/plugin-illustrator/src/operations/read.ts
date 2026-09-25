@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { DrawingOperation } from '../types';
-import { resolveVariant } from '../util/load-drawing';
+import { DrawingOperation } from '#types';
+
+import { resolveVariant } from '../util/load-drawing.ts';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Read> = DrawingOperation.Read.pipe(
   Operation.withHandler(

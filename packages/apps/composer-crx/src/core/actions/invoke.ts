@@ -6,17 +6,17 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { findComposerTab, openComposerTab } from '../bridge/sender';
-import { getRegistry } from './registry';
-import { enrichSnapshotWithThumbnail } from './thumbnail';
+import { findComposerTab, openComposerTab } from '../bridge/sender.ts';
+import { getRegistry } from './registry.ts';
+import { enrichSnapshotWithThumbnail } from './thumbnail.ts';
 import {
   type InvokeAck,
   type InvokeRequest,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
   PAGE_ACTION_INVOKE_MESSAGE_TYPE,
   decodeInvokeAck,
-} from './types';
-import { nextId, sleep } from './util';
+} from './types.ts';
+import { nextId, sleep } from './util.ts';
 
 const OPEN_RETRY_INTERVAL_MS = 1_500;
 const OPEN_RETRY_ATTEMPTS = 10;

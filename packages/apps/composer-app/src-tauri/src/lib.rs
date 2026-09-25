@@ -1,6 +1,11 @@
 //! Composer Tauri application entry point.
 
+#[cfg(target_os = "ios")]
+mod audio_input;
 mod asset_cache;
+pub mod channel;
+#[cfg(desktop)]
+mod last_url;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
@@ -11,17 +16,92 @@ mod xattr_cmd;
 mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
+mod web_process;
 
 #[cfg(desktop)]
 use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
-/// Fixed port for the localhost asset server in production builds (CMPSR = 26777).
-pub const LOCALHOST_PORT: u16 = 26777;
+const MAIN_WINDOW_LABEL: &str = "main";
+
+#[cfg(target_os = "macos")]
+static RELOAD_ON_FOCUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Port the desktop webview loads the app from: the Vite dev server in development, and in release the
+/// asset-server port this build's release channel owns.
+#[cfg(desktop)]
+pub fn webview_port(identifier: &str) -> u16 {
+    if cfg!(debug_assertions) {
+        channel::DEV_SERVER_PORT
+    } else {
+        channel::ReleaseChannel::from_identifier(identifier).localhost_port()
+    }
+}
+
+/// Root of the app the desktop webview loads.
+#[cfg(desktop)]
+fn app_root_url(identifier: &str) -> tauri::Url {
+    format!("http://localhost:{}", webview_port(identifier)).parse().expect("app root URL is valid")
+}
+
+/// Whether the asset server can still claim this channel's port. `tauri-plugin-localhost` only panics
+/// on a background thread when its bind fails, leaving the webview to load whatever else answers there
+/// — so the port is probed before the plugin is registered rather than after it has failed.
+///
+/// Every address `localhost` resolves to has to be free, not merely the first: the plugin binds whichever
+/// one it reaches first while the webview resolves the name itself, so a port held on the other address
+/// family would still hand the window foreign content.
+#[cfg(all(not(debug_assertions), desktop))]
+fn port_available(port: u16) -> bool {
+    use std::net::{TcpListener, ToSocketAddrs};
+
+    match ("localhost", port).to_socket_addrs() {
+        Ok(addresses) => addresses.into_iter().all(|address| TcpListener::bind(address).is_ok()),
+        // A resolver failure is no evidence the port is taken; leave the verdict to the plugin's own bind.
+        Err(_) => true,
+    }
+}
+
+/// Navigates a webview whose WebContent process died back to its page. `reload()` would run as a
+/// back/forward load that accepts stale cached HTML, and wry's `url()` unwraps `WKWebView.URL`, which can
+/// be nil once the process is gone, so that case falls back to the app root.
+#[cfg(target_os = "macos")]
+fn recover_webview<R: tauri::Runtime>(webview: &tauri::Webview<R>) -> tauri::Result<()> {
+    use tauri::Manager;
+
+    let current = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| webview.url()))
+        .ok()
+        .and_then(Result::ok);
+    let url = match current {
+        Some(url) => url,
+        None => app_root_url(&webview.app_handle().config().identifier),
+    };
+    webview.navigate(url)
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    web_process::mark_host_start();
+
+    // Installed before anything can panic; the message reaches the log once `setup` has registered it.
+    let default_panic_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        log::error!("panic: {info}");
+        default_panic_hook(info);
+    }));
+
+    // `tauri.conf.json` is compiled in, so the identifier here is the one `.github/actions/cn-config`
+    // rewrote for this channel — the only thing a running build knows about which channel it is.
+    let context = tauri::generate_context!();
+
+    #[cfg(all(not(debug_assertions), desktop))]
+    let release_channel = channel::ReleaseChannel::from_identifier(&context.config().identifier);
+    #[cfg(all(not(debug_assertions), desktop))]
+    let localhost_port = release_channel.localhost_port();
+    #[cfg(all(not(debug_assertions), desktop))]
+    let port_taken = !port_available(localhost_port);
+
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
         // Custom URI scheme: serves cached third-party plugin assets so plugins keep
@@ -37,7 +117,18 @@ pub fn run() {
     // Serve bundled assets via localhost plugin on desktop only (needed for SharedWorker support).
     // Mobile uses Tauri's default asset protocol instead.
     #[cfg(all(not(debug_assertions), desktop))]
-    let builder = builder.plugin(tauri_plugin_localhost::Builder::new(LOCALHOST_PORT).build());
+    let builder = if port_taken {
+        builder
+    } else {
+        builder.plugin(
+            tauri_plugin_localhost::Builder::new(localhost_port)
+                // `no-cache` still lets WebKit store the page, and a crash reload serves it stale (an older
+                // build whose chunks this binary answers with index.html). No validators are sent, so no
+                // load reuses the cache today.
+                .on_request(|_request, response| response.add_header("Cache-Control", "no-store"))
+                .build(),
+        )
+    };
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -69,7 +160,8 @@ pub fn run() {
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_dialog::init())
-            .plugin(tauri_plugin_fs::init());
+            .plugin(tauri_plugin_fs::init())
+            .plugin(tauri_plugin_http::init());
 
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
@@ -110,6 +202,7 @@ pub fn run() {
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
+        oauth::get_oauth_recovery_result,
         oauth::initiate_oauth_flow,
         #[cfg(unix)]
         xattr_cmd::get_xattr,
@@ -119,6 +212,7 @@ pub fn run() {
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
+        web_process::take_web_process_terminations,
     ]);
 
     #[cfg(mobile)]
@@ -127,21 +221,51 @@ pub fn run() {
         asset_cache::evict_plugin,
         asset_cache::resolve_cached_url,
         asset_cache::list_cached_plugins,
+        #[cfg(target_os = "ios")]
+        audio_input::list_audio_inputs,
+        #[cfg(target_os = "ios")]
+        audio_input::set_preferred_audio_input,
+        #[cfg(target_os = "ios")]
+        audio_input::start_microphone_bridge,
+        #[cfg(target_os = "ios")]
+        audio_input::stop_microphone_bridge,
+        web_process::take_web_process_terminations,
     ]);
 
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());
 
+    // Tauri's default handler reloads unconditionally. WebKit kills WebContent under memory pressure
+    // whatever the scheduling policy, so a hidden main window waits for focus rather than rebooting
+    // into that pressure; on macOS 13, where `background_throttling` below is ignored, the hidden
+    // reload would also run suspended.
+    #[cfg(target_os = "macos")]
+    let builder = builder.on_web_content_process_terminate(|webview| {
+        let window = webview.window();
+        let visible = window.is_visible().unwrap_or(true) && !window.is_minimized().unwrap_or(false);
+        log::warn!("web process terminated ({}, visible={visible})", webview.label());
+        web_process::record(webview.label(), visible);
+        if webview.label() != MAIN_WINDOW_LABEL || visible {
+            if let Err(error) = recover_webview(webview) {
+                log::error!("reload after web process termination failed ({}): {error}", webview.label());
+            }
+        } else {
+            log::warn!("main window web process terminated while hidden; reloading on next focus");
+            RELOAD_ON_FOCUS.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+    });
+
     builder
         .setup(move |app| {
-            // Initialize logging in debug mode.
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Every build logs, iOS included, since the host sees failures the page cannot report. The
+            // default 40 KB single file would lose the failed session's record as soon as the app restarts.
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .level(log::LevelFilter::Info)
+                    .max_file_size(5_000_000)
+                    .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
+                    .build(),
+            )?;
 
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
             // SharedWorker requires HTTP origin, so desktop uses External URL.
@@ -149,10 +273,38 @@ pub fn run() {
             {
                 use tauri::WebviewWindowBuilder;
 
-                // In production, use the localhost plugin port; in dev, use the Vite dev server.
-                let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
-                let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
-                let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
+                // Something else already answers on this channel's port, so the window would render that
+                // process's build as if it were ours. Report it and quit rather than create the window.
+                #[cfg(not(debug_assertions))]
+                if port_taken {
+                    let message = format!(
+                        "Composer's {} channel serves its app from port {}, which another program is already using — most often a second copy of Composer that is still running.\n\nQuit it and open Composer again.",
+                        release_channel.label(),
+                        localhost_port,
+                    );
+                    log::error!("{}", message);
+                    eprintln!("[composer] {}", message);
+
+                    // `blocking_show` deadlocks on the main thread, and the dialog is the only UI this
+                    // failure has — no window is created.
+                    let handle = app.handle().clone();
+                    std::thread::spawn(move || {
+                        use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                        handle
+                            .dialog()
+                            .message(message)
+                            .title("Composer cannot start")
+                            .kind(MessageDialogKind::Error)
+                            .blocking_show();
+                        handle.exit(1);
+                    });
+
+                    return Ok(());
+                }
+
+                let root = app_root_url(&app.config().identifier);
+                let url = last_url::initial_url(app.handle(), root.clone());
+                let main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)
                     .resizable(true)
@@ -164,6 +316,14 @@ pub fn run() {
                     // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
                     // Tradeoff: native file drop from Finder into the webview is disabled for now.
                     .disable_drag_drop_handler()
+                    // The default WKInactiveSchedulingPolicy suspends, then terminates, the WebContent
+                    // process of a hidden (Cmd+H) window. `Disabled` = WKInactiveSchedulingPolicyNone;
+                    // macOS 14+/iOS 17+, ignored elsewhere.
+                    // TODO(wittjosiah): Support suspension instead of opting out of it. Opting out trades
+                    // battery for the app not crashing, which is the right trade today, but a hidden app
+                    // should be able to suspend and resume cleanly: `Throttle` or the default policy, with
+                    // the app surviving the reload and the workers reconnecting.
+                    .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .devtools(true)
                     .build()?;
 
@@ -173,6 +333,30 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                // Saved on blur as well as close, so a crash or force quit still reopens a recent page.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if matches!(event, tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Focused(false)) {
+                            last_url::save(&window, &root);
+                        }
+                    });
+                }
+
+                #[cfg(target_os = "macos")]
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if matches!(event, tauri::WindowEvent::Focused(true))
+                            && RELOAD_ON_FOCUS.swap(false, std::sync::atomic::Ordering::SeqCst)
+                        {
+                            if let Err(error) = recover_webview(AsRef::<tauri::Webview<_>>::as_ref(&window)) {
+                                log::error!("deferred reload after web process termination failed: {error}");
+                            }
+                        }
+                    });
+                }
             }
 
             // Mobile: create window using Tauri's default asset protocol.
@@ -180,7 +364,11 @@ pub fn run() {
             #[cfg(mobile)]
             {
                 use tauri::WebviewWindowBuilder;
-                let _main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
+                let _main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::App("index.html".into()))
+                    // Same rationale as the desktop window above: WKWebView suspends, then
+                    // terminates, the WebContent process of a hidden/backgrounded view.
+                    // `Disabled` = WKInactiveSchedulingPolicyNone, iOS 17+, ignored elsewhere.
+                    .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .build()?;
             }
 
@@ -195,6 +383,16 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
+            #[cfg(desktop)]
+            if let tauri::RunEvent::ExitRequested { .. } = _event {
+                use tauri::Manager;
+                if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
+                    last_url::save(&window, &app_root_url(&_app.config().identifier));
+                }
+            }
+        });
 }

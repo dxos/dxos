@@ -14,16 +14,16 @@ Find where Chrome stores OPFS for a Composer origin.
 
 ```bash
 python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
-  --origin https://main.composer.space
+  --origin https://preview.composer.space
 ```
 
 Options:
 
-| Flag        | Default                        | Description              |
-| ----------- | ------------------------------ | ------------------------ |
-| `--origin`  | `https://main.composer.space`  | Target origin URL        |
-| `--profile` | `~/Library/.../Chrome/Default` | Chrome profile directory |
-| `--json`    | off                            | Machine-readable output  |
+| Flag        | Default                          | Description              |
+| ----------- | -------------------------------- | ------------------------ |
+| `--origin`  | `https://preview.composer.space` | Target origin URL        |
+| `--profile` | `~/Library/.../Chrome/Default`   | Chrome profile directory |
+| `--json`    | off                              | Machine-readable output  |
 
 Output fields:
 
@@ -34,7 +34,7 @@ Output fields:
 ### Other origins
 
 ```bash
-python3 .agents/skills/composer-forensics/scripts/locate-origin.py --origin https://labs.composer.space
+python3 .agents/skills/composer-forensics/scripts/locate-origin.py --origin https://composer.space
 python3 .agents/skills/composer-forensics/scripts/locate-origin.py --origin http://localhost:5173
 ```
 
@@ -53,17 +53,17 @@ Strip the 4096-byte `AccessHandlePoolVFS` header from Chrome pool blobs.
 
 ```bash
 OPFS_DIR="$(python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
-  --origin https://main.composer.space --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["opfs_pool_dir"])')"
+  --origin https://preview.composer.space --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["opfs_pool_dir"])')"
 
 python3 .agents/skills/composer-forensics/scripts/extract-opfs-sqlite.py \
   --opfs-dir "$OPFS_DIR" \
-  --out /tmp/composer-forensics/main.composer.space
+  --out /tmp/composer-forensics/preview.composer.space
 ```
 
 Output:
 
 ```
-/tmp/composer-forensics/main.composer.space/
+/tmp/composer-forensics/preview.composer.space/
 ├── DXOS.sqlite           # Main database
 ├── DXOS-journal.bin      # Rollback journal (optional)
 ├── manifest.json         # Extraction metadata
@@ -82,7 +82,7 @@ Recovery **Export Profile** downloads a CBOR `.dxprofile` with a `SQLITE_DATABAS
 cd .agents/skills/composer-forensics/scripts && pnpm install
 
 # Raw SQLite → .dxprofile (for re-import via recovery)
-node profile-wrap.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+node profile-wrap.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 
 # .dxprofile → raw SQLite (for probe / automerge tools)
 node profile-unwrap.js ./composer-2026-06-07.dxprofile --out-dir /tmp/composer-forensics/unwrapped
@@ -103,7 +103,7 @@ File-level checks via `sqlite3` CLI:
 
 ```bash
 bash .agents/skills/composer-forensics/scripts/validate-extract.sh \
-  /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+  /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 ```
 
 Checks: SQLite magic, `PRAGMA integrity_check`, core table inventory, row counts, top spaces by `objectMeta`.
@@ -129,7 +129,7 @@ chmod +x .agents/skills/composer-forensics/scripts/probe.js
 export PROTO_HOME="$HOME/.proto" PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 
 node .agents/skills/composer-forensics/scripts/probe.js \
-  /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+  /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 ```
 
 Prints:
@@ -157,9 +157,9 @@ List document ids sorted by **combined chunk bytes** (largest first):
 ```bash
 cd .agents/skills/composer-forensics/scripts
 
-node automerge-list.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+node automerge-list.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 # or via probe:
-node probe.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite automerge list
+node probe.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite automerge list
 ```
 
 JSON:
@@ -241,8 +241,8 @@ Attach `.bin` + `-report.md` when opening an issue with Automerge maintainers. R
 
 ```bash
 export PROTO_HOME="$HOME/.proto" PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
-ORIGIN=https://main.composer.space
-OUT=/tmp/composer-forensics/main.composer.space
+ORIGIN=https://preview.composer.space
+OUT=/tmp/composer-forensics/preview.composer.space
 OPFS=$(python3 .agents/skills/composer-forensics/scripts/locate-origin.py --origin "$ORIGIN" --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["opfs_pool_dir"])')
 python3 .agents/skills/composer-forensics/scripts/extract-opfs-sqlite.py --opfs-dir "$OPFS" --out "$OUT"
 bash .agents/skills/composer-forensics/scripts/validate-extract.sh "$OUT/DXOS.sqlite"
@@ -260,10 +260,10 @@ See [VALIDATION.md](VALIDATION.md) for table reference and query templates.
 Quick examples:
 
 ```bash
-sqlite3 /tmp/composer-forensics/main.composer.space/DXOS.sqlite \
+sqlite3 /tmp/composer-forensics/preview.composer.space/DXOS.sqlite \
   "SELECT spaceId, typeDXN, COUNT(*) FROM objectMeta GROUP BY 1,2 ORDER BY 3 DESC LIMIT 20;"
 
-sqlite3 /tmp/composer-forensics/main.composer.space/DXOS.sqlite \
+sqlite3 /tmp/composer-forensics/preview.composer.space/DXOS.sqlite \
   "SELECT document_id FROM automerge_heads ORDER BY document_id;"
 ```
 

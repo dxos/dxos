@@ -3,9 +3,8 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
+import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
@@ -14,26 +13,37 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
-  type QueryAST,
+  PROPERTY_ID,
+  QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
-import { EffectEx, type RuntimeProvider } from '@dxos/effect';
-import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
+import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { RuntimeProvider } from '@dxos/effect';
+import {
+  type EntityMeta,
+  EscapedPropPath,
+  type IndexEngine,
+  type QueueRef,
+  type QueueWindow,
+  type ReverseRef,
+} from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
-import type { AutomergeHost } from '../automerge';
-import type { SpaceStateManager } from '../db-host';
-import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
-import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
-import { QueryError } from './errors';
-import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
-import { QueryPlan } from './plan';
-import { QueryPlanner, filterContainsInQuery } from './query-planner';
+import type { AutomergeHost } from '../automerge/index.ts';
+import type { SpaceStateManager } from '../db-host/index.ts';
+import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
+import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
+import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
+import { QueryError } from './errors.ts';
+import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
+import { QueryPlan } from './plan.ts';
+import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+import { type CompiledRow } from './sql/index.ts';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -44,6 +54,9 @@ type QueryExecutorOptions = {
   queryId: string;
   query: QueryAST.Query;
   reactivity: QueryReactivity;
+  executor?: QueryExecutorMode;
+  /** Builds compiled statements; the planner needs it only under the `sql` executor. */
+  sql?: SqlClient.SqlClient;
 };
 
 type QueryExecutionResult = {
@@ -72,6 +85,9 @@ type QueryItem = {
   // For objects from queues.
   data: Obj.JSON | null;
 
+  /** For objects selected from the index without loading, when both `doc` and `data` are null. */
+  meta?: EntityMeta;
+
   /**
    * Relevance rank for this item.
    * Higher values indicate better matches for FTS/vector searches.
@@ -97,9 +113,39 @@ type QueryItem = {
    * shared by every member of a group and read by a following group-level `OrderStep`.
    */
   aggregates?: GroupAggregates;
+
+  /**
+   * Set when this item stands for its whole group: the query declared no `items` aggregate, so
+   * `AggregateStep` kept one member per group and the result ships only `groupKey`/`aggregates`.
+   */
+  collapsed?: { size: number };
+
+  /**
+   * The shipped form, already built by a `SqlStep` from the row SQLite returned. Such an item
+   * carries no document, data or meta, so it is only ever produced by the plan's last step.
+   */
+  result?: QueryService.QueryResult;
 };
 
 const QueryItem = Object.freeze({
+  /** An item for an index row, carrying no document; `null` for a row that is not document-backed. */
+  fromIndexRow: (meta: EntityMeta): QueryItem | null =>
+    meta.documentId
+      ? {
+          objectId: meta.objectId,
+          documentId: meta.documentId as DocumentId,
+          spaceId: meta.spaceId,
+          queueId: null,
+          queueNamespace: null,
+          doc: null,
+          data: null,
+          meta,
+          rank: 1,
+          createdAt: meta.createdAt,
+          updatedAt: meta.updatedAt,
+        }
+      : null,
+
   /**
    * Checks if the item is deleted.
    * Only applies to this item, not its parents.
@@ -109,6 +155,8 @@ const QueryItem = Object.freeze({
       return EntityStructure.isDeleted(item.doc);
     } else if (item.data) {
       return item.data['@deleted'] === true;
+    } else if (item.meta) {
+      return item.meta.deleted;
     } else {
       throw new Error('Invalid query item');
     }
@@ -125,17 +173,56 @@ const QueryItem = Object.freeze({
   },
 
   /**
+   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id — every
+   * object exposes `id` through the API, but documents don't store it in their data (see
+   * `PROPERTY_ID` handling in the echo handler), so a group key falling back to `id` would otherwise
+   * collapse every keyless member into the shared `null` group.
+   */
+  getAggregateProperty: (item: QueryItem, property: string): unknown =>
+    property === PROPERTY_ID ? item.objectId : QueryItem.getProperty(item, [property]),
+
+  /**
    * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
    * by result field name. No `group` entries yields `{}` — a single group over the whole input.
    */
   getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+      switch (aggregate.kind) {
+        case 'group':
+          key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+            QueryItem.getAggregateProperty(item, property),
+          );
+          break;
+        case 'type':
+          key[aggregate.name] = QueryItem.getTypeUri(item);
+          break;
+        case 'timestamp':
+          key[aggregate.name] = GroupBy.truncateTime(item[aggregate.field], aggregate.unit);
+          break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTime(
+            QueryItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+          );
+          break;
       }
     }
     return key;
+  },
+
+  /** The stored type reference as a URI string, or `null` for an untyped object. */
+  getTypeUri: (item: QueryItem): string | null => {
+    if (item.doc) {
+      return EntityStructure.getTypeReference(item.doc)?.['/'] ?? null;
+    } else if (item.data) {
+      const type = item.data[ATTR_TYPE];
+      return typeof type === 'string' ? type : null;
+    } else if (item.meta) {
+      return getEntityMetaTypeURI(item.meta) ?? null;
+    } else {
+      throw new Error('Invalid query item');
+    }
   },
 
   getParent: (item: QueryItem): EID.EID | undefined => {
@@ -144,6 +231,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getParent(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_PARENT];
+    } else if (item.meta) {
+      raw = item.meta.parent ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -156,6 +245,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getRelationSource(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_SOURCE];
+    } else if (item.meta) {
+      raw = item.meta.source ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -168,6 +259,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getRelationTarget(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_TARGET];
+    } else if (item.meta) {
+      raw = item.meta.target ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -181,6 +274,14 @@ const QueryItem = Object.freeze({
    * snapshots and don't gate on dependency loads, so they report no strong deps.
    */
   getStrongDependencies: (item: QueryItem): EID.EID[] => {
+    if (!item.doc && item.meta) {
+      const { typeDXN, entityKind, source, target, parent } = item.meta;
+      const endpoints = entityKind === 'relation' ? [source, target] : [];
+      return [typeDXN, ...endpoints, parent].flatMap((raw) => {
+        const uri = raw ? EID.tryParse(raw) : undefined;
+        return uri ? [uri] : [];
+      });
+    }
     if (!item.doc) {
       return [];
     }
@@ -227,6 +328,11 @@ export type ExecutionTrace = {
   documentLoadTime: number;
 
   children: ExecutionTrace[];
+
+  /** The compiled statement, on the `sql` path. */
+  sql?: string;
+  /** `EXPLAIN QUERY PLAN` of that statement, when execution tracing is on. */
+  explain?: string[];
 };
 
 export const ExecutionTrace = Object.freeze({
@@ -297,6 +403,7 @@ declare global {
 
   interface ImportMetaEnv {
     DX_TRACE_QUERY_EXECUTION: string;
+    DX_ECHO_QUERY_EXECUTOR: string;
   }
 }
 
@@ -494,6 +601,9 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
 const _serializeOptionalGroupKey = (key: GroupKeyValue | undefined): string =>
   key === undefined ? '\0' : GroupBy.serializeGroupKey(key);
 
+const _serializeCollapsed = (item: QueryItem): string =>
+  item.collapsed === undefined ? '' : JSON.stringify([item.collapsed.size, item.aggregates ?? null]);
+
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const isGrouped = (workingSet: QueryItem[]): boolean => workingSet.length > 0 && workingSet[0].groupKey !== undefined;
 
@@ -524,11 +634,15 @@ export class QueryExecutor extends Resource {
   // TODO(dmaretskyi): Might be used in the future.
   private readonly _reactivity: QueryReactivity;
 
+  /** The uncompiled steps until the first execution, which swaps in the compiled plan. */
   private _plan: QueryPlan.Plan;
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
+  #changeResultSet: ChangeItem[] | undefined;
+  readonly #planner: QueryPlanner;
+  readonly #mode: QueryExecutorMode;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -542,6 +656,12 @@ export class QueryExecutor extends Resource {
   /** Subquery-resolution traces already attached to a FilterStep's trace this `execQuery` run. */
   #inQueryTracesAttached = new Set<string>();
 
+  /**
+   * Strong dependencies loaded during the current `execQuery` run, keyed by how they resolve (see
+   * {@link QueryExecutor._loadDependency}). Siblings share their parents, and each load is a lookup.
+   */
+  #dependencyCache = new Map<string, Promise<QueryItem | null>>();
+
   constructor(options: QueryExecutorOptions) {
     super();
 
@@ -554,8 +674,9 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
 
-    const queryPlanner = new QueryPlanner();
-    this._plan = queryPlanner.createPlan(this._query);
+    this.#mode = options.executor ?? 'memory';
+    this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
+    this._plan = this.#planner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
@@ -576,7 +697,14 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  getResults(): QueryResult[] {
+  get compiled(): boolean {
+    return this._plan.steps.some((step) => step._tag === 'SqlStep');
+  }
+
+  getResults(): QueryService.QueryResult[] {
+    if (this.#changeResultSet) {
+      return changeResults(this.#changeResultSet);
+    }
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -587,8 +715,21 @@ export class QueryExecutor extends Resource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
-    return this._lastResultSet.map((item): QueryResult => {
+    return this._lastResultSet.map((item): QueryService.QueryResult => {
+      if (item.result !== undefined) {
+        return item.result;
+      }
       const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
+      if (item.collapsed !== undefined && serializedGroupKey !== undefined) {
+        return {
+          id: serializedGroupKey,
+          spaceId: item.spaceId,
+          rank: item.rank,
+          groupKey: serializedGroupKey,
+          groupCount: item.collapsed.size,
+          aggregates: JSON.stringify(item.aggregates ?? {}),
+        };
+      }
       return {
         id: item.objectId,
         documentId: item.documentId ?? undefined,
@@ -631,6 +772,7 @@ export class QueryExecutor extends Resource {
     log('exec query', {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
+      mode: this.#mode,
     });
 
     // Subquery results can change between reactive runs, so resolved `in-query` sets must not
@@ -638,41 +780,58 @@ export class QueryExecutor extends Resource {
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
 
-    const prevResultSet = this._lastResultSet;
-    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
-    // Omit objects whose strong deps cannot be resolved from local state so they
-    // never reach the client, where hydration would fail or stall on them.
-    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
+    const [select] = this._plan.steps;
+    if (select?._tag === 'SelectStep' && select.selector._tag === 'ChangesSelector') {
+      const previous = this.#changeResultSet;
+      const next = await executeChangesPlan(this._ctx, this._plan, {
+        indexEngine: this._indexEngine,
+        automergeHost: this._automergeHost,
+        spaceStateManager: this._spaceStateManager,
+        runInRuntime: (effect) => this._runInRuntime(effect),
+      });
+      this.#changeResultSet = next;
+      return { changed: serializeChangeResults(previous ?? []) !== serializeChangeResults(next) };
+    }
+
+    const previous = this._lastResultSet;
+    const { workingSet, trace } = await this._resolveWorkingSet();
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
+    // A `SqlStep` ran the statement one level down; surface it on the root the trace prints.
+    trace.sql = trace.children.find((child) => child.sql !== undefined)?.sql;
+    trace.explain = trace.children.find((child) => child.explain !== undefined)?.explain;
     this._trace = trace;
 
     const changed =
-      prevResultSet.length !== workingSet.length ||
-      prevResultSet.some(
-        (item, index) =>
-          workingSet[index].objectId !== item.objectId ||
-          workingSet[index].spaceId !== item.spaceId ||
-          workingSet[index].documentId !== item.documentId ||
-          workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace ||
-          // A property edit can move an item between groups without changing its flat position
-          // (e.g. the last item of group A becomes the first item of group B at the same index).
-          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey),
-      );
+      previous.length !== workingSet.length || previous.some((item, index) => !_sameResult(workingSet[index], item));
 
     // Disabled because concurrent queries don't print hierarchies correctly.
     // ExecutionTrace.putOnPerformanceTimeline(trace);
 
     if (TRACE_QUERY_EXECUTION) {
       // eslint-disable-next-line no-console
-      console.log(ExecutionTrace.format(trace));
+      console.log(ExecutionTrace.format(trace), trace.sql, trace.explain);
     }
 
-    return {
-      changed,
-    };
+    return { changed };
+  }
+
+  /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
+  private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
+    try {
+      const { workingSet, trace } = await this._execPlan(this._plan, []);
+      // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
+      // the compiler declined runs step by step even under `sql` and needs the filter.
+      if (this.compiled) {
+        return { workingSet, trace };
+      }
+      // Unresolvable items never reach the client, where hydration would fail or stall on them.
+      return { workingSet: await this._filterUnresolvableStrongDeps(workingSet), trace };
+    } finally {
+      // An idle reactive query keeps its executor, which would otherwise hold these items until its next run.
+      this.#dependencyCache.clear();
+    }
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -733,6 +892,9 @@ export class QueryExecutor extends Resource {
       case 'AggregateStep':
         ({ workingSet: newWorkingSet, trace } = await this._execAggregateStep(step, workingSet));
         break;
+      case 'SqlStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSqlStep(step));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -760,8 +922,13 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
-        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds);
+        const queueRefs = extractQueueRefs(queues);
+        const metas = await this._queryAllFromSqlIndex(
+          spaces,
+          allQueuesFromSpaces,
+          queueRefs,
+          extractQueueWindow(step),
+        );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -770,8 +937,8 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += results.length;
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -802,7 +969,7 @@ export class QueryExecutor extends Resource {
             }
             if (queues.length > 0) {
               const spaceId = extractSpaceIdFromQueue(queues[0]);
-              const queueId = extractQueueIds([queues[0]])?.[0];
+              const queueId = extractQueueRefs([queues[0]])?.[0]?.queueId;
               if (spaceId && queueId) {
                 return this._loadQueueItemById(spaceId, queueId, id);
               }
@@ -823,13 +990,14 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const metas = await this._queryTypesFromSqlIndex(
           spaces,
           step.selector.typename,
           step.selector.inverted,
           allQueuesFromSpaces,
-          queueIds,
+          queueRefs,
+          extractQueueWindow(step),
         );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
@@ -839,8 +1007,8 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += results.length;
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -851,7 +1019,7 @@ export class QueryExecutor extends Resource {
 
       case 'TimestampSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const metas = await this._runInRuntime(
           this._indexEngine.queryByTimeRange({
             spaceIds: spaces,
@@ -860,7 +1028,7 @@ export class QueryExecutor extends Resource {
             createdAfter: step.selector.createdAfter,
             createdBefore: step.selector.createdBefore,
             includeAllQueues: allQueuesFromSpaces,
-            queueIds,
+            queues: queueRefs,
           }),
         );
         trace.indexHits = metas.length;
@@ -871,7 +1039,33 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
+        break;
+      }
+
+      case 'ChangesSelector':
+        throw new Error('A changes plan runs through executeChangesPlan.');
+
+      case 'IncomingReferenceSelector': {
+        const beginIndexQuery = performance.now();
+        const metas = await this._queryIncomingReferencesByTarget([step.selector.targetDXN], step.selector.property);
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        // The index is per-space, but the scope may name a subset of the queried spaces.
+        const scoped = spaces.length > 0 ? metas.filter((meta) => spaces.includes(meta.spaceId)) : metas;
+        const results = await this._loadDocumentsAfterSqlQuery(scoped);
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -882,7 +1076,6 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'vector') {
           // Vector search is not currently supported.
@@ -890,16 +1083,17 @@ export class QueryExecutor extends Resource {
           break;
         }
 
-        // Full-text search using SQLite FTS5.
+        // Full-text search using SQLite FTS5, optionally scoped by type.
         const beginIndexQuery = performance.now();
         invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,
             spaceId: spaces,
             includeAllQueues: allQueuesFromSpaces,
-            queueIds,
+            queues: queueRefs,
+            typeDxns: step.selector.typename,
           }),
         );
         trace.indexHits = textResults.length;
@@ -975,7 +1169,7 @@ export class QueryExecutor extends Resource {
             }
             if (item.queueId) {
               return queues.some((queueRef) => {
-                const queueId = extractQueueIds([queueRef])?.[0];
+                const queueId = extractQueueRefs([queueRef])?.[0]?.queueId;
                 const spaceId = extractSpaceIdFromQueue(queueRef);
                 return queueId === item.queueId && spaceId === item.spaceId;
               });
@@ -1035,6 +1229,8 @@ export class QueryExecutor extends Resource {
         });
       } else if (item.data) {
         return filterMatchObjectJSON(filter, item.data);
+      } else if (item.meta) {
+        return filterMatchEntityMeta(filter, item.meta);
       } else {
         return false;
       }
@@ -1152,7 +1348,7 @@ export class QueryExecutor extends Resource {
         spaceIds: spaces,
         ...params,
         includeAllQueues: false,
-        queueIds: [],
+        queues: [],
       }),
     );
     const matchingIds = new Set(metas.map((m) => m.objectId));
@@ -1578,19 +1774,49 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  /**
+   * Runs a compiled statement. A source step: it ignores the incoming working set, because the
+   * statement already stands for every step that produced one.
+   */
+  private async _execSqlStep(step: QueryPlan.SqlStep): Promise<StepExecutionResult> {
+    const trace = ExecutionTrace.makeEmpty();
+    const begin = performance.now();
+    const { rows, explain } = await this._runInRuntime(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql.unsafe<CompiledRow>(step.sql, step.params);
+        const explain = TRACE_QUERY_EXECUTION
+          ? (yield* sql.unsafe<{ detail: string }>(`EXPLAIN QUERY PLAN ${step.sql}`, step.params)).map(
+              (row) => row.detail,
+            )
+          : undefined;
+        return { rows, explain };
+      }),
+    );
+    trace.indexQueryTime = performance.now() - begin;
+    trace.indexHits = rows.length;
+    trace.objectCount = rows.length;
+    trace.sql = step.sql;
+    trace.explain = explain;
+    return { workingSet: rows.map(compiledRowToItem), trace };
+  }
+
   private async _execAggregateStep(
     step: QueryPlan.AggregateStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.aggregates) }));
     const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
-    const groupedWorkingSet = GroupBy.withGroupAggregates(
+    const stamped = GroupBy.withGroupAggregates(
       partitioned,
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
       step.aggregates,
-      (item, property) => QueryItem.getProperty(item, [property]),
+      (item, property) => QueryItem.getAggregateProperty(item, property),
       (a, b, order) => this._compareByOrder(a, b, order),
     );
+    const groupedWorkingSet = step.aggregates.some((aggregate) => aggregate.kind === 'items')
+      ? stamped
+      : GroupBy.collapseGroups(stamped, serializeItemGroupKey);
 
     return {
       workingSet: groupedWorkingSet,
@@ -1623,7 +1849,11 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        const comparison = a.objectId.localeCompare(b.objectId);
+        // Code-unit order, not `localeCompare`: the feed scan pushes this ordering into SQLite's
+        // `ORDER BY objectId`, which collates BINARY, and an entity id may be lower-case (the
+        // format check is case-insensitive). Under a locale collation the two would disagree on a
+        // mixed-case pair, and the scan's capped page would not be the page this sort produces.
+        const comparison = a.objectId < b.objectId ? -1 : a.objectId > b.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'property': {
@@ -1673,9 +1903,9 @@ export class QueryExecutor extends Resource {
       return -1;
     }
 
-    // Both strings
+    // Both strings, in the collation SQLite sorts by.
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return aValue.localeCompare(bValue);
+      return compareCodeUnits(aValue, bValue);
     }
 
     // Both numbers
@@ -1689,22 +1919,22 @@ export class QueryExecutor extends Resource {
     }
 
     // Fallback: convert to strings and compare
-    return String(aValue).localeCompare(String(bValue));
+    return compareCodeUnits(String(aValue), String(bValue));
   }
 
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
-    const runtime = await EffectEx.runAndForwardErrors(runtimeProvider);
-    return await EffectEx.unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+    return await RuntimeProvider.runPromise(runtimeProvider)(effect);
   }
 
   private async _queryAllFromSqlIndex(
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
-    queueIds: readonly EntityId[] | null,
+    queues: readonly QueueRef[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queues, window }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1712,10 +1942,11 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly URI.URI[],
     inverted: boolean,
     includeAllQueues: boolean,
-    queueIds: readonly EntityId[] | null,
+    queues: readonly QueueRef[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(
-      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queues, window }),
     );
   }
 
@@ -1731,7 +1962,20 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    const anchorDxns = workingSet.map((item) => QueryExecutor._anchorTargetDxn(item));
+    return this._queryIncomingReferencesByTarget(
+      workingSet.map((item) => QueryExecutor._anchorTargetDxn(item)),
+      property,
+    );
+  }
+
+  /**
+   * Reverse-reference lookup by target URI. Anchors that are not entities (a named entity's `dxn:`)
+   * reach this directly, without a working set.
+   */
+  private async _queryIncomingReferencesByTarget(
+    anchorDxns: readonly URI.URI[],
+    property: EscapedPropPath | null,
+  ): Promise<readonly EntityMeta[]> {
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
@@ -1876,13 +2120,13 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -1982,21 +2226,21 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
 
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), objectId);
     if (!object) {
       return null;
     }
 
     return {
       objectId,
-      documentId: handle.documentId,
+      documentId: lease.documentId,
       spaceId,
       queueId: null,
       queueNamespace: null,
@@ -2074,7 +2318,7 @@ export class QueryExecutor extends Resource {
         }
         seen.add(key);
 
-        const depItem = await this._loadFromDXN(dep, { sourceSpaceId: item.spaceId });
+        const depItem = await this._loadDependency(item, dep);
         const verdict =
           depItem != null && (await this._areStrongDepsResolvable(depItem, remainingDepth - 1, verdicts, seen));
         verdicts.set(key, verdict);
@@ -2082,6 +2326,38 @@ export class QueryExecutor extends Resource {
       }),
     );
     return results.every(Boolean);
+  }
+
+  /**
+   * Resolves an object `item` depends on, in the same form as `item`: an item selected from the index
+   * resolves its dependencies from the index too, so checking them loads no documents either. Each
+   * dependency loads once per `execQuery` run.
+   */
+  private _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
+    const fromDocument = Boolean(item.doc || item.data || !item.meta);
+    const key = compositeKey(item.spaceId, dxn, fromDocument ? 'document' : 'index');
+    let loaded = this.#dependencyCache.get(key);
+    if (!loaded) {
+      loaded = fromDocument
+        ? this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId })
+        : this._loadDependencyFromIndex(item.spaceId, dxn);
+      this.#dependencyCache.set(key, loaded);
+    }
+    return loaded;
+  }
+
+  private async _loadDependencyFromIndex(sourceSpaceId: SpaceId, dxn: URI.URI): Promise<QueryItem | null> {
+    const echoUri = EID.tryParse(dxn);
+    const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (!echoUri || !objectId) {
+      return null;
+    }
+    const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
+    const meta = metas.find((candidate) => candidate.documentId);
+    return meta ? QueryItem.fromIndexRow(meta) : null;
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
@@ -2098,7 +2374,7 @@ export class QueryExecutor extends Resource {
     // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
     const strongDepStates = await Promise.all(
       strongDeps.map(async (dxn) => {
-        const dep = await this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
+        const dep = await this._loadDependency(item, dxn);
         if (!dep) {
           return false;
         }
@@ -2121,16 +2397,82 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   return echoUri ? EID.getSpaceId(echoUri) : undefined;
 };
 
-const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {
+/** Bound below every assigned position, which start at 0. */
+const BEFORE_FIRST_POSITION = -1;
+
+/**
+ * The index-level window for a select the storage layer can bound itself, so a bounded query costs
+ * what it asks for rather than the whole feed: a cursor range resumes by position, and a
+ * `feedScan` (set by the planner only where it proved the cap sound) reads in natural order.
+ *
+ * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
+ * a cursor read, which is over positioned blocks in position order. A reader that paged the
+ * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
+ * waited behind them.
+ *
+ * A bound that is not a decimal position is treated as unsatisfiable rather than as absent:
+ * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
+ */
+const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
+  const range = step.feedCursorRange;
+  if (range === undefined) {
+    if (step.feedScan === undefined || step.limit === undefined) {
+      return undefined;
+    }
+    return {
+      kind: 'natural',
+      direction: step.feedScan.direction,
+      limit: step.limit,
+      ...(step.feedScan.deleted !== undefined ? { deleted: step.feedScan.deleted } : {}),
+    };
+  }
+
+  // Backstop for the planner's check, which is where a cursor over a space's documents is refused.
+  if (!step.scope.every((scope) => scope._tag === 'feed')) {
+    throw new QueryError({
+      message: 'A feed cursor filter can only be used with a feed scope.',
+      context: { query: null },
+    });
+  }
+
+  return {
+    kind: 'cursor',
+    // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
+    after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
+    ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
+    ...(step.limit !== undefined ? { limit: step.limit } : {}),
+  };
+};
+
+/** A cursor's position, or `unsatisfiable` when it does not name one. */
+const parseCursor = (cursor: string, unsatisfiable: number): number => {
+  const position = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
+  return Number.isSafeInteger(position) ? position : unsatisfiable;
+};
+
+/**
+ * The queues a feed scope names, each carrying the space its URI qualifies it with so the index
+ * seek cannot cross spaces — a queue id is unique only within its own. An unqualified URI
+ * (`echo:///<id>`) names no space, and matches on its id alone.
+ */
+const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
   if (queues.length === 0) {
     return null;
   }
   return queues
-    .map((feedUri) => {
+    .map((feedUri): QueueRef | undefined => {
       const echoUri = EID.tryParse(feedUri);
-      return echoUri ? EID.getEntityId(echoUri) : undefined;
+      if (!echoUri) {
+        return undefined;
+      }
+      const queueId = EID.getEntityId(echoUri);
+      if (!queueId) {
+        return undefined;
+      }
+      const spaceId = EID.getSpaceId(echoUri);
+      return spaceId !== undefined ? { queueId, spaceId } : { queueId };
     })
-    .filter((id): id is EntityId => id !== undefined);
+    .filter(isNonNullable);
 };
 
 /**
@@ -2188,3 +2530,81 @@ function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
  * resolution across every occurrence of the same subquery within an `execQuery` run.
  */
 const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.stringify(node.subquery)}\0${node.property}`;
+
+/**
+ * A compiled row as a working-set item. The shipped form is built here rather than in
+ * `getResults`, since the row already carries everything the client needs and the item carries no
+ * document to derive it from. A collapsed group stands for its members, so it ships no object
+ * fields and its id is the serialized group key.
+ */
+const compiledRowToItem = (row: CompiledRow): QueryItem => {
+  const result: QueryService.QueryResult =
+    row.aggregates !== null && row.groupKey !== null
+      ? {
+          id: row.groupKey,
+          spaceId: row.spaceId,
+          rank: row.rank,
+          groupKey: row.groupKey,
+          groupCount: row.groupCount ?? undefined,
+          aggregates: row.aggregates,
+        }
+      : {
+          id: row.objectId,
+          spaceId: row.spaceId,
+          documentId: row.documentId !== '' ? row.documentId : undefined,
+          queueId: row.queueId !== '' ? row.queueId : undefined,
+          queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
+          rank: row.rank,
+          documentJson: row.documentJson ?? undefined,
+          groupKey: row.groupKey ?? undefined,
+          groupCount: row.groupCount ?? undefined,
+        };
+  return {
+    objectId: row.objectId,
+    spaceId: row.spaceId,
+    documentId: row.documentId !== '' ? (row.documentId as DocumentId) : null,
+    queueId: row.queueId !== '' ? (row.queueId as EntityId) : null,
+    queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : null,
+    doc: null,
+    data: null,
+    rank: row.rank,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    result,
+  };
+};
+
+/**
+ * Whether two working-set items would ship the same record, for reactive change detection. A
+ * `SqlStep` item already carries its shipped form, so comparing that is comparing the record; an
+ * item the steps built is compared on the fields `getResults` derives the record from.
+ */
+const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+  if (a.result !== undefined || b.result !== undefined) {
+    return (
+      a.result?.id === b.result?.id &&
+      a.result?.spaceId === b.result?.spaceId &&
+      a.result?.documentId === b.result?.documentId &&
+      a.result?.queueId === b.result?.queueId &&
+      a.result?.queueNamespace === b.result?.queueNamespace &&
+      a.result?.groupKey === b.result?.groupKey &&
+      a.result?.groupCount === b.result?.groupCount &&
+      a.result?.aggregates === b.result?.aggregates &&
+      a.result?.rank === b.result?.rank &&
+      // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
+      a.result?.documentJson === b.result?.documentJson
+    );
+  }
+  return (
+    a.objectId === b.objectId &&
+    a.spaceId === b.spaceId &&
+    a.documentId === b.documentId &&
+    a.queueId === b.queueId &&
+    a.queueNamespace === b.queueNamespace &&
+    // A property edit can move an item between groups without changing its flat position
+    // (e.g. the last item of group A becomes the first item of group B at the same index).
+    _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
+    // A collapsed group ships only its size and aggregates, so those are what can change.
+    _serializeCollapsed(a) === _serializeCollapsed(b)
+  );
+};

@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
+import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -15,19 +15,22 @@ import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 
-import { Process, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
-import type { ProcessNotFoundError } from './errors';
-import { ProcessManagerService } from './process-manager-service';
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import type { ProcessNotFoundError } from './errors.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -52,10 +55,10 @@ export interface ProcessOperationInvoker {
   attachFiber: <T>(pid: Process.ID) => Effect.Effect<OperationFiber<T>, ProcessNotFoundError>;
 }
 
-export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoker')<
+export class Service extends Context.Service<
   Service,
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
->() {}
+>()('@dxos/functions/ProcessOperationInvoker') {}
 
 const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
@@ -65,7 +68,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
     // scope closed.
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
-      Effect.map(Chunk.head),
+      Effect.map(Array.head),
       Effect.flatMap(
         Option.match({
           onSome: Effect.succeed,
@@ -75,26 +78,30 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 case Process.State.FAILED: {
                   return yield* Effect.failCause(
                     handle.status.exit.pipe(
-                      Option.flatMap(Exit.causeOption),
+                      Option.flatMap(Exit.getCause),
                       Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
                     ),
                   );
                 }
                 case Process.State.TERMINATED:
                   return yield* Effect.die('Operation was terminated');
-                default:
+                case Process.State.SUCCEEDED:
                   return yield* Effect.die('Process produced no output');
+                default:
+                  // Outputs close on a live process only when the manager suspends it (app shutdown):
+                  // the invocation was cut short rather than answered, which is an interruption.
+                  return yield* Effect.interrupt;
               }
             }),
         }),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
     );
     log('lifecycle: subscribed to outputs', { handle });
     return {
       pid: handle.pid,
-      await: outputFiber.await,
-      poll: outputFiber.poll,
+      await: Fiber.await(outputFiber),
+      poll: Effect.sync(() => Option.fromNullishOr(outputFiber.pollUnsafe())),
     };
   });
 
@@ -107,16 +114,26 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
  * When `remoteInvoker` is supplied, invocations requesting edge execution (`InvokeOptions.on === 'edge'`)
  * are dispatched to the remote runtime by the operation's `meta.deployedId` instead of spawning a local
  * process. Absent a remote invoker, edge invocations die with a descriptive error.
+ *
+ * `tracer` is the runtime's tracer, applied as a fallback on every invocation.
  */
 export const make = (opts: {
   manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
   remoteInvoker?: RemoteOperationInvoker.Invoker;
+  tracer: Tracer.Tracer;
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
+  const tracerContext = Context.make(Tracer.Tracer, opts.tracer);
+
+  // Beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would
+  // otherwise fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
+  const withFallbackTracer = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+    effect.pipe(Effect.updateContext((context: Context.Context<never>) => Context.merge(tracerContext, context)));
+
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
-  const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
+  const pendingFibers = new Set<Fiber.Fiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
 
   // Dispatches an operation to the remote (EDGE) runtime, keyed by its deployment id. Used when an
@@ -177,11 +194,15 @@ export const make = (opts: {
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(
+      Effect.withSpan('ProcessOperationInvoker.invoke', {
+        attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },
+      }),
       Effect.onInterrupt(() =>
         Effect.sync(() => {
           log('operation interrupted', { opKey: op.meta.key });
         }),
       ),
+      withFallbackTracer,
     );
 
   const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
@@ -199,7 +220,7 @@ export const make = (opts: {
       const newFiber = yield* fiberFromProcess(handle);
       fiberCache.set(pid, newFiber);
       return newFiber;
-    });
+    }).pipe(withFallbackTracer);
 
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
@@ -214,6 +235,7 @@ export const make = (opts: {
       log('invoking operation on edge', { opKey: op.meta.key, deployedId: op.meta.deployedId });
       return invokeRemote<I, O>(op, input).pipe(
         Effect.tap((output) => PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() })),
+        withFallbackTracer,
       );
     }
 
@@ -239,14 +261,15 @@ export const make = (opts: {
 
       return output;
     }).pipe(
-      Effect.tapErrorCause((cause) =>
+      Effect.tapCause((cause) =>
         Effect.sync(() => {
-          if (Cause.isInterruptedOnly(cause)) {
+          if (Cause.hasInterruptsOnly(cause)) {
             return;
           }
           log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
         }),
       ),
+      withFallbackTracer,
     );
   };
 
@@ -266,13 +289,13 @@ export const make = (opts: {
         const fiber = yield* invokeRemote<I, O>(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
         pendingFibers.add(fiber);
         fiber.addObserver(() => {
           pendingFibers.delete(fiber);
         });
-      });
+      }).pipe(withFallbackTracer);
     }
 
     const traceMeta = options?.tracing as Trace.Meta | undefined;
@@ -295,9 +318,9 @@ export const make = (opts: {
         },
       }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
-        Effect.tapErrorCause((cause) =>
+        Effect.tapCause((cause) =>
           Effect.sync(() => {
-            if (Cause.isInterruptedOnly(cause)) {
+            if (Cause.hasInterruptsOnly(cause)) {
               log.warn('scheduled operation interrupted', { opKey: op.meta.key });
             } else {
               log.error('scheduled operation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
@@ -305,7 +328,7 @@ export const make = (opts: {
           }),
         ),
         Effect.ignore,
-        Effect.forkDaemon,
+        Effect.forkDetach,
       );
       pendingFibers.add(fiber);
       fiber.addObserver(() => {
@@ -317,6 +340,7 @@ export const make = (opts: {
           log('operation schedule interrupted', { opKey: op.meta.key });
         }),
       ),
+      withFallbackTracer,
     );
   };
 
@@ -341,7 +365,7 @@ export const make = (opts: {
     invoke(op, input, options) as any;
 
   const awaitFollowups: Effect.Effect<void> = Effect.suspend(() =>
-    Fiber.awaitAll(Array.from(pendingFibers)).pipe(Effect.asVoid),
+    Fiber.awaitAll(globalThis.Array.from(pendingFibers)).pipe(Effect.asVoid),
   );
 
   return {
@@ -361,14 +385,15 @@ export const layer: Layer.Layer<
   Operation.Service | Service,
   never,
   ProcessManagerService | OperationHandlerSet.OperationHandlerProvider
-> = Layer.unwrapEffect(
+> = Layer.unwrap(
   Effect.gen(function* () {
     const manager = yield* ProcessManagerService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     // Optional: edge dispatch (`InvokeOptions.on === 'edge'`) is only available when a
     // `RemoteOperationInvoker.Service` is present in context; otherwise edge invocations die.
     const remoteInvoker = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
-    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker) });
+    const tracer = yield* Effect.tracer;
+    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker), tracer });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );

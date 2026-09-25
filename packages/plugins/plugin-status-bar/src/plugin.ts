@@ -1,9 +1,16 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { ReactSurface, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const StatusBarPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const StatusBarPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
+
+export default StatusBarPlugin;

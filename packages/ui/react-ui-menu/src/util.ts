@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Node } from '@dxos/app-graph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
-import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types.ts';
 
 /**
  * Execute a menu action's Effect with its captured context.
  * This provides the `_actionContext` layer if available.
  */
-export const executeMenuAction = async (action: MenuAction, params: Node.InvokeProps = {}): Promise<void> => {
+export const executeMenuAction = async (action: MenuAction, params: AppGraphNode.InvokeProps = {}): Promise<void> => {
   let effect = action.data(params);
 
   // Provide captured action context if available.
@@ -26,32 +26,30 @@ export const executeMenuAction = async (action: MenuAction, params: Node.InvokeP
   await EffectEx.runAndForwardErrors(effect);
 };
 
-export const getShortcut = (action: Node.ActionLike) => {
-  return typeof action.properties?.keyBinding === 'string'
-    ? action.properties.keyBinding
-    : action.properties?.keyBinding?.[getHostPlatform()];
+export const getShortcut = (action: AppGraphNode.ActionLike) => {
+  return resolveKeyBinding(action.properties?.keyBinding);
 };
 
 export const fallbackIcon = 'ph--circle-dashed--regular';
 
 export const createMenuAction = <P extends {} = {}>(
   id: string,
-  invoke: (params?: Node.InvokeProps) => void,
+  invoke: (params?: AppGraphNode.InvokeProps) => void,
   properties: P & MenuActionProperties,
 ) =>
   ({
     id,
-    type: Node.ActionType,
+    type: AppGraphNode.ActionType,
     properties,
-    data: (params?: Node.InvokeProps) => Effect.sync(() => invoke(params)),
+    data: (params?: AppGraphNode.InvokeProps) => Effect.sync(() => invoke(params)),
   }) satisfies MenuAction;
 
 export const createMenuItemGroup = <P extends MenuItemGroupProperties>(id: string, properties: P) =>
   ({
     id,
-    type: Node.ActionGroupType,
+    type: AppGraphNode.ActionGroupType,
     properties,
-    data: Node.actionGroupSymbol,
+    data: AppGraphNode.actionGroupSymbol,
   }) satisfies MenuItemGroup;
 
 export const createGapSeparator = (id: string = 'gap', source: string = 'root') => ({

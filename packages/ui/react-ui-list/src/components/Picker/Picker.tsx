@@ -9,11 +9,10 @@
 // The two contexts (Input / Item) are split so items don't re-render on
 // every keystroke and the input doesn't re-render on every (un)register.
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
-  type ElementType,
   type KeyboardEvent,
   type PropsWithChildren,
   type MouseEvent as ReactMouseEvent,
@@ -26,16 +25,24 @@ import React, {
   useState,
 } from 'react';
 
-import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import {
+  type Density,
+  type Elevation,
+  Field,
+  type ThemedClassName,
+  composableProps,
+  slottable,
+  useThemeContext,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
   usePickerInputContext,
   usePickerItemContext,
-} from './context';
+} from './context.ts';
 
 const styles = listTheme.styles();
 
@@ -168,12 +175,20 @@ PickerRoot.displayName = 'Picker.Root';
 
 type InputVariant = 'default' | 'subdued';
 
+/**
+ * What Escape does while the input holds a query: `clear` empties it and keeps the surface open,
+ * `dismiss` leaves the key to the dialog or popover, which closes.
+ */
+type EscapeBehavior = 'clear' | 'dismiss';
+
 type PickerInputProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
     /** Controlled input value. Caller owns this — e.g. binds to query state. */
     value?: string;
     /** Called on every keystroke with the new input string. */
     onValueChange?: (value: string) => void;
+    /** Defaults to `clear`. */
+    escapeBehavior?: EscapeBehavior;
     density?: Density;
     elevation?: Elevation;
     variant?: InputVariant;
@@ -181,10 +196,24 @@ type PickerInputProps = ThemedClassName<
 >;
 
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
-  ({ value, onValueChange, onChange, onKeyDown, autoFocus, ...props }, forwardedRef) => {
+  ({ value, onValueChange, onChange, onKeyDown, autoFocus, escapeBehavior = 'clear', ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
+    const inputRef = useRef<HTMLInputElement>(null);
+    const shouldAutoFocus = !!autoFocus && !hasIosKeyboard;
+
+    // React's `autoFocus` fires during commit, so a host that restores focus afterwards — a dialog's
+    // focus trap, or the editor the palette was opened over — wins and the caret never reaches the
+    // input. Claiming it again on the next frame is what makes a command palette typable on open.
+    useEffect(() => {
+      if (!shouldAutoFocus) {
+        return;
+      }
+
+      const frame = requestAnimationFrame(() => inputRef.current?.focus());
+      return () => cancelAnimationFrame(frame);
+    }, [shouldAutoFocus]);
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -200,10 +229,27 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
         if (event.defaultPrevented) {
           return;
         }
+        // Escape is claimed only while there is a query to clear, so an empty picker passes it to the
+        // dialog or popover it sits in, which dismisses; `escapeBehavior='dismiss'` never claims it.
+        // (The highlight is not cleared: the root re-selects the first item at once, which would make
+        // Escape a no-op that still ate the key.)
+        const clearOnEscape = () => {
+          if (escapeBehavior === 'dismiss') {
+            return;
+          }
+          if (event.currentTarget.value) {
+            event.preventDefault();
+            if (value === undefined) {
+              event.currentTarget.value = '';
+            }
+            onValueChange?.('');
+          }
+        };
+
         const values = getItemValues();
         if (values.length === 0) {
           if (event.key === 'Escape') {
-            onValueChange?.('');
+            clearOnEscape();
           }
           return;
         }
@@ -253,32 +299,43 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
             break;
           }
           case 'Escape': {
-            event.preventDefault();
-            if (selectedValue !== undefined) {
-              onSelectedValueChange(undefined);
-            } else {
-              onValueChange?.('');
-            }
+            clearOnEscape();
             break;
           }
         }
       },
-      [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onValueChange, onKeyDown],
+      [
+        selectedValue,
+        onSelectedValueChange,
+        getItemValues,
+        triggerSelect,
+        onValueChange,
+        onKeyDown,
+        value,
+        escapeBehavior,
+      ],
     );
 
     // Only force-control when `value` is provided; otherwise leave the
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           {...props}
-          autoFocus={autoFocus && !hasIosKeyboard}
+          autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          ref={forwardedRef}
+          ref={(node: HTMLInputElement | null) => {
+            inputRef.current = node;
+            if (typeof forwardedRef === 'function') {
+              forwardedRef(node);
+            } else if (forwardedRef) {
+              forwardedRef.current = node;
+            }
+          }}
         />
-      </Input.Root>
+      </Field.Root>
     );
   },
 );
@@ -300,8 +357,8 @@ type PickerItemProps = ThemedClassName<{
   children?: ReactNode;
 }>;
 
-const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
-  ({ classNames, value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
+const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
+  ({ value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
     const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
@@ -335,11 +392,13 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
       event.preventDefault();
     }, []);
 
-    const Comp: ElementType = asChild ? Slot : 'div';
-
     return (
-      <Comp
-        {...props}
+      <ark.div
+        asChild={asChild}
+        {...composableProps<HTMLDivElement>(props, {
+          classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
+          role: 'option',
+        })}
         ref={(node: HTMLDivElement | null) => {
           internalRef.current = node;
           if (typeof forwardedRef === 'function') {
@@ -348,7 +407,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
             forwardedRef.current = node;
           }
         }}
-        role='option'
         aria-selected={isSelected}
         aria-disabled={disabled}
         data-selected={isSelected}
@@ -356,12 +414,11 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-value={value}
         // Browser focus stays on the input; highlight is via `aria-selected`.
         tabIndex={-1}
-        className={styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed', classNames) })}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -374,6 +431,4 @@ export const Picker = {
   Item: PickerItem,
 };
 
-export type { PickerInputProps, PickerItemProps, PickerRootProps };
-
-export { usePickerInputContext, usePickerItemContext } from './context';
+export type { EscapeBehavior, PickerInputProps, PickerItemProps, PickerRootProps };

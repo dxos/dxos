@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { SearchOperation } from '../types';
-import { fetchPage, isCrxRenderAvailable } from '../util';
+import { SearchOperation } from '#types';
+
+import { fetchPage, isCrxRenderAvailable } from '../util/index.ts';
 
 /**
  * Render bridge handler. Runs in the plugin's (main-thread) operation host, where `window` and the

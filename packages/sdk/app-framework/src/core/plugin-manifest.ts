@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { BaseError } from '@dxos/errors';
 import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
@@ -50,7 +51,7 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
 export const Manifest = Schema.Struct({
   // Reuse the build manifest field definitions from `@dxos/protocols` (the shape `composerPlugin`
   // emits), minus `assets` which we relax below, plus the dev-only `devEntry`.
-  ...PluginManifestSchema.omit('assets').fields,
+  ...PluginManifestSchema.mapFields((fields) => Struct.omit(fields, ['assets'])).fields,
   /**
    * Relative asset paths. Relaxed vs the build `PluginManifestSchema` (which requires >= 1) because
    * dev-server manifests list no assets — chunks/styles flow through the dev server on demand.

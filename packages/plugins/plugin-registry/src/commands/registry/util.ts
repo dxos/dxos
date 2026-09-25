@@ -2,19 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { ALL_NSIDS, NSID } from '@dxos/protocols';
+import { ALL_NSIDS, ATMOSPHERE_SOURCE, NSID } from '@dxos/protocols';
+
+import { RegistryCommandError } from './errors.ts';
 
 export { ALL_NSIDS, NSID };
 
@@ -24,17 +26,12 @@ export { ALL_NSIDS, NSID };
  * These commands write `org.dxos.experimental.*` records to a publisher's PDS via AT Protocol
  * XRPC. Auth has two modes (see {@link resolveSession}):
  *
- * - **Personal-space (default):** when logged in (`dx account login`), the publisher's atproto
- *   session lives in their personal space as the "Atmosphere" `AccessToken`. Record writes are
+ * - **Default-space:** when logged in (`dx account login`), the publisher's atproto
+ *   session lives in their default space as the "Atmosphere" `AccessToken`. Record writes are
  *   signed by Edge's DPoP proxy (`/atproto/proxy`) — no app password required.
  * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
  *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
-
-// `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
-// `ATMOSPHERE_SOURCE` in plugin-connector; inlined to avoid a plugin-registry -> plugin-connector
-// dependency.
-const ATMOSPHERE_SOURCE = 'atproto.local';
 
 // Public read-only XRPC base used for identity resolution. Works for any
 // AT Protocol identity regardless of which PDS hosts it.
@@ -85,12 +82,12 @@ export type ListRecordsEntry = Schema.Schema.Type<typeof ListRecordsEntrySchema>
 // ---------------------------------------------------------------------------
 
 const decodeJson =
-  <T>(schema: Schema.Schema<T>) =>
+  <T>(schema: Schema.Codec<T>) =>
   (response: HttpClientResponse.HttpClientResponse) =>
-    Effect.flatMap(response.json, Schema.decodeUnknown(schema));
+    Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema));
 
 /** GET an XRPC endpoint and decode the JSON response. */
-const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.Schema<T>) =>
+const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.Codec<T>) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     return yield* HttpClientRequest.get(url).pipe(
@@ -105,7 +102,7 @@ const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.S
 const xrpcPost = <T>(
   url: string,
   body: Record<string, unknown>,
-  schema: Schema.Schema<T> | undefined,
+  schema: Schema.Codec<T> | undefined,
   headers: Record<string, string> = {},
 ) =>
   Effect.gen(function* () {
@@ -140,14 +137,16 @@ export const resolvePds = (did: string) =>
       const path = segments.length > 0 ? `/${segments.join('/')}/did.json` : '/.well-known/did.json';
       doc = yield* xrpcGet(`https://${host}${path}`, {}, DidDocumentSchema);
     } else {
-      return yield* Effect.fail(new Error(`Unsupported DID method: ${did}`));
+      return yield* Effect.fail(new RegistryCommandError({ message: `Unsupported DID method: ${did}` }));
     }
     const service = doc.service?.find(
       (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
     );
     const endpoint = service?.serviceEndpoint;
     if (typeof endpoint !== 'string' || endpoint.length === 0) {
-      return yield* Effect.fail(new Error(`PDS endpoint missing in DID document for ${did}`));
+      return yield* Effect.fail(
+        new RegistryCommandError({ message: `PDS endpoint missing in DID document for ${did}` }),
+      );
     }
     return endpoint;
   });
@@ -173,7 +172,7 @@ type AppPasswordSession = {
   readonly accessJwt: string;
 };
 
-/** Indirect auth: writes are DPoP-signed by Edge's `/atproto/proxy` using a personal-space token. */
+/** Indirect auth: writes are DPoP-signed by Edge's `/atproto/proxy` using a default-space token. */
 type DpopProxySession = {
   readonly mode: 'dpop-proxy';
   readonly did: string;
@@ -216,7 +215,7 @@ export type ResolveSessionOptions = {
   handle: string | undefined;
   /** `--app-password` flag value (if any). */
   appPassword: string | undefined;
-  /** The DXOS client, used to read default credentials from the personal space. */
+  /** The DXOS client, used to read default credentials from the default space. */
   client: Client;
 };
 
@@ -225,43 +224,46 @@ export type ResolveSessionOptions = {
  *
  * 1. Explicit `--handle` + `--app-password` (or `$ATPROTO_HANDLE` / `$ATPROTO_APP_PASSWORD`) →
  *    app-password session (works without a DXOS identity).
- * 2. The logged-in identity's personal-space "Atmosphere" `AccessToken` → DPoP-proxy session.
+ * 2. The logged-in identity's default-space "Atmosphere" `AccessToken` → DPoP-proxy session.
  * 3. A context-specific error guiding the user to log in / connect an integration / pass creds.
  */
 export const resolveSession = (options: ResolveSessionOptions) =>
   Effect.gen(function* () {
-    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_HANDLE')));
+    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_HANDLE')));
     const appPassword =
-      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_APP_PASSWORD')));
+      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_APP_PASSWORD')));
     if (handle && appPassword) {
       return yield* createSession(handle, appPassword);
     }
 
-    const fromPersonalSpace = yield* resolvePersonalSpaceSession(options.client);
-    if (fromPersonalSpace) {
-      return fromPersonalSpace;
+    const fromDefaultSpace = yield* resolveDefaultSpaceSession(options.client);
+    if (fromDefaultSpace) {
+      return fromDefaultSpace;
     }
 
     if (options.client.halo.identity.get()) {
       return yield* Effect.fail(
-        new Error(
-          'No atproto integration connected. Connect one with `dx integration add`, or pass --handle/--app-password. ' +
+        new RegistryCommandError({
+          message:
+            'No atproto integration connected. Connect one with `dx integration add`, or pass --handle/--app-password. ' +
             '(`dx account login` cannot add an integration to an existing identity.)',
-        ),
+        }),
       );
     }
     return yield* Effect.fail(
-      new Error('No DXOS identity. Run `dx account login` first, or pass --handle/--app-password.'),
+      new RegistryCommandError({
+        message: 'No DXOS identity. Run `dx account login` first, or pass --handle/--app-password.',
+      }),
     );
   });
 
 /**
- * Build a DPoP-proxy session from the personal space's "Atmosphere" `AccessToken`, or `undefined`
+ * Build a DPoP-proxy session from the default space's "Atmosphere" `AccessToken`, or `undefined`
  * if the user isn't logged in or hasn't connected an atproto integration.
  */
-const resolvePersonalSpaceSession = (client: Client) =>
+const resolveDefaultSpaceSession = (client: Client) =>
   Effect.gen(function* () {
-    const space = AppSpace.getPersonalSpace(client);
+    const space = AppSpace.getDefaultSpace(client);
     if (!space) {
       return undefined;
     }
@@ -305,7 +307,7 @@ const proxyCall = <T>(
     query?: Record<string, string>;
     jsonBody?: Record<string, unknown>;
   },
-  schema: Schema.Schema<T> | undefined,
+  schema: Schema.Codec<T> | undefined,
 ) => {
   const query = params.query ? `?${new URLSearchParams(params.query).toString()}` : '';
   const innerHeaders: Record<string, string> = { Accept: 'application/json', Authorization: `DPoP ${session.token}` };

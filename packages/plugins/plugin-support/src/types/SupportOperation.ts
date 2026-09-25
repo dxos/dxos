@@ -6,124 +6,118 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, DXN, Format, Ref, Type } from '@dxos/echo';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
 
-import * as Support from './Support';
-
-export const OnCreateSpace = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.support.onCreateSpace'),
-    name: 'On Create Space',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Type.getSchema(Collection.Collection),
-    isDefault: Schema.Boolean.pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
+import * as Support from './Support.ts';
+import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
-export const IssueType = Schema.Literal('bug', 'feature').annotations({
+export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
-  description: 'Whether this is a bug report or a feature request.',
+  description: 'Bug report or a feature request.',
 });
 export type IssueType = Schema.Schema.Type<typeof IssueType>;
 
-export const Severity = Schema.Literal('High priority', 'Medium priority', 'Low priority').annotations({
+export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Low priority']).annotate({
   title: 'Severity',
-  description: 'How disruptive the issue is.',
+  description: 'Level of impact.',
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
-/**
- * Form payload shared by all three FeedbackPanel submit actions (PostHog
- * feedback, Discord help thread, GitHub issue). `version` is a hidden form
- * field populated by the panel from runtime config and forwarded to the
- * backend for triage. `area` is a free-form plugin id; the panel
- * pre-populates options from the active plugin list.
- */
+/** Form payload for the FeedbackPanel submit action. */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
-    Schema.nonEmptyString(),
-    Schema.maxLength(256),
-    Schema.annotations({
+    Schema.check(Schema.isNonEmpty()),
+    Schema.check(Schema.isMaxLength(256)),
+    Schema.annotate({
       title: 'Title',
       description: 'Short summary of the issue.',
     }),
   ),
   body: Format.Text.pipe(
-    Schema.nonEmptyString(),
-    Schema.maxLength(16_384),
-    Schema.annotations({
+    Schema.check(Schema.isNonEmpty()),
+    Schema.check(Schema.isMaxLength(16_384)),
+    Schema.annotate({
       title: 'Description',
       description: 'Please describe the issue or feature request in detail.',
     }),
   ),
-  area: Schema.String.annotations({
+  area: Schema.String.annotate({
     title: 'Area',
-    description: 'The plugin or area this relates to (optional).',
+    description: 'The plugin or area this relates to.',
   }).pipe(Schema.optional),
-  type: IssueType,
-  severity: Severity,
+  type: IssueType.pipe(Schema.optional),
+  severity: Severity.pipe(Schema.optional),
   image: Schema.Boolean.pipe(
-    Schema.annotations({
-      title: 'Attach screenshot (GitHub only)',
-      description: 'Capture the current view and attach it to the GitHub issue. Form fields are obscured for privacy.',
+    Schema.annotate({
+      title: 'Attach screenshot',
+      description: 'Capture the current view and attach it to the report. Posted publicly with the report.',
     }),
     Schema.optional,
   ),
   includeLogs: Schema.Boolean.pipe(
-    Schema.annotations({
+    Schema.annotate({
       title: 'Include debug logs',
+      description: 'Attach the debug log bundle to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),
   // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // under the same Linear label the PostHog submissions sync under.
+  labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** Legacy observability-backend input. Derived from {@link SupportRequest} by the FeedbackPanel. */
-export const UserFeedback = Schema.Struct({
-  message: Schema.String,
-  includeLogs: Schema.Boolean.pipe(Schema.optional),
-});
-
-export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
-
-export const CaptureUserFeedback = Operation.make({
+export const SubmitReport = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.captureFeedback'),
-    name: 'Capture User Feedback',
-    description: 'Capture one-shot user feedback (sent to the observability backend).',
-    icon: 'ph--chat-text--regular',
+    key: DXN.make('org.dxos.operation.support.submitReport'),
+    name: 'Submit Support Report',
+    description: 'Files a user report as a PostHog support ticket with a public Discord help thread.',
+    icon: 'ph--lifebuoy--regular',
   },
   services: [Capability.Service],
-  input: UserFeedback,
-  output: Schema.UndefinedOr(Schema.String),
+  input: Schema.Struct({
+    report: SupportRequest,
+    did: Schema.optional(Schema.String),
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportReportResult,
+});
+
+export const SubmitIssue = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.submitIssue'),
+    name: 'File Linear Issue',
+    description: 'Files a report as a Linear issue with logs attached.',
+    icon: 'ph--bug--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    report: SupportRequest,
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportIssueResult,
 });
 
 export const CreateTicket = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.createTicket'),
+    key: DXN.make('org.dxos.operation.support.createTicket'),
     name: 'Create Support Ticket',
     description: 'Creates a new support ticket in the active space.',
     icon: 'ph--note--regular',
   },
   input: Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Short summary of the issue.',
     }),
     body: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Optional longer description of the issue.',
       }),
     ),
@@ -134,13 +128,13 @@ export const CreateTicket = Operation.make({
 
 export const MarkInProgress = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.markInProgress'),
+    key: DXN.make('org.dxos.operation.support.markInProgress'),
     name: 'Mark Support Ticket In Progress',
     description: 'Marks a support ticket as in progress.',
     icon: 'ph--clock--regular',
   },
   input: Schema.Struct({
-    ticket: Ref.Ref(Support.Ticket).annotations({
+    ticket: Ref.Ref(Support.Ticket).annotate({
       description: 'The ticket to mark as in progress.',
     }),
   }),
@@ -150,17 +144,17 @@ export const MarkInProgress = Operation.make({
 
 export const ResolveTicket = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.resolveTicket'),
+    key: DXN.make('org.dxos.operation.support.resolveTicket'),
     name: 'Resolve Support Ticket',
     description: 'Marks a support ticket as resolved with optional resolution notes.',
     icon: 'ph--check--regular',
   },
   input: Schema.Struct({
-    ticket: Ref.Ref(Support.Ticket).annotations({
+    ticket: Ref.Ref(Support.Ticket).annotate({
       description: 'The ticket to resolve.',
     }),
     resolution: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Optional notes describing how the issue was resolved.',
       }),
     ),
@@ -171,17 +165,17 @@ export const ResolveTicket = Operation.make({
 
 export const SearchDocs = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.searchDocs'),
+    key: DXN.make('org.dxos.operation.support.searchDocs'),
     name: 'Search Documentation',
     description: 'Searches DXOS / Composer documentation for the given query.',
     icon: 'ph--magnifying-glass--regular',
   },
   input: Schema.Struct({
-    query: Schema.String.annotations({
+    query: Schema.String.annotate({
       description: 'Search query.',
     }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
         description: 'Maximum number of results to return.',
       }),
     ),

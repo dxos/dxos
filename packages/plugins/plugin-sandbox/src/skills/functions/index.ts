@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * from './definitions';
+import { SandboxOperation } from '#types';
 
-export const SandboxHandlers = OperationHandlerSet.lazy(
-  () => import('./create-sandbox'),
-  () => import('./exec'),
-  () => import('./upload-file'),
-  () => import('./download-file'),
-);
+export const SandboxHandlers = OperationHandlerSet.lazy([
+  SandboxOperation.CreateSandbox.pipe(Operation.lazyHandler(() => import('./create-sandbox.ts'))),
+  SandboxOperation.Exec.pipe(Operation.lazyHandler(() => import('./exec.ts'))),
+  SandboxOperation.UploadFile.pipe(Operation.lazyHandler(() => import('./upload-file.ts'))),
+  SandboxOperation.DownloadFile.pipe(Operation.lazyHandler(() => import('./download-file.ts'))),
+]);

@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 export const translations = [
   {
@@ -20,6 +20,9 @@ export const translations = [
         'request-access-email.description':
           "A confirmation link has been sent to your inbox. If it doesn't arrive in the next three minutes please check your spam folder.",
         'email-error.message': 'Failed to send verification email.',
+        'account-exists-error.message': 'That email already has an account. Log in instead.',
+        'email-check-unavailable-error.message': "Couldn't check that email just now. Please try again in a moment.",
+        'log-in-instead-link.label': 'Log in with this email',
         'oauth-error.message': 'Could not connect to that account. Please try again.',
 
         'email-input.label': 'Email',
@@ -34,11 +37,15 @@ export const translations = [
         'welcome-back.title': 'Welcome back!',
         'sign-in-with-passkey-button.label': 'Log in with passkey',
         'passkey-pending.label': 'Waiting for passkey…',
+        'oauth-pending.label': 'Authorizing…',
         'passkey-dismissed-error.message':
           'No passkey was used. The prompt was dismissed, or this device has no passkey for Composer.',
         'passkey-rejected-error.message':
           "That passkey isn't linked to an account. Try another passkey, or log in with email or another device.",
         'passkey-failed-error.message': 'Passkey login failed. Please try again or use another way to log in.',
+        'passkey-rejected-passkey-only-error.message': "That passkey isn't linked to an account. Try another passkey.",
+        'passkey-failed-passkey-only-error.message': 'Passkey login failed. Please try again.',
+        'login-unavailable.message': "Passkey login isn't available on this device.",
         'more-ways-to-sign-in.label': 'More ways to log in',
         'login-passkey.label': 'Passkey',
         'login-passkey.description': 'The simplest way to access your data on new devices.',
@@ -55,7 +62,7 @@ export const translations = [
         'get-an-invite.label': 'New here? Get an invite',
 
         'signup-code.title': 'Enter your invitation code',
-        'signup-code.description': "Codes are 8 characters. We'll verify yours before continuing.",
+        'signup-code.description': "Enter the code you were given. We'll verify it before continuing.",
         'signup-auth.title': 'Set up your account',
         'signup-auth.description': "Enter your email so we can confirm it later. You'll be admitted right away.",
         'no-invitation-code-link.label': "Don't have a code? Join the waiting list",
@@ -64,7 +71,7 @@ export const translations = [
         'or-divider.label': 'or',
         'atmosphere-account-button.label': 'Or use your Atmosphere account.',
         'atmosphere-handle-input.placeholder': 'you.bsky.social',
-        'invitation-code-format-error.message': 'Codes are 8 characters of A–Z and 0–9 (e.g. XK4F-9P2A).',
+        'invitation-code-format-error.message': 'Codes use A–Z, 0–9 and dashes (e.g. XK4F-9P2A or SF-MEETUP-7K2Q).',
         'invitation-code-invalid-error.message': "That code isn't valid. Check it for typos or request a new one.",
 
         'waitlist.title': 'Join the waiting list',
@@ -85,13 +92,16 @@ export const translations = [
         'passkey-setup-toast-action.label': 'Setup',
         'passkey-setup-toast-action.alt': 'Navigate to the passkeys management page.',
 
+        'authorizing-device.title': 'Authorizing this device',
+        'login-link-expired-toast.title': 'Login link expired',
+        'login-link-expired-toast.description':
+          'This login link is no longer valid. Please request a new one to log in.',
+        'login-failed-toast.title': 'Could not complete login',
+        'login-failed-toast.description':
+          'Something went wrong while authorizing this device. Please try logging in again.',
+
         'native-redirect.message': 'Opening in the Composer app...',
         'open-in-browser-button.label': 'Open here instead',
-
-        'settings.section.title': 'Sample space',
-        'settings.recreate-exemplar.label': 'Recreate sample space',
-        'settings.recreate-exemplar.description':
-          'Import a fresh copy of the Bramble Coffee Roasters sample space. Safe to run even if one already exists.',
 
         'open-about.label': 'About Composer',
         'version.label': 'Version {{version}}',

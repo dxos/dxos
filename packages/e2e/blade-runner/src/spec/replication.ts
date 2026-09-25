@@ -6,9 +6,15 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { EchoReplicant } from '../replicants/echo-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import {
+  type Platform,
+  type ReplicantBrain,
+  type ReplicantsSummary,
+  type TestPlan,
+  type TestProps,
+} from '../plan/index.ts';
+import { EchoReplicant } from '../replicants/echo-replicant.ts';
 
 /**
  * +-----------------------+

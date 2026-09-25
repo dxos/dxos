@@ -2,15 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { meta } from './meta';
-export { HaloServicesLayer } from './halo-services-layer';
-export * from './progress';
-export * from './types';
-export { ClientOperation } from './operations';
-export {
-  PasskeyDismissedError,
-  type PasskeyFailure,
-  PasskeyLoginError,
-  PasskeyRejectedError,
-  classifyPasskeyFailure,
-} from './operations/errors';
+export * as ClientPlugin from './ClientPlugin.ts';
+export * from './progress/index.ts';
+export * from '#types';
+export { ClientOperation } from '#operations';
+export { HaloServicesLayer } from './halo-services-layer.ts';
+export { meta } from '#meta';

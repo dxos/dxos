@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chat from '@effect/ai/Chat';
-import type * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Chat from 'effect/unstable/ai/Chat';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
@@ -16,9 +16,9 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import * as McpToolkit from './McpToolkit';
+import * as McpToolkit from './McpToolkit.ts';
 
-const AiServiceLayer = AiService.model('com.anthropic.model.claude-opus-4-8.default', { thinking: false }).pipe(
+const AiServiceLayer = AiService.languageModel('com.anthropic.model.claude-opus-5.default', { thinking: false }).pipe(
   Layer.provide(
     TestAiService({
       disableMemoization: true,
@@ -34,14 +34,17 @@ describe('connectWithFallback', () => {
       timeout: 30_000,
     },
     async () => {
-      const toolkit = await EffectEx.runAndForwardErrors(
+      const tools = await EffectEx.runAndForwardErrors(
         McpToolkit.make({
           url: 'https://mcp.linear.app/mcp',
           protocol: 'sse',
           apiKey: process.env.LINEAR_API_KEY,
-        }),
+        }).pipe(
+          Effect.map((toolkit) => Object.keys(toolkit.toolkit.tools)),
+          Effect.scoped,
+        ),
       );
-      log.info('connected', { tools: Object.keys(toolkit.toolkit.tools) });
+      log.info('connected', { tools });
     },
   );
 });
@@ -58,7 +61,7 @@ describe('Browser Automation', () => {
 
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput = 'Check that you are able to use the browser. Open https://example.com';
-        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools, 'opaque'>;
 
         do {
           output = yield* chat
@@ -97,7 +100,7 @@ describe('Browser Automation', () => {
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput =
           'Scrape effect blog at https://effect.website/blog and find the content of last 3 articles. Next prompt I will ask you generate structured representation.';
-        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools, 'opaque'>;
 
         do {
           output = yield* chat

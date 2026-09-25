@@ -5,12 +5,13 @@
 import React, { useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { Skill, Template } from '@dxos/compute';
-import { type Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -57,7 +58,8 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
           const toolId = ToolId.make(fnKey);
           if (!existingSkill.tools?.includes(toolId)) {
             Obj.update(existingSkill, (existingSkill) => {
-              existingSkill.tools = [...(existingSkill.tools ?? []), toolId];
+              existingSkill.tools ??= [];
+              existingSkill.tools.push(toolId);
             });
           }
         }
@@ -78,26 +80,24 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
   }, [db, existingSkill, fnKey, skillKey, object.name, instructions]);
 
   return (
-    <div className='flex flex-col'>
-      <Form.Section title={t('skill-editor.label')} description={t('skill-editor.description')} />
-
-      <Input.Root>
-        <Input.Label>{t('skill-instructions.label')}</Input.Label>
-        <Input.TextArea
+    <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
+      <Field.Root>
+        <Field.Label>{t('skill-instructions.label')}</Field.Label>
+        <Field.Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}
           onChange={(event) => setInstructions(event.target.value)}
           classNames='resize-y'
         />
-      </Input.Root>
+      </Field.Root>
 
       <div className='pt-2'>
         <Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
         </Button>
       </div>
-    </div>
+    </Form.FieldSet>
   );
 };
 

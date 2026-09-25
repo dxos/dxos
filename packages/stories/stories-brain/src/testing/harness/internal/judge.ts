@@ -9,9 +9,9 @@ import { EffectEx } from '@dxos/effect';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText, parseJsonArray, parseJsonObject } from '../llm';
-import { ALL_VARIANTS, type ModelVariant, REMOTE_VARIANTS } from '../models';
-import { slugify } from './fact-store';
+import { generateText, parseJsonArray, parseJsonObject } from '../llm.ts';
+import { ALL_VARIANTS, type ModelVariant, REMOTE_VARIANTS } from '../models.ts';
+import { slugify } from './fact-store.ts';
 
 // Blind LLM-judge scorer for the brain-vs-rag ablation. The generator models produce the summaries;
 // a single (ideally stronger, remote) judge model grades every arm the same way, so the only variable

@@ -9,12 +9,16 @@ import { type MulticastObservable } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
-  Invitation as ClientInvitation,
+  type Invitation as ClientInvitation,
+  Invitation_AuthMethod as ClientInvitationAuthMethod,
+  Invitation_State as ClientInvitationState,
+  Invitation_Type as ClientInvitationType,
   InvitationEncoder,
 } from '@dxos/client/invitations';
+import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Bridges a {@link MulticastObservable} into an Effect {@link Stream}. The current value is
@@ -22,7 +26,7 @@ import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
  * consumer stops or the observable errors.
  */
 export const streamFromObservable = <T>(observable: MulticastObservable<T>): Stream.Stream<T> =>
-  Stream.async<T, Error>((emit) => {
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
     const subscription = observable.subscribe(
       (value: T) => void emit.single(value),
       (err: Error) => void emit.fail(err),
@@ -30,32 +34,47 @@ export const streamFromObservable = <T>(observable: MulticastObservable<T>): Str
     return Effect.sync(() => subscription.unsubscribe());
   }).pipe(Stream.orDie);
 
-const TERMINAL_STATES: ReadonlySet<ClientInvitation.State> = new Set([
-  ClientInvitation.State.SUCCESS,
-  ClientInvitation.State.CANCELLED,
-  ClientInvitation.State.TIMEOUT,
-  ClientInvitation.State.ERROR,
-  ClientInvitation.State.EXPIRED,
+/**
+ * Like {@link streamFromObservable}, but the observable is resolved lazily after the client
+ * has initialized — `client.halo`/`client.spaces` throw before then, and the adapters must be
+ * constructible over a client whose forked `initialize()` is still running. Emissions begin at
+ * initialization (with the observable's then-current value), so consumers see "no value yet"
+ * as silence, never as a false empty reading.
+ */
+export const streamFromClientObservable = <T>(
+  client: { waitUntilInitialized(): Promise<void> },
+  getObservable: () => MulticastObservable<T>,
+): Stream.Stream<T> =>
+  Stream.unwrap(
+    Effect.promise(() => client.waitUntilInitialized()).pipe(Effect.map(() => streamFromObservable(getObservable()))),
+  );
+
+const TERMINAL_STATES: ReadonlySet<ClientInvitationState> = new Set([
+  ClientInvitationState.SUCCESS,
+  ClientInvitationState.CANCELLED,
+  ClientInvitationState.TIMEOUT,
+  ClientInvitationState.ERROR,
+  ClientInvitationState.EXPIRED,
 ]);
 
 const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined => {
   switch (invitation.state) {
-    case ClientInvitation.State.CONNECTING:
+    case ClientInvitationState.CONNECTING:
       return { _tag: 'connecting' };
-    case ClientInvitation.State.CONNECTED:
+    case ClientInvitationState.CONNECTED:
       return { _tag: 'connected' };
-    case ClientInvitation.State.READY_FOR_AUTHENTICATION:
+    case ClientInvitationState.READY_FOR_AUTHENTICATION:
       return { _tag: 'readyForAuthentication', authCode: invitation.authCode };
-    case ClientInvitation.State.AUTHENTICATING:
+    case ClientInvitationState.AUTHENTICATING:
       return { _tag: 'authenticating' };
-    case ClientInvitation.State.SUCCESS:
+    case ClientInvitationState.SUCCESS:
       return { _tag: 'success', result: {} };
-    case ClientInvitation.State.CANCELLED:
+    case ClientInvitationState.CANCELLED:
       return { _tag: 'cancelled' };
-    case ClientInvitation.State.TIMEOUT:
-    case ClientInvitation.State.ERROR:
-    case ClientInvitation.State.EXPIRED:
-      return { _tag: 'error', message: `Invitation ${ClientInvitation.State[invitation.state]}` };
+    case ClientInvitationState.TIMEOUT:
+    case ClientInvitationState.ERROR:
+    case ClientInvitationState.EXPIRED:
+      return { _tag: 'error', message: `Invitation ${ClientInvitationState[invitation.state]}` };
     default:
       // INIT and any unmodeled state — not surfaced.
       return undefined;
@@ -67,7 +86,7 @@ const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined
  * completing after a terminal event.
  */
 export const invitationEvents = (observable: CancellableInvitationObservable): Stream.Stream<HaloInvitation.Event> =>
-  Stream.async<HaloInvitation.Event>((emit) => {
+  EffectEx.streamFromEmitter<HaloInvitation.Event>((emit) => {
     const subscription = observable.subscribe(
       (invitation: ClientInvitation) => {
         const event = toEvent(invitation);
@@ -104,8 +123,61 @@ export const makeFlow = (
         })
       : Effect.fail(new InvitationError({ context: { reason: 'flow is not awaiting authentication' } })),
   cancel: () => Effect.promise(() => observable.cancel()),
-  code: Effect.sync(() => InvitationEncoder.encode(observable.get())),
+  code: Effect.map(encodableInvitation(observable), InvitationEncoder.encode),
 });
+
+/** How long the services may take to complete an invitation before its code is given up on. */
+const CODE_TIMEOUT = '30 seconds';
+
+/**
+ * The invitation once it is complete enough to hand to a guest.
+ *
+ * A known-public-key invitation's guest keypair is generated by the services when they receive the
+ * request, so the proxy's initial value — which carries the swarm key the guest needs to connect —
+ * lacks the key the guest then signs with. Encoding it early yields a code that connects and then
+ * fails authentication with `keypair missing in the invitation`.
+ */
+const encodableInvitation = (
+  observable: CancellableInvitationObservable,
+): Effect.Effect<ClientInvitation, InvitationError> => {
+  const isEncodable = (invitation: ClientInvitation) =>
+    invitation.authMethod !== ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY || !!invitation.guestKeypair?.privateKey;
+
+  /** Settles once the invitation is encodable, or fails once it has ended without becoming so. */
+  const settle = (invitation: ClientInvitation): Effect.Effect<ClientInvitation, InvitationError> | undefined => {
+    if (isEncodable(invitation)) {
+      return Effect.succeed(invitation);
+    }
+    if (TERMINAL_STATES.has(invitation.state)) {
+      return Effect.fail(new InvitationError({ context: { reason: 'invitation ended before it became shareable' } }));
+    }
+    return undefined;
+  };
+
+  return Effect.callback<ClientInvitation, InvitationError>((resume) => {
+    const initial = settle(observable.get());
+    if (initial) {
+      resume(initial);
+      return;
+    }
+    const subscription = observable.subscribe(
+      (invitation: ClientInvitation) => {
+        const result = settle(invitation);
+        if (result) {
+          resume(result);
+        }
+      },
+      // Never the pending value: without its keypair the code connects and then fails to authenticate.
+      (error: Error) => resume(Effect.fail(new InvitationError({ context: { error } }))),
+    );
+    return Effect.sync(() => subscription.unsubscribe());
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: CODE_TIMEOUT,
+      orElse: () => Effect.fail(new InvitationError({ context: { reason: 'invitation never became shareable' } })),
+    }),
+  );
+};
 
 /**
  * Maps {@link HaloInvitation.ShareOptions} to the client invitation options. Defaults to a
@@ -118,27 +190,27 @@ export const toShareOptions = (options?: HaloInvitation.ShareOptions): Partial<C
   ...(options?.target !== undefined ? { target: options.target } : {}),
 });
 
-const toAuthMethod = (method?: HaloInvitation.AuthMethod): ClientInvitation.AuthMethod => {
+const toAuthMethod = (method?: HaloInvitation.AuthMethod): ClientInvitationAuthMethod => {
   switch (method) {
     case 'shared-secret':
-      return ClientInvitation.AuthMethod.SHARED_SECRET;
+      return ClientInvitationAuthMethod.SHARED_SECRET;
     case 'known-public-key':
-      return ClientInvitation.AuthMethod.KNOWN_PUBLIC_KEY;
+      return ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY;
     case 'none':
     default:
-      return ClientInvitation.AuthMethod.NONE;
+      return ClientInvitationAuthMethod.NONE;
   }
 };
 
-const toType = (type?: HaloInvitation.Type): ClientInvitation.Type => {
+const toType = (type?: HaloInvitation.Type): ClientInvitationType => {
   switch (type) {
     case 'delegated':
-      return ClientInvitation.Type.DELEGATED;
+      return ClientInvitationType.DELEGATED;
     case 'multiuse':
-      return ClientInvitation.Type.MULTIUSE;
+      return ClientInvitationType.MULTIUSE;
     case 'interactive':
     default:
-      return ClientInvitation.Type.INTERACTIVE;
+      return ClientInvitationType.INTERACTIVE;
   }
 };
 
@@ -146,14 +218,14 @@ const toType = (type?: HaloInvitation.Type): ClientInvitation.Type => {
  * Maps a legacy space-member role to the Keyhive-aligned {@link HaloSpace.Access} level.
  * Returns `undefined` for `REMOVED` (not a current member).
  */
-export const toAccess = (role: HaloSpaceMember.Role): HaloSpace.Access | undefined => {
+export const toAccess = (role: SpaceMember_Role): HaloSpace.Access | undefined => {
   switch (role) {
-    case HaloSpaceMember.Role.OWNER:
-    case HaloSpaceMember.Role.ADMIN:
+    case SpaceMember_Role.OWNER:
+    case SpaceMember_Role.ADMIN:
       return 'admin';
-    case HaloSpaceMember.Role.EDITOR:
+    case SpaceMember_Role.EDITOR:
       return 'edit';
-    case HaloSpaceMember.Role.READER:
+    case SpaceMember_Role.READER:
       return 'read';
     default:
       return undefined;
@@ -164,14 +236,14 @@ export const toAccess = (role: HaloSpaceMember.Role): HaloSpace.Access | undefin
  * Maps a Keyhive-aligned {@link HaloSpace.Access} level to a legacy space-member role.
  * Returns `undefined` for `pull` (no legacy equivalent — reject at the call site).
  */
-export const fromAccess = (access: HaloSpace.Access): HaloSpaceMember.Role | undefined => {
+export const fromAccess = (access: HaloSpace.Access): SpaceMember_Role | undefined => {
   switch (access) {
     case 'admin':
-      return HaloSpaceMember.Role.ADMIN;
+      return SpaceMember_Role.ADMIN;
     case 'edit':
-      return HaloSpaceMember.Role.EDITOR;
+      return SpaceMember_Role.EDITOR;
     case 'read':
-      return HaloSpaceMember.Role.READER;
+      return SpaceMember_Role.READER;
     default:
       return undefined;
   }
@@ -180,4 +252,4 @@ export const fromAccess = (access: HaloSpace.Access): HaloSpaceMember.Role | und
 /**
  * Whether a member is currently online.
  */
-export const isOnline = (member: SpaceMember): boolean => member.presence === SpaceMember.PresenceState.ONLINE;
+export const isOnline = (member: SpaceMember): boolean => member.presence === SpaceMember_PresenceState.ONLINE;

@@ -233,8 +233,8 @@ describe('Serializer', () => {
             jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
           }),
         );
-        Type.update(roundTrip, (draft) => {
-          draft.name = 'Round Trip Type';
+        Type.update(roundTrip, (roundTrip) => {
+          roundTrip.name = 'Round Trip Type';
         });
         await db.flush();
         data = await new Serializer().export(db);

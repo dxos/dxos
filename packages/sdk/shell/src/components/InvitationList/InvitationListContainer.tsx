@@ -7,8 +7,8 @@ import { type PublicKey } from '@dxos/react-client';
 import { useSpace, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { InvitationList } from './InvitationList';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { InvitationList } from './InvitationList.tsx';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export interface InvitationListContainerProps extends SharedInvitationListProps {
   spaceKey: PublicKey;

@@ -4,20 +4,21 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
-import { TupleField } from './TupleField';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
+import { TupleField } from './TupleField.tsx';
 
 // TupleField isn't auto-dispatched and needs a `binding`; wire it via `fieldMap`.
 const schema = Schema.Struct({
-  point: Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotations({ title: 'Point' }),
-}).pipe(Schema.mutable);
+  point: Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotate({ title: 'Point' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 
@@ -33,7 +34,7 @@ const DefaultStory = () => {
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

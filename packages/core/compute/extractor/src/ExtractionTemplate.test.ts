@@ -7,19 +7,19 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { dispatch } from './dispatch';
-import { type ExtractionTemplate, makeTemplateExtractor } from './ExtractionTemplate';
-import { fromExtractors } from './ExtractorRegistry';
-import { getOrCreate } from './getOrCreate';
-import { type ExtractResult } from './ObjectExtractor';
-import { fromResolvers } from './Resolver';
-import { mockAiService } from './testing/mock-ai';
+import { dispatch } from './dispatch.ts';
+import { type ExtractionTemplate, makeTemplateExtractor } from './ExtractionTemplate.ts';
+import { fromExtractors } from './ExtractorRegistry.ts';
+import { getOrCreate } from './getOrCreate.ts';
+import { type ExtractResult } from './ObjectExtractor.ts';
+import { fromResolvers } from './Resolver.ts';
+import { mockAiService } from './testing/mock-ai.ts';
 
 //
 // Test types.

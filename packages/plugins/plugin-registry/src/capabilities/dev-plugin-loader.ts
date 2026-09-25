@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
-import { RegistryCapabilities } from '../types';
+import { RegistryCapabilities, type RegistryPluginOptions } from '#types';
 
 /**
  * Startup module that auto-loads a locally-served dev plugin when the user has
@@ -16,10 +17,14 @@ import { RegistryCapabilities } from '../types';
  * the toggle stays on, the next reload retries.
  */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(RegistryCapabilities.Settings);
+  Effect.fnUntraced(function* ({ externalPlugins = true }: RegistryPluginOptions = {}) {
+    if (!externalPlugins) {
+      return [];
+    }
+
+    const manager = yield* Capabilities.PluginManager;
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* RegistryCapabilities.Settings;
 
     const settings = registry.get(settingsAtom);
     const url = settings.devPluginUrl?.trim();

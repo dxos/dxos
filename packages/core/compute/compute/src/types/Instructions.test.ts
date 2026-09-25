@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Instructions from './Instructions';
+import * as Instructions from './Instructions.ts';
 
 describe('Instructions', () => {
   test('commands round-trip through make', ({ expect }) => {

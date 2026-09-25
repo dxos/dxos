@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Plugin, type PluginManager } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   Button,
   Carousel,
+  Field,
+  Grid,
   Icon,
-  Input,
   Link,
   ScrollArea,
   Select,
@@ -24,10 +27,12 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
+  /** Scope control for this one plugin, rendered under the enable switch. */
+  scope?: ReactNode;
   enabled?: boolean;
   /** True while an in-flight install is running. Disables the install button. */
   installing?: boolean;
@@ -107,6 +112,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
+      scope,
       enabled,
       installing,
       updating,
@@ -132,6 +138,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
+    const layout = useLayout();
+    // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
+    // 4rem floor on both left it with less width for the center content than the gutters themselves.
+    const isMobile = layout.mode === 'mobile';
     const { key: slug, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta.profile;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
@@ -153,10 +163,23 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
-            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={iconKey} size={14} />
+          <Grid
+            cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
+            grow={false}
+            align='start'
+            classNames='dx-document gap-x-4 p-4'
+          >
+            <Icon
+              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+              icon={iconKey}
+              size={isMobile ? 8 : 14}
+            />
 
-            <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
+            <Grid
+              cols={['1fr', 'min-content']}
+              grow={false}
+              classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
+            >
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
                 {failure && <PluginFailureBadge failure={failure} size={5} />}
@@ -166,15 +189,22 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                <Field.Root>
+                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                </Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}
                 {author && <span className='dx-tag dx-tag--info'>{author}</span>}
               </div>
-            </div>
+            </Grid>
+
+            {scope && (
+              <Section.Root>
+                <Section.Heading title={t('plugin-scope.section.title')} />
+                <Section.Body>{scope}</Section.Body>
+              </Section.Root>
+            )}
 
             {description && (
               <Section.Root>
@@ -311,7 +341,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
               </div>
             )}
-          </div>
+          </Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

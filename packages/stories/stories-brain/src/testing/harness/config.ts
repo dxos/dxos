@@ -4,9 +4,14 @@
 
 import { fileURLToPath } from 'node:url';
 
+import { fixturePath } from '@dxos/fixtures';
+
 // Structural harness configuration: paths, corpus/output locations, and model routing that the
 // harness infrastructure itself reads. (Non-structural, test-level knobs — subject, which model to
 // save, skill modes — live in `src/test/defs.ts` next to the tests.)
+
+/** Shared fixture name for the real mailbox corpus (`moon run fixtures:pull -- mailbox`). */
+export const MAILBOX_FIXTURE_NAME = 'mailbox';
 
 /** Absolute package root (…/stories-brain/). Anchors fixture/result paths regardless of file depth. */
 export const PACKAGE_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -22,8 +27,16 @@ export const join = (...parts: string[]): string =>
 // Corpus / fixtures.
 //
 
-/** The private mailbox feed fixture (git-ignored). Override with `MAILBOX_FEED_FIXTURE`. */
-export const FIXTURE = process.env.MAILBOX_FEED_FIXTURE ?? join(PACKAGE_ROOT, 'fixtures/local/mailbox-feed.json');
+/**
+ * The private mailbox feed fixture: the newest shared `mailbox` version pulled by
+ * `moon run fixtures:pull -- mailbox`, falling back to this package's own git-ignored copy so an
+ * archive downloaded before the shared directory existed keeps working. Override the whole path
+ * with `MAILBOX_FEED_FIXTURE`, or pin one version with `MAILBOX_FIXTURE_VERSION`.
+ */
+export const FIXTURE =
+  process.env.MAILBOX_FEED_FIXTURE ??
+  fixturePath(MAILBOX_FIXTURE_NAME, { version: process.env.MAILBOX_FIXTURE_VERSION }) ??
+  join(PACKAGE_ROOT, 'fixtures/local/mailbox-feed.json');
 
 /** The persisted fact-store fixture. Override with `FACT_STORE_FIXTURE`. */
 export const FACT_STORE_FIXTURE =

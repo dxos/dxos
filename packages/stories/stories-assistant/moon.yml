@@ -6,3 +6,13 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+tasks:
+  # Agent.stories drives the REAL Claude Agent SDK through the sidecar middleware, so it carries the
+  # repo's `manual` tag and is skipped by `test-storybook` until this variable opts in.
+  test-storybook-live:
+    extends: test-storybook
+    env:
+      DX_RUN_MANUAL_TESTS: '1'
+    options:
+      runInCI: false
+      cache: false

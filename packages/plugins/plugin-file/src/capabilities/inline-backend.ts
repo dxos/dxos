@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 
 import { FileCapabilities } from '#types';
@@ -14,11 +14,11 @@ import { FileCapabilities } from '#types';
  * Exported standalone for direct testing.
  */
 export const inlineBackend: FileCapabilities.Backend = {
-  name: 'Inline (ECHO)',
+  name: 'ECHO',
   description: 'Store the file bytes directly inside the ECHO document. Capped at 4MB; images, videos, and PDFs only.',
   storage: Blob.Storage.inline,
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(FileCapabilities.Backend, inlineBackend)),
+  Effect.succeed(Capability.contribute(FileCapabilities.Backend, inlineBackend)),
 );

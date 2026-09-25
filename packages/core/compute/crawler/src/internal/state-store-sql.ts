@@ -2,33 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { StateError } from '../errors';
-import { type RunStatus, type StateStoreApi } from '../StateStore';
-import type * as Type from '../types';
+import { StateError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store/index.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
-/** Create the frontier + run-status tables (idempotent). */
-export const migrate = (sql: SqlClient.SqlClient) =>
-  Effect.gen(function* () {
-    yield* sql`CREATE TABLE IF NOT EXISTS crawl_target (
-      id TEXT PRIMARY KEY,
-      channel_id TEXT NOT NULL,
-      thread_id TEXT,
-      parent_message_id TEXT,
-      depth INTEGER NOT NULL,
-      position INTEGER NOT NULL,
-      status TEXT NOT NULL,
-      cursor TEXT,
-      last_run_at TEXT,
-      last_error TEXT
-    )`;
-    yield* sql`CREATE INDEX IF NOT EXISTS crawl_target_position ON crawl_target (position)`;
-    yield* sql`CREATE TABLE IF NOT EXISTS crawl_run (id INTEGER PRIMARY KEY CHECK (id = 1), status TEXT NOT NULL)`;
-    yield* sql`INSERT INTO crawl_run (id, status) VALUES (1, 'idle') ON CONFLICT(id) DO NOTHING`;
-  });
+/**
+ * Applies any migrations this database has not recorded yet.
+ */
+export const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('crawler.stateStore.migrate'),
+  );
 
 type Row = {
   readonly id: string;
@@ -48,7 +42,7 @@ type Row = {
 const parseTargetStatus = (value: string): Type.TargetStatus =>
   value === 'pending' || value === 'active' || value === 'done' ? value : 'error';
 
-const parseRunStatus = (value: string): RunStatus =>
+const parseRunStatus = (value: string): StateStore.RunStatus =>
   value === 'idle' || value === 'running' || value === 'paused' || value === 'done' ? value : 'error';
 
 const toTarget = (row: Row): Type.Target => ({
@@ -65,7 +59,7 @@ const toTarget = (row: Row): Type.Target => ({
 
 const fail = (message: string) => (cause: unknown) => new StateError({ message, cause });
 
-export const makeSql = (sql: SqlClient.SqlClient): StateStoreApi => ({
+export const makeSql = (sql: SqlClient.SqlClient): StateStore.Service => ({
   pushTargets: (targets) =>
     sql
       .withTransaction(

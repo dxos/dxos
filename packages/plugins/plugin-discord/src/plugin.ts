@@ -2,10 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { Connector, OperationHandler, PluginAsset, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const DiscordPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const DiscordPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
 
-export { DiscordOperationHandlerSet } from './operations';
+export default DiscordPlugin;

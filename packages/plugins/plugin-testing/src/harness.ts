@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
@@ -25,17 +25,17 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
  * that can be activated without a browser DOM.
  */
 const headlessCorePlugins = (): Plugin.Plugin[] => [
-  AttentionPlugin(),
-  GraphPlugin(),
+  AttentionPlugin.make(),
+  GraphPlugin.make(),
   ProcessManagerPlugin(),
-  SettingsPlugin(),
+  SettingsPlugin.make(),
 ];
 
 /**
  * Creates a TestHarness pre-loaded with the Composer core plugins
  * (Attention, Graph, ProcessManager, Settings, optionally Theme).
  *
- * For a ClientPlugin-backed harness, pass `ClientPlugin({ ... })` via `plugins`.
+ * For a ClientPlugin-backed harness, pass `ClientPlugin.make({ ... })` via `plugins`.
  *
  * @idiom org.dxos.plugin-testing.pluginModuleActivation
  *   applies: Writing a basic activation smoke-test for any Composer plugin
@@ -49,12 +49,9 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
   if (theme) {
     const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
     const { defaultTx } = await import('@dxos/react-ui');
-    core.push(ThemePlugin({ tx: defaultTx }));
+    core.push(ThemePlugin.make({ tx: defaultTx }));
   }
   return createTestApp({
-    // Composer always fires SetupSettings before Startup so that settings modules
-    // activate before graph builders (which use allOf(SetupSettings, SetupAppGraph)).
-    setupEvents: [AppActivationEvents.SetupSettings],
     ...rest,
     plugins: [...core, ...plugins],
   });

@@ -22,7 +22,7 @@ export type AnimatedBorderProps = ThemedClassName<PropsWithChildren<{ animate?: 
 export const AnimatedBorder = ({ children, classNames, animate = false }: AnimatedBorderProps) => {
   return (
     <div className='relative overflow-hidden p-px rounded-sm'>
-      <div className={mx('relative z-10 bg-base-surface rounded-sm border border-subdued-separator', classNames)}>
+      <div className={mx('relative z-10 dx-base-surface rounded-sm border border-subdued-separator', classNames)}>
         {children}
       </div>
       {animate && (

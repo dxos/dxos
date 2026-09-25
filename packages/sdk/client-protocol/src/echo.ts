@@ -5,12 +5,13 @@
 import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
-import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type { SpacesService } from '@dxos/protocols/rpc';
 
-import type { AuthenticatingInvitation } from './invitations';
-import type { Space } from './space';
-import type { SpaceProperties } from './types';
+import type { AuthenticatingInvitation } from './invitations/index.ts';
+import type { Space } from './space.ts';
+import type { SpaceProperties } from './types/index.ts';
 
 /**
  * Public database API.
@@ -44,7 +45,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Creates a space from the given archive.
    */
-  import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
+  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.

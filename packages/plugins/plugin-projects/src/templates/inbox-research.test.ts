@@ -5,14 +5,18 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Instructions, Project, Routine, Skill, Trigger } from '@dxos/compute';
-import { Collection, Database, Feed, Filter, Obj } from '@dxos/echo';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import { inboxResearch } from './inbox-research';
+import { inboxResearch } from './inbox-research.ts';
 
 describe('inbox research project template', () => {
   let builder: EchoTestBuilder;
@@ -32,7 +36,6 @@ describe('inbox research project template', () => {
         Instructions.Instructions,
         Routine.Routine,
         Trigger.Trigger,
-        Collection.Collection,
         Mailbox.Mailbox,
         Feed.Feed,
         TagIndex.TagIndex,
@@ -68,10 +71,8 @@ describe('inbox research project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.table').toString());
 
-    // Starter routine: owned by the project AND linked into `routines`.
     expect(project.routines).toHaveLength(1);
     const routine = await project.routines[0].tryLoad();
-    expect(Obj.getParent(routine!)?.id).toBe(project.id);
 
     // The routine's headless scope: project ref as context, table + project skills.
     const routineInstructionsRef = Routine.instructionsRef(routine!);

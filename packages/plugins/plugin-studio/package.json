@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-studio",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Image-creation plugin for Composer.",
   "homepage": "https://dxos.org",
@@ -15,8 +15,14 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -39,15 +45,20 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
+    "#plugin": {
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
     "#surfaces": {
       "source": "./src/surfaces.ts",
       "types": "./dist/types/src/surfaces.d.ts",
       "default": "./dist/lib/surfaces.mjs"
-    },
-    "#plugin": {
-      "source": "./src/StudioPlugin.tsx",
-      "types": "./dist/types/src/StudioPlugin.d.ts",
-      "default": "./dist/lib/StudioPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -67,11 +78,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./surfaces": {
       "source": "./src/surfaces.ts",
       "types": "./dist/types/src/surfaces.d.ts",
@@ -82,13 +88,113 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./package.json": "./package.json",
+    "./MediaArtifact": {
+      "source": "./src/types/MediaArtifact.ts",
+      "types": "./dist/types/src/types/MediaArtifact.d.ts",
+      "import": "./dist/lib/MediaArtifact.mjs"
+    },
+    "./Generation": {
+      "source": "./src/types/Generation.ts",
+      "types": "./dist/types/src/types/Generation.d.ts",
+      "import": "./dist/lib/Generation.mjs"
+    },
+    "./GenerationService": {
+      "source": "./src/types/GenerationService.ts",
+      "types": "./dist/types/src/types/GenerationService.d.ts",
+      "import": "./dist/lib/GenerationService.mjs"
+    },
+    "./Lightbox": {
+      "source": "./src/types/Lightbox.ts",
+      "types": "./dist/types/src/types/Lightbox.d.ts",
+      "import": "./dist/lib/Lightbox.mjs"
+    },
+    "./StudioCapabilities": {
+      "source": "./src/types/StudioCapabilities.ts",
+      "types": "./dist/types/src/types/StudioCapabilities.d.ts",
+      "import": "./dist/lib/StudioCapabilities.mjs"
+    },
+    "./StudioEvents": {
+      "source": "./src/types/StudioEvents.ts",
+      "types": "./dist/types/src/types/StudioEvents.d.ts",
+      "import": "./dist/lib/StudioEvents.mjs"
+    },
+    "./StudioOperation": {
+      "source": "./src/types/StudioOperation.ts",
+      "types": "./dist/types/src/types/StudioOperation.d.ts",
+      "import": "./dist/lib/StudioOperation.mjs"
+    },
+    "./StudioPlugin": {
+      "source": "./src/StudioPlugin.ts",
+      "types": "./dist/types/src/StudioPlugin.d.ts",
+      "import": "./dist/lib/StudioPlugin.mjs"
+    },
+    "./Variant": {
+      "source": "./src/types/Variant.ts",
+      "types": "./dist/types/src/types/Variant.d.ts",
+      "import": "./dist/lib/Variant.mjs"
+    },
+    "./Frame": {
+      "source": "./src/types/Frame.ts",
+      "types": "./dist/types/src/types/Frame.d.ts",
+      "import": "./dist/lib/Frame.mjs"
+    },
+    "./Storyboard": {
+      "source": "./src/types/Storyboard.ts",
+      "types": "./dist/types/src/types/Storyboard.d.ts",
+      "import": "./dist/lib/Storyboard.mjs"
+    },
+    "./StoryboardView": {
+      "source": "./src/types/StoryboardView.ts",
+      "types": "./dist/types/src/types/StoryboardView.d.ts",
+      "import": "./dist/lib/StoryboardView.mjs"
+    },
+    "./StudioSkill": {
+      "source": "./src/skills/StudioSkill.ts",
+      "types": "./dist/types/src/skills/StudioSkill.d.ts",
+      "import": "./dist/lib/StudioSkill.mjs"
+    },
+    "./templates": {
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts",
+      "import": "./dist/lib/templates.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "MediaArtifact": [
+        "dist/types/src/types/MediaArtifact.d.ts"
+      ],
+      "Generation": [
+        "dist/types/src/types/Generation.d.ts"
+      ],
+      "GenerationService": [
+        "dist/types/src/types/GenerationService.d.ts"
+      ],
+      "Lightbox": [
+        "dist/types/src/types/Lightbox.d.ts"
+      ],
+      "StudioCapabilities": [
+        "dist/types/src/types/StudioCapabilities.d.ts"
+      ],
+      "StudioEvents": [
+        "dist/types/src/types/StudioEvents.d.ts"
+      ],
+      "StudioOperation": [
+        "dist/types/src/types/StudioOperation.d.ts"
+      ],
+      "Variant": [
+        "dist/types/src/types/Variant.d.ts"
+      ],
+      "Frame": [
+        "dist/types/src/types/Frame.d.ts"
+      ],
+      "Storyboard": [
+        "dist/types/src/types/Storyboard.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -97,36 +203,33 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-board": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -135,10 +238,10 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -146,7 +249,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

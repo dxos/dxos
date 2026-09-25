@@ -2,21 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/cli/Prompt';
-import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { FormBuilder } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
+import {
+  Annotation,
+  Database,
+  type Error as EchoError,
+  Entity,
+  Feed,
+  Filter,
+  Obj,
+  Query,
+  Ref,
+  Scope,
+  Type,
+} from '@dxos/echo';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { FeedAnnotation } from '@dxos/schema';
+import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
+
+import { RoutineCommandError } from '../errors.ts';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 
@@ -34,7 +47,14 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
+// Annotated: the inferred `Doc` resolves through a path `@dxos/cli-util` does not export (TS2883).
+export const printTrigger: (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) => Effect.Effect<Doc.Doc<any>, EchoError.EntityNotFoundError> = Effect.fn(function* (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) {
   const fn = trigger.runnable && (yield* Database.load(trigger.runnable));
 
   return FormBuilder.make({
@@ -45,10 +65,10 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
       trigger.enabled ? 'enabled' : 'disabled',
       trigger.enabled ? Ansi.green : Ansi.blackBright,
     ),
-    FormBuilder.option('kind', Option.fromNullable(trigger.spec?.kind)),
+    FormBuilder.option('kind', Option.fromNullishOr(trigger.spec?.kind)),
     FormBuilder.option(
       'remote',
-      Option.fromNullable(remoteStatus),
+      Option.fromNullishOr(remoteStatus),
       Match.type<TriggerRemoteStatus>().pipe(
         Match.withReturnType<Ansi.Ansi>(),
         Match.when('available', () => Ansi.green),
@@ -67,7 +87,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         ),
       ),
     ),
-    FormBuilder.nestedOption('spec', Option.fromNullable(trigger.spec).pipe(Option.map(printSpec))),
+    FormBuilder.nestedOption('spec', Option.fromNullishOr(trigger.spec).pipe(Option.map(printSpec))),
     FormBuilder.build,
   );
 });
@@ -107,7 +127,7 @@ const printFeed = (spec: Trigger.FeedSpec) =>
  * @param defaults - Optional default values to use as initial values and pre-select optional properties
  */
 export const promptForSchemaInput = Effect.fn(function* (
-  schema: Schema.Schema.AnyNoContext | undefined,
+  schema: Schema.Codec<any, any> | undefined,
   defaults?: Record<string, any> | undefined,
 ) {
   if (!schema) {
@@ -117,7 +137,7 @@ export const promptForSchemaInput = Effect.fn(function* (
   const ast = schema.ast;
 
   // Check if it's a struct/object type
-  if (!SchemaAST.isTypeLiteral(ast)) {
+  if (!SchemaAST.isObjects(ast)) {
     return {};
   }
 
@@ -180,7 +200,7 @@ export const promptForSchemaInput = Effect.fn(function* (
       };
     });
 
-    const selected = yield* Prompt.multiSelect({
+    const selected = yield* Prompt.MultiSelect({
       message: 'Select optional properties to include:',
       choices,
     });
@@ -206,39 +226,39 @@ export const promptForSchemaInput = Effect.fn(function* (
 
     const key = info.key;
     const propType = info.prop.type;
-    const schemaDefault = Option.getOrUndefined(SchemaAST.getDefaultAnnotation(propType));
+    const schemaDefault = SchemaAST.getDefaultAnnotation(propType);
     const defaultValue = defaults?.[key] ?? schemaDefault;
 
     if (SchemaAST.isBooleanKeyword(propType)) {
       const initialValue =
         typeof defaultValue === 'boolean' ? defaultValue : typeof schemaDefault === 'boolean' ? schemaDefault : false;
-      const value = yield* Prompt.confirm({
+      const value = yield* Prompt.Confirm({
         message: `${info.key}${defaults?.[key] !== undefined ? ` (current: ${defaults[key]})` : ''}:`,
         initial: initialValue,
       });
       inputObj[key] = value;
     } else if (SchemaAST.isNumberKeyword(propType)) {
       const currentValue = typeof defaultValue === 'number' ? String(defaultValue) : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : parseFloat(valueStr) || 0;
     } else if (SchemaAST.isStringKeyword(propType)) {
       const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
     } else if (Ref.isRefType(propType)) {
       const isDefaultTemplate =
         typeof defaultValue === 'string' && defaultValue.startsWith('{{') && defaultValue.endsWith('}}');
-      const useTemplate = yield* Prompt.confirm({
+      const useTemplate = yield* Prompt.Confirm({
         message: `Use a template to specify ${info.key}?${isDefaultTemplate ? ' (current: template)' : ''}`,
         initial: isDefaultTemplate,
       });
       if (useTemplate) {
         const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
-        const templateStr = yield* Prompt.text({
+        const templateStr = yield* Prompt.String({
           message: `${info.key} template${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
         }).pipe(Prompt.run);
         inputObj[key] = templateStr === '' && defaultValue !== undefined ? defaultValue : templateStr;
@@ -248,7 +268,7 @@ export const promptForSchemaInput = Effect.fn(function* (
         if (objects.length === 0) {
           inputObj[key] = undefined;
         } else {
-          const selected = yield* Prompt.select({
+          const selected = yield* Prompt.Select({
             message: `Select ${info.key}:`,
             choices: objects.map((obj: Entity.Any) => ({
               title: Entity.getLabel(obj) ?? obj.id,
@@ -262,7 +282,7 @@ export const promptForSchemaInput = Effect.fn(function* (
     } else {
       // For other types, prompt as string and let validation handle it
       const currentValue = defaultValue !== undefined ? String(defaultValue) : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
@@ -282,10 +302,10 @@ export const selectFunction = Effect.fn(function* () {
   const functions = allFunctions.filter((fn) => Operation.isVisible(fn));
 
   if (functions.length === 0) {
-    return yield* Effect.fail(new Error('No functions available'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No functions available' }));
   }
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a function:',
     choices: functions.map((fn: Operation.PersistentOperation) => ({
       title: fn.name ?? fn.id,
@@ -309,7 +329,9 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {
-    return yield* Effect.fail(new Error(kind ? `No ${kind} triggers available` : 'No triggers available'));
+    return yield* Effect.fail(
+      new RoutineCommandError({ message: kind ? `No ${kind} triggers available` : 'No triggers available' }),
+    );
   }
 
   const choices = yield* Effect.all(
@@ -332,7 +354,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
     ),
   );
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: kind ? `Select a ${kind} trigger:` : 'Select a trigger:',
     choices,
   });
@@ -350,14 +372,10 @@ export const selectFeed = Effect.fn(function* () {
   const schemas = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
 
   // Filter schemas that have FeedAnnotation.
-  const feedSchemas = schemas.filter((type) => {
-    const schema = Type.getSchema(type);
-    const annotation = FeedAnnotation.get(schema);
-    return Option.isSome(annotation) && annotation.value === true;
-  });
+  const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
   if (feedSchemas.length === 0) {
-    return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No schemas with Feed annotation found' }));
   }
 
   // Collect all Feed objects referenced by host objects.
@@ -369,8 +387,8 @@ export const selectFeed = Effect.fn(function* () {
       const objects = yield* Database.query(Filter.type(Type.getURI(schema))).run;
 
       for (const obj of objects) {
-        // Access the feed property (which is a Ref<Feed>).
-        const feedRef = (obj as any).feed as Ref.Ref<any> | undefined;
+        // Resolved through the property named by `FeedAnnotation`, not a hardcoded `feed`.
+        const feedRef = getFeedRef(obj);
         if (!feedRef) {
           continue;
         }
@@ -389,14 +407,14 @@ export const selectFeed = Effect.fn(function* () {
           description,
         });
       }
-    }).pipe(Effect.catchAll(() => Effect.void));
+    }).pipe(Effect.catch(() => Effect.void));
   }
 
   if (feedChoices.length === 0) {
-    return yield* Effect.fail(new Error('No objects with feed properties found'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No objects with feed properties found' }));
   }
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a feed:',
     choices: feedChoices,
   });
@@ -407,5 +425,5 @@ export const selectFeed = Effect.fn(function* () {
 /**
  * Pretty prints trigger removal result with ANSI colors.
  */
-export const printTriggerRemoved = (id: string) =>
+export const printTriggerRemoved = (id: string): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Trigger removed' }).pipe(FormBuilder.set('id', id), FormBuilder.build);

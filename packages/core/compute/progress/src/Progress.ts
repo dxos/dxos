@@ -8,17 +8,27 @@
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
 
 /** Live progress for one task: `current`/`total` is the item (e.g. message) index. */
-// TODO(burdon): Implement pause/resume functionality.
 export type TaskProgress = {
   /** Stable key within a registry. */
   readonly name: string;
   /** Human display name, shown by UIs. */
   readonly label?: string;
   readonly current: number;
+  /** Items in the current phase; absent means the length is unknowable and no bar is drawn. */
   readonly total?: number;
+  /**
+   * How many phases the run expects, when it knows up front. A phased run reports `current`/`total`
+   * WITHIN its current phase, so the two axes are independent: a run can be on phase 2 of 4 and know
+   * nothing about how long phase 2 is.
+   */
+  readonly phases?: number;
+  /** Zero-based index of the phase in flight. */
+  readonly phase?: number;
   readonly status: TaskStatus;
   readonly startedAt?: string;
   readonly updatedAt: string;
+  /** When `current` last moved forward, which is what {@link deriveEta} rates a run by. */
+  readonly progressedAt?: string;
   readonly elapsedMs?: number;
   /** Producer-supplied estimate of remaining time (ms); see {@link deriveEta}. */
   readonly estimatedMs?: number;
@@ -33,19 +43,35 @@ type MutableTask = {
   -readonly [Key in keyof TaskProgress]: TaskProgress[Key];
 };
 
-export type ProgressSnapshot = {
+export type Snapshot = {
   readonly updatedAt: string;
   readonly tasks: readonly TaskProgress[];
 };
 
-/** Handle for updating one task; returned by {@link ProgressApi.task}. */
+/** Handle for updating one task; returned by {@link Api.task}. */
 export interface TaskHandle {
   /** Advance the item index by `by` (default 1). */
   readonly advance: (by?: number) => void;
   /** Set the absolute item index. */
   readonly set: (current: number) => void;
-  /** Set (or revise) the expected total. */
-  readonly total: (total: number) => void;
+  /**
+   * Set (or revise) the expected total for the current phase. Pass `undefined` to return the task to
+   * indeterminate — a run that counted one phase and cannot count the next (a single model call, a
+   * remote step reporting nothing) has to be able to drop the bar rather than leave it pinned at its
+   * last fraction, which reads as stuck.
+   */
+  readonly total: (total: number | undefined) => void;
+  /**
+   * Enter a phase: sets the index, resets the item count, and clears the total unless one is given.
+   * Clearing is the default because the next phase's length is a fresh question — carrying the last
+   * phase's total forward is how a bar ends up describing work it knows nothing about.
+   */
+  readonly phase: (phase: number, options?: { total?: number; note?: string }) => void;
+  /**
+   * Set the plan without entering a phase — how a remote producer's status update lands, where the
+   * count and the phase arrive together and the update must not reset either.
+   */
+  readonly plan: (options: { phases?: number; phase?: number }) => void;
   /** Set the producer's estimate of remaining time (ms). */
   readonly estimate: (remainingMs: number) => void;
   readonly note: (text: string) => void;
@@ -59,30 +85,33 @@ export interface TaskHandle {
  * A live progress registry. It is subscribable — every mutation notifies listeners, so a reactive
  * consumer (e.g. a browser panel) updates instantly while file/log sinks throttle.
  */
-export interface ProgressApi {
+export interface Api {
   /**
-   * Registers (or resumes) a task and marks it running; returns a handle to update it. Pass
-   * `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
-   * {@link ProgressApi.cancel}.
+   * Registers (or resumes) a task and marks it running; returns a handle to update it.
+   * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
+   * {@link Api.cancel}.
    */
-  readonly task: (name: string, options?: { total?: number; label?: string; onCancel?: () => void }) => TaskHandle;
+  readonly task: (
+    name: string,
+    options?: { total?: number; phases?: number; label?: string; onCancel?: () => void },
+  ) => TaskHandle;
   /** Pre-registers tasks as `pending` (so an orchestrator can show the full list up front). */
   readonly seed: (tasks: readonly { name: string; total?: number; label?: string }[]) => void;
   /** Invokes the task's registered `onCancel` handler (no-op if absent). */
   readonly cancel: (name: string) => void;
-  readonly snapshot: () => ProgressSnapshot;
+  readonly snapshot: () => Snapshot;
   /** Subscribe to snapshots; returns an unsubscribe. The listener fires on every change. */
-  readonly subscribe: (listener: (snapshot: ProgressSnapshot) => void) => () => void;
+  readonly subscribe: (listener: (snapshot: Snapshot) => void) => () => void;
 }
 
 /** Construct a standalone progress registry. */
-export const make = (): ProgressApi => {
+export const make = (): Api => {
   const tasks = new Map<string, MutableTask>();
   const cancelHandlers = new Map<string, () => void>();
-  const listeners = new Set<(snapshot: ProgressSnapshot) => void>();
+  const listeners = new Set<(snapshot: Snapshot) => void>();
   const now = (): string => new Date().toISOString();
 
-  const snapshot = (): ProgressSnapshot => ({
+  const snapshot = (): Snapshot => ({
     updatedAt: now(),
     tasks: [...tasks.values()].map((task) => ({ ...task })),
   });
@@ -97,22 +126,28 @@ export const make = (): ProgressApi => {
   };
 
   const touch = (task: MutableTask, mutate: (task: MutableTask) => void): void => {
+    const before = task.current;
     mutate(task);
     task.updatedAt = now();
+    if (task.current > before) {
+      task.progressedAt = task.updatedAt;
+    }
     if (task.startedAt) {
       task.elapsedMs = Date.parse(task.updatedAt) - Date.parse(task.startedAt);
     }
     emit();
   };
 
-  const task: ProgressApi['task'] = (name, options = {}) => {
+  const task: Api['task'] = (name, options = {}) => {
     const started = now();
     const entry: MutableTask = tasks.get(name) ?? { name, current: 0, status: 'pending', updatedAt: started };
     entry.label = options.label ?? entry.label;
     entry.total = options.total ?? entry.total;
+    entry.phases = options.phases ?? entry.phases;
     entry.status = 'running';
     entry.startedAt = entry.startedAt ?? started;
     entry.updatedAt = started;
+    entry.progressedAt = entry.progressedAt ?? started;
     if (options.onCancel) {
       cancelHandlers.set(name, options.onCancel);
       entry.cancellable = true;
@@ -123,6 +158,26 @@ export const make = (): ProgressApi => {
       advance: (by = 1) => touch(entry, (item) => (item.current += by)),
       set: (current) => touch(entry, (item) => (item.current = current)),
       total: (total) => touch(entry, (item) => (item.total = total)),
+      plan: ({ phases, phase }) =>
+        touch(entry, (item) => {
+          if (phases !== undefined) {
+            item.phases = phases;
+          }
+          if (phase !== undefined) {
+            item.phase = phase;
+          }
+        }),
+      phase: (phase, options = {}) =>
+        touch(entry, (item) => {
+          item.phase = phase;
+          item.current = 0;
+          // A phase starts its own clock: the count resets, so the stall window does too.
+          item.progressedAt = now();
+          item.total = options.total;
+          if (options.note !== undefined) {
+            item.note = options.note;
+          }
+        }),
       estimate: (remainingMs) => touch(entry, (item) => (item.estimatedMs = remainingMs)),
       note: (text) => touch(entry, (item) => (item.note = text)),
       done: () => touch(entry, (item) => (item.status = 'done')),
@@ -140,11 +195,11 @@ export const make = (): ProgressApi => {
     };
   };
 
-  const cancel: ProgressApi['cancel'] = (name) => {
+  const cancel: Api['cancel'] = (name) => {
     cancelHandlers.get(name)?.();
   };
 
-  const seed: ProgressApi['seed'] = (defs) => {
+  const seed: Api['seed'] = (defs) => {
     for (const def of defs) {
       if (!tasks.has(def.name)) {
         tasks.set(def.name, {
@@ -160,7 +215,7 @@ export const make = (): ProgressApi => {
     emit();
   };
 
-  const subscribe: ProgressApi['subscribe'] = (listener) => {
+  const subscribe: Api['subscribe'] = (listener) => {
     listeners.add(listener);
     return () => void listeners.delete(listener);
   };
@@ -169,15 +224,32 @@ export const make = (): ProgressApi => {
 };
 
 /**
+ * A run that has gone this long without moving, or twice its average per-item time if that is
+ * longer, is stalled. The floor keeps a bursty producer from flickering between an estimate and
+ * none; the multiple lets a slow one keep its estimate between items.
+ */
+const STALL_FLOOR_MS = 5_000;
+
+/**
  * Estimated remaining time (ms): the producer's `estimatedMs` if present, else a naive linear
  * estimate `elapsedMs / current × (total − current)` when the total and some progress are known;
- * `undefined` when it cannot be estimated.
+ * `undefined` when it cannot be estimated, or when the run has stalled — a rate is only worth
+ * projecting while the count is moving, and projecting a stalled run reports an estimate that
+ * grows with every touch and never arrives.
  */
 export const deriveEta = (task: TaskProgress): number | undefined => {
   if (task.estimatedMs !== undefined) {
     return task.estimatedMs;
   }
-  if (task.total !== undefined && task.current > 0 && task.current < task.total && task.elapsedMs !== undefined) {
-    return (task.elapsedMs / task.current) * (task.total - task.current);
+  if (task.total === undefined || task.current <= 0 || task.current >= task.total || task.elapsedMs === undefined) {
+    return undefined;
   }
+  const perItemMs = task.elapsedMs / task.current;
+  if (task.progressedAt !== undefined) {
+    const sinceProgressMs = Date.parse(task.updatedAt) - Date.parse(task.progressedAt);
+    if (sinceProgressMs > Math.max(STALL_FLOOR_MS, 2 * perItemMs)) {
+      return undefined;
+    }
+  }
+  return perItemMs * (task.total - task.current);
 };

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { createInaudibleAudioStreamTrack } from '../calls/util/stub-media-streams';
+import { createInaudibleAudioStreamTrack } from '../calls/util/stub-media-streams.ts';
 
 export const useInaudibleAudioStreamTrack = () => {
   const [audioStreamTrack, setAudioStreamTrack] = useState<MediaStreamTrack | undefined>(undefined);

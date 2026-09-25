@@ -9,8 +9,8 @@ import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/ui-theme';
 
-import { useEditorContext } from '../../hooks';
-import { type Polygon } from '../../types';
+import { useEditorContext } from '../../hooks/index.ts';
+import { type Polygon } from '../../types/index.ts';
 
 export type GraphNodeProps = NodeProps<Node<Polygon>>;
 
@@ -27,7 +27,7 @@ export const GraphNode = memo(({ data, selected }: GraphNodeProps) => {
     <>
       <div
         className={mx(
-          'h-full w-full p-1 bg-group-surface rounded-xs border border-separator',
+          'dx-fill p-1 bg-group-surface rounded-xs border border-separator',
           selected && 'ring-1 ring-primary-500',
         )}
       >

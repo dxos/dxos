@@ -5,18 +5,19 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector/types';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
@@ -70,7 +71,11 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   }, [invokePromise, subject]);
 
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
+    void invokePromise(
+      SpaceOperation.RemoveObjects,
+      { objects: [subject] },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    );
   }, [invokePromise, subject]);
 
   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
@@ -190,15 +195,15 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   );
 
   return (
-    <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
+    <>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
-            <div className='dx-container'>
+            <div className='dx-expand'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>
                   <Masonry.Content>
@@ -233,7 +238,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Root>
-    </Menu.Root>
+    </>
   );
 };
 

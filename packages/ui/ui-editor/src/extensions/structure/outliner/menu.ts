@@ -8,16 +8,16 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { GUTTER_WIDTH } from '../blocks';
+import { GUTTER_WIDTH } from '../blocks/index.ts';
+import { treeFacet } from './tree.ts';
 
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
-const TRIGGER_SIZE = 24;
+// No size constant: the trigger is a `dx-button` whose box follows the theme, so it is centred on a point
+// by CSS (`translate(-50%, -50%)`) — see `.cm-outliner-menu` below.
 
 export type MenuOptions = {
   icon?: string;
-  height?: number;
-  padding?: number;
 };
 
 /** Floating action button positioned beside the active outliner line. */
@@ -42,7 +42,7 @@ export const menu = (options: MenuOptions = {}): Extension => [
         // Outer `dx-anchor` (fires `dx-anchor-activate`, driving the popover) styled as a `dx-button`;
         // inner element holds the phosphor glyph. Mirrors the drag grip's construction.
         this.tag = Domino.of('dx-anchor')
-          .classNames('dx-button aspect-square cm-popover-trigger')
+          .classNames('dx-button aspect-square cm-popover-trigger cm-outliner-menu')
           .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
           .append(
             Domino.of('div')
@@ -52,9 +52,11 @@ export const menu = (options: MenuOptions = {}): Extension => [
 
         container.appendChild(this.tag);
 
-        // Listen for scroll events.
+        // Capture-phase on the document, not `container`: the trigger is `position: fixed`, so its
+        // coordinates go stale when ANY ancestor scrolls — and when the editor grows to fit its
+        // content the scroller is the surrounding plank, which never fires on `scrollDOM`.
         const handler = () => this.scheduleUpdate();
-        this.cleanup = addEventListener(container, 'scroll', handler);
+        this.cleanup = addEventListener(document, 'scroll', handler, { capture: true, passive: true });
         this.scheduleUpdate();
       }
 
@@ -93,6 +95,12 @@ export const menu = (options: MenuOptions = {}): Extension => [
         const { x, width } = this.view.contentDOM.getBoundingClientRect();
 
         const pos = this.view.state.selection.main.head;
+        // The actions act on an item; a prose line has none to offer.
+        if (!this.view.state.facet(treeFacet).find(pos)) {
+          this.tag.style.display = 'none';
+          return;
+        }
+
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
         if (!coords) {
@@ -102,12 +110,10 @@ export const menu = (options: MenuOptions = {}): Extension => [
           return;
         }
 
-        const lineHeight = coords.bottom - coords.top;
-        const dy = (lineHeight - (options.height ?? TRIGGER_SIZE)) / 2;
-
-        const offsetTop = coords.top + dy;
-        // Center the trigger within the 3rem gutter immediately right of the content (mirrors the grip).
-        const offsetLeft = x + width + GUTTER_WIDTH / 2 - TRIGGER_SIZE / 2;
+        // The centre of the line's first row, and of the 3rem gutter immediately right of the content
+        // (mirrors the grip). Both name a point; the CSS transform centres the box on it.
+        const offsetTop = (coords.top + coords.bottom) / 2;
+        const offsetLeft = x + width + GUTTER_WIDTH / 2;
 
         this.tag.style.top = `${offsetTop}px`;
         this.tag.style.left = `${offsetLeft}px`;
@@ -133,6 +139,13 @@ const styles = EditorView.theme({
     position: 'fixed',
     opacity: '0',
     cursor: 'pointer',
+  },
+  // Scoped to this menu's own trigger rather than the shared `cm-popover-trigger`: that class is also
+  // on the inline `dx-anchor` decorations `popover.ts` puts in the document, and centring those on a
+  // point would shift them out from under their own text.
+  '.cm-outliner-menu': {
+    // `left`/`top` name the centre point; the browser centres the real box on it, whatever its size.
+    transform: 'translate(-50%, -50%)',
   },
   '.cm-popover-trigger-icon': {
     display: 'grid',

@@ -14,10 +14,8 @@ import { type QueryAST } from '@dxos/echo-protocol';
  * imports Filter.ts as a value, so a reverse value import would create a cycle. Both
  * Filter.ts and Query.ts import this shared leaf module instead.
  *
- * A string-literal id (not a `Symbol.for`), matching `FilterTypeId`/`QueryTypeId`/`OrderTypeId` —
- * this lets the sandboxed `query-lite` mirror (which cannot import `@dxos/echo`'s runtime) declare
- * its own local constant with the same literal and construct structurally-compatible objects,
- * the same way it already does for those brands.
+ * A string-literal id (not a `Symbol.for`), matching `FilterTypeId`/`QueryTypeId`/`OrderTypeId` so
+ * that structurally-compatible objects can be constructed without importing this module's runtime.
  */
 export const ProjectionTypeId = '~@dxos/echo/Query.Projection' as const;
 export type ProjectionTypeId = typeof ProjectionTypeId;

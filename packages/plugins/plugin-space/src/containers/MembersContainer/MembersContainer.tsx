@@ -4,17 +4,25 @@
 
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
+import { type SpaceMember_Role, useSpaceInvitations } from '@dxos/react-client/echo';
+import { useContacts } from '@dxos/react-client/halo';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
+import { Button, Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -25,19 +33,21 @@ import {
   InvitationList,
   SpaceMemberList,
   Viewport,
+  contactDisplayName,
+  contactKeyHex,
   translationKey as shellTranslationKey,
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceOperation } from '#types';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 
 const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
   const invitationCode = InvitationEncoder.encode(invitation);
-  if (invitation.state === Invitation.State.CONNECTING) {
+  if (invitation.state === Invitation_State.CONNECTING) {
     log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     subscription.unsubscribe();
   }
@@ -53,7 +63,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
-    (invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state),
+    (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),
   );
 
   const [activeAction, setInternalActiveAction] = useState(localStorage.getItem(activeActionKey) ?? 'inviteMany');
@@ -77,8 +87,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         onClick: async () => {
           const { data: invitation } = await invokePromise(SpaceOperation.Share, {
             space,
-            type: Invitation.Type.INTERACTIVE,
-            authMethod: Invitation.AuthMethod.SHARED_SECRET,
+            type: Invitation_Type.INTERACTIVE,
+            authMethod: Invitation_AuthMethod.SHARED_SECRET,
             multiUse: false,
             target: target && Obj.getURI(target),
           });
@@ -97,8 +107,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         onClick: async () => {
           const { data: invitation } = await invokePromise(SpaceOperation.Share, {
             space,
-            type: Invitation.Type.DELEGATED,
-            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+            type: Invitation_Type.DELEGATED,
+            authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: true,
             target: target && Obj.getURI(target),
           });
@@ -113,6 +123,43 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
     [t, space, target, invokePromise],
   );
 
+  const contacts = useContacts();
+  const isSurfaceAvailable = Surface.useIsAvailable();
+  const contactPickerData = useMemo(
+    (): AppSurface.ContactPickerData => ({
+      space,
+      onAdd: async (identityKeys: string[], role: SpaceMember_Role) => {
+        const { data, error } = await invokePromise(SpaceOperation.AddMembers, { space, identityKeys, role });
+        if (error) {
+          log.catch(error);
+        }
+        const result = data ?? {
+          joinUrl: '',
+          failed: identityKeys.map((key) => ({ key, error: error?.message ?? 'Unknown error' })),
+        };
+        if (result.failed.length > 0) {
+          const names = result.failed
+            .map(({ key }) => {
+              const contact = contacts.find((candidate) => contactKeyHex(candidate) === key);
+              return contact ? contactDisplayName(contact) : key.slice(0, 8);
+            })
+            .join(', ');
+          await invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.profile.key}/add-members-failed`,
+            title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
+            // Label tuples carry no interpolation values, so the names are resolved here.
+            description: t('add-members-failed-toast.description', { names }),
+            icon: 'ph--warning--regular',
+          });
+        }
+
+        return result;
+      },
+    }),
+    [t, space, contacts, invokePromise],
+  );
+  const showContactPicker = isSurfaceAvailable({ type: AppSurface.ContactPicker, data: contactPickerData });
+
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);
   const handleSend = (event: { type: 'selectInvitation'; invitation: CancellableInvitationObservable }) => {
     setSelectedInvitation(event.invitation);
@@ -122,44 +169,45 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   return (
-    <Clipboard.Provider>
-      <Form.Root variant='settings'>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.Section title={t('members-verbose.label')} description={t('members.description')}>
-              <Form.Group>
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('members.label')}</h3>
-                  <SpaceMemberList spaceKey={space.key} includeSelf />
-                </div>
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
-                  {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                  {!selectedInvitation && (
-                    <>
-                      <p className='text-description mb-2'>{t('space-invitation.description')}</p>
-                      <InvitationList
-                        className='mb-2'
-                        send={handleSend}
-                        invitations={visibleInvitations ?? []}
-                        onClickRemove={(invitation) => invitation.cancel()}
-                        createInvitationUrl={createInvitationUrl}
-                      />
-                      <BifurcatedAction
-                        actions={inviteActions}
-                        activeAction={activeAction}
-                        onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                        data-testid='membersContainer.createInvitation'
-                      />
-                    </>
-                  )}
-                </div>
-              </Form.Group>
-            </Form.Section>
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+            <Form.FieldSet appearance='section' label={t('members.label')}>
+              <SpaceMemberList spaceKey={space.key} includeSelf />
+            </Form.FieldSet>
+            {showContactPicker && (
+              <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
+                <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+              </Form.FieldSet>
+            )}
+            <Form.FieldSet
+              appearance='section'
+              label={t('invitations.label')}
+              description={selectedInvitation ? undefined : t('space-invitation.description')}
+            >
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <InvitationList
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
+              )}
+            </Form.FieldSet>
+          </Form.FieldSet>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -167,14 +215,14 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
 type InvitationComponentProps = Partial<
   Pick<Invitation, 'authCode' | 'invitationId'> & {
-    state: Invitation.State;
+    state: Invitation_State;
     url: string;
     onBack: () => void;
   }
 >;
 
 const InvitationSection = ({
-  state = Invitation.State.INIT,
+  state = Invitation_State.INIT,
   authCode,
   invitationId = 'never',
   url = 'never',
@@ -183,9 +231,9 @@ const InvitationSection = ({
   const activeView =
     state < 0
       ? 'init'
-      : state >= Invitation.State.CANCELLED
+      : state >= Invitation_State.CANCELLED
         ? 'complete'
-        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
+        : state >= Invitation_State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
   return (
@@ -217,16 +265,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
-          <QR
-            rounding={100}
-            backgroundColor='transparent'
-            color='currentColor'
-            aria-labelledby={qrLabel}
-            errorCorrectionLevel='Q'
-            cutout={true}
-          >
-            {url ?? 'never'}
-          </QR>
+          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
@@ -234,7 +273,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <Clipboard.Button value={url ?? 'never'} />
+        <SystemIconButton.Clipboard value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
@@ -262,9 +301,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
   );
 };
 

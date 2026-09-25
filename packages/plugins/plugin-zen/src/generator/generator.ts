@@ -8,22 +8,22 @@ export type BrainwavePreset = 'delta' | 'theta' | 'alpha' | 'beta';
 
 /** Effect Schema for binaural generator configuration. */
 export const BinauralConfigSchema = Schema.Struct({
-  preset: Schema.Literal('delta', 'theta', 'alpha', 'beta').annotations({
+  preset: Schema.Literals(['delta', 'theta', 'alpha', 'beta']).annotate({
     description: 'Brainwave preset.',
   }),
-  baseFrequency: Schema.Number.annotations({
+  baseFrequency: Schema.Number.annotate({
     description: 'Carrier frequency (Hz).',
   }),
-  beatFrequency: Schema.Number.annotations({
+  beatFrequency: Schema.Number.annotate({
     description: 'Beat frequency (Hz).',
   }),
-  volume: Schema.Number.annotations({
+  volume: Schema.Number.annotate({
     description: 'Master volume (0-1).',
   }),
-  noiseEnabled: Schema.Boolean.annotations({
+  noiseEnabled: Schema.Boolean.annotate({
     description: 'Enable pink noise.',
   }),
-  noiseVolume: Schema.Number.annotations({
+  noiseVolume: Schema.Number.annotate({
     description: 'Noise volume (0-1).',
   }),
 });

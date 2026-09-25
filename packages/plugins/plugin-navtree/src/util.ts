@@ -2,70 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph, Node } from '@dxos/plugin-graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type DropKind } from '@dxos/react-ui-list';
 import { isNonNullable } from '@dxos/util';
 
-import { type NavTreeItemGraphNode } from '#types';
+import { NavTreeNode } from '#types';
 
 export const getParent = (
-  graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
-  path: string[],
-): NavTreeItemGraphNode | undefined => {
+  graph: AppGraph.ReadableGraph,
+  node: NavTreeNode.NavTreeItemGraphNode,
+  path: readonly string[],
+): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return Graph.getConnections(graph, node.id, Node.childRelation('inbound')).find(
-    (n: Node.Node) => n.id === parentId,
-  ) as NavTreeItemGraphNode | undefined;
+  return AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child)).find(
+    (n: AppGraphNode.Node) => n.id === parentId,
+  ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export const getPersistenceParent = (
-  graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
-  path: string[],
-  persistenceClass: string,
-): NavTreeItemGraphNode | null => {
-  if (node.properties.acceptPersistenceClass?.has(persistenceClass)) {
-    return node;
-  } else {
-    const parent = getParent(graph, node, path);
-    return parent ? getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass) : null;
-  }
-};
-
-export const resolveMigrationOperation = (
-  graph: Graph.ReadableGraph,
-  activeNode: NavTreeItemGraphNode,
-  destinationPath: string[],
-  destinationRelatedNode?: NavTreeItemGraphNode,
-): 'transfer' | 'copy' | 'reject' => {
-  const activeClass = activeNode.properties.persistenceClass;
-  if (destinationRelatedNode && activeClass) {
-    const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
-    if (persistenceParent) {
-      const activeKey = activeNode.properties.persistenceKey;
-      if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
-        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
-          persistenceParent.properties.onTransferStart
-          ? 'transfer'
-          : persistenceParent.properties.onCopy
-            ? 'copy'
-            : 'reject';
-      } else {
-        return 'reject';
-      }
-    } else {
-      return 'reject';
-    }
-  } else {
+export const resolveDropKind = ({
+  source,
+  sourceParent,
+  destination,
+}: {
+  source: NavTreeNode.NavTreeItemGraphNode;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+}): DropKind => {
+  const { persistenceClass, persistenceKey } = source.properties;
+  if (
+    !destination ||
+    destination.id === sourceParent?.id ||
+    // Node ids are qualified by path, so another row for the same object has a different id.
+    (destination.data?.id !== undefined && destination.data.id === source.data?.id) ||
+    !persistenceClass ||
+    !persistenceKey ||
+    !destination.properties.acceptPersistenceClass?.has(persistenceClass) ||
+    !destination.properties.acceptPersistenceKey?.has(persistenceKey)
+  ) {
     return 'reject';
   }
+
+  const scope = destination.properties.moveScope;
+  if (
+    scope &&
+    sourceParent?.properties.moveScope === scope &&
+    sourceParent.properties.onMoveOut &&
+    destination.properties.onMoveIn
+  ) {
+    return 'move';
+  }
+  return destination.properties.onLink ? 'link' : 'reject';
 };
 
+/** The index `arrayMove` takes to land an item at `insertIndex`, counted before the item leaves its slot. */
+export const getRearrangeIndex = (sourceIndex: number, insertIndex: number): number =>
+  sourceIndex < insertIndex ? insertIndex - 1 : insertIndex;
+
 // TODO(wittjosiah): Move into node implementation?
-export const sortActions = (actions: Node.Action[]): Node.Action[] =>
+export const sortActions = (actions: AppGraphNode.Action[]): AppGraphNode.Action[] =>
   actions.sort((a, b) => {
-    const aPrimary = Node.hasDisposition(a, 'list-item-primary');
-    const bPrimary = Node.hasDisposition(b, 'list-item-primary');
+    const aPrimary = AppGraphNode.hasDisposition(a, 'list-item-primary');
+    const bPrimary = AppGraphNode.hasDisposition(b, 'list-item-primary');
     if (aPrimary === bPrimary) {
       return 0;
     }
@@ -74,35 +72,35 @@ export const sortActions = (actions: Node.Action[]): Node.Action[] =>
   });
 
 export const getChildren = (
-  graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
+  graph: AppGraph.ReadableGraph,
+  node: NavTreeNode.NavTreeItemGraphNode,
   path: readonly string[] = [],
-): NavTreeItemGraphNode[] => {
-  return Graph.getConnections(graph, node.id, 'child')
-    .map((n: Node.Node) => {
+): NavTreeNode.NavTreeItemGraphNode[] => {
+  return AppGraph.getConnections(graph, node.id, 'child')
+    .map((n: AppGraphNode.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];
-      return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
+      return nextPath.includes(n.id) ? undefined : (n as NavTreeNode.NavTreeItemGraphNode);
     })
-    .filter(isNonNullable) as NavTreeItemGraphNode[];
+    .filter(isNonNullable) as NavTreeNode.NavTreeItemGraphNode[];
 };
 
 /**
  * Determines whether a node should be visible based on its disposition.
  */
-export const filterItems = (node: Node.Node, disposition?: string) => {
-  if (!disposition && Node.hasDisposition(node, 'hidden')) {
+export const filterItems = (node: AppGraphNode.Node, disposition?: string) => {
+  if (!disposition && AppGraphNode.hasDisposition(node, 'hidden')) {
     return false;
   } else if (!disposition) {
-    const action = Node.isAction(node);
-    return !action || Node.hasDisposition(node, 'item');
+    const action = AppGraphNode.isAction(node);
+    return !action || AppGraphNode.hasDisposition(node, 'item');
   } else {
-    return Node.hasDisposition(node, disposition);
+    return AppGraphNode.hasDisposition(node, disposition);
   }
 };
 
-export const l0ItemType = (item: Node.Node) => {
-  if (Node.isActionLike(item)) {
+export const l0ItemType = (item: AppGraphNode.Node) => {
+  if (AppGraphNode.isActionLike(item)) {
     return 'action';
   } else {
     return 'tab';

@@ -2,42 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
-import { JsonView, Panel } from '@dxos/devtools';
+import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Field, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type GlobalState } from '../../calls';
+import { type EncodedTrackName, type GlobalState } from '../../calls/index.ts';
 
-export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
+// Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
+const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
 
-export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
+export type CallDebugPanelProps = ThemedClassName<{
+  /** Overrides the live manager state; used by stories to render fixtures. */
+  state?: GlobalState;
+}>;
+
+/** The call's status as a card in the devtools stats stack. */
+export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // `useCapabilities` tolerates the manager being absent, which is the case in stories.
+  const [manager] = useCapabilities(CallsCapabilities.Manager);
+  const liveState = useAtomValue(manager?.stateAtom ?? noCallState);
+  const state = stateOverride ?? liveState;
 
-  const [open, setOpen] = useState(false);
-  const handleToggle = () => setOpen(!open);
   const [showServiceHistory, setShowServiceHistory] = useState(false);
-  const handleToggleServiceHistory = () => setShowServiceHistory(!showServiceHistory);
-
-  const handleCopyRaw = async () => {
-    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
-  };
-
   const [showDetailedWebRTCStats, setShowDetailedWebRTCStats] = useState(false);
-  const handleShowDetailedWebRTCStats = () => setShowDetailedWebRTCStats(!showDetailedWebRTCStats);
 
-  const webrtcStats = useMemo(
-    () =>
-      new WebRTCStats({
-        getStatsInterval: 1000,
-      }),
-    [],
-  );
+  const webrtcStats = useMemo(() => new WebRTCStats({ getStatsInterval: 1000 }), []);
   const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
 
   useEffect(() => {
@@ -63,113 +63,104 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
     };
   }, [state?.media.peer?.session?.peerConnection, showDetailedWebRTCStats]);
 
-  const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
+  const rows = useMemo(() => getCallStatusRows(state), [state?.call.users, state?.media.pulledAudioTracks]);
+
+  const handleCopyRaw = async () => {
+    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
+  };
 
   return (
-    <Panel
-      id='meeting-status'
-      icon='ph--video-conference--regular'
-      open={open}
-      onToggle={handleToggle}
-      title={t('meeting-status.title')}
-      info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
-      maxHeight={0}
-    >
-      <div className='flex flex-col w-full text-xs'>
-        <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Input.Label>{t('show-calls-history.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
-          <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
-        </div>
-        <Table rows={rows} />
-        {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
-        {showServiceHistory && <JsonView data={{ history: state?.media.peer?.history.get() }} />}
-      </div>
-    </Panel>
+    <StatCard.Root>
+      <StatCard.Header
+        icon='ph--video-conference--regular'
+        hue={STAT_CARD_HUES.edge}
+        title={t('meeting-status.title')}
+        info={state?.call.joined ? 'active' : 'inactive'}
+        menu={[{ label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => void handleCopyRaw() }]}
+      />
+      {rows.map((row, index) => (
+        <StatCard.Row key={index} label={row.label} tooltip={row.label} value={row.value} />
+      ))}
+      <StatCard.Row
+        label={t('show-webrtc-stats.title')}
+        action={<Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+      />
+      <StatCard.Row
+        label={t('show-calls-history.title')}
+        action={<Field.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+      />
+      {showDetailedWebRTCStats && (
+        <StatCard.Content>
+          <JsonView data={{ stats }} />
+        </StatCard.Content>
+      )}
+      {showServiceHistory && (
+        <StatCard.Content>
+          <JsonView data={{ history: state?.media.peer?.history.get() }} />
+        </StatCard.Content>
+      )}
+    </StatCard.Root>
   );
 };
 
-const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
+CallDebugPanel.displayName = 'CallDebugPanel';
+
+type StatusRow = { label: string; value: string };
+
+const trackStatus = (label: string, ok: unknown, enabled = true): string | undefined =>
+  enabled ? `${label} ${ok ? '✓' : '✗'}` : undefined;
+
+const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
   if (!state || !state.call?.users) {
     return [];
   }
 
   const self = state.call.self;
-  const users = state.call.users
-    .filter((user) => user.id !== self!.id)
+  const userRows = state.call.users
+    .filter((user) => user.id !== self?.id)
     .map((user) => {
-      const isOk = {
-        audio:
-          user.tracks?.audio &&
-          state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName]?.ctx.disposed === false,
-        video:
-          user.tracks?.video &&
-          state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName]?.ctx.disposed === false,
-        screenshare:
-          user.tracks?.screenshare &&
-          state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
-      };
-
+      const audio =
+        user.tracks?.audio &&
+        state.media.pulledAudioTracks[user.tracks.audio as EncodedTrackName]?.ctx.disposed === false;
+      const video =
+        user.tracks?.video &&
+        state.media.pulledVideoStreams[user.tracks.video as EncodedTrackName]?.ctx.disposed === false;
+      const screenshare =
+        user.tracks?.screenshare &&
+        state.media.pulledVideoStreams[user.tracks.screenshare as EncodedTrackName]?.ctx.disposed === false;
       return {
-        ...user,
-        isOk,
+        label: user.name ?? truncateKey(user.id, 8),
+        value: [
+          trackStatus('AUD', audio),
+          trackStatus('VID', video),
+          trackStatus('SCR', screenshare, !!user.tracks?.screenshareEnabled),
+        ]
+          .filter(Boolean)
+          .join(' '),
       };
     });
 
   return [
-    ['users', state.call.users.length ?? 0],
-    [
-      '*self* ' + (self?.name ?? truncateKey(self!.id, 8)),
-      self?.tracks?.audio && state.media.pushedAudioTrack ? 'AUD ✅' : 'AUD ❌',
-      self?.tracks?.video && state.media.pushedVideoTrack ? 'VID ✅' : 'VID ❌',
-      self?.tracks?.screenshareEnabled
-        ? self.tracks.screenshareEnabled && state.media.pushedScreenshareTrack
-          ? 'SCR ✅'
-          : 'SCR ❌'
-        : undefined,
-    ],
-
-    ...users.map((user) => [
-      user.name ?? truncateKey(user.id, 8),
-      user.isOk.audio ? 'AUD ✅' : 'AUD ❌',
-      user.isOk.video ? 'VID ✅' : 'VID ❌',
-      user.tracks?.screenshareEnabled ? (user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌') : undefined,
-    ]),
-    ['ICE', state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection'],
+    { label: 'Users', value: String(state.call.users.length ?? 0) },
+    ...(self
+      ? [
+          {
+            label: `self: ${self.name ?? truncateKey(self.id, 8)}`,
+            value: [
+              trackStatus('AUD', self.tracks?.audio && state.media.pushedAudioTrack),
+              trackStatus('VID', self.tracks?.video && state.media.pushedVideoTrack),
+              trackStatus(
+                'SCR',
+                self.tracks?.screenshareEnabled && state.media.pushedScreenshareTrack,
+                !!self.tracks?.screenshareEnabled,
+              ),
+            ]
+              .filter(Boolean)
+              .join(' '),
+          },
+        ]
+      : []),
+    ...userRows,
+    { label: 'ICE', value: state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection' },
   ];
 };
-
-export namespace Unit {
-  export const KB = (n?: number) => ((n ?? 0) / 1_000).toFixed(2);
-}
-
-export type TableProps = {
-  rows: (string | number | undefined)[][];
-};
-
-export const Table = ({ rows }: TableProps) => {
-  return (
-    <div className='w-full text-xs font-mono'>
-      {rows.map(([prefix, label, value, unit], i) => (
-        <div key={i} className='grid grid-cols-[3fr_1fr_1fr_1fr]'>
-          <div className='p-1'>{prefix}</div>
-          <div className='p-1'>{label}</div>
-          <div className='p-1'>{value}</div>
-          <div className='p-1'>{unit}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-CallDebugPanel.displayName = 'CallDebugPanel';

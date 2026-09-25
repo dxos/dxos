@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Mermaid } from '@dxos/plugin-illustrator/model';
+import { type ContentMap, Mermaid } from '@dxos/diagram';
 
-import { applyCommands } from './builder';
+import { applyCommands } from './builder.ts';
 
 const FLOWCHART = 'flowchart TB\n  A[Alpha]\n  B[Beta]\n  A --> B\n';
 

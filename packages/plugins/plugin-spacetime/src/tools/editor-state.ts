@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Model } from '../types';
-import { type Selection, type SelectionMode } from './tool-context';
+import { Model } from '#types';
+
+import { type Selection, type SelectionMode } from './tool-context.ts';
 
 /** Unified editor state shared between tools, actions, canvas, and toolbar. */
 export type EditorState = {

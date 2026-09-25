@@ -7,6 +7,7 @@ public/icons.svg
 
 trace.zip
 app.log
+app.log.*
 
 # Ollama sidecar runtime (fetched at build time via scripts/fetch-ollama.mjs).
 src-tauri/sidecar/

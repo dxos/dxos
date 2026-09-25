@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-export const EntityKind = Schema.Literal('person', 'org', 'place', 'event', 'concept', 'thing');
+export const EntityKind = Schema.Literals(['person', 'org', 'place', 'event', 'concept', 'thing']);
 export type EntityKind = Schema.Schema.Type<typeof EntityKind>;
 
 export const Entity = Schema.Struct({

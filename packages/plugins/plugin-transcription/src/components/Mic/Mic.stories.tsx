@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { MicButton, Toolbar } from '@dxos/react-ui';
+import { SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
 const DEVICES: AudioInputDevice[] = [
@@ -28,24 +27,23 @@ const DefaultStory = () => {
 
   return (
     <Toolbar.Root>
-      <MicButton
+      <SystemIconButton.Mic
         iconOnly
         variant='ghost'
         label={recording ? 'Stop recording' : recordMode === 'hold' ? 'Hold to record' : 'Start recording'}
         recording={recording}
         mode={recordMode}
-        onToggle={() => setRecording((value) => !value)}
         onPressStart={() => setRecording(true)}
         onPressEnd={() => setRecording(false)}
+        onToggle={() => setRecording((value) => !value)}
       />
       <MicSettings
-        translationNs={pluginMeta.profile.key}
+        devices={DEVICES}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
-        devices={DEVICES}
         selectedDeviceId={selectedDeviceId}
-        onRecordModeChange={setRecordMode}
         onEntityExtractionChange={setEntityExtraction}
+        onRecordModeChange={setRecordMode}
         onSelectDevice={setSelectedDeviceId}
       />
     </Toolbar.Root>

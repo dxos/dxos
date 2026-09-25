@@ -4,25 +4,31 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import * as Tracer from 'effect/Tracer';
 
-import { LayerSpec, ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 
-import * as LayerStack from './LayerStack';
+import * as LayerStack from './LayerStack.ts';
 
 //
 // Test service tags.
 //
 
-class ServiceA extends Context.Tag('test/ServiceA')<ServiceA, { readonly value: string }>() {}
-class ServiceB extends Context.Tag('test/ServiceB')<ServiceB, { readonly value: string }>() {}
-class ServiceC extends Context.Tag('test/ServiceC')<ServiceC, { readonly value: string }>() {}
-class ServiceD extends Context.Tag('test/ServiceD')<ServiceD, { readonly value: string }>() {}
+class ServiceA extends Context.Service<ServiceA, { readonly value: string }>()('test/ServiceA') {}
+class ServiceB extends Context.Service<ServiceB, { readonly value: string }>()('test/ServiceB') {}
+class ServiceC extends Context.Service<ServiceC, { readonly value: string }>()('test/ServiceC') {}
+class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('test/ServiceD') {}
 
 /**
  * Helpers.
@@ -30,7 +36,321 @@ class ServiceD extends Context.Tag('test/ServiceD')<ServiceD, { readonly value: 
 const resolveWithScope = <A, E>(effect: Effect.Effect<A, E, Scope.Scope>) =>
   Effect.scoped(effect) as Effect.Effect<A, E, never>;
 
+const sliceSpans: Tracer.Span[] = [];
+
 describe('LayerStack', () => {
+  it.effect(
+    'builds service layers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const layer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.effect(ServiceA, Effect.succeed({ value: 'a' }).pipe(Effect.withSpan('Slice.build'))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+
+        expect(sliceSpans.map(({ name }) => name)).toContain('Slice.build');
+      },
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpans))),
+    ),
+  );
+
+  describe('ambient services', () => {
+    it.effect(
+      'satisfies a spec requirement from the services the embedder supplied',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        expect(resolved).toEqual({ value: 'b:ambient' });
+      }),
+    );
+
+    it.effect(
+      'resolves an ambient service no spec provides',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [],
+        });
+
+        expect(yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}))).toEqual({
+          value: 'ambient',
+        });
+      }),
+    );
+
+    it.effect(
+      'reaches a space-affinity spec as well',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [
+            LayerSpec.make({ affinity: 'space', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* resolveWithScope(
+          stack.getServiceResolver().resolve(ServiceB, { space: SpaceId.random() }),
+        );
+        expect(resolved).toEqual({ value: 'b:ambient' });
+      }),
+    );
+
+    it.effect(
+      'prunes a spec whose ambient requirement is absent, leaving the others',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceC] }, () =>
+              Layer.succeed(ServiceC, { value: 'c' }),
+            ),
+          ],
+        });
+
+        const exit = yield* Effect.exit(resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {})));
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceC, {}))).toEqual({ value: 'c' });
+      }),
+    );
+  });
+
+  describe('teardown', () => {
+    it.effect(
+      'disposes every batch even when a later one fails',
+      Effect.fn(function* ({ expect }) {
+        const released: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.effect(
+                ServiceA,
+                Effect.acquireRelease(Effect.succeed({ value: 'a' }), () =>
+                  Effect.sync(() => {
+                    released.push('a');
+                  }),
+                ),
+              ),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.acquireRelease(Effect.succeed({ value: 'b' }), () => Effect.die(new Error('teardown failed'))),
+              ),
+            ),
+          ],
+        });
+
+        // Resolved one at a time so each lands in its own batch runtime; the failing one is disposed
+        // first, and the batch beneath it must still be released.
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+
+        const exit = yield* Effect.exit(stack.destroy());
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(released).toEqual(['a']);
+      }),
+    );
+  });
+
+  describe('layer', () => {
+    it.effect(
+      'takes its ambient services from the layer context, declared as tags',
+      Effect.fn(function* ({ expect }) {
+        const stackLayer = LayerStack.layer({
+          services: [ServiceA],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* Effect.gen(function* () {
+          const stack = yield* LayerStack.Service;
+          return yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        }).pipe(Effect.provide(stackLayer), Effect.provideService(ServiceA, { value: 'declared' }), Effect.scoped);
+        expect(resolved).toEqual({ value: 'b:declared' });
+      }),
+    );
+
+    it.effect(
+      'provides the resolver alongside the stack',
+      Effect.fn(function* ({ expect }) {
+        const stackLayer = LayerStack.layer({
+          services: [],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+          ],
+        });
+
+        const resolved = yield* ServiceResolver.resolve(ServiceA, {}).pipe(Effect.provide(stackLayer), Effect.scoped);
+        expect(resolved).toEqual({ value: 'a' });
+      }),
+    );
+
+    it.effect(
+      'destroys the stack when the layer scope closes',
+      Effect.fn(function* ({ expect }) {
+        const released: string[] = [];
+        const stackLayer = LayerStack.layer({
+          services: [],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.effect(
+                ServiceA,
+                Effect.acquireRelease(Effect.succeed({ value: 'a' }), () =>
+                  Effect.sync(() => {
+                    released.push('a');
+                  }),
+                ),
+              ),
+            ),
+          ],
+        });
+
+        yield* Effect.gen(function* () {
+          const stack = yield* LayerStack.Service;
+          yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        }).pipe(Effect.provide(stackLayer), Effect.scoped);
+
+        expect(released).toEqual(['a']);
+      }),
+    );
+  });
+
+  describe('eager specs', () => {
+    it.effect(
+      'builds a side-effect-only spec nothing asks for',
+      Effect.fn(function* ({ expect }) {
+        const built: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            // Provides nothing, so only `eager` can pull it in.
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [], eager: true }, () =>
+              Layer.effectDiscard(Effect.map(ServiceA, (service) => built.push(service.value))),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(built).toEqual(['a']);
+      }),
+    );
+
+    it.effect(
+      'leaves a lazy spec unbuilt until one of its tags is requested',
+      Effect.fn(function* ({ expect }) {
+        const built: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.sync(() => {
+                  built.push('b');
+                  return { value: 'b' };
+                }),
+              ),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(built).toEqual([]);
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        expect(built).toEqual(['b']);
+      }),
+    );
+
+    it.effect(
+      'builds an eager spec once across repeated resolutions',
+      Effect.fn(function* ({ expect }) {
+        let builds = 0;
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [], eager: true }, () =>
+              Layer.effectDiscard(Effect.sync(() => void builds++)),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(builds).toEqual(1);
+      }),
+    );
+  });
+
+  it.effect(
+    'disposes later-materialized batches before the ones they depend on',
+    Effect.fn(function* ({ expect }) {
+      const closed: string[] = [];
+      const stack = new LayerStack.LayerStack({
+        layers: [
+          // Eager, so it lands in the slice's first batch.
+          LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA], eager: true }, () =>
+            Layer.effect(
+              ServiceA,
+              Effect.acquireRelease(Effect.succeed({ value: 'a' }), () => Effect.sync(() => closed.push('a'))),
+            ),
+          ),
+          // Lazy and dependent, so it is materialized into a later batch.
+          LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+            Layer.effect(
+              ServiceB,
+              Effect.acquireRelease(
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+                () => Effect.sync(() => closed.push('b')),
+              ),
+            ),
+          ),
+        ],
+      });
+
+      yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+      yield* stack.destroy();
+      expect(closed).toEqual(['b', 'a']);
+    }),
+  );
+
   describe('application-affinity resolution', () => {
     it.effect(
       'resolves a single service provided by an application-affinity layer',
@@ -229,6 +549,122 @@ describe('LayerStack', () => {
         const space = SpaceId.random();
         const resolved = yield* resolveWithScope(resolver.resolve(ServiceB, { space }));
         expect(resolved).toEqual({ value: `shared:${space}` });
+      }),
+    );
+
+    it.effect(
+      'resolves an application service while a space layer is still building',
+      Effect.fn(function* ({ expect }) {
+        const building = yield* Deferred.make<void>();
+        const appLayer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.succeed(ServiceA, { value: 'app' }),
+        );
+        const spaceLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceB] }, () =>
+          Layer.effect(ServiceB, Deferred.succeed(building, undefined).pipe(Effect.andThen(Effect.never))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer] });
+        const resolver = stack.getServiceResolver();
+
+        const space = SpaceId.random();
+        const spaceResolution = yield* Effect.forkChild(resolveWithScope(resolver.resolve(ServiceB, { space })));
+        yield* Deferred.await(building);
+
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, {}))).toEqual({ value: 'app' });
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, { space }))).toEqual({ value: 'app' });
+        yield* Fiber.interrupt(spaceResolution);
+      }),
+    );
+
+    it.effect(
+      'resolves a built space service while another layer in its slice is still building',
+      Effect.fn(function* ({ expect }) {
+        const building = yield* Deferred.make<void>();
+        const builtLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceA] }, () =>
+          Layer.succeed(ServiceA, { value: 'built' }),
+        );
+        const slowLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceB] }, () =>
+          Layer.effect(ServiceB, Deferred.succeed(building, undefined).pipe(Effect.andThen(Effect.never))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [builtLayer, slowLayer] });
+        const resolver = stack.getServiceResolver();
+
+        const space = SpaceId.random();
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, { space }))).toEqual({ value: 'built' });
+        const slowResolution = yield* Effect.forkChild(resolveWithScope(resolver.resolve(ServiceB, { space })));
+        yield* Deferred.await(building);
+
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, { space }))).toEqual({ value: 'built' });
+        yield* Fiber.interrupt(slowResolution);
+      }),
+    );
+
+    it.effect(
+      'builds a slice once when two resolutions for it run concurrently',
+      Effect.fn(function* ({ expect }) {
+        const building = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
+        let constructions = 0;
+        const spaceLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceB] }, () =>
+          Layer.effect(
+            ServiceB,
+            Effect.gen(function* () {
+              constructions++;
+              yield* Deferred.succeed(building, undefined);
+              yield* Deferred.await(release);
+              return { value: 'b' };
+            }),
+          ),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [spaceLayer] });
+        const resolver = stack.getServiceResolver();
+
+        const space = SpaceId.random();
+        const first = yield* Effect.forkChild(resolveWithScope(resolver.resolve(ServiceB, { space })));
+        yield* Deferred.await(building);
+        const second = yield* Effect.forkChild(resolveWithScope(resolver.resolve(ServiceB, { space })));
+        yield* Effect.yieldNow;
+        yield* Deferred.succeed(release, undefined);
+
+        expect(yield* Fiber.join(first)).toEqual({ value: 'b' });
+        expect(yield* Fiber.join(second)).toEqual({ value: 'b' });
+        expect(constructions).toBe(1);
+      }),
+    );
+
+    it.effect(
+      'initializes a slice on the next resolution after its first initialization failed',
+      Effect.fn(function* ({ expect }) {
+        let attempts = 0;
+        const appLayer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.effect(
+            ServiceA,
+            Effect.suspend(() =>
+              attempts++ === 0
+                ? Effect.die(new ServiceNotAvailableError('test/ServiceA', { message: 'first build fails' }))
+                : Effect.succeed({ value: 'a' }),
+            ),
+          ),
+        );
+        const spaceLayer = LayerSpec.make({ affinity: 'space', requires: [ServiceA], provides: [ServiceB] }, () =>
+          Layer.effect(
+            ServiceB,
+            Effect.gen(function* () {
+              const a = yield* ServiceA;
+              return { value: `space:${a.value}` };
+            }),
+          ),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer] });
+        const resolver = stack.getServiceResolver();
+        const space = SpaceId.random();
+
+        const failed = yield* resolveWithScope(resolver.resolve(ServiceB, { space })).pipe(Effect.exit);
+        expect(Exit.isFailure(failed)).toBe(true);
+        expect(yield* resolveWithScope(resolver.resolve(ServiceB, { space }))).toEqual({ value: 'space:a' });
       }),
     );
   });

@@ -2,30 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 
-import {
-  DeckCapabilities,
-  type DeckPluginState,
-  type DeckState,
-  type EphemeralDeckState,
-  type StoredDeckState,
-} from '#types';
+import { DeckCapabilities, DeckSchema } from '#types';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */
-  state: DeckPluginState;
+  state: DeckSchema.DeckPluginState;
   /** The active deck, computed from decks[activeDeck]. */
-  deck: DeckState;
+  deck: DeckSchema.DeckState;
   /** Update persisted state. */
-  updateState: (fn: (current: StoredDeckState) => StoredDeckState) => void;
+  updateState: (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => void;
   /** Update ephemeral state. */
-  updateEphemeral: (fn: (current: EphemeralDeckState) => EphemeralDeckState) => void;
+  updateEphemeral: (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => void;
 };
 
 /**
@@ -39,16 +33,19 @@ export const useDeckState = (): DeckStateHook => {
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 
-  // Compute deck from decks[activeDeck] to ensure it's always current.
+  // The active workspace's preferences plus what the URL says is open; see `DeckCapabilities.getDeck`.
+  // Keyed on this workspace's own entry, not the whole `open` map: another workspace's planks
+  // changing must not hand every reader here a new deck.
+  const stored = persistedState.decks[persistedState.activeDeck];
+  const open = ephemeralState.open[persistedState.activeDeck] ?? DeckSchema.defaultOpenDeck;
   const deck = useMemo(() => {
-    const deck = persistedState.decks[persistedState.activeDeck];
-    invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
-    return deck;
-  }, [persistedState.decks, persistedState.activeDeck]);
+    invariant(stored, `Deck not found: ${persistedState.activeDeck}`);
+    return { ...stored, ...open };
+  }, [stored, open, persistedState.activeDeck]);
 
   // Combine persisted and ephemeral state into a unified view.
   const state = useMemo(
-    (): DeckPluginState => ({
+    (): DeckSchema.DeckPluginState => ({
       ...persistedState,
       ...ephemeralState,
     }),
@@ -56,14 +53,14 @@ export const useDeckState = (): DeckStateHook => {
   );
 
   const updateState = useCallback(
-    (fn: (current: StoredDeckState) => StoredDeckState) => {
+    (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
       registry.set(stateAtom, fn(registry.get(stateAtom)));
     },
     [registry, stateAtom],
   );
 
   const updateEphemeral = useCallback(
-    (fn: (current: EphemeralDeckState) => EphemeralDeckState) => {
+    (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => {
       registry.set(ephemeralAtom, fn(registry.get(ephemeralAtom)));
     },
     [registry, ephemeralAtom],

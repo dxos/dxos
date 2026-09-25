@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type Database, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { findReferences, insertReferences } from '../quotes';
+import { findReferences, insertReferences } from '../quotes.ts';
 
 const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -18,7 +18,7 @@ const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
  * Proper nouns extracted from transcript text.
  */
 export const ProperNouns = Schema.Struct({
-  properNouns: Schema.Array(Schema.String).annotations({
+  properNouns: Schema.Array(Schema.String).annotate({
     description: 'Proper nouns (names of people, organizations, places, products) mentioned in the text.',
   }),
 });
@@ -46,7 +46,7 @@ export const extractProperNouns = (text: string) =>
     // Drop short tokens (e.g. "IT"): insertReferences replaces case-insensitive substrings, so a
     // short noun would match inside unrelated words ("secur[IT]y") and corrupt neighbouring links.
     return value.properNouns.map((noun) => noun.trim()).filter((noun) => noun.length >= 3);
-  }).pipe(Effect.provide(AiService.model(EXTRACTION_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(EXTRACTION_MODEL)));
 
 /**
  * Enriches a transcript message: for each transcript block, extracts proper nouns, links them to

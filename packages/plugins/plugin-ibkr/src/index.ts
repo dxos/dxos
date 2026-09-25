@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './skills';
-export * from './types';
+export * as IbkrPlugin from './IbkrPlugin.ts';
+export * from './meta.ts';
+export * from '#skills';
+export * from '#types';

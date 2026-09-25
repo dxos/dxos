@@ -44,7 +44,7 @@ brain/inbox no longer load devtools/compute-runtime at all.
 
 **Action.** §1's fix removes the biggest startup cost. After restarting `:9009`, re-open
 `WithMarkdown`; if activation is still slow, the next step is per-plugin activation timing via the
-`@dxos/log`-based debug instrumentation (the `debug-mode` workflow), focused on which
+`@dxos/log`-based debug instrumentation (the `debugging` skill), focused on which
 `SetupReactSurface`/`ProcessManagerReady` handler dominates.
 
 ---

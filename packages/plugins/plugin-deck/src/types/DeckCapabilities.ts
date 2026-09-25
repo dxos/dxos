@@ -4,33 +4,60 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import type * as FiberHandle from 'effect/FiberHandle';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './schema';
+import * as DeckSchema from './DeckSchema.ts';
+import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema.ts';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(`${meta.profile.key}.capability.state`);
 
 /** Transient/ephemeral state (not persisted). */
-export const EphemeralState = Capability.make<Atom.Writable<EphemeralDeckState>>(
-  `${meta.profile.key}.capability.ephemeral-state`,
+export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDeckState>>()(
+  `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** Get the current active deck from state. */
+/**
+ * Holds the URL projection in flight, so starting a newer one interrupts it. A projection can wait
+ * out its deadlines, so without this an older one could resume and apply a URL the address bar has
+ * long since moved off (see `url/project.ts`).
+ */
+export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<string | undefined, any>>()(
+  `${meta.profile.key}.capability.projection`,
+);
+
+/**
+ * The active workspace's deck: its persisted preferences, plus what the URL says is open. The two
+ * live in different atoms because only one of them is the deck's to remember.
+ */
 export const getDeck = (): Effect.Effect<DeckState, Error, Capability.Service> =>
   Effect.gen(function* () {
     const state = yield* Capabilities.getAtomValue(State);
+    const { open } = yield* Capabilities.getAtomValue(EphemeralState);
     const deck = state.decks[state.activeDeck];
     invariant(deck, `Deck not found: ${state.activeDeck}`);
-    return deck;
+    return { ...deck, ...(open[state.activeDeck] ?? DeckSchema.defaultOpenDeck) };
   });
+
+/** Re-exported alongside the capability so hosts keep reading the platform from one place. */
+export type Platform = DeckSchema.Platform;
+
+/** Options for {@link DeckPlugin}. */
+export type DeckPluginOptions = {
+  /** Which root layout the plugin renders; state and operations are shared. */
+  platform?: Platform;
+};
+
+export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.capability.platform`);

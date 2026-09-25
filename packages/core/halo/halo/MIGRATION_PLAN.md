@@ -30,12 +30,12 @@ does not need to be re-litigated.
 - **Mutations route through Operations** (app-framework), handlers use the
   services; components dispatch operations.
 
-## Known external blocker (not fixable from here)
+## Publish blocker — CLEARED
 
-CI `check-packages-published` requires `@dxos/halo`, `@dxos/halo-adapter-client`,
-`@dxos/halo-react` to be published to npm with OIDC trusted publishing. That is a
-maintainer/release action. The PR stays red on that one check until a maintainer
-publishes the packages; all other checks should be green.
+`check-packages-published` used to fail because `@dxos/halo`,
+`@dxos/halo-adapter-client`, and `@dxos/halo-react` had never been published. All
+three are on npm at 0.11.1, so the check passes; the maintainer/release action is
+done and no longer gates this work.
 
 ## Phases (all in the one PR)
 
@@ -59,7 +59,7 @@ The migration decision is: **plugins consume HALO via `@dxos/halo` /
 (`@dxos/halo-adapter-client`) and plugin-client's client provider + the
 `IdentityService`/`SpaceService` capabilities it contributes.
 
-### HALO API added to support consumers
+### HALO API added to support consumers (APIs 1-6)
 
 - `Identity.Info` gained `identityKey` (hex) + `data`; `Space.Member` gained
   `identityKey` (hex), `displayName`, `data`.
@@ -100,25 +100,42 @@ not "complete" references one of these numbers.
 
 ### HALO (this PR's surface)
 
-1. **Personal space id from identity creation.** `Identity.create` must return
-   the personal `spaceId` (or add `Identity.personalSpaceId` / `Space.personal`).
-   Today consumers read `client.halo.identity.get()?.spaceKey`.
-2. **Recovery-credential creation.** `Identity.createRecoveryCredential({ recoveryKey,
-algorithm, lookupKey })` (+ `requestRecoveryChallenge`). The WebAuthn/passkey
-   ceremony stays at the call site; only the credential write moves to HALO.
-3. **EDGE identity / VP-auth verb.** A HALO replacement for
-   `createEdgeIdentity(client)` (`@dxos/client/edge`) + `presentCredentials`, so a
-   consumer can attach the signed-in identity to an EDGE/Hub HTTP client.
-4. **Device-invitation share for non-client UI.** `Identity.share()` must surface a
-   flow/observable the UI can render without `@dxos/client/invitations`, plus a
-   HALO-typed device that `@dxos/shell`'s `DeviceListItem` accepts (or a
-   halo-typed list item). Today: `client.halo.share()` + client `Device`.
-5. **Operation/hook to invoke `grantServiceAccess` from React.** The verb exists;
-   a `ClientOperation` (or `useGrantServiceAccess`) is needed so components can
-   call it without `client.halo.writeCredentials`.
-6. **Identity atom for graph builders.** An `Atom`/observable bridge (or documented
-   `Atom.make(Identity.identity…)` recipe) to replace
-   `CreateAtom.fromObservable(client.halo.identity)` in app-graph builders.
+1. ~~**Personal space id from identity creation.**~~ DONE — `Identity.personalSpaceId`
+   returns `Option<SpaceId>` for the identity's HALO space. A verb, not a field on
+   `Info`, because the id is derived from the identity key by an async digest.
+   `Identity.create` also accepts `data` now, so profile metadata survives creation.
+2. ~~**Recovery-credential creation.**~~ DONE — `Identity.createRecoveryCredential`
+   (no argument mints a recovery code; `{ externalKey: { recoveryKey, lookupKey,
+algorithm, label?, kind? } }` registers a passkey), `Identity.requestRecoveryChallenge`,
+   `Identity.revokeRecoveryCredential(lookupKey)`, and a `passkey` variant on
+   `Identity.recover` that carries a WebAuthn assertion over a challenge. The
+   WebAuthn ceremony stays at the call site; only the credential write moved.
+   `client-protocol`'s `Halo.recoverIdentity` was widened to the `external` variant
+   (new `RecoverIdentityArgs`) so the passkey path goes through the proxy — which
+   emits `identityChanged` — instead of the raw `IdentityService` RPC.
+3. ~~**EDGE identity / VP-auth verb.**~~ DONE — `Identity.getEdgeIdentity()` returns
+   `Option<EdgeIdentity>`: the DID, the local device's peer key, and the
+   `presentCredentials({ challenge })` signer EDGE's `401` handshake needs. Structurally
+   the `EdgeIdentity` of `@dxos/edge-client`, so consumers pass it straight to
+   `setIdentity` / `handleAuthChallenge`. Synchronous (like `getSnapshot`) because every
+   consumer attaches it inside a React effect or an identity-change callback; the signing
+   it defers is the async part. `@dxos/halo` took a type-only `@dxos/protocols` dependency
+   for the `Presentation` return type.
+4. ~~**Device-invitation share for non-client UI.**~~ DONE — `useInvitationFlow(flow)` in
+   `@dxos/halo-react` renders any `Invitation.Flow` (latest lifecycle event + shareable
+   code) in place of subscribing to the client's `CancellableInvitationObservable`, and
+   `@dxos/shell`'s `DeviceListItem` now takes the structural `ShellDevice`, which
+   `Identity.DeviceInfo` satisfies. `DeviceInfo` gained `presence`, `os`, `platform`, and a
+   populated `kind` so the list renders status, name, and icon from HALO alone; shell's own
+   client-backed `DeviceList` maps through the exported `toShellDevice`.
+5. ~~**Operation to invoke `grantServiceAccess` from React.**~~ DONE — `ClientOperation.GrantServiceAccess`
+   (`{ serverName, capabilities }`) wraps the verb, and plugin-script's settings surface
+   dispatches it instead of hand-building a `ServiceAccess` credential and calling
+   `client.halo.writeCredentials`.
+6. ~~**Identity atom for graph builders.**~~ DONE — `Identity.atom(service)` is an
+   `Atom<Option<Info>>` seeded from `getSnapshot()` and updated through `subscribe()`,
+   keyed by service reference. plugin-client's app-graph-builder uses it in place of
+   `CreateAtom.fromObservable(client.halo.identity)`.
 
 ### ECHO track (separate, much larger — ~340 imports)
 
@@ -148,28 +165,28 @@ above. **Any plugin not listed here imports neither `@dxos/client` nor
 `@dxos/react-client` in non-test/story source — complete.** `(story)` = the only
 remaining import is in a `*.stories.tsx`.
 
-| Plugin                                                                                                                                                                                                                                                                                                                                                                         | HALO     | Remaining `@dxos/client` / `@dxos/react-client` pins                                                                                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| plugin-client                                                                                                                                                                                                                                                                                                                                                                  | partial  | create-identity (1), create-passkey (2), useHubClient (3), DevicesContainer (4, 9), app-graph-builder (6, 9), invitations UI (8), the client provider + `IdentityService`/`SpaceService` capabilities (intentional boundary) |
-| plugin-onboarding                                                                                                                                                                                                                                                                                                                                                              | partial  | WelcomeScreen/onboarding-manager/util/oauth (1, 2), ECHO (7)                                                                                                                                                                 |
-| plugin-script                                                                                                                                                                                                                                                                                                                                                                  | partial  | react-surface credential write (5), deploy/functions helpers take a `client` param, EDGE (3), ECHO (7)                                                                                                                       |
-| plugin-assistant                                                                                                                                                                                                                                                                                                                                                               | complete | edge-model-resolver EDGE identity (3), ECHO (7)                                                                                                                                                                              |
-| plugin-connector                                                                                                                                                                                                                                                                                                                                                               | n/a      | EDGE (3), ECHO (7)                                                                                                                                                                                                           |
-| plugin-payments                                                                                                                                                                                                                                                                                                                                                                | n/a      | EDGE (3)                                                                                                                                                                                                                     |
-| plugin-comments                                                                                                                                                                                                                                                                                                                                                                | complete | ECHO (7)                                                                                                                                                                                                                     |
-| plugin-thread                                                                                                                                                                                                                                                                                                                                                                  | complete | ECHO (7); `useIdentity` (story)                                                                                                                                                                                              |
-| plugin-space                                                                                                                                                                                                                                                                                                                                                                   | complete | ECHO (7), invitations (8), config/mesh (9)                                                                                                                                                                                   |
-| plugin-transcription                                                                                                                                                                                                                                                                                                                                                           | complete | ECHO (7)                                                                                                                                                                                                                     |
-| plugin-markdown                                                                                                                                                                                                                                                                                                                                                                | complete | ECHO (7)                                                                                                                                                                                                                     |
-| plugin-code                                                                                                                                                                                                                                                                                                                                                                    | complete | ECHO (7)                                                                                                                                                                                                                     |
-| plugin-calls                                                                                                                                                                                                                                                                                                                                                                   | complete | config/services (9)                                                                                                                                                                                                          |
-| plugin-meeting                                                                                                                                                                                                                                                                                                                                                                 | complete | ECHO (7)                                                                                                                                                                                                                     |
-| plugin-iroh-beacon                                                                                                                                                                                                                                                                                                                                                             | complete | — (off client)                                                                                                                                                                                                               |
-| plugin-observability                                                                                                                                                                                                                                                                                                                                                           | n/a      | config/telemetry (9)                                                                                                                                                                                                         |
-| plugin-registry                                                                                                                                                                                                                                                                                                                                                                | n/a      | CLI commands construct the client                                                                                                                                                                                            |
-| plugin-debug, plugin-devtools                                                                                                                                                                                                                                                                                                                                                  | n/a      | mesh/devtools (9), ECHO (7)                                                                                                                                                                                                  |
-| plugin-space (CLI), plugin-client (CLI)                                                                                                                                                                                                                                                                                                                                        | n/a      | `src/commands/**` construct the client — separate execution model                                                                                                                                                            |
-| plugin-board, -bookmarks, -chess, -chess-com, -conductor, -crm, -explorer, -file, -freeq, -heygen, -ibkr, -inbox, -kanban, -magazine, -map, -outliner, -preview, -sample, -search, -sequencer, -sheet, -spacetime, -stack, -status-bar, -studio, -support, -table, -trip, -video, -wnfs, -zen, -bluesky, -commerce, -pipeline, -routine, -native-filesystem, -sandbox, -doctor | n/a      | ECHO (7), and `/testing` (10) where present — no HALO usage                                                                                                                                                                  |
+| Plugin                                                                                                                                                                                                                                                                                                                                                                         | HALO     | Remaining `@dxos/client` / `@dxos/react-client` pins                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| plugin-client                                                                                                                                                                                                                                                                                                                                                                  | complete | DevicesContainer network status + `DX_ENVIRONMENT` gate (9), app-graph-builder config/mesh (9), invitations UI (8), the client provider + `IdentityService`/`SpaceService` capabilities (intentional boundary) |
+| plugin-onboarding                                                                                                                                                                                                                                                                                                                                                              | partial  | WelcomeScreen/onboarding-manager/util (credential query, see below), oauth-recovery-redirect (3), ECHO (7)                                                                                                     |
+| plugin-script                                                                                                                                                                                                                                                                                                                                                                  | complete | deploy/functions helpers take a `client` param, ECHO (7)                                                                                                                                                       |
+| plugin-assistant                                                                                                                                                                                                                                                                                                                                                               | complete | ECHO (7); `Client` type in `testing/snapshot.ts`                                                                                                                                                               |
+| plugin-connector                                                                                                                                                                                                                                                                                                                                                               | complete | ECHO (7), config (9); `Client` type in `ConnectorSpec`, CLI `ClientService`                                                                                                                                    |
+| plugin-payments                                                                                                                                                                                                                                                                                                                                                                | complete | — (off client)                                                                                                                                                                                                 |
+| plugin-comments                                                                                                                                                                                                                                                                                                                                                                | complete | ECHO (7)                                                                                                                                                                                                       |
+| plugin-thread                                                                                                                                                                                                                                                                                                                                                                  | complete | ECHO (7); `useIdentity` (story)                                                                                                                                                                                |
+| plugin-space                                                                                                                                                                                                                                                                                                                                                                   | complete | ECHO (7), invitations (8), config/mesh (9)                                                                                                                                                                     |
+| plugin-transcription                                                                                                                                                                                                                                                                                                                                                           | complete | ECHO (7)                                                                                                                                                                                                       |
+| plugin-markdown                                                                                                                                                                                                                                                                                                                                                                | complete | ECHO (7)                                                                                                                                                                                                       |
+| plugin-code                                                                                                                                                                                                                                                                                                                                                                    | complete | ECHO (7)                                                                                                                                                                                                       |
+| plugin-calls                                                                                                                                                                                                                                                                                                                                                                   | complete | config/services (9)                                                                                                                                                                                            |
+| plugin-meeting                                                                                                                                                                                                                                                                                                                                                                 | complete | ECHO (7)                                                                                                                                                                                                       |
+| plugin-iroh-beacon                                                                                                                                                                                                                                                                                                                                                             | complete | — (off client)                                                                                                                                                                                                 |
+| plugin-observability                                                                                                                                                                                                                                                                                                                                                           | n/a      | config/telemetry (9)                                                                                                                                                                                           |
+| plugin-registry                                                                                                                                                                                                                                                                                                                                                                | n/a      | CLI commands construct the client                                                                                                                                                                              |
+| plugin-debug, plugin-devtools                                                                                                                                                                                                                                                                                                                                                  | n/a      | mesh/devtools (9), ECHO (7)                                                                                                                                                                                    |
+| plugin-space (CLI), plugin-client (CLI)                                                                                                                                                                                                                                                                                                                                        | n/a      | `src/commands/**` construct the client — separate execution model                                                                                                                                              |
+| plugin-board, -bookmarks, -chess, -chess-com, -conductor, -crm, -explorer, -file, -freeq, -heygen, -ibkr, -inbox, -kanban, -magazine, -map, -outliner, -preview, -sample, -search, -sequencer, -sheet, -spacetime, -stack, -status-bar, -studio, -support, -table, -trip, -video, -wnfs, -zen, -bluesky, -commerce, -pipeline, -routine, -native-filesystem, -sandbox, -doctor | n/a      | ECHO (7), and `/testing` (10) where present — no HALO usage                                                                                                                                                    |
 
 ## `@dxos/client` / `@dxos/react-client` usage inventory (snapshot)
 
@@ -185,7 +202,7 @@ Import counts across `packages/plugins/*/src` + `packages/ui/*/src`
 | `@dxos/client/echo`              | 52    | ECHO (7)                                      |
 | `@dxos/react-client/halo`        | 8     | HALO — plugin-client + plugin-onboarding only |
 | `@dxos/client/invitations`       | 7     | invitations (8)                               |
-| `@dxos/client/edge`              | 6     | EDGE (3)                                      |
+| `@dxos/client/edge`              | 3     | CLI commands only (`src/commands/**`)         |
 | `@dxos/react-client/invitations` | 4     | invitations (8)                               |
 | `@dxos/react-client/mesh`        | 3     | platform (9)                                  |
 | `@dxos/client/halo`              | 3     | HALO — plugin-client + plugin-onboarding      |
@@ -205,13 +222,31 @@ Missing API 7 (ECHO React bindings), not on HALO.
 - **HALO React consumer tier: complete.**
 - **HALO imperative singleton tier: complete** except the EDGE-auth (3) and
   script/onboarding cases.
-- **HALO remaining tier: outstanding** — Missing APIs 1–6 (identity-creation
-  verbs, recovery credential, EDGE verb, device-invitation/Shell, script write-op,
-  graph-builder atom). Only `plugin-client`, `plugin-onboarding`, `plugin-script`,
-  and the EDGE consumers (`plugin-assistant`, `plugin-connector`, `plugin-payments`)
-  still touch the client for HALO/EDGE. Tracked as task #7.
+- **HALO tier COMPLETE: Missing APIs 1–6 are all DONE.** No plugin reaches for
+  `@dxos/client` to do HALO work anymore. What remains in the plugins is the
+  non-HALO set: ECHO (7), space-invitation UI (8), config/mesh/services (9), and the
+  test harness (10) — plus two deliberate boundaries, the CLI `src/commands/**`
+  (which construct the client) and plugin-client's own client provider. The
+  DevicesContainer keeps `useClient`/`useNetworkStatus` for exactly those reasons
+  (swarm status and the `DX_ENVIRONMENT` gate), not for identity or devices.
 - **Full `@dxos/client`/`@dxos/react-client` elimination: future scope** — gated on
   Missing APIs 7–10 (ECHO React bindings dominate at ~340 imports), tracked
   separately from this HALO PR.
-- **External blocker unchanged**: `check-packages-published` stays red until a
-  maintainer publishes the three `@dxos/halo*` packages + OIDC.
+- **External blocker cleared**: the three `@dxos/halo*` packages are published at
+  0.11.1.
+
+### Two carve-outs found while landing APIs 1–2
+
+- **`requestRecoveryChallenge` is EDGE-only.** `IdentityRecoveryManager` asserts an
+  EDGE connection, so the verb exists and is typed but cannot be covered by the
+  in-process `halo-e2e` harness (`TestBuilder` peers have no EDGE). Its e2e test is
+  deliberately absent rather than skipped-with-a-fake.
+- **`oauth-recovery-redirect` still holds a client.** Not for EDGE identity — it needs
+  `Account.createHubClient` and a 30s `recoverIdentity` timeout that differs from the
+  proxy's 20s. Migrating it is a decision about that timeout, not a missing verb.
+- **`plugin-onboarding`'s `queryAllCredentials` is not a HALO gap.** It exists
+  because `HaloProxy.queryCredentials` only returns credentials already loaded in
+  the client, so it reads the feed through `SpacesService.queryCredentials` with the
+  identity's space key. `Identity.credentials` inherits the same limitation — an
+  exhaustive credential _query_ verb (distinct from the live stream) is a new
+  requirement, not part of API 2.

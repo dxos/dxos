@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -20,8 +19,8 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { translations } from '#translations';
 
-import { Editor } from '../components';
-import { type UseTextEditorProps } from '../hooks';
+import { Editor } from '../components/index.ts';
+import { type UseTextEditorProps } from '../hooks/index.ts';
 
 type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
 
@@ -52,7 +51,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
     <Editor.Root extensions={extensions} viewMode={viewMode}>
       <Editor.Content>
         <Editor.Toolbar classNames='dx-document' />
-        <div className='dx-container dx-document bg-base-surface'>
+        <div className='dx-expand dx-document dx-base-surface'>
           <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
         </div>
       </Editor.Content>

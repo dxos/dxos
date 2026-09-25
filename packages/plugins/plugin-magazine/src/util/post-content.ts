@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from './text';
+import { Subscription } from '#types';
+
+import { extractImageUrls, makeSnippet, stripHtml } from './text.ts';
 
 /**
  * Pure derivations of a Post's display snippet/hero-image, preferring the refined values on a

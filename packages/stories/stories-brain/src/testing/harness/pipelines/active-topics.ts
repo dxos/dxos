@@ -11,11 +11,11 @@ import { EMAIL_EXTRACT_OPTIONS, deriveThreadId, messageToDocument } from '@dxos/
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type ActiveTopicsDeps, type TopicContext } from '../internal/active-topics';
-import { generateText, parseJsonArray, parseJsonObject } from '../llm';
-import { type ModelPolicy, resolveModel } from '../model-policy';
-import { type ModelVariant } from '../models';
-import { draftReply } from './draft';
+import { type ActiveTopicsDeps, type TopicContext } from '../internal/active-topics.ts';
+import { generateText, parseJsonArray, parseJsonObject } from '../llm.ts';
+import { type ModelPolicy, resolveModel } from '../model-policy.ts';
+import { type ModelVariant } from '../models.ts';
+import { draftReply } from './draft.ts';
 
 // Model-backed `ActiveTopicsDeps` for the driver: wires the injected LLM steps (confidence / status /
 // tasks / facts / drafts) to the harness pipelines + `generateText`, each run under its stage's model
@@ -105,7 +105,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
               strict: factsVariant.strict,
             }).pipe(
               Effect.timeout('120 seconds'),
-              Effect.orElse(() => Effect.succeed([] as RDF.Fact[])),
+              Effect.catch(() => Effect.succeed([] as RDF.Fact[])),
             );
             collected.push(...extracted.map(renderFact));
           }

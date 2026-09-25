@@ -4,17 +4,19 @@
 
 import React from 'react';
 
-import VersionNumber from '../VersionNumber';
+import { Flex } from '@dxos/react-ui';
+
+import VersionNumber from '../VersionNumber/index.ts';
 
 export type StatusBarActionsProps = {};
 
 export const StatusBarActions = (_props: StatusBarActionsProps) => {
   return (
-    <div className='h-full flex items-center px-2 gap-2'>
+    <Flex gap='sm' align='center' classNames='h-full px-2'>
       <VersionNumber />
       <div className='grow' />
       {/* TODO(burdon): Show EDGE service status? */}
-    </div>
+    </Flex>
   );
 };
 

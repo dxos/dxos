@@ -8,13 +8,13 @@
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/test-utils"
     },
     {
       "path": "../../echo/echo"

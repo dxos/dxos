@@ -2,12 +2,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Query } from '@dxos/echo';
 import { findDuplicates } from '@dxos/extractor';
 
-import { SpaceOperation } from './definitions';
-import { resolveIdentitySpec } from './helpers';
+import { SpaceOperation } from '#types';
+
+import { resolveIdentitySpec } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.FindDuplicates> = SpaceOperation.FindDuplicates.pipe(
   Operation.withHandler(

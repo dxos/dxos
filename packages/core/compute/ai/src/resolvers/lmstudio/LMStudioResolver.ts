@@ -4,19 +4,19 @@
 
 // @import-as-namespace
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { type AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
-import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { type AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter.ts';
 
 /**
  * LM Studio resolver using the OpenAI-compatible Chat Completions API.
@@ -39,6 +39,7 @@ export const make = ({
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
+    provider: 'lmstudio',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
@@ -52,9 +53,5 @@ export const make = ({
     modelMap[model.id] = createModelLayer(model.backend);
   }
 
-  return AiModelResolver.AiModelResolver.fromModelMap(
-    { name: 'LM Studio' },
-    Provider.lmStudio.id,
-    Effect.succeed(modelMap),
-  );
+  return AiModelResolver.fromModelMap({ name: 'LM Studio' }, Provider.lmStudio.id, Effect.succeed(modelMap));
 };

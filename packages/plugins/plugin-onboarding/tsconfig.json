@@ -13,7 +13,6 @@
     "vitest.config.ts"
   ],
   "include": [
-    "scripts",
     "src"
   ],
   "references": [
@@ -25,6 +24,12 @@
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -40,9 +45,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -72,7 +74,7 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/migrations"
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -90,13 +92,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"
@@ -106,12 +102,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-connector"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-illustrator"

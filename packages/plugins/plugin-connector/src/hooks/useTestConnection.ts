@@ -2,24 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { useCallback, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { Connection } from '@dxos/link';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useConnector } from '#hooks';
-
-import { type Connection } from '../types';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */
@@ -34,9 +33,12 @@ export type TestConnectionStatus =
   | 'unsupported';
 
 export type UseTestConnectionResult = {
+  /** The last completed verdict. Holds its value across a retest rather than resetting. */
   readonly status: TestConnectionStatus;
   /** User-facing failure reason when `status` is `'invalid'`. */
   readonly error?: string;
+  /** Whether a probe is in flight. Orthogonal to `status`, which still shows the previous result. */
+  readonly testing: boolean;
   /** Re-run the test (e.g. after the user reauthenticates). */
   readonly retest: () => void;
 };
@@ -57,6 +59,10 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
   const accessToken = connection?.accessToken?.target;
   const [status, setStatus] = useState<TestConnectionStatus>('idle');
   const [error, setError] = useState<string | undefined>(undefined);
+  // Tracked separately from `status` so a retest does not have to discard the previous verdict to
+  // say it is running. Folding the two together blanks the failure message for the duration of the
+  // probe and then restores it, which reads as a flicker rather than as progress.
+  const [testing, setTesting] = useState(false);
   const [nonce, setNonce] = useState(0);
 
   const retest = useCallback(() => setNonce((value) => value + 1), []);
@@ -82,12 +88,17 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   useAsyncEffect(
     async (controller) => {
+      // Every early exit clears `testing`, including these: a probe may already have been in flight
+      // when its subject went away, and the superseding run returns here without ever reaching the
+      // code that would clear the flag — leaving the button disabled on "Testing…" for good.
       if (!connection || !connector) {
+        setTesting(false);
         return;
       }
       if (!testConnection) {
         setStatus('unsupported');
         setError(undefined);
+        setTesting(false);
         return;
       }
       if (!accessToken || !db) {
@@ -95,28 +106,30 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
         // database went away, which would otherwise leave the status on 'testing' indefinitely.
         setStatus('idle');
         setError(undefined);
+        setTesting(false);
         return;
       }
 
-      setStatus('testing');
-      setError(undefined);
+      // The previous verdict stays on screen while this runs; only the in-flight flag changes.
+      setTesting(true);
 
       // Service resolution failing rejects rather than yielding an exit; treat it as a failed probe.
       const exit = await runTest().catch(Exit.die);
       if (controller.signal.aborted) {
         return;
       }
+      setTesting(false);
       if (Exit.isSuccess(exit)) {
         setStatus('valid');
         setError(undefined);
       } else {
         setStatus('invalid');
         // A defect (unexpected throw) leaves no typed failure — fall back to a generic message.
-        setError(Option.getOrUndefined(Cause.failureOption(exit.cause))?.message ?? 'Connection test failed.');
+        setError(Option.getOrUndefined(Cause.findErrorOption(exit.cause))?.message ?? 'Connection test failed.');
       }
     },
     [connection, connector, testConnection, accessToken, accessTokenSnapshot?.token, db?.spaceId, runTest, nonce],
   );
 
-  return { status, error, retest };
+  return { status, error, testing, retest };
 };

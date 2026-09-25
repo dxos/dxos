@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
   "categories": {},
   "env": {
     "builtin": true
@@ -34,15 +34,63 @@
     "denyWarnings": true,
     "typeAware": true
   },
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "react-perf",
+    "promise",
+    "vitest",
+    "jsdoc",
+    "node",
+    "import"
+  ],
   "rules": {
-    "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
+    "@dxos/eslint-plugin-rules/consistent-update-param": "error",
+    "@dxos/eslint-plugin-rules/dxos-package-imports": "warn",
+    "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
+    "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
+    "@dxos/eslint-plugin-rules/no-dead-tailwind-logical": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
+    "@dxos/eslint-plugin-rules/operation-key-shape": "error",
+    "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/no-similar-sibling-files": [
+      "error",
+      {
+        "allow": [
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-task.test.ts",
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-task.ts",
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-tasks.ts",
+          "packages/core/echo/echo-panproto/src/lens/codec.ts",
+          "packages/core/echo/echo-panproto/src/lens/codecs.ts",
+          "packages/plugins/plugin-assistant/src/components/Chat/Thread.stories.tsx",
+          "packages/plugins/plugin-assistant/src/components/Chat/thread.test.ts",
+          "packages/plugins/plugin-assistant/src/components/Chat/thread.ts",
+          "packages/plugins/plugin-crm/src/operations/EnrichImages.stories.tsx",
+          "packages/plugins/plugin-crm/src/operations/enrich-images.test.ts",
+          "packages/plugins/plugin-crm/src/operations/enrich-images.ts",
+          "packages/plugins/plugin-space/src/types/SpaceCapabilities.ts",
+          "packages/plugins/plugin-space/src/types/SpaceCapability.ts",
+          "packages/plugins/plugin-support/src/hooks/useTour.tsx",
+          "packages/plugins/plugin-support/src/hooks/useTours.ts",
+          "packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts",
+          "packages/sdk/app-toolkit/src/app-framework/AppCapability.ts",
+          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shape.tsx",
+          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shapes.tsx",
+          "packages/ui/react-ui-menu/src/components/ActionLabel.tsx",
+          "packages/ui/react-ui-menu/src/components/action-label.ts",
+          "packages/ui/react-ui/src/providers/ThemeProvider/IconRegistry.tsx",
+          "packages/ui/react-ui/src/providers/ThemeProvider/icon-registry.ts"
+        ]
+      }
+    ],
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
@@ -57,6 +105,19 @@
     "eslint/no-useless-escape": "off",
     "eslint/no-useless-rename": "off",
     "eslint/require-yield": "off",
+    "import/default": "off",
+    "import/export": "off",
+    "import/extensions": [
+      "error",
+      "always",
+      {
+        "ignorePackages": true,
+        "checkTypeImports": true,
+        "pathGroupOverrides": [{ "pattern": "@dxos*[tT]heme", "action": "ignore" }]
+      }
+    ],
+    "import/named": "off",
+    "import/namespace": "off",
     "import-x-js/order": "off",
     "jest/expect-expect": "off",
     "jest/no-conditional-expect": "off",

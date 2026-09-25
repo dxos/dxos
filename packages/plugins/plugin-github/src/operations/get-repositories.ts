@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
+import { GitHubOperation } from '#types';
+
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's
@@ -29,7 +31,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
 
         return yield* Effect.gen(function* () {
@@ -43,10 +45,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
             description: repo.description ?? undefined,
           }));
           return { targets };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(GitHubApi.GitHubCredentials.fromConnection(connection)),
-        );
+        }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromConnection(connection))));
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );

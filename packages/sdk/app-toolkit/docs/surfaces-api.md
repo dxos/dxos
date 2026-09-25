@@ -8,7 +8,7 @@ This decoupling means plugins don't need to know about each other's UI — they 
 
 ## How Surfaces Fit Together
 
-The layout plugins (deck, simple-layout) are one canonical consumer of surfaces — they render roles like `article`, `status-indicator`, and `deck-companion--{id}`. But surfaces are a general mechanism: any plugin component can render a `Surface.Surface` element with a role, and any other plugin can register a surface to fulfill it.
+The layout plugin (deck) is one canonical consumer of surfaces — it renders roles like `article`, `status-indicator`, and `deck-companion--{id}`. But surfaces are a general mechanism: any plugin component can render a `Surface.Surface` element with a role, and any other plugin can register a surface to fulfill it.
 
 1. A component renders a surface slot with a role and data.
 2. The framework queries registered surfaces for that role.

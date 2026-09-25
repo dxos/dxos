@@ -7,17 +7,16 @@
 // global settings panel when contributed via `AppCapabilities.Settings`.
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 // `Schema.mutable` is required for settings schemas because the settings atom
 // is a writable store that gets mutated when users toggle settings in the UI.
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    showStatusIndicator: Schema.optional(
-      Schema.Boolean.annotations({
-        title: 'Show status indicator',
-      }),
-    ),
-  }),
-);
+export const Settings = Schema.Struct({
+  showStatusIndicator: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show status indicator',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

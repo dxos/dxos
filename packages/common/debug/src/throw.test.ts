@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { expectToThrow } from './throw';
+import { expectToThrow } from './throw.ts';
 
 test('expectToThrow', async () => {
   await expectToThrow(

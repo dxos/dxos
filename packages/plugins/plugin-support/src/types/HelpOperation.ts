@@ -6,18 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Start = Operation.make({
   meta: {
-    key: makeKey('startWelcomeTour'),
+    key: DXN.make('org.dxos.operation.support.startWelcomeTour'),
     name: 'Start welcome tour',
     icon: 'ph--question--regular',
   },
@@ -26,19 +21,14 @@ export const Start = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * Persists the per-space "welcome dismissed" annotation so the Welcome carousel stays hidden on
- * the personal space's Home page. Invoked from the Home article toolbar's "Hide Welcome" action.
- */
-export const HideWelcome = Operation.make({
+/** Runs a tour registered via `AppCapabilities.Tour`, by id, for the graph node `subjectId`, and records it as seen. */
+export const StartTour = Operation.make({
   meta: {
-    key: makeKey('hideWelcome'),
-    name: 'Hide Welcome',
-    icon: 'ph--eye-slash--regular',
+    key: DXN.make('org.dxos.operation.support.startTour'),
+    name: 'Start tour',
+    icon: 'ph--path--regular',
   },
   services: [Capability.Service],
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }),
+  input: Schema.Struct({ tourId: Schema.String, subjectId: Schema.optional(Schema.String) }),
   output: Schema.Void,
 });

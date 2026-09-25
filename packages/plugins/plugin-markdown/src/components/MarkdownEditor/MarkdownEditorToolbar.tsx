@@ -5,11 +5,11 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
 
-import { FileUpload, type FileUploadAction } from './FileUpload';
+import { FileUpload, type FileUploadAction } from './FileUpload.tsx';
 
 export type MarkdownEditorToolbarProps = {
   id: string;

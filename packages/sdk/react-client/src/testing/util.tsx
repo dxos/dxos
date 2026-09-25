@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { Client, type Config, fromHost } from '@dxos/client';
+import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { fromHost } from '@dxos/client/local';
 
-import { ClientContext, ClientProvider } from '../client';
+import { ClientContext, ClientProvider } from '../client/index.ts';
 
 // TODO(burdon): Reconcile with initializeClient.
 export const createClient = async ({

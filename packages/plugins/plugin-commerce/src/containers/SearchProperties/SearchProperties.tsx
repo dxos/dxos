@@ -8,12 +8,13 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { Provider, Search, SearchOperation } from '../../types';
-import { buildUnionFormSchema } from '../../util';
+import { meta } from '#meta';
+import { Provider, Search, SearchOperation } from '#types';
+
+import { buildUnionFormSchema } from '../../util/index.ts';
 
 export type SearchPropertiesProps = {
   search: Search.Search;
@@ -75,7 +76,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <div className='flex flex-col'>
+    <Flex column>
       {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
@@ -88,7 +89,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
           onSave={handleSave}
         >
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Root>
       )}
@@ -99,7 +100,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
-    </div>
+    </Flex>
   );
 };
 

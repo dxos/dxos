@@ -10,10 +10,10 @@ import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Task } from '@dxos/types';
 
-import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
+import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.
@@ -25,7 +25,7 @@ import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
 
 /** The panel chrome: a captioned, scrollable region. */
 export const DemoPanel = ({ label, children, testId }: { label: string; children: ReactNode; testId: string }) => (
-  <Panel.Root classNames='min-w-0 bg-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
+  <Panel.Root classNames='min-w-0 dx-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
     <Panel.Toolbar>
       <Toolbar.Root>
         <Toolbar.Text>{label}</Toolbar.Text>
@@ -99,11 +99,12 @@ export const CanonicalTaskPanel = ({ task }: { task: Task.Task }) => {
       <Form.Root schema={TaskForm} values={snapshot} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
-            <Form.Section
-              title='Task'
+            <Form.FieldSet
+              label='Task'
               description='The object as it is stored. This form is written against Task and nothing else.'
-            />
-            <Form.Layout template={CANONICAL_LAYOUT} />
+            >
+              <Form.Layout template={CANONICAL_LAYOUT} />
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -151,11 +152,12 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
       <Form.Root schema={GtdForm} values={view} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
-            <Form.Section
-              title='GTD task'
+            <Form.FieldSet
+              label='GTD task'
               description='The same object, a different shape. This form has never heard of Task.'
-            />
-            <Form.Layout template={LENSED_LAYOUT} />
+            >
+              <Form.Layout template={LENSED_LAYOUT} />
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -163,19 +165,10 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
   );
 };
 
-/**
- * A labelled JSON block.
- *
- * `Syntax` rather than a bare `JsonHighlighter`: the highlighter is documented as inline and
- * non-scrolling, so a long property value ran off the pane instead of scrolling.
- */
+/** A labelled JSON block, capped so a long value scrolls inside the pane. */
 const JsonSection = ({ title, data, testId }: { title: string; data: unknown; testId: string }) => (
   <Card.Section title={title}>
-    <Syntax.Root data={data}>
-      <Syntax.Viewport classNames='max-h-64'>
-        <Syntax.Code testId={testId} />
-      </Syntax.Viewport>
-    </Syntax.Root>
+    <JsonHighlighter data={data} classNames='max-h-64' testId={testId} />
   </Card.Section>
 );
 

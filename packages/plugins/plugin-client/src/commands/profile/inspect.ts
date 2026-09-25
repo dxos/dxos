@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ProfileArchiveEntryType } from '@dxos/protocols';
@@ -16,11 +16,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
 
-  const { decodeProfileArchive } = yield* Effect.promise(() => import('@dxos/client-services'));
+  const { Storage } = yield* Effect.promise(() => import('@dxos/client-services'));
 
   const data = yield* fs.readFile(file);
 
-  const archive = decodeProfileArchive(data);
+  const archive = Storage.decodeProfileArchive(data);
 
   if (json) {
     yield* Console.log(
@@ -57,8 +57,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
 export const inspect = Command.make(
   'inspect',
   {
-    file: Options.text('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    storage: Options.boolean('storage', { ifPresent: true }).pipe(Options.withDescription('List storage entries.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    storage: Options.Boolean('storage').pipe(
+      Options.withDefault(false),
+      Options.withDescription('List storage entries.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Inspect profile archive.'));

@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-import { assembleDocument } from './align';
-import { type Document, Upos } from './Document';
+import { assembleDocument } from './align.ts';
+import { type Document, Upos } from './Document.ts';
 
 const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -19,8 +19,8 @@ const TaggedSentences = Schema.Struct({
     Schema.Struct({
       tokens: Schema.Array(
         Schema.Struct({
-          text: Schema.String.annotations({ description: 'Token surface form exactly as in the source.' }),
-          upos: Upos.annotations({ description: 'Universal POS tag for the token.' }),
+          text: Schema.String.annotate({ description: 'Token surface form exactly as in the source.' }),
+          upos: Upos.annotate({ description: 'Universal POS tag for the token.' }),
         }),
       ),
     }),
@@ -48,7 +48,7 @@ export const parseText = (text: string) =>
       }),
     );
     return assembleDocument(text, value.sentences);
-  }).pipe(Effect.provide(AiService.model(PARSE_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(PARSE_MODEL)));
 
 /** The pluggable parser contract consumed by the editor extension and pipeline. */
 export type Parser = (text: string) => Promise<Document>;

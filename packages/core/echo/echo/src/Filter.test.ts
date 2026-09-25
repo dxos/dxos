@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Filter from './Filter';
-import * as Obj from './Obj';
-import { TestSchema } from './testing/test-schema';
+import * as Filter from './Filter.ts';
+import * as Obj from './Obj.ts';
+import { TestSchema } from './testing/test-schema.ts';
 
 describe('Filter timestamp builders', () => {
   test('updated({ after }) produces correct AST', () => {
@@ -90,6 +90,28 @@ describe('Filter timestamp builders', () => {
   test('timestamp filters pass the is() check', () => {
     const f = Filter.updated({ after: Date.now() });
     expect(Filter.is(f)).toBe(true);
+  });
+});
+
+describe('entity', () => {
+  test('matches the anchor and nothing else', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const match = Filter.toPredicate(Filter.entity(alice));
+    expect(match(alice)).toBe(true);
+    expect(match(bob)).toBe(false);
+  });
+
+  test('is Filter.id on the anchor id', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Filter.entity(alice).ast).toEqual(Filter.id(alice.id).ast);
+  });
+
+  test('accepts a snapshot, keeping its entity type', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    // The annotation is the assertion: a snapshot must not widen to `Filter<Entity.Unknown>`.
+    const filter: Filter.Filter<TestSchema.Person> = Filter.entity(Obj.getSnapshot(alice));
+    expect(Filter.toPredicate(filter)(alice)).toBe(true);
   });
 });
 

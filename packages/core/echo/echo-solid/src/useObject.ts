@@ -215,7 +215,7 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
  * Obj.atom handles both objects and refs, returning snapshots.
  */
 function useObjectValue<T extends Obj.Unknown>(
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   objOrRef: MaybeAccessor<T | Ref.Ref<T> | undefined>,
 ): Accessor<T | undefined> {
   // Memoize the resolved input to track changes.
@@ -259,7 +259,7 @@ function useObjectValue<T extends Obj.Unknown>(
  * Internal function for subscribing to a specific property of an Echo object.
  */
 function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   obj: Accessor<T | undefined>,
   property: K,
 ): Accessor<T[K] | undefined> {

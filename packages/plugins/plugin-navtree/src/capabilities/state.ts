@@ -2,24 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Graph, Node } from '@dxos/plugin-graph';
-import { Path } from '@dxos/react-ui-list';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
 
-import { navTreeOpenAspect } from './nav-tree-view-state';
+import { navTreeOpenAspect } from './nav-tree-view-state.ts';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
 const defaultOpen = false;
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
-const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
+const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === GraphNode.RootId;
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
@@ -29,10 +32,10 @@ const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
 
     // Mirror of the layout's active planks. An item registers its path only on its first render, which
     // can happen long after the layout change that made it current, so entries derive `current` from
@@ -125,38 +128,41 @@ export default Capability.makeModule(
       queueMicrotask(handleUpdate);
     });
 
-    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-
-      // Always expand the active workspace so its subtree is initialized.
-      const layout = registry.get(layoutAtom);
-      if (layout.workspace) {
-        Graph.expand(graph, layout.workspace, 'child');
-      }
-
-      // Expand persisted open nodes, skipping inactive workspace tabs.
-      const openPaths = Array.from(backingState.entries())
-        .filter(([, state]) => state.open)
-        .map(([pathString]) => Path.parts(pathString))
-        .filter((path) => !isTopLevelPath(path));
-      for (const path of openPaths) {
-        const nodeId = path[path.length - 1];
-        if (!nodeId) {
-          continue;
+      // A workspace the deck left is released, so entering one re-expands it and the items the tree
+      // still remembers as open.
+      const reexpandWorkspace = (workspace: string | undefined) => {
+        if (!workspace) {
+          return;
         }
-        Graph.expand(graph, nodeId, 'child');
-      }
-    }).pipe(Effect.forkDaemon);
 
-    return Capability.contributes(
-      NavTreeCapabilities.State,
-      {
-        getItem,
-        getItemAtom,
-        setItem,
-      },
-      () => Effect.sync(() => unsubscribe()),
-    );
+        AppGraph.expandSync(graph, workspace, 'child');
+        for (const [pathString, state] of backingState.entries()) {
+          const path = Path.parts(pathString);
+          const nodeId = path[path.length - 1];
+          if (state.open && !isTopLevelPath(path) && nodeId && GraphPath.getWorkspaceFromPath(nodeId) === workspace) {
+            AppGraph.expandSync(graph, nodeId, 'child');
+          }
+        }
+      };
+
+      let workspace = registry.get(layoutAtom).workspace;
+      reexpandWorkspace(workspace);
+      const unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
+        if (layout.workspace !== workspace) {
+          workspace = layout.workspace;
+          reexpandWorkspace(workspace);
+        }
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeWorkspace()));
+    }).pipe(Effect.forkScoped);
+
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(NavTreeCapabilities.State, {
+      getItem,
+      getItemAtom,
+      setItem,
+    });
   }),
 );

@@ -10,7 +10,7 @@ import {
   setPendingAnchor,
   setPendingFinal,
   setPendingInterim,
-} from './pending-text';
+} from './pending-text.ts';
 
 //
 // Sinks — decouple the streamer from its target (a live editor, or memory for tests/stories).

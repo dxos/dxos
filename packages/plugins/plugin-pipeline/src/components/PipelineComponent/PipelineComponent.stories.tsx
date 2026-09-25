@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
@@ -12,16 +12,15 @@ import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
 import { usePipelineBoardModel } from '#hooks';
 import { translations } from '#translations';
 
-import { type ItemProps, PipelineComponent } from './PipelineComponent';
+import { type ItemProps, PipelineComponent } from './PipelineComponent.tsx';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   const personSchema = useMemo(() => omitId(Type.getSchema(Person.Person)), []);
@@ -33,7 +32,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
       <Form.Root schema={personSchema} projection={projectionModel} values={contact} autoSave>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

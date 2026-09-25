@@ -13,7 +13,7 @@
 
 import { type ContentBlock } from '@dxos/types';
 
-import type { ConversationUtterance, ParsedConversation } from './conversation-parser';
+import type { ConversationUtterance, ParsedConversation } from './conversation-parser.ts';
 
 export type StreamSimulatorOptions = {
   /**

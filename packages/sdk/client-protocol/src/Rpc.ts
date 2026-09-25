@@ -6,13 +6,19 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
+import { log } from '@dxos/log';
+import { RpcRouter } from '@dxos/rpc';
 import { RpcTiming } from '@dxos/worker-framework';
 
 export type ServeOptions = {
@@ -36,6 +42,36 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 // in @effect/rpc's type parameter; runtime dispatch accepts any RpcGroup instance.
 const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group as Parameters<typeof RpcClient.make>[0];
 
+// Server-only: the client never sees this middleware, so it does not change the wire contract.
+class DefectLogMiddleware extends RpcMiddleware.Service<DefectLogMiddleware>()('DxosRpcDefectLogMiddleware') {}
+
+const defectLogLayer = Layer.succeed(DefectLogMiddleware, (handler, { rpc }) =>
+  Effect.tapCause(handler, (cause) =>
+    Cause.hasDies(cause)
+      ? Effect.sync(() => log.error('rpc handler defect', { rpc: rpc._tag, cause: Cause.pretty(cause) }))
+      : Effect.void,
+  ),
+);
+
+const makeServerLayer = <G, ROut, R>(
+  group: G,
+  handlers: Layer.Layer<ROut, never, R>,
+  options: ServeOptions | undefined,
+) => {
+  const timingEnabled = RpcTiming.isEnabled(options?.timing);
+  const timedGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+  const rpcGroup = asRpcGroup(timedGroup).middleware(DefectLogMiddleware);
+  const handlersLayer = timingEnabled
+    ? Layer.mergeAll(handlers, defectLogLayer, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
+    : Layer.merge(handlers, defectLogLayer);
+  return RpcServer.layer(asRpcGroup(rpcGroup), {
+    disableTracing: options?.disableTracing ?? true,
+    concurrency: options?.concurrency ?? 'unbounded',
+    // A defect fails only its own request; fatal defects fail every request and stream on the connection.
+    disableFatalDefects: true,
+  }).pipe(Layer.provide(handlersLayer));
+};
+
 /**
  * Builds an effect-native RPC client over a caller-supplied {@link RpcClient.Protocol} layer.
  * Transport-agnostic: consumers provide the Worker-platform protocol (see {@link makeClient}) or a
@@ -51,7 +87,7 @@ export const makeClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
     const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
     const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(RpcTiming.clientLayer())) : protocol;
 
-    // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
+    // Build the transport into the caller's scope (extended via `Scope.provide`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
     // construction effect, tearing the worker connection down the instant the client is returned
     // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.
@@ -72,11 +108,72 @@ export const makeClient = <G>(
 ): Effect.Effect<unknown, never, Scope.Scope> =>
   makeClientOverProtocol(
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => port)),
+      Layer.provide(BrowserWorker.layer(() => port)),
     ),
     group,
     options,
   );
+
+/**
+ * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
+ * ambient {@link RpcServer.Protocol} for the life of the layer.
+ */
+export const serverLayer = <Rpcs extends Rpc.Any, R>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
+  options?: ServeOptions,
+): Layer.Layer<never, never, RpcServer.Protocol | R> => makeServerLayer(group, handlers, options);
+
+/** The group as it goes on the wire: `Rpcs` under the standard server middleware. */
+export type Served<Rpcs extends Rpc.Any> = Rpc.AddMiddleware<
+  Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>,
+  typeof DefectLogMiddleware
+>;
+
+/**
+ * Serves `group` with `handlers` over the ambient {@link RpcRouter.RpcRouter} for the current scope,
+ * under the standard server middleware. Registration is per group, so nothing has to enumerate the
+ * services a transport carries; {@link RpcRouter.layerTransport} serves whatever is registered.
+ */
+export const serveOnRouter = <Rpcs extends Rpc.Any>(
+  prefix: string,
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: RpcGroup.HandlersFrom<Rpcs>,
+  options?: ServeOptions & Pick<RpcRouter.ServeOptions<Rpcs>, 'inProcessClient'>,
+): Effect.Effect<void, never, RpcRouter.RpcRouter | Scope.Scope | Rpc.ServicesServer<Served<Rpcs>>> => {
+  // Timing is unconditional here: the middleware is `requiredForClient` and every client of a
+  // router-served transport (the tab) applies it, so a group served without it would reject
+  // every request.
+  const served = RpcTiming.applyMiddleware(group).middleware(DefectLogMiddleware);
+  return RpcRouter.serve(prefix, served, {
+    disableTracing: options?.disableTracing ?? true,
+    concurrency: options?.concurrency ?? 'unbounded',
+    // A defect fails only its own request; fatal defects fail every request and stream on the connection.
+    disableFatalDefects: true,
+    inProcessClient: options?.inProcessClient,
+  }).pipe(
+    Effect.provide(
+      Layer.mergeAll(
+        handlerLayer(group, handlers),
+        defectLogLayer,
+        RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)),
+      ),
+    ),
+  );
+};
+
+/**
+ * `group`'s handlers as the handlers of {@link Served} — the same group under middleware.
+ *
+ * `Rpc.ToHandler` keys off an rpc's `_tag` alone and `AddMiddleware` preserves it, so both are the
+ * same services; a middleware only widens what a handler MAY require. TypeScript cannot reduce
+ * `AddMiddleware` through a generic parameter, so the equality is stated rather than inferred.
+ */
+const handlerLayer = <Rpcs extends Rpc.Any>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: RpcGroup.HandlersFrom<Rpcs>,
+): Layer.Layer<Rpc.ToHandler<Served<Rpcs>>> =>
+  group.toLayer(handlers) as unknown as Layer.Layer<Rpc.ToHandler<Served<Rpcs>>>;
 
 export type GroupServer = {
   open(): Promise<void>;
@@ -84,75 +181,12 @@ export type GroupServer = {
 };
 
 /**
- * Serves an {@link RpcGroup} on a {@link MessagePort} via the native Worker runner protocol.
+ * Wraps a server layer in the open/close lifecycle every transport server shares. The in-flight
+ * open is cached so concurrent opens share one runtime and a close during startup disposes the
+ * runtime that startup created rather than leaking it.
  */
-export const serve = <G, H extends Layer.Layer<never, never, never>>(
-  port: MessagePort,
-  group: G,
-  handlers: H,
-  options?: ServeOptions,
-): GroupServer => {
+const makeGroupServer = (buildLayer: () => Layer.Layer<never, never, never>): GroupServer => {
   let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
-
-  return {
-    async open(): Promise<void> {
-      if (runtime) {
-        return;
-      }
-
-      const timingEnabled = RpcTiming.isEnabled(options?.timing);
-      const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-      // Merge the timing middleware layer into the handler layer (rather than a conditional
-      // `.pipe(...)` element) so the pipeline stays a fixed tuple.
-      const handlersLayer = timingEnabled
-        ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-        : handlers;
-      const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
-        disableTracing: options?.disableTracing ?? true,
-        concurrency: options?.concurrency ?? 'unbounded',
-      }).pipe(
-        Layer.provide(handlersLayer),
-        Layer.provide(
-          RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
-        ),
-        Layer.orDie,
-      );
-
-      const current = ManagedRuntime.make(serverLayer);
-      try {
-        await current.runPromise(Effect.void);
-      } catch (error) {
-        // Leave the server un-opened on startup failure so a later open() can retry rather than
-        // returning early against a runtime that never started.
-        await current.dispose();
-        throw error;
-      }
-      runtime = current;
-    },
-
-    async close(): Promise<void> {
-      const current = runtime;
-      runtime = undefined;
-      await current?.dispose();
-    },
-  };
-};
-
-/**
- * Serves an {@link RpcGroup} over a caller-supplied {@link RpcServer.Protocol} layer.
- * Transport-agnostic counterpart to {@link makeClientOverProtocol}: consumers provide a byte
- * protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
- */
-export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>(
-  protocol: Layer.Layer<RpcServer.Protocol>,
-  group: G,
-  handlers: H,
-  options?: ServeOptions,
-): GroupServer => {
-  let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
-  // Cache the in-flight open so concurrent opens share one initialization and a close during open
-  // can await it before disposing — otherwise `runtime` is unset mid-open and a fast open/close
-  // (e.g. client restart) leaks the runtime.
   let openPromise: Promise<void> | undefined;
 
   return {
@@ -162,17 +196,7 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
       }
 
       openPromise = (async () => {
-        const timingEnabled = RpcTiming.isEnabled(options?.timing);
-        const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-        const handlersLayer = timingEnabled
-          ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-          : handlers;
-        const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
-          disableTracing: options?.disableTracing ?? true,
-          concurrency: options?.concurrency ?? 'unbounded',
-        }).pipe(Layer.provide(handlersLayer), Layer.provide(protocol), Layer.orDie);
-
-        const current = ManagedRuntime.make(serverLayer);
+        const current = ManagedRuntime.make(buildLayer());
         try {
           await current.runPromise(Effect.void);
         } catch (error) {
@@ -198,3 +222,50 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
     },
   };
 };
+
+/**
+ * Serves an {@link RpcGroup} on a {@link MessagePort} via the native Worker runner protocol.
+ */
+export const serve = <G, H extends Layer.Layer<never, never, never>>(
+  port: MessagePort,
+  group: G,
+  handlers: H,
+  options?: ServeOptions,
+): GroupServer =>
+  makeGroupServer(() =>
+    makeServerLayer(group, handlers, options).pipe(
+      Layer.provide(
+        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+      ),
+      Layer.orDie,
+    ),
+  );
+
+/**
+ * Serves whatever is registered with the ambient router on a {@link MessagePort} via the native
+ * Worker runner protocol — the transport half of a worker session, without the stack around it.
+ * The router is resolved on `open`, so a host that builds its stack later can be served.
+ */
+export const serveRouterOnPort = (router: () => RpcRouter.Service, port: MessagePort): GroupServer =>
+  makeGroupServer(() =>
+    RpcRouter.layerTransport.pipe(
+      Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router())),
+      Layer.provide(
+        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+      ),
+      Layer.orDie,
+    ),
+  );
+
+/**
+ * Serves an {@link RpcGroup} over a caller-supplied {@link RpcServer.Protocol} layer.
+ * Transport-agnostic counterpart to {@link makeClientOverProtocol}: consumers provide a byte
+ * protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
+ */
+export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>(
+  protocol: Layer.Layer<RpcServer.Protocol>,
+  group: G,
+  handlers: H,
+  options?: ServeOptions,
+): GroupServer =>
+  makeGroupServer(() => makeServerLayer(group, handlers, options).pipe(Layer.provide(protocol), Layer.orDie));

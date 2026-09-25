@@ -3,10 +3,9 @@
 //
 
 import { DXN } from '@dxos/keys';
-import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
-import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 /** Surface id for the sync-targets dialog. */
 export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.profile.key}.syncTargetsDialog`);
@@ -16,21 +15,6 @@ export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.profile.key}.providerFormDi
 
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
-
-/**
- * Connector id for the built-in Atmosphere (atproto) connection: the same atproto OAuth
- * flow as Bluesky but without any sync targets. Also the connector the OAuth account-recovery flow
- * routes its Connection to.
- */
-export const ATMOSPHERE_PROVIDER_ID = 'atmosphere';
-
-/**
- * `AccessToken.source` for the Atmosphere connection. atproto accounts are portable — the PDS and
- * handle can change — so we don't pin to a hostname.
- */
-export const ATMOSPHERE_SOURCE = 'atproto.local';
-
-export { ATPROTO_OAUTH_SCOPES };
 
 /**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key
@@ -64,4 +48,11 @@ export const CONNECTIONS_SECTION_TYPE = `org.dxos.plugin.connector.space-setting
  * subject must include the `settings` segment to resolve through the graph.
  */
 export const connectionDeckSubject = (spacePath: string, connectionId: string): string =>
-  `${spacePath}/${SETTINGS_SECTION_ID}/${CONNECTIONS_SECTION_ID}/${connectionId}`;
+  `${connectionsDeckSubject(spacePath)}/${connectionId}`;
+
+/**
+ * Deck navigation subject for a space's Connections section itself — where to land when a specific
+ * connection stops existing, since its own subject no longer resolves once it is deleted.
+ */
+export const connectionsDeckSubject = (spacePath: string): string =>
+  `${spacePath}/${SpaceSchema.SETTINGS_SECTION_ID}/${CONNECTIONS_SECTION_ID}`;

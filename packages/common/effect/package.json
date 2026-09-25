@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Effect utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,29 +29,28 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/opentelemetry": "catalog:",
     "@opentelemetry/api": "catalog:",
     "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-logs": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
+    "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:"
   },

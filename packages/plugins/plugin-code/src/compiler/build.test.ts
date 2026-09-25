@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type LoadedFile, compileEntry, executeScript } from './build';
-import { resetCompiler } from './singleton';
+import { type LoadedFile, compileEntry, executeScript } from './build.ts';
+import { resetCompiler } from './singleton.ts';
 
 // Skipped from default fast-CI; opt in with VITEST_TAGS_FILTER="llm || compiler".
 // The first compileEntry call fetches lib.d.ts from the playground CDN (~5s)

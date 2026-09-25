@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './TestPanel';
+export * from './TestPanel.tsx';

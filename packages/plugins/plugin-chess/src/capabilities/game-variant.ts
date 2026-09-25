@@ -5,29 +5,29 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
-import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
+import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { Chess } from '#types';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Name',
       description: 'Optional name for the game.',
     }),
   ),
   pgn: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'PGN',
       description: 'Optional Portable Game Notation to start from.',
     }),
   ),
 });
 
-const variant: GameVariant = {
+const variant: GameCapabilities.GameVariant = {
   id: Type.getTypename(Chess.State),
   label: 'Chess',
   icon: 'ph--shield-chevron--regular',
@@ -41,5 +41,5 @@ const variant: GameVariant = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+  Effect.succeed(Capability.contribute(GameCapabilities.VariantProvider, variant)),
 );

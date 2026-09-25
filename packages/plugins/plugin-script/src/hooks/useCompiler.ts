@@ -6,10 +6,9 @@ import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { ScriptEvents } from '#types';
-import { ScriptCapabilities } from '#types';
+import { ScriptCapabilities, ScriptEvents } from '#types';
 
-import type { Compiler } from '../compiler';
+import type { Compiler } from '../compiler/index.ts';
 
 /**
  * Asynchronously sets up the compiler and returns it.

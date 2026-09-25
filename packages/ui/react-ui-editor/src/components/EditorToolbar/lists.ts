@@ -9,7 +9,7 @@ import { List, toggleList } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const listStyles = {
   bullet: 'ph--list-bullets--regular',

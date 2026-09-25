@@ -4,7 +4,7 @@
 
 import { type HierarchyNode, hierarchy as d3Hierarchy } from 'd3';
 
-import { type TreeNode } from '../types';
+import { type TreeNode } from '../types.ts';
 
 /**
  * Build a d3 hierarchy from a TreeNode, pruning children of nodes whose ids are in `collapsed`.

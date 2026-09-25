@@ -14,14 +14,15 @@ import { fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { Organization } from '@dxos/types';
 
-import { Booking, Segment, Trip } from '../../types';
+import { Booking, Segment, Trip } from '#types';
+
 import gateChangeRaw from './testing/files/gate-change.md?raw';
 import genericConfirmationRaw from './testing/files/generic-booking-confirmation.md?raw';
 import klmConfirmationRaw from './testing/files/klm-confirmation.md?raw';
 import unitedConfirmationRaw from './testing/files/united-confirmation.md?raw';
 import unrelatedRaw from './testing/files/unrelated.md?raw';
-import { parseFixtureMessage } from './testing/load-fixture';
-import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor';
+import { parseFixtureMessage } from './testing/load-fixture.ts';
+import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor.ts';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});

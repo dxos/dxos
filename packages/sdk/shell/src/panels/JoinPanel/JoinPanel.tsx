@@ -5,16 +5,17 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
 
-import { Viewport } from '../../components';
-import { ConfirmReset } from '../../steps';
-import { stepStyles } from '../../styles';
-import { JoinHeading } from './JoinHeading';
-import { useJoinMachine } from './joinMachine';
-import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
+import { Viewport } from '../../components/index.ts';
+import { ConfirmReset } from '../../steps/index.ts';
+import { stepStyles } from '../../styles/index.ts';
+import { JoinHeading } from './JoinHeading.tsx';
+import { useJoinMachine } from './joinMachine.ts';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps.ts';
 import {
   AdditionMethodChooser,
   IdentityAdded,
@@ -22,7 +23,7 @@ import {
   InvitationAuthenticator,
   InvitationInput,
   InvitationRescuer,
-} from './steps';
+} from './steps/index.ts';
 
 // TODO(burdon): Needs to be reimplemented.
 export const JoinPanelImpl = ({
@@ -212,6 +213,27 @@ export const JoinPanel = ({
 
     return subscription.unsubscribe;
   }, [joinService]);
+
+  // TODO(wittjosiah): Workaround, not a fix. The defect is in the join machine: `identity` enters it as
+  //   a one-time context snapshot, so a panel mounting while an identity deletion settles routes on the
+  //   outgoing identity into `resettingIdentity`, a state with no automatic exit. The machine should
+  //   react to identity clearing rather than needing this effect to re-issue the disposition from
+  //   outside it. Doing that means editing the machine's routing, which is riskier than this is worth
+  //   until someone can reason through every transition it feeds.
+  useEffect(() => {
+    if (identity || initialDisposition !== 'accept-halo-invitation') {
+      return;
+    }
+
+    // The two states that leave the panel without the invitation input the caller asked for: the
+    // chooser is where the machine lands when the snapshot was null but the routing already consumed.
+    if (joinState.matches('resettingIdentity')) {
+      joinSend({ type: 'resetIdentity' });
+      joinSend({ type: 'acceptHaloInvitation' });
+    } else if (joinState.matches({ choosingIdentity: 'choosingAuthMethod' })) {
+      joinSend({ type: 'acceptHaloInvitation' });
+    }
+  }, [identity, initialDisposition, joinState, joinSend]);
 
   useEffect(() => {
     const stateStack = joinState.configuration[0].id.split('.');
@@ -410,25 +432,31 @@ export const JoinPanel = ({
 
   const onHaloDone = useCallback(() => {
     propsOnDone?.({
-      identityKey: joinState.context.identity?.identityKey ?? joinState.context.halo.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.identity?.spaceKey ?? joinState.context.halo.invitation?.spaceKey ?? null,
+      identityKey:
+        toPublicKey(joinState.context.identity?.identityKey) ??
+        toPublicKey(joinState.context.halo.invitation?.identityKey) ??
+        null,
+      swarmKey: toPublicKey(joinState.context.halo.invitation?.swarmKey) ?? null,
+      spaceKey:
+        toPublicKey(joinState.context.identity?.spaceKey) ??
+        toPublicKey(joinState.context.halo.invitation?.spaceKey) ??
+        null,
       target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 
   const onSpaceDone = useCallback(() => {
     propsOnDone?.({
-      identityKey: joinState.context.space.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
+      identityKey: toPublicKey(joinState.context.space.invitation?.identityKey) ?? null,
+      swarmKey: toPublicKey(joinState.context.space.invitation?.swarmKey) ?? null,
+      spaceKey: toPublicKey(joinState.context.space.invitation?.spaceKey) ?? null,
       target: joinState.context.space.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 
   const onConfirmResetStorage = useCallback(
     () =>
-      client.reset().then(() => {
+      client.halo.deleteIdentity().then(() => {
         joinSend({ type: 'resetIdentity' });
       }),
     [client, joinSend],

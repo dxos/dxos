@@ -5,7 +5,6 @@
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
-import { Operation } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import {
   InvocationOutcome,
@@ -15,11 +14,12 @@ import {
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 
-import { type Column, Table } from '../../../../components';
-import { theme } from '../../../../theme';
+import { type Column, Table } from '../../../../components/index.ts';
+import { theme } from '../../../../theme.ts';
 
 export type TraceProps = {
   db: Database.Database;

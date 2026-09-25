@@ -8,12 +8,11 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { CollectionModel } from '@dxos/app-toolkit';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { EffectEx } from '@dxos/effect';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
@@ -53,8 +52,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
     () =>
       Filter.or(
         ...(db ? db.graph.registry.list().filter(Type.isType) : [])
-          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
-          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+          .filter((schema) => TypeOptions.isUserType(schema))
           .map((schema) => Filter.type(Type.getURI(schema))),
       ),
     [db],
@@ -74,7 +72,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         const [results, containing] = yield* Effect.all(
           [
             Database.query(Query.select(filter)).run,
-            current ? Database.query(CollectionModel.containing(current)).run : Effect.succeed([]),
+            current ? Database.query(ContainerModel.containing(current)).run : Effect.succeed([]),
           ],
           { concurrency: 'unbounded' },
         );
@@ -99,7 +97,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           });
 
         // File new objects in the current document's collection; with no containing collection
-        // `OpenCreateObject` falls back to the space's own default placement.
+        // `OpenObjectForm` falls back to the space's own default placement.
         const target = containing[0] ?? db;
 
         const createItem: EditorMenuItem = {
@@ -107,15 +105,17 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           label: ['add-object.label', { ns: meta.profile.key }],
           icon: 'ph--plus--regular',
           onSelect: ({ view, head }) => {
-            void invokePromise?.(SpaceOperation.OpenCreateObject, {
+            void invokePromise?.(SpaceOperation.OpenObjectForm, {
               target,
               // Keep the deck where it is: the link is inserted back into the editor the user is in.
               navigable: false,
-              initialFormValues: name ? { name } : undefined,
-              onCreateObject: (object: Obj.Unknown) => {
+              defaults: name ? { name } : undefined,
+            }).then(({ data }) => {
+              const object = data?.target;
+              if (object) {
                 insertLink(view, head, toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
                 view.focus();
-              },
+              }
             });
           },
         };

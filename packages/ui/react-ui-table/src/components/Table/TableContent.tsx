@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as String from 'effect/String';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type MouseEvent, type WheelEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
@@ -24,13 +26,14 @@ import {
 import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/ui-theme';
 
-import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
-import { tableButtons, tableControls } from '../../util';
-import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
-import { ColumnActionsMenu } from './ColumnActionsMenu';
-import { ColumnSettings } from './ColumnSettings';
-import { RowActionsMenu } from './RowActionsMenu';
-import { TableController, useTableContext } from './Table';
+import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model/index.ts';
+import { tableButtons, tableControls } from '../../util/index.ts';
+import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor/index.ts';
+import { ColumnActionsMenu } from './ColumnActionsMenu.tsx';
+import { ColumnSettings } from './ColumnSettings.tsx';
+import { RowActionsMenu } from './RowActionsMenu.tsx';
+import { type TableController } from './Table.tsx';
+import { useTableContext } from './TableContext.ts';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
@@ -388,7 +391,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
     }
 
     return (
-      <div {...composableProps(props, { classNames: 'dx-container relative' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand relative' })} ref={forwardedRef}>
         <Grid.Root id={model.id ?? 'table-grid'}>
           <TableValueEditor
             model={model}

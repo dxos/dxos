@@ -7,15 +7,18 @@ import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Operation, OperationHandlerSet, Process } from '@dxos/compute';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
 
-import { Chat } from '../../../types';
-import { Relay } from './definitions';
-import relayHandler from './relay';
+import { Relay } from './definitions.ts';
+import relayHandler from './relay.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(relayHandler),
@@ -25,8 +28,8 @@ const TestLayer = AssistantTestLayer({
 // Control-plane only: the qualify:false path needs no LLM turn, so it runs ungated in CI.
 // Qualification itself (cheap-model relevance) is covered by the memoized agent-skill suite.
 describe('Agent relay (control plane)', () => {
-  it.scoped(
-    'forwards onto the durable session for the chat feed',
+  it.effect(
+    'forwards onto the durable session for the chat',
     Effect.fnUntraced(
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
@@ -44,8 +47,8 @@ describe('Agent relay (control plane)', () => {
           qualify: false,
         });
 
-        // Delivery lands on the durable process keyed by the chat feed (spawned on demand).
-        const target = Obj.getURI(feed);
+        // Delivery lands on the durable process bound to the chat (spawned on demand).
+        const target = Obj.getURI(chat);
         const processes = yield* processManager.list({ target });
         expect(processes.length).toBeGreaterThanOrEqual(1);
 

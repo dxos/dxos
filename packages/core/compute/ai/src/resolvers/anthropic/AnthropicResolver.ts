@@ -4,17 +4,20 @@
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+
+/** Developer authority of the model ids this resolver serves. */
+const ANTHROPIC_DEVELOPER = 'com.anthropic';
 
 export const make = () =>
-  AiModelResolver.AiModelResolver.resolver(
+  AiModelResolver.resolver(
     {
       name: 'Anthropic',
     },
@@ -24,19 +27,24 @@ export const make = () =>
       return (model, options): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never> => {
         // Resolve only when the request targets the edge provider (or leaves it unset).
         if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
-          return Layer.fail(new AiModelNotAvailableError(model));
+          return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
-        // Edge models are served by Anthropic; the catalog supplies the back-end name, the output-token
-        // ceiling, and which models use adaptive thinking (Opus).
+        // The edge provider fronts several upstreams; this resolver claims the Anthropic ids. The
+        // catalog supplies the back-end name, the output-token ceiling, and which models use adaptive
+        // thinking (Opus).
         const info = Model.get(Provider.edge.id, model);
-        if (!info) {
-          return Layer.fail(new AiModelNotAvailableError(model));
+        if (!info || Model.developer(model) !== ANTHROPIC_DEVELOPER) {
+          return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         const max_tokens = info.characteristics?.maxTokens;
         const thinking =
           info.characteristics?.thinking && (options?.thinking ?? true)
             ? // The Effect-AI Anthropic binding's `thinking.type` union predates Anthropic's `adaptive` mode.
-              ({ type: 'adaptive' as any } as const)
+              ({
+                type: 'adaptive',
+                // The API default omits thinking blocks from the stream; summaries keep them visible.
+                display: 'summarized',
+              } as const)
             : undefined;
         return AnthropicLanguageModel.layer({ model: info.backend, config: { thinking, max_tokens } }).pipe(
           Layer.provide(clientLayer),

@@ -6,12 +6,12 @@ import { useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Excalidraw } from '#types';
 
-import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
+import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter.ts';
 
 /**
  * Hook that manages the Excalidraw store adapter lifecycle for a canvas object.

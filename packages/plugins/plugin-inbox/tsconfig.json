@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -33,6 +30,9 @@
     },
     {
       "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -50,10 +50,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/ai"
@@ -63,12 +63,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
-      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/extractor"
@@ -86,9 +80,6 @@
       "path": "../../core/compute/pipeline-email"
     },
     {
-      "path": "../../core/compute/pipeline-rdf"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -104,9 +95,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -119,9 +107,6 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -129,9 +114,6 @@
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -161,19 +143,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-rdf"
+      "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-search"
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -185,7 +164,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"
@@ -206,6 +185,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
       "path": "../plugin-routine"
     },
     {
@@ -216,9 +198,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

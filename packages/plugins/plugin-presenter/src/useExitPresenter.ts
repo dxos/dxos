@@ -17,7 +17,7 @@ export const useExitPresenter = (object: any) => {
   const { invokePromise } = useOperationInvoker();
 
   return useCallback(
-    () => invokePromise(PresenterOperation.TogglePresentation, { object, state: false }),
+    () => invokePromise(PresenterOperation.SetPresenting, { object, state: false }),
     [invokePromise, object],
   );
 };

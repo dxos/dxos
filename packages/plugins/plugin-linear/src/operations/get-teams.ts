@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import { LinearOperation } from '#types';
+
+import { LinearApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Linear teams reachable from the connection's token.
@@ -28,7 +30,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
       const connectionObj = connection.target;
       const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
       if (!db) {
-        return yield* Effect.dieMessage('No database for connection ref.');
+        return yield* Effect.die(new Error('No database for connection ref.'));
       }
 
       return yield* Effect.gen(function* () {
@@ -42,10 +44,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
           description: team.description ?? undefined,
         }));
         return { targets };
-      }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(LinearApi.LinearCredentials.fromConnection(connection)),
-      );
+      }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), LinearApi.fromConnection(connection))));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

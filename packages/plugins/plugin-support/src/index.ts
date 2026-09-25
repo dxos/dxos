@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './skills';
-export * from './constants';
-export * from './meta';
-export * from './types';
+export * as SupportPlugin from './SupportPlugin.ts';
+export * from './constants.ts';
+export * from './errors.ts';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

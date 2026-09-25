@@ -7,9 +7,14 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -17,7 +22,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
-import { upsertToast } from '../util';
+import { upsertToast } from '../util/index.ts';
 
 const NOTIFY_TOAST_DURATION = 5_000;
 const ERROR_TOAST_DURATION = 10_000;
@@ -33,12 +38,15 @@ const UNDO_TOAST_DURATION = 10_000;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Captured so the forked undo fiber (a separate root effect; `Effect.runFork` does not
+    // inherit the current fiber's context) can still resolve capabilities via `Capability.waitFor`.
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
-    const monitor = yield* Capability.get(Capabilities.ProcessMonitor);
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capabilities.AtomRegistry;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
+    const monitor = yield* Capabilities.ProcessMonitor;
+    const manager = yield* Capabilities.PluginManager;
+    const invoker = yield* Capabilities.OperationInvoker;
+    const operationHandlers = yield* Capabilities.OperationHandler;
 
     const addToast = (toast: LayoutOperation.Toast) => {
       const state = registry.get(ephemeralAtom);
@@ -51,7 +59,9 @@ export default Capability.makeModule(
     const runInvocation = (action: Operation.SerializedInvocation) =>
       void EffectEx.runPromise(
         Effect.gen(function* () {
-          const handlers = OperationHandlerSet.merge(...capabilities.getAll(Capabilities.OperationHandler));
+          // Handler sets register eagerly at startup, so the merged contributions are complete;
+          // only the matched handler's body loads here (keyed sets resolve per operation).
+          const handlers = OperationHandlerSet.merge(...operationHandlers.get());
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
@@ -143,9 +153,13 @@ export default Capability.makeModule(
         description: ['plugin-failure.description', { ns: meta.profile.key }],
         icon: 'ph--warning--regular',
         duration: ERROR_TOAST_DURATION,
-        actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
-        actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
-        onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+        ...(SettingsOperation.isPluginRegistryAvailable(registry.get(manager.enabled))
+          ? {
+              actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
+              actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
+              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+            }
+          : {}),
       };
       const state = registry.get(ephemeralAtom);
       registry.set(ephemeralAtom, { ...state, toasts: upsertToast(state.toasts, toast) });
@@ -176,8 +190,8 @@ export default Capability.makeModule(
       registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: upsertToast(toasts, toast) });
     };
 
-    // The history tracker is contributed on ProcessManagerReady, possibly after this module activates;
-    // `waitFor` resolves it once available, then we observe its undoable stream.
+    // The history tracker may be contributed after this module activates; `waitFor` resolves
+    // it once available, then we observe its undoable stream.
     const undoFiber = Effect.runFork(
       Effect.gen(function* () {
         const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);
@@ -190,12 +204,13 @@ export default Capability.makeModule(
     );
 
     // Track all subscriptions so they are torn down when the module deactivates.
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
         unsubscribeMonitor();
         unsubscribeFailures();
         yield* Fiber.interrupt(undoFiber);
       }),
     );
+    return [];
   }),
 );

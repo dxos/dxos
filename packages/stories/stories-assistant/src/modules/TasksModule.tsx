@@ -7,7 +7,7 @@ import React from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';

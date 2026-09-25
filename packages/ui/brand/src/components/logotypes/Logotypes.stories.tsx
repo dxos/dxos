@@ -8,9 +8,9 @@ import React, { type PropsWithChildren } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { DXOSHorizontalType } from './DXOSHorizontalType';
-import { DXOSType } from './DXOSType';
-import { DXOSVerticalType } from './DXOSVerticalType';
+import { DXOSHorizontalType } from './DXOSHorizontalType.tsx';
+import { DXOSType } from './DXOSType.tsx';
+import { DXOSVerticalType } from './DXOSVerticalType.tsx';
 
 const Icon = () => null;
 
@@ -33,7 +33,7 @@ const Cell = ({ children, dark }: PropsWithChildren<{ dark?: boolean }>) => (
 export const Default: Story = {
   render: () => {
     return (
-      <div className='absolute flex h-full w-full items-center justify-center'>
+      <div className='absolute flex dx-fill items-center justify-center'>
         <div className='flex grid grid-cols-2 gap-16'>
           <Cell>
             <DXOSType className='w-[256px]' />

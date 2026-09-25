@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 export const SyncOptions = Schema.Struct({
   /** Sync messages or events from this many days back. */
   syncBackDays: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       title: 'Sync back days',
       description: 'Sync messages or events from this many days back.',
     }),
@@ -25,7 +25,7 @@ export const SyncOptions = Schema.Struct({
    * a free-text search across event fields.
    */
   filter: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Filter',
       description: 'Optional provider-specific search query applied in addition to the date range.',
     }),
@@ -40,7 +40,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 export const CalendarSyncOptions = Schema.Struct({
   /** Sync events forward from today by this many days. */
   syncForwardDays: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       title: 'Sync forward days',
       description: 'Sync events forward from today by this many days.',
     }),

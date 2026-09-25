@@ -4,7 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const ArtifactArticle: ComponentType<any> = lazy(() => import('./ArtifactArticle'));
-export const ArtifactsArticle: ComponentType<any> = lazy(() => import('./ArtifactsArticle'));
-export const GalleryArticle: ComponentType<any> = lazy(() => import('./GalleryArticle'));
-export const LightboxArticle: ComponentType<any> = lazy(() => import('./LightboxArticle'));
+export const MediaArtifactArticle: ComponentType<any> = lazy(() => import('./MediaArtifactArticle/index.ts'));
+export const StoryboardArticle: ComponentType<any> = lazy(() => import('./StoryboardArticle/index.ts'));
+export const FrameCompanion: ComponentType<any> = lazy(() => import('./FrameCompanion/index.ts'));
+export const GalleryArticle: ComponentType<any> = lazy(() => import('./GalleryArticle/index.ts'));
+export const LightboxArticle: ComponentType<any> = lazy(() => import('./LightboxArticle/index.ts'));

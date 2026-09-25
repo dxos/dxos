@@ -15,20 +15,21 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import type { CollectionId } from '@dxos/echo-protocol';
+import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { range } from '@dxos/util';
 
-import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing';
-import { AutomergeHost } from './automerge-host';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeHost } from './automerge-host.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
+import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
+import { deleteSubductionRemoteHeads } from './subduction-migrations/0001_delete_remote_heads.ts';
+import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate } from './subduction-test-utils.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
+describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
     const { runtime, dispose } = createRuntime();
     onTestFinished(() => dispose());
@@ -57,9 +58,132 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.whenReady();
+    await handle2.waitUntilReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
+  });
+
+  test('a write after eviction and re-lease is persisted', async ({ expect }) => {
+    // Eviction unloads a document that may be leased again later: the fork's subduction source has
+    // to re-attach to the new handle, or every subsequent write is dropped on the floor.
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
+
+    const created = await host.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    const url = created.url;
+    await host.flush(Context.default());
+
+    created[Symbol.dispose]();
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).not.toContain(documentId);
+
+    using reacquired = host.acquireDoc<any>(documentId);
+    await reacquired.waitUntilReady();
+    reacquired.change((doc: any) => {
+      doc.text = 'second';
+    });
+    await host.flush(Context.default());
+    await host.close();
+
+    const reopened = await setupAutomergeHost({ runtime });
+    using loaded = (await reopened.loadDoc<any>(Context.default(), url))!;
+    await loaded.waitUntilReady();
+    expect(loaded.doc()!.text).toEqual('second');
+  });
+
+  test('a write after eviction and re-lease reaches a peer', async ({ expect }) => {
+    // The subduction source keeps a per-document record bound to the handle it attached to; if
+    // eviction leaves that record in place, writes through the re-leased document are never synced.
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+    const created = await host1.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    await host1.flush(Context.default());
+
+    const network = await new TestReplicationNetwork().open();
+    try {
+      await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+      using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+
+      created[Symbol.dispose]();
+      await host1.drainEvictions();
+      expect(host1.loadedDocumentIds).not.toContain(documentId);
+
+      using reacquired = host1.acquireDoc<any>(documentId);
+      await reacquired.waitUntilReady();
+      reacquired.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await host1.flush(Context.default());
+
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('second');
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
+  });
+
+  test('sync works both ways after the stored remote heads are deleted', async ({ expect }) => {
+    // The recovery page's Repair action deletes these records. They only cache what a peer last reported, so a
+    // host restarted without them must still pull and push, and record the peer's heads again.
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+    const network = await new TestReplicationNetwork().open();
+    const connectHost1 = async () => {
+      const host = await setupAutomergeHost({ runtime: rt1.runtime });
+      await host.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      return host;
+    };
+
+    let host1 = await connectHost1();
+    try {
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      const created = await host1.createDoc<any>({ text: 'first' });
+      const documentId = created.documentId;
+      await host1.flush(Context.default());
+      using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(0);
+
+      created[Symbol.dispose]();
+      await host1.close();
+      const { deleted } = await RuntimeProvider.runPromise(rt1.runtime)(deleteSubductionRemoteHeads());
+      expect(deleted).toBeGreaterThan(0);
+      expect(await countStoredRemoteHeads(rt1.runtime)).toBe(0);
+
+      host1 = await connectHost1();
+      using reopened = (await host1.loadDoc<any>(Context.default(), documentId))!;
+      await reopened.waitUntilReady();
+      expect(reopened.doc()!.text).toEqual('first');
+
+      mirrored.change((doc: any) => {
+        doc.pulled = true;
+      });
+      await expect.poll(() => reopened.doc()?.pulled, { timeout: SYNC_WINDOW_MS }).toBe(true);
+      reopened.change((doc: any) => {
+        doc.pushed = true;
+      });
+      await expect.poll(() => mirrored.doc()?.pushed, { timeout: SYNC_WINDOW_MS }).toBe(true);
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(0);
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
   });
 
   test('load resolves when document is created from binary', async ({ expect }) => {
@@ -126,7 +250,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     }
   });
 
-  test('loads remote document over replication network', { timeout: 5_000 }, async ({ expect }) => {
+  test('loads remote document over replication network', async ({ expect }) => {
     const { runtime: runtime1, dispose: dispose1 } = createRuntime();
     onTestFinished(() => dispose1());
     const host1 = await setupAutomergeHost({ runtime: runtime1 });
@@ -136,7 +260,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
-    await waitForSubductionSave();
 
     const network = await new TestReplicationNetwork().open();
     try {
@@ -157,7 +280,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // exercises the same teardown path as the existing
   // `loads remote document over replication network` test and is included as a
   // baseline for the concurrent-close case below.
-  test('sequential close after sync does not hang', { timeout: 5_000 }, async ({ expect }) => {
+  test('sequential close after sync does not hang', async ({ expect }) => {
     const { runtime: runtime1, dispose: dispose1 } = createRuntime();
     onTestFinished(() => dispose1());
     const host1 = await setupAutomergeHost({ runtime: runtime1 });
@@ -167,7 +290,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
-    await waitForSubductionSave();
 
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(Context.default(), await network.createReplicator());
@@ -189,7 +311,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // (cancels readers / aborts writers); the second host then enters `_close`
   // and gets stuck draining subduction state that depends on the now-dead
   // peer.
-  test('concurrent close after sync does not hang', { timeout: 30_000 }, async ({ expect }) => {
+  test('concurrent close after sync does not hang', async ({ expect }) => {
     const { runtime: runtime1, dispose: dispose1 } = createRuntime();
     onTestFinished(() => dispose1());
     const host1 = await setupAutomergeHost({ runtime: runtime1 });
@@ -199,7 +321,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
-    await waitForSubductionSave();
 
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(Context.default(), await network.createReplicator());
@@ -213,7 +334,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     await network.close();
   });
 
-  test('collection synchronization', { timeout: 5_000 }, async ({ expect }) => {
+  test('collection synchronization', async ({ expect }) => {
     const NUM_DOCUMENTS = 10;
 
     const { runtime: runtime1, dispose: dispose1 } = createRuntime();
@@ -229,7 +350,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       documentIds.push(handle.documentId);
     }
     await host2.flush(Context.default());
-    await waitForSubductionSave();
 
     const network = await new TestReplicationNetwork().open();
     try {
@@ -268,7 +388,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // Mirrors the "loads remote document over replication network" baseline but
     // explicitly exercises `_subductionPolicy.authorizeFetch` via the per-connection
     // `shouldAdvertise` predicate.
-    test('authorized holder allows fetcher', { timeout: 5_000 }, async ({ expect }) => {
+    test('authorized holder allows fetcher', async ({ expect }) => {
       const rt1 = createRuntime();
       onTestFinished(() => rt1.dispose());
       const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
@@ -277,7 +397,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'authorized' });
       await host2.flush(Context.default());
-      await waitForSubductionSave();
 
       const network = await new TestReplicationNetwork().open();
       try {
@@ -297,7 +416,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // Holder's `shouldAdvertise` returns false → `_subductionPolicy.authorizeFetch`
     // on the holder rejects the fetcher's request → fetcher's query never reaches
     // `'ready'` and the local doc stays empty.
-    test('unauthorized holder blocks fetcher (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
+    test('unauthorized holder blocks fetcher (authorizeFetch denial)', async ({ expect }) => {
+      const gate = createDenyGate();
       const rt1 = createRuntime();
       onTestFinished(() => rt1.dispose());
       const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
@@ -306,19 +426,22 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'should-not-fetch' });
       await host2.flush(Context.default());
-      await waitForSubductionSave();
 
       const network = await new TestReplicationNetwork().open();
       try {
         await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
         // host2 (holder) refuses to advertise.
-        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
+        await host2.addReplicator(
+          Context.default(),
+          await network.createReplicator({ shouldAdvertise: () => gate.refuse() }),
+        );
 
         // Don't await `loadDoc` (it would hang). Probe via findWithProgress and assert no transition to 'ready'.
-        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
-        await sleep(POLICY_NEGATIVE_DELAY_MS);
-        expect(progress.peek().state).to.not.equal('ready');
-        expect(progress.handle.doc()?.text).to.be.undefined;
+        const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
+        // Wait for the holder to actually refuse to advertise, not for a span in which it might.
+        await gate.waitForDenial();
+        expect(progress.state).to.not.equal('ready');
+        expect(progress.doc()?.text).to.be.undefined;
       } finally {
         await host1.close();
         await host2.close();
@@ -330,47 +453,44 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // via the host (e.g. by calling `createDoc` which now schedules the task in both modes).
     // Per SKILL doc, `shareConfigChanged()` is the documented recovery hatch for
     // `authorizeFetch`-denied entries.
-    test(
-      'shareConfigChanged() recovers after authorizeFetch denial flips to allow',
-      { timeout: 5_000 },
-      async ({ expect }) => {
-        const rt1 = createRuntime();
-        onTestFinished(() => rt1.dispose());
-        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
-        const rt2 = createRuntime();
-        onTestFinished(() => rt2.dispose());
-        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
-        const handle = await host2.createDoc({ text: 'recover-me' });
-        await host2.flush(Context.default());
-        await waitForSubductionSave();
+    test('shareConfigChanged() recovers after authorizeFetch denial flips to allow', async ({ expect }) => {
+      const gate = createDenyGate();
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+      const handle = await host2.createDoc({ text: 'recover-me' });
+      await host2.flush(Context.default());
 
-        const network = await new TestReplicationNetwork().open();
-        try {
-          const host1Replicator = await network.createReplicator({ shouldAdvertise: () => true });
-          const host2Replicator = await network.createReplicator({ shouldAdvertise: () => false });
-          await host1.addReplicator(Context.default(), host1Replicator);
-          await host2.addReplicator(Context.default(), host2Replicator);
+      const network = await new TestReplicationNetwork().open();
+      try {
+        const host1Replicator = await network.createReplicator({ shouldAdvertise: () => true });
+        const host2Replicator = await network.createReplicator({ shouldAdvertise: () => gate.refuse() });
+        await host1.addReplicator(Context.default(), host1Replicator);
+        await host2.addReplicator(Context.default(), host2Replicator);
 
-          const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
-          await sleep(POLICY_NEGATIVE_DELAY_MS);
-          expect(progress.peek().state).to.not.equal('ready');
+        const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
+        // Wait for the holder to actually refuse to advertise, not for a span in which it might.
+        await gate.waitForDenial();
+        expect(progress.state).to.not.equal('ready');
 
-          // Flip the holder to allow, then drive a no-op commit on the holder.
-          // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
-          // calls `_repo.shareConfigChanged()` on host2 — the documented recovery
-          // hatch for `authorizeFetch`-denied entries.
-          host2Replicator.shouldAdvertise = () => true;
-          await host2.createDoc({ kick: true });
+        // Flip the holder to allow, then drive a no-op commit on the holder.
+        // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
+        // calls `_repo.shareConfigChanged()` on host2 — the documented recovery
+        // hatch for `authorizeFetch`-denied entries.
+        host2Replicator.shouldAdvertise = () => true;
+        await host2.createDoc({ kick: true });
 
-          await expect.poll(() => progress.peek().state, { timeout: 5_000 }).toEqual('ready');
-          expect(progress.handle.doc()?.text).toEqual('recover-me');
-        } finally {
-          await host1.close();
-          await host2.close();
-          await network.close();
-        }
-      },
-    );
+        await expect.poll(() => progress.state, { timeout: SYNC_WINDOW_MS }).toEqual('ready');
+        expect(progress.doc()?.text).toEqual('recover-me');
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
 
     // Regression test for the patched `Repo.on('subduction-peer-bound', ...)` event
     // (mirrors upstream automerge/automerge-repo#635). Subduction's discovery handshake
@@ -378,7 +498,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // hosts use `role: 'connect'`) at least one side observes the binding. We assert
     // the binding fields rather than count of events: the responder's binding must
     // carry the connector's repo PeerId and a distinct subduction PeerId.
-    test('subduction-peer-bound event surfaces verified peer ids', { timeout: 5_000 }, async ({ expect }) => {
+    test('subduction-peer-bound event surfaces verified peer ids', async ({ expect }) => {
       const rt1 = createRuntime();
       onTestFinished(() => rt1.dispose());
       const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
@@ -389,7 +509,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // doc on host2 before connecting so the adapter-connect flow runs end-to-end.
       await host2.createDoc({ text: 'binding-fixture' });
       await host2.flush(Context.default());
-      await waitForSubductionSave();
 
       const bindings: Array<{ side: 'host1' | 'host2'; binding: SubductionPeerBinding }> = [];
       ((host1 as any)._repo as any).on('subduction-peer-bound', (b: SubductionPeerBinding) =>
@@ -435,11 +554,18 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // policy denies BOTH `authorizeFetch` and `authorizePut` during the
   // initial subduction sync round (confirmed via subduction_core WARNs
   // `policy denied: authorizePut denied by client share policy`), flipping
-  // the policy to allow recovers replication within ~5 seconds WITHOUT any
-  // external nudge (no fresh commit, no explicit `shareConfigChanged()`
-  // call from the test). The recovery is driven by `AutomergeHost`'s
-  // automatic `_sharePolicyChangedTask` firing on `documentRequested`
-  // events from subduction's heal-retry attempts.
+  // the policy to allow recovers replication in seconds on `AutomergeHost`'s
+  // own machinery — no fresh commit and no `shareConfigChanged()` from the
+  // test — PROVIDED the scope change is signalled.
+  //
+  // CORRECTION: an earlier reading of this test had recovery needing no
+  // signal at all. It does. `_sharePolicyChangedTask` is scheduled by
+  // `onConnectionOpen`, `onConnectionAuthScopeChanged` and `documentRequested`
+  // only; a policy flip that signals none of them recovers just when a heal
+  // retry happens to request a document, which is why the unsignalled version
+  // failed at every window from 10s to 70s. Production always pairs a policy
+  // change with `onConnectionAuthScopeChanged` (e.g.
+  // `MeshEchoReplicator.authorizeDevice`), so the test now does too.
   //
   // This contradicts the raw-Repo F1 test in
   // `automerge-repo-subduction.test.ts` ("authorizePut deny → allow needs
@@ -471,7 +597,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       }
       await host1.flush(Context.default());
       await host2.flush(Context.default());
-      await waitForSubductionSave();
       return documentIds;
     };
 
@@ -486,42 +611,67 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       return true;
     };
 
-    test(
-      'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
-      { timeout: 25_000 },
-      async ({ expect }) => {
-        const rt1 = createRuntime();
-        onTestFinished(() => rt1.dispose());
-        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
-        const rt2 = createRuntime();
-        onTestFinished(() => rt2.dispose());
-        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
-        const documentIds = await createDivergentDocs(host1, host2);
+    test('deny→allow flip recovers via AutomergeHost machinery once the scope change is signalled', async ({
+      expect,
+    }) => {
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+      const documentIds = await createDivergentDocs(host1, host2);
 
-        const network = await new TestReplicationNetwork().open();
-        try {
-          let allowOnHost1 = false;
-          const host1Replicator = await network.createReplicator({ shouldAdvertise: () => allowOnHost1 });
-          await host1.addReplicator(Context.default(), host1Replicator);
-          await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      const network = await new TestReplicationNetwork().open();
+      try {
+        let allowOnHost1 = false;
+        const refused = new Set<string>();
+        const host1Replicator = await network.createReplicator({
+          shouldAdvertise: ({ documentId }) => {
+            if (allowOnHost1) {
+              return true;
+            }
+            refused.add(documentId);
+            return false;
+          },
+        });
+        await host1.addReplicator(Context.default(), host1Replicator);
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
-          // Hold deny long enough for subduction to attempt + log denials.
-          await sleep(3_000);
-          expect(await allConverged(host1, host2, documentIds)).toBe(false);
+        // Hold deny until EVERY document has been refused at least once, so each entry has a
+        // failed round for the scope-change signal below to re-drive. Waiting on the first
+        // refusal alone flips the policy before the later entries have settled, and nothing
+        // then re-drives them; a fixed span was the previous stand-in for this.
+        await expect.poll(() => refused.size, { timeout: SYNC_WINDOW_MS }).toBeGreaterThanOrEqual(documentIds.length);
+        // `refused` is observed on host1, but host2's round settles failed a moment later, and the
+        // scope-change signal below only re-drives entries that have ALREADY failed. Nothing
+        // reports that transition, so this last hop is a short bounded grace rather than an event.
+        await sleep(NO_TRAFFIC_WINDOW_MS);
+        expect(await allConverged(host1, host2, documentIds)).toBe(false);
 
-          allowOnHost1 = true;
-
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
-        } finally {
-          await host1.close();
-          await host2.close();
-          await network.close();
+        allowOnHost1 = true;
+        // Signal the scope change the way production does. `_sharePolicyChangedTask` is scheduled
+        // by exactly three things — `onConnectionOpen`, `onConnectionAuthScopeChanged`, and an
+        // incidental `documentRequested` — and flipping a `shouldAdvertise` closure fires none of
+        // them, so without this the test waits on a heal retry happening to ask host1 for a doc.
+        // That is why it failed at windows of 10s, 20s, 35s and 70s alike.
+        for (const connection of host1Replicator.connections) {
+          host1Replicator.context!.onConnectionAuthScopeChanged(connection);
         }
-      },
-    );
 
-    test('control: docs converge when policy never denies', { timeout: 15_000 }, async ({ expect }) => {
+        // Its own window, and the widest in the suite: recovery here rides `_sharePolicyChangedTask`,
+        // which throttles to `SHARE_POLICY_KICK_MIN_INTERVAL_MS` (1s) before it even fans out, over
+        // five documents. 10s held when the file ran alone but not against the rest of the suite in
+        // parallel; 15s is the value measured green across 20 consecutive full runs.
+        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 15_000 }).toBe(true);
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    test('control: docs converge when policy never denies', async ({ expect }) => {
       const rt1 = createRuntime();
       onTestFinished(() => rt1.dispose());
       const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
@@ -535,7 +685,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
         await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
-        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 5_000 }).toBe(true);
+        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: SYNC_WINDOW_MS }).toBe(true);
       } finally {
         await host1.close();
         await host2.close();
@@ -544,7 +694,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     });
   });
 
-  test('collection synchronization is bidirectional', { timeout: 10_000 }, async ({ expect }) => {
+  test('collection synchronization is bidirectional', async ({ expect }) => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];
 
@@ -565,7 +715,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       host2DocumentIds.push(handle.documentId);
     }
     await host2.flush(Context.default());
-    await waitForSubductionSave();
 
     const network = await new TestReplicationNetwork().open();
     try {
@@ -601,10 +750,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // End-to-end policy gating using the real DXOS replication stack:
   // `MeshEchoReplicator` over `TeleportBuilder`. The mesh replicator is the
   // production wiring for peer-to-peer DXOS connections; it gates per-space
-  // via `authorizeDevice(spaceKey, deviceKey)`.
+  // via `authorizeDevice(await createIdFromSpaceKey(spaceKey), deviceKey)`.
   describe('subductionPolicy + MeshEchoReplicator', () => {
     // Two hosts in the same space, both authorized → doc replicates.
-    test('authorized peers in same space replicate', { timeout: 5_000 }, async ({ expect }) => {
+    test('authorized peers in same space replicate', async ({ expect }) => {
       const spaceKey = PublicKey.random();
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
@@ -618,7 +767,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       const handle = await host2.host.createDoc({ text: 'mesh-authorized' });
       await host2.host.flush(Context.default());
-      await waitForSubductionSave();
 
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ true);
 
@@ -637,7 +785,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // `MeshReplicatorConnection.shouldAdvertise` consults `_authorizedDevices`, which
     // is empty → `_subductionPolicy.authorizeFetch` rejects on the holder → fetcher
     // never reaches `'ready'`.
-    test('unauthorized peers cannot fetch (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
+    test('unauthorized peers cannot fetch (authorizeFetch denial)', async ({ expect }) => {
       const spaceKey = PublicKey.random();
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
@@ -651,14 +799,15 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       const handle = await host2.host.createDoc({ text: 'mesh-denied' });
       await host2.host.flush(Context.default());
-      await waitForSubductionSave();
 
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
 
-      const progress = host1.host.findWithProgress<{ text: string }>(handle.documentId);
-      await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-      expect(progress.handle.doc()?.text).to.be.undefined;
+      // An unauthorized mesh connection advertises nothing, so there is no refusal to observe and
+      // no traffic to drain — the bounded window is the assertion.
+      const progress = host1.host.acquireDoc<{ text: string }>(handle.documentId);
+      await sleep(NO_TRAFFIC_WINDOW_MS);
+      expect(progress.state).to.not.equal('ready');
+      expect(progress.doc()?.text).to.be.undefined;
     });
 
     // Start unauthorized; the holder's `_subductionPolicy.authorizeFetch` rejects.
@@ -666,7 +815,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // `_sharePolicyChangedTask` → `_repo.shareConfigChanged()` on the holder — the
     // documented recovery hatch). The denied entry on the fetcher should clear and
     // the doc syncs.
-    test('authorizeDevice after denial recovers replication', { timeout: 10_000 }, async ({ expect }) => {
+    test('authorizeDevice after denial recovers replication', async ({ expect }) => {
       const spaceKey = PublicKey.random();
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
@@ -680,23 +829,18 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       const handle = await host2.host.createDoc({ text: 'mesh-recover' });
       await host2.host.flush(Context.default());
-      await waitForSubductionSave();
 
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
 
       // Probe but don't wait on `findWithProgress` (the subduction fork transitions
       // to `'unavailable'` when no peer serves the doc, which is sticky).
-      await sleep(POLICY_NEGATIVE_DELAY_MS);
-      const initial = host1.host.findWithProgress<{ text: string }>(handle.documentId).peek();
-      expect(initial.state).to.not.equal('ready');
+      // As above: nothing crosses an unauthorized connection, so this negative is a bounded window.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
+      using probe = host1.host.acquireDoc<{ text: string }>(handle.documentId);
+      expect(probe.state).to.not.equal('ready');
 
-      // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
-      // EchoNetworkAdapter, which under subduction triggers a fresh handshake — that
-      // clears the stuck "all-failed" fetch entry and rebinds the subduction PeerId.
-      // Driving a no-op commit on the holder kicks `_sharePolicyChangedTask` →
-      // `shareConfigChanged()` for belt-and-suspenders recovery on the fetcher.
-      await host1.meshReplicator.authorizeDevice(spaceKey, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceKey, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host1.teleport.peerId);
       await host2.host.createDoc({ kick: true });
 
       // Re-probe via a fresh load: the previous `DocumentQuery` may already have
@@ -706,7 +850,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           async () =>
             (await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 500 }))?.doc()
               ?.text,
-          { timeout: 5_000 },
+          { timeout: SYNC_WINDOW_MS },
         )
         .toEqual('mesh-recover');
     });
@@ -717,7 +861,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // `spaceKey` via `getContainingSpaceForDocument` → `_getSpaceKeyByRootDocumentId`
     // and that `MeshReplicatorConnection.shouldAdvertise` rejects when the device
     // is not in `_authorizedDevices[spaceB]`.
-    test('device authorized for space A cannot fetch space B docs', { timeout: 5_000 }, async ({ expect }) => {
+    test('device authorized for space A cannot fetch space B docs', async ({ expect }) => {
       const spaceA = PublicKey.random();
       const spaceB = PublicKey.random();
       const teleportBuilder = new TeleportBuilder();
@@ -754,11 +898,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         preserveHistory: true,
       });
       await host2.host.flush(Context.default());
-      await waitForSubductionSave();
 
       // Authorize the device pair only for space A on both sides.
-      await host1.meshReplicator.authorizeDevice(spaceA, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceA, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host1.teleport.peerId);
 
       const [connection1, connection2] = await teleportBuilder.connect(host1.teleport, host2.teleport);
       connection1.teleport.addExtension('automerge', host1.meshReplicator.createExtension());
@@ -776,10 +919,11 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       // Space B doc does NOT — host2's `_subductionPolicy.authorizeFetch` resolves
       // its space → spaceB, finds no authorized devices for spaceB, rejects.
-      const progress = host1.host.findWithProgress<{ text: string }>(spaceBDocId);
-      await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-      expect(progress.handle.doc()?.text).to.be.undefined;
+      // No wait needed: the space-A poll above already observed this connection carrying a doc, so
+      // anything space B was going to receive over it would have arrived by now.
+      const progress = host1.host.acquireDoc<{ text: string }>(spaceBDocId);
+      expect(progress.state).to.not.equal('ready');
+      expect(progress.doc()?.text).to.be.undefined;
     });
   });
 });
@@ -791,16 +935,11 @@ const createRuntime = (tmpPath?: string): RuntimeHandle => {
   return createTestSqliteRuntime(tmpPath ? tmpPath + '.db' : ':memory:');
 };
 
-const waitForSubductionSave = async () => {
-  await sleep(150);
+const countStoredRemoteHeads = async (runtime: RuntimeArg): Promise<number> => {
+  const adapter = new SqliteStorageAdapter({ runtime });
+  await adapter.open();
+  return (await adapter.loadRange(['subduction', 'remote-heads'])).length;
 };
-
-/**
- * Wait long enough that a permissive policy would have completed the sync round, so
- * a stable not-ready / empty assertion proves the policy denial held. Tuned for the
- * happy-path subduction sync observed locally (~200–300 ms) plus margin.
- */
-const POLICY_NEGATIVE_DELAY_MS = 500;
 
 const setupAutomergeHost = async ({ runtime }: { runtime: RuntimeArg }) => {
   const host = new AutomergeHost({
@@ -879,8 +1018,8 @@ const connectMeshPeers = async (
   authorized: boolean,
 ) => {
   if (authorized) {
-    await peer1.meshReplicator.authorizeDevice(spaceKey, peer2.teleport.peerId);
-    await peer2.meshReplicator.authorizeDevice(spaceKey, peer1.teleport.peerId);
+    await peer1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer2.teleport.peerId);
+    await peer2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer1.teleport.peerId);
   }
 
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);

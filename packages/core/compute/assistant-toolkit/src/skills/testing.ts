@@ -8,7 +8,7 @@ import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { AiRequest, AiSession, GenerationObserver, Harness } from '@dxos/assistant';
-import type { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 

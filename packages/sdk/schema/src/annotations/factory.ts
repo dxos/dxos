@@ -23,5 +23,5 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  */
 export type FactoryFn = (values: any) => unknown;
 
-export const FactoryAnnotationId = Symbol.for('@dxos/schema/annotation/Factory');
+export const FactoryAnnotationId = '@dxos/schema/annotation/Factory';
 export const FactoryAnnotation = createAnnotationHelper<FactoryFn>(FactoryAnnotationId);

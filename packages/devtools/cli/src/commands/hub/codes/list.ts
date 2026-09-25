@@ -2,31 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type AdminListInvitationCodesResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util';
+import { HubApiError, formatHubError, hubApiRequest } from '../util.ts';
 
-const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): string => {
+type CodeRow = AdminListInvitationCodesResponse['codes'][number];
+
+const redemptionsOf = (row: CodeRow): number =>
+  row.redemptionCount ?? (row.redeemedAt || row.redeemedByIdentityDid ? 1 : 0);
+
+const statusOf = (row: CodeRow): string => {
   if (row.revokedAt) {
     return 'revoked';
   }
-  if (row.redeemedByIdentityDid) {
+  if (redemptionsOf(row) >= (row.maxRedemptions ?? 1)) {
     return 'redeemed';
   }
   return 'available';
 };
+
+const usesOf = (row: CodeRow): string => `${redemptionsOf(row)}/${row.maxRedemptions ?? 1}`;
 
 export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
     const result = yield* hubApiRequest<AdminListInvitationCodesResponse>('GET', '/api/code').pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new HubApiError({ message: formatHubError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {
@@ -44,7 +51,7 @@ export const list = Command.make(
       const issuer = row.issuedByIdentityDid ? row.issuedByIdentityDid.slice(0, 20) + '…' : 'bootstrap';
       const created = new Date(row.createdAt).toLocaleString();
       yield* Console.log(
-        `  ${row.code}  ${status.padEnd(10)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,
+        `  ${row.code}  ${status.padEnd(10)} ${usesOf(row).padEnd(8)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,
       );
     }
   }),

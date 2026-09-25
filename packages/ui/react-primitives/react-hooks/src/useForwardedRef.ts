@@ -38,7 +38,7 @@ export function setRef<T>(ref: Ref<T> | undefined | null, value: T | null): Retu
  * Merges multiple refs into a single ref callback.
  * Returns a ref callback that synchronizes all provided refs and handles cleanup.
  */
-export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
+export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): RefCallback<T> => {
   return (value: T | null) => {
     const cleanups: (() => void)[] = [];
     for (const ref of refs) {
@@ -58,6 +58,6 @@ export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
  * Hook that merges multiple refs into a single stable ref callback.
  * The returned ref is memoized and only changes when the refs array changes.
  */
-export const useMergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
+export const useMergeRefs = <T>(refs: (Ref<T> | undefined)[]): RefCallback<T> => {
   return useMemo(() => mergeRefs(refs), [...refs]);
 };

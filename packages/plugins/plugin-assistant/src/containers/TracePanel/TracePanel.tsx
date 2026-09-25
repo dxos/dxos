@@ -2,250 +2,168 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
-import { pipe } from 'effect/Function';
-import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process } from '@dxos/compute';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Process from '@dxos/compute/Process';
+import { Annotation, Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { type Space } from '@dxos/react-client/echo';
-import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { useAttentionAttributes, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import {
+  TracePanel as NaturalTracePanel,
+  type TracePanelProps as NaturalTracePanelProps,
+  type ProcessEnvironment,
+  parseProcessEnvironments,
+  useExecutionGraph,
+  useTraceMessages,
+} from '@dxos/react-ui-trace';
 
-import { ProcessTree, ProcessTreeProps } from '#components';
-import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
-import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
+export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<NaturalTracePanelProps, 'onProcessTerminate'>>;
 
+/**
+ * The trace panel bound to the app: the process monitor, the space's trace feed, the assistant's
+ * settings (environment filter, debug view), a view-state process selection, and navigation.
+ */
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
     const { invokePromise } = useOperationInvoker();
-    const settings = useAtomCapability(AssistantCapabilities.Settings);
-    const tracePanelDebug = settings.tracePanelDebug ?? false;
+    const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
+    const environments = useMemo(
+      () => parseProcessEnvironments(settings.traceProcessEnvironments),
+      [settings.traceProcessEnvironments],
+    );
+    const handleEnvironmentsChange = useCallback(
+      (traceProcessEnvironments: ProcessEnvironment[]) =>
+        updateSettings((settings) => ({ ...settings, traceProcessEnvironments })),
+      [updateSettings],
+    );
 
-    // `useDeferredValue` batches update bursts, works together with `React.memo`.
-    // See the comment in `ProcessTreeContainer` for more details.
-    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
+    // The picked processes live in view state keyed by the panel, so they survive a remount; the
+    // trace narrows to them and their children.
+    const selectedPids = useSelection(attendableId, 'multi');
+    const { multi: setSelected } = useSelectionActions(attendableId);
 
-    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
-    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
-    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
-    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
-    const traceMessages = useTraceMessages(space);
-    useEffect(() => {
-      if (!import.meta.env.DEV) {
-        return;
+    const monitor = useCapability(Capabilities.ProcessMonitor);
+    const processesAtom = useMemo(
+      () => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty,
+      [monitor],
+    );
+    const processes = useAtomValue(processesAtom);
+    const graph = useExecutionGraph(space, monitor?.processTreeAtom, { selectedPids });
+
+    // A process only knows the feed it serves, so the chat's name is joined in here rather than
+    // carried on the process itself.
+    const chats = useQuery(space.db, Filter.type(Chat.Chat));
+    const chatNamesByFeed = useMemo(() => {
+      const names = new Map<string, string>();
+      for (const chat of chats) {
+        const name = chat.name?.trim();
+        if (name) {
+          names.set(feedKey(chat.feed.uri), name);
+        }
       }
-      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
-      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
-      debugGlobal.dxosDumpTrace = () => {
-        const data = traceMessages.map((message) => ({
-          meta: message.meta,
-          isEphemeral: message.isEphemeral,
-          events: message.events,
-        }));
-        const json = JSON.stringify(data, null, 2);
-        // eslint-disable-next-line no-console
-        console.log(json);
-        void navigator.clipboard?.writeText(json);
-        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
-      };
-      return () => {
-        delete debugGlobal.dxosDumpTrace;
-      };
-    }, [traceMessages]);
+      return names;
+    }, [chats]);
 
-    const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
-    const handleCommitSelect = useCallback(
-      (commit: Commit | undefined) => {
-        setSelectedCommit(commit);
-        if (commit?.link) {
-          const echoUri = EID.tryParse(commit.link);
-          const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
-          const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
-          if (spaceId && objectId) {
-            // TODO(dmaretskyi): Navigates, but fails to open.
-            void invokePromise(LayoutOperation.Open, {
-              subject: [`${spaceId}:${objectId}`],
-            });
-          }
-        }
-      },
-      [invokePromise, setSelectedCommit],
-    );
-
-    // Select current branch.
-    const [currentBranch, setCurrentBranch] = useState<string | null>(null);
-    const handleProcessSelect = useCallback(
+    // Only the agent process itself is renamed: its children inherit the conversation environment and
+    // keep their own operation names.
+    const resolveLabel = useCallback(
       (process: Process.Info) => {
-        const branch = branches.find((branch) => branch === process.pid.toString());
-        if (branch) {
-          setCurrentBranch(branch);
+        if (!Process.isHarnessHost(process)) {
+          return undefined;
         }
+        const target = Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation).pipe(
+          Option.getOrUndefined,
+        );
+        return target === undefined ? undefined : chatNamesByFeed.get(feedKey(target.toString()));
       },
-      [branches],
+      [chatNamesByFeed],
     );
+
+    const handleOpenLink = useCallback(
+      (uri: string) => {
+        const eid = EID.tryParse(uri);
+        if (!eid || !EID.getSpaceId(eid) || !EID.getEntityId(eid)) {
+          return;
+        }
+
+        void invokePromise(NavigationOperation.ResolveNavigationTargets, { query: { uri: eid } }).then(({ data }) => {
+          const path = data?.targets[0]?.path;
+          if (path) {
+            void invokePromise(LayoutOperation.Open, { subject: [path] });
+          }
+        });
+      },
+      [invokePromise],
+    );
+
+    useTraceDumpHatch(space);
 
     return (
-      <div
-        {...composableProps(props, {
-          ...attentionAttrs,
-          classNames: mx(
-            'h-full grid divide-y divide-separator',
-            !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[minmax(0,160px)_1fr]',
-          ),
-        })}
+      <NaturalTracePanel
+        {...composableProps(props, attentionAttrs)}
         ref={forwardedRef}
-      >
-        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
-
-        <ScrollContainer.Root pin>
-          <ScrollContainer.Content thin>
-            <ScrollContainer.Fade />
-            <ScrollContainer.Viewport>
-              {tracePanelDebug ? (
-                <Syntax.Root data={spanTree}>
-                  <Syntax.Content>
-                    <Syntax.Viewport>
-                      <Syntax.Code className='text-xs' />
-                    </Syntax.Viewport>
-                  </Syntax.Content>
-                </Syntax.Root>
-              ) : (
-                <Timeline
-                  compact
-                  commits={commits}
-                  branches={branches}
-                  currentBranch={currentBranch}
-                  onSelect={handleCommitSelect}
-                />
-              )}
-            </ScrollContainer.Viewport>
-            <ScrollContainer.ScrollDownButton />
-          </ScrollContainer.Content>
-        </ScrollContainer.Root>
-
-        {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code className='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        )}
-      </div>
+        processes={processes}
+        graph={graph}
+        environments={environments}
+        onEnvironmentsChange={handleEnvironmentsChange}
+        debug={settings.tracePanelDebug ?? false}
+        resolveLabel={resolveLabel}
+        selected={selectedPids}
+        onSelectedChange={setSelected}
+        onProcessTerminate={onProcessTerminate}
+        onOpenLink={handleOpenLink}
+      />
     );
   },
 );
 
+TracePanel.displayName = 'TracePanel';
+
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
 
-// How often the graph re-checks for spans that timed out with no closing event.
-// Coarse-grained on purpose: `spanTimeoutMs` operates on a 20-minute scale, so there is no
-// benefit to re-deriving the graph more often than this just to catch the timeout crossing.
-const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
-
-type UseExecutionGraphOptions = {
-  collapseCompletedSpans?: boolean;
-  eventLimit?: number;
+/** Entity id of a feed URI, the join key between a process environment and a chat's feed ref. */
+const feedKey = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return (eid && EID.getEntityId(eid)) ?? uri;
 };
 
-const useExecutionGraph = (
-  space: Space,
-  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
-): ExecutionGraph => {
-  const monitor = useCapability(Capabilities.ProcessMonitor);
-  const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
+const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta.env.DEV
+  ? (space) => {
+      const traceMessages = useTraceMessages(space);
+      useEffect(() => {
+        const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+        debugGlobal.dxosDumpTrace = () => {
+          const data = traceMessages.map((message) => ({
+            meta: message.meta,
+            isEphemeral: message.isEphemeral,
+            events: message.events,
+          }));
+          const json = JSON.stringify(data, null, 2);
+          // eslint-disable-next-line no-console
+          console.log(json);
+          void navigator.clipboard?.writeText(json);
+          return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+        };
 
-  // Ticks periodically so spans that are still open purely because no new trace event has
-  // arrived (e.g. the runtime crashed before writing its `operationEnd`) eventually get
-  // force-closed by `buildExecutionGraph`'s `spanTimeoutMs` check, instead of staying stuck
-  // until unrelated trace activity happens to trigger a recompute.
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), SPAN_TIMEOUT_CHECK_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, []);
-
-  const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
-  );
-
-  return useAtomValue(atom);
-};
-
-const getExecutionGraph = (
-  space: Space,
-  processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
-): Atom.Atom<ExecutionGraph> => {
-  const traceMessages = getTraceMessagesAtom(space);
-
-  const activeProcesses = pipe(
-    processesAtom,
-    Atom.debounce(Duration.millis(500)),
-    Atom.map((processes) =>
-      // `Data.array` does structural comparison on the array elements.
-      Data.array(
-        processes
-          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
-          .map(Data.struct),
-      ),
-    ),
-  );
-
-  return Atom.make((get) =>
-    buildExecutionGraph({
-      traceMessages: get(traceMessages),
-      activeProcesses: get(activeProcesses),
-      collapseCompletedSpans,
-      eventLimit,
-      now,
-    }),
-  );
-};
-TracePanel.displayName = 'TracePanel';
-
-// Isolate `ProcessTree` updates from the rest of the panel.
-// TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({
-  onProcessSelect,
-  onProcessTerminate,
-}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
-  const monitor = useCapability(Capabilities.ProcessMonitor);
-  const processes = useAtomValue(
-    useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
-  );
-
-  // `processes` updates in bursts (about 14 updates per navigation).
-  // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
-  // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
-  const processesDeferred = useDeferredValue(processes);
-  return (
-    <ProcessTree
-      processes={processesDeferred}
-      depth={3}
-      onProcessSelect={onProcessSelect}
-      onProcessTerminate={onProcessTerminate}
-    />
-  );
-};
+        return () => {
+          delete debugGlobal.dxosDumpTrace;
+        };
+      }, [traceMessages]);
+    }
+  : () => {};

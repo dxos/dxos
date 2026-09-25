@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -41,8 +41,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
     const types = schemas
       .flat()
       .filter(Type.isType)
-      .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
-      .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+      .filter((type) => TypeOptions.isUserType(type))
       .filter((type) => Type.getTypename(type) !== collectionTypename);
     return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
   }, [schemas]);

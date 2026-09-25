@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { type KnotHandle, type Options, render } from './three';
+import { type KnotHandle, type Options, render } from './three.ts';
 
 export type KnotProps = {
   options?: Partial<Options>;
@@ -39,5 +39,5 @@ export const Knot = ({ options }: KnotProps = {}) => {
     }
   }, [options]);
 
-  return <div ref={ref} className='relative w-full h-full' />;
+  return <div ref={ref} className='relative dx-fill' />;
 };

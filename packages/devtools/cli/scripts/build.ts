@@ -13,8 +13,7 @@ import { dirname, extname, join } from 'path';
 /**
  * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
  * resolves the spec to a file path and inlines the file's contents as the default export.
- * Required because some workspace packages (e.g. `@dxos/echo-query`'s `query-sandbox.ts`)
- * use `?raw` to inline the bundled `query-lite` bundle as a string for QuickJS evaluation;
+ * Required because some workspace packages inline assets (shaders, fixtures) as strings this way;
  * Vite-built consumers handle this natively, but Bun's resolver doesn't.
  */
 const rawImportPlugin: BunPlugin = {
@@ -131,7 +130,11 @@ const automergeWasmPlugin: BunPlugin = {
   },
 };
 
-// Platform configurations.
+// Platform configurations. Every target needs its `@opentui/core-<platform>-<arch>` installed here —
+// `@opentui/core` reaches its native library through a dynamic import interpolating
+// `process.platform`/`process.arch`, which bun folds into a constant per target and resolves at
+// bundle time — hence the devDependencies on all five, which pnpm otherwise installs for the host
+// platform alone.
 const platforms = [
   { target: 'bun-darwin-arm64', platform: 'darwin', arch: 'arm64', ext: '' },
   { target: 'bun-darwin-x64', platform: 'darwin', arch: 'x64', ext: '' },
@@ -187,6 +190,14 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
     plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
+    // Marks the binary so `--watch` selects the binary strategy: a binary has no sources for
+    // `bun --watch` to track, so its supervisor re-runs the executable and watches dev-installed
+    // plugins instead. Substituted while bundling rather than read from the environment at startup,
+    // so nothing in the environment can flip it.
+    define: {
+      'globalThis.DX_CLI_BUNDLED': 'true',
+      'globalThis.DX_CLI_POSTHOG_TOKEN': JSON.stringify(process.env.DX_CLI_POSTHOG_API_KEY ?? ''),
+    },
     compile: {
       target,
       outfile,

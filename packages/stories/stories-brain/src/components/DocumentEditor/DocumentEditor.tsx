@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { IconButton, Input, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { Field, IconButton, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -52,12 +52,12 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {parse && (
-            <Input.Root>
+            <Field.Root>
               <div className='flex items-center gap-2'>
-                <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Input.Label classNames='text-sm text-description'>POS</Input.Label>
+                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
-            </Input.Root>
+            </Field.Root>
           )}
           <div className='grow' />
           <IconButton

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { decamelize, hyphenize } from './case';
+import { decamelize, hyphenize } from './case.ts';
 
 describe('util', () => {
   test('decamelize', () => {

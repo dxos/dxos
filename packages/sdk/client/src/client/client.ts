@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
   type Echo,
@@ -20,7 +21,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,18 +31,22 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  RpcClosedError,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
-import { type MeshProxy } from '../mesh/mesh-proxy';
-import type { IFrameManager, Shell, ShellManager } from '../services';
-import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
+import { type MeshProxy } from '../mesh/mesh-proxy.ts';
+import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
+import { DXOS_VERSION } from '../version.ts';
+import { ClientRuntime } from './client-runtime.ts';
+
+/** Longest a destroy waits for a database's pending writes to reach the host. */
+const DESTROY_FLUSH_TIMEOUT = 5_000;
 
 /**
  * This options object configures the DXOS Client.
@@ -55,7 +60,7 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
 
   /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
-  runtime?: Runtime.Runtime<never>;
+  runtime?: EffectContext.Context<never>;
 
   /** ECHO schema. */
   types?: Type.AnyEntity[];
@@ -82,13 +87,15 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _fatalErrorUpdate = new Event<Error | null>();
+  private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
   private readonly _echoClient = new EchoClient();
 
   private readonly _options: ClientOptions;
 
   /** Effect runtime threaded to client components for running service-rpc effects. */
-  private readonly _effectRuntime: Runtime.Runtime<never>;
+  private readonly _effectRuntime: EffectContext.Context<never>;
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -103,6 +110,9 @@ export class Client {
   private _services?: ClientServicesProvider;
 
   private _initialized = false;
+
+  /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
+  private readonly _initializedTrigger = new Trigger();
 
   private _resetting = false;
 
@@ -135,7 +145,7 @@ export class Client {
     }
 
     this._options = options;
-    this._effectRuntime = options.runtime ?? Runtime.defaultRuntime;
+    this._effectRuntime = options.runtime ?? EffectContext.empty();
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');
@@ -195,10 +205,29 @@ export class Client {
   }
 
   /**
+   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
+   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
+   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   *
+   * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
+   * own call site, and this promise stays pending.
+   */
+  waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._initializedTrigger.wait({ timeout });
+  }
+
+  /**
    * Client services system status.
    */
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
+  }
+
+  /**
+   * Set when the system status stream fails after open; cleared only when the client reopens.
+   */
+  get fatalError(): MulticastObservable<Error | null> {
+    return this._fatalError;
   }
 
   /**
@@ -280,17 +309,15 @@ export class Client {
    */
   // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
-    const { DiagnosticsCollector } = await import('@dxos/client-services');
+    const { Diagnostics } = await import('@dxos/client-services');
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    return DiagnosticsCollector.collect(this._config, this.services, options);
+    return Diagnostics.DiagnosticsCollector.collect(this._config, this.services, options);
   }
 
   /**
    * Test and repair database.
    */
   async repair(): Promise<any> {
-    const { createLevel } = await import('@dxos/client-services');
-
     // TODO(burdon): Factor out.
     const repairSummary: any = {};
 
@@ -332,24 +359,8 @@ export class Client {
     }
 
     {
-      repairSummary.levelDBRemovedEntries = 0;
-      // Cleanup old index-data from level db.
-      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
-      const sublevelsToCleanup = [
-        level.sublevel('index-store'),
-        level.sublevel('index-metadata').sublevel('clean'),
-        level.sublevel('index-metadata').sublevel('dirty'),
-      ];
-
-      for (const sublevel of sublevelsToCleanup) {
-        repairSummary.levelDBRemovedEntries += (await sublevel.keys().all()).length;
-        await sublevel.clear();
-      }
-    }
-
-    {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc.QueryService.reindex(undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
         timeout: 30_000,
         label: 'QueryService.reindex',
       });
@@ -371,8 +382,10 @@ export class Client {
 
     performance.mark('client.initialize:called');
     log('initializing client');
-    const { createClientServices, IFrameManager, ShellManager } = await import('../services');
-    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
+    const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
+      await import('@dxos/protocols/buf/dxos/config_pb');
+    performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
     this._ctx = new Context();
@@ -383,7 +396,7 @@ export class Client {
       // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime_Client_ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -391,10 +404,10 @@ export class Client {
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
-            ? Runtime.Client.Storage.SqliteMode.OPFS
+            ? Runtime_Client_Storage_SqliteMode.OPFS
             : this._options.sqlitePath || clientCfg?.storage?.dataRoot
-              ? Runtime.Client.Storage.SqliteMode.FILE
-              : Runtime.Client.Storage.SqliteMode.MEMORY;
+              ? Runtime_Client_Storage_SqliteMode.FILE
+              : Runtime_Client_Storage_SqliteMode.MEMORY;
         this._config = new Config(
           { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
           this._config.values,
@@ -413,6 +426,7 @@ export class Client {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -420,18 +434,20 @@ export class Client {
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     log('client.initialize: opening client');
     await this._open(this._ctx);
+    performance.mark('client.initialize:opened');
     log('client.initialize: client opened');
     invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       log('client.initialize: mounting devtools hooks');
-      const { mountDevtoolsHooks } = await import('../devtools');
+      const { mountDevtoolsHooks } = await import('../devtools/index.ts');
       mountDevtoolsHooks({ client: this });
       log('client.initialize: devtools hooks mounted');
     }
 
     this._initialized = true;
+    this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
@@ -443,10 +459,10 @@ export class Client {
     log('opening...');
     invariant(this._services);
     log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list');
-    const { HaloProxy } = await import('../halo/halo-proxy');
-    const { MeshProxy } = await import('../mesh/mesh-proxy');
-    const { Shell } = await import('../services');
+    const { SpaceList } = await import('../echo/space-list.ts');
+    const { HaloProxy } = await import('../halo/halo-proxy.ts');
+    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
+    const { Shell } = await import('../services/index.ts');
     log('client._open: proxy modules loaded');
 
     const trigger = new Trigger<Error | undefined>();
@@ -537,18 +553,31 @@ export class Client {
 
       this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
         Blob.Storage.edge,
-        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+        createEdgeBlobBackend({
+          transport: {
+            url: (key) => edgeHttpClient.getBlobUrl(key),
+            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
+          },
+        }),
         { default: true },
       );
     }
 
     log('client._open: subscribing to system status...');
+    this._fatalErrorUpdate.emit(null);
+    let statusReceived = false;
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
-      this._services.rpc.SystemService.queryStatus({ interval: 3_000 }),
+      this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
+          statusReceived = true;
           this._statusTimeout && clearTimeout(this._statusTimeout);
           trigger.wake(undefined);
 
@@ -559,8 +588,18 @@ export class Client {
         },
         onError: (err) => {
           log('client._open: status error', { err });
-          trigger.wake(err);
           this._statusUpdate.emit(null);
+          if (!statusReceived) {
+            trigger.wake(err);
+            return;
+          }
+
+          // A lost connection is reopened by `_services.closed`, and a reset tears services down on purpose.
+          if (this._resetting || err instanceof RpcClosedError) {
+            return;
+          }
+          log.error('system status stream failed', { err });
+          this._fatalErrorUpdate.emit(err);
         },
         onClose: () => {
           trigger.wake(undefined);
@@ -627,16 +666,34 @@ export class Client {
       return;
     }
 
-    // TODO(burdon): Call flush?
+    await this._flushDatabases();
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();
 
     this._initialized = false;
+    // Back to WAITING alongside `_initialized`: leaving the trigger resolved makes
+    // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
+    // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
+    this._initializedTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {
     await this.destroy();
+  }
+
+  /**
+   * Hands writes still pending to the host, so objects added just before the client is torn down (e.g. by a
+   * React StrictMode remount) are not lost. The bound only stops a dead host from holding destroy open.
+   */
+  private async _flushDatabases(): Promise<void> {
+    await Promise.all(
+      Array.from(this._echoClient.openDatabases, (db) =>
+        asyncTimeout(db.flush({ indexes: false }), DESTROY_FLUSH_TIMEOUT).catch((err) =>
+          log.warn('pending writes were not handed to the host before destroy', { spaceId: db.spaceId, err }),
+        ),
+      ),
+    );
   }
 
   private async _close(): Promise<void> {
@@ -667,7 +724,7 @@ export class Client {
   async resumeHostServices(): Promise<void> {
     await runServiceCall(
       this._effectRuntime,
-      this.services.rpc.SystemService.updateStatus({ status: SystemStatus.ACTIVE }),
+      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
       {
         label: 'SystemService.updateStatus',
       },
@@ -688,8 +745,12 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc.SystemService.reset(undefined), {
+    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
+    }).catch((err) => {
+      if (!isHostShutDownByReset(err)) {
+        throw err;
+      }
     });
     await this._close();
 
@@ -700,3 +761,5 @@ export class Client {
     log('reset complete');
   }
 }
+
+const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;

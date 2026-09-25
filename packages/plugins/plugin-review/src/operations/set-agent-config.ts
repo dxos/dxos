@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { type Thread } from '@dxos/types';
 
-import { CommentOperation } from '../types';
+import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.SetAgentConfig> = CommentOperation.SetAgentConfig.pipe(
   Operation.withHandler(

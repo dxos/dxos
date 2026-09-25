@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const ExcalidrawArticle: ComponentType<any> = lazy(() => import('./ExcalidrawArticle'));
-export const ExcalidrawSettings: ComponentType<any> = lazy(() => import('./ExcalidrawSettings'));
+export const ExcalidrawArticle: ComponentType<any> = lazy(() => import('./ExcalidrawArticle/index.ts'));
+export const ExcalidrawSettings: ComponentType<any> = lazy(() => import('./ExcalidrawSettings/index.ts'));

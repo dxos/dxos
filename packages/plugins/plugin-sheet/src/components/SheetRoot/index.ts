@@ -2,4 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './SheetRoot';
+export { useSheetContext } from './SheetContext.ts';
+
+export * from './SheetRoot.tsx';

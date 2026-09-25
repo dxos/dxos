@@ -2,18 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import * as Operation from '@dxos/compute/Operation';
+import { Collection, Database, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -24,13 +23,14 @@ const RECENT_LIMIT = 20;
 const MAX_PROMPTS = 3;
 
 // Onboarding documents added by the system at identity creation — exclude them so a
-// brand-new personal space (containing only the welcome doc) still uses fallback prompts.
+// brand-new default space (containing only the welcome doc) still uses fallback prompts.
 const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
 
 const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSuggestions> =
   AssistantOperation.GenerateHomeSuggestions.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ db }) {
+      Effect.fnUntraced(function* () {
+        const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
         // Cache check: return early if a fresh result exists.
@@ -46,8 +46,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const types = schemas
           .flat()
           .filter(Type.isType)
-          .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
-          .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+          .filter((type) => TypeOptions.isUserType(type))
           .filter((type) => Type.getTypename(type) !== collectionTypename);
 
         let prompts: string[] = [];
@@ -106,11 +105,11 @@ const generateSuggestions = (items: { label: string; typename: string }[]) =>
     }),
   ).pipe(
     Effect.map(({ value }) => [...value.prompts.slice(0, MAX_PROMPTS)]),
-    Effect.catchAll((err) => {
+    Effect.catch((err) => {
       log.warn('generate-home-suggestions: LLM call failed', { err });
       return Effect.succeed<string[]>([]);
     }),
-    Effect.provide(AiService.model(MODEL)),
+    Effect.provide(AiService.languageModel(MODEL)),
   );
 
 export default handler;

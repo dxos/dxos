@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type ContentBlock } from '@dxos/types';
 
-import { type Stage, StageWrite } from '../types/stage';
+import { type Stage, StageWrite } from '../types/stage.ts';
 
 export type DiarizationInput = { window: ContentBlock.Transcript[] };
 

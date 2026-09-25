@@ -4,19 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { proxyFetchLegacy } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import { TranscriptionService } from '../operations';
-import { VideoOperation } from '../types';
+import { TranscriptionService } from '#operations';
+import { VideoOperation } from '#types';
 
 const DEFAULT_LANG = 'en';
 
+// Addressed through the EDGE entrypoint, like every other service. An operation handler has no
+// client config to read, so the environment is pinned here.
 // TODO(burdon): Configure from config.
-const TRANSCRIPTION_ENDPOINT = 'https://transcription.dxos.network/video';
+const TRANSCRIPTION_ENDPOINT = 'https://dxos.network/transcription/video';
 
 const handler: Operation.WithHandler<typeof VideoOperation.Transcribe> = VideoOperation.Transcribe.pipe(
   Operation.withHandler(
@@ -44,15 +46,18 @@ const handler: Operation.WithHandler<typeof VideoOperation.Transcribe> = VideoOp
 
 export default handler;
 
+/** The transcription endpoint did not return a usable transcript. */
+export class TranscriptionError extends BaseError.extend('TranscriptionError', 'Transcription failed.') {}
+
 const fetchTranscript = (url: string, lang: string) =>
   Effect.tryPromise({
     try: async () => {
       const target = new URL(TRANSCRIPTION_ENDPOINT);
       target.searchParams.set('url', url);
       target.searchParams.set('lang', lang);
-      // Route through the EDGE CORS proxy: the worker does not send CORS headers,
-      // so a direct browser fetch is blocked. `proxyFetchLegacy` forwards the request server-side.
-      const response = await proxyFetchLegacy(target);
+      // Direct: behind the EDGE entrypoint the response carries EDGE's CORS headers, so the hop
+      // through the CORS proxy that transcription-service's own hostname needed is gone.
+      const response = await fetch(target);
       if (!response.ok) {
         const body = await response.text().catch(() => '');
         if (response.status === 404) {
@@ -75,5 +80,5 @@ const fetchTranscript = (url: string, lang: string) =>
         text: raw.replace(/(\[[^\]]*\]\([^)]*\))\s*\n\s*/g, '$1 ').replace(/\n{2,}/g, '\n'),
       };
     },
-    catch: (error) => (error instanceof Error ? error : new Error('Transcription failed.')),
+    catch: TranscriptionError.wrap(),
   });

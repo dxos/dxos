@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Repo, generateAutomergeUrl, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type Chunk,
+  Repo,
+  type StorageAdapterInterface,
+  type StorageKey,
+  generateAutomergeUrl,
+  initSubduction,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import {
   AuthenticatedTransport,
   BlobMeta,
@@ -17,7 +26,8 @@ import {
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -93,10 +103,194 @@ const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
  */
 const commitIdOf = (seed: number): CommitId => CommitId.fromBytes(new Uint8Array(32).fill(seed));
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('automerge-subduction', () => {
+/**
+ * Wraps a storage so a test can await the arrival of a sedimentree's bytes. Propagation is a
+ * best-effort send with no delivery ack, so the receiver's own save is the only concrete state an
+ * assertion can be ordered after.
+ */
+const withSaveSignal = (storage: MemoryStorage) => {
+  const arrivals = new Map<string, Trigger>();
+  const arrival = (sedimentreeId: SedimentreeId): Trigger => {
+    const key = sedimentreeId.toString();
+    let trigger = arrivals.get(key);
+    if (!trigger) {
+      trigger = new Trigger();
+      arrivals.set(key, trigger);
+    }
+    return trigger;
+  };
+
+  // The save paths subduction takes on receipt. The trigger latches, so bytes that land before the
+  // await still resolve it.
+  const saveMethods = new Set(['saveCommit', 'saveFragment', 'saveBatchAll']);
+  const proxy = new Proxy(storage, {
+    get: (target, property) => {
+      const value = Reflect.get(target, property, target);
+      if (typeof value !== 'function') {
+        return value;
+      }
+      if (!saveMethods.has(String(property))) {
+        return value.bind(target);
+      }
+      return (sedimentreeId: SedimentreeId, ...rest: unknown[]) => {
+        const result = value.apply(target, [sedimentreeId, ...rest]);
+        void Promise.resolve(result).then((saved) => {
+          // `saveBatchAll` answers with the number of records written; an empty batch is not an arrival.
+          if (saved !== 0) {
+            arrival(sedimentreeId).wake();
+          }
+        });
+        return result;
+      };
+    },
+  });
+
+  return { storage: proxy, saved: (sedimentreeId: SedimentreeId) => arrival(sedimentreeId).wait() };
+};
+
+const storageKeyToString = (key: StorageKey): string => key.join('\0');
+
+/**
+ * In-memory {@link StorageAdapterInterface} for repo restart tests.
+ */
+class MemoryStorageAdapter implements StorageAdapterInterface {
+  readonly #data = new Map<string, Uint8Array>();
+
+  async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    return this.#data.get(storageKeyToString(key));
+  }
+
+  async save(key: StorageKey, binary: Uint8Array): Promise<void> {
+    this.#data.set(storageKeyToString(key), binary);
+  }
+
+  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    for (const [key, binary] of entries) {
+      await this.save(key, binary);
+    }
+  }
+
+  async remove(key: StorageKey): Promise<void> {
+    this.#data.delete(storageKeyToString(key));
+  }
+
+  async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    const prefix = storageKeyToString(keyPrefix);
+    const chunks: Chunk[] = [];
+    for (const [key, data] of this.#data) {
+      if (key.startsWith(prefix)) {
+        chunks.push({ key: key.split('\0'), data });
+      }
+    }
+    chunks.sort((left, right) => storageKeyToString(left.key).localeCompare(storageKeyToString(right.key)));
+    return chunks;
+  }
+
+  async removeRange(keyPrefix: StorageKey): Promise<void> {
+    const prefix = storageKeyToString(keyPrefix);
+    for (const key of [...this.#data.keys()]) {
+      if (key.startsWith(prefix)) {
+        this.#data.delete(key);
+      }
+    }
+  }
+}
+
+type StorageOpName = 'load' | 'save' | 'saveBatch' | 'remove' | 'loadRange' | 'removeRange';
+
+/**
+ * Counts every storage adapter call. Used to assert restart recovery is read-only.
+ */
+class CountingStorageAdapter implements StorageAdapterInterface {
+  readonly ops: Record<StorageOpName, number> = {
+    load: 0,
+    save: 0,
+    saveBatch: 0,
+    remove: 0,
+    loadRange: 0,
+    removeRange: 0,
+  };
+
+  #logging: boolean;
+
+  constructor(
+    private readonly _inner: StorageAdapterInterface,
+    { logging }: { logging?: boolean } = {},
+  ) {
+    this.#logging = logging ?? false;
+  }
+
+  get readOps(): number {
+    return this.ops.load + this.ops.loadRange;
+  }
+
+  get writeOps(): number {
+    return this.ops.save + this.ops.saveBatch + this.ops.remove + this.ops.removeRange;
+  }
+
+  setLogging(logging: boolean): void {
+    this.#logging = logging;
+  }
+
+  async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    if (this.#logging) {
+      log.info('load', { key });
+    }
+    this.ops.load++;
+    return this._inner.load(key);
+  }
+
+  async save(key: StorageKey, binary: Uint8Array): Promise<void> {
+    if (this.#logging) {
+      log.info('save', { key });
+    }
+    this.ops.save++;
+    return this._inner.save(key, binary);
+  }
+
+  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    if (this.#logging) {
+      log.info('saveBatch', { entries });
+    }
+    this.ops.saveBatch++;
+    return this._inner.saveBatch(entries);
+  }
+
+  async remove(key: StorageKey): Promise<void> {
+    if (this.#logging) {
+      log.info('remove', { key });
+    }
+    this.ops.remove++;
+    return this._inner.remove(key);
+  }
+
+  async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    if (this.#logging) {
+      log.info('loadRange', { keyPrefix });
+    }
+    this.ops.loadRange++;
+    return this._inner.loadRange(keyPrefix);
+  }
+
+  async removeRange(keyPrefix: StorageKey): Promise<void> {
+    if (this.#logging) {
+      log.info('removeRange', { keyPrefix });
+    }
+    this.ops.removeRange++;
+    return this._inner.removeRange(keyPrefix);
+  }
+
+  resetCounters(): void {
+    this.ops.load = 0;
+    this.ops.save = 0;
+    this.ops.saveBatch = 0;
+    this.ops.remove = 0;
+    this.ops.loadRange = 0;
+    this.ops.removeRange = 0;
+  }
+}
+
+describe('automerge-subduction', () => {
   beforeAll(async () => {
     await initSubduction();
   });
@@ -196,7 +390,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
     const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -219,15 +414,18 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     const result = await subductionA.syncWithAllPeers(sid, true);
     expect(result.entries().length).toBeGreaterThan(0);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
+    // Propagation is a best-effort send that does not block on peer acks, so the push is still in
+    // flight when `syncWithAllPeers` resolves.
+    await signalB.saved(sid);
+    expect(await subductionB.getBlobs(sid)).toHaveLength(1);
   }, 10_000);
 
   test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
     const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage(), serviceName: 'test-service' });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage(), serviceName: 'test-service' });
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage, serviceName: 'test-service' });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -244,16 +442,17 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     await subductionA.syncWithAllPeers(sid, false);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
-    expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
+    await signalB.saved(sid);
+    expect((await subductionB.getBlobs(sid))[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
+    const signalA = withSaveSignal(new MemoryStorage());
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionA = new Subduction({ signer: signerA, storage: signalA.storage });
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage });
 
     const sidA = SedimentreeId.fromBytes(new Uint8Array(32).fill(1));
     const sidB = SedimentreeId.fromBytes(new Uint8Array(32).fill(2));
@@ -268,67 +467,154 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     // Commits are added after connecting: a sedimentree present before
     // `addConnection` is not picked up by a later full sync, so seed both
-    // sides on the live connection. A single `fullSyncWithAllPeers` then
-    // exchanges fingerprints bidirectionally — each peer ends up with both.
+    // sides on the live connection. A full sync pushes the caller's own trees
+    // but does not pull the peer's, so each side runs its own.
     await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
     await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
     await subductionA.fullSyncWithAllPeers();
+    await subductionB.fullSyncWithAllPeers();
 
-    const blobsAonB = await subductionB.getBlobs(sidA);
-    const blobsBonA = await subductionA.getBlobs(sidB);
-    expect(blobsAonB).toHaveLength(1);
-    expect(blobsAonB[0]).toEqual(new Uint8Array([10, 20]));
-    expect(blobsBonA).toHaveLength(1);
-    expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
+    await signalB.saved(sidA);
+    await signalA.saved(sidB);
+    expect((await subductionB.getBlobs(sidA))[0]).toEqual(new Uint8Array([10, 20]));
+    expect((await subductionA.getBlobs(sidB))[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
 
   // After B drops handshake state and rehydrates from durable storage, does
   // subduction re-handshake on the reused logical channel when A pushes?
   // Empirical answer: no — A's auto-broadcast does not reach B'.
-  test(
-    'does not auto-rehydrate handshake on a logical connection where one end dropped it',
-    { timeout: 15_000 },
-    async ({ expect }) => {
-      const signerA = MemorySigner.generate();
-      const signerB = MemorySigner.generate();
-      const storageA = new MemoryStorage();
-      const storageB = new MemoryStorage();
-      const [transportA, transportB] = createMemoryTransportPair();
+  test('does not auto-rehydrate handshake on a logical connection where one end dropped it', async ({ expect }) => {
+    const signerA = MemorySigner.generate();
+    const signerB = MemorySigner.generate();
+    const storageA = new MemoryStorage();
+    const signalB = withSaveSignal(new MemoryStorage());
+    const storageB = signalB.storage;
+    const [transportA, transportB] = createMemoryTransportPair();
 
-      const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
-      let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
+    let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
 
-      const [authA, authB] = await Promise.all([
-        AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
-        AuthenticatedTransport.accept(transportB, signerB),
-      ]);
-      await subA.addConnection(authA);
-      await subB.addConnection(authB);
+    const [authA, authB] = await Promise.all([
+      AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+      AuthenticatedTransport.accept(transportB, signerB),
+    ]);
+    await subA.addConnection(authA);
+    await subB.addConnection(authB);
 
-      const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
-      await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
-      await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 5_000 }).toEqual(1);
+    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+    // `addCommit` broadcasts only to peers subscribed to the sedimentree, so B
+    // subscribes before A writes.
+    await subB.syncWithAllPeers(sid, true);
+    await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
+    await signalB.saved(sid);
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      // Simulate B crash: clearing the queue's waiters halts the orphaned
-      // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
-      // `disconnectFromPeer` — those send a graceful goodbye A would observe.
-      await transportB.disconnect();
-      subB.free();
+    // Simulate B crash: clearing the queue's waiters halts the orphaned
+    // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
+    // `disconnectFromPeer` — those send a graceful goodbye A would observe.
+    await transportB.disconnect();
+    subB.free();
 
-      subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
-      expect(await subB.getConnectedPeerIds()).toHaveLength(0);
-      expect(await subA.getConnectedPeerIds()).toHaveLength(1);
+    subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
+    expect(await subB.getConnectedPeerIds()).toHaveLength(0);
+    expect(await subA.getConnectedPeerIds()).toHaveLength(1);
 
-      await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
-      await sleep(500);
+    await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
+    await sleep(500);
 
-      // TODO(mykola): When subduction-core grows channel-level handshake
-      // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
+    // TODO(mykola): When subduction-core grows channel-level handshake
+    // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      subA.free();
-      subB.free();
-    },
-  );
+    subA.free();
+    subB.free();
+  });
+
+  test('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
+    const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
+    const urls: AutomergeUrl[] = [];
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
+      for (let index = 0; index < 100; index++) {
+        const handle = repo.create<{ index: number }>({ index });
+        urls.push(handle.url);
+      }
+      await repo.flush();
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBeGreaterThan(0);
+    storage.resetCounters();
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
+      for (const url of urls) {
+        const handle = await repo.find<{ index: number }>(url);
+        await handle.whenReady(['ready']);
+        expect(handle.doc()?.index).toBeDefined();
+      }
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBe(0);
+    expect(storage.readOps).toBeGreaterThan(0);
+  });
+
+  // Same restart shape as above, but with a `signer` — this activates
+  // `SubductionSource` (the subduction-specific document source used in
+  // production, distinct from classical automerge-repo's own storage
+  // subsystem exercised by the test above). `entry.knownHashes` /
+  // `entry.lastSavedHeads` start empty every process; if they are not
+  // seeded from the `persistedCommitHashes`/`persistedFragmentHashes` disk
+  // scan, the first `#save()` after reattaching a document re-persists its
+  // entire already-on-disk history.
+  test('repo restart reloads documents via subduction without extra writes', async ({ expect }) => {
+    const signer = MemorySigner.generate();
+    const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
+    const urls: AutomergeUrl[] = [];
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+        signer,
+      });
+      for (let index = 0; index < 20; index++) {
+        const handle = repo.create<{ index: number }>({ index });
+        urls.push(handle.url);
+      }
+      await repo.flush();
+      await sleep(200);
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBeGreaterThan(0);
+    storage.resetCounters();
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+        signer,
+      });
+      for (const url of urls) {
+        const handle = await repo.find<{ index: number }>(url);
+        await handle.whenReady(['ready']);
+        expect(handle.doc()?.index).toBeDefined();
+      }
+      await sleep(200);
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBe(0);
+    expect(storage.readOps).toBeGreaterThan(0);
+  });
 });

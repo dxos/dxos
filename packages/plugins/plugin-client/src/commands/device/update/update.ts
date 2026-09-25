@@ -2,16 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { buf, requirePublicKey } from '@dxos/protocols/buf';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { printDevice } from '../util';
+import { printDevice } from '../util.ts';
 
 export const handler = Effect.fn(function* ({ label }: { label: string }) {
   const { json } = yield* CommandConfig;
@@ -26,10 +28,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     return;
   }
 
-  const updatedProfile = {
-    ...device.profile,
-    label,
-  };
+  const updatedProfile = buf.create(DeviceProfileDocumentSchema, { ...device.profile, label });
 
   const devicesService = client.services.services.DevicesService;
   if (!devicesService) {
@@ -47,7 +46,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: updatedDevice.deviceKey.toHex(),
+          deviceKey: requirePublicKey(updatedDevice.deviceKey).toHex(),
           profile: updatedDevice.profile,
         },
         null,
@@ -62,7 +61,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
 export const update = Command.make(
   'update',
   {
-    label: Options.text('label').pipe(Options.withDescription('The device label.')),
+    label: Options.String('label').pipe(Options.withDescription('The device label.')),
   },
   handler,
 ).pipe(Command.withDescription('Update device label.'));

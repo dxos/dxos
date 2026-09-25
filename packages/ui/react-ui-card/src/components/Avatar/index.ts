@@ -2,4 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Avatar';
+export * from './avatar-name.ts';
+
+export * from './Avatar.tsx';
+export * from './ObjectAvatar.tsx';

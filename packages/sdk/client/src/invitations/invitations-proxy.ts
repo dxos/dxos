@@ -2,27 +2,41 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, type Observable, PushStream, Trigger, asyncTimeout } from '@dxos/async';
+import { type Stream } from '@dxos/async';
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
+  type ClientServices,
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { buf, bufInit, fromPublicKey } from '@dxos/protocols/buf';
 import {
-  type IdentityService,
   Invitation,
-  type InvitationsService,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
   QueryInvitationsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
+
+/**
+ * Budget for the initial invitations snapshot. Bounded because `open()` sits on the client
+ * initialization path, which the whole app boot waits on.
+ */
+const INITIAL_SNAPSHOT_TIMEOUT = 10_000;
 
 /**
  * Create an observable from an RPC stream.
@@ -62,8 +76,8 @@ export class InvitationsProxy implements Invitations {
   private _opened = false;
 
   constructor(
-    private readonly _invitationsService: InvitationsService,
-    private readonly _identityService: IdentityService | undefined,
+    private readonly _invitationsService: ClientServices['InvitationsService'],
+    private readonly _identityService: ClientServices['IdentityService'] | undefined,
     private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
@@ -98,58 +112,85 @@ export class InvitationsProxy implements Invitations {
     // TODO(nf): actually needed?
     const initialAcceptedReceived = new Trigger();
 
+    // A stream that fails or closes must not leave `open()` pending: the caller chain
+    // (SpaceList._open -> Client.initialize) blocks the whole app boot on it.
+    const streamTerminated = new Trigger<Error | undefined>();
+
     const stream = this._invitationsService.queryInvitations(undefined, { timeout: RPC_TIMEOUT });
-    stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
-      switch (action) {
-        case QueryInvitationsResponse.Action.ADDED: {
-          log('remote invitations added', { type, invitations });
-          invitations
-            ?.filter((invitation) => this._matchesInvitationContext(invitation))
-            .filter((invitation) => !this._invitations.has(invitation.invitationId))
-            .forEach((invitation) => {
-              type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
-            });
-          if (existing) {
-            type === QueryInvitationsResponse.Type.CREATED
-              ? initialCreatedReceived.wake()
-              : initialAcceptedReceived.wake();
+    stream.subscribe(
+      ({ action, type, invitations, existing }: QueryInvitationsResponse) => {
+        switch (action) {
+          case QueryInvitationsResponse_Action.ADDED: {
+            log('remote invitations added', { type, invitations });
+            invitations
+              ?.filter((invitation) => this._matchesInvitationContext(invitation))
+              .filter((invitation) => !this._invitations.has(invitation.invitationId))
+              .forEach((invitation) => {
+                type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
+              });
+            if (existing) {
+              type === QueryInvitationsResponse_Type.CREATED
+                ? initialCreatedReceived.wake()
+                : initialAcceptedReceived.wake();
+            }
+            break;
           }
-          break;
+          case QueryInvitationsResponse_Action.REMOVED: {
+            log('remote invitations removed', { type, invitations });
+            const cache = type === QueryInvitationsResponse_Type.CREATED ? this._created : this._accepted;
+            const cacheUpdate =
+              type === QueryInvitationsResponse_Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+            invitations?.forEach((removed) => {
+              const index = cache
+                .get()
+                .findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
+              void cache.get()[index]?.cancel();
+              index >= 0 &&
+                cacheUpdate.emit([
+                  ...cache.get().slice(0, index),
+                  ...cache.get().slice(index + 1),
+                ] as AuthenticatingInvitation[]);
+            });
+            existing && initialAcceptedReceived.wake();
+            break;
+          }
+          case QueryInvitationsResponse_Action.LOAD_COMPLETE: {
+            persistentLoaded.wake();
+            break;
+          }
+          case QueryInvitationsResponse_Action.SAVED: {
+            log('remote invitations saved', { invitations });
+            this._savedUpdate.emit(invitations ?? []);
+            break;
+          }
         }
-        case QueryInvitationsResponse.Action.REMOVED: {
-          log('remote invitations removed', { type, invitations });
-          const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
-          const cacheUpdate =
-            type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
-          invitations?.forEach((removed) => {
-            const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
-            void cache.get()[index]?.cancel();
-            index >= 0 &&
-              cacheUpdate.emit([
-                ...cache.get().slice(0, index),
-                ...cache.get().slice(index + 1),
-              ] as AuthenticatingInvitation[]);
-          });
-          existing && initialAcceptedReceived.wake();
-          break;
-        }
-        case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
-          persistentLoaded.wake();
-          break;
-        }
-        case QueryInvitationsResponse.Action.SAVED: {
-          log('remote invitations saved', { invitations });
-          this._savedUpdate.emit(invitations ?? []);
-          break;
-        }
-      }
-    });
+      },
+      (error?: Error) => streamTerminated.wake(error),
+    );
 
     this._ctx.onDispose(() => stream.close());
-    await persistentLoaded.wait();
-    // wait until remote invitations are added and removed in case .created is called early.
-    await initialAcceptedReceived.wait();
-    await initialCreatedReceived.wait();
+
+    // Invitations are not required for the client to be usable, so a snapshot that never arrives
+    // degrades to "no invitations known yet" instead of blocking initialization forever. The
+    // subscription stays live, so a late snapshot is still applied.
+    try {
+      await asyncTimeout(
+        Promise.race([
+          // Wait until remote invitations are added and removed in case .created is called early.
+          Promise.all([persistentLoaded.wait(), initialAcceptedReceived.wait(), initialCreatedReceived.wait()]),
+          streamTerminated.wait().then((error) => {
+            throw error ?? new Error('invitations stream closed before the initial snapshot');
+          }),
+        ]),
+        INITIAL_SNAPSHOT_TIMEOUT,
+      );
+    } catch (error) {
+      log.warn('proceeding without the initial invitations snapshot', {
+        error,
+        ...this._getInvitationContext(),
+      });
+    }
+
     this._opened = true;
     log('opened', this._getInvitationContext());
   }
@@ -167,14 +208,14 @@ export class InvitationsProxy implements Invitations {
   }
 
   getInvitationOptions(): Invitation {
-    return {
+    return buf.create(InvitationSchema, {
       invitationId: PublicKey.random().toHex(),
-      type: Invitation.Type.INTERACTIVE,
-      authMethod: Invitation.AuthMethod.SHARED_SECRET,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      ...this._getInvitationContext(),
-    };
+      type: Invitation_Type.INTERACTIVE,
+      authMethod: Invitation_AuthMethod.SHARED_SECRET,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      ...bufInit(this._getInvitationContext()),
+    });
   }
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
@@ -220,7 +261,9 @@ export class InvitationsProxy implements Invitations {
       // drive the optional protobuf codec, which dereferences the missing message and throws,
       // silently stalling the accept RPC.
       subscriber: createObservable(
-        this._invitationsService.acceptInvitation(deviceProfile ? { invitation, deviceProfile } : { invitation }),
+        this._invitationsService.acceptInvitation(
+          deviceProfile ? { invitation, deviceProfile: deviceProfile } : { invitation },
+        ),
       ),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
@@ -243,12 +286,34 @@ export class InvitationsProxy implements Invitations {
     const context = this._getInvitationContext();
     log('checking invitation context', { invitation, context });
     return Object.entries(context).reduce((acc, [key, value]) => {
-      const invitationValue = (invitation as any)[key];
-      if (invitationValue instanceof PublicKey && value instanceof PublicKey) {
-        return acc && invitationValue.equals(value);
-      } else {
-        return acc && invitationValue === value;
-      }
+      const invitationValue = (invitation as Record<string, unknown>)[key];
+      return acc && contextValuesEqual(invitationValue, value);
     }, true);
   }
 }
+
+/** The key bytes behind a context value, for the key types an invitation can carry. */
+const keyBytes = (value: unknown): Uint8Array | undefined => {
+  if (value instanceof PublicKey) {
+    return value.asUint8Array();
+  }
+  if (value !== null && typeof value === 'object' && 'data' in value && value.data instanceof Uint8Array) {
+    return value.data;
+  }
+};
+
+/**
+ * Compares one field of the invitation context.
+ *
+ * A key is compared by its bytes: it reaches here either as the domain `PublicKey` or as the buf
+ * message, and two messages carrying the same key are distinct objects.
+ */
+const contextValuesEqual = (invitationValue: unknown, value: unknown): boolean => {
+  const left = keyBytes(invitationValue);
+  const right = keyBytes(value);
+  if (left && right) {
+    return left.length === right.length && left.every((byte, index) => byte === right[index]);
+  }
+
+  return invitationValue === value;
+};

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-toolkit",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,6 +21,16 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./Memory": {
+      "source": "./src/types/Memory.ts",
+      "types": "./dist/types/src/types/Memory.d.ts",
+      "import": "./dist/lib/Memory.mjs"
+    },
+    "./AgentOperation": {
+      "source": "./src/operations/definitions.ts",
+      "types": "./dist/types/src/operations/definitions.d.ts",
+      "import": "./dist/lib/AgentOperation.mjs"
     }
   },
   "files": [
@@ -30,14 +40,12 @@
   "dependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -46,20 +54,15 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
-    "@effect/platform": "catalog:",
-    "dfx": "catalog:",
-    "exa-js": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './types';
-export * from './util';
+export * from './types.ts';
+export * from './util.ts';
 
-export * from './Gameboard';
+export { type GameboardContextValue, useGameboardContext } from './GameboardContext.ts';
+
+export * from './Gameboard.tsx';

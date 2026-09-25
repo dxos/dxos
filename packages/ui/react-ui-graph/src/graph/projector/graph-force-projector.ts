@@ -14,12 +14,12 @@ import {
   forceY,
 } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { forcePoint } from './graph-forces';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { forcePoint } from './graph-forces.ts';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector.ts';
 
 /**
  * Return value or invoke function.
@@ -224,7 +224,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     this.restart();
   }
 
-  override onUpdate(graph?: Graph.Any): void {
+  override onUpdate(graph?: GraphModel.AnyData): void {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
     this.mergeData(graph);

@@ -11,7 +11,7 @@ import { SchemaEx } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-const schemaForValue = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
+const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
   switch (typeof value) {
     case 'string':
       return Schema.String;
@@ -35,7 +35,7 @@ const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
 export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
   const schema = useMemo(() => {
     const ignored = new Set(ignorePaths ?? []);
-    const fields: Record<string, Schema.Schema.AnyNoContext> = {};
+    const fields: Record<string, Schema.Codec<any, any>> = {};
     for (const key of Object.keys(subject)) {
       if (isInternalKey(key) || ignored.has(key)) {
         continue;
@@ -51,7 +51,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {
       const paths = Object.keys(changed).filter((path) => changed[path]);
-      Obj.update(subject, () => {
+      Obj.update(subject, (subject) => {
         for (const path of paths) {
           const value = values[path];
           const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
@@ -67,7 +67,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
       <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

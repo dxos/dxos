@@ -4,15 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type ActionProperties } from '#types';
+import { NavTreeNode } from '#types';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
 
@@ -26,12 +26,12 @@ const lgActionButtonProps = {
   density: 'lg' as const,
 };
 
-export type NavTreeItemActionMenuProps = ActionProperties & {
-  parent: Node.Node;
+export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
+  parent: AppGraphNode.Node;
   path?: string[];
   caller?: string;
   monolithic?: boolean;
-  menuActions?: Node.Action[];
+  menuActions?: AppGraphNode.Action[];
 };
 
 export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
@@ -40,27 +40,27 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
     const density = useDensityContext();
     const runAction = useActionRunner();
     const handleAction = useCallback(
-      (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
+      (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
       [runAction, path],
     );
 
     return (
-      <Menu.Root caller={caller} onAction={handleAction}>
-        <Menu.Trigger asChild>
-          <IconButton
-            {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
-            {...composableProps(props)}
-            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-            variant='ghost'
-            icon={icon ?? fallbackIcon}
-            iconOnly
-            label={toLocalizedString(label, t)}
-            data-testid={testId}
-            ref={forwardedRef}
-          />
-        </Menu.Trigger>
-        <Menu.Content group={parent} items={menuActions as MenuItem[]} />
-      </Menu.Root>
+      <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
+        <IconButton
+          {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
+          {...composableProps(props)}
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon={icon ?? fallbackIcon}
+          iconOnly
+          label={toLocalizedString(label, t)}
+          data-testid={testId}
+          // The tree selects a row on any click inside it, and selecting navigates away from the
+          // menu just opened. The trigger has handled the click by the time this runs.
+          onClick={(event) => event.stopPropagation()}
+          ref={forwardedRef}
+        />
+      </ActionMenu>
     );
   },
 );
@@ -68,10 +68,10 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 NavTreeItemActionDropdownMenu.displayName = 'NavTreeItemActionDropdownMenu';
 
 export const NavTreeItemMonolithicAction = (
-  props: Node.Action & {
-    parent: Node.Node;
+  props: AppGraphNode.Action & {
+    parent: AppGraphNode.Node;
     path?: string[];
-    onAction?: (action: Node.Action) => void;
+    onAction?: (action: AppGraphNode.Action) => void;
     baseLabel: string;
   },
 ) => {

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 export type Attention = {
   hasAttention: boolean;
@@ -15,14 +16,13 @@ export type Attention = {
  * Attention keys are slash-qualified graph IDs; ancestry is derived from progressive prefixes.
  */
 export class AttentionManager {
-  private readonly _map = new Map<string, Atom.Writable<Attention>>();
-  private readonly _currentAtom: Atom.Writable<string[]>;
+  readonly #map = new Map<string, Atom.Writable<Attention>>();
+  readonly #currentAtom: Atom.Writable<string[]>;
+  readonly #registry: Registry.AtomRegistry;
 
-  constructor(
-    private readonly _registry: Registry.Registry,
-    initial: string[] = [],
-  ) {
-    this._currentAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+  constructor(registry: Registry.AtomRegistry, initial: string[] = []) {
+    this.#registry = registry;
+    this.#currentAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     if (initial.length > 0) {
       this.update(initial);
     }
@@ -32,23 +32,23 @@ export class AttentionManager {
    * Atom for the currently attended element IDs.
    */
   get current(): Atom.Atom<string[]> {
-    return this._currentAtom;
+    return this.#currentAtom;
   }
 
   /**
    * Gets the currently attended element IDs.
    */
   getCurrent(): readonly string[] {
-    return this._registry.get(this._currentAtom);
+    return this.#registry.get(this.#currentAtom);
   }
 
   /**
    * Subscribe to changes in the current attention IDs.
    */
   subscribeCurrent(cb: (current: readonly string[]) => void): () => void {
-    this._registry.get(this._currentAtom);
-    return this._registry.subscribe(this._currentAtom, () => {
-      cb(this._registry.get(this._currentAtom));
+    this.#registry.get(this.#currentAtom);
+    return this.#registry.subscribe(this.#currentAtom, () => {
+      cb(this.#registry.get(this.#currentAtom));
     });
   }
 
@@ -56,30 +56,30 @@ export class AttentionManager {
    * All tracked qualified IDs.
    */
   keys(): string[] {
-    return Array.from(this._map.keys());
+    return Array.from(this.#map.keys());
   }
 
   /**
    * Get the attention state for a given qualified ID.
    */
   get(id: string): Attention {
-    const atom = this._getAtom(id);
-    return this._registry.get(atom);
+    const atom = this.#getAtom(id);
+    return this.#registry.get(atom);
   }
 
   /**
    * Subscribe to changes in the attention state for a given qualified ID.
    */
   subscribe(id: string, cb: (attention: Attention) => void): () => void {
-    const atom = this._getAtom(id);
-    this._registry.get(atom);
-    return this._registry.subscribe(atom, () => {
-      cb(this._registry.get(atom));
+    const atom = this.#getAtom(id);
+    this.#registry.get(atom);
+    return this.#registry.subscribe(atom, () => {
+      cb(this.#registry.get(atom));
     });
   }
 
-  private _getAtom(id: string): Atom.Writable<Attention> {
-    const existing = this._map.get(id);
+  #getAtom(id: string): Atom.Writable<Attention> {
+    const existing = this.#map.get(id);
     if (existing) {
       return existing;
     }
@@ -87,7 +87,7 @@ export class AttentionManager {
     const newAtom = Atom.make<Attention>({ hasAttention: false, isAncestor: false, isRelated: false }).pipe(
       Atom.keepAlive,
     );
-    this._map.set(id, newAtom);
+    this.#map.set(id, newAtom);
     return newAtom;
   }
 
@@ -113,17 +113,17 @@ export class AttentionManager {
     if (prevPrimaryId) {
       const prevPrefixes = expandAttendableId(prevPrimaryId);
       for (const prefix of prevPrefixes) {
-        this._set(prefix, {});
+        this.#set(prefix, {});
       }
       const prevSegmentId = getSegmentId(prevPrimaryId);
       for (const key of this.keys()) {
         if (getSegmentId(key) === prevSegmentId) {
-          this._set(key, {});
+          this.#set(key, {});
         }
       }
     }
 
-    this._registry.set(this._currentAtom, nextIds);
+    this.#registry.set(this.#currentAtom, nextIds);
 
     // Set ancestors and primary.
     const prefixes = expandAttendableId(primaryId);
@@ -132,11 +132,11 @@ export class AttentionManager {
 
     for (const prefix of prefixes) {
       if (prefix === primaryId) {
-        this._set(prefix, { hasAttention: true });
+        this.#set(prefix, { hasAttention: true });
       } else if (prefix === linkedParent) {
-        this._set(prefix, { isAncestor: true, isRelated: true });
+        this.#set(prefix, { isAncestor: true, isRelated: true });
       } else {
-        this._set(prefix, { isAncestor: true });
+        this.#set(prefix, { isAncestor: true });
       }
     }
 
@@ -144,14 +144,14 @@ export class AttentionManager {
     const segmentId = getSegmentId(primaryId);
     for (const key of this.keys()) {
       if (!prefixSet.has(key) && getSegmentId(key) === segmentId) {
-        this._set(key, { isRelated: true });
+        this.#set(key, { isRelated: true });
       }
     }
   }
 
-  private _set(id: string, attention: Partial<Attention>): void {
-    const atom = this._getAtom(id);
-    this._registry.set(atom, {
+  #set(id: string, attention: Partial<Attention>): void {
+    const atom = this.#getAtom(id);
+    this.#registry.set(atom, {
       hasAttention: attention.hasAttention ?? false,
       isAncestor: attention.isAncestor ?? false,
       isRelated: attention.isRelated ?? false,
@@ -189,6 +189,27 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   }
 
   return [...new Set(acc)];
+};
+
+/**
+ * Attend `element` the way focusing it would, without moving focus. Answers the attended ids, or
+ * undefined when nothing changed: an element outside any attendable leaves attention where it was.
+ */
+export const attendElement = (attention: AttentionManager, element: Element): string[] | undefined => {
+  const selector = [
+    ATTENDABLE_SELECTOR,
+    ...Array.from(document.querySelectorAll('[aria-controls]')).map(
+      (el) => `[id="${el.getAttribute('aria-controls')}"]`,
+    ),
+  ].join(',');
+  const prev = attention.getCurrent();
+  const next = getAttendables(selector, element);
+  if (next.length === 0 || (prev.length === next.length && prev.every((id, index) => next[index] === id))) {
+    return undefined;
+  }
+
+  attention.update(next);
+  return next;
 };
 
 /**

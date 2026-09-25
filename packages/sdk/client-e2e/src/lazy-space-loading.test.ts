@@ -15,7 +15,8 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 describe('Lazy Space Loading', () => {
   test('explicitly created space is closed after reload', async () => {
@@ -82,8 +83,10 @@ describe('Lazy Space Loading', () => {
 
     const connectionEstablished = new Trigger();
     space.members.subscribe((members) => {
-      const client2State = members.find((m) => m.identity.identityKey.equals(client2.halo.identity.get()!.identityKey));
-      if (client2State?.presence === SpaceMember.PresenceState.ONLINE) {
+      const client2State = members.find((m) =>
+        toPublicKey(m.identity?.identityKey)?.equals(requirePublicKey(client2.halo.identity.get()!.identityKey)),
+      );
+      if (client2State?.presence === SpaceMember_PresenceState.ONLINE) {
         connectionEstablished.wake();
       }
     });

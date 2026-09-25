@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
-import { MailboxModule } from './MailboxModule';
-import { ProjectModule, type ProjectModuleProps } from './ProjectModule';
+import { MailboxModule } from './MailboxModule.tsx';
+import { ProjectModule, type ProjectModuleProps } from './ProjectModule.tsx';
 
-export * from './MailboxModule';
-export * from './ProjectModule';
+export * from './MailboxModule.tsx';
+export * from './ProjectModule.tsx';
 
 /**
  * Custom roles for story panels with no equivalent composer plugin surface. Generic diagnostics

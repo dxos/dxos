@@ -34,25 +34,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-react"
-    },
-    {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"

@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './LoopMarkers';
-export * from './SequenceGrid';
-export * from './TrackList';
+export * from './LoopMarkers/index.ts';
+export * from './SequenceGrid/index.ts';
+export * from './TrackList/index.ts';

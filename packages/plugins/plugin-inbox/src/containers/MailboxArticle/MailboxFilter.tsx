@@ -18,8 +18,10 @@ export type MailboxFilterProps = {
   /** Parsed filter; save is enabled only when the text parses. */
   filter?: Filter.Any;
   onChange: (value: string) => void;
-  onSave: () => void;
+  /** The editor's own parse of the text, so the filter is not rebuilt again per keystroke here. */
+  onFilterChange: (filter: Filter.Any | undefined) => void;
   onClear: () => void;
+  onSave: () => void;
   editorRef: Ref<EditorController>;
   saveButtonRef: Ref<HTMLButtonElement>;
 };
@@ -31,8 +33,9 @@ export const MailboxFilter = ({
   value,
   filter,
   onChange,
-  onSave,
+  onFilterChange,
   onClear,
+  onSave,
   editorRef,
   saveButtonRef,
 }: MailboxFilterProps) => {
@@ -45,6 +48,7 @@ export const MailboxFilter = ({
         tags={tags}
         value={value}
         onChange={onChange}
+        onFilterChange={({ filter }) => onFilterChange(filter)}
         ref={editorRef}
       />
       <IconButton

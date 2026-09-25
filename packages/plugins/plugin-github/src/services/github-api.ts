@@ -4,29 +4,29 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import { type AccessToken, Connection } from '@dxos/link';
 
-import { GITHUB_API_BASE } from '../constants';
+import { GITHUB_API_BASE } from '../constants.ts';
 
-/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
+/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
   token: string;
 };
 
 const ACCEPT = 'application/vnd.github+json';
+/** Serves a pull request as the unified diff git would produce, rather than as JSON. */
+const DIFF_ACCEPT = 'application/vnd.github.v3.diff';
 const API_VERSION = '2022-11-28';
 const USER_AGENT = '@dxos/plugin-github';
 
@@ -83,6 +83,17 @@ const GitHubPullRefSchema = Schema.Struct({
   merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
+const GitHubMilestoneSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** ISO datetime, unlike the date-only shape the local model stores. */
+  due_on: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubMilestone = Schema.Schema.Type<typeof GitHubMilestoneSchema>;
+
 const GitHubIssueSchema = Schema.Struct({
   id: Schema.Number,
   number: Schema.Number,
@@ -99,9 +110,32 @@ const GitHubIssueSchema = Schema.Struct({
   user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
   assignees: Schema.Array(GitHubUserSchema).pipe(Schema.optional),
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  milestone: Schema.NullOr(GitHubMilestoneSchema).pipe(Schema.optional),
   pull_request: Schema.NullOr(GitHubPullRefSchema).pipe(Schema.optional),
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
+
+/** GET /repos/{owner}/{repo}/pulls/{number} — the pull-request view, which alone carries the diff size and merge state. */
+const GitHubPullSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  body: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.String,
+  draft: Schema.Boolean.pipe(Schema.optional),
+  merged: Schema.Boolean.pipe(Schema.optional),
+  merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
+  labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  additions: Schema.Number.pipe(Schema.optional),
+  deletions: Schema.Number.pipe(Schema.optional),
+  // `sha` pins the commit a derived artefact (a generated walkthrough) describes; `ref` is a branch
+  // name and moves under it.
+  base: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  head: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+});
+export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
 
 const GitHubCommentSchema = Schema.Struct({
   id: Schema.Number,
@@ -121,7 +155,7 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * Layer-based credentials service. Mirrors `TrelloCredentials`: every API call
  * pulls the token from this service rather than threading it through as an
  * explicit parameter, so callers compose a single
- * `Effect.provide(GitHubApi.GitHubCredentials.fromConnection(ref))` at the
+ * `Effect.provide(GitHubApi.fromConnection(ref))` at the
  * operation boundary.
  *
  * Token sourcing: an operation invoked with a `Connection` composes
@@ -129,39 +163,38 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates
  * to `Connection`).
  */
-export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCredentials')<
-  GitHubCredentials,
-  GitHubCredentialsValue
->() {
-  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
+export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHubCredentialsValue>()(
+  '@dxos/plugin-github/GitHubCredentials',
+) {}
 
-  /** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
-}
+/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
+
+/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
 //
 
-type GitHubEffect<T> = Effect.Effect<
+export type GitHubEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
 >;
 
@@ -174,29 +207,36 @@ type GitHubEffect<T> = Effect.Effect<
  *  - TimeoutException: yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
-): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
-const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue) =>
+/**
+ * The status a failed GitHub request answered with, or `undefined` for a transport, timeout or
+ * decode failure. Callers branch on it to tell a dead credential (401) from an absent resource.
+ */
+export const responseStatus = (error: unknown): number | undefined =>
+  HttpClientError.isHttpClientError(error) && error.reason._tag === 'StatusCodeError'
+    ? error.reason.response.status
+    : undefined;
+
+/** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
+const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue, accept = ACCEPT) =>
   req.pipe(
-    HttpClientRequest.setHeader('Authorization', `Bearer ${creds.token}`),
-    HttpClientRequest.setHeader('Accept', ACCEPT),
+    (req) => (creds.token ? HttpClientRequest.setHeader(req, 'Authorization', `Bearer ${creds.token}`) : req),
+    HttpClientRequest.setHeader('Accept', accept),
     HttpClientRequest.setHeader('X-GitHub-Api-Version', API_VERSION),
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
@@ -212,22 +252,46 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * blow up against the success schema with a `ParseError`, masking the real
  * cause (e.g. a 403 from an integration token that lacks issue write).
  */
-const githubRequest = <T>(
-  build: () => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): GitHubEffect<T> =>
+const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+/**
+ * Fetch a response GitHub serves as text rather than JSON — the `diff` media type, which has no
+ * schema to decode against.
+ *
+ * The timeout is longer than `githubRequest`'s because a diff is the whole change rather than a
+ * summary of it. GitHub answers 406 rather than truncating when a pull request exceeds its own
+ * limits (roughly 300 files or 20k lines), which `filterStatusOk` surfaces as a typed failure.
+ */
+const githubText = (build: () => HttpClientRequest.HttpClientRequest, accept: string): GitHubEffect<string> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+      HttpClient.filterStatusOk,
+    );
+    return yield* clientNoTracer.execute(withAuth(build(), creds, accept)).pipe(
+      Effect.flatMap((res) => res.text),
+      Effect.timeout('60 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -263,18 +327,22 @@ const getNextLink = (header: string | undefined): string | undefined => {
   return undefined;
 };
 
-const githubPaginated = <T>(
+/**
+ * Walks `rel="next"` to the end, decoding each page with `pageSchema` and taking its items through
+ * `select` — an endpoint that answers with an envelope rather than a bare array pages the same way.
+ */
+const githubPages = <TPage, T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
-  itemSchema: Schema.Schema<T>,
+  pageSchema: Schema.Codec<TPage>,
+  select: (page: TPage) => readonly T[],
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* GitHubCredentials;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
     let request = withAuth(buildInitial(), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
@@ -285,19 +353,19 @@ const githubPaginated = <T>(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
-            const decoded = yield* Schema.decodeUnknown(arraySchema)(body);
+            const decoded = yield* Schema.decodeUnknownEffect(pageSchema)(body);
             return { decoded, link: res.headers['link'] };
           }),
         ),
         Effect.timeout('15 seconds'),
         Effect.retry({
-          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
           while: shouldRetry,
         }),
         Effect.scoped,
       );
 
-      out.push(...result.decoded);
+      out.push(...select(result.decoded));
       nextUrl = getNextLink(result.link);
       if (!nextUrl) {
         break;
@@ -307,6 +375,11 @@ const githubPaginated = <T>(
 
     return out;
   });
+
+const githubPaginated = <T>(
+  buildInitial: () => HttpClientRequest.HttpClientRequest,
+  itemSchema: Schema.Codec<T>,
+): GitHubEffect<readonly T[]> => githubPages(buildInitial, Schema.Array(itemSchema), (page) => page);
 
 //
 // API surface
@@ -376,6 +449,59 @@ export const fetchRepoIssues = (
     return req;
   }, GitHubIssueSchema);
 
+/** GET /repos/{owner}/{repo}. */
+export const fetchRepo = (owner: string, repo: string): GitHubEffect<GitHubRepo> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    GitHubRepoSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/issues/{number} — an issue, or the issue view of a pull request. */
+export const fetchIssue = (owner: string, repo: string, number: number): GitHubEffect<GitHubIssue> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`,
+      ),
+    GitHubIssueSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/pulls/{number}. */
+export const fetchPullRequest = (owner: string, repo: string, number: number): GitHubEffect<GitHubPull> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    GitHubPullSchema,
+  );
+
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number} as a unified diff — the same bytes `git diff` would
+ * produce, which is what a generated walkthrough splices its chunks from.
+ */
+export const fetchPullRequestDiff = (owner: string, repo: string, number: number): GitHubEffect<string> =>
+  githubText(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    DIFF_ACCEPT,
+  );
+
+/**
+ * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the
+ * issues still assigned to them have to resolve to something).
+ */
+export const fetchRepoMilestones = (owner: string, repo: string): GitHubEffect<readonly GitHubMilestone[]> =>
+  githubPaginated(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones`,
+      ).pipe(HttpClientRequest.appendUrlParam('state', 'all')),
+    GitHubMilestoneSchema,
+  );
+
 /** GET /repos/{owner}/{repo}/issues/{number}/comments. */
 export const fetchIssueComments = (
   owner: string,
@@ -395,33 +521,41 @@ export const fetchIssueComments = (
 //
 
 /**
- * PATCH a GitHub object. The shape mirrors {@link githubRequest} except the
- * request method is PATCH and the body is `application/json`. Failures are
+ * Write to a GitHub object (PATCH or POST, as `build` chooses). The shape mirrors {@link githubRequest} except the
+ * body is `application/json`. Failures are
  * propagated unchanged; the caller is expected to surface them on the target
- * row's `lastError`. Retry rules are the same — 429 / 5xx retry, 4xx don't.
+ * row's `lastError`.
+ *
+ * Only PATCH retries (429 / 5xx retry, 4xx don't). A POST here creates a comment or a review, and
+ * GitHub can commit one before the response reaches us, so retrying a timeout would post it twice.
  */
-const githubPatch = <T>(
+const githubWrite = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
   body: Record<string, unknown>,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyUnsafeJson(body));
-    return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));
+    const attempt = clientNoTracer.execute(request).pipe(
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
-      Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
-        while: shouldRetry,
-      }),
-      Effect.scoped,
     );
+    return yield* (
+      request.method === 'PATCH'
+        ? attempt.pipe(
+            Effect.retry({
+              schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+              while: shouldRetry,
+            }),
+          )
+        : attempt
+    ).pipe(Effect.scoped);
   });
 
 export type IssueUpdateInput = {
@@ -444,7 +578,7 @@ export const updateIssue = (
   issueNumber: number,
   input: IssueUpdateInput,
 ): GitHubEffect<GitHubIssue> =>
-  githubPatch(
+  githubWrite(
     () =>
       HttpClientRequest.patch(
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
@@ -467,8 +601,106 @@ export type RepoUpdateInput = {
  * almost never what a user wants from a sync mirror.
  */
 export const updateRepo = (owner: string, repo: string, input: RepoUpdateInput): GitHubEffect<GitHubRepo> =>
-  githubPatch(
+  githubWrite(
     () => HttpClientRequest.patch(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
     input as unknown as Record<string, unknown>,
     GitHubRepoSchema,
+  );
+
+const GitHubReviewSchema = Schema.Struct({
+  id: Schema.Number,
+  state: Schema.String,
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubReview = Schema.Schema.Type<typeof GitHubReviewSchema>;
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/reviews with `event: APPROVE`. */
+export const approvePullRequest = (
+  owner: string,
+  repo: string,
+  number: number,
+  body?: string,
+): GitHubEffect<GitHubReview> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/reviews`,
+      ),
+    { event: 'APPROVE', ...(body ? { body } : {}) },
+    GitHubReviewSchema,
+  );
+
+/** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */
+export const createIssueComment = (
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  body: string,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
+      ),
+    { body },
+    GitHubCommentSchema,
+  );
+
+const GitHubCheckRunSchema = Schema.Struct({
+  name: Schema.String,
+  /** `queued`, `in_progress` or `completed`. */
+  status: Schema.String,
+  /** Set once `completed`: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`. */
+  conclusion: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** The provider's own page for the run (Depot, say), which GitHub's `html_url` only links back to. */
+  details_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  started_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  completed_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubCheckRun = Schema.Schema.Type<typeof GitHubCheckRunSchema>;
+
+const GitHubCheckRunsSchema = Schema.Struct({
+  total_count: Schema.Number,
+  check_runs: Schema.Array(GitHubCheckRunSchema),
+});
+
+/**
+ * GET /repos/{owner}/{repo}/commits/{sha}/check-runs — every page, since a truncated list would
+ * report a failing commit as green.
+ */
+export const fetchCheckRuns = (owner: string, repo: string, sha: string): GitHubEffect<readonly GitHubCheckRun[]> =>
+  githubPages(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}/check-runs`,
+      ),
+    GitHubCheckRunsSchema,
+    ({ check_runs }) => check_runs,
+  );
+
+export type ReviewCommentInput = {
+  body: string;
+  /** Head SHA the line numbers refer to. */
+  commit_id: string;
+  path: string;
+  line: number;
+  /** `LEFT` is the base (removed) side, `RIGHT` the head (added or context) side. */
+  side: 'LEFT' | 'RIGHT';
+};
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/comments — a review comment on one line of the diff. */
+export const createReviewComment = (
+  owner: string,
+  repo: string,
+  number: number,
+  input: ReviewCommentInput,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/comments`,
+      ),
+    input,
+    GitHubCommentSchema,
   );

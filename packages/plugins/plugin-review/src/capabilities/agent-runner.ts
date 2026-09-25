@@ -2,27 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AgentIdentity, CommentCapabilities } from '../types';
+import { AgentIdentity, CommentCapabilities } from '#types';
 
-const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-4-6.default';
+const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-5.default';
 
 const baseInstructions = trim`
   You are a helpful assistant participating in a comment thread on a document.
@@ -56,22 +57,22 @@ const baseInstructions = trim`
 const EditAnchoredRangeTool = Tool.make('editAnchoredRange', {
   description:
     'Replace the text of the anchored selection in the markdown document. Call this for in-place edits when a <selection> is provided.',
-  parameters: {
-    replacement: Schema.String.annotations({
+  parameters: Schema.Struct({
+    replacement: Schema.String.annotate({
       description: 'The new text for the anchored range. Only this span will be replaced.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 
 const UpdateDocumentTool = Tool.make('updateDocument', {
   description:
     'Replace the entire markdown content of the document. Call this for in-place edits when there is no anchored selection.',
-  parameters: {
-    content: Schema.String.annotations({
+  parameters: Schema.Struct({
+    content: Schema.String.annotate({
       description: 'The full new markdown content of the document.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 
@@ -95,46 +96,47 @@ type EditTarget =
  *    anchor — agent may replace the whole doc via `updateDocument`.
  *  - 'none' when the subject isn't editable text — no edit tools wired.
  */
-const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): EditTarget => {
-  if (!Obj.instanceOf(Markdown.Document, subject)) {
-    return { kind: 'none' };
-  }
-  const text = subject.content?.target;
-  if (!text) {
-    return { kind: 'none' };
-  }
-  const db = Obj.getDatabase(thread);
-  if (!db) {
-    return { kind: 'document', text };
-  }
-  const relations = db.query(Filter.type(AnchoredTo.AnchoredTo)).runSync();
-  const ours = relations.find(
-    (relation: AnchoredTo.AnchoredTo) =>
-      Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
-  );
-  if (!ours?.anchor) {
-    return { kind: 'document', text };
-  }
-  try {
-    const accessor = Doc.createAccessor(text, ['content']);
-    const range = getRangeFromCursor(accessor, ours.anchor);
-    if (!range || range.start === range.end) {
+const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<EditTarget> =>
+  Effect.gen(function* () {
+    if (!Obj.instanceOf(Markdown.Document, subject)) {
+      return { kind: 'none' };
+    }
+    const text = subject.content?.target;
+    if (!text) {
+      return { kind: 'none' };
+    }
+    const db = Obj.getDatabase(thread);
+    if (!db) {
       return { kind: 'document', text };
     }
-    const content = (text as unknown as { content: string }).content ?? '';
-    return {
-      kind: 'anchored',
-      text,
-      from: range.start,
-      to: range.end,
-      snippet: content.slice(range.start, range.end),
-      relation: ours,
-    };
-  } catch (err) {
-    log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
-    return { kind: 'document', text };
-  }
-};
+    const relations = yield* Effect.promise(() => db.query(Filter.type(AnchoredTo.AnchoredTo)).run());
+    const ours = relations.find(
+      (relation: AnchoredTo.AnchoredTo) =>
+        Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
+    );
+    if (!ours?.anchor) {
+      return { kind: 'document', text };
+    }
+    try {
+      const accessor = Doc.createAccessor(text, ['content']);
+      const range = getRangeFromCursor(accessor, ours.anchor);
+      if (!range || range.start === range.end) {
+        return { kind: 'document', text };
+      }
+      const content = (text as unknown as { content: string }).content ?? '';
+      return {
+        kind: 'anchored',
+        text,
+        from: range.start,
+        to: range.end,
+        snippet: content.slice(range.start, range.end),
+        relation: ours,
+      };
+    } catch (err) {
+      log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
+      return { kind: 'document', text };
+    }
+  });
 
 /**
  * Build the system prompt for a turn. Inlines the doc content and, when the
@@ -195,7 +197,7 @@ export default Capability.makeModule(
           const aiServiceLayer = ServiceResolver.provide({ space: db.spaceId }, AiService.AiService).pipe(
             Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
           );
-          const identity = yield* Capability.get(AgentIdentity);
+          const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
 
           // Load every referenced message into a plain Message.Message[].
           const loaded = yield* Effect.forEach(
@@ -205,7 +207,7 @@ export default Capability.makeModule(
           );
           const history = normalizeRoles(loaded);
 
-          const target = resolveEditTarget(thread, subject);
+          const target = yield* resolveEditTarget(thread, subject);
           const prompt = yield* AiPreprocessor.preprocessPrompt(history, {
             system: buildInstructions(subject, target),
           });
@@ -252,8 +254,12 @@ export default Capability.makeModule(
 
           const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
             Effect.scoped,
-            Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer))),
-            Effect.provide(toolkitLayer),
+            Effect.provide(
+              Layer.provideMerge(
+                AiService.languageModel(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)),
+                toolkitLayer,
+              ),
+            ),
           );
 
           // The chat message defaults to whatever the model returned, but when
@@ -282,6 +288,6 @@ export default Capability.makeModule(
         }),
     };
 
-    return Capability.contributes(CommentCapabilities.AgentRunner, runner);
+    return Capability.contribute(CommentCapabilities.AgentRunner, runner);
   }),
 );

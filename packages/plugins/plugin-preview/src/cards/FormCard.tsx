@@ -52,7 +52,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     }
   }, [staticType, subject]);
   const runtimeType = useType(db, fallbackTypeUri);
-  const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
+  const schema = useMemo((): Schema.Codec<any, any> | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;
   }, [runtimeType, staticType]);
@@ -83,7 +83,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   const handleSave = useCallback(
     (values: AnyProperties, { changed }: FormUpdateMeta<AnyProperties>) => {
       const paths = (Object.keys(changed) as SchemaEx.JsonPath[]).filter((path) => changed[path]);
-      Obj.update(subject, () => {
+      Obj.update(subject, (subject) => {
         for (const path of paths) {
           const parts = SchemaEx.splitJsonPath(path);
           const value = Obj.getValue(values as any, parts);
@@ -119,7 +119,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './annotations';
-export * from './assistant';
-export * from './fader';
-export * from './hashtag';
-export * from './marker';
-export * from './pos';
-export * from './replacer';
+export * from './annotations.ts';
+export * from './assistant.ts';
+export * from './fader.ts';
+export * from './hashtag.ts';
+export * from './marker.ts';
+export * from './pos.ts';

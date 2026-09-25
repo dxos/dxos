@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 
-import { makeRegistry } from '../registry';
-import { QueryResultCache, serializeQueryKey } from './query-result-cache';
+import { makeRegistry } from '../registry/index.ts';
+import { QueryResultCache, serializeQueryKey } from './query-result-cache.ts';
 
 describe('QueryResultCache', () => {
   test('returns the same instance for an identical query AST and constructs it once', () => {

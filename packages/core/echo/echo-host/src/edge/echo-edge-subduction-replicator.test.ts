@@ -3,27 +3,26 @@
 //
 
 import { cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
-import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 import { compositeKey } from '@dxos/util';
 
-import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
-import { EchoEdgeSubductionReplicator } from './echo-edge-subduction-replicator';
+import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge/index.ts';
+import { EchoEdgeSubductionReplicator, MAX_IN_PLACE_REHANDSHAKES } from './echo-edge-subduction-replicator.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
+describe('EchoEdgeSubductionReplicator', () => {
   test('opens a subduction connection when connectToSpace is called', async () => {
     const { client } = await createClientServer();
 
@@ -42,11 +41,11 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
   });
 
   test('reconnects', async () => {
-    const { client, server } = await createClientServer();
+    const { client } = await createClientServer();
 
     const spaceId = SpaceId.random();
 
-    const { context, openConnections, connectionOpen } = createMockContext();
+    const { context, connectionOpen } = createMockContext();
     const replicator = await connectReplicator(client, context);
 
     // Subscribe before connectToSpace so we capture the initial open.
@@ -59,35 +58,67 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
 
-    // Subduction-era restart: edge emits an `error` frame on the SUBDUCTION_REPLICATOR
-    // service id carrying the client's current `connectionId`; the connection tears
-    // down and the replicator opens a fresh connection on the next mutex pass. The
-    // current connection lives at the tail of `openConnections` — extract its
-    // `_connectionId` (private but visible to the same-package test) so the frame
-    // matches the client-side restart guard.
-    const currentConnectionId = () => (openConnections[openConnections.length - 1] as any)._connectionId as string;
-    await server.sendMessage(
-      createSubductionErrorMessage(
-        { identityDid: client.identityDid, peerKey: client.peerKey },
-        spaceId,
-        currentConnectionId(),
-      ),
-    );
-    await connectionOpen.waitForCount(1);
-
-    // Double restart to check for race conditions. The error frame must carry the
-    // current connection's `_connectionId` after `setIdentity` finishes reconnecting,
-    // so wait for the post-`setIdentity` open before constructing it.
+    // Double reconnect to check for race conditions.
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
-    await server.sendMessage(
-      createSubductionErrorMessage(
-        { identityDid: client.identityDid, peerKey: client.peerKey },
-        spaceId,
-        currentConnectionId(),
-      ),
-    );
-    await connectionOpen.waitForCount(1);
+
+    await replicator.disconnect();
+  });
+
+  test('an edge error re-handshakes in place, keeping the connection and its peer id', async () => {
+    const { client, server } = await createClientServer();
+
+    const spaceId = SpaceId.random();
+    const { context, openConnections, connectionOpen, transportResets } = createMockContext();
+    const replicator = await connectReplicator(client, context);
+
+    const waitForOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), spaceId);
+    await waitForOpen;
+    const connection = openConnections[0];
+    const peerId = connection.peerId;
+
+    // The edge signals a lost session on this connection lifetime (DX-1275).
+    await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
+    await waitForCondition({ condition: () => transportResets.length === 1 });
+
+    expect(transportResets[0]).toBe(connection);
+    expect(openConnections.length).toBe(1);
+    expect(openConnections[0]).toBe(connection);
+    expect(openConnections[0].peerId).toBe(peerId);
+
+    await replicator.disconnect();
+  });
+
+  test('falls back to a restart once the in-place re-handshake budget is spent', async () => {
+    const { client, server } = await createClientServer();
+
+    const spaceId = SpaceId.random();
+    const { context, openConnections, connectionOpen, transportResets } = createMockContext();
+    const replicator = await connectReplicator(client, context);
+
+    const waitForOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), spaceId);
+    await waitForOpen;
+    const firstConnection = openConnections[0];
+
+    // No inbound frame ever answers these, so the budget is never refilled.
+    for (let attempt = 0; attempt < MAX_IN_PLACE_REHANDSHAKES; attempt++) {
+      await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
+      await waitForCondition({ condition: () => transportResets.length === attempt + 1 });
+    }
+    expect(openConnections[0]).toBe(firstConnection);
+
+    // One past the budget: the connection is torn down and replaced, as before DX-1275.
+    const waitForReopen = connectionOpen.waitForCount(1);
+    await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
+    await waitForReopen;
+
+    // The replaced connection's close runs detached, so assert on what the replicator now holds.
+    const currentConnection = openConnections[openConnections.length - 1];
+    expect(transportResets.length).toBe(MAX_IN_PLACE_REHANDSHAKES);
+    expect(currentConnection).not.toBe(firstConnection);
+    expect(currentConnection.peerId).not.toBe(firstConnection.peerId);
 
     await replicator.disconnect();
   });
@@ -159,12 +190,17 @@ const createMockContext = (args?: {
 }) => {
   const connectionOpen = new Event();
   const openConnections: AutomergeReplicatorConnection[] = [];
+  const transportResets: AutomergeReplicatorConnection[] = [];
   const context: AutomergeReplicatorContext = {
     getContainingSpaceIdForDocument: async (documentId) => args?.documentSpaceId?.[documentId] ?? null,
     getContainingSpaceForDocument: async () => null,
     isDocumentInRemoteCollection: async (params) =>
       args?.remoteCollections?.[params.peerId]?.[params.documentId] ?? false,
     onConnectionAuthScopeChanged: () => {},
+    onConnectionTransportReset: (connection) => {
+      transportResets.push(connection);
+      return openConnections.includes(connection);
+    },
     onConnectionClosed: (connection) => {
       const idx = openConnections.indexOf(connection);
       if (idx >= 0) {
@@ -177,7 +213,24 @@ const createMockContext = (args?: {
     },
     peerId: PublicKey.random().toHex(),
   };
-  return { context, openConnections, connectionOpen };
+  return { context, openConnections, connectionOpen, transportResets };
+};
+
+/** Deliver an edge `error` frame carrying the current connection's `_connectionId`, which the client matches before acting. */
+const sendErrorForCurrentConnection = async (
+  client: EdgeClient,
+  server: Awaited<ReturnType<typeof createTestEdgeWsServer>>,
+  spaceId: SpaceId,
+  openConnections: AutomergeReplicatorConnection[],
+): Promise<void> => {
+  const connectionId = (openConnections[openConnections.length - 1] as any)._connectionId as string;
+  await server.sendMessage(
+    createSubductionErrorMessage(
+      create(PeerSchema, { identityDid: client.identityDid, peerKey: client.peerKey }),
+      spaceId,
+      connectionId,
+    ),
+  );
 };
 
 const createSubductionErrorMessage = (target: Peer, spaceId: SpaceId, connectionId: string) =>

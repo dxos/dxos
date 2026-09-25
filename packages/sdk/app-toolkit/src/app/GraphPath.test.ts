@@ -3,13 +3,15 @@
 //
 
 import * as Option from 'effect/Option';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Graph } from '@dxos/app-graph';
-import { Key } from '@dxos/echo';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import { Key, Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 
-import * as GraphPath from './GraphPath';
+import * as GraphPath from './GraphPath.ts';
 
 describe('GraphPath', () => {
   describe('getWorkspaceFromPath', () => {
@@ -25,30 +27,24 @@ describe('GraphPath', () => {
       expect(GraphPath.getWorkspaceFromPath('root/myspace/types/doc/obj1')).toBe('root/myspace');
     });
 
-    test('extracts workspace from pinned path', ({ expect }) => {
-      expect(GraphPath.getWorkspaceFromPath('root/!dxos:settings')).toBe('root/!dxos:settings');
+    test('extracts workspace from a non-space workspace path', ({ expect }) => {
+      expect(GraphPath.getWorkspaceFromPath('root/dxos:settings')).toBe('root/dxos:settings');
     });
   });
 
-  describe('isPinnedWorkspace', () => {
-    test('detects pinned workspace', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/!dxos:settings')).toBe(true);
+  describe('getWorkspaceToken', () => {
+    test('reads the space id', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root/myspace/types/doc/obj1')).toBe('myspace');
     });
 
-    test('rejects regular workspace', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/myspace')).toBe(false);
+    test('reads a pinned workspace, which has no space id', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root/dxos:settings')).toBe('dxos:settings');
+      expect(GraphPath.getWorkspaceToken('root/account/profile')).toBe('account');
     });
 
-    test('rejects bare root', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root')).toBe(false);
-    });
-
-    test('rejects deep path with ! in later segment', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/myspace/!something')).toBe(false);
-    });
-
-    test('rejects default workspace key', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('default')).toBe(false);
+    test('a path naming no workspace has no token', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root')).toBeUndefined();
+      expect(GraphPath.getWorkspaceToken('default')).toBeUndefined();
     });
   });
 
@@ -56,8 +52,8 @@ describe('GraphPath', () => {
     const spaceId = Key.SpaceId.random();
     const objectId = Key.EntityId.random();
     // Seed via addNode: the GraphProps.nodes constructor option does not register nodes (latent upstream bug).
-    const graph = Graph.make();
-    Graph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
 
     test('parses a canonical database path', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/${objectId}`;
@@ -79,6 +75,76 @@ describe('GraphPath', () => {
     test('rejects a path whose trailing segment is not a valid entity id', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/not-an-entity-id`;
       expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
+    });
+
+    // Backs plank dedup, where two views of one object are deliberately different planks.
+    test('does not look past a view discriminator', ({ expect }) => {
+      const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
+      expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
+    });
+  });
+
+  describe('tryGetEidCandidates', () => {
+    const spaceId = Key.SpaceId.random();
+    const objectId = Key.EntityId.random();
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+
+    test('a canonical path yields its trailing object', ({ expect }) => {
+      const path = `root/${spaceId}/system/database/test.document/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);
+    });
+
+    // The mailbox-view shape: the object id is interior.
+    test('finds an object id behind a view discriminator', ({ expect }) => {
+      const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);
+    });
+
+    test('orders candidates terminal-first so the canonical answer stays preferred', ({ expect }) => {
+      const containerId = Key.EntityId.random();
+      const path = `root/${spaceId}/content/collections/${containerId}/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([
+        EID.make({ spaceId, entityId: objectId }),
+        EID.make({ spaceId, entityId: containerId }),
+      ]);
+    });
+
+    test('rejects a path with no known workspace node', ({ expect }) => {
+      const path = `root/${Key.SpaceId.random()}/system/database/test.document/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([]);
+    });
+
+    test('yields nothing for a path naming no object', ({ expect }) => {
+      expect(GraphPath.tryGetEidCandidates(graph, `root/${spaceId}/system/database`)).toEqual([]);
+    });
+  });
+
+  describe('getObjectPathFromObject', () => {
+    let builder: EchoTestBuilder;
+
+    beforeEach(async () => {
+      builder = await new EchoTestBuilder().open();
+    });
+
+    afterEach(async () => {
+      await builder.close();
+    });
+
+    test('keys a static type by its typename', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+      expect(GraphPath.getObjectPathFromObject(person)).toBe(
+        GraphPath.getObjectPath(db.spaceId, GraphPath.getTypeSlug(TestSchema.Person), person.id),
+      );
+    });
+
+    test('keys a stored type by its entity id, as the database subtree does', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const schema = await db.addType(TestSchema.Person);
+      const person = db.add(Obj.make(schema, { name: 'alice' }));
+      expect(GraphPath.getTypeSlug(schema)).toBe(schema.id);
+      expect(GraphPath.getObjectPathFromObject(person)).toBe(GraphPath.getObjectPath(db.spaceId, schema.id, person.id));
     });
   });
 });

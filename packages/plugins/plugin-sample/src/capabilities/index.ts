@@ -3,22 +3,49 @@
 //
 
 // Capabilities barrel with lazy-loaded modules.
-// `Capability.lazy()` defers module loading until the framework activates the module.
-// This enables code-splitting: the graph builder, surfaces, and settings modules
-// are only loaded when their activation events fire.
-// The string argument is a debug tag used in error messages and tracing.
+// `AppCapability.*` makers pair a capability's requires/provides spec (evaluated before the
+// module's code loads) with the deferred loader, enabling code-splitting; plugin-local
+// capabilities that have no maker use `Capability.lazyModule()` directly.
 
-import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { SampleCapabilities } from '#types';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['node'],
+});
 
-export const SampleSettings = Capability.lazy('SampleSettings', () => import('./settings'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
+
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.deckCompanion.samplePanel',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.section',
+    'org.dxos.role.statusIndicator',
+  ],
+});
+
+export const SampleSettings = AppCapability.settings(() => import('./settings.ts'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [SampleCapabilities.Settings],
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

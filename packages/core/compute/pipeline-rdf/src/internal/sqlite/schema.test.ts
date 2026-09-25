@@ -3,11 +3,11 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { migrate } from './schema';
+import { migrate } from './schema.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 

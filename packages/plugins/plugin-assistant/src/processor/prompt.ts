@@ -17,11 +17,18 @@ export type ProcessorRequestContext = {
 /**
  * Prompt content for a request: the bare message, or — when the request carries selection context —
  * a synthetic block (system-generated user-turn content, hidden from the summary view) ahead of it.
+ * A synthetic request is itself system-generated (a completed inline flow reporting itself), so it
+ * becomes one synthetic block rather than words the reader appears to have typed.
  */
 export const createPromptContent = (request: {
   message: string;
+  disposition?: ContentBlock.Text['disposition'];
   context?: ProcessorRequestContext;
 }): string | ContentBlock.Any[] => {
+  if (request.disposition === 'synthetic') {
+    return [ContentBlock.Text.make({ text: request.message, disposition: 'synthetic' })];
+  }
+
   const selection = request.context?.selection;
   if (!selection?.text.length) {
     return request.message;

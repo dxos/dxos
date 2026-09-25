@@ -20,28 +20,16 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/display-name"
     },
     {
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -66,15 +54,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../lit-ui"
     },
     {
       "path": "../ui"

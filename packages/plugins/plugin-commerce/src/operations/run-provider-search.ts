@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Provider, Result, SearchOperation } from '../types';
-import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util';
+import { Provider, Result, SearchOperation } from '#types';
+
+import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util/index.ts';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
 export const buildResults = (provider: Provider.Provider, body: string): ResultData[] => {

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 
-import { Surface } from '../ui';
+import { Surface } from '../ui/index.ts';
 
 /**
  * Storybook decorator that enables the surface debug overlays (`<dx-surface>` wrappers + boundary

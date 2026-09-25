@@ -4,9 +4,9 @@
 
 import { CircularBuffer } from '@dxos/util';
 
-import { type LogConfig, LogLevel, shortLevelName } from './config';
-import { type LogEntry, type LogProcessor } from './context';
-import { type LogRecord } from './jsonl';
+import { type LogConfig, LogLevel, shortLevelName } from './config.ts';
+import { type LogEntry, type LogProcessor } from './context.ts';
+import { type LogRecord } from './jsonl.ts';
 
 const DEFAULT_BUFFER_SIZE = 2_000;
 const MAX_CONTEXT_LENGTH = 500;

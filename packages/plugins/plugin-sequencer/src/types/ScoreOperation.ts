@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import * as Score from './Score';
+import * as Score from './Score.ts';
 
 /**
  * Read a Score and return its lead-sheet text representation. The lead sheet is
@@ -20,7 +20,7 @@ import * as Score from './Score';
  */
 export const Read = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sequencer.read'),
+    key: DXN.make('org.dxos.operation.sequencer.read'),
     name: 'Read score',
     icon: 'ph--music-notes--regular',
     description: trim`
@@ -30,12 +30,12 @@ export const Read = Operation.make({
     `,
   },
   input: Schema.Struct({
-    score: Ref.Ref(Score.Score).annotations({
+    score: Ref.Ref(Score.Score).annotate({
       description: 'The Score to read.',
     }),
   }),
   output: Schema.Struct({
-    text: Schema.String.annotations({
+    text: Schema.String.annotate({
       description: 'Lead-sheet text representation of the Score.',
     }),
   }),
@@ -51,7 +51,7 @@ export const Read = Operation.make({
  */
 export const Write = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sequencer.write'),
+    key: DXN.make('org.dxos.operation.sequencer.write'),
     name: 'Write score',
     icon: 'ph--music-notes--regular',
     description: trim`
@@ -61,18 +61,18 @@ export const Write = Operation.make({
     `,
   },
   input: Schema.Struct({
-    score: Ref.Ref(Score.Score).annotations({
+    score: Ref.Ref(Score.Score).annotate({
       description: 'The Score to write to.',
     }),
-    text: Schema.String.annotations({
+    text: Schema.String.annotate({
       description: 'Lead-sheet text to apply. Same format produced by Read.',
     }),
   }),
   output: Schema.Struct({
-    tracks: Schema.Number.annotations({
+    tracks: Schema.Number.annotate({
       description: 'Number of tracks in the resulting Score.',
     }),
-    notes: Schema.Number.annotations({
+    notes: Schema.Number.annotate({
       description: 'Total number of notes across all sequences.',
     }),
   }),

@@ -2,13 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -18,34 +13,38 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
-import * as Ref from 'effect/Ref';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
+import * as Tracer from 'effect/Tracer';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import {
-  Cancellation,
-  Operation,
-  OperationHandlerSet,
-  Process,
-  RunAgainError,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Trace,
-} from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Annotation, Database, DXN } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { log } from '@dxos/log';
+import * as Trace from '@dxos/compute/Trace';
+import { Annotation, Database, DXN, Key } from '@dxos/echo';
+import { SpanAttributes } from '@dxos/effect';
+import { makeRecordingTracer } from '@dxos/effect/testing';
+import { invariant } from '@dxos/invariant';
+import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
-import { ProcessStore } from './process-store';
-import * as ProcessManager from './ProcessManager';
-import * as ProcessMonitor from './ProcessMonitor';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
-import { TestDatabaseLayer } from './testing';
+import { ProcessStore } from './process-store.ts';
+import * as ProcessManager from './ProcessManager.ts';
+import * as ProcessMonitor from './ProcessMonitor.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import { TestDatabaseLayer } from './testing/index.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -56,26 +55,32 @@ import { TestDatabaseLayer } from './testing';
 //
 
 const Double = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.double'), name: 'Double' },
+  meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
 
+const Traced = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.traced'), name: 'Traced' },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
 const Failing = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
+  meta: { key: DXN.make('com.example.operation.test.failing'), name: 'Failing' },
   input: Schema.Void,
   output: Schema.Void,
 });
 
 const RunAgain = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.runAgain'), name: 'RunAgain' },
+  meta: { key: DXN.make('com.example.operation.test.runAgain'), name: 'RunAgain' },
   input: Schema.Void,
   output: Schema.Void,
 });
 
 // Carries an arbitrary live reference (e.g. a model/handle) that is not JSON-serializable.
 const WithLiveRef = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.withLiveRef'), name: 'WithLiveRef' },
+  meta: { key: DXN.make('com.example.operation.test.withLiveRef'), name: 'WithLiveRef' },
   input: Schema.Struct({ ref: Schema.Any }),
   output: Schema.Number,
 });
@@ -84,7 +89,7 @@ const WithLiveRef = Operation.make({
  * Child used by {@link ParentInvoker} to exercise the parent-child SUCCEEDED state invariant.
  */
 const ChildPassthrough = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.childPassthrough'), name: 'ChildPassthrough' },
+  meta: { key: DXN.make('com.example.operation.test.childPassthrough'), name: 'ChildPassthrough' },
   input: Schema.Number,
   output: Schema.Number,
 });
@@ -95,7 +100,7 @@ const ChildPassthrough = Operation.make({
  * a parent's SUCCEEDED status.
  */
 const ParentInvoker = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.parentInvoker'), name: 'ParentInvoker' },
+  meta: { key: DXN.make('com.example.operation.test.parentInvoker'), name: 'ParentInvoker' },
   input: Schema.Number,
   output: Schema.Number,
 });
@@ -108,11 +113,11 @@ const SlowChildGate = {
   completeDeferred: undefined as Deferred.Deferred<void> | undefined,
   alarmStarted: undefined as Deferred.Deferred<void> | undefined,
   alarmResume: undefined as Deferred.Deferred<void> | undefined,
-  alarmHandlerFinished: undefined as Ref.Ref<boolean> | undefined,
+  alarmHandlerFinished: undefined as Deferred.Deferred<void> | undefined,
 };
 
 const SlowChild = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.slowChild'), name: 'SlowChild' },
+  meta: { key: DXN.make('com.example.operation.test.slowChild'), name: 'SlowChild' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
@@ -122,6 +127,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* (input) {
         return input.value * 2;
+      }),
+    ),
+  ),
+  Traced.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Effect.void.pipe(Effect.withSpan('Handler.span'));
       }),
     ),
   ),
@@ -135,7 +147,7 @@ const handlers = OperationHandlerSet.make(
   RunAgain.pipe(
     Operation.withHandler(
       Effect.fn(function* () {
-        yield* Operation.runAgain();
+        return yield* Operation.runAgain();
       }),
     ),
   ),
@@ -189,19 +201,20 @@ const makeParentAwaitingChild = () =>
     (ctx) =>
       Effect.succeed({
         onSpawn: () => Effect.void,
-        onInput: () =>
-          Effect.sync(() => {
-            ctx.setAlarm(0);
-          }),
+        onInput: () => ctx.setAlarm(0),
         onAlarm: () =>
           Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            const { alarmStarted, alarmResume, alarmHandlerFinished } = SlowChildGate;
+            if (alarmStarted === undefined || alarmResume === undefined || alarmHandlerFinished === undefined) {
+              return yield* Effect.die('SlowChildGate alarm fields not initialized');
+            }
             // Detach child invocation so the alarm handler can block on external completion,
             // matching agent-process awaiting an async tool call at shutdown.
-            yield* Deferred.succeed(SlowChildGate.alarmStarted!, undefined);
-            yield* Effect.fork(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
-            yield* Deferred.await(SlowChildGate.alarmResume!);
-            yield* Ref.set(SlowChildGate.alarmHandlerFinished!, true);
+            yield* Deferred.succeed(alarmStarted, undefined);
+            yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+            yield* Deferred.await(alarmResume);
+            yield* Deferred.succeed(alarmHandlerFinished, undefined);
             ctx.succeed();
           }),
         onChildEvent: () => Effect.void,
@@ -227,7 +240,10 @@ const makeSumAggregator = () =>
           }),
         onInput: (input: number) =>
           Effect.gen(function* () {
-            let acc = yield* StorageService.get(Schema.NumberFromString, 'acc').pipe(Effect.flatten, Effect.orDie);
+            let acc = yield* StorageService.get(Schema.NumberFromString, 'acc').pipe(
+              Effect.flatMap((value) => Effect.fromOption(value)),
+              Effect.orDie,
+            );
             acc += input;
             yield* StorageService.set(Schema.NumberFromString, 'acc', acc);
             ctx.submitOutput(acc);
@@ -235,6 +251,17 @@ const makeSumAggregator = () =>
         onAlarm: () => Effect.void,
         onChildEvent: () => Effect.void,
       }),
+  );
+
+/** Succeeds on its first input without producing an output. */
+const makeSucceedingExecutable = () =>
+  Process.make({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.sync(() => ctx.succeed()),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
   );
 
 /**
@@ -245,7 +272,7 @@ const makeWaitingExecutable = () =>
     Effect.succeed({
       onSpawn: () =>
         Effect.gen(function* () {
-          ctx.setAlarm(500);
+          yield* ctx.setAlarm(500);
         }),
       onInput: () => Effect.void,
       onAlarm: () =>
@@ -255,6 +282,32 @@ const makeWaitingExecutable = () =>
       onChildEvent: () => Effect.void,
     }),
   );
+
+/**
+ * A process whose input handler ignores interruption. Terminating it leaves the scope pinned open —
+ * the mid-turn cancel where the in-flight turn does not unwind — so the handle stays observable in
+ * the window between "finished" and "torn down", which is where the wedged-chat bug lived.
+ */
+const makeStallingProcess = Effect.fnUntraced(function* () {
+  const release = yield* Deferred.make<void>();
+  const started = yield* Deferred.make<void>();
+  let inputs = 0;
+  const executable = Process.make({ key: 'test.stalling', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () =>
+        Effect.gen(function* () {
+          inputs++;
+          yield* Deferred.succeed(started, undefined);
+          yield* Deferred.await(release).pipe(Effect.uninterruptible);
+        }),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
+  return { executable, release, started, inputs: () => inputs };
+});
 
 const rpcs = RpcGroup.make(
   Rpc.make('getValue', {
@@ -278,7 +331,7 @@ const ProcessWithRpcs = Process.make(
     Effect.gen(function* () {
       const storage = yield* StorageService.StorageService;
       return {
-        rpcHandlers: yield* rpcs.toHandlersContext({
+        rpcHandlers: yield* rpcs.toHandlers({
           getValue: Effect.fn(function* () {
             return yield* storage.get(Schema.NumberFromString, 'acc').pipe(Effect.map(Option.getOrElse(() => 0)));
           }),
@@ -306,6 +359,47 @@ const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, P
   Layer.provide(Trace.layerNoop),
 );
 
+// Trace messages captured by {@link CapturingTraceTestLayer}. Cleared at the start of each test that
+// uses it (the sink closure holds this stable reference, so it must be mutated in place, not reassigned).
+const capturedTraceMessages: Trace.Message[] = [];
+
+// Variant of {@link TestLayer} whose {@link Trace.TraceSink} records every message for assertions.
+const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
+  Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+  Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+  Layer.provide(TestDatabaseLayer({ types: [Organization.Organization] })),
+  Layer.provide(KeyValueStore.layerMemory),
+  Layer.provide(OperationHandlerSet.provide(handlers)),
+  Layer.provideMerge(Registry.layer),
+  Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
+);
+
+/** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
+const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?: string } = {}) =>
+  Process.make({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
+      onInput: () =>
+        options.scheduleInSpan ? ctx.setAlarm(0).pipe(Effect.withSpan(options.scheduleInSpan)) : ctx.setAlarm(0),
+      onAlarm: () =>
+        Effect.void.pipe(
+          Effect.withSpan('Alarm.handler'),
+          Effect.tap(() => Effect.sync(() => ctx.succeed())),
+        ),
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
+const recordedSpans: Tracer.Span[] = [];
+const spaceSpans: Tracer.Span[] = [];
+const alarmSpans: Tracer.Span[] = [];
+const rearmSpans: Tracer.Span[] = [];
+const runtimeSpans: Tracer.Span[] = [];
+const callerSpans: Tracer.Span[] = [];
+const unusedRuntimeSpans: Tracer.Span[] = [];
+
 describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
@@ -317,13 +411,179 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(executable);
       expect(handle.pid).toBeDefined();
 
-      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.forkChild);
 
       yield* handle.submitInput({ value: 5 });
 
       const outputs = yield* Fiber.join(outputFiber);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+      expect(outputs).toEqual([10]);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runs process handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers));
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+        expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
+    ),
+  );
+
+  it.effect(
+    'stamps the process space on every span a handler opens',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers), {
+          environment: { space: 'B7777777777777777777777777' as any },
+        });
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+
+        const span = spaceSpans.find(({ name }) => name === 'Handler.span');
+        expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans)))),
+    ),
+  );
+
+  it.effect(
+    'runs an alarm handler outside the span that scheduled it',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable({ scheduleInSpan: 'Input.span' }));
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
+        // The dispatch span is the root of the alarm's trace: nothing above it, so the scheduling
+        // span cannot be an ancestor.
+        const ancestry: string[] = [];
+        let span: Tracer.AnySpan | undefined = alarmSpans.find(({ name }) => name === 'Alarm.handler');
+        while (span?._tag === 'Span') {
+          ancestry.push(span.name);
+          span = Option.getOrUndefined(span.parent);
+        }
+        expect(span).toBeUndefined();
+        expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans)))),
+    ),
+  );
+
+  it.effect(
+    'runs alarm-dispatched handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable());
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
+    ),
+  );
+
+  it.effect(
+    'wraps each handler dispatch in a Process span carrying the process identity',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = makeTracedAlarmExecutable();
+        const handle = yield* manager.spawn(executable);
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        const dispatch = recordedSpans.find(
+          ({ name, attributes }) =>
+            name === 'Process.alarm' && attributes.get(SpanAttributes.PROCESS.id) === handle.pid,
+        );
+        expect(dispatch?.attributes.get(SpanAttributes.PROCESS.key)).toEqual(executable.key);
+        const handler = recordedSpans.find(
+          ({ name, parent }) =>
+            name === 'Alarm.handler' && Option.exists(parent, ({ spanId }) => spanId === dispatch?.spanId),
+        );
+        expect(handler).toBeDefined();
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
+    ),
+  );
+
+  it.effect(
+    'runs child-event handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const childExited = yield* Deferred.make<void>();
+        const parent = yield* manager.spawn(
+          Process.make({ key: 'test.traced-parent', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+            Effect.succeed({
+              onChildEvent: () =>
+                Effect.void.pipe(
+                  Effect.withSpan('ChildEvent.handler'),
+                  Effect.andThen(Deferred.succeed(childExited, undefined)),
+                ),
+            }),
+          ),
+        );
+        const child = yield* manager.spawn(Process.fromOperation(Double, handlers), { parentProcessId: parent.pid });
+        yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
+        yield* Deferred.await(childExited);
+
+        expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
+        yield* parent.terminate();
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
+    ),
+  );
+
+  it.effect(
+    "traces an operation invoked through the promise entry point on the runtime's tracer",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        const { error } = yield* Effect.promise(() => invoker.invokePromise(Traced, undefined));
+        expect(error).toBeUndefined();
+
+        expect(spanNamesToRoot(runtimeSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+        ]);
+      },
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans)))),
+    ),
+  );
+
+  it.effect(
+    "nests an operation invoked from a fiber under that fiber's span",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        yield* invoker
+          .invoke(Traced, undefined)
+          .pipe(Effect.withSpan('Caller.span'), Effect.provideService(Tracer.Tracer, makeRecordingTracer(callerSpans)));
+
+        expect(spanNamesToRoot(callerSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+          'Caller.span',
+        ]);
+        expect(unusedRuntimeSpans).toEqual([]);
+      },
+      Effect.provide(
+        Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      ),
+    ),
   );
 
   it.effect(
@@ -332,7 +592,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([14]);
+      expect(outputs).toEqual([14]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -343,7 +603,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
       const outputs = yield* handle.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([4]);
+      expect(outputs).toEqual([4]);
       expect(handle.status.state).toEqual(Process.State.IDLE);
     }, Effect.provide(TestLayer)),
   );
@@ -409,6 +669,82 @@ describe('ManagerImpl', () => {
   );
 
   it.effect(
+    'terminate settles the handle even when a handler holds the process scope open',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const { executable, release, started } = yield* makeStallingProcess();
+
+      const handle = yield* manager.spawn(executable);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(started);
+      const terminating = yield* Effect.forkChild(handle.terminate());
+      yield* Effect.yieldNow;
+
+      // The terminal state is visible while teardown is still blocked; a handle stuck in TERMINATING
+      // reads as live and gets adopted by the next session, which then never receives a turn.
+      expect(handle.status.state).toEqual(Process.State.TERMINATED);
+      // ...and a caller waiting on the stop is released rather than held for the process's lifetime.
+      yield* handle.runUntilSettled();
+
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(terminating);
+    }, Effect.provide(TestLayer)),
+  );
+
+  // The rest of the contract a stalled teardown has to keep. Each assertion is a state some consumer
+  // reads while `terminate` is still blocked, and getting any of them wrong strands the caller
+  // silently rather than failing it.
+  it.effect(
+    'a process stalled in teardown is not adoptable, and drops further input',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const { executable, release, started, inputs } = yield* makeStallingProcess();
+
+      const handle = yield* manager.spawn(executable);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(started);
+      const terminating = yield* Effect.forkChild(handle.terminate());
+      yield* Effect.yieldNow;
+
+      // A remount lookup adopts the first process it finds in a non-terminal state. While teardown
+      // blocks, this handle must not be that process.
+      const listed = yield* manager.list({ key: 'test.stalling' });
+      expect(listed.map((process) => process.status.state)).toEqual([Process.State.TERMINATED]);
+
+      // Input after the stop is refused outright. Queueing it would be worse than dropping it: the
+      // handler never runs again, so the caller would wait on a turn that cannot come.
+      yield* handle.submitInput(undefined);
+      expect(inputs()).toEqual(1);
+
+      // Stopping twice returns rather than joining the blocked teardown behind the first caller.
+      yield* handle.terminate();
+
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(terminating);
+
+      // Teardown completing neither revives the handle nor replays the dropped input.
+      expect(handle.status.state).toEqual(Process.State.TERMINATED);
+      expect(inputs()).toEqual(1);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'terminating a process cascades to its non-terminal children but not its terminated ones',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const parent = yield* manager.spawn(makeWaitingExecutable());
+      const runningChild = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
+      const finishedChild = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
+      yield* finishedChild.terminate();
+      expect(finishedChild.status.state).toEqual(Process.State.TERMINATED);
+
+      yield* parent.terminate();
+      expect(parent.status.state).toEqual(Process.State.TERMINATED);
+      expect(runningChild.status.state).toEqual(Process.State.TERMINATED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'terminate fires the run Cancellation signal',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
@@ -440,17 +776,8 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
-      let lastOutput = 0,
-        outputCount = 0;
-      yield* handle.subscribeOutputs().pipe(
-        Stream.runForEach((output) =>
-          Effect.sync(() => {
-            lastOutput = output;
-            outputCount++;
-          }),
-        ),
-        Effect.fork,
-      );
+      // Forked before either input is submitted, so `Stream.take(2)` collects exactly the two outputs produced below.
+      const outputsFiber = yield* handle.subscribeOutputs().pipe(Stream.take(2), Stream.runCollect, Effect.forkChild);
       {
         yield* handle.runToCompletion();
         expect(handle.status.state).toEqual(Process.State.IDLE);
@@ -460,9 +787,8 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(2);
         yield* handle.runToCompletion();
         expect(handle.status.state).toEqual(Process.State.IDLE);
-        // TODO(dmaretskyi): Output streaming is async, not sure how to sync it.
-        yield* Effect.promise(() => expect.poll(() => outputCount).toEqual(2));
-        yield* Effect.promise(() => expect.poll(() => lastOutput).toEqual(3));
+        const outputs = yield* Fiber.join(outputsFiber);
+        expect(outputs).toEqual([1, 3]);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -485,6 +811,34 @@ describe('ManagerImpl', () => {
     }, Effect.provide(TestLayer)),
   );
 
+  it.effect(
+    'filters listed processes by parentProcessId, state, and target',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeWaitingExecutable();
+      const target = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTTARGET000000000000');
+
+      const parent = yield* manager.spawn(executable);
+      const child = yield* manager.spawn(executable, { parentProcessId: parent.pid });
+      const targeted = yield* manager.spawn(executable, { target });
+
+      const childrenOfParent = yield* manager.list({ parentProcessId: parent.pid });
+      expect(childrenOfParent.map((handle) => handle.pid)).toEqual([child.pid]);
+
+      const hibernating = yield* manager.list({ state: Process.State.HYBERNATING });
+      expect(new Set(hibernating.map((handle) => handle.pid))).toEqual(new Set([parent.pid, child.pid, targeted.pid]));
+      const succeeded = yield* manager.list({ state: Process.State.SUCCEEDED });
+      expect(succeeded).toEqual([]);
+
+      const byTarget = yield* manager.list({ target });
+      expect(byTarget.map((handle) => handle.pid)).toEqual([targeted.pid]);
+
+      yield* parent.terminate();
+      yield* child.terminate();
+      yield* targeted.terminate();
+    }, Effect.provide(TestLayer)),
+  );
+
   describe('ProcessMonitor', () => {
     it.effect(
       'processTree lists spawned process with expected pid and state',
@@ -496,11 +850,34 @@ describe('ManagerImpl', () => {
 
         const tree = yield* monitor.processTree;
         expect(tree).toHaveLength(1);
-        expect(tree[0]!.pid).toEqual(handle.pid);
-        expect(tree[0]!.parentPid).toBeNull();
-        expect(tree[0]!.state).toEqual(Process.State.HYBERNATING);
+        const [info] = tree;
+        invariant(info);
+        expect(info.pid).toEqual(handle.pid);
+        expect(info.parentPid).toBeNull();
+        expect(info.state).toEqual(Process.State.HYBERNATING);
 
         yield* handle.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a finished process is released, leaving its summary in processTree and nothing in the registry',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const registry = yield* Registry.AtomRegistry;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+        yield* handle.terminate();
+
+        const tree = yield* monitor.processTree;
+        expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
+        const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
+        expect(Exit.isFailure(attached)).toBe(true);
+
+        yield* Effect.promise(() => new Promise<void>((resolve) => setImmediate(resolve)));
+        expect(registry.getNodes().has(handle.statusAtom)).toBe(false);
+        expect(registry.get(handle.statusAtom).state).toEqual(Process.State.TERMINATED);
       }, Effect.provide(TestLayer)),
     );
 
@@ -549,6 +926,128 @@ describe('ManagerImpl', () => {
         yield* handle.terminate();
       }, Effect.provide(TestLayer)),
     );
+
+    it.effect(
+      'processTree serializes a FAILED process error from the underlying Error object',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const executable = Process.make(
+          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
+              onInput: () => Effect.void,
+              onAlarm: () => Effect.void,
+              onChildEvent: () => Effect.void,
+            }),
+        );
+
+        const handle = yield* manager.spawn(executable);
+        expect(handle.status.state).toEqual(Process.State.FAILED);
+
+        const tree = yield* monitor.processTree;
+        const info = tree.find((node) => node.pid === handle.pid);
+        expect(info?.error?.name).toEqual('Error');
+        expect(info?.error?.message).toEqual('boom failure');
+        expect(info?.error?.stack).toContain('boom failure');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a crashed process reports the failure at error level, with the failing error (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = Process.make(
+          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
+              onInput: () => Effect.void,
+              onAlarm: () => Effect.void,
+              onChildEvent: () => Effect.void,
+            }),
+        );
+
+        const entries = yield* captureLogEntries(() => manager.spawn(executable));
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures).toHaveLength(1);
+        expect(failures[0].level).toEqual(LogLevel.ERROR);
+        // `e` carries the failing Error itself, so a bundle keeps the message and stack rather than
+        // only the outermost pretty-printed reason.
+        expect(failures[0].computedError).toContain('boom failure');
+        expect(failures[0].computedContext.key).toEqual('test.explicit-fail');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a died handler reports the failure at error level too (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
+            yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+          }),
+        );
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures.length).toBeGreaterThanOrEqual(1);
+        expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
+        expect(failures[0].computedError).toContain('Test Error');
+      }, Effect.provide(TestLayer)),
+    );
+
+    /** The two messages a settled FAILED transition reports under, so the debug lifecycle chatter is ignored. */
+    const LIFECYCLE_OUTCOMES = new Set(['lifecycle: failed', 'lifecycle: cancelled']);
+
+    it.effect(
+      'a user-dismissed prompt reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const dismissed = new Error('No passkey was presented', {
+          cause: new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError'),
+        });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.dismissed', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports).toHaveLength(1);
+        expect(reports[0].level).toEqual(LogLevel.INFO);
+        expect(reports[0].computedError).toContain('No passkey was presented');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'an aborted ceremony reports below error level, other DOMExceptions do not (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const aborted = new Error('aborted', { cause: new DOMException('signal aborted', 'AbortError') });
+        const unsupported = new Error('unsupported', {
+          cause: new DOMException('no authenticator', 'NotSupportedError'),
+        });
+
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            yield* manager.spawn(failWith('test.aborted', aborted));
+            yield* manager.spawn(failWith('test.unsupported', unsupported));
+          }),
+        );
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO, LogLevel.ERROR]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a domain error that declares itself a cancellation reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        // Mirrors `PasskeyError.Dismissed`, which the platform can raise without any DOMException.
+        const dismissed = Object.assign(new Error('No passkey was presented'), { cancellation: true as const });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.marked', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO]);
+      }, Effect.provide(TestLayer)),
+    );
   });
 
   it.effect(
@@ -557,7 +1056,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
+      expect(outputs).toEqual([22]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -569,14 +1068,14 @@ describe('ManagerImpl', () => {
 
       const handle = yield* manager.spawn(Process.fromOperation(ParentInvoker, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+      expect(outputs).toEqual([7]);
 
       // Drain any background child-cleanup callbacks. Without the fix in
       // ProcessHandle.requestChildEvent, the late child-exit notification would
       // re-enter #runHandler after the parent set #finished=true, clobbering
       // SUCCEEDED with RUNNING and leaving the process permanently stuck.
-      yield* Effect.yieldNow();
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
+      yield* Effect.yieldNow;
 
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
@@ -589,7 +1088,9 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
-      expect(exit).toEqual(Exit.die('Test Error'));
+      // Compared by defect rather than by deep-equal Exit: v4 annotates causes with a stack trace,
+      // which a freshly-constructed `Exit.die` does not carry.
+      expect(Result.getOrUndefined(Exit.findDefect(exit))).toEqual('Test Error');
       expect(handle.status.state).toEqual(Process.State.FAILED);
     }, Effect.provide(TestLayer)),
   );
@@ -609,16 +1110,34 @@ describe('ManagerImpl', () => {
       }
 
       const cause = exit.cause;
-      expect(cause._tag).toBe('Die');
+      expect(cause.reasons.some(Cause.isDieReason)).toBe(true);
 
       const defect = Cause.squash(cause);
       expect(typeof defect).not.toBe('string');
       expect(Cause.isCause(defect)).toBe(false);
       expect(RunAgainError.is(defect)).toBe(true);
 
-      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
+      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.getCause), Option.getOrUndefined);
       expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAgain tags the OperationEnd failure with the run-again error code',
+    Effect.fn(function* ({ expect }) {
+      capturedTraceMessages.length = 0;
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(Process.fromOperation(RunAgain, handlers));
+      yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+
+      // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
+      const ends = capturedTraceMessages
+        .flatMap((message) => Trace.flatten(message))
+        .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data] : []));
+      expect(ends).toHaveLength(1);
+      expect(ends[0].outcome).toBe('failure');
+      expect(ends[0].errorCode).toBe(RUN_AGAIN_ERROR_CODE);
+    }, Effect.provide(CapturingTraceTestLayer)),
   );
 
   it.effect(
@@ -626,12 +1145,12 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
-      const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.fork);
+      const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.forkChild);
       yield* Fiber.interrupt(collectFiber);
       const exit = yield* Fiber.join(collectFiber).pipe(Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
       if (Exit.isFailure(exit)) {
-        expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true);
+        expect(Cause.hasInterruptsOnly(exit.cause)).toEqual(true);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -692,7 +1211,39 @@ describe('ProcessOperationInvoker', () => {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
-      expect(output).toEqual(Exit.die('Test Error'));
+      expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a finished process reads as terminal by the time its outputs close',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSucceedingExecutable());
+      // The first read after the stream ends is what the invoker bases its verdict on.
+      const collector = yield* handle.subscribeOutputs().pipe(
+        Stream.runDrain,
+        Effect.map(() => handle.status.state),
+        Effect.forkChild,
+      );
+      yield* handle.submitInput(undefined);
+      expect(yield* Fiber.join(collector)).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an invocation still running at shutdown is interrupted, not a defect',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const fiber = yield* invoker.invokeFiber(SlowChild, { value: 1 });
+      // The handler is mid-flight when the app goes away.
+      yield* Queue.take(SlowChildGate.taskSignal);
+      yield* manager.shutdown();
+      const output = yield* fiber.await;
+      expect(Exit.isFailure(output) && Cause.hasInterruptsOnly(output.cause)).toEqual(true);
     }, Effect.provide(TestLayer)),
   );
 });
@@ -704,13 +1255,17 @@ describe('ProcessOperationInvoker', () => {
 
 describe('ProcessOperationInvoker edge dispatch', () => {
   const DeployedDouble = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.deployedDouble'), name: 'DeployedDouble', deployedId: 'fn-double' },
+    meta: {
+      key: DXN.make('com.example.operation.test.deployedDouble'),
+      name: 'DeployedDouble',
+      deployedId: 'fn-double',
+    },
     input: Schema.Struct({ value: Schema.Number }),
     output: Schema.Number,
   });
 
   const NotDeployed = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.notDeployed'), name: 'NotDeployed' },
+    meta: { key: DXN.make('com.example.operation.test.notDeployed'), name: 'NotDeployed' },
     input: Schema.Struct({ value: Schema.Number }),
     output: Schema.Number,
   });
@@ -807,7 +1362,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // strict resolver below. If `Database.Service` resolves, the test layer
   // has correctly propagated the space context from the parent.
   const ChildOp = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.invoker.child'), name: 'Child' },
+    meta: { key: DXN.make('com.example.operation.test.invoker.child'), name: 'Child' },
     input: Schema.Void,
     output: Schema.Struct({ spaceId: Schema.String }),
     services: [Database.Service],
@@ -816,7 +1371,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // Operation that, from its own handler, invokes `ChildOp` and surfaces the
   // resulting spaceId so the test can compare it against the expected one.
   const ParentOp = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.invoker.parent'), name: 'Parent' },
+    meta: { key: DXN.make('com.example.operation.test.invoker.parent'), name: 'Parent' },
     input: Schema.Struct({
       override: Schema.optional(Schema.String),
     }),
@@ -838,7 +1393,10 @@ describe('ProcessOperationInvoker environment inheritance', () => {
           const result = yield* Operation.invoke(
             ChildOp,
             undefined,
-            input.override !== undefined ? { spaceId: input.override as any } : undefined,
+            // Test-only coercion: an override may deliberately be a syntactically-plausible but
+            // wrong space id to exercise the resolver's mismatch path, so `Key.SpaceId.make`
+            // (which validates the format) is not usable here.
+            input.override !== undefined ? { spaceId: input.override as Key.SpaceId } : undefined,
           );
           return { childSpaceId: result.spaceId };
         }),
@@ -859,11 +1417,10 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
       const dbService = yield* Database.Service;
-      return ServiceResolver.make((tag, context) =>
+      // `succeed` ties the tag to `getService`'s return type, so `dbService` (already typed as
+      // `Database.Service`'s shape) needs no cast to satisfy it.
+      return ServiceResolver.succeed(Database.Service, (context) =>
         Effect.gen(function* () {
-          if (tag.key !== Database.Service.key) {
-            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
-          }
           if (context.space !== dbService.db.spaceId) {
             return yield* Effect.fail(
               new ServiceNotAvailableError(
@@ -871,7 +1428,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
               ),
             );
           }
-          return dbService as any;
+          return dbService;
         }),
       );
     }),
@@ -958,9 +1515,8 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const monitor = yield* Process.ProcessMonitorService;
-      const manager = yield* ProcessManager.Service;
 
-      const conversation = 'echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000' as any;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,
@@ -969,16 +1525,12 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       );
       yield* fiber.await;
 
-      // The parent op spawns the child via Operation.invoke; locate the
-      // child's handle through the process tree and assert its environment
-      // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
         throw new Error('child process not present in process tree');
       }
-      const childHandle = yield* manager.attach(childInfo.pid);
-      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+      expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
   );
 });
@@ -996,7 +1548,7 @@ describe('ProcessOperationInvoker invocations', () => {
           const output = yield* invoker.invoke(Double, { value: 5 });
           expect(output).toEqual(10);
 
-          const event = yield* Queue.take(events);
+          const event = yield* PubSub.take(events);
           expect(event.operation.meta.key).toEqual(Double.meta.key);
           expect(event.output).toEqual(10);
         }),
@@ -1016,7 +1568,7 @@ describe('ProcessOperationInvoker invocations', () => {
           expect(Exit.isFailure(exit)).toBe(true);
 
           // No success event should be queued for a failed invocation.
-          expect(yield* Queue.size(events)).toBe(0);
+          expect(yield* PubSub.remaining(events)).toBe(0);
         }),
       );
     }, Effect.provide(TestLayer)),
@@ -1083,7 +1635,7 @@ describe('reentrancy', () => {
       const dormant = yield* manager.list({ key: executable.key });
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [2] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([3]);
+      expect(outputs).toEqual([3]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1109,7 +1661,7 @@ describe('reentrancy', () => {
 
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+      expect(outputs).toEqual([7]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1129,7 +1681,28 @@ describe('reentrancy', () => {
       expect(dormant).toHaveLength(1);
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [1] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([1]);
+      expect(outputs).toEqual([1]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'startup after shutdown resets the manager so a later shutdown suspends newly spawned processes',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeSumAggregator();
+      yield* manager.spawn(executable);
+      yield* manager.shutdown();
+      yield* manager.startup();
+
+      // Spawned only after the reset, so this handle is only ever suspended by the SECOND shutdown below.
+      const handle = yield* manager.spawn(executable);
+      yield* manager.shutdown();
+
+      const attachExit = yield* manager.attach(handle.pid).pipe(Effect.exit);
+      expect(Exit.isFailure(attachExit)).toEqual(true);
+
+      const dormant = yield* manager.list({ key: executable.key });
+      expect(dormant.map((process) => process.pid)).toContain(handle.pid);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1205,7 +1778,7 @@ describe('reentrancy', () => {
 describe('durability', () => {
   const mkManager = (deps: {
     kv: KeyValueStore.KeyValueStore;
-    registry: Registry.Registry;
+    registry: Registry.AtomRegistry;
     resolver: ServiceResolver.ServiceResolver;
     handlerSet: OperationHandlerSet.OperationHandlerSet;
     traceSink: Trace.Sink;
@@ -1282,6 +1855,98 @@ describe('durability', () => {
   );
 
   it.effect(
+    'a child exit handed over as the app closes still reaches the parent after hydrate',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const alarmStarted = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      const childEvents: string[] = [];
+      const delivered = yield* Deferred.make<void>();
+      const parentDefinition = Process.make(
+        {
+          key: 'test.parent-child-exit-at-close',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [ProcessManager.ProcessOperationInvoker.Service],
+        },
+        (ctx) =>
+          Effect.succeed({
+            onInput: () => ctx.setAlarm(0),
+            onAlarm: () =>
+              Effect.gen(function* () {
+                const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+                yield* Deferred.succeed(alarmStarted, undefined);
+                yield* Deferred.await(alarmResume);
+              }),
+            onChildEvent: (event) =>
+              Effect.sync(() => {
+                childEvents.push(event._tag);
+              }).pipe(Effect.andThen(Deferred.succeed(delivered, undefined))),
+          }),
+      );
+
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(parentDefinition);
+      yield* parent.submitInput(undefined);
+      yield* Deferred.await(alarmStarted);
+      yield* Queue.take(SlowChildGate.taskSignal);
+
+      // The child completes inline from this fiber and the app closes before yielding again, as
+      // when a tool process finishes just before the agent runtime suspends. The exit must either
+      // be handled now or stay persisted for redelivery; dropping it loses the tool result.
+      yield* Deferred.succeed(SlowChildGate.completeDeferred, undefined);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: parentDefinition.key });
+      yield* dormant[0].hydrate(parentDefinition);
+      yield* Deferred.succeed(alarmResume, undefined);
+
+      yield* Deferred.await(delivered);
+      expect(childEvents).toContain('exited');
+
+      SlowChildGate.taskSignal = undefined;
+      SlowChildGate.completeDeferred = undefined;
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'fires a re-armed alarm under the ambient tracer after hydrate',
+    Effect.fn(
+      function* ({ expect }) {
+        const kv = yield* KeyValueStore.KeyValueStore;
+        const registry = yield* Registry.AtomRegistry;
+        const resolver = yield* ServiceResolver.ServiceResolver;
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const traceSink = yield* Trace.TraceSink;
+
+        const traced = makeTracedAlarmExecutable({ atSpawn: 500 });
+        const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        yield* managerA.spawn(traced);
+        yield* managerA.shutdown();
+
+        const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        const restored = yield* (yield* managerB.list({ key: 'test.traced-alarm' }))[0].hydrate(traced);
+        yield* TestClock.adjust(Duration.millis(500));
+        yield* restored.runToCompletion();
+
+        expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
+      },
+      Effect.provide(
+        Layer.provideMerge(DurabilityTestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      ),
+    ),
+  );
+
+  it.effect(
     're-runs onSpawn only when its spawn event is still pending',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
@@ -1296,9 +1961,9 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
                 spawnCount++;
-                ctx.setAlarm(10_000);
+                yield* ctx.setAlarm(10_000);
               }),
             onInput: () => Effect.void,
             onAlarm: () => Effect.void,
@@ -1329,7 +1994,6 @@ describe('durability', () => {
 
       const alarmStarted = yield* Deferred.make<void>();
       const alarmResume = yield* Deferred.make<void>();
-      const alarmHandlerFinished = yield* Ref.make(false);
       const blockingParent = Process.make(
         {
           key: 'test.blocking-alarm-hydrate',
@@ -1340,15 +2004,11 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () => Effect.void,
-            onInput: () =>
-              Effect.sync(() => {
-                ctx.setAlarm(0);
-              }),
+            onInput: () => ctx.setAlarm(0),
             onAlarm: () =>
               Effect.gen(function* () {
                 yield* Deferred.succeed(alarmStarted, undefined);
                 yield* Deferred.await(alarmResume);
-                yield* Ref.set(alarmHandlerFinished, true);
               }),
             onChildEvent: () => Effect.void,
           }),
@@ -1369,17 +2029,12 @@ describe('durability', () => {
       const dormant = yield* managerB.list({ key: blockingParent.key });
       expect(dormant).toHaveLength(1);
 
-      // `hydrate` returns immediately; the unsettled alarm is redelivered on the process scope.
-      yield* dormant[0].hydrate(blockingParent);
-      yield* Deferred.await(alarmStarted);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
-
+      // A `Deferred` remembers its outcome, so succeeding `alarmResume` before the redelivered
+      // `onAlarm` ever awaits it is safe, and `runToCompletion` synchronizes on the process's
+      // real status instead of racing a hand-rolled signal.
+      const restored = yield* dormant[0].hydrate(blockingParent);
       yield* Deferred.succeed(alarmResume, undefined);
-      yield* Effect.promise(() =>
-        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
-      );
-
-      const restored = yield* managerB.attach(handle.pid);
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.IDLE);
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1396,7 +2051,12 @@ describe('durability', () => {
       SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
       SlowChildGate.completeDeferred = yield* Deferred.make<void>();
       SlowChildGate.alarmStarted = yield* Deferred.make<void>();
-      SlowChildGate.alarmResume = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      SlowChildGate.alarmResume = alarmResume;
+      // The shared handler dies if this is undefined, on both the first run and the redelivered
+      // one, so it must be set before the first `onAlarm` fires — unused otherwise now that the
+      // final wait below synchronizes on the process's real status instead of a hand-rolled signal.
+      SlowChildGate.alarmHandlerFinished = yield* Deferred.make<void>();
 
       const parentExecutable = makeParentAwaitingChild();
       const childKey = DXN.getName(SlowChild.meta.key);
@@ -1417,20 +2077,15 @@ describe('durability', () => {
       const dormantChildren = yield* managerB.list({ key: childKey });
       expect(dormantChildren.length).toBeGreaterThanOrEqual(1);
 
-      const alarmHandlerFinished = yield* Ref.make(false);
-      SlowChildGate.alarmHandlerFinished = alarmHandlerFinished;
-
-      yield* dormantParents[0].hydrate(parentExecutable);
+      const restored = yield* dormantParents[0].hydrate(parentExecutable);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
       const taskSignalB = SlowChildGate.taskSignal;
       yield* Queue.take(taskSignalB);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
 
-      yield* Deferred.succeed(SlowChildGate.alarmResume!, undefined);
-      yield* Effect.promise(() =>
-        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
-      );
-
-      const restored = yield* managerB.attach(handle.pid);
+      yield* Deferred.succeed(alarmResume, undefined);
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
 
       SlowChildGate.taskSignal = undefined;
@@ -1452,6 +2107,7 @@ describe('durability', () => {
 
       let handled = 0;
       let gate = true; // first manager: block; after hydrate: allow.
+      const handledOnce = yield* Deferred.make<void>();
       const blocking = Process.make(
         { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
         () =>
@@ -1460,9 +2116,10 @@ describe('durability', () => {
             onInput: () =>
               Effect.gen(function* () {
                 if (gate) {
-                  yield* Effect.never;
+                  return yield* Effect.never;
                 }
                 handled++;
+                yield* Deferred.succeed(handledOnce, undefined);
               }),
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
@@ -1470,15 +2127,19 @@ describe('durability', () => {
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
-      // Submit input and fork it (it will block forever in manager A).
-      yield* Effect.fork(handle.submitInput('hello'));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // `submitInput` returns once the input is durably persisted, without waiting on the handler,
+      // so awaiting it already guarantees the input is pending before shutdown.
+      yield* handle.submitInput('hello');
       yield* managerA.shutdown();
 
       gate = false; // allow handling after restart.
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       yield* (yield* managerB.list({ key: 'test.blocking-input' }))[0].hydrate(blocking);
-      yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      yield* Deferred.await(handledOnce);
+      expect(handled).toEqual(1);
       yield* (yield* managerB.attach(handle.pid)).terminate();
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1495,7 +2156,7 @@ describe('durability', () => {
       let gate = true;
       // No IdempotentAnnotation → treated as non-idempotent by `fromOperation`.
       const SlowOp = Operation.make({
-        meta: { key: DXN.make('org.dxos.test.slowNonIdempotent'), name: 'SlowNonIdempotent' },
+        meta: { key: DXN.make('com.example.operation.test.slowNonIdempotent'), name: 'SlowNonIdempotent' },
         input: Schema.Struct({ value: Schema.Number }),
         output: Schema.Void,
       });
@@ -1504,7 +2165,7 @@ describe('durability', () => {
           Operation.withHandler(
             Effect.fn(function* () {
               if (gate) {
-                yield* Effect.never;
+                return yield* Effect.never;
               }
             }),
           ),
@@ -1513,17 +2174,20 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      // Submit input and let the handler enter the blocked section before shutdown.
-      yield* Effect.fork(handle.submitInput({ value: 1 }));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // `submitInput` returns once the input and the operation's durable "started" marker are
+      // persisted, without waiting on the handler, so awaiting it already captures both before shutdown.
+      yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
       // Restore: the operation observes its durable "started" marker → fails instead of retrying.
       gate = false;
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
-      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
-      const restoredHandle = yield* managerB.attach(handle.pid);
+      const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      const exit = yield* restoredHandle.runToCompletion().pipe(Effect.exit);
+      expect(Exit.isFailure(exit)).toBe(true);
       expect(restoredHandle.status.state).toEqual(Process.State.FAILED);
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1539,11 +2203,12 @@ describe('durability', () => {
 
       let handled = 0;
       let gate = true;
+      const handledOnce = yield* Deferred.make<void>();
       const idempotentAnnotations: Annotation.Dictionary = {};
       Annotation.setDictionary(idempotentAnnotations, Operation.IdempotentAnnotation, true);
       const SlowOp = Operation.make({
         meta: {
-          key: DXN.make('org.dxos.test.slowIdempotent'),
+          key: DXN.make('com.example.operation.test.slowIdempotent'),
           name: 'SlowIdempotent',
           annotations: idempotentAnnotations,
         },
@@ -1555,9 +2220,10 @@ describe('durability', () => {
           Operation.withHandler(
             Effect.fn(function* () {
               if (gate) {
-                yield* Effect.never;
+                return yield* Effect.never;
               }
               handled++;
+              yield* Deferred.succeed(handledOnce, undefined);
             }),
           ),
         ),
@@ -1565,16 +2231,20 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      yield* Effect.fork(handle.submitInput({ value: 1 }));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // See the sibling durability test above for why a plain, non-forked `submitInput` already
+      // guarantees the pending input is durably captured before shutdown.
+      yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
       // Restore: idempotent operations skip the marker and are simply re-run to completion.
       gate = false;
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
-      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
-      yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
-      const restoredHandle = yield* managerB.attach(handle.pid);
+      const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      yield* Deferred.await(handledOnce);
+      expect(handled).toEqual(1);
       expect(restoredHandle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1614,6 +2284,97 @@ describe('durability', () => {
   );
 
   it.effect(
+    'hydrate returns a live handle; the dormant view stays inert',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(waiting);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const [dormant] = yield* managerB.list({ key: 'test.waiting' });
+
+      // The dormant view is read-only: callers must use what `hydrate` returns, not the listed
+      // handle (the AgentService regression that surfaced as "Process not hydrated" on submit).
+      const live = yield* dormant.hydrate(waiting);
+      expect(live).not.toBe(dormant);
+      expect(live.pid).toEqual(handle.pid);
+      yield* live.submitInput(undefined);
+      expect(Exit.isFailure(yield* dormant.submitInput(undefined).pipe(Effect.exit))).toBe(true);
+
+      // Hydrating again is idempotent — it returns the same live handle.
+      expect(yield* dormant.hydrate(waiting)).toBe(live);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'terminating a dormant handle discards the record and its descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Discarding a stale process must not require booting it first.
+      yield* dormantParent.terminate();
+
+      expect(yield* managerB.list({ key: 'test.waiting' })).toHaveLength(0);
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'discarding a handle hydrated since the listing still sweeps its dormant descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Another caller hydrates the parent between the listing and the discard. Live termination
+      // only visits children in the handle map, so the still-dormant child would survive.
+      yield* dormantParent.hydrate(waiting);
+      yield* dormantParent.terminate();
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'terminal processes are not hydrated',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
@@ -1626,7 +2387,7 @@ describe('durability', () => {
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+      expect(outputs).toEqual([10]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
       yield* managerA.shutdown();
 
@@ -1638,3 +2399,39 @@ describe('durability', () => {
     }, Effect.provide(DurabilityTestLayer)),
   );
 });
+
+const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
+  const names: string[] = [];
+  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
+  while (span?._tag === 'Span') {
+    names.push(span.name);
+    span = Option.getOrUndefined(span.parent);
+  }
+  return names;
+};
+
+/**
+ * Collect the log entries `body` emits, so a test can assert on the level a code path reports at
+ * and not merely on the state it leaves behind.
+ */
+const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.Effect<LogEntry[], E, R> =>
+  Effect.suspend(() => {
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const remove = log.addProcessor(processor);
+    return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
+  });
+
+// A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
+// DOMException sits on `cause` rather than being the failing value itself.
+const failWith = (key: string, error: Error) =>
+  Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.sync(() => ctx.fail(error)),
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );

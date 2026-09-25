@@ -7,7 +7,7 @@ import { type TLRecord, createTLStore, defaultShapeUtils, loadSnapshot } from '@
 
 import { log } from '@dxos/log';
 
-import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
+import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema.ts';
 
 // TODO(burdon): Update version in package.json.
 // TODO(burdon): Try/catch around rendering component component.

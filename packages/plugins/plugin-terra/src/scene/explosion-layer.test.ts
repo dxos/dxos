@@ -7,9 +7,10 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { type SimObject, evaluate, initialState } from '../sim';
-import { Terra, TerraObject } from '../types';
-import { ExplosionLayer } from './explosion-layer';
+import { Terra, TerraObject } from '#types';
+
+import { type SimObject, evaluate, initialState } from '../sim/index.ts';
+import { ExplosionLayer } from './explosion-layer.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'explosion-1' } }));
 

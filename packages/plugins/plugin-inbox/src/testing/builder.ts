@@ -7,7 +7,7 @@ import { addDays, addMinutes, roundToNearestMinutes, startOfDay, subDays } from 
 import { type Database, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Actor, Event, Message, Person } from '@dxos/types';
+import { Actor, ContentBlock, Event, Message, Person } from '@dxos/types';
 
 //
 // Types
@@ -237,7 +237,10 @@ export class Builder {
       .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
-    let blocks: { _tag: 'text'; text: string }[];
+    // Seeded blocks carry the fields synced mail always has — a disposition (authored by a person,
+    // as opposed to a derived `summary`) and a mime type — so stories exercise the same shapes the
+    // renderers see in production rather than a stripped-down one.
+    let blocks: ContentBlock.Text[];
     if (links) {
       const { db, max = 5 } = links;
       const words = text.split(' ');
@@ -254,11 +257,11 @@ export class Builder {
       // First block plain text (links stripped), second block enriched text (links intact).
       text = enrichedText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
       blocks = [
-        { _tag: 'text', text },
-        { _tag: 'text', text: enrichedText },
+        { _tag: 'text', text, disposition: 'user', mimeType: 'text/plain' },
+        { _tag: 'text', text: enrichedText, disposition: 'user', mimeType: 'text/markdown' },
       ];
     } else {
-      blocks = [{ _tag: 'text', text }];
+      blocks = [{ _tag: 'text', text, disposition: 'user', mimeType: 'text/plain' }];
     }
 
     const from = this._randomActor();

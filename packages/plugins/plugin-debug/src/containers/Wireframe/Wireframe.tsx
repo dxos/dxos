@@ -6,7 +6,7 @@ import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Obj } from '@dxos/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Flex, type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -24,13 +24,13 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
 
   return (
     <div ref={ref} className={mx('relative grow min-h-96', classNames)} {...attentionAttrs}>
-      <div className='absolute inset-2 flex flex-col gap-2 overflow-hidden font-mono'>
-        <div className='flex justify-between'>
+      <Flex column gap='sm' classNames='absolute inset-2 overflow-hidden font-mono'>
+        <Flex justify='between'>
           <div>{label}</div>
           <div>{`[${width}x${height}]`}</div>
-        </div>
+        </Flex>
         {object && <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />}
-      </div>
+      </Flex>
       <svg width={width} height={height} className='bg-transparent *:text-subdued'>
         <rect x={0} y={0} width={width} height={height} strokeWidth={1} fill='none' />
         <line x1={0} y1={0} x2={width} y2={height} strokeWidth={1} />

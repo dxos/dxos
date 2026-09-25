@@ -9,13 +9,13 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
-import type * as Operation from '../Operation';
-import * as Runnable from '../Runnable';
-import * as Instructions from './Instructions';
-import * as Trigger from './Trigger';
+import type * as Operation from '../Operation.ts';
+import * as Runnable from '../Runnable.ts';
+import * as Instructions from './Instructions.ts';
+import * as Trigger from './Trigger.ts';
 
 const Kinds = ['runnable', 'instructions'] as const;
-export const Kind = Schema.Literal(...Kinds);
+export const Kind = Schema.Literals(Kinds);
 export type Kind = (typeof Kinds)[number];
 
 const RunnableSpec = Schema.Struct({
@@ -25,10 +25,11 @@ const RunnableSpec = Schema.Struct({
 
 const InstructionsSpec = Schema.Struct({
   kind: Schema.Literal('instructions'),
-  instructions: Ref.Ref(Instructions.Instructions),
+  /** Owned by the routine: `SetParent` cascades it. */
+  instructions: Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set()),
 });
 
-const RoutineSpec = Schema.Union(RunnableSpec, InstructionsSpec);
+const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.
@@ -54,10 +55,11 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */
-    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)),
+    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)).pipe(Annotation.SetParent.set()),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

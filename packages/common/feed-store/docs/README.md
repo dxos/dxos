@@ -8,17 +8,17 @@ A consistent store for hypercore feeds.
 classDiagram
 direction TB
 
-class FeedStore {
+class HypercoreStore {
   size
   feeds
-  getFeed()
-  openFeed()
+  getHypercore()
+  openHypercore()
   close()
 }
-FeedStore *-- "Map" FeedWrapper : _feeds
-FeedStore --> FeedFactory : _factory
-FeedStore --> FeedStoreOptions : { factory }
-class FeedWrapper {
+HypercoreStore *-- "Map" HypercoreWrapper : _feeds
+HypercoreStore --> HypercoreFactory : _factory
+HypercoreStore --> HypercoreStoreOptions : { factory }
+class HypercoreWrapper {
   key
   core
   properties
@@ -27,12 +27,12 @@ class FeedWrapper {
   length
   toJSON()
   createReadableStream()
-  createFeedWriter()
+  createHypercoreWriter()
 }
-class FeedFactory {
-  createFeed()
+class HypercoreFactory {
+  createHypercore()
 }
-class FeedStoreOptions {
+class HypercoreStoreOptions {
   <interface>
   factory
 }
@@ -42,7 +42,7 @@ class FeedStoreOptions {
 classDiagram
 direction TB
 
-class AbstractFeedIterator {
+class AbstractHypercoreIterator {
   isOpen
   isRunning
   toJSON()
@@ -52,14 +52,14 @@ class AbstractFeedIterator {
   stop()
   _generator()
 }
-class FeedIterator {
+class HypercoreIterator {
   _onOpen()
   _onClose()
   _nextBlock()
 }
-FeedIterator --> FeedQueue : _queue
-FeedIterator --> FeedWrapper : _feed
-class FeedQueue {
+HypercoreIterator --> HypercoreQueue : _queue
+HypercoreIterator --> HypercoreWrapper : _feed
+class HypercoreQueue {
   feed
   isOpen
   length
@@ -70,8 +70,8 @@ class FeedQueue {
   peek()
   pop()
 }
-FeedQueue --> FeedWrapper : _feed
-class FeedWrapper {
+HypercoreQueue --> HypercoreWrapper : _feed
+class HypercoreWrapper {
   key
   core
   properties
@@ -80,7 +80,7 @@ class FeedWrapper {
   length
   toJSON()
   createReadableStream()
-  createFeedWriter()
+  createHypercoreWriter()
 }
 ```
 

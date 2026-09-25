@@ -8,14 +8,14 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Image, Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Card, Flex, Image, Panel } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
-import { type Bookmark, BookmarkOperation } from '#types';
+import { Bookmark, BookmarkOperation } from '#types';
 
-import { useImageLoads } from '../useImageLoads';
+import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
 
@@ -80,39 +80,37 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col'>
-          <div className='flex justify-center'>
-            <div className='dx-document py-3'>
-              <Card.Root fullWidth border={false}>
-                <Card.Header>
-                  <Card.Block>
-                    <img src={bookmark.favicon} alt={bookmark.title} />
-                  </Card.Block>
-                  <Card.Title>{bookmark.title}</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  <Card.Section>
-                    <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
-                      {bookmark.url}
-                    </Card.Text>
-                    <Card.Text>{bookmark.excerpt}</Card.Text>
-                    {bookmark.image && imageLoads && (
-                      <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
-                    )}
-                  </Card.Section>
-                </Card.Body>
-              </Card.Root>
-            </div>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='flex flex-col'>
+        <Flex justify='center'>
+          <div className='dx-document py-3'>
+            <Card.Root fullWidth border={false}>
+              <Card.Header>
+                <Card.Block>
+                  <img src={bookmark.favicon} alt={bookmark.title} />
+                </Card.Block>
+                <Card.Title>{bookmark.title}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Card.Section>
+                  <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                    {bookmark.url}
+                  </Card.Text>
+                  <Card.Text>{bookmark.excerpt}</Card.Text>
+                  {bookmark.image && imageLoads && (
+                    <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                  )}
+                </Card.Section>
+              </Card.Body>
+            </Card.Root>
           </div>
-          {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+        </Flex>
+        {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -7,18 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import {
-  Connection,
-  ConnectionTestError,
-  Connector,
-  type CredentialForm,
-  type OnTokenCreated,
-  type TestConnection,
-} from '@dxos/plugin-connector';
+import { AccessToken, Connection } from '@dxos/link';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
+
+import { DiscordOperation, DiscordTargetOptions } from '#types';
 
 import {
   DISCORD_BOT_LABEL,
@@ -26,10 +22,10 @@ import {
   DISCORD_SOURCE,
   DISCORD_USER_LABEL,
   DISCORD_USER_PROVIDER_ID,
-} from '../constants';
-import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
-import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
-import { DiscordOperation, DiscordTargetOptions } from '../types';
+} from '../constants.ts';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors.ts';
+import { DiscordSyncError } from '../operations/errors.ts';
+import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services/index.ts';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -40,7 +36,7 @@ import { DiscordOperation, DiscordTargetOptions } from '../types';
  * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Bot Token',
     description:
       'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +
@@ -67,17 +63,17 @@ const validateToken = (token: string) =>
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.mapError((error) => {
       if (isDiscordErrorResponse(error) && discordErrorStatus(error) === 401) {
-        return new Error(
-          'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
-        );
+        return new DiscordSyncError({
+          message: 'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
+        });
       }
       // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
       // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
-      return error instanceof Error ? error : new Error(formatDiscordSyncFailure(error));
+      return error instanceof Error ? error : new DiscordSyncError({ message: formatDiscordSyncFailure(error) });
     }),
   );
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
   defaultValues: { token: '' },
   // Validates before the dialog closes so 401/format errors are shown inline.
@@ -85,7 +81,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
     Effect.gen(function* () {
       const token = values.token.trim();
       if (token.length === 0) {
-        return yield* Effect.fail(new Error('Bot token is required.'));
+        return yield* Effect.fail(new DiscordSyncError({ message: 'Bot token is required.' }));
       }
       yield* validateToken(token);
     }),
@@ -118,7 +114,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * Connection.
  */
 const makeOnTokenCreated =
-  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): ConnectorSpec.OnTokenCreated =>
   ({ accessToken }) =>
     Effect.gen(function* () {
       if (accessToken.account) {
@@ -141,7 +137,7 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  * A rejected token or transport failure surfaces as a user-facing error so the
  * connection UI can offer to reauthenticate.
  */
-const userTestConnection: TestConnection = ({ accessToken }) =>
+const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const rest = yield* DiscordREST;
     yield* rest.getMyUser();
@@ -155,7 +151,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes two `Connector` entries for Discord:
+ * Contributes two `ConnectorSpec.Connector` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
  *
@@ -167,7 +163,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,
@@ -177,7 +173,7 @@ export default Capability.makeModule(
           operation: DiscordOperation.SyncDiscordChannel,
           getTargets: DiscordOperation.GetDiscordChannels,
           materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          optionsSchema: DiscordTargetOptions,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
         },
         onTokenCreated,
       },
@@ -193,7 +189,7 @@ export default Capability.makeModule(
           operation: DiscordOperation.SyncDiscordChannel,
           getTargets: DiscordOperation.GetDiscordChannels,
           materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          optionsSchema: DiscordTargetOptions,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
         },
         onTokenCreated: userOnTokenCreated,
         testConnection: userTestConnection,

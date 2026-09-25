@@ -4,22 +4,26 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Position } from '@dxos/util';
 
-import { ABOUT_DIALOG } from '../components';
-import { meta } from '../meta';
+import { ABOUT_DIALOG } from '../constants.ts';
+import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'about',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: 'openAbout',
             data: Effect.fnUntraced(function* () {
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -30,11 +34,14 @@ export default Capability.makeModule(
               label: ['open-about.label', { ns: meta.profile.key }],
               icon: 'ph--info--regular',
               disposition: 'menu',
+              // The only entry with an explicit position: every other contributor ties at the
+              // default 0, so this alone is what keeps About at the end of the app menu.
+              position: Position.last,
             },
           }),
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extension);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extension);
   }),
 );

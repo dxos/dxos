@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,9 +14,9 @@ import { fileURLToPath } from 'node:url';
 import { ContentBlock } from '@dxos/types';
 import { Message } from '@dxos/types';
 
-import * as AiService from '../AiService';
-import { agenticLoop } from './process-messages';
-import { AiServiceTestingPreset } from './test-layers';
+import * as AiService from '../AiService.ts';
+import { agenticLoop } from './process-messages.ts';
+import { AiServiceTestingPreset } from './test-layers.ts';
 
 const EXAMPLE_PDF = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-pdf.pdf'));
 const EXAMPLE_IMAGE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-image.jpg'));
@@ -66,7 +66,7 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('com.anthropic.model.claude-opus-4-8.default').pipe(
+  AiService.languageModel('com.anthropic.model.claude-opus-5.default').pipe(
     Layer.provideMerge(AiServiceTestingPreset('direct')),
   ),
 );

@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
@@ -14,8 +14,8 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
-import { omitId } from '../../util';
-import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
+import { omitId } from '../../util/index.ts';
+import { Form, META_TAGS_KEY, partitionMetaTags, withMetaTags } from '../Form/index.ts';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
@@ -25,7 +25,7 @@ export type ObjectFormProps = {
    * (`Type.getSchema(T).pipe(Schema.pick(...))`). Values are still read from and written back to
    * `object` by path, so the picked fields must be paths on `object`. Defaults to `type`'s schema.
    */
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Schema.Codec<any, any>;
   /** Render the meta-tags field. Defaults to `true`. */
   showTags?: boolean;
 };
@@ -36,8 +36,13 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
   // reading the raw object during render does not establish a subscription. `snapshot` is a fresh value on change.
   const [snapshot] = useObject(object);
   const meta = Obj.getMeta(object);
-  // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
-  const tags = [...meta.tags];
+  // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler). Provider-owned tags
+  // are held out of the form and written back untouched — see `partitionMetaTags`.
+  const spaceTags = useQuery(db, Filter.type(Tag.Tag));
+  const { editable: tags, preserved: preservedTags } = useMemo(
+    () => partitionMetaTags([...meta.tags], spaceTags),
+    [meta.tags, spaceTags],
+  );
   const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...snapshot }), [snapshot, tags]);
   const formSchema = useMemo(() => {
     const base = schema ?? Type.getSchema(type);
@@ -51,7 +56,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
+        Obj.getMeta(object).tags.push(Ref.make(newObject));
       });
     }
   }, []);
@@ -74,15 +79,17 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
       const hasTagsChange = changedPaths.some((path) => SchemaEx.splitJsonPath(path)[0] === META_TAGS_KEY);
       if (hasTagsChange) {
         Obj.update(object, (object) => {
-          // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
-          Obj.getMeta(object).tags = Array.isArray(metaTags) ? [...(metaTags as Ref.Ref<Tag.Tag>[])] : [];
+          // Copy so later in-place form mutations don't bypass the `Obj.update` boundary. The
+          // provider-owned tags the form never saw are restored, since this replaces `tags` wholesale.
+          const edited = Array.isArray(metaTags) ? (metaTags as Ref.Ref<Tag.Tag>[]) : [];
+          Obj.getMeta(object).tags = [...preservedTags, ...edited];
         });
       }
 
       // Handle other property changes.
       const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
       if (nonTagPaths.length > 0) {
-        Obj.update(object, () => {
+        Obj.update(object, (object) => {
           for (const path of nonTagPaths) {
             const parts = SchemaEx.splitJsonPath(path);
             const value = Obj.getValue(values, parts);
@@ -91,7 +98,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
         });
       }
     },
-    [object],
+    [object, preservedTags],
   );
 
   return (
@@ -109,7 +116,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     >
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -117,14 +124,13 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
 };
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, presentation, getValue, onValueChange }) => {
+  hue: ({ type, label, jsonPath, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
-      <>
-        {presentation !== 'inline' && <Form.Label label={label} />}
+      <Form.Field path={jsonPath} label={label} presentation={presentation}>
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
+      </Form.Field>
     );
   },
 };

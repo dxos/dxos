@@ -3,16 +3,22 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
-import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
+import {
+  type DataSourceCursor,
+  type DocumentActivity,
+  type IndexDataSource,
+  type IndexerObject,
+} from '@dxos/index-core';
 import { log } from '@dxos/log';
 
-import { type AutomergeHost } from '../automerge';
+import { type AutomergeHost } from '../automerge/index.ts';
+import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
 
@@ -42,25 +48,75 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
   return cursor !== headsCodec.encode(currentHeads);
 };
 
+export type AutomergeDataSourceOptions = {
+  isBranchDocument?: (documentId: DocumentId) => boolean;
+};
+
 /**
  * Data source that fetches objects from AutomergeHost.
- * Iterates all documents from HeadsStore and tracks document heads as cursors to detect changes.
+ * Iterates all documents from SqliteHeadsStore and tracks document heads as cursors to detect changes.
  */
 export class AutomergeDataSource implements IndexDataSource {
   readonly sourceName = 'automerge';
 
   readonly #automergeHost: AutomergeHost;
+  readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;
 
-  constructor(automergeHost: AutomergeHost) {
+  /**
+   * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
+   * an unbounded scan of `automerge_heads` and is cursor-independent, so re-reading it for each
+   * index in a pass doubles the cost for an identical result. Held only for the pass — a document
+   * saved mid-pass is still picked up next pass, since `documentsSaved` schedules one.
+   */
+  #passHeads: Promise<{ documentId: DocumentId; heads: A.Heads }[]> | null = null;
+  #passActive = false;
+
+  /**
+   * Branch documents seen as a space root's registry, across every pass. A merge lands a branch's
+   * changes in the main document under the same hashes, so counting the branch document too would
+   * double-count every merged change.
+   */
+  readonly #branchDocumentIds = new Set<DocumentId>();
+
+  constructor(automergeHost: AutomergeHost, options?: AutomergeDataSourceOptions) {
     this.#automergeHost = automergeHost;
+    this.#isBranchDocument = options?.isBranchDocument;
+  }
+
+  beginPass(): void {
+    this.#passActive = true;
+    this.#passHeads = null;
+  }
+
+  endPass(): void {
+    this.#passActive = false;
+    this.#passHeads = null;
+  }
+
+  /** Caches the promise, not the result, so concurrent callers in one pass share a single scan. */
+  #listAllDocumentHeads(): Promise<{ documentId: DocumentId; heads: A.Heads }[]> {
+    if (this.#passHeads) {
+      return this.#passHeads;
+    }
+    const scan = (async () => {
+      const entries: { documentId: DocumentId; heads: A.Heads }[] = [];
+      for await (const entry of this.#automergeHost.listDocumentHeads()) {
+        entries.push(entry);
+      }
+      return entries;
+    })();
+    if (this.#passActive) {
+      this.#passHeads = scan;
+    }
+    return scan;
   }
 
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
-    return Effect.gen(this, function* () {
+    opts?: { limit?: number; activity?: boolean; objects?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
+    return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
       const cursorMap = new Map<string, string>();
       for (const cursor of cursors) {
@@ -69,34 +125,34 @@ export class AutomergeDataSource implements IndexDataSource {
         }
       }
 
-      // Find changed documents by iterating all documents from HeadsStore.
-      const changedDocuments = yield* Effect.promise(async () => {
-        const result: { documentId: DocumentId; heads: A.Heads }[] = [];
-        const limit = opts?.limit ?? Infinity;
-
-        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
-          const existingCursor = cursorMap.get(documentId);
-          if (hasChanged(existingCursor, heads)) {
-            result.push({ documentId, heads });
-            if (result.length >= limit) {
-              break;
-            }
+      // Find changed documents by diffing every document's heads against this index's cursors. The
+      // scan is shared across the pass; the diff is not, since cursors are per-index.
+      const allDocumentHeads = yield* Effect.promise(() => this.#listAllDocumentHeads());
+      const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
+      const limit = opts?.limit ?? Infinity;
+      for (const { documentId, heads } of allDocumentHeads) {
+        if (hasChanged(cursorMap.get(documentId), heads)) {
+          changedDocuments.push({ documentId, heads });
+          if (changedDocuments.length >= limit) {
+            break;
           }
         }
-        return result;
-      });
+      }
 
       // Load changed documents and extract objects.
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
+      const pendingActivity = new Map<DocumentId, DocumentActivity>();
+      const branchDiscards = new Map<DocumentId, DocumentActivity>();
+      const extractObjects = opts?.objects !== false;
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
-          if (!handle) {
+          using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
+          if (!lease) {
             continue;
           }
-          const doc = handle.doc();
+          const doc: DatabaseDirectory = lease.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {
@@ -110,10 +166,24 @@ export class AutomergeDataSource implements IndexDataSource {
             continue;
           }
 
-          const existingCursor = cursorMap.get(documentId);
-          const { changedObjectIds, updatedAt } = inspectDocChanges(doc, existingCursor);
+          if (doc.branches) {
+            for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
+              if (!isValidAutomergeUrl(url)) {
+                continue;
+              }
+              const branchId = interpretAsDocumentId(url);
+              this.#branchDocumentIds.add(branchId);
+              branchDiscards.set(branchId, { spaceId, documentId: branchId, full: true, changes: [] });
+            }
+          }
 
-          const docObjects = doc.objects ?? {};
+          const existingCursor = cursorMap.get(documentId);
+          const { changedObjectIds, updatedAt, changesMeta } = inspectDocChanges(doc, existingCursor, {
+            changes: !!opts?.activity,
+            objects: extractObjects,
+          });
+
+          const docObjects = extractObjects ? (doc.objects ?? {}) : {};
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -124,6 +194,7 @@ export class AutomergeDataSource implements IndexDataSource {
               documentId,
               queueId: null,
               queueNamespace: null,
+              queuePosition: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
@@ -137,52 +208,79 @@ export class AutomergeDataSource implements IndexDataSource {
             resourceId: documentId,
             cursor: headsCodec.encode(docHeads),
           });
+          if (opts?.activity) {
+            pendingActivity.set(documentId, {
+              spaceId,
+              documentId,
+              full: existingCursor === undefined,
+              changes: changesMeta.flatMap((meta) => {
+                const change = toChangeRecord(meta);
+                return change ? [{ time: change.time, ops: change.ops }] : [];
+              }),
+            });
+          }
         } catch (error) {
           log.error('Error loading document for indexing', { documentId, error });
         }
       }
 
-      return { objects, cursors: updatedCursors };
+      if (!opts?.activity) {
+        return { objects, cursors: updatedCursors };
+      }
+      const activity: DocumentActivity[] = [...branchDiscards.values()];
+      for (const [documentId, entry] of pendingActivity) {
+        if (branchDiscards.has(documentId)) {
+          continue;
+        }
+        const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
+        activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
+      }
+      return { objects, cursors: updatedCursors, activity };
     });
   }
 }
 
 /**
- * Determines which ECHO objects changed and the document-level max change timestamp.
+ * Determines which ECHO objects changed, the document-level max change timestamp, and (when
+ * `opts.changes` is set) the Automerge changes behind them.
  *
  * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`),
- * and `A.getChangesMetaSince` for the max timestamp (second-level precision).
+ * and `A.getChangesMetaSince` for both the max timestamp (second-level precision) and the change
+ * metadata.
  * Returns `changedObjectIds: null` when all objects should be indexed (new document).
  */
 const inspectDocChanges = (
   doc: DatabaseDirectory,
   existingCursor: string | undefined,
-): { changedObjectIds: Set<string> | null; updatedAt: number } => {
+  opts: { changes: boolean; objects: boolean },
+): { changedObjectIds: Set<string> | null; updatedAt: number; changesMeta: A.ChangeMetadata[] } => {
   if (!existingCursor) {
     // On first indexing we don't have a prior cursor so we can't isolate per-object
     // change timestamps.  Fall back to the current wall-clock time so that freshly
     // indexed objects sort "recent" in `Order.updated` queries.
-    return { changedObjectIds: null, updatedAt: Date.now() };
+    const changesMeta = opts.changes ? A.getChangesMetaSince(doc, []) : [];
+    return { changedObjectIds: null, updatedAt: Date.now(), changesMeta };
   }
 
   const oldHeads = headsCodec.decode(existingCursor);
 
-  const patches = A.diff(doc, oldHeads, A.getHeads(doc));
   const changedObjectIds = new Set<string>();
-  for (const patch of patches) {
-    if (patch.path.length >= 2 && patch.path[0] === 'objects') {
-      changedObjectIds.add(String(patch.path[1]));
+  if (opts.objects) {
+    for (const patch of A.diff(doc, oldHeads, A.getHeads(doc))) {
+      if (patch.path.length >= 2 && patch.path[0] === 'objects') {
+        changedObjectIds.add(String(patch.path[1]));
+      }
     }
   }
 
-  const changes = A.getChangesMetaSince(doc, oldHeads);
+  const changesMeta = A.getChangesMetaSince(doc, oldHeads);
   let maxTime = 0;
-  for (const change of changes) {
+  for (const change of changesMeta) {
     if (change.time > maxTime) {
       maxTime = change.time;
     }
   }
   const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
 
-  return { changedObjectIds, updatedAt };
+  return { changedObjectIds, updatedAt, changesMeta };
 };

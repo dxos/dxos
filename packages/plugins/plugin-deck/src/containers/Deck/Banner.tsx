@@ -10,9 +10,9 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { VersionInfo } from '#types';
+import { DeckRole } from '#types';
 
-import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
+import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
   const { t } = useTranslation(meta.profile.key);
@@ -29,14 +29,14 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
       <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
-        <div className='absolute inset-0 pointer-events-none'>
+        <div className='dx-fullscreen pointer-events-none'>
           <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
             <Surface.Surface type={AppSurface.SearchInput} limit={1} />
           </div>
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface type={VersionInfo} limit={1} />
+      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
     </header>
   );
 };

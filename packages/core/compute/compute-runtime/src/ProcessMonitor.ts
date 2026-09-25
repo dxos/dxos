@@ -4,16 +4,18 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Process, type Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import type * as Trace from '@dxos/compute/Trace';
 
-import { ProcessManagerService } from './process-manager-service';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import { ProcessManagerService } from './process-manager-service.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Aggregate {@link Process.ProcessMonitorService} that merges the local
@@ -38,9 +40,19 @@ export const layer: Layer.Layer<
     const aggregate = Atom.make((get) => [...get(manager.monitor.processTreeAtom), ...get(remote.processTreeAtom)]);
     registry.mount(aggregate);
 
+    const processTree = Effect.sync(() => registry.get(aggregate));
+    const refreshRemote = remote.refreshProcessTree;
     return {
-      processTree: Effect.sync(() => registry.get(aggregate)),
+      processTree,
       processTreeAtom: aggregate,
+      // A filter naming a space re-reads that space from the remote runtime first: the remote half of
+      // the tree is an atom the client writes as it acts, so an action taken any other way (another
+      // client, a direct call to the host) would otherwise read back stale. `processTree` and the atom
+      // stay the cheap reactive read; this is the authoritative one.
+      list: (filter?: Process.MonitorFilter) =>
+        filter?.space !== undefined && refreshRemote
+          ? refreshRemote(filter.space).pipe(Effect.ignore, Effect.andThen(Process.listFromTree(processTree)(filter)))
+          : Process.listFromTree(processTree)(filter),
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.merge(manager.monitor.subscribeToTraceMessages(filter), remoteTrace.subscribeToTraceMessages(filter)),
     } satisfies Process.Monitor;

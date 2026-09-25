@@ -2,18 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Panel, Toolbar, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
-import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing';
-import { type Overlay, type Point, type Projection } from '../../types';
-import { Diagram, type DiagramBackgroundProps } from './Diagram';
+import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing/index.ts';
+import { type Overlay, type Point, type Projection } from '../../types/index.ts';
+import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
 
 /**
  * Source pane. The DSL is the source of truth, so this is the authoritative editor and the diagram
@@ -50,7 +49,7 @@ SourceEditor.displayName = 'SourceEditor';
 
 const EMPTY: Projection = { graph: { nodes: [], edges: [] } };
 
-type StoryProps = {
+type StoryArgs = {
   /** Mermaid source. When set, the source pane is shown and the projection derives from it. */
   source?: string;
   /** A ready-made projection, for when there is no DSL to derive one from. */
@@ -65,7 +64,7 @@ const count = (value: number, noun: string) => `${value} ${noun}${value === 1 ? 
  * projected from a dialect, or handed the neutral model directly — so both belong in one harness
  * rather than in stories that share no code.
  */
-const DefaultStory = ({ source, projection, background }: StoryProps) => {
+const DefaultStory = ({ source, projection, background }: StoryArgs) => {
   // `key` remounts the editor so Reset restores the document; CodeMirror owns its own buffer.
   const [{ text, key }, setSource] = useState({ text: source, key: 0 });
   // Pinned positions live outside the DSL, which cannot express them.
@@ -91,7 +90,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
   const pinned = Object.keys(overlay.positions ?? {}).length;
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
         <Panel.Root>
           <Panel.Toolbar asChild>
@@ -107,7 +106,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
           <Panel.Content asChild>
             <SourceEditor key={key} value={text} onChange={handleChange} />
           </Panel.Content>
-          <Panel.Statusbar className='p-2'>
+          <Panel.Statusbar classNames='p-2'>
             <span>mermaid ({count(text.split('\n').length, 'line')})</span>
           </Panel.Statusbar>
         </Panel.Root>
@@ -130,7 +129,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
               <Diagram.Background variant={background} />
             </Diagram.Canvas>
           </Panel.Content>
-          <Panel.Statusbar className='p-2'>
+          <Panel.Statusbar classNames='p-2'>
             <span>
               {[
                 count(resolved.graph.nodes.length, 'node'),

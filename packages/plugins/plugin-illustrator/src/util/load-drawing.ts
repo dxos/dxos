@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Database, type Ref } from '@dxos/echo';
 
-import * as Drawing from '../types/Drawing';
-import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
-import { type DrawingVariant } from '../types/types';
+import { Drawing, IllustratorCapabilities } from '#types';
 
 export class UnknownDrawingVariantError extends Error {
   readonly _tag = 'UnknownDrawingVariantError';
@@ -25,7 +23,7 @@ export class UnknownDrawingVariantError extends Error {
 export const resolveVariant = (
   ref: Ref.Ref<Drawing.Drawing>,
 ): Effect.Effect<
-  { drawing: Drawing.Drawing; canvas: Drawing.Canvas; variant: DrawingVariant },
+  { drawing: Drawing.Drawing; canvas: Drawing.Canvas; variant: IllustratorCapabilities.DrawingVariant },
   Error,
   Database.Service | Capability.Service
 > =>
@@ -43,6 +41,6 @@ export const resolveVariant = (
 
 /** Resolve a variant by canvas schema, for callers that already hold the canvas. */
 export const findVariant = (
-  variants: readonly DrawingVariant[],
+  variants: readonly IllustratorCapabilities.DrawingVariant[],
   canvas: Pick<Drawing.Canvas, 'schema'> | undefined,
-): DrawingVariant | undefined => variants.find((entry) => entry.id === (canvas?.schema ?? ''));
+): IllustratorCapabilities.DrawingVariant | undefined => variants.find((entry) => entry.id === (canvas?.schema ?? ''));

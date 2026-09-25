@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './sheet-extension';
+export * from './sheet-extension.ts';

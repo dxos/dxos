@@ -12,15 +12,17 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { CommercePlugin } from '../../plugin';
-import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing';
-import { translations } from '../../translations';
-import { Provider, Result, Search } from '../../types';
-import { SearchArticle } from './SearchArticle';
+import { CommercePlugin } from '#plugin';
+import { Provider, Result, Search } from '#types';
+
+import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { SearchArticle } from './SearchArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -59,12 +61,12 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Provider.Provider, Result.Result, Search.Search],
           onClientInitialized: seedSpace,
         }),
         SpacePlugin({}),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         CommercePlugin(),
       ],
     }),

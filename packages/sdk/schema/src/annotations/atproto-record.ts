@@ -60,7 +60,7 @@ export type AtprotoRecord = {
   lens: Panproto.Lens;
 };
 
-export const AtprotoRecordAnnotationId = Symbol.for('@dxos/schema/annotation/AtprotoRecord');
+export const AtprotoRecordAnnotationId = '@dxos/schema/annotation/AtprotoRecord';
 export const AtprotoRecordAnnotation = createAnnotationHelper<AtprotoRecord>(AtprotoRecordAnnotationId);
 
 /**
@@ -92,5 +92,5 @@ export type AtprotoPolicy = {
   foreignKeys?: (record: Record<string, unknown>) => AtprotoForeignKey[];
 };
 
-export const AtprotoPolicyAnnotationId = Symbol.for('@dxos/schema/annotation/AtprotoPolicy');
+export const AtprotoPolicyAnnotationId = '@dxos/schema/annotation/AtprotoPolicy';
 export const AtprotoPolicyAnnotation = createAnnotationHelper<AtprotoPolicy>(AtprotoPolicyAnnotationId);

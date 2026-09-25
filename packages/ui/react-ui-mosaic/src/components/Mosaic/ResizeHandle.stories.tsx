@@ -9,7 +9,7 @@ import { type Axis, ScrollArea } from '@dxos/react-ui';
 import { Dnd, type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Mosaic, type MosaicTileProps } from './Mosaic';
+import { Mosaic, type MosaicTileProps } from './Mosaic.ts';
 
 type Item = { id: string; label: string };
 
@@ -40,7 +40,7 @@ const ResizableTile = ({ data, size, onResize, ...tileProps }: ResizableTileProp
   return (
     <Mosaic.Tile
       {...tileProps}
-      classNames='flex flex-col p-2 m-1 border border-separator rounded-sm bg-base-surface overflow-hidden'
+      classNames='flex flex-col p-2 m-1 border border-separator rounded-sm dx-base-surface overflow-hidden'
       data={data}
       size={size}
       onSizeChange={handleSizeChange}

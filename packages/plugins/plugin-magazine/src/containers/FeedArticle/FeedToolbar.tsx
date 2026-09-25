@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -22,6 +22,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        // `gap` is a flexible spacer: Sync is a run action, so it sits at the trailing edge with the
+        // magazine's Clear and Curate rather than at the leading edge where content actions go.
+        .separator('gap')
         .action(
           'sync',
           {
@@ -36,11 +39,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Toolbar asChild>
-        <Menu.Toolbar />
-      </Panel.Toolbar>
-    </Menu.Root>
+    <Panel.Toolbar asChild>
+      <ActionToolbar {...menuActions} attendableId={attendableId} />
+    </Panel.Toolbar>
   );
 };
 

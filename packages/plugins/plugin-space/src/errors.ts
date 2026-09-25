@@ -10,8 +10,26 @@ export class NoIdentityError extends BaseError.extend(
   'A local identity is required to accept a space invitation.',
 ) {}
 
+/** Deleting the designated default space would strand content that resolves to it. */
+export class DefaultSpaceDeletionError extends BaseError.extend(
+  'DefaultSpaceDeletionError',
+  'The default space cannot be deleted; designate another space first.',
+) {}
+
 /** The space's properties object never became available, so it cannot be safely used yet. */
 export class SpaceNotReadyError extends BaseError.extend(
   'SpaceNotReadyError',
   'Timed out waiting for the space to finish initializing.',
 ) {}
+
+/** A create names a template whose capability is not contributed — usually deactivated while the dialog stayed open. */
+export class TemplateNotFoundError extends BaseError.extend(
+  'TemplateNotFoundError',
+  'No space template is registered under that id.',
+) {}
+
+/** The space was created and initialized, but the template failed to write its content into it. */
+export class TemplateApplyError extends BaseError.extend('TemplateApplyError', 'Failed to apply the space template.') {}
+
+/** A `?spaceKey=` deep link timed out or was rejected while joining, distinct from an invitation-code failure. */
+export class JoinByKeyError extends BaseError.extend('JoinByKeyError', 'Failed to join the space by key.') {}

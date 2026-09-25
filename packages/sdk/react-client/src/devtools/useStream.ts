@@ -4,7 +4,7 @@
 
 import { type DependencyList, useEffect, useState } from 'react';
 
-import { type Stream } from '@dxos/codec-protobuf/stream';
+import { type Stream } from '@dxos/async';
 import { log } from '@dxos/log';
 
 /**

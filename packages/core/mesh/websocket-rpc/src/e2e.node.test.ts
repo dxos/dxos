@@ -2,16 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { schema } from '@dxos/protocols/proto';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  TestRpcRequestSchema,
+  TestRpcResponseSchema,
+  TestService as TestServiceDesc,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
-import { WebsocketRpcClient } from './client';
-import { WebsocketRpcServer } from './server';
+import { WebsocketRpcClient } from './client.ts';
+import { WebsocketRpcServer } from './server.ts';
+
+type TestService = BufService<typeof TestServiceDesc>;
 
 const services = createServiceBundle({
-  TestService: schema.getService('example.testing.rpc.TestService'),
+  TestService: getBufService<TestService>('example.testing.rpc.TestService'),
 });
 
 describe('e2e', () => {
@@ -24,12 +33,8 @@ describe('e2e', () => {
           requested: {},
           handlers: {
             TestService: {
-              testCall: async (request: any) => {
-                return {
-                  data: request.data,
-                };
-              },
-              voidCall: async () => {},
+              testCall: async (request) => create(TestRpcResponseSchema, { data: request.data }),
+              voidCall: async () => create(EmptySchema, {}),
             },
           },
         };
@@ -48,7 +53,7 @@ describe('e2e', () => {
     await client.open();
     onTestFinished(() => client.close());
 
-    const response = await client.rpc.TestService.testCall({ data: 'hello' });
+    const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'hello' }));
     expect(response.data).to.equal('hello');
   });
 });

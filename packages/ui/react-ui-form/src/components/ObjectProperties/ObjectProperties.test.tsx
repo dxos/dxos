@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { composeStories } from '@storybook/react';
+import { composeStories } from '@storybook/react-vite';
 import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
-import * as stories from './ObjectProperties.stories';
-import { type ObjectPropertiesDebug } from './ObjectProperties.stories';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing/index.ts';
+import * as stories from './ObjectProperties.stories.tsx';
+import { type ObjectPropertiesDebug } from './ObjectProperties.stories.tsx';
 
 const { CreateTagPlay, CreateRefArrayPlay, CreateHiddenFieldPlay } = composeStories(stories);
 
@@ -22,7 +22,7 @@ const getDebug = (): ObjectPropertiesDebug => {
 };
 
 /**
- * Refs may be stored in local (`echo:/<id>`) or qualified (`echo://<space>/<id>`) form —
+ * Refs may be stored in local (`echo:///<id>`) or qualified (`echo://<space>/<id>`) form —
  * extract and compare object id.
  */
 const refTargetsObject = (uri: string, objectId: string): boolean => {

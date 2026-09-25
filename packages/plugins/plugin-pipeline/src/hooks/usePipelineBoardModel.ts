@@ -2,26 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
 import { Obj, Query } from '@dxos/echo';
-import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';
 
 export const usePipelineBoardModel = (
   pipeline: Pipeline.Pipeline | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): BoardModel<Pipeline.Column, Obj.Unknown> =>
   useMemo<BoardModel<Pipeline.Column, Obj.Unknown>>(() => {
     if (pipeline == null) {
       return emptyPipelineModel;
     }
 
-    const space = getSpace(pipeline);
+    const db = Obj.getDatabase(pipeline);
     const columnsAtom = Obj.atomProperty(pipeline, 'columns');
     const columnAtomFamily = Atom.family<string, Atom.Atom<Pipeline.Column | undefined>>((viewKey: string) =>
       Atom.make((get) => {
@@ -41,12 +41,14 @@ export const usePipelineBoardModel = (
           return [];
         }
         const query = Query.fromAst(JSON.parse(JSON.stringify(viewSnapshot.query.ast)));
-        const queryTarget = space ? getQueryTarget(query.ast, space) : undefined;
+        const queryTarget = db ? getQueryTarget(query.ast, db) : undefined;
         if (!queryTarget) {
           return [];
         }
         const raw = get(queryTarget.query(query).atom);
-        return isSpace(queryTarget) ? raw : [...raw].reverse();
+        // `getQueryTarget` resolves to a database in every branch, so the space-vs-feed test that
+        // used to guard this was already dead.
+        return [...raw].reverse();
       }),
     );
 

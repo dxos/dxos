@@ -3,47 +3,56 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import {
-  Credential,
-  FunctionError,
-  Header,
-  InvalidOperationInputError,
-  InvalidOperationOutputError,
-  Operation,
-  Trace,
-} from '@dxos/compute';
+import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Header from '@dxos/compute/Header';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
+import { messageOf } from '@dxos/errors';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
+import {
+  accessTokenResolverFromService,
+  configuredCredentialsLayer,
+  createS3Host,
+  credentialsLayerFromDatabase,
+} from './services/index.ts';
+
+/** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
+const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
  * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
  */
-type EdgeFunctionServices =
+export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
   | Trace.TraceService
   | Operation.Service
-  | Registry.Service;
+  | Registry.Service
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // is satisfied by the same layer rather than having to merge its own provider.
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -91,19 +100,11 @@ export const wrapFunctionHandler = (
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
-          try {
-            Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
-          } catch (error: any) {
-            throw new InvalidOperationInputError({
-              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
-              cause: error,
-            });
-          }
-        }
-
         await using funcContext = await new FunctionContext(context, opts).open();
 
+        // `opts.types` are already registered by `_open`; this adds the FUNCTION's own, which the
+        // context never sees. Re-adding the former is harmless (the registry de-duplicates) and
+        // keeps the two sources in one call.
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
@@ -114,6 +115,26 @@ export const wrapFunctionHandler = (
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
+
+        // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
+        // instance, and callers send the encoded `{'/': dxn}` form.
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
+          try {
+            // `reportInput` puts the rejected value in the message, and `errors: 'all'` reports
+            // every bad field at once: a remote caller cannot see its own payload in our logs, so
+            // a message naming only the expected shape leaves it guessing which field it got wrong.
+            Schema.decodeUnknownSync(Schema.toType(func.input), {
+              onExcessProperty: 'error',
+              reportInput: true,
+              errors: 'all',
+            })(dataWithDecodedRefs);
+          } catch (error: any) {
+            throw new InvalidOperationInputError({
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
+          }
+        }
 
         let result: any = await func.handler(dataWithDecodedRefs);
 
@@ -140,7 +161,7 @@ export const wrapFunctionHandler = (
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
-            Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
+            Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
@@ -160,12 +181,18 @@ export const wrapFunctionHandler = (
 
 /**
  * Container for services and context for a function.
+ *
+ * Exported because a hosted `Process` needs the same set: the EDGE process host assembles this
+ * against its own bindings rather than rebuilding the layer stack, which is how the two runtimes stay
+ * in step when a service is added.
  */
-class FunctionContext extends Resource {
+export class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
+  /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
+  #unregisterBlobBackend: (() => void) | undefined;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -181,7 +208,9 @@ class FunctionContext extends Resource {
   }
 
   override async _open() {
+    const startedAt = Date.now();
     await this.client?.open();
+    const clientOpenedAt = Date.now();
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
@@ -193,10 +222,72 @@ class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    await this.db?.open();
+    const rootSetAt = Date.now();
+    if (this.db) {
+      const db = this.db;
+      // Bounded: opening waits for the space's root document from the data service, and a root
+      // that never arrives otherwise holds the invocation until the Workers runtime kills it as
+      // hung — ~30s with no error naming the space, inherited by every caller up the chain.
+      await EffectEx.runPromise(
+        Effect.tryPromise({
+          try: () => db.open(),
+          // Reported rather than wrapped bare: `Effect.tryPromise` defaults to an `UnknownError`
+          // whose message says only that a promise rejected, and the reason (a root document the
+          // data plane cannot produce) is the whole diagnosis for the caller.
+          catch: (error) =>
+            new FunctionError({
+              message: `Space ${this.context.spaceId} failed to open: ${messageOf(error) ?? 'unknown error'}`,
+              cause: error,
+            }),
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: SPACE_OPEN_TIMEOUT,
+            orElse: () =>
+              Effect.fail(
+                new FunctionError({
+                  message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
+                }),
+              ),
+          }),
+        ),
+      );
+    }
+    log.info('function context open timing', {
+      spaceId: this.context.spaceId,
+      clientOpenMs: clientOpenedAt - startedAt,
+      setRootMs: rootSetAt - clientOpenedAt,
+      dbOpenMs: Date.now() - rootSetAt,
+    });
+
+    // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
+    // directly and never passes through that path, so its declared schemas went unregistered and
+    // every TYPED query it made matched nothing — an agent appended a prompt to its conversation and
+    // read the queue back empty, which reads as a lost write rather than a missing schema.
+    if (this.opts.types?.length && this.db) {
+      this.db.graph.registry.add(this.opts.types);
+    }
+
+    // Register the S3 backend so a handler running here can write to a bucket the space is
+    // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
+    // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed —
+    // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
+    //
+    // Imported dynamically: `plugin-client` pulls this package into the app's eager boot graph, and
+    // a static import would put the SigV4 signer there with it — for code that only ever runs
+    // inside a function invocation.
+    if (this.client && this.db) {
+      const db = this.db;
+      const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
+      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
+        S3_BACKEND,
+        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      );
+    }
   }
 
   override async _close() {
+    this.#unregisterBlobBackend?.();
+    this.#unregisterBlobBackend = undefined;
     await this.db?.close();
     await this.client?.close();
   }
@@ -236,9 +327,18 @@ class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const registryLayer = this.db
-      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+    // The client's graph rather than the database's (they are the same graph), so the registry
+    // reached through `Hypergraph.Service` and `Registry.Service` is one object even with no space.
+    const registryLayer = this.client
+      ? Layer.succeed(Registry.Service, this.client.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
+
+    // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
+    // by a harness hook is handed a fixed payload with no space id, so it has to find its own space
+    // (`RemoteSessionOperation`). Omitting it failed every such operation at the first service
+    // access with `Service not found: @dxos/echo/Hypergraph/Service` — half of all deployed
+    // `operation.invoke` calls, after ~1.8s of work.
+    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
 
     return Layer.mergeAll(
       dbLayer,
@@ -248,6 +348,7 @@ class FunctionContext extends Resource {
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
+      hypergraphLayer,
     );
   }
 }
@@ -282,15 +383,17 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
     Layer.provide(httpClient),
   );
   const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
-  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+  return AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
 };
 
 /**
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
  * handlers can invoke other deployed operations remotely. The `deployedId` on the operation
  * definition is used as the routing key.
+ *
+ * @internal Exported for testing.
  */
-const makeOperationServiceLayer = (
+export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
@@ -321,7 +424,16 @@ const makeOperationServiceLayer = (
       )) as Operation.OperationService['invoke'],
     schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
-        invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
+        // Dropped rather than asserted: `schedule` is typed `Effect<void, never>`, so failing an
+        // unroutable followup would take its caller down with it — a handler that imported a
+        // definition directly (no `deployedId`, e.g. `observability.sendEvent` scheduled by
+        // `space.addObject`) must not fail the operation that emitted it.
+        if (!op.meta.deployedId) {
+          log.warn('scheduled operation dropped: no deployedId, cannot schedule remotely', {
+            key: String(op.meta.key),
+          });
+          return;
+        }
         // Fire and forget — schedule is intentionally non-awaiting.
         void functionsService.invoke(op.meta.deployedId, input).catch(() => {
           // Swallow errors — schedule is observability-only.
@@ -336,7 +448,13 @@ const makeOperationServiceLayer = (
 
 const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   invoke: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
-  schedule: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
+  // Warn rather than die, for the same reason the routable variant drops unroutable followups.
+  schedule: (op: Operation.Definition.Any) =>
+    Effect.sync(() => {
+      log.warn('scheduled operation dropped: missing functionsService in EDGE context', {
+        key: String(op.meta.key),
+      });
+    }),
   invokePromise: async () => ({
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
@@ -362,7 +480,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
   }
 
   switch (encoded._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return value;
       }
@@ -376,14 +494,14 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return result;
     }
 
-    case 'TupleType': {
+    case 'Arrays': {
       if (!Array.isArray(value)) {
         return value;
       }
 
-      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      // For arrays, effect uses an `Arrays` node with empty elements and a single rest element.
       if (encoded.elements.length === 0 && encoded.rest.length === 1) {
-        const elementType = encoded.rest[0].type;
+        const elementType = encoded.rest[0];
         return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
       }
 
@@ -391,10 +509,17 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Union': {
-      // Optional values are represented as union with undefined.
-      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
-      if (nonUndefined.length === 1) {
-        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      // Optional and nullable values are represented as a union with `undefined` and/or `null`.
+      // A null or undefined `value` already returned above, so neither branch can be the one that
+      // matches here and both are safe to discard: without dropping `null`, a
+      // `Schema.optional(Schema.NullOr(Ref))` field keeps two branches, is left undecoded, and the
+      // handler rejects the caller's wire envelope — which is why updating a ref field failed
+      // while creating one with the same envelope succeeded.
+      const candidates = encoded.types.filter(
+        (type) => !SchemaAST.isUndefinedKeyword(type) && !SchemaAST.isNullKeyword(type),
+      );
+      if (candidates.length === 1) {
+        return decodeRefsFromSchema(candidates[0], value, db);
       }
 
       // For other unions we can't safely pick a branch without validating.
@@ -402,12 +527,11 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Suspend': {
-      return decodeRefsFromSchema(encoded.f(), value, db);
+      return decodeRefsFromSchema(encoded.thunk(), value, db);
     }
 
-    case 'Refinement': {
-      return decodeRefsFromSchema(encoded.from, value, db);
-    }
+    // v4 has no `Refinement` node: a refined node IS its base node with checks attached, so the
+    // cases above already match it.
 
     default: {
       return value;

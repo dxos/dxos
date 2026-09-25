@@ -23,7 +23,7 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { createIntrospector, pluginsFilePath } from '../src';
+import { createIntrospector, pluginsFilePath } from '../src/index.ts';
 
 // Bumped whenever the sidecar shape changes. Must match the worker's
 // `fetchPluginsJson` version check.

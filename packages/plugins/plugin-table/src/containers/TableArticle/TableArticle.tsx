@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Match from 'effect/Match';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
@@ -31,6 +33,7 @@ import {
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
+import { downloadBlob } from '@dxos/util';
 
 import { meta } from '#meta';
 import { TableOperation } from '#types';
@@ -64,16 +67,14 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
+        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
       },
-      [invokePromise],
+      [invokePromise, db],
     );
 
     const handleDeleteColumn = useCallback(
       (fieldId: string) => {
-        const liveView = object.view.target;
-        invariant(liveView);
-        void invokePromise(SpaceOperation.DeleteField, { view: liveView, fieldId });
+        void invokePromise(SpaceOperation.DeleteField, { view: object.view, fieldId });
       },
       [invokePromise, object.view],
     );
@@ -172,12 +173,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             }
 
             const blob = new Blob([result.data.content], { type: result.data.mimeType });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = result.data.filename;
-            anchor.click();
-            URL.revokeObjectURL(url);
+            void downloadBlob(blob, result.data.filename);
           },
         );
       },

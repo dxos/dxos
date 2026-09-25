@@ -2,22 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event } from '@dxos/async';
+import { SpanAttributes } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { PositionConflictError } from './errors';
+import { type Cypher, CypherError } from './cypher.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
 type Block = FeedProtocol.Block;
+type BlockKey = FeedProtocol.BlockKey;
 const FeedCursor = FeedProtocol.FeedCursor;
 type FeedCursor = FeedProtocol.FeedCursor;
 const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
@@ -25,6 +28,18 @@ type QueryRequest = FeedProtocol.QueryRequest;
 type QueryResponse = FeedProtocol.QueryResponse;
 type SubscribeRequest = FeedProtocol.SubscribeRequest;
 type SubscribeResponse = FeedProtocol.SubscribeResponse;
+
+/** A stored block's identity, order and position, without its payload. */
+export type BlockHead = {
+  insertionId: number;
+  feedId: string;
+  actorId: string;
+  sequence: number;
+  position: number | null;
+};
+
+/** A block payload ready for insertion, encrypted when the cypher asked for it. */
+type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
 
 export interface FeedStoreOptions {
   /**
@@ -37,12 +52,54 @@ export interface FeedStoreOptions {
    * Only a single peer (usually the server) can assign positions.
    */
   assignPositions: boolean;
+
+  /**
+   * Seals block payloads at rest. When absent, blocks are stored as plaintext (no encryption by
+   * default); the cypher decides per feed whether to encrypt at all.
+   */
+  cypher?: Cypher;
 }
+
+/**
+ * Client-side pull progress for one space/namespace.
+ */
+export type SyncState = {
+  /** Highest global position pulled from the server, or -1 when nothing has been pulled. */
+  lastPulledPosition: number;
+  /**
+   * Token of the server that assigned {@link lastPulledPosition}. Undefined before the first
+   * response carrying one, which is also the case for state written by earlier releases.
+   */
+  serverToken: string | undefined;
+  /**
+   * Blocks the server still held past {@link lastPulledPosition} when it was written. An estimate:
+   * the server reports only whether more remains, so a batch's size stands in for the next one.
+   */
+  blocksToPull: number;
+};
+
+/**
+ * Outcome of {@link FeedStore.append}: the protocol response plus what adopting the appended
+ * positions did to the rows already held.
+ */
+export type AppendResult = AppendResponse & {
+  /**
+   * Blocks whose position was cleared because an appended block carries it. Only a replica adopting
+   * a position authority's positions ever displaces anything; an authority assigns fresh ones.
+   */
+  displaced: number;
+  /**
+   * Appended blocks the store already held at a different position. Like a displacement it means
+   * the authority's ordering has diverged from this store's, and it is the only trace a re-issued
+   * position leaves when the slot it lands in was empty here.
+   */
+  moved: number;
+};
 
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<FeedStoreService, FeedStore>() {}
+export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
  * Persistent storage for feed metadata, blocks, subscriptions, and sync state.
@@ -56,63 +113,31 @@ export class FeedStore {
   }
 
   /**
-   * Emits after successful block append operations.
+   * Emits after successful block append operations, with the space the blocks were written to.
    */
-  readonly onNewBlocks = new Event<void>();
+  readonly onNewBlocks = new Event<{ spaceId: string }>();
 
   /**
-   * Creates required feed store tables and indexes if they do not exist.
+   * Emits when a space's sync backlog may have changed: blocks appended, positions assigned or
+   * reset, or a new remote backlog recorded.
+   */
+  readonly onSyncStateChanged = new Event<{ spaceId: string }>();
+
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * A database created before migration tracking existed already holds migration 1's tables, and
+   * needs no special handling: every statement in it is `IF NOT EXISTS`, so it applies as a no-op
+   * and is recorded like any other.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-
-      // Feeds Table
-      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
-        feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-        spaceId TEXT NOT NULL,
-        feedId TEXT NOT NULL,
-        feedNamespace TEXT
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
-
-      // Blocks Table
-      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
-        insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-        feedPrivateId INTEGER NOT NULL,
-        position INTEGER,
-        sequence INTEGER NOT NULL,
-        actorId TEXT NOT NULL,
-        prevSequence INTEGER,
-        prevActorId TEXT,
-        timestamp INTEGER NOT NULL,
-        data BLOB NOT NULL,
-        FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
-
-      // Subscriptions Table
-      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
-          subscriptionId TEXT PRIMARY KEY,
-          expiresAt INTEGER NOT NULL,
-          feedPrivateIds TEXT NOT NULL -- JSON array
-      )`;
-
-      // Cursor Tokens Table
-      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
-          spaceId TEXT PRIMARY KEY,
-          token TEXT NOT NULL
-      )`;
-
-      // Sync State Table.
-      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
-          spaceId TEXT NOT NULL,
-          feedNamespace TEXT NOT NULL,
-          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
-          PRIMARY KEY (spaceId, feedNamespace)
-      )`;
-    }).pipe(Effect.withSpan('FeedStore.migrate')),
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
+      // can recover from — so it dies rather than widening this signature beyond SqlError.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+      Effect.withSpan('FeedStore.migrate'),
+    ),
   );
 
   /**
@@ -124,7 +149,7 @@ export class FeedStore {
       feedId: string,
       namespace?: string,
     ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         const rows = yield* sql<{ feedPrivateId: number }>`
@@ -138,33 +163,244 @@ export class FeedStore {
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         return newRows[0].feedPrivateId;
-      }).pipe(Effect.withSpan('FeedStore.ensureFeed')),
+      }).pipe(Effect.withSpan('FeedStore.ensureFeed'), SpanAttributes.annotateSpace(spaceId)),
   );
 
-  /**
-   * Ensures cursor token exists for a space and returns it.
-   */
+  /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
+  readonly #cursorTokens = new Map<string, string>();
+
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
+        const cached = this.#cursorTokens.get(spaceId);
+        if (cached !== undefined) {
+          return cached;
+        }
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
         if (rows.length > 0) {
+          this.#cursorTokens.set(spaceId, rows[0].token);
           return rows[0].token;
         }
 
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
+        this.#cursorTokens.set(spaceId, token);
         return token;
-      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken')),
+      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken'), SpanAttributes.annotateSpace(spaceId)),
+  );
+
+  /**
+   * Identity of this store's storage, as reported to sync clients so they can detect that the
+   * server they had been syncing with was swapped or wiped. Created on first use and stable
+   * thereafter, so it only changes when the underlying storage is recreated.
+   */
+  getServerToken = (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
+    this.#ensureCursorToken(spaceId);
+
+  /**
+   * Highest position held in a space/namespace, or -1 when none of its blocks is positioned.
+   */
+  #maxPosition = (
+    spaceId: string,
+    feedNamespace: string,
+  ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ maxPos: number | null }>`
+        SELECT MAX(position) as maxPos
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${spaceId} AND feeds.feedNamespace = ${feedNamespace}
+      `;
+      return rows[0]?.maxPos ?? -1;
+    });
+
+  /**
+   * Makes room for `holder` at `position`: clears the position of every other block in the
+   * space/namespace holding that slot (`displaced`) and of the holder itself when it sits at a
+   * different one (`moved`), so the caller can write the position without tripping the unique
+   * index. It runs once per pulled block, so each half has to be a single index search: written as
+   * one `UPDATE … WHERE (displaced OR moved)`, SQLite planned a multi-index OR whose `displaced`
+   * branch scanned every block in the store — 220 ms per pulled block on a 12k-block OPFS profile,
+   * which kept the storage worker saturated for the whole initial feed sync. The halves cannot
+   * match the same row (one excludes the holder, the other requires it), and every caller runs
+   * inside a transaction, so splitting them changes nothing else.
+   *
+   * A position only ever reaches a replica from its authority, so either finding means the replica
+   * cached an ordering the authority has since abandoned (its storage was rolled back and it
+   * re-issued the slot). The evicted block is unpositioned again, which is what gets it pushed once
+   * more and told where it really is. Namespace-wide, not per feed: the authority's counter is one
+   * per namespace, and a block left holding a position that another feed's block now owns would
+   * count as synced and never be pushed again.
+   */
+  #evictSlot = (
+    spaceId: string,
+    feedNamespace: string,
+    position: number,
+    holder: Pick<Block, 'actorId' | 'sequence'> & { feedPrivateId: number },
+  ): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // Feeds first so the (feedPrivateId, position) index answers this, rather than a scan on position.
+      const displaced = yield* sql<{ feedPrivateId: number }>`
+        UPDATE blocks SET position = NULL
+        WHERE feedPrivateId IN (
+            SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+          )
+          AND position = ${position}
+          AND NOT (
+            feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+          )
+        RETURNING feedPrivateId
+      `;
+      // The (feedPrivateId, sequence, actorId) index.
+      const moved = yield* sql<{ feedPrivateId: number }>`
+        UPDATE blocks SET position = NULL
+        WHERE feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+          AND position IS NOT NULL AND position != ${position}
+        RETURNING feedPrivateId
+      `;
+      return { displaced: displaced.length, moved: moved.length };
+    });
+
+  /**
+   * Seals block payloads for a batch, returning storage columns aligned by input index. A block
+   * whose feed the cypher declines — or any block when no cypher is configured — passes through as
+   * plaintext with no envelope.
+   */
+  #sealBlocks = (
+    spaceId: string,
+    feedNamespace: string,
+    blocks: readonly Block[],
+  ): Effect.Effect<SealedBlock[], CypherError> => {
+    const cypher = this.#options.cypher;
+    return Effect.forEach(
+      blocks,
+      (block) =>
+        Effect.gen({ self: this }, function* () {
+          const feed = { spaceId, feedId: block.feedId!, feedNamespace };
+          if (!cypher || !cypher.shouldEncrypt(feed)) {
+            return { data: block.data, encryptionKeyId: null, iv: null };
+          }
+          const blockId = blockNaturalKey(block.feedId!, block.actorId, block.sequence);
+          const payload = yield* Effect.tryPromise({
+            try: () => cypher.encrypt(block.data, { feed, blockId }),
+            catch: (error) => new CypherError({ operation: 'encrypt', blockId, cause: error }),
+          });
+          return { data: payload.ciphertext, encryptionKeyId: payload.encryptionKeyId, iv: payload.iv };
+        }),
+      { concurrency: 'unbounded' },
+    );
+  };
+
+  /**
+   * Opens a stored block for callers, decrypting when it carries an envelope and a cypher is
+   * configured. Returns a plaintext block with the envelope columns cleared.
+   */
+  #openBlock = (row: Block, spaceId: string, feedNamespace: string): Effect.Effect<Block, CypherError> =>
+    Effect.gen({ self: this }, function* () {
+      const data = new Uint8Array(row.data);
+      const blockId = blockNaturalKey(row.feedId!, row.actorId, row.sequence);
+      // Both envelope fields move together; exactly one present is a corrupt row, never plaintext —
+      // fail closed rather than hand ciphertext to a caller as if it were cleartext.
+      if ((row.encryptionKeyId == null) !== (row.iv == null)) {
+        return yield* Effect.fail(
+          new CypherError({ operation: 'decrypt', blockId, cause: new Error('Partial encryption envelope.') }),
+        );
+      }
+      const cypher = this.#options.cypher;
+      if (!cypher || row.encryptionKeyId == null || row.iv == null) {
+        return {
+          ...row,
+          data,
+          encryptionKeyId: row.encryptionKeyId ?? undefined,
+          iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+        };
+      }
+      const plaintext = yield* Effect.tryPromise({
+        try: () =>
+          cypher.decrypt(
+            { encryptionKeyId: row.encryptionKeyId!, iv: new Uint8Array(row.iv!), ciphertext: data },
+            { feed: { spaceId, feedId: row.feedId!, feedNamespace }, blockId },
+          ),
+        catch: (error) => new CypherError({ operation: 'decrypt', blockId, cause: error }),
+      });
+      return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
+    });
+
+  /**
+   * Opens stored rows for callers. Without a cypher it takes the synchronous path, so decryption adds
+   * no async turns to the hot query path when encryption is off.
+   */
+  #openRows = (rows: readonly Block[], spaceId: string, feedNamespace: string): Effect.Effect<Block[], CypherError> =>
+    this.#options.cypher
+      ? Effect.forEach(rows, (row) => this.#openBlock(row, spaceId, feedNamespace), { concurrency: 'unbounded' })
+      : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
+        // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
+        // Cloning the buffer avoids an empty Uint8Array.
+        Effect.succeed(
+          rows.map((row) => ({
+            ...row,
+            data: new Uint8Array(row.data),
+            encryptionKeyId: row.encryptionKeyId ?? undefined,
+            iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+          })),
+        );
+
+  /**
+   * Every block of a namespace's feeds as a {@link BlockHead}, in insertion order, plus the opened
+   * blocks inserted after `dataAfter`. A subscriber diffs the heads to see positions assigned or
+   * cleared, and reads payloads only for blocks it has not been sent.
+   */
+  queryHeads = Effect.fn('Feed.queryHeads')(
+    (request: {
+      spaceId: string;
+      feedNamespace: string;
+      /** All feeds of the namespace when absent. */
+      feedIds?: readonly string[];
+      /** Insertion id of the newest block already read; -1 reads every payload. */
+      dataAfter: number;
+    }): Effect.Effect<
+      { heads: readonly BlockHead[]; blocks: Block[] },
+      SqlError.SqlError | CypherError,
+      SqlClient.SqlClient
+    > =>
+      Effect.gen({ self: this }, function* () {
+        const sql = yield* SqlClient.SqlClient;
+        if (request.feedIds !== undefined && request.feedIds.length === 0) {
+          return { heads: [], blocks: [] };
+        }
+        const scope = sql`
+          FROM blocks
+          JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
+          ${request.feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in([...request.feedIds])}` : sql``}
+        `;
+        const heads = yield* sql<BlockHead>`
+          SELECT blocks.insertionId, feeds.feedId, blocks.actorId, blocks.sequence, blocks.position
+          ${scope}
+          ORDER BY blocks.insertionId ASC
+        `;
+        const rows = heads.some((head) => head.insertionId > request.dataAfter)
+          ? yield* sql<Block>`
+              SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+              ${scope}
+              AND blocks.insertionId > ${request.dataAfter}
+              ORDER BY blocks.insertionId ASC
+            `
+          : [];
+        const blocks = yield* this.#openRows(rows, request.spaceId, request.feedNamespace);
+        return { heads, blocks };
+      }).pipe(Effect.withSpan('FeedStore.queryHeads'), SpanAttributes.annotateSpace(request.spaceId)),
   );
 
   /**
    * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
    */
   query = Effect.fn('Feed.query')(
-    (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+    (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] | undefined = [];
         let cursorInsertionId = -1;
@@ -194,6 +430,13 @@ export class FeedStore {
 
         // Validate Token if cursor used.
         const validCursorToken = yield* this.#ensureCursorToken(request.spaceId);
+        // Only a position authority's token is meaningful to a sync client -- it names the store
+        // whose positions the client is caching. Likewise its high-water mark: a client compares it
+        // against its cursor to notice the store no longer holds what the client pulled.
+        const serverToken = this.#options.assignPositions ? validCursorToken : undefined;
+        const maxPosition = this.#options.assignPositions
+          ? yield* this.#maxPosition(request.spaceId, request.feedNamespace)
+          : undefined;
         if (request.cursor && cursorToken !== validCursorToken) {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
@@ -210,7 +453,21 @@ export class FeedStore {
            We prioritize `cursor`.
         */
 
-        const position = request.position ?? -1;
+        // A client whose remembered positions were assigned by a different store names slots that
+        // no longer exist, so serve the namespace from the start rather than from a meaningless
+        // offset — recovering in the same round-trip the client already paid for.
+        const serverChanged = request.expectedServerToken != null && request.expectedServerToken !== validCursorToken;
+        const position = serverChanged ? -1 : (request.position ?? -1);
+        // The block at the cursor is how a client checks its ordering once this store has been
+        // written past the cursor again, where the high-water mark no longer tells it anything.
+        const cursorBlock =
+          this.#options.assignPositions && position >= 0
+            ? ((yield* this.getPositionHolders({
+                spaceId: request.spaceId,
+                feedNamespace: request.feedNamespace,
+                position,
+              }))[0] ?? null)
+            : undefined;
 
         // Resolve subscriptions or feed IDs.
         if (request.query && 'subscriptionId' in request.query) {
@@ -239,8 +496,11 @@ export class FeedStore {
           return {
             requestId: request.requestId,
             blocks: [],
-            nextCursor: encodeCursor(validCursorToken, -1),
+            nextCursor: FeedCursor.make(`${validCursorToken}|-1`),
             hasMore: false,
+            serverToken,
+            maxPosition,
+            cursorBlock,
           };
         }
 
@@ -277,22 +537,26 @@ export class FeedStore {
 
         const hasMore = requestLimit != null && rows.length > requestLimit;
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
-        const blocks = slice.map((row) => ({
-          ...row,
-          // Have to clone buffer otherwise we get empty Uint8Array.
-          data: new Uint8Array(row.data),
-        }));
+        const blocks = yield* this.#openRows(slice, request.spaceId, request.feedNamespace);
 
-        let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
+        let nextCursor: FeedCursor = request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`);
         if (blocks.length > 0 && request.spaceId) {
           const lastBlock = blocks[blocks.length - 1];
           if (lastBlock.insertionId !== undefined) {
-            nextCursor = encodeCursor(validCursorToken, lastBlock.insertionId);
+            nextCursor = FeedCursor.make(`${validCursorToken}|${lastBlock.insertionId}`);
           }
         }
 
-        return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
-      }).pipe(Effect.withSpan('FeedStore.query')),
+        return {
+          requestId: request.requestId,
+          blocks,
+          nextCursor,
+          hasMore,
+          serverToken,
+          maxPosition,
+          cursorBlock,
+        } satisfies QueryResponse;
+      }).pipe(Effect.withSpan('FeedStore.query'), SpanAttributes.annotateSpace(request.spaceId)),
   );
 
   /**
@@ -300,7 +564,7 @@ export class FeedStore {
    */
   subscribe = Effect.fn('Feed.subscribe')(
     (request: SubscribeRequest): Effect.Effect<SubscribeResponse, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         const ttl = 60 * 60 * 1000;
         const subscriptionId = crypto.randomUUID();
@@ -327,42 +591,142 @@ export class FeedStore {
           subscriptionId,
           expiresAt,
         };
-      }).pipe(Effect.withSpan('FeedStore.subscribe')),
+      }).pipe(Effect.withSpan('FeedStore.subscribe'), SpanAttributes.annotateSpace(request.spaceId)),
   );
 
   /**
-   * Get the last pulled position for the given space and namespace.
-   * Returns -1 if no sync state exists yet.
+   * Get the pull progress for the given space and namespace.
+   * `lastPulledPosition` is -1 and `serverToken` undefined when no sync state exists yet.
    */
   getSyncState = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
-  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+  }): Effect.Effect<SyncState, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ lastPulledPosition: number }>`
-        SELECT lastPulledPosition FROM sync_state
+      const rows = yield* sql<{ lastPulledPosition: number; serverToken: string | null; blocksToPull: number }>`
+        SELECT lastPulledPosition, serverToken, blocksToPull FROM sync_state
         WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
-      return rows[0]?.lastPulledPosition ?? -1;
-    }).pipe(Effect.withSpan('FeedStore.getSyncState'));
+      return {
+        lastPulledPosition: rows[0]?.lastPulledPosition ?? -1,
+        serverToken: rows[0]?.serverToken ?? undefined,
+        blocksToPull: rows[0]?.blocksToPull ?? 0,
+      };
+    }).pipe(Effect.withSpan('FeedStore.getSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
-   * Update the last pulled position for the given space and namespace.
+   * Update the pull progress for the given space and namespace.
    */
   setSyncState = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
     lastPulledPosition: number;
+    /** Token of the server that assigned `lastPulledPosition`; leaves the stored token as-is when omitted. */
+    serverToken?: string;
+    /** See {@link SyncState.blocksToPull}. Defaults to 0: a pull that reports nothing drained it. */
+    blocksToPull?: number;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
+      const serverToken = opts.serverToken ?? null;
+      const blocksToPull = opts.blocksToPull ?? 0;
       yield* sql`
-        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
-        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
-        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
+        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken, blocksToPull)
+        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition}, ${serverToken}, ${blocksToPull})
+        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET
+          lastPulledPosition = ${opts.lastPulledPosition},
+          serverToken = COALESCE(${serverToken}, sync_state.serverToken),
+          blocksToPull = ${blocksToPull}
       `;
-    }).pipe(Effect.withSpan('FeedStore.setSyncState'));
+    }).pipe(Effect.withSpan('FeedStore.setSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
+
+  /**
+   * Discards everything derived from a server that no longer exists: strips the global position
+   * from every block of the space/namespace and restarts pull progress under the new server's
+   * token, so the next pull replays the namespace from the start.
+   *
+   * Blocks themselves are kept -- they are re-pushed and de-duplicated by (actorId, sequence) -- so
+   * locally authored history survives a server swap.
+   */
+  resetSyncState = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    serverToken: string;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql.withTransaction(
+        Effect.gen(function* () {
+          yield* sql`
+            UPDATE blocks SET position = NULL
+            WHERE feedPrivateId IN (
+              SELECT feedPrivateId FROM feeds
+              WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+            )
+          `;
+          yield* sql`
+            DELETE FROM sync_state
+            WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+          `;
+          yield* sql`
+            INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken)
+            VALUES (${opts.spaceId}, ${opts.feedNamespace}, -1, ${opts.serverToken})
+          `;
+        }),
+      );
+      this.#emitBlocksChanged(opts.spaceId);
+    }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
+
+  /**
+   * Clears every position above `position` in a space/namespace, returning how many blocks that
+   * unpositioned.
+   *
+   * For a replica whose authority just reported `position` as its high-water mark: positions only
+   * come from the authority, so a local one above its mark names a row the authority lost, and the
+   * block holding it has to be pushed again -- which clearing it is what triggers.
+   */
+  clearPositionsAbove = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    position: number;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ insertionId: number }>`
+        UPDATE blocks SET position = NULL
+        WHERE feedPrivateId IN (
+            SELECT feedPrivateId FROM feeds WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+          )
+          AND position > ${opts.position}
+        RETURNING insertionId
+      `;
+      return rows.length;
+    }).pipe(Effect.withSpan('FeedStore.clearPositionsAbove'), SpanAttributes.annotateSpace(opts.spaceId));
+
+  /**
+   * Keys of the blocks holding `position` in a space/namespace, in insertion order.
+   *
+   * A store that agrees with its authority holds at most one; a replica whose ordering diverged can
+   * hold two until the next pull evicts one, and a client comparing its cursor against the server's
+   * has to see both to know it disagrees.
+   */
+  getPositionHolders = (opts: {
+    spaceId: string;
+    feedNamespace: string;
+    position: number;
+  }): Effect.Effect<readonly BlockKey[], SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      return yield* sql<BlockKey>`
+        SELECT feeds.feedId, blocks.actorId, blocks.sequence
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId} AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND blocks.position = ${opts.position}
+        ORDER BY blocks.insertionId ASC
+      `;
+    }).pipe(Effect.withSpan('FeedStore.getPositionHolders'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
    * Returns the number of blocks pending push (no global position yet) in a space/namespace.
@@ -371,7 +735,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -382,7 +746,7 @@ export class FeedStore {
           AND blocks.position IS NULL
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
    * Returns the total number of blocks stored locally for a space/namespace.
@@ -391,7 +755,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -401,7 +765,7 @@ export class FeedStore {
           AND feeds.feedNamespace = ${opts.feedNamespace}
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
    * Returns the number of stored blocks for a single feed in a space/namespace.
@@ -413,7 +777,7 @@ export class FeedStore {
     feedNamespace: string;
     feedId: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -424,7 +788,7 @@ export class FeedStore {
           AND feeds.feedId = ${opts.feedId}
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countBlocks'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
    * Deletes the oldest blocks for a single feed in a space/namespace.
@@ -440,7 +804,7 @@ export class FeedStore {
     feedId: string;
     count: number;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       if (opts.count <= 0) {
         return 0;
@@ -466,11 +830,31 @@ export class FeedStore {
 
   /**
    * Appends blocks for a space/namespace and optionally assigns global positions.
+   *
+   * On a replica the appended blocks' positions are the authority's word and win over whatever the
+   * local rows hold; see {@link AppendResult.displaced}.
    */
   append = (
     request: AppendRequest,
-  ): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
-    Effect.gen(this, function* () {
+  ): Effect.Effect<AppendResult, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sealed = yield* this.#sealForInsert(request);
+      const sql = yield* SqlClient.SqlClient;
+      // Wrap in transaction to ensure atomicity when assigning positions.
+      const { positions, displaced, moved } = yield* sql.withTransaction(this.#insertSealed(request, sealed));
+      // Notify on the committed blocks, before the cursor token, which is a separate write.
+      this.#emitBlocksChanged(request.spaceId!);
+
+      const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId!) : undefined;
+      return { requestId: request.requestId, positions, serverToken, displaced, moved };
+    }).pipe(Effect.withSpan('FeedStore.append'));
+
+  /**
+   * Validates a request and seals its payloads. Runs outside any transaction, so the WebCrypto
+   * round-trips never hold the store's connection open.
+   */
+  #sealForInsert = (request: AppendRequest): Effect.Effect<SealedBlock[], CypherError> =>
+    Effect.gen({ self: this }, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
       }
@@ -486,119 +870,166 @@ export class FeedStore {
         assertArgument(block.feedId, 'block.feedId', 'feedId is required');
       }
 
-      // Wrap in transaction to ensure atomicity when assigning positions.
-      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
-      const positions = yield* sqlTransaction.withTransaction(
-        Effect.gen(this, function* () {
-          const sql = yield* SqlClient.SqlClient;
+      // Seal payloads before the transaction so the WebCrypto round-trips do not hold it open.
+      // Without a cypher, stay fully synchronous here so append adds no async turns when encryption
+      // is off (an extra turn can reorder concurrent appends racing for the same position).
+      const sealed = this.#options.cypher
+        ? yield* this.#sealBlocks(request.spaceId, request.feedNamespace, request.blocks)
+        : request.blocks.map((block) => ({ data: block.data, encryptionKeyId: null, iv: null }));
+      return sealed;
+    });
 
-          // 1. Collect unique feed IDs and batch #ensureFeed calls.
-          const feedKeys = new Map<string, { feedId: string }>();
-          for (const block of request.blocks) {
-            const key = block.feedId!;
-            if (!feedKeys.has(key)) {
-              feedKeys.set(key, { feedId: block.feedId! });
-            }
-          }
+  /** Writes sealed blocks and returns their positions. The caller owns the transaction. */
+  #insertSealed = (
+    request: AppendRequest,
+    sealed: SealedBlock[],
+  ): Effect.Effect<{ positions: number[]; displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // 1. Collect unique feed IDs and batch #ensureFeed calls.
+      const feedKeys = new Map<string, { feedId: string }>();
+      for (const block of request.blocks) {
+        const key = block.feedId!;
+        if (!feedKeys.has(key)) {
+          feedKeys.set(key, { feedId: block.feedId! });
+        }
+      }
 
-          const feedPrivateIds = new Map<string, number>();
-          yield* Effect.forEach(
-            [...feedKeys.entries()],
-            ([key, { feedId }]) =>
-              Effect.gen(this, function* () {
-                const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
-                feedPrivateIds.set(key, id);
-              }),
-            { concurrency: 'unbounded' },
-          );
-
-          // 2. Get max position per namespace ONCE (not per block).
-          const maxPositions = new Map<string, number>();
-          if (this.#options.assignPositions) {
-            const maxPosResult = yield* sql<{ maxPos: number | null }>`
-              SELECT MAX(position) as maxPos 
-              FROM blocks 
-              JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-              WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
-            `;
-            maxPositions.set(request.feedNamespace, maxPosResult[0]?.maxPos ?? -1);
-          }
-
-          // 3. Insert all blocks and compute positions.
-          //
-          // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
-          // we must (a) return the EXISTING position to the caller and (b) NOT advance the
-          // namespace position counter. Otherwise the response contains wasted slots that
-          // sync clients will try to UPDATE local rows to, tripping the
-          // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
-          const positions: number[] = [];
-          for (const block of request.blocks) {
-            const key = block.feedId!;
-            const feedPrivateId = feedPrivateIds.get(key)!;
-
-            let positionToInsert: number | null = null;
-            if (this.#options.assignPositions) {
-              positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
-            } else if (block.position != null) {
-              positionToInsert = block.position;
-            }
-
-            const inserted = yield* sql<{ position: number | null }>`
-              INSERT INTO blocks (
-                feedPrivateId, position, sequence, actorId,
-                prevSequence, prevActorId, timestamp, data
-              ) VALUES (
-                ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
-              )
-              ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
-              RETURNING position
-            `;
-
-            if (!this.#options.assignPositions) {
-              continue;
-            }
-
-            if (inserted.length > 0) {
-              // New row written at the freshly allocated position.
-              positions.push(positionToInsert!);
-              maxPositions.set(request.feedNamespace, positionToInsert!);
-              continue;
-            }
-
-            // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
-            const existing = yield* sql<{ position: number | null }>`
-              SELECT position FROM blocks
-              WHERE feedPrivateId = ${feedPrivateId}
-                AND actorId = ${block.actorId}
-                AND sequence = ${block.sequence}
-            `;
-            const existingPosition = existing[0]?.position;
-            if (existingPosition != null) {
-              positions.push(existingPosition);
-              continue;
-            }
-
-            // Defensive: existing row carries no position (e.g. inserted via an earlier
-            // assignPositions=false path). Back-fill it so the caller can mark it positioned.
-            yield* sql`
-              UPDATE blocks SET position = ${positionToInsert}
-              WHERE feedPrivateId = ${feedPrivateId}
-                AND actorId = ${block.actorId}
-                AND sequence = ${block.sequence}
-            `;
-            positions.push(positionToInsert!);
-            maxPositions.set(request.feedNamespace, positionToInsert!);
-          }
-
-          return positions;
-        }),
+      const feedPrivateIds = new Map<string, number>();
+      yield* Effect.forEach(
+        [...feedKeys.entries()],
+        ([key, { feedId }]) =>
+          Effect.gen({ self: this }, function* () {
+            const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
+            feedPrivateIds.set(key, id);
+          }),
+        { concurrency: 'unbounded' },
       );
 
-      this.onNewBlocks.emit();
+      // 2. Get max position per namespace ONCE (not per block).
+      const maxPositions = new Map<string, number>();
+      if (this.#options.assignPositions) {
+        maxPositions.set(request.feedNamespace, yield* this.#maxPosition(request.spaceId, request.feedNamespace));
+      }
 
-      return { requestId: request.requestId, positions };
-    }).pipe(Effect.withSpan('FeedStore.append'));
+      // 3. Insert all blocks and compute positions.
+      //
+      // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
+      // we must (a) return the EXISTING position to the caller and (b) NOT advance the
+      // namespace position counter. Otherwise the response contains wasted slots that
+      // sync clients will try to UPDATE local rows to, tripping the
+      // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
+      // On a replica, a pulled block the store already holds is the same block by
+      // (actorId, sequence): adopt the server's position for it, even over a position the row
+      // already carried (cleared, and counted, by #evictSlot just before). The authority is the
+      // only source of positions, so a differing local one is stale -- kept, it would leave the
+      // replica's ordering out of step for good.
+      // A position authority must keep DO NOTHING -- the assignment path below distinguishes a
+      // fresh row from a duplicate by whether the insert wrote one.
+      const onConflict = this.#options.assignPositions
+        ? sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING`
+        : sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO UPDATE SET position = excluded.position
+              WHERE excluded.position IS NOT NULL AND blocks.position IS NOT excluded.position`;
+
+      const positions: number[] = [];
+      let displaced = 0;
+      let moved = 0;
+      for (const [blockIndex, block] of request.blocks.entries()) {
+        const key = block.feedId!;
+        const feedPrivateId = feedPrivateIds.get(key)!;
+        const { data, encryptionKeyId, iv } = sealed[blockIndex];
+
+        let positionToInsert: number | null = null;
+        if (this.#options.assignPositions) {
+          positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
+        } else if (block.position != null) {
+          positionToInsert = block.position;
+          const evicted = yield* this.#evictSlot(request.spaceId, request.feedNamespace, positionToInsert, {
+            ...block,
+            feedPrivateId,
+          });
+          displaced += evicted.displaced;
+          moved += evicted.moved;
+        }
+
+        const inserted = yield* sql<{ position: number | null }>`
+          INSERT INTO blocks (
+            feedPrivateId, position, sequence, actorId,
+            prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
+          ) VALUES (
+            ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
+            ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
+          )
+          ${onConflict}
+          RETURNING position
+        `;
+
+        if (!this.#options.assignPositions) {
+          continue;
+        }
+
+        if (inserted.length > 0) {
+          // New row written at the freshly allocated position.
+          positions.push(positionToInsert!);
+          maxPositions.set(request.feedNamespace, positionToInsert!);
+          continue;
+        }
+
+        // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
+        const existing = yield* sql<{ position: number | null }>`
+          SELECT position FROM blocks
+          WHERE feedPrivateId = ${feedPrivateId}
+            AND actorId = ${block.actorId}
+            AND sequence = ${block.sequence}
+        `;
+        const existingPosition = existing[0]?.position;
+        if (existingPosition != null) {
+          positions.push(existingPosition);
+          continue;
+        }
+
+        // Defensive: existing row carries no position (e.g. inserted via an earlier
+        // assignPositions=false path). Back-fill it so the caller can mark it positioned.
+        yield* sql`
+          UPDATE blocks SET position = ${positionToInsert}
+          WHERE feedPrivateId = ${feedPrivateId}
+            AND actorId = ${block.actorId}
+            AND sequence = ${block.sequence}
+        `;
+        positions.push(positionToInsert!);
+        maxPositions.set(request.feedNamespace, positionToInsert!);
+      }
+
+      return { positions, displaced, moved };
+    });
+
+  /**
+   * Records pull progress for a pull that brought no blocks. Writes and notifies only when the
+   * stored row would actually change, so a caught-up namespace polls without touching the database.
+   */
+  recordPullProgress = (request: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    lastPulledPosition: number;
+    blocksToPull: number;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const current = yield* this.getSyncState(request);
+      if (current.lastPulledPosition === request.lastPulledPosition && current.blocksToPull === request.blocksToPull) {
+        return;
+      }
+      yield* this.setSyncState(request);
+      this.onSyncStateChanged.emit({ spaceId: request.spaceId });
+    }).pipe(Effect.withSpan('FeedStore.recordPullProgress'), SpanAttributes.annotateSpace(request.spaceId));
+
+  /**
+   * Announces a change to a space's block rows. Positions are part of what `subscribeFeed` serves,
+   * so assigning or clearing them is a block change, not only a sync-state change.
+   */
+  #emitBlocksChanged(spaceId: string): void {
+    this.onNewBlocks.emit({ spaceId });
+    this.onSyncStateChanged.emit({ spaceId });
+  }
 
   /**
    * Creates local blocks with sequential predecessors and appends grouped batches.
@@ -611,8 +1042,8 @@ export class FeedStore {
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
-      Effect.gen(this, function* () {
+    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         // 1. Collect unique feeds and ensure they exist.
@@ -630,7 +1061,7 @@ export class FeedStore {
         yield* Effect.forEach(
           [...feedKeys.entries()],
           ([key, { spaceId, feedId, feedNamespace }]) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               const id = yield* this.#ensureFeed(spaceId, feedId, feedNamespace);
               feedPrivateIds.set(key, id);
             }),
@@ -728,53 +1159,54 @@ export class FeedStore {
   );
 
   /**
-   * Sets positions for existing blocks while preventing conflicting reassignments.
+   * Adopts the positions a position authority reported for blocks this store already holds.
+   *
+   * The authority's word is final: a block whose local position differs takes the reported one, and
+   * any other block occupying that slot is cleared (see {@link AppendResult.displaced}). Refusing
+   * either would pin the replica to an ordering the authority no longer has, and a refusal retried
+   * verbatim never resolves -- which is how a client wedged behind a server whose storage had been
+   * rolled back.
+   *
+   * @returns How many other blocks were cleared to make room, and how many of the blocks themselves
+   * left a different position.
    */
   setPosition = (request: {
     spaceId: string;
-    blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
-  }): Effect.Effect<void, SqlError.SqlError | PositionConflictError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    blocks: { feedId: string; feedNamespace: string; actorId: string; sequence: number; position: number }[];
+  }): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      for (const block of request.blocks) {
-        // Fold the conflict check into the UPDATE itself: only write when the row is
-        // unset or already at the requested position. RETURNING tells us whether the
-        // write took effect, so we avoid the per-block SELECT round-trip on the
-        // common path. Conflicts (rare) take the slow path below.
-        const updated = yield* sql<{ position: number | null }>`
-          UPDATE blocks SET position = ${block.position}
-          WHERE feedPrivateId = (
-            SELECT feedPrivateId FROM feeds
-            WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
-          )
-          AND actorId = ${block.actorId} AND sequence = ${block.sequence}
-          AND (position IS NULL OR position = ${block.position})
-          RETURNING position
-        `;
-        if (updated.length > 0) {
-          continue;
-        }
-        const existing = yield* sql<{ position: number | null }>`
-          SELECT position FROM blocks
-          WHERE feedPrivateId = (
-            SELECT feedPrivateId FROM feeds
-            WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
-          )
-          AND actorId = ${block.actorId} AND sequence = ${block.sequence}
-        `;
-        const current = existing[0];
-        if (current?.position != null && current.position !== block.position) {
-          yield* Effect.fail(
-            new PositionConflictError({
-              feedId: block.feedId,
-              actorId: block.actorId,
-              sequence: block.sequence,
-              currentPosition: current.position,
-              requestedPosition: block.position,
-            }),
-          );
-        }
+      const result = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          // A push batch is almost always one feed, so resolve each feed once rather than per block.
+          const feedPrivateIds = new Map<string, number>();
+          let displaced = 0;
+          let moved = 0;
+          for (const block of request.blocks) {
+            const feedKey = `${block.feedNamespace}|${block.feedId}`;
+            const feedPrivateId =
+              feedPrivateIds.get(feedKey) ??
+              (yield* this.#ensureFeed(request.spaceId, block.feedId, block.feedNamespace));
+            feedPrivateIds.set(feedKey, feedPrivateId);
+            const evicted = yield* this.#evictSlot(request.spaceId, block.feedNamespace, block.position, {
+              ...block,
+              feedPrivateId,
+            });
+            displaced += evicted.displaced;
+            moved += evicted.moved;
+            yield* sql`
+              UPDATE blocks SET position = ${block.position}
+              WHERE feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
+            `;
+          }
+          return { displaced, moved };
+        }),
+      );
+
+      if (request.blocks.length > 0) {
+        this.#emitBlocksChanged(request.spaceId);
       }
+      return result;
     }).pipe(Effect.withSpan('FeedStore.setPosition'));
 
   /**
@@ -792,7 +1224,7 @@ export class FeedStore {
     SqlError.SqlError,
     SqlClient.SqlClient
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
 
       const feeds = yield* sql<{ feedId: string; feedNamespace: string }>`
@@ -815,9 +1247,13 @@ export class FeedStore {
         result.push({
           feedId: feed.feedId,
           feedNamespace: feed.feedNamespace,
+          // Byte-faithful export: sealed payloads keep their ciphertext and envelope so a re-import
+          // reconstitutes the exact stored rows, and no plaintext leaks into an archive.
           blocks: blocks.map((row) => ({
             ...row,
             data: new Uint8Array(row.data),
+            encryptionKeyId: row.encryptionKeyId ?? undefined,
+            iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
           })),
         });
       }
@@ -826,7 +1262,9 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.getAllFeedsForSpace'));
 }
 
-const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);
+/** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
+const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
+
 const decodeCursor = (cursor: FeedCursor) => {
   const [token, insertionId] = cursor.split('|');
   return { token, insertionId: Number(insertionId) };

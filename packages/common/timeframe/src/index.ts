@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './timeframe';
+export * from './timeframe.ts';

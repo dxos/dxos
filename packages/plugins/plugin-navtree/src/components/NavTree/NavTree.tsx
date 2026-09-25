@@ -4,21 +4,25 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node } from '@dxos/plugin-graph';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
+import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { Position } from '@dxos/util';
 
 import { useLoadDescendents } from '#hooks';
 
-import { useNavTreeContext } from '../NavTreeContext';
-import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = { id: string; root?: Node.Node; tab: string } & Pick<L1TabsProps, 'open'>;
+export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<
+  L1TabsProps,
+  'open' | 'unavailable'
+>;
 
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
@@ -32,7 +36,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
     //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
     //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
-    //  not use `react-ui-tabs` at all.
+    //  not use `Tabs` at all.
     <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
       <L0Menu
         menuActions={topLevelActions as MenuItem[]}
@@ -51,32 +55,32 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
 /**
  * Partitions root children into workspaces, pinned items, user-account, and top-level actions.
  */
-const useTopLevelNavItems = (root?: Node.Node) => {
+const useTopLevelNavItems = (root?: AppGraphNode.Node) => {
   const { graph } = useAppGraph();
-  const rootId = root?.id ?? Node.RootId;
+  const rootId = root?.id ?? GraphNode.RootId;
   const rootOutboundItems = useConnections(graph, rootId, 'child');
   const rootActions = useGraphActions(graph, rootId);
 
   const { topLevelActions, l0Items, pinnedItems, userAccountItem } = useMemo(() => {
-    const topLevelWorkspaces: Node.Node[] = [];
-    const outboundPinnedItems: Node.Node[] = [];
-    let userAccountItem: Node.Node | undefined;
+    const topLevelWorkspaces: AppGraphNode.Node[] = [];
+    const outboundPinnedItems: AppGraphNode.Node[] = [];
+    let userAccountItem: AppGraphNode.Node | undefined;
     for (const node of rootOutboundItems) {
-      if (Node.hasDisposition(node, 'workspace')) {
+      if (AppGraphNode.hasDisposition(node, 'workspace')) {
         topLevelWorkspaces.push(node);
-      } else if (Node.hasDisposition(node, 'pin-end')) {
+      } else if (AppGraphNode.hasDisposition(node, 'pin-end')) {
         outboundPinnedItems.push(node);
-      } else if (Node.hasDisposition(node, 'user-account')) {
+      } else if (AppGraphNode.hasDisposition(node, 'user-account')) {
         userAccountItem ??= node;
       }
     }
 
     const topLevelActions = rootActions
-      .filter((action) => Node.hasDisposition(action, 'menu'))
+      .filter((action) => AppGraphNode.hasDisposition(action, 'menu'))
       .toSorted((a, b) => Position.compare(a.properties, b.properties));
     const pinnedItems = [
       ...outboundPinnedItems,
-      ...rootActions.filter((action) => Node.hasDisposition(action, 'pin-end')),
+      ...rootActions.filter((action) => AppGraphNode.hasDisposition(action, 'pin-end')),
     ].toSorted((a, b) => Position.compare(a.properties, b.properties));
 
     return {

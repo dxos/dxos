@@ -8,16 +8,16 @@ import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-solid';
-import { type Map as MapType } from '@dxos/plugin-map';
+import type * as Map from '@dxos/plugin-map/Map';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
 
-import { GlobeControl } from '../Globe';
-import { MapControl } from '../Map';
+import { GlobeControl } from '../Globe/index.ts';
+import { MapControl } from '../Map/index.ts';
 
 type MapSurfaceProps = {
-  data?: { subject: MapType.Map };
+  data?: { subject: Map.Map };
 };
 
 const MapSurface = (props: MapSurfaceProps) => {
@@ -68,11 +68,11 @@ const MapSurface = (props: MapSurfaceProps) => {
 
         return { id: row.id, location: { lat, lng } };
       })
-      .filter(Predicate.isNotNullable);
+      .filter(Predicate.isNotNullish);
   });
 
   return (
-    <div class='flex h-full w-full min-h-0'>
+    <div class='flex dx-expand'>
       <Show when={type() === 'map'}>
         <MapControl markers={markers} onToggle={() => setType('globe')} />
       </Show>

@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type AccessToken } from '@dxos/link';
 import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 
-import { type OAuthPreset } from './util';
+import { ConnectorCommandError } from '../errors.ts';
+import { type OAuthPreset } from './util.ts';
 
 // TODO(wittjosiah): Migrate the CLI `connector add` OAuth path off the hard-coded
 //   `OAUTH_PRESETS` list onto the registered `Connector` capabilities (which already
@@ -117,13 +118,15 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       const body = (yield* response.json) as EdgeEnvelope<InitiateOAuthFlowResponse>;
 
       if (!body.success) {
-        return yield* Effect.fail(new Error(`OAuth initiation failed: ${body.error?.message || 'Unknown error'}`));
+        return yield* Effect.fail(
+          new ConnectorCommandError({ message: `OAuth initiation failed: ${body.error?.message || 'Unknown error'}` }),
+        );
       }
 
       return body.data.authUrl;
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catchAll((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
+      Effect.catch((error) => Effect.fail(new ConnectorCommandError({ message: `OAuth initiation failed: ${error}` }))),
     ),
 });
 
@@ -154,7 +157,7 @@ export const performOAuthFlow = Effect.fn(function* (
   const initiator = oauthInitiator ?? createFetchOAuthInitiator();
 
   yield* Effect.gen(function* () {
-    const authHeader = getEdgeAuthHeader(edgeClient);
+    const authHeader = yield* Effect.promise(() => edgeClient.getAuthHeader());
 
     // Initiate OAuth flow.
     const authUrl = yield* initiator.initiate({
@@ -176,21 +179,11 @@ export const performOAuthFlow = Effect.fn(function* (
 
     // TypeScript type narrowing for discriminated union.
     if (oauthResult.success === false) {
-      return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
+      return yield* Effect.fail(new ConnectorCommandError({ message: `OAuth flow failed: ${oauthResult.reason}` }));
     }
 
     Obj.update(accessToken, (accessToken) => {
       accessToken.token = oauthResult.accessToken;
     });
-  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));
+  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catch(() => Effect.void))));
 });
-
-/**
- * Returns the Edge client's cached auth header if available, so Edge can associate
- * the OAuth flow with the current identity.
- */
-// TODO(wittjosiah): EdgeHttpClient does not expose this publicly. Prefer adding a proper API
-//   (e.g. getAuthHeader() or an initiateOAuth helper) to @dxos/edge-client instead of reading
-//   private _authHeader. Cast is at the external-client boundary until that API exists.
-const getEdgeAuthHeader = (edgeClient: EdgeHttpClient): string | undefined =>
-  (edgeClient as unknown as { _authHeader?: string })._authHeader;

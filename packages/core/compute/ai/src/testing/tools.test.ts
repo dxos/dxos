@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 
-import { callTool } from '../tools/call';
-import { ToolId } from '../tools/tool';
-import { ToolExecutionService } from '../tools/tool-execution-service';
-import { ToolResolverService } from '../tools/tool-resolver-service';
-import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from './calculator';
+import { callTool } from '../tools/call.ts';
+import { ToolExecutionService } from '../tools/tool-execution-service.ts';
+import { ToolResolverService } from '../tools/tool-resolver-service.ts';
+import { ToolId } from '../tools/tool.ts';
+import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from './calculator.ts';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (_id: ToolId) => Effect.succeed(CalculatorTool),
@@ -31,7 +31,7 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
 const UserToolkit = Toolkit.make(
   Tool.make('test/age', {
     description: 'Gets the age of the user',
-    parameters: {},
+    parameters: Schema.Struct({}),
     success: Schema.Number,
   }),
 );
@@ -76,8 +76,7 @@ describe('ToolResolverService', () => {
         const result = yield* results.pipe();
         log.info('result', { result });
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 
@@ -101,8 +100,7 @@ describe('ToolResolverService', () => {
           providerExecuted: false,
         });
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 
@@ -125,8 +123,7 @@ describe('ToolResolverService', () => {
         expect((result as any).result).toBeUndefined();
         expect((result as any).error).toMatch(/SyntaxError/);
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 });

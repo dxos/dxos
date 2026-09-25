@@ -4,43 +4,33 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
+import { File } from '@dxos/types';
 
-import { File, FileCapabilities, FileOperation, Settings, isAcceptedMimeType } from '../types';
+import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
 
-export class UnsupportedFileTypeError extends Error {
+export class UnsupportedFileTypeError extends BaseError.extend('UnsupportedFileTypeError') {
   constructor(public readonly type: string) {
-    super(`Unsupported file type: ${type}`);
-    this.name = 'UnsupportedFileTypeError';
+    super({ message: `Unsupported file type: ${type}` });
   }
 }
 
-export class FileTooLargeError extends Error {
+export class FileTooLargeError extends BaseError.extend('FileTooLargeError') {
   constructor(
     public readonly size: number,
     public readonly limit: number = Blob.MAX_INLINE_SIZE,
   ) {
-    super(`File is too large: ${size} bytes (limit: ${limit} bytes)`);
-    this.name = 'FileTooLargeError';
+    super({ message: `File is too large: ${size} bytes (limit: ${limit} bytes)` });
   }
 }
 
-export class NoBackendError extends Error {
-  constructor() {
-    super('No file storage backend is registered.');
-    this.name = 'NoBackendError';
-  }
-}
+export class NoBackendError extends BaseError.extend('NoBackendError', 'No file storage backend is registered.') {}
 
-export class FileReadError extends Error {
-  constructor(cause: unknown) {
-    super('Failed to read file contents.');
-    this.name = 'FileReadError';
-    this.cause = cause;
-  }
-}
+export class FileReadError extends BaseError.extend('FileReadError', 'Failed to read file contents.') {}
 
 /**
  * Resolves the storage name to force for an upload:
@@ -79,14 +69,14 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
       // Validate before hitting the backend so the contract is consistent regardless of backend.
-      if (!isAcceptedMimeType(file.type)) {
+      if (!FileLimits.isAcceptedMimeType(file.type)) {
         return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
       }
       const storage = yield* resolveActiveStorage;
       const bytes = new Uint8Array(
         yield* Effect.tryPromise({
           try: () => file.arrayBuffer(),
-          catch: (error) => new FileReadError(error),
+          catch: FileReadError.wrap(),
         }),
       );
       // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;

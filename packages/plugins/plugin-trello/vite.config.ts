@@ -13,6 +13,8 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    TrelloEvents: 'src/types/TrelloEvents.ts',
+    TrelloOperation: 'src/types/TrelloOperation.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

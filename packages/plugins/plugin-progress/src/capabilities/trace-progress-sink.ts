@@ -4,10 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
-import { Process, ServiceResolver, Trace } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
 /**
@@ -19,16 +23,14 @@ import { log } from '@dxos/log';
  * is cancelled through the remote ({@link RemoteProcessManager}) control keyed by its trigger id; a
  * local process is terminated on this runtime's {@link ProcessManager}.
  *
- * Activates on `SetupProcessManager` so the factory is collected when the process-manager runtime
- * is built. {@link AppCapabilities.ProgressRegistry} is resolved lazily on each write — it is
- * contributed later on Startup, and waiting for it here would deadlock the Startup →
- * SetupProcessManager `firesBefore` chain. Process-manager runtime is likewise resolved lazily on
- * cancel.
+ * {@link AppCapabilities.ProgressRegistry} is resolved lazily on each write rather than required
+ * upfront, since the factory itself has no dependencies. Process-manager runtime is likewise
+ * resolved lazily on cancel.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
-    const runtime = yield* Effect.runtime<Capability.Service>();
+    const runtime = yield* Effect.context<Capability.Service>();
 
     // Local branch: terminate the emitting process on this runtime's ProcessManager (interrupting the
     // operation's fiber). Unchanged from the former pid-only path.
@@ -41,7 +43,7 @@ export default Capability.makeModule(
             const manager = yield* ProcessManager.ProcessManagerService;
             const handle = yield* manager
               .attach(Process.ID.make(pid))
-              .pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+              .pipe(Effect.catch(() => Effect.succeed(undefined)));
             if (handle) {
               yield* handle.terminate();
             }
@@ -58,33 +60,35 @@ export default Capability.makeModule(
           Effect.scoped,
           // Soft-fail (the meter has already cleared locally) but never silently: an unresolvable
           // manager or a rejected request means the run may still be going on the edge.
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
           ),
         ),
       );
 
-    return Capability.contributes(Capabilities.TraceSink, ({ resolver }) =>
-      createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
-        cancelProcess: (target: CancelTarget) => {
-          // An edge target never falls through to local terminate: its pid names a process on the
-          // edge runtime, so terminating that id here could only hit an unrelated local process.
-          if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
-            const triggerId = resolveTriggerId(target);
-            if (target.space && triggerId) {
-              cancelRemote(resolver, target.space, triggerId, target.pid);
-            } else {
-              log.warn('edge progress cancel dropped: unresolvable target', {
-                space: target.space,
-                trigger: target.trigger?.uri.toString(),
-                pid: target.pid,
-              });
+    return [
+      Capability.contribute(Capabilities.TraceSink, ({ resolver }) =>
+        createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
+          cancelProcess: (target: CancelTarget) => {
+            // An edge target never falls through to local terminate: its pid names a process on the
+            // edge runtime, so terminating that id here could only hit an unrelated local process.
+            if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
+              const triggerId = resolveTriggerId(target);
+              if (target.space && triggerId) {
+                cancelRemote(resolver, target.space, triggerId, target.pid);
+              } else {
+                log.warn('edge progress cancel dropped: unresolvable target', {
+                  space: target.space,
+                  trigger: target.trigger?.uri.toString(),
+                  pid: target.pid,
+                });
+              }
+            } else if (target.pid) {
+              terminateLocal(target.pid);
             }
-          } else if (target.pid) {
-            terminateLocal(target.pid);
-          }
-        },
-      }),
-    );
+          },
+        }),
+      ),
+    ];
   }),
 );

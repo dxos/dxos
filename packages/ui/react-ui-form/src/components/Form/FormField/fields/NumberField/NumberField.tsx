@@ -2,59 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
-
-/**
- * Extracts numeric constraints (`minimum`/`maximum` bounds and whether the value must be an integer)
- * by walking the chain of Refinement ASTs and reading each one's JSON schema annotation (e.g. produced
- * by `Schema.between` / `Schema.int`). Returns empty constraints when none are declared.
- */
-export const getNumericConstraints = (ast: SchemaAST.AST): { min?: number; max?: number; integer: boolean } => {
-  let node: SchemaAST.AST | undefined = ast;
-  let min: number | undefined;
-  let max: number | undefined;
-  let integer = false;
-  // Nested refinements (e.g. `Schema.int()` + `Schema.between()`) each carry their own JSON schema
-  // fragment, so accumulate across the chain rather than reading only the outermost node.
-  while (node && SchemaAST.isRefinement(node)) {
-    const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(node));
-    if (jsonSchema != null) {
-      // Stacked refinements intersect: keep the strictest bound (largest min, smallest max).
-      if ('minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
-        min = min === undefined ? jsonSchema.minimum : Math.max(min, jsonSchema.minimum);
-      }
-      if ('maximum' in jsonSchema && typeof jsonSchema.maximum === 'number') {
-        max = max === undefined ? jsonSchema.maximum : Math.min(max, jsonSchema.maximum);
-      }
-      if (
-        ('type' in jsonSchema && jsonSchema.type === 'integer') ||
-        ('multipleOf' in jsonSchema && jsonSchema.multipleOf === 1)
-      ) {
-        integer = true;
-      }
-    }
-    node = node.from;
-  }
-  return { min, max, integer };
-};
+import { FormStaticValue } from '../../FormField.tsx';
+import { presentationFor } from '../../presentation.tsx';
+import { getNumericConstraints } from './numeric-constraints.ts';
 
 export const NumberField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
   getValue,
   onValueChange,
   onBlur,
-  ...props
 }: FormFieldRendererProps<number>) => {
   const { min, max, integer } = getNumericConstraints(type);
 
@@ -91,7 +58,7 @@ export const NumberField = ({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => {
       const value = event.target.value;
       setRaw(value);
@@ -120,21 +87,21 @@ export const NumberField = ({
     [raw, getValue, onBlur, clamp],
   );
 
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={externalValue} format={format} />;
+  }
+
   return (
-    <FormRow<number> readonly={readonly} getValue={getValue} {...props}>
-      {() => (
-        <Input.TextInput
-          type='number'
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={raw}
-          min={min}
-          max={max}
-          step={integer ? 1 : undefined}
-          onChange={handleChange}
-          onBlur={handleBlur}
-        />
-      )}
-    </FormRow>
+    <Field.Input
+      type='number'
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={raw}
+      min={min}
+      max={max}
+      step={integer ? 1 : undefined}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
   );
 };

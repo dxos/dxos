@@ -3,7 +3,13 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  type Heads,
+  type PeerId,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -13,11 +19,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { range } from '@dxos/util';
 
-import { createTestSqliteRuntime } from '../testing';
-import { TestReplicationNetwork } from '../testing';
-import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host';
-import { type EchoNetworkAdapter } from './echo-network-adapter';
-import { deriveCollectionIdFromSpaceId } from './space-collection';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { TestReplicationNetwork } from '../testing/index.ts';
+import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
+import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -94,7 +100,7 @@ describe('AutomergeHost', () => {
     const host2 = await setupAutomergeHost(runtime2);
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.whenReady();
+    await handle2.waitUntilReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
   });
@@ -299,6 +305,155 @@ describe('AutomergeHost', () => {
     await host1.close();
     await host2.close();
     await network.close();
+  });
+
+  // A document that is `ready` locally but whose heads disagree with a peer's is the one case
+  // neither Subduction retry path covers: `findWithProgress` resolves from the existing query, and
+  // `shareConfigChanged()` skips entries whose last sync succeeded. `_handleCollectionSync` is the
+  // only place that sees the divergence, so it has to be the place that acts on it.
+  test('a diverged ready document is resynced once per head pair', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+
+    const resynced: DocumentId[] = [];
+    const resyncDocument = host.resyncDocument.bind(host);
+    host.resyncDocument = (id) => {
+      resynced.push(id);
+      resyncDocument(id);
+    };
+
+    // A head the local document cannot overlap, so the diff reports `different` rather than
+    // `missingOnLocal`/`missingOnRemote` — the shape that used to fall through to nothing.
+    const peerId = 'test-peer' as PeerId;
+    const remoteState = { documents: { [documentId]: ['0'.repeat(64)] } };
+    const synchronizer = (host as any)._collectionSynchronizer;
+
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(1);
+
+    // A peer repeating an unchanged-but-still-diverged state is deliberately not deduped by
+    // `onRemoteStateReceived` (that is what keeps the diff loop alive), so the guard against
+    // re-arming the heal backoff has to live on this side.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await sleep(500);
+    expect(resynced).toEqual([documentId]);
+
+    // Clearing the collection drops its budget, so registering it again earns a fresh resync rather
+    // than being suppressed by the stale entry.
+    await host.clearLocalCollectionState(collectionId);
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
+
+    // A removed document never converges, so its retry budget has to go with it.
+    const resyncHeads: Map<string, { documentId: string }> = (host as any)._divergedResyncHeads;
+    expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
+    await host.removeDocument(documentId);
+    expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
+  });
+
+  // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
+  // so an evicted diverged document must not re-arm it on every diff pass.
+  test('a diverged evicted document does not kick the share policy', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    handle[Symbol.dispose]();
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).not.toContain(documentId);
+
+    const task = (host as any)._sharePolicyChangedTask;
+    const schedule = task.schedule.bind(task);
+    let kicks = 0;
+    task.schedule = () => {
+      kicks++;
+      schedule();
+    };
+
+    // The pass faults the document back in after deciding on the kick.
+    const leaseUntilSettled = (host as any)._leaseUntilSettled.bind(host);
+    const leased: DocumentId[] = [];
+    (host as any)._leaseUntilSettled = (id: DocumentId) => {
+      leased.push(id);
+      leaseUntilSettled(id);
+    };
+
+    const synchronizer = (host as any)._collectionSynchronizer;
+    synchronizer.onRemoteStateReceived(collectionId, 'test-peer' as PeerId, {
+      documents: { [documentId]: ['0'.repeat(64)] },
+    });
+    await expect.poll(() => leased, { timeout: 2_000 }).toContain(documentId);
+    expect(kicks).toBe(0);
+  });
+
+  // `DeferredTask` clears its scheduled flag before running the callback, so a throttle that waited
+  // inside the callback queued a second run for kicks it had already covered — and that run fanned
+  // out again a full interval later.
+  test('a burst of share-policy kicks inside the throttle window fans out once', { timeout: 15_000 }, async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const repo = (host as any)._repo;
+    const shareConfigChanged = repo.shareConfigChanged.bind(repo);
+    let kicks = 0;
+    repo.shareConfigChanged = () => {
+      kicks++;
+      shareConfigChanged();
+    };
+
+    // Inside a throttle window, as right after a previous kick. Wide, so the first run parks even on a
+    // loaded runner: one that reached it only after the deadline would kick at once, and the burst
+    // below would then legitimately cause a second kick.
+    (host as any)._sharePolicyKickNextAllowedAt = Date.now() + 3_000;
+    const task = (host as any)._sharePolicyChangedTask;
+    task.schedule();
+    await expect.poll(() => (host as any)._sharePolicyKickParked, { timeout: 2_500 }).toBe(true);
+
+    // Issued while the first run is parked, which is exactly what the parked kick covers.
+    task.schedule();
+    task.schedule();
+    await expect.poll(() => kicks, { timeout: 10_000 }).toBe(1);
+
+    // A second fan-out would land one minimum interval after the first.
+    await sleep(1_500);
+    expect(kicks).toBe(1);
   });
 });
 

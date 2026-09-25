@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Planet, type TerraConfigValues, generatePlanet } from './generate-planet';
+import { type Planet, type TerraConfigValues, generatePlanet } from './generate-planet.ts';
 
 /**
  * Retention budget across all cached planets. Generation is deterministic in the config, so a

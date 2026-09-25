@@ -4,4 +4,4 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
-  - memoized-llm
+  - model-fixture

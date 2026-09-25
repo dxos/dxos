@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as WebSearchOperations from './definitions';
+import { Fetch } from './definitions.ts';
 
-export const WebSearchHandlers = OperationHandlerSet.lazy(() => import('./fetch'));
+export * as WebSearchOperations from './definitions.ts';
+
+export const WebSearchHandlers = OperationHandlerSet.lazy([
+  Fetch.pipe(Operation.lazyHandler(() => import('./fetch.ts'))),
+]);

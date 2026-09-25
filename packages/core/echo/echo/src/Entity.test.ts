@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Entity from './Entity';
-import * as Obj from './Obj';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Entity from './Entity.ts';
+import * as Obj from './Obj.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 const makeObject = () =>
   Obj.make(TestSchema.Person, {
@@ -127,6 +127,58 @@ describe('Entity', () => {
       expect(Type.isObject(TestSchema.Person)).toBe(true);
       expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
       expect(Type.getVersion(TestSchema.Person)).toBe('0.1.0');
+    });
+  });
+
+  // The convergence key has no dedicated accessors: it is assigned through meta inside an update
+  // callback so it batches with the caller's other writes. Validation is the engine's job —
+  // detection, the worker, and the client executor each ignore keyed relations and empty strings.
+  describe('meta.convergenceKey', () => {
+    const setConvergenceKey = (object: Entity.Unknown, convergenceKey: string | undefined) =>
+      Entity.update(object, (object) => {
+        Entity.getMeta(object).convergenceKey = convergenceKey;
+      });
+
+    test('an entity declares no convergence key by default', () => {
+      expect(Entity.getMeta(makeObject()).convergenceKey).toBeUndefined();
+    });
+
+    test('round-trips a convergence key', () => {
+      const object = makeObject();
+      setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getMeta(object).convergenceKey).toBe('org.example.seed');
+    });
+
+    test('re-setting replaces rather than accumulates', () => {
+      const object = makeObject();
+      setConvergenceKey(object, 'org.example.seed');
+      setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getMeta(object).convergenceKey).toBe('org.example.seed@2');
+    });
+
+    test('undefined clears the convergence key', () => {
+      const object = makeObject();
+      setConvergenceKey(object, 'org.example.seed');
+      setConvergenceKey(object, undefined);
+      expect(Entity.getMeta(object).convergenceKey).toBeUndefined();
+    });
+
+    test('the convergence key is independent of the registry key and version', () => {
+      const object = makeObject();
+      Obj.update(object, (object) => {
+        Obj.getMeta(object).key = 'org.example.registry.entry';
+        Obj.getMeta(object).version = '1.2.0';
+      });
+      setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getMeta(object).convergenceKey).toBe('org.example.seed@2');
+      expect(Obj.getMeta(object).key).toBe('org.example.registry.entry');
+      expect(Obj.getMeta(object).version).toBe('1.2.0');
+    });
+
+    test('survives a snapshot round-trip', () => {
+      const object = makeObject();
+      setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getMeta(Obj.getSnapshot(object)).convergenceKey).toBe('org.example.seed');
     });
   });
 });

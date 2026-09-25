@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import { commentsViewAspect } from './comments-view-state';
+import { commentsViewAspect } from './comments-view-state.ts';
 
 describe('commentsViewAspect', () => {
   test('declares a memory-backed aspect with resolved threads hidden by default', ({ expect }) => {

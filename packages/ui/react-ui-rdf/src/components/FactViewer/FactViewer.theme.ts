@@ -19,10 +19,10 @@ const factViewerStyles = tv({
 
     // Graph view.
     graphContent: 'overflow-hidden',
-    graphTree: 'w-full h-full',
+    graphTree: 'dx-fill',
 
     // Subject group card.
-    group: 'shrink-0 flex flex-col bg-card-surface border border-subdued-separator rounded-sm overflow-hidden',
+    group: 'shrink-0 flex flex-col dx-card-surface border border-subdued-separator rounded-sm overflow-hidden',
     groupHeader: 'flex px-3 py-1 items-center justify-between',
     groupConflict: 'flex items-center gap-1',
 
@@ -40,7 +40,7 @@ const factViewerStyles = tv({
   variants: {
     // Conflicting facts get a warning rule on the inline-start edge.
     conflicting: {
-      true: { row: 'border-is-2 border-warning-border' },
+      true: { row: 'border-s-2 border-warning-border' },
     },
   },
 });

@@ -13,10 +13,10 @@ import { Form } from '@dxos/react-ui-form';
 export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
 
 const QueryOptions = Schema.Struct({
-  question: Schema.String.annotations({ title: 'Query' }),
+  question: Schema.String.annotate({ title: 'Query' }),
   query: Schema.String.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'SPARQL' }),
+    Schema.annotate({ title: 'SPARQL' }),
   ),
 });
 
@@ -71,7 +71,7 @@ export const QueryPanel = ({
         />
       </Toolbar.Root>
     </Panel.Toolbar>
-    <Panel.Content classNames='dx-container'>
+    <Panel.Content>
       <Form.Root
         schema={QueryOptions}
         values={{ question, query }}
@@ -82,7 +82,7 @@ export const QueryPanel = ({
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

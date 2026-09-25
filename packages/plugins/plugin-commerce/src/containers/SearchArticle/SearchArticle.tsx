@@ -5,20 +5,20 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Banner, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Result, Search } from '../../types';
-import { ResultDetail } from './ResultDetail';
-import { ResultTile } from './ResultTile';
+import { meta } from '#meta';
+import { Result, Search } from '#types';
+
+import { ResultDetail } from './ResultDetail.tsx';
+import { ResultTile } from './ResultTile.tsx';
 
 export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 
@@ -141,11 +141,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={id}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={id} />
+      </Panel.Toolbar>
+
       <Panel.Content>
         {(selectedResult && (
           <ResultDetail
@@ -156,7 +155,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Empty
+            <Banner.Empty
               classNames='h-full'
               label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
             />

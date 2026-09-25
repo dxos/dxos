@@ -11,16 +11,19 @@ import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { FileAction } from '#types';
+import { FileCapabilities } from '#types';
 
 export type FileInputProps = {
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
   onChange: (file: File) => void;
 };
 
 export const FileInput = ({ schema, onChange }: FileInputProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const accept = SchemaEx.findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
+  const accept = SchemaEx.findAnnotation<Record<string, string[]>>(
+    schema.ast,
+    FileCapabilities.FileAction.UploadAnnotationId,
+  );
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
 

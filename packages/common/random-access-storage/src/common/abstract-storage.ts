@@ -9,10 +9,10 @@ import type { RandomAccessStorage } from 'random-access-storage';
 import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { Directory } from './directory';
-import { type File, wrapFile } from './file';
-import { type Storage, type StorageType } from './storage';
-import { getFullPath } from './utils';
+import { Directory } from './directory.ts';
+import { type File, wrapFile } from './file.ts';
+import { type Storage, type StorageType } from './storage.ts';
+import { getFullPath } from './utils.ts';
 
 /**
  * Base class for all storage implementations.

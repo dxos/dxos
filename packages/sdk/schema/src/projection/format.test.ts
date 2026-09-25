@@ -10,7 +10,7 @@ import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
+import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format.ts';
 
 describe('format', () => {
   test('get format schema', ({ expect }) => {
@@ -24,7 +24,7 @@ describe('format', () => {
     const prop: Partial<PropertyType> = { property: 'test' as SchemaEx.JsonProp };
     const schema = getFormatSchema(prop.format);
     expect(schema).to.eq(formatToSchema[Format.TypeFormat.None]);
-    const validate = Schema.validate(PropertySchema);
+    const validate = Schema.decodeUnknownSync(Schema.toType(PropertySchema));
     expect(() => validate(prop)).to.throw;
   });
 
@@ -73,7 +73,7 @@ describe('format', () => {
   });
 
   test('ref format', async ({ expect }) => {
-    const validate = Schema.validateSync(PropertySchema);
+    const validate = Schema.decodeUnknownSync(Schema.toType(PropertySchema));
     const prop: Partial<PropertyType> = {
       property: 'organization' as SchemaEx.JsonProp,
       type: TypeEnum.Ref,

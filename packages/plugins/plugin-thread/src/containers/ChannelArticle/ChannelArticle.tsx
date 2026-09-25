@@ -2,23 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { log } from '@dxos/log';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
+import { ChannelBackend, ThreadCapabilities, ThreadOperation } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -51,7 +53,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const { invokePromise } = useOperationInvoker();
 
   const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
+  const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
@@ -68,7 +70,13 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     if (!callProvider || !id) {
       return;
     }
-    await callProvider.join(id);
+    try {
+      await callProvider.join(id);
+    } catch (err) {
+      // The menu action fires this without awaiting, so a failed join (e.g. the transport rejects
+      // the room) must be reported here rather than surface as an unhandled rejection.
+      log.catch(err);
+    }
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
@@ -106,11 +114,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar />
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
+        </Panel.Toolbar>
       )}
       {showCall ? (
         <Panel.Content>

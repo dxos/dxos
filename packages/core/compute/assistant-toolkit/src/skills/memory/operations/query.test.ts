@@ -6,14 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Memory } from '../../../types/Memory';
-import { QueryMemories } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import { Memory } from '../../../types/Memory.ts';
+import { QueryMemories } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -65,12 +65,12 @@ describe('QueryMemories', () => {
 });
 
 const titles = (results: readonly unknown[]) =>
-  Schema.decodeUnknown(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
+  Schema.decodeUnknownEffect(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
     Effect.map((rows) => rows.map((row) => row.title)),
   );
 
 const seed = Effect.fnUntraced(function* () {
   yield* Database.add(Obj.make(Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
   yield* Database.add(Obj.make(Memory, { title: 'Favourite language', content: 'TypeScript.' }));
-  yield* Database.flush();
+  yield* Database.flush({ secondaryIndexes: true });
 });

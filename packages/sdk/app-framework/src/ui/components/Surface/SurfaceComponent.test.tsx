@@ -5,20 +5,21 @@
 import { act } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
 import React, { Profiler, useState } from 'react';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { Capability, Plugin } from '../../../core';
-import { createTestApp } from '../../../testing/harness';
-import { render } from '../../../testing/react';
-import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent';
-import { setSurfaceDebug } from './SurfaceDebug';
-import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter } from './types';
+import { ActivationEvents, Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { createTestApp } from '../../../testing/harness.ts';
+import { render } from '../../../testing/react.tsx';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
+import { getMountedSurfaces, setSurfaceDebug } from './SurfaceDebug.tsx';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
+import { SurfaceProfilerProvider } from './SurfaceProfilerContext.tsx';
+import { type Definition, create, makeFilter } from './types.ts';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -36,14 +37,49 @@ const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfacePe
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({ id: 'alpha', filter: makeFilter(RoleA), component: () => <span data-testid='a' /> }),
           create({ id: 'beta', filter: makeFilter(RoleB), component: () => <span data-testid='b' /> }),
         ]),
-      ),
+      ]),
+  }),
+  Plugin.make,
+);
+
+// Exercises `props`: `Plain` takes its own props, so registering it needs no adapter component.
+const RoleSubject = Role.make<{ subject: string }>('org.dxos.test.role.subject');
+const RoleEnvelope = Role.make<{ subject: string }>('org.dxos.test.role.envelope');
+
+const Plain = ({ label }: { label: string }) => <span data-testid='mapped'>{label}</span>;
+
+const mappedPropsMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceMappedProps'),
+  name: 'SurfaceMappedPropsTest',
+});
+
+const MappedPropsPlugin = Plugin.define(mappedPropsMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({
+            id: 'mapped',
+            filter: makeFilter(RoleSubject),
+            component: Plain,
+            props: ({ data: { subject } }) => ({ label: subject }),
+          }),
+          create({
+            id: 'envelope',
+            filter: makeFilter(RoleEnvelope),
+            component: ({ data: { subject } }) => <span data-testid='envelope'>{subject}</span>,
+          }),
+        ]),
+      ]),
   }),
   Plugin.make,
 );
@@ -54,16 +90,20 @@ const invalidIdMeta = Plugin.makeMeta({
 });
 
 // Contributes a single surface with a hyphenated (invalid) local id for role A.
+// Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
+// authoring site, and this exercises the computed ids it deliberately lets through.
+const invalidId: string = 'gallery-article';
+
 const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
-          create({ id: 'gallery-article', filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({ id: invalidId, filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -85,6 +125,196 @@ describe('SurfaceComponent dispatch', () => {
     await using harness = await createTestApp({ plugins: [InvalidIdPlugin()] });
     const view = render(harness, <SurfaceComponent type={RoleA} />);
     expect(view.queryByTestId('invalid')).toBeNull();
+  });
+
+  test('`props` maps the surface props onto a plain component', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [MappedPropsPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleSubject} data={{ subject: 'mapped' }} />);
+    // The component receives only `{ label }`, never the surface's `data` envelope.
+    expect((await view.findByTestId('mapped')).textContent).toBe('mapped');
+  });
+
+  test('a surface without `props` still receives the full surface props', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [MappedPropsPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleEnvelope} data={{ subject: 'envelope' }} />);
+    expect((await view.findByTestId('envelope')).textContent).toBe('envelope');
+  });
+});
+
+const RoleGated = Role.make<Record<string, unknown>>('org.dxos.test.role.gated');
+
+const gatedMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceGated'), name: 'SurfaceGatedTest' });
+
+// The surface module parks on its role's demand event instead of activating at startup —
+// the shape the surface maker's `roles` option produces.
+const GatedPlugin = Plugin.define(gatedMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activatesOn: ActivationEvents.SurfacesRequested(RoleGated.role),
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({ id: 'gated', filter: makeFilter(RoleGated), component: () => <span data-testid='gated' /> }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+describe('SurfaceComponent demand activation', () => {
+  test('a role-gated module loads when a surface for its role first renders', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [GatedPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleGated} />);
+    // The mount fires SurfacesRequested(role); the module activates and its contribution
+    // re-renders the surface through the candidates atom.
+    expect(await view.findByTestId('gated')).toBeTruthy();
+  });
+
+  test('an availability miss fires the demand event so later checks see the module', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [GatedPlugin()] });
+    let bump: () => void = () => {};
+    const Probe = () => {
+      const isSurfaceAvailable = useIsSurfaceAvailable();
+      const [, setN] = useState(0);
+      bump = () => setN((n) => n + 1);
+      return <span data-testid='gated-available'>{String(isSurfaceAvailable({ type: RoleGated }))}</span>;
+    };
+    const view = render(harness, <Probe />);
+    expect((await view.findByTestId('gated-available')).textContent).toBe('false');
+    // The returned callback is deliberately non-reactive, so re-check on a fresh render.
+    await vi.waitFor(() => {
+      act(() => bump());
+      expect(view.getByTestId('gated-available').textContent).toBe('true');
+    });
+  });
+});
+
+//
+// A role served by BOTH an eager catch-all (`Position.last`, matching anything) and a gated module
+// whose activation is held open by a latch — the shape behind #12717, where plugin-space's record
+// article claimed a feed plank for a second while plugin-magazine's chunk loaded.
+//
+
+const RoleHeld = Role.make<Record<string, unknown>>('org.dxos.test.role.held');
+
+const catchAllMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceCatchAll'),
+  name: 'SurfaceCatchAllTest',
+});
+
+const CatchAllPlugin = Plugin.define(catchAllMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({
+            id: 'catchAll',
+            position: Position.last,
+            filter: makeFilter(RoleHeld),
+            component: () => <span data-testid='catch-all' />,
+          }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const specificMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceSpecific'),
+  name: 'SurfaceSpecificTest',
+});
+
+const SpecificPlugin = Plugin.define(specificMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({ id: 'specific', filter: makeFilter(RoleHeld), component: () => <span data-testid='specific' /> }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const heldMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceHeld'), name: 'SurfaceHeldTest' });
+
+/** A role-gated surface module whose activation completes only when the returned latch is released. */
+const makeHeldPlugin = () => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const plugin = Plugin.define(heldMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activatesOn: ActivationEvents.SurfacesRequested(RoleHeld.role),
+      activate: () =>
+        Effect.promise(() => gate).pipe(
+          Effect.map(() => [
+            Capability.contributeAll(Capabilities.ReactSurface, [
+              create({ id: 'held', filter: makeFilter(RoleHeld), component: () => <span data-testid='held' /> }),
+            ]),
+          ]),
+        ),
+    }),
+    Plugin.make,
+  );
+  return { plugin, release: () => release() };
+};
+
+describe('SurfaceComponent fallback hold', () => {
+  test("withholds a catch-all while the role's own module is still activating", async ({ expect }) => {
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
+
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    // The catch-all matches and is already loaded, but rendering it here is the flash: the role's
+    // own module has not settled, so nothing renders yet.
+    expect(view.queryByTestId('catch-all')).toBeNull();
+    expect(view.queryByTestId('held')).toBeNull();
+
+    release();
+    expect(await view.findByTestId('held')).toBeTruthy();
+  });
+
+  test('limit={0} renders nothing while the role is still activating', async ({ expect }) => {
+    // `limit={0}` means render nothing, and a held fallback must not reintroduce output through the
+    // placeholder — which is only visible with an explicit one, since the default is empty.
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
+
+    const view = render(
+      harness,
+      <SurfaceComponent type={RoleHeld} limit={0} placeholder={<span data-testid='placeholder' />} />,
+    );
+    expect(view.queryByTestId('placeholder')).toBeNull();
+    expect(view.queryByTestId('catch-all')).toBeNull();
+
+    release();
+  });
+
+  test('renders the catch-all once no gated module for the role is left activating', async ({ expect }) => {
+    // Guards the hazard in #12717: a hold that never lifts would strand every plank whose role has
+    // only a fallback.
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    expect(await view.findByTestId('catch-all')).toBeTruthy();
+  });
+
+  test('a specific match renders immediately, without waiting for the gated module', async ({ expect }) => {
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [SpecificPlugin(), plugin()] });
+
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    // Only fallbacks are held; a surface that already has real content shows it.
+    expect(await view.findByTestId('specific')).toBeTruthy();
+    release();
   });
 });
 
@@ -219,10 +449,10 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   const BenchPlugin = Plugin.define(benchMeta).pipe(
     Plugin.addModule({
       id: 'surfaces',
-      activatesOn: ActivationEvents.SetupReactSurface,
+      provides: [Capabilities.ReactSurface],
       activate: () =>
-        Effect.succeed(
-          Capability.contributes(
+        Effect.succeed([
+          Capability.contributeAll(
             Capabilities.ReactSurface,
             roles.flatMap((role, ri) =>
               Array.from({ length: SURFACES_PER_ROLE }, (_, si) =>
@@ -230,7 +460,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
               ),
             ),
           ),
-        ),
+        ]),
     }),
     Plugin.make,
   );
@@ -292,6 +522,78 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   });
 });
 
+const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
+
+const stableMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceStable'),
+  name: 'SurfaceStableTest',
+});
+
+const StablePlugin = (counts: { value: number }) =>
+  Plugin.define(stableMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed([
+          Capability.contributeAll(Capabilities.ReactSurface, [
+            create({
+              id: 'stable',
+              filter: makeFilter(RoleStable),
+              component: ({ data: { subject } }) => {
+                counts.value++;
+                return <span data-testid='stable'>{subject.id}</span>;
+              },
+            }),
+          ]),
+        ]),
+    }),
+    Plugin.make,
+  )();
+
+/** Mounts a host that passes `data` as an object literal, and hands back the two ways to move it. */
+const mountStableHost = async (harness: Awaited<ReturnType<typeof createTestApp>>, initial: { id: string }) => {
+  const controls = { rerender: () => {}, setSubject: (_: { id: string }) => {} };
+  const Host = () => {
+    const [, setNonce] = useState(0);
+    const [subject, setSubject] = useState(initial);
+    controls.rerender = () => setNonce((nonce) => nonce + 1);
+    controls.setSubject = setSubject;
+    return <SurfaceComponent type={RoleStable} data={{ subject }} />;
+  };
+
+  const view = render(harness, <Host />);
+  await view.findByTestId('stable');
+  return { view, ...controls };
+};
+
+describe('SurfaceComponent data stability', () => {
+  test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { rerender } = await mountStableHost(harness, { id: 'x' });
+    const baseline = counts.value;
+
+    for (let i = 0; i < 5; i++) {
+      act(() => rerender());
+    }
+
+    expect(counts.value).toBe(baseline);
+  });
+
+  test('a genuine `data` change still re-renders the subtree', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { view, setSubject } = await mountStableHost(harness, { id: 'first' });
+    const baseline = counts.value;
+
+    act(() => setSubject({ id: 'second' }));
+
+    expect(counts.value).toBeGreaterThan(baseline);
+    expect((await view.findByTestId('stable')).textContent).toBe('second');
+  });
+});
+
 describe('SurfaceComponent dev metrics', () => {
   test('records dispatch + candidate count and flags unstable data', async ({ expect }) => {
     setSurfaceDebug(true);
@@ -350,6 +652,30 @@ describe('SurfaceComponent dev metrics', () => {
       expect(metric?.dataUnstable).toBe(false);
     } finally {
       setSurfaceDebug(false);
+    }
+  });
+});
+
+describe('SurfaceComponent mount registry', () => {
+  test('a production build registers surfaces only under a profiler provider', async ({ expect }) => {
+    vi.stubEnv('DEV', false);
+    try {
+      await using harness = await createTestApp({ plugins: [TestPlugin()] });
+
+      const plain = render(harness, <SurfaceComponent type={RoleA} />);
+      await plain.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(false);
+      plain.unmount();
+
+      // The devtools Surfaces card lists this registry; it must be populated in production too.
+      const profiled = render(harness, <SurfaceComponent type={RoleA} />, {
+        reactContexts: [SurfaceProfilerProvider],
+      });
+      await profiled.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(true);
+      profiled.unmount();
+    } finally {
+      vi.unstubAllEnvs();
     }
   });
 });

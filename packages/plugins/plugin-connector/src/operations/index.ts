@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ConnectorOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-connection'),
-  () => import('./sync-connection'),
-);
+import { ConnectorOperation } from '#types';
+
+export const ConnectorOperationHandlerSet = OperationHandlerSet.lazy([
+  ConnectorOperation.CreateConnection.pipe(Operation.lazyHandler(() => import('./create-connection.ts'))),
+]);

@@ -17,7 +17,7 @@ import React from 'react';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FactViewer, type FactViewerRootProps } from './FactViewer';
+import { FactViewer, type FactViewerRootProps } from './FactViewer.tsx';
 
 const extractor = {
   id: 'default',

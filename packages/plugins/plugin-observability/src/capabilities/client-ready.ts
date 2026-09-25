@@ -4,22 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { type Observability, ObservabilityProvider } from '@dxos/observability';
+import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
-export type ClientReadyOptions = {
-  namespace: string;
-  observability: Observability.Observability;
-};
-
+// The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
+// once, at Startup, by the `observability` module) rather than re-created here — a capability is a
+// singleton and two independent contributions would trigger `DuplicateProviderError`.
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ observability }: ClientReadyOptions) {
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capabilities.PluginManager;
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const client = yield* ObservabilityCapabilities.ClientCapability;
+    const observability = yield* ObservabilityCapabilities.Observability;
 
     // Ensure errors are tagged with enabled plugins to help with reproductions.
     const enabledPlugins = manager.getEnabled();
@@ -45,22 +45,30 @@ export default Capability.makeModule(
     // a hung worker pipe surfaces as a missing "added" log, so the last
     // "adding ..." line points to the stall.
     log('client-ready: adding identity data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.identityProvider(client.services.services));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.identityProvider(client.services.services));
     log('client-ready: identity data provider added');
 
     log('client-ready: adding network metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.networkMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(
+      ObservabilityClientProvider.Client.networkMetricsProvider(client.services.services),
+    );
     log('client-ready: network metrics data provider added');
 
     log('client-ready: adding runtime metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.runtimeMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(
+      ObservabilityClientProvider.Client.runtimeMetricsProvider(client.services.services),
+    );
     log('client-ready: runtime metrics data provider added');
 
     log('client-ready: adding space metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.spacesMetricsProvider(client));
     log('client-ready: space metrics data provider added');
 
-    log('client-ready: contributing observability capability');
-    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
+    log('client-ready: adding document metrics data provider');
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.documentsMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.syncMetricsProvider(client));
+    log('client-ready: document metrics data provider added');
+
+    return [];
   }),
 );

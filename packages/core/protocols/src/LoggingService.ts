@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { LogEntrySchema, QueryLogsRequestSchema } from './buf/proto/gen/dxos/client/logging_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp } from './service-schemas.ts';
 
 //
@@ -84,8 +86,8 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('queryLogs', {
-    payload: protoMessage('dxos.client.services.QueryLogsRequest'),
-    success: protoMessage('dxos.client.services.LogEntry'),
+    payload: bufMessage(QueryLogsRequestSchema),
+    success: bufMessage(LogEntrySchema),
     error: serviceError,
     stream: true,
   }),
@@ -94,3 +96,8 @@ export class Rpcs extends RpcGroup.make(
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+/**
+ * Effect service tag for the `LoggingService` RPC handlers.
+ */
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/LoggingService') {}

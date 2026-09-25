@@ -5,7 +5,7 @@
 import type { Device } from '@dxos/client/halo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 export const useDevices = (): Device[] => {
   const client = useClient();

@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import type { Note, Sequence, Track } from '#types';
+import { Note, Sequence, Track } from '#types';
 
-import { SequenceGrid } from './SequenceGrid';
+import { SequenceGrid } from './SequenceGrid.tsx';
 
 const SEQUENCE_LENGTH = 16; // beats
 const BEATS_PER_CELL = 0.25;
@@ -95,7 +96,7 @@ const DefaultStory = ({ playback }: StoryArgs) => {
   };
 
   return (
-    <div className='absolute inset-0'>
+    <div className='dx-fullscreen'>
       <SequenceGrid
         sequence={sequence}
         track={sampleTrack}

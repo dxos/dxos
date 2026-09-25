@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './skills';
-export * from './meta';
-export * from './types';
+export * as CodePlugin from './CodePlugin.ts';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

@@ -4,24 +4,22 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import { type AccessToken, Connection } from '@dxos/link';
 import { type Task } from '@dxos/types';
 
-import { LINEAR_API_URL } from '../constants';
-import { LinearGraphQLError } from '../errors';
+import { LINEAR_API_URL } from '../constants.ts';
+import { LinearGraphQLError } from '../errors.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type LinearCredentialsValue = {
@@ -56,12 +54,21 @@ const ProjectSchema = Schema.Struct({
 });
 export type Project = Schema.Schema.Type<typeof ProjectSchema>;
 
+const ProjectMilestoneSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  // Linear's `TimelessDate` scalar, already `YYYY-MM-DD` unlike its datetime fields.
+  targetDate: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type ProjectMilestone = Schema.Schema.Type<typeof ProjectMilestoneSchema>;
+
 /**
  * Linear workflow state types group user-defined states into a fixed set of
  * categories. We map by category, not by name, so renamed states keep working.
  * `triage` exists in some workspaces; treat it as backlog.
  */
-const StateTypeSchema = Schema.Literal('triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled');
+const StateTypeSchema = Schema.Literals(['triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled']);
 export type StateType = Schema.Schema.Type<typeof StateTypeSchema>;
 
 const IssueStateSchema = Schema.Struct({
@@ -79,6 +86,10 @@ const IssueProjectRefSchema = Schema.Struct({
   id: Schema.String,
 });
 
+const IssueProjectMilestoneRefSchema = Schema.Struct({
+  id: Schema.String,
+});
+
 const IssueSchema = Schema.Struct({
   id: Schema.String,
   identifier: Schema.String,
@@ -89,6 +100,7 @@ const IssueSchema = Schema.Struct({
   state: IssueStateSchema,
   assignee: Schema.NullOr(IssueAssigneeSchema).pipe(Schema.optional),
   project: Schema.NullOr(IssueProjectRefSchema).pipe(Schema.optional),
+  projectMilestone: Schema.NullOr(IssueProjectMilestoneRefSchema).pipe(Schema.optional),
   createdAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
   updatedAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
@@ -108,33 +120,32 @@ const PageInfoSchema = Schema.Struct({
  * call pulls the token from this service rather than threading it through as
  * an explicit parameter.
  */
-export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCredentials')<
-  LinearCredentials,
-  LinearCredentialsValue
->() {
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
+export class LinearCredentials extends Context.Service<LinearCredentials, LinearCredentialsValue>()(
+  '@dxos/plugin-linear/LinearCredentials',
+) {}
 
-  /**
-   * Loads the access token directly and returns its `token` value. Used by callers that only have
-   * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
-   */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
-}
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
+
+/**
+ * Loads the access token directly and returns its `token` value. Used by callers that only have
+ * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
@@ -142,27 +153,24 @@ export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCr
 
 type LinearEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | LinearGraphQLError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | LinearGraphQLError,
   HttpClient.HttpClient | LinearCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | LinearGraphQLError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | LinearGraphQLError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError || LinearGraphQLError.is(error)) {
-    return false;
+  // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
+  // negative side. The specific failure hangs off `reason` -- a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (HttpClientError.isHttpClientError(error)) {
+    if (error.reason._tag !== 'StatusCodeError') {
+      return true;
+    }
+    const status = error.reason.response.status;
+    return status === 429 || (status >= 500 && status <= 599);
   }
-  if (Cause.isTimeoutException(error)) {
-    return true;
-  }
-  if (error._tag === 'RequestError') {
-    return true;
-  }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
-  return status === 429 || (status >= 500 && status <= 599);
+  return Cause.isTimeoutError(error);
 };
 
 const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: LinearCredentialsValue) =>
@@ -172,7 +180,7 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: LinearCredent
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
 
-const GraphQLEnvelope = <T>(dataSchema: Schema.Schema<T>) =>
+const GraphQLEnvelope = <T>(dataSchema: Schema.Codec<T>) =>
   Schema.Struct({
     data: Schema.NullOr(dataSchema).pipe(Schema.optional),
     errors: Schema.Array(Schema.Struct({ message: Schema.String })).pipe(Schema.optional),
@@ -187,18 +195,20 @@ const GraphQLEnvelope = <T>(dataSchema: Schema.Schema<T>) =>
 const linearGraphQL = <T>(
   query: string,
   variables: Record<string, unknown>,
-  dataSchema: Schema.Schema<T>,
+  dataSchema: Schema.Codec<T>,
 ): LinearEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* LinearCredentials;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     const request = withAuth(HttpClientRequest.post(LINEAR_API_URL), creds).pipe(
-      HttpClientRequest.bodyUnsafeJson({ query, variables }),
+      HttpClientRequest.bodyJsonUnsafe({ query, variables }),
     );
     const envelopeSchema = GraphQLEnvelope(dataSchema);
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(envelopeSchema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(envelopeSchema))),
       Effect.flatMap((envelope) => {
         if (envelope.errors && envelope.errors.length > 0) {
           return Effect.fail(new LinearGraphQLError({ context: { messages: envelope.errors.map((e) => e.message) } }));
@@ -210,7 +220,7 @@ const linearGraphQL = <T>(
       }),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -236,7 +246,7 @@ const paginate = <T>(
     nodes: readonly T[];
     pageInfo: { hasNextPage: boolean; endCursor?: string | null };
   },
-  dataSchema: Schema.Schema<any, any>,
+  dataSchema: Schema.Codec<any, any>,
 ): LinearEffect<readonly T[]> =>
   Effect.gen(function* () {
     const out: T[] = [];
@@ -245,7 +255,7 @@ const paginate = <T>(
       const data = yield* linearGraphQL(
         query,
         { ...baseVariables, first: PAGE_SIZE, after },
-        dataSchema as Schema.Schema<any>,
+        dataSchema as Schema.Codec<any>,
       );
       const conn = selectConnection(data);
       out.push(...conn.nodes);
@@ -334,6 +344,41 @@ const TeamProjectsSchema = Schema.Struct({
 export const fetchTeamProjects = (teamId: string): LinearEffect<readonly Project[]> =>
   paginate(TEAM_PROJECTS_QUERY, { teamId }, (d) => d.team.projects, TeamProjectsSchema);
 
+const PROJECT_MILESTONES_QUERY = /* GraphQL */ `
+  query ProjectMilestones($projectId: String!, $first: Int!, $after: String) {
+    project(id: $projectId) {
+      projectMilestones(first: $first, after: $after) {
+        nodes {
+          id
+          name
+          description
+          targetDate
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+const ProjectMilestonesSchema = Schema.Struct({
+  project: Schema.Struct({
+    projectMilestones: Schema.Struct({
+      nodes: Schema.Array(ProjectMilestoneSchema),
+      pageInfo: PageInfoSchema,
+    }),
+  }),
+});
+
+/**
+ * List milestones for a project. Milestones are per-project in Linear (issues point at one via
+ * `projectMilestone`), so this is fetched once per project pulled rather than once per team.
+ */
+export const fetchProjectMilestones = (projectId: string): LinearEffect<readonly ProjectMilestone[]> =>
+  paginate(PROJECT_MILESTONES_QUERY, { projectId }, (d) => d.project.projectMilestones, ProjectMilestonesSchema);
+
 /**
  * List issues for a team. `since` is an optional ISO timestamp; when set,
  * filters the GraphQL connection to issues with `updatedAt >= since`. When
@@ -360,6 +405,9 @@ const TEAM_ISSUES_QUERY = /* GraphQL */ `
             name
           }
           project {
+            id
+          }
+          projectMilestone {
             id
           }
           createdAt
@@ -398,10 +446,10 @@ export const fetchTeamIssues = (teamId: string, options: { since?: string } = {}
  * mapping is intentionally lossy and one-way — we don't push status back, so
  * round-trip ambiguity isn't an issue in pull-only mode.
  */
-export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'in-progress' | 'done' => {
+export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'started' | 'done' => {
   switch (type) {
     case 'started':
-      return 'in-progress';
+      return 'started';
     case 'completed':
     case 'canceled':
       return 'done';
@@ -430,6 +478,59 @@ export const priorityNumberToTaskPriority = (
       return 'medium';
     case 4:
       return 'low';
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Linear estimates are story points on a per-team scale (commonly Fibonacci:
+ * 1, 2, 3, 5, 8). `Task.estimate` is a t-shirt size, because a size is what a
+ * reader can agree on without knowing the team's scale.
+ *
+ * The buckets are the Fibonacci points each size is usually written as, with
+ * anything larger folding into `xl` — an 800-point issue is not a new size, it
+ * is the same "very large". Returns undefined for 0 or absent, so the field
+ * stays empty rather than reading as a deliberate `xs`.
+ */
+export const estimatePointsToTaskEstimate = (points: number | undefined): Task.Estimate | undefined => {
+  if (points === undefined || points <= 0) {
+    return undefined;
+  }
+  if (points <= 1) {
+    return 'xs';
+  }
+  if (points <= 2) {
+    return 's';
+  }
+  if (points <= 3) {
+    return 'm';
+  }
+  if (points <= 5) {
+    return 'l';
+  }
+  return 'xl';
+};
+
+/**
+ * Reverse of {@link estimatePointsToTaskEstimate}. Each size pushes the
+ * representative point value of its bucket, so a round-trip is stable: a size
+ * that came from 5 goes back as 5, and one that came from 13 goes back as 8.
+ * That last case is lossy by construction — the size does not carry which
+ * large number it was — and is why a local edit is what triggers the push.
+ */
+export const taskEstimateToEstimatePoints = (estimate: Task.Estimate | undefined): number | undefined => {
+  switch (estimate) {
+    case 'xs':
+      return 1;
+    case 's':
+      return 2;
+    case 'm':
+      return 3;
+    case 'l':
+      return 5;
+    case 'xl':
+      return 8;
     default:
       return undefined;
   }
@@ -466,7 +567,7 @@ export const taskPriorityToPriorityNumber = (
  * push we pick a single canonical Linear state-type per Task status:
  *
  * - `todo`        → `unstarted`
- * - `in-progress` → `started`
+ * - `started` → `started`
  * - `done`        → `completed`
  * - `failed`      → `canceled` (Linear has no failure category)
  * - `cancelled`   → `canceled`
@@ -476,7 +577,7 @@ export const taskPriorityToPriorityNumber = (
  */
 export const taskStatusToStateType = (status: NonNullable<Task.Task['status']>): StateType => {
   switch (status) {
-    case 'in-progress':
+    case 'started':
       return 'started';
     case 'done':
       return 'completed';

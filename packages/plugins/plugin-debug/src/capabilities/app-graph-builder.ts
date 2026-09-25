@@ -4,52 +4,108 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { type Space } from '@dxos/react-client/echo';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
 
+/** The hidden category every developer tool hangs off: a root child the main navtree filters out. */
+export const createDebugRootExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'debugRoot',
+    match: GraphNodeMatcher.whenRoot,
+    connector: () =>
+      Effect.succeed([
+        AppGraphNode.make({
+          id: GraphPath.GroupSegments.debug,
+          type: GraphPath.GroupTypes.debug,
+          data: null,
+          properties: {
+            label: ['debug-panel.title', { ns: meta.profile.key }],
+            icon: 'ph--bug--regular',
+            disposition: 'hidden',
+            draggable: false,
+            droppable: false,
+          },
+        }),
+      ]),
+  });
+
+/** The Debug node: the console and log viewer first (what the panel opened on as tabs), then the generator. */
+export const createDebugExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'debug',
+    match: AppNodeMatcher.whenDebugGroup,
+    connector: () =>
+      Effect.succeed([
+        AppGraphNode.make({
+          id: DebugNodes.nodeId(DebugNodes.id),
+          data: null,
+          type: DebugNodes.id,
+          properties: {
+            label: ['debug.label', { ns: meta.profile.key }],
+            icon: 'ph--bug--regular',
+            // Before DevTools (10), whichever plugin registers first: the panel's own pages lead the tree.
+            position: 0,
+          },
+          nodes: [
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.Console),
+              type: DebugNodes.Console,
+              data: DebugNodes.Console,
+              properties: {
+                label: ['console.tab.label', { ns: meta.profile.key }],
+                icon: 'ph--terminal-window--regular',
+                // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
+                position: 0,
+              },
+            }),
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.Logs),
+              type: DebugNodes.Logs,
+              data: DebugNodes.Logs,
+              properties: {
+                label: ['logs.tab.label', { ns: meta.profile.key }],
+                icon: 'ph--list-bullets--regular',
+                position: 1,
+              },
+            }),
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.SpaceType),
+              type: DebugNodes.SpaceType,
+              data: DebugNodes.SpaceType,
+              properties: {
+                label: ['generate-objects.label', { ns: meta.profile.key }],
+                icon: 'ph--dice-five--regular',
+                position: 2,
+              },
+            }),
+          ],
+        }),
+      ]),
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
-      GraphBuilder.createExtension({
-        id: 'debug',
-        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
-        connector: (space: Space) =>
-          Effect.succeed([
-            Node.make({
-              id: DebugNodes.nodeId(DebugNodes.id),
-              data: null,
-              type: DebugNodes.id,
-              properties: {
-                label: ['debug.label', { ns: meta.profile.key }],
-                icon: 'ph--bug--regular',
-                position: Position.last,
-              },
-              nodes: [
-                Node.make({
-                  id: DebugNodes.nodeId(DebugNodes.SpaceType),
-                  type: DebugNodes.SpaceType,
-                  data: { space, type: DebugNodes.SpaceType },
-                  properties: {
-                    label: ['generate-objects.label', { ns: meta.profile.key }],
-                    icon: 'ph--dice-five--regular',
-                  },
-                }),
-              ],
-            }),
-          ]),
-      }),
+      // The hidden root/debug category.
+      createDebugRootExtension(),
 
+      // The Debug node, under the debug category: the panel's own pages, then the generator.
+      createDebugExtension(),
       // Debug object companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'debugObject',
-        match: NodeMatcher.whenEchoObject,
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -63,9 +119,10 @@ export default Capability.makeModule(
       }),
 
       // Object explorer deck companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceObjects',
-        match: NodeMatcher.whenRoot,
+        relation: AppNode.companion,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -74,27 +131,12 @@ export default Capability.makeModule(
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
               position: Position.last,
-            }),
-          ]),
-      }),
-
-      // Log panel deck companion.
-      GraphBuilder.createExtension({
-        id: 'logs',
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeDeckCompanion({
-              id: 'logs',
-              label: ['logs.label', { ns: meta.profile.key }],
-              icon: 'ph--list-magnifying-glass--regular',
-              data: 'logs' as const,
-              position: Position.last,
+              mount: 'open',
             }),
           ]),
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

@@ -10,4 +10,4 @@
  * specs; use ./testing for in-browser test helpers.
  */
 
-export * from './board-manager';
+export * from './board-manager.ts';

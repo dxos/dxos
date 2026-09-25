@@ -2,11 +2,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { log } from '@dxos/log';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
@@ -41,7 +42,11 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
       }
 
       if (transcriptionManager) {
-        yield* Effect.promise(() => transcriptionManager.setEnabled(enabled));
+        // Transcription is optional (it needs a configured endpoint); a failure here must not take
+        // down the rest of the payload handling as a defect.
+        yield* Effect.promise(() => transcriptionManager.setEnabled(enabled)).pipe(
+          Effect.catchCause((cause) => Effect.sync(() => log.warn('failed to toggle transcription', { cause }))),
+        );
       }
     }),
   ),

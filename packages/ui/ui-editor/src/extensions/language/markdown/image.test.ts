@@ -7,8 +7,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { focus } from '../../state/focus';
-import { image } from './image';
+import { focus } from '../../state/focus.ts';
+import { image } from './image.ts';
 
 const createView = (doc: string, extensions: any[]) => {
   const parent = document.createElement('div');

@@ -13,8 +13,8 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { emailToMessage } from './email-fixtures';
-import { type ParquetRow, parquetSource } from './parquet';
+import { emailToMessage } from './email-fixtures.ts';
+import { type ParquetRow, parquetSource } from './parquet.ts';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) is exposed via ROOT_DIR;
 // its layout is `${ROOT_DIR}/data/train-*.parquet`.
@@ -105,10 +105,14 @@ const countBySenderStage =
   <E = never>(): Stage.Stage<ParquetRow, SenderCount, E> =>
   (input) =>
     input.pipe(
-      Stream.mapAccum(new Map<string, number>(), (counts, row) => {
-        const sender = String(row.from ?? '');
-        const count = (counts.get(sender) ?? 0) + 1;
-        counts.set(sender, count);
-        return [counts, { sender, count }];
-      }),
+      Stream.mapAccum(
+        () => new Map<string, number>(),
+        (counts, row) => {
+          const sender = String(row.from ?? '');
+          const count = (counts.get(sender) ?? 0) + 1;
+          counts.set(sender, count);
+          // v4 emits zero or more values per input, so the mapped value is an array.
+          return [counts, [{ sender, count }]] as const;
+        },
+      ),
     );

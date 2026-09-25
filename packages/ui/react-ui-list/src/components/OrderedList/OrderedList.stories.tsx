@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { OrderedList } from './OrderedList';
+import { OrderedList } from './OrderedList.tsx';
 
 type Item = { id: string; label: string };
 
@@ -148,9 +148,9 @@ const CheckboxWithDeleteStory = () => {
               hover
               classNames='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)] items-center gap-1 px-2'
             >
-              <Input.Root>
-                <Input.Checkbox checked={item.done} onCheckedChange={(next) => handleToggle(item.id, next === true)} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Checkbox checked={item.done} onCheckedChange={(next) => handleToggle(item.id, next === true)} />
+              </Field.Root>
               <OrderedList.Title classNames={mx(item.done && 'line-through text-subdued')}>
                 {item.label}
               </OrderedList.Title>
@@ -226,7 +226,7 @@ const DraggableWithToggleStory = () => {
 
 //
 // Nested — a parent `OrderedList.DetailItem` whose detail panel contains another
-// `OrderedList`. Exercises Radix context shadowing (each `<OrderedList.Root>` provides its
+// `OrderedList`. Exercises context shadowing (each `<OrderedList.Root>` provides its
 // own reorder/disclosure/nav controllers) and pragmatic-dnd's per-list `canDrop` filter
 // (so a sub-item can't drop into the parent list, and vice versa).
 //

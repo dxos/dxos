@@ -12,10 +12,10 @@ import { Message } from '@dxos/types';
 // Base types
 //
 
-export const createInputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
+export const createInputSchema = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> =>
   Schema.Struct({ [DEFAULT_INPUT]: schema });
 
-export const createOutputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
+export const createOutputSchema = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> =>
   Schema.Struct({ [DEFAULT_OUTPUT]: schema });
 
 export type InputType<INPUT = any> = {
@@ -64,7 +64,7 @@ export type AnyOutput = Schema.Schema.Type<typeof AnyOutput>;
 //
 
 // TODO(burdon): Define type.
-export const Scalar = Schema.Union(Schema.String, Schema.Number, Schema.Boolean);
+export const Scalar = Schema.Union([Schema.String, Schema.Number, Schema.Boolean]);
 
 export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 

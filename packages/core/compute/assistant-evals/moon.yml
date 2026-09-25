@@ -4,7 +4,25 @@ tags:
   - evalite
   - typecheck
 tasks:
-  evals:
-    command: evalite
-    args:
-      - src/evals
+  # Spelled out rather than inherited from the `ts-test` tag: that task filters with
+  # `--project=node`, and this package's vitest config has to stay flat for evalite's file discovery
+  # to find the scenarios at all, so it defines no projects and the filter matches nothing.
+  test:
+    # No `--passWithNoTests`, unlike the inherited task: this package has test files of its own, so
+    # discovering none is a regression in the config rather than a shard with nothing to run.
+    command: pnpm exec dx-killorphans vitest run
+    deps:
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - ^:build
+      - '^:#prebuild'
+    inputs:
+      - '@group(sources)'
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /pnpm-lock.yaml
+      - vitest.config.ts
+      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+    options:
+      timeout: 600

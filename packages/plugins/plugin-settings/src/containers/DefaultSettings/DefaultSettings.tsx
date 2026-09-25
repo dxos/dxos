@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { SettingsScope } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 export type DefaultSettingsProps = {
@@ -36,9 +37,9 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={title ?? subject.prefix}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet label={title ?? subject.prefix} actions={<SettingsScope prefix={subject.prefix} />}>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

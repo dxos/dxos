@@ -6,24 +6,25 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
+import { getObjectOnBranch } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import { Markdown, MarkdownOperation } from '../types';
-import { MarkdownOperationHandlerSet } from './index';
+import { MarkdownOperationHandlerSet } from '#operations';
+import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [SpaceProperties, Collection.Collection, Markdown.Document, Text.Text, HasSubject.HasSubject, Feed.Feed],
 });
 
@@ -41,12 +42,15 @@ describe('accept-change operation', () => {
           doc: Ref.make(doc),
           name: 'draft',
         });
-        const { newContent: branchContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+        yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'bravo', newString: 'BRAVO' }],
           branchId,
         });
-        expect(branchContent).toBe('alpha\nBRAVO\ncharlie\n');
+        const branchData = (yield* Effect.promise(() => getObjectOnBranch(rootText, branchId))) as {
+          content?: string;
+        };
+        expect(branchData.content).toBe('alpha\nBRAVO\ncharlie\n');
         expect(rootText.content).toBe('alpha\nbravo\ncharlie\n');
 
         // Anchor covering the 'bravo' region on the base (core branch name === branchId).

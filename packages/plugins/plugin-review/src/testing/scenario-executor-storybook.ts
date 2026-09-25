@@ -5,11 +5,11 @@
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type ReviewScenario, type ScenarioStep } from './scenarios';
+import { type ReviewScenario, type ScenarioStep } from './scenarios.ts';
 
 /**
  * Open the editor view-mode dropdown and pick an entry by label. The review mode is folded into this

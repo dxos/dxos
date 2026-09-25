@@ -31,7 +31,7 @@ The following extension dialects are used in this document.
 | -------- | ------------------------- |
 | `module` | `org.dxos.mdl.module@1.0` |
 | `feat`   | `org.dxos.mdl.feat@1.0`   |
-| `test`   | `org.dxos.mdl.test@1.0`   |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 
 ## Modules
 
@@ -481,7 +481,7 @@ feat F-6: Effect Database service
 ## Acceptance
 
 ```mdl
-test T-1: Class type is both schema and TS type
+scenario T-1: Class type is both schema and TS type
   given: `class Person extends Type.makeObject<Person>(dxn)(Schema.Struct({ name: Schema.String })) {}`
   then:
     - Type.getTypename(Person) equals the typename encoded in dxn
@@ -490,7 +490,7 @@ test T-1: Class type is both schema and TS type
 ```
 
 ```mdl
-test T-2: Object round-trips through JSON
+scenario T-2: Object round-trips through JSON
   given: an object created with Obj.make and added to a db
   when: it is passed through Obj.toJSON then Obj.fromJSON({ graph, db })
   then:
@@ -499,7 +499,7 @@ test T-2: Object round-trips through JSON
 ```
 
 ```mdl
-test T-3: Query subscription reacts to mutation
+scenario T-3: Query subscription reacts to mutation
   given: a subscribed QueryResult for Filter.type(Person)
   when: a new Person is added and an existing one is mutated
   then:
@@ -508,14 +508,14 @@ test T-3: Query subscription reacts to mutation
 ```
 
 ```mdl
-test T-4: Effect query requires the service
+scenario T-4: Effect query requires the service
   given: an Effect program using Database.query(Filter.everything)
   when: run without providing Database.Service
   then: the program is a type error / fails to run until Database.layer(db) is provided
 ```
 
 ```mdl
-test T-5: Missing ref target is catchable
+scenario T-5: Missing ref target is catchable
   given: a ref whose target does not exist
   when: Database.load(ref) runs
   then: it fails with EntityNotFoundError, catchable via Effect.catchTag('EntityNotFoundError', ...)
@@ -550,8 +550,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -4,21 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateDrawingPanel } from '#components';
-
-import { Drawing, IllustratorCapabilities } from '../types';
+import { Drawing, IllustratorCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Drawing.Drawing),
       customPanel: CreateDrawingPanel,
       createObject: (
@@ -37,13 +37,8 @@ export default Capability.makeModule(
                 .pipe(Effect.provideService(Database.Service, Database.makeService(options.db)))
             : Drawing.makeCanvas({ schema: variant.id });
 
-          // Add the canvas to the database. It carries HiddenAnnotation, so `CollectionModel.add`
-          // persists it without filing it into the target collection.
-          yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: canvas,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          // The canvas is an implementation detail of the drawing, so it is persisted but filed nowhere.
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: canvas }, { spaceId: options.db.spaceId });
 
           const drawing = Drawing.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
@@ -53,13 +48,20 @@ export default Capability.makeModule(
           // Add the user-facing Drawing wrapper. Not hidden — this is the object the user sees
           // and navigates to. If this second write fails, roll back the canvas so we don't
           // leak an orphaned object into the space.
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: drawing,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          }).pipe(
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: drawing,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          ).pipe(
             Effect.tapError(() =>
-              Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
+              Operation.invoke(
+                SpaceOperation.RemoveObjects,
+                { objects: [canvas] },
+                { spaceId: options.db.spaceId },
+              ).pipe(Effect.ignore),
             ),
           );
         }),

@@ -1,10 +1,9 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './types';
-
-export * as Notebook from './Notebook';
-export * as ScriptCapabilities from './ScriptCapabilities';
-export * as ScriptEvents from './ScriptEvents';
-export * as ScriptOperation from './ScriptOperation';
+export * as Notebook from './Notebook.ts';
+export * as ScriptCapabilities from './ScriptCapabilities.ts';
+export * as ScriptEvents from './ScriptEvents.ts';
+export * as ScriptOperation from './ScriptOperation.ts';
+export * as Settings from './Settings.ts';

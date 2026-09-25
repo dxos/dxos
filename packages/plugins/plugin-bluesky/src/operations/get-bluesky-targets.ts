@@ -2,19 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { BLUESKY_TARGET } from '../constants';
-import { BlueskyApi } from '../services';
-import { GetBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { GetBlueskyTargets } from './definitions.ts';
 
 /**
  * Fixed self-targets every Bluesky integration exposes. The remote-id is the
@@ -41,9 +42,8 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
-        Effect.provide(FetchHttpClient.layer),
-        Effect.catchAll((error) =>
+        Effect.provide(Layer.provideMerge(BlueskyApi.fromConnection(connectionRef, client), FetchHttpClient.layer)),
+        Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });
             return [] as ReadonlyArray<BlueskyApi.SavedFeed>;

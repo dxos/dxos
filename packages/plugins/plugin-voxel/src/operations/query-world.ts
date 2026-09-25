@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { Voxel, VoxelOperation } from '../types';
+import { Voxel, VoxelOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof VoxelOperation.QueryWorld> = VoxelOperation.QueryWorld.pipe(
   Operation.withHandler(

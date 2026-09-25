@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, it } from 'vitest';
 
-import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
+import { SchemaAST } from '@dxos/effect';
+
+import { applyObjectTemplate, getObjectTemplateInputSchema } from './json.ts';
 
 describe('json template', () => {
   describe('getObjectTemplateInputSchema', () => {

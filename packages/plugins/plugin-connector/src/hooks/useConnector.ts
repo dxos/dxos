@@ -4,12 +4,12 @@
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 
-import { Connector, type ConnectorEntry } from '#types';
+import { ConnectorSpec } from '#types';
 
 /**
- * Resolve a contributed {@link ConnectorEntry} by stable `id`.
+ * Resolve a contributed {@link ConnectorSpec.ConnectorEntry} by stable `id`.
  */
-export const useConnector = (connectorId: string | undefined): ConnectorEntry | undefined => {
-  const connectors = useCapabilities(Connector).flat();
+export const useConnector = (connectorId: string | undefined): ConnectorSpec.ConnectorEntry | undefined => {
+  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
   return connectorId ? connectors.find((connector) => connector.id === connectorId) : undefined;
 };

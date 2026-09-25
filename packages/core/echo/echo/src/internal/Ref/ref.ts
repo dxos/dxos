@@ -2,34 +2,41 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
-import * as ParseResult from 'effect/ParseResult';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaIssue from 'effect/SchemaIssue';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import type * as Types from 'effect/Types';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import * as Database from '../../Database';
-import type * as Type from '../../Type';
+import * as Database from '../../Database.ts';
+import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from './atoms';
+} from '../Annotation/annotations.ts';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types/index.ts';
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
+import * as RefAtoms from './atoms.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -43,6 +50,14 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
     const typename = parsed ? DXN.getName(parsed) : undefined;
     return typename ? { typename } : undefined;
   }
+};
+
+/**
+ * The reference target as a DXN, preserving the version that {@link getSchemaReference} drops.
+ */
+export const getSchemaReferenceDXN = (property: JsonSchemaType): DXN.DXN | undefined => {
+  const { $id, reference: { schema: { $ref } = {} } = {} } = property;
+  return $id === JSON_SCHEMA_ECHO_REF_ID && $ref ? DXN.tryMake($ref) : undefined;
 };
 
 export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
@@ -72,13 +87,11 @@ export type RefereneAST = {
 };
 
 export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => {
-  if (ast._tag !== 'Declaration' || !ast.annotations[ReferenceAnnotationId]) {
+  const reference = SchemaAST.getAnnotation<{ typename: string; version: string }>(ast, ReferenceAnnotationId);
+  if (ast._tag !== 'Declaration' || !reference) {
     return undefined;
   }
-  return {
-    typename: (ast.annotations[ReferenceAnnotationId] as any).typename,
-    version: (ast.annotations[ReferenceAnnotationId] as any).version,
-  };
+  return { typename: reference.typename, version: reference.version };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,7 +100,7 @@ export const RefTypeId: unique symbol = Symbol.for('@dxos/echo/internal/Ref') as
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.Codec<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -128,7 +141,7 @@ export interface RefFn {
   /**
    * @returns True if the schema is a reference schema.
    */
-  isRefSchema: (schema: Schema.Schema<any, any>) => schema is RefSchema<any>;
+  isRefSchema: (schema: Schema.Codec<any, any>) => schema is RefSchema<any>;
 
   /**
    * @returns True if the schema AST is a reference schema.
@@ -165,6 +178,17 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
 };
 
 /**
+ * Disposition of a deleted target, mirroring the query option of the same name.
+ */
+export type LoadOptions = {
+  deleted?: 'exclude' | 'include';
+};
+
+/** Reads the deletion marker off a value of unconstrained target type. */
+const isTargetDeleted = (target: unknown): boolean =>
+  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
+
+/**
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
@@ -183,8 +207,19 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
+   * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
+   * resolve asynchronously, or the ref's atom for reactive access.
    */
   get target(): T | undefined;
+
+  /**
+   * @returns The target when it is already materialized: the pinned target, or a side-effect-free
+   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
+   * document; callers that need a settled document must load instead.
+   */
+  peek(): T | undefined;
 
   /**
    * @returns Promise that will resolves with the target object.
@@ -198,13 +233,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
    *   uses: {@link load}
    *   related: org.dxos.echo-react.useObjectReactive
    */
-  load(): Promise<T>;
+  load(options?: LoadOptions): Promise<T>;
 
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
 
-  tryLoad(): Promise<T | undefined>;
+  tryLoad(options?: LoadOptions): Promise<T | undefined>;
 
   /**
    * Subscribe to the ref's resolution event.
@@ -269,12 +304,12 @@ Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
   return uri !== undefined && EID.isLocal(uri) && EID.getEntityId(uri) === id;
 };
 
-Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
+Ref.isRefSchema = (schema: Schema.Codec<any, any>): schema is RefSchema<any> => {
   return Ref.isRefSchemaAST(schema.ast);
 };
 
 Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
-  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
+  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId) !== undefined;
 };
 
 Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
@@ -304,6 +339,30 @@ export type JsonSchemaReferenceInfo = {
 };
 
 /**
+ * Wire form of a reference: the `{ '/': uri }` shape stored in the Automerge document.
+ *
+ * A `Struct` rather than a `declare`: Effect 4 gives declarations no JSON-schema representation, so
+ * a declared encoded side serializes to an opaque placeholder and the reference annotations on the
+ * outer schema never reach the generated document.
+ */
+// The struct's field is a plain string while `EncodedReference` brands it as a `URI`; the values
+// this encodes are URIs by construction, and the brand carries no runtime representation.
+const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String }) as unknown as Schema.Codec<EncodedReference> &
+  Schema.Struct<{ readonly '/': Schema.String }>;
+
+/** The `identifier` annotation every ref declaration carries, naming the type it points at. */
+const refIdentifier = (target: string): string => `Ref<${target}>`;
+
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`, which would replace a ref property with a `$ref` and strip the annotations readers key
+ * off; generators use this to keep refs inline while still naming genuinely recursive schemas.
+ */
+export const isRefIdentifier = (identifier: string | undefined): boolean => identifier?.startsWith('Ref<') ?? false;
+
+/**
  * @internal
  */
 // TODO(burdon): Move to json schema and make private?
@@ -311,7 +370,7 @@ export const createEchoReferenceSchema = (
   echoUri: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-): Schema.SchemaClass<Ref<any>, EncodedReference> => {
+): Schema.Codec<Ref<any>, EncodedReference> => {
   if (!echoUri && !typename) {
     throw new TypeError('Either echoUri or typename must be provided.');
   }
@@ -324,69 +383,67 @@ export const createEchoReferenceSchema = (
     schemaVersion: version,
   };
 
-  // TODO(dmaretskyi): Add name and description.
-  const refSchema = Schema.declare<Ref<any>, EncodedReference, []>(
-    [],
-    {
-      encode: () => {
-        return (value) =>
-          Effect.gen(function* () {
-            if (Ref.isRef(value)) {
-              return EncodedReference.fromURI((value as Ref<any>).uri);
-            } else if (EncodedReference.isEncodedReference(value)) {
-              return value;
-            }
-            throw new Error('Invalid reference');
-          });
-      },
-      decode: () => {
-        return (value) =>
-          Effect.gen(function* () {
-            const dbService = yield* Effect.serviceOption(Database.Service);
+  // Effect 4 splits what v3's three-parameter `declare` did into two steps: `declare` states the
+  // decoded type, `encodeTo` attaches the wire form and the transformation between them.
+  const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
+    .annotate({
+      // Without an `identifier` Effect renders every rejection of a ref field as the placeholder
+      // `Expected <Declaration>`, which names neither the target type nor that a reference was
+      // wanted; `InvalidOperationInput` interpolates that message verbatim to remote callers.
+      // `identifier` only, since `title` and `description` travel into the generated JSON schema
+      // and would overwrite whatever the field's own annotations say. Built from the same value as
+      // `$ref` so it survives a JSON-schema round trip, which reconstructs the schema from `echoUri`
+      // where the original had only a typename.
+      identifier: refIdentifier(referenceInfo.schema.$ref),
+    })
+    .pipe(
+      Schema.encodeTo(
+        // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the
+        // encoded side of a transformed schema and does not see annotations on the type side.
+        EncodedReferenceSchema.annotate({
+          // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
+          $id: JSON_SCHEMA_ECHO_REF_ID,
+          $ref: JSON_SCHEMA_ECHO_REF_ID,
+          reference: referenceInfo,
+        }),
+        SchemaTransformation.transformEffect({
+          decode: (encoded) =>
+            Effect.gen(function* () {
+              const dbService = yield* Effect.serviceOption(Database.Service);
+              // Widened because the runtime value is not always the declared encoded shape:
+              // `Schema.is` routes an already-decoded `Ref` back through here.
+              const candidate: unknown = encoded;
 
-            // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-            if (Ref.isRef(value)) {
-              if (Option.isSome(dbService)) {
-                return dbService.value.db.makeRef(value.uri);
-              } else {
-                return value;
+              if (Ref.isRef(candidate)) {
+                return Option.isSome(dbService) ? dbService.value.db.makeRef(candidate.uri) : candidate;
               }
-            }
+              if (!EncodedReference.isEncodedReference(candidate)) {
+                return yield* Effect.fail(new SchemaIssue.InvalidValue(undefined, candidate));
+              }
 
-            if (!EncodedReference.isEncodedReference(value)) {
-              return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+              const uri = EncodedReference.toURI(candidate);
+              return Option.isSome(dbService) ? dbService.value.db.makeRef(uri) : Ref.fromURI(uri);
+            }),
+          encode: (value) => {
+            const candidate: unknown = value;
+            if (Ref.isRef(candidate)) {
+              return Effect.succeed(EncodedReference.fromURI(candidate.uri));
             }
-            if (Option.isSome(dbService)) {
-              return dbService.value.db.makeRef(EncodedReference.toURI(value));
-            } else {
-              return Ref.fromURI(EncodedReference.toURI(value));
-            }
-          });
-      },
-    },
-    {
-      jsonSchema: {
-        // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
-        $id: JSON_SCHEMA_ECHO_REF_ID,
-        $ref: JSON_SCHEMA_ECHO_REF_ID,
-        reference: referenceInfo,
-      },
+            return EncodedReference.isEncodedReference(candidate)
+              ? Effect.succeed(candidate)
+              : Effect.fail(new SchemaIssue.InvalidValue(undefined, candidate));
+          },
+        }),
+      ),
+    )
+    .annotate({
       [ReferenceAnnotationId]: {
         typename: typename ?? '',
         version,
       },
-    },
-  );
+    });
 
   return refSchema;
-};
-
-const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => {
-  return SchemaAST.getIdentifierAnnotation(ast).pipe(
-    Option.orElse(() => SchemaAST.getTitleAnnotation(ast)),
-    Option.orElse(() => SchemaAST.getDescriptionAnnotation(ast)),
-    Option.getOrElse(() => undefined),
-  );
 };
 
 /**
@@ -457,12 +514,12 @@ export interface RefResolver {
    * Resolver ref asynchronously.
    * @deprecated Use {@link resolve} with `{ source: 'network' }`. Removed in Task 11.
    */
-  resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined>;
+  resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined>;
 
   /**
    * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
    */
-  resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
+  resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined>;
 
   /**
    * Resolve the source `Type.AnyEntity` entity for a type URI. Used by
@@ -538,6 +595,23 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  peek(): T | undefined {
+    if (this.#target) {
+      return this.#target;
+    }
+    if (!this.#resolver) {
+      return undefined;
+    }
+    try {
+      return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
   get isAvailable(): boolean {
     return this.#target !== undefined || this.#resolver !== undefined;
   }
@@ -549,27 +623,25 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  async load(): Promise<T> {
-    if (this.#target) {
-      return this.#target;
-    }
-    invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolveLegacy(this.#uri);
+  async load(options?: LoadOptions): Promise<T> {
+    const obj = await this.tryLoad(options);
     if (obj == null) {
       throw new Error('Object not found');
     }
-    return obj as T;
+    return obj;
   }
 
   /**
    * @inheritdoc
    */
-  async tryLoad(): Promise<T | undefined> {
+  async tryLoad(options?: LoadOptions): Promise<T | undefined> {
     if (this.#target) {
-      return this.#target;
+      // An inlined target never reaches the resolver, so it is checked here instead.
+      const hidden = options?.deleted !== 'include' && isTargetDeleted(this.#target);
+      return hidden ? undefined : this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolveLegacy(this.#uri)) as T | undefined;
+    return (await this.#resolver.resolveLegacy(this.#uri, options)) as T | undefined;
   }
 
   /**
@@ -622,8 +694,8 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
    * to deduplicate Ref instances that point to the same object.
-   * ECHO proxies return new RefImpl instances on every property access,
-   * so without this, each access would create a separate cache entry.
+   * ECHO proxies mint a new RefImpl whenever the object changes,
+   * so without this, each one would create a separate cache entry.
    */
   [Hash.symbol](): number {
     return Hash.hash(this.#uri.toString());
@@ -689,7 +761,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 
 export class StaticRefResolver implements RefResolver {
   public objects = new Map<EntityId, AnyProperties>();
-  public schemas = new Map<URI.URI, Schema.Schema.AnyNoContext>();
+  public schemas = new Map<URI.URI, Schema.Codec<any, any>>();
 
   addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
@@ -718,7 +790,7 @@ export class StaticRefResolver implements RefResolver {
     return this.#lookup(uri);
   }
 
-  async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
+  async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {
     return this.schemas.get(uri);
   }
 

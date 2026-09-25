@@ -107,3 +107,19 @@ OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, Operation
 
 One superset environment serving all tests is simpler than per-test environments, as long as the
 additions are inert for tests that do not use them.
+
+## 8. One memo map per root run — reach for `fresh` when you want a second instance
+
+Effect 4 shares the layer memo map across `Effect.provide` calls, where v3 gave each call its own.
+Two provides of the same layer **within one run** now yield the same instance; each root run still
+rebuilds, so test isolation holds.
+
+This produces no compile error — only shared-instance bugs and tests that pass alone and fail in a
+suite. Where a second instance is genuinely wanted, say so:
+
+```ts
+Effect.provide(program, Layer.fresh(StateStore.layerMemory));
+Effect.provide(program, layer, { local: true });
+```
+
+Both properties are pinned by `packages/common/effect/src/layer-memoization.test.ts`.

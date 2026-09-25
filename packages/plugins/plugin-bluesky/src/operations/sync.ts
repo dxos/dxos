@@ -2,60 +2,57 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Subscription } from '@dxos/plugin-magazine';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Binding from '@dxos/plugin-connector/Binding';
+import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
-import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { BlueskyApi } from '../services';
-import { SyncBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { SyncBlueskyTargets } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ binding: bindingRef }) {
+    Effect.fnUntraced(function* ({ connection, priority }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const binding = yield* Database.load(bindingRef);
-      if (!Cursor.isExternal(binding)) {
-        return { appended: 0 };
-      }
-      const db = Obj.getDatabase(binding);
-      if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
-      }
-
-      // The credentials layer loads the access token, validates the handle,
-      // and resolves the user's PDS once. Public XRPC reads (e.g.
-      // `getAuthorFeed`) only need HttpClient and ignore the layer.
-      return yield* syncBinding({ client, binding, db }).pipe(
-        Effect.provide(BlueskyApi.Credentials.fromAccessToken(binding.spec.source, client)),
-        Effect.provide(FetchHttpClient.layer),
-      );
+      const { outputs } = yield* Binding.syncAll({
+        connection,
+        priority,
+        sync: (binding) =>
+          // The credentials layer loads the access token, validates the handle,
+          // and resolves the user's PDS once. Public XRPC reads (e.g.
+          // `getAuthorFeed`) only need HttpClient and ignore the layer.
+          syncBinding({ client, binding }).pipe(
+            Effect.provide(
+              Layer.provideMerge(BlueskyApi.fromAccessToken(binding.spec.source, client), FetchHttpClient.layer),
+            ),
+          ),
+      });
+      return { appended: outputs.reduce((total, output) => total + output.appended, 0) };
     }),
   ),
 );
 
 export default handler;
 
-const syncBinding = ({
-  client,
-  binding,
-  db,
-}: {
-  client: Client;
-  binding: Cursor.ExternalCursor;
-  db: Database.Database;
-}) =>
+const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.ExternalCursor }) =>
   Effect.gen(function* () {
+    const db = Obj.getDatabase(binding);
+    if (!db) {
+      return yield* Effect.fail(new SyncDatabaseMissingError());
+    }
+
     const externalId = binding.spec.externalId;
     if (!externalId) {
       return { appended: 0 };

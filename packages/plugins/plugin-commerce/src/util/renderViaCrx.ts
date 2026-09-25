@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FetchError } from './fetch';
+import { FetchError } from './fetch.ts';
 
 /**
  * Page side of the Composer extension's search render-proxy contract.
@@ -74,9 +74,9 @@ export const isCrxRenderAvailable = (): boolean =>
  * if the extension is unavailable, rejects the request, or does not ack within the timeout.
  */
 export const renderViaCrx = (url: string, options: RenderOptions = {}): Effect.Effect<string, FetchError> =>
-  Effect.async<string, FetchError>((resume) => {
+  Effect.callback<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {
-      resume(Effect.fail(new FetchError('Composer render-proxy extension is not available')));
+      resume(Effect.fail(new FetchError({ message: 'Composer render-proxy extension is not available' })));
       return;
     }
 
@@ -100,7 +100,7 @@ export const renderViaCrx = (url: string, options: RenderOptions = {}): Effect.E
       if (ack.ok) {
         resume(Effect.succeed(ack.html));
       } else {
-        resume(Effect.fail(new FetchError(`render-proxy failed: ${ack.error}`)));
+        resume(Effect.fail(new FetchError({ message: `render-proxy failed: ${ack.error}` })));
       }
     };
 
@@ -110,7 +110,7 @@ export const renderViaCrx = (url: string, options: RenderOptions = {}): Effect.E
       }
       settled = true;
       cleanup();
-      resume(Effect.fail(new FetchError(`render-proxy timed out after ${timeoutMs}ms for ${url}`)));
+      resume(Effect.fail(new FetchError({ message: `render-proxy timed out after ${timeoutMs}ms for ${url}` })));
     }, timeoutMs + 1_000);
 
     window.addEventListener(RENDER_ACK_EVENT, onAck);

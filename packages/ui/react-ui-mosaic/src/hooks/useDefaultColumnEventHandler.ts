@@ -5,7 +5,7 @@
 import { type Obj } from '@dxos/echo';
 import { type DndContainerHandler, type GetId } from '@dxos/react-ui-dnd';
 
-import { useEventHandlerAdapter } from './useEventHandlerAdapter';
+import { useEventHandlerAdapter } from './useEventHandlerAdapter.ts';
 
 /**
  * Minimal model shape needed to build the default column handler.

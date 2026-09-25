@@ -13,11 +13,10 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#types';
-import type { SampleItem } from '#types';
+import { SampleItem, SampleOperation } from '#types';
 
 export type SamplePropertiesProps = {
   subject: SampleItem.SampleItem;
@@ -32,11 +31,11 @@ export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
   }, [invokePromise, subject]);
 
   return (
-    <Input.Root>
-      <Input.Label>{t('randomize-item.label')}</Input.Label>
-      <Input.DescriptionAndValidation>{t('randomize-item-description.label')}</Input.DescriptionAndValidation>
+    <Field.Root>
+      <Field.Label>{t('randomize-item.label')}</Field.Label>
+      <Field.HelperText>{t('randomize-item-description.label')}</Field.HelperText>
       <Button onClick={handleRandomize}>{t('randomize-item.label')}</Button>
-    </Input.Root>
+    </Field.Root>
   );
 };
 

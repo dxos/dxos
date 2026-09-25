@@ -2,29 +2,28 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Data from 'effect/Data';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Annotation from '../../Annotation';
-import type * as Entity from '../../Entity';
-import { snapshotForComparison } from '../common/atom-snapshot';
-import { subscribe } from '../common/proxy/reactive';
-import { isEntity } from '../Entity';
-import { get as getAnnotation } from './entity-dictionary';
+import type * as Annotation from '../../Annotation.ts';
+import type * as Entity from '../../Entity.ts';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
+import { subscribe } from '../common/proxy/reactive.ts';
+import { isEntity } from '../Entity/index.ts';
+import { get as getAnnotation } from './entity-dictionary.ts';
 
 /**
  * Atom family for an annotation value on an entity instance.
  * Mirrors the object-property atom family: re-emits a fresh reference whenever the entity changes
  * (so an in-place array mutation is observed) and dedupes primitive values via `!==`.
  */
-const annotationFamily = Atom.family((target: Entity.Unknown) =>
-  Atom.family(<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>> => {
-    const read = (): Option.Option<T> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
+const annotationFamily = Atom.family(
+  ([target, annotation]: readonly [Entity.Unknown, Annotation.Annotation<any>]): Atom.Atom<Option.Option<any>> => {
+    const read = (): Option.Option<any> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
 
-    return Atom.make<Option.Option<T>>((get) => {
+    return Atom.make<Option.Option<any>>((get) => {
       let previous = read();
 
       const unsubscribe = subscribe(target, () => {
@@ -37,13 +36,13 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
-  }),
+    });
+  },
 );
 
 /**
  * Atom family for a single key of a record-valued annotation on an entity instance.
- * Keyed by a value-equal `Data.tuple([target, annotation, key])` so nested families are avoided.
+ * Keyed by a structurally-equal tuple key `[target, annotation, key])` so nested families are avoided.
  */
 const annotationPropertyFamily = Atom.family(
   ([target, annotation, key]: readonly [
@@ -62,7 +61,8 @@ const annotationPropertyFamily = Atom.family(
 
       const unsubscribe = subscribe(target, () => {
         const next = read();
-        if (next !== previous) {
+        // Content comparison — `read()` snapshots, so identity never matches for arrays/objects.
+        if (!snapshotEquals(next, previous)) {
           previous = next;
           get.setSelf(next);
         }
@@ -70,13 +70,13 @@ const annotationPropertyFamily = Atom.family(
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
+    });
   },
 );
 
-/** Equal when both empty, or both present with the same (snapshotted) value. */
+/** Equal when both empty, or both present with shallow-equal content (see `snapshotEquals`). */
 const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
-  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : a.value === b.value;
+  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotEquals(a.value, b.value);
 
 /**
  * Reactive atom for an annotation value on an entity instance. Emits a shallow snapshot (a fresh
@@ -87,7 +87,7 @@ export const makeAtom = <T>(
   annotation: Annotation.Annotation<T>,
 ): Atom.Atom<Option.Option<T>> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return annotationFamily(target)(annotation);
+  return annotationFamily([target, annotation]);
 };
 
 /**
@@ -101,7 +101,7 @@ export const makeProperty = <V>(
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
   // The flattened family key is a single concrete tuple type, so the generic `V` is erased at the
   // family boundary and recovered here; no typed alternative exists for a per-call-generic family.
-  return annotationPropertyFamily(
-    Data.tuple(target, annotation as Annotation.Annotation<Record<string, any>>, key),
-  ) as Atom.Atom<V | undefined>;
+  return annotationPropertyFamily([target, annotation as Annotation.Annotation<Record<string, any>>, key]) as Atom.Atom<
+    V | undefined
+  >;
 };

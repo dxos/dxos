@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './MediaPlayer';
+export { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
+
+export * from './MediaPlayer.tsx';

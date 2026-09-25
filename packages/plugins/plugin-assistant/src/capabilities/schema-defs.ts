@@ -1,0 +1,37 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
+import { Memory } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
+import * as Skill from '@dxos/compute/Skill';
+import { Sequence } from '@dxos/conductor';
+import { Feed, type Type } from '@dxos/echo';
+import { Text } from '@dxos/schema';
+import { HasSubject, Message } from '@dxos/types';
+
+// The single source for the plugin's schema list, loaded lazily by every `AssistantPlugin`
+// variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
+// fast-check/zod) that must stay out of the definition's static closure.
+const types: ReadonlyArray<Type.AnyEntity> = [
+  Chat.Chat,
+  Skill.Skill,
+  AiContext.Binding,
+  Alarm.Alarm,
+  SessionLink.SessionLink,
+  Feed.Feed,
+  HasSubject.HasSubject,
+  Message.Message,
+  Instructions.Instructions,
+  Agent.Agent,
+  McpServer.McpServer,
+  Sequence.Sequence,
+  Memory.Memory,
+  Text.Text,
+];
+
+export default types;

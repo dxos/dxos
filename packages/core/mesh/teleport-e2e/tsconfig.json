@@ -12,12 +12,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../rpc"
-    },
-    {
       "path": "../teleport"
     }
   ]

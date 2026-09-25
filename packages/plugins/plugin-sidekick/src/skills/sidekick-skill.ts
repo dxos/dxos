@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 const SKILL_KEY = 'org.dxos.skill.sidekick';
@@ -65,7 +66,7 @@ const make = () =>
         {
           name: 'agent',
           kind: 'operation',
-          operation: 'org.dxos.function.agent.get-context',
+          operation: 'org.dxos.operation.assistantToolkit.getContext',
         },
       ],
     }),

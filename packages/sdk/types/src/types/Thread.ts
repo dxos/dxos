@@ -7,18 +7,17 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
-import * as Message from './Message';
+import * as Message from './Message.ts';
 
-export const ThreadStatus = Schema.Union(
+export const ThreadStatus = Schema.Union([
   Schema.Literal('staged'),
   Schema.Literal('active'),
   Schema.Literal('resolved'),
-);
+]);
 
 /** Per-thread agent firing policy. */
-export const AgentMode = Schema.Union(Schema.Literal('auto'), Schema.Literal('mention'));
+export const AgentMode = Schema.Union([Schema.Literal('auto'), Schema.Literal('mention')]);
 export type AgentMode = Schema.Schema.Type<typeof AgentMode>;
 
 /**
@@ -44,7 +43,7 @@ export class Thread extends Type.makeObject<Thread>(DXN.make('org.dxos.type.thre
     status: ThreadStatus.pipe(Schema.optional),
     messages: Schema.Array(Ref.Ref(Message.Message)),
     agent: Schema.optional(AgentConfig),
-  }).pipe(HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 export const make = ({

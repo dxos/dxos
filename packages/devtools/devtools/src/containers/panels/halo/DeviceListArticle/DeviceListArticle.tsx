@@ -1,0 +1,74 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { useMemo } from 'react';
+
+import { Format } from '@dxos/echo/Format';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Device_PresenceState, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
+import { Panel } from '@dxos/react-ui';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+
+import { MasterDetailTable } from '../../../../components/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+export const DeviceListArticle = ({ role }: ArticleProps) => {
+  const devices = useDevices();
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'key', format: Format.TypeFormat.DID },
+      {
+        name: 'state',
+        format: Format.TypeFormat.SingleSelect,
+        size: 150,
+        config: {
+          options: [
+            { id: 'THIS DEVICE', title: 'THIS DEVICE', color: 'green' },
+            { id: 'ONLINE', title: 'ONLINE', color: 'green' },
+            { id: 'OFFLINE', title: 'OFFLINE', color: 'neutral' },
+          ],
+        },
+      },
+      {
+        name: 'type',
+        format: Format.TypeFormat.SingleSelect,
+        size: 180,
+        config: {
+          options: Object.entries(DeviceType)
+            .filter(([key]) => isNaN(Number(key)))
+            .map(([key]) => ({ id: key, title: key, color: 'neutral' })),
+        },
+      },
+      { name: 'label', format: Format.TypeFormat.String, size: 180 },
+    ],
+    [],
+  );
+
+  const data = useMemo(
+    () =>
+      devices.map((device) => ({
+        id: toPublicKey(device.deviceKey)?.toString() ?? '',
+        key: toPublicKey(device.deviceKey)?.toString() ?? '',
+        state: device.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device_PresenceState[device.presence],
+        type: DeviceType[device.profile?.type || DeviceType.UNKNOWN],
+        label: device.profile?.label,
+        _original: device,
+      })),
+    [devices],
+  );
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Content>
+        <MasterDetailTable
+          properties={properties}
+          data={data}
+          detailsTransform={(d) => d._original}
+          detailsPosition='bottom'
+        />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};

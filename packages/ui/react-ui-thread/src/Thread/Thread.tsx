@@ -36,13 +36,12 @@ import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { command } from '../command';
-import { ThreadContextProvider, useThreadContext } from '../context';
-import { Message } from '../Message';
-import { translationKey } from '../translations';
-import { type MessageMetadata, type ThreadContextValue } from '../types';
+import { translationKey } from '#translations';
 
-const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
+import { command } from '../command.ts';
+import { ThreadContextProvider, useThreadContext } from '../context.ts';
+import { Message } from '../Message/index.ts';
+import { type MessageMetadata, type ThreadContextValue } from '../types.ts';
 
 //
 // Root
@@ -296,7 +295,7 @@ const groupMessages = (
     if (currentGroup && sameSenderAsGroup && withinGroupWindow) {
       currentGroup.messages.push(message);
     } else {
-      currentGroup = { kind: 'group', id: getMessageId(message), messages: [message] };
+      currentGroup = { kind: 'group', id: Obj.getURI(message), messages: [message] };
       items.push(currentGroup);
     }
     lastGroupMessage = message;
@@ -392,7 +391,7 @@ const ThreadMessages = ({
       currentId={currentId}
       eventHandler={eventHandler}
     >
-      <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
+      <ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
         <ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
             Tile={ThreadItemAdapter}

@@ -23,7 +23,7 @@ export interface Invoker {
   invoke<I, O>(ctx: DxosContext, deployedId: string, input: I): Effect.Effect<O>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteOperationInvoker')<Service, Invoker>() {}
+export class Service extends Context.Service<Service, Invoker>()('@dxos/compute-runtime/RemoteOperationInvoker') {}
 
 /**
  * No-op remote invoker for local-only deployments. Dies if a remote

@@ -7,7 +7,7 @@ import { describe, it } from 'vitest';
 
 import { bundleFunction } from '@dxos/edge-compute/native';
 
-import { writeBundle } from './testing';
+import { writeBundle } from './testing/index.ts';
 
 describe('bundle', () => {
   it('should bundle', async () => {

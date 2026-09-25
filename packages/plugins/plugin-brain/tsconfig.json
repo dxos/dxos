@@ -34,6 +34,12 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {
@@ -43,16 +49,10 @@
       "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-react"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
@@ -77,9 +77,6 @@
     },
     {
       "path": "../plugin-routine"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

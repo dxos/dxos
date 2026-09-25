@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Node } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
@@ -32,6 +32,8 @@ export type ToolbarProps = ThemedClassName<{
   autoHideControls?: boolean;
   isInRoom?: boolean;
   onJoin?: () => void;
+  /** Calls service unconfigured: the join control renders disabled rather than doing nothing. */
+  joinDisabled?: boolean;
   onLeave?: () => void;
 }>;
 
@@ -43,6 +45,7 @@ export const Toolbar = ({
   autoHideControls = true,
   isInRoom,
   onJoin,
+  joinDisabled,
   onLeave,
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -69,7 +72,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 bg-modal-surface rounded-md shadow-md', classNames]}>
+      <NaturalToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{
@@ -77,7 +80,7 @@ export const Toolbar = ({
               icon: 'ph--microphone--regular',
               label: t('mic-off.button'),
               onClick: () => call.turnAudioOff(),
-              classNames: 'bg-call-active',
+              classNames: 'bg-accent-bg',
             },
             off: {
               icon: 'ph--microphone-slash--duotone',
@@ -130,7 +133,7 @@ export const Toolbar = ({
 
             {/* Companion actions. */}
             {actions
-              .filter((action): action is Node.Action => Node.isAction(action))
+              .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
                 <IconButton
                   key={action.id}
@@ -171,6 +174,7 @@ export const Toolbar = ({
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
+            disabled={joinDisabled}
             onClick={onJoin}
           />
         )}
@@ -197,7 +201,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? (state.on.classNames ?? 'bg-call-active') : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}

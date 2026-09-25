@@ -3,8 +3,6 @@
 //
 
 import { type EventName, createComponent } from '@lit/react';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
   type PropsWithChildren,
@@ -16,6 +14,9 @@ import React, {
 
 import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
+import { useControllableState } from '@dxos/react-hooks';
+
+import { GRID_NAME, GridProvider, useGridContext } from './GridContext.ts';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -45,21 +46,13 @@ type GridEditing = {
   initialContent: DxEditRequest['initialContent'];
 } | null;
 
-type GridContextValue = {
+export type GridContextValue = {
   id: string;
   editing: GridEditing;
   setEditing: (nextEditing: GridEditing) => void;
   editBox: GridEditBox;
   setEditBox: (nextEditBox: GridEditBox) => void;
 };
-
-type GridScopedProps<P> = P & { __gridScope?: Scope };
-
-const GRID_NAME = 'Grid';
-
-const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
-
-const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
 
 type GridRootProps = PropsWithChildren<
   {
@@ -72,14 +65,7 @@ type GridRootProps = PropsWithChildren<
 >;
 
 // TODO(burdon): Make headless.
-const GridRoot = ({
-  __gridScope,
-  children,
-  id,
-  editing: propsEditing,
-  defaultEditing,
-  onEditingChange,
-}: GridScopedProps<GridRootProps>) => {
+const GridRoot = ({ children, id, editing: propsEditing, defaultEditing, onEditingChange }: GridRootProps) => {
   const [editing = null, setEditing] = useControllableState({
     prop: propsEditing,
     defaultProp: defaultEditing,
@@ -87,14 +73,7 @@ const GridRoot = ({
   });
   const [editBox, setEditBox] = useState<GridEditBox>(initialBox);
   return (
-    <GridProvider
-      id={id}
-      editing={editing}
-      setEditing={setEditing}
-      editBox={editBox}
-      setEditBox={setEditBox}
-      scope={__gridScope}
-    >
+    <GridProvider id={id} editing={editing} setEditing={setEditing} editBox={editBox} setEditBox={setEditBox}>
       <div className='dx-grid-host' style={{ display: 'contents' }}>
         {children}
       </div>
@@ -111,8 +90,8 @@ type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   activeRefs?: string;
 };
 
-const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
-  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
+const GridContent = forwardRef<NaturalDxGrid, GridContentProps>((props, forwardedRef) => {
+  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME);
   const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
@@ -152,13 +131,6 @@ GridContent.displayName = GRID_CONTENT_NAME;
 // Fragments
 //
 
-// NOTE(Zan): These fragments add border to w-end and h-end of the grid using pseudo-elements.
-// These are offset by 1px to avoid double borders in planks.
-const gridSeparatorInlineEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-y-0 [&>.dx-grid]:after:-right-px [&>.dx-grid]:after:w-px [&>.dx-grid]:after:bg-subdued-separator';
-const gridSeparatorBlockEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-x-0 [&>.dx-grid]:before:-bottom-px [&>.dx-grid]:before:h-px [&>.dx-grid]:before:bg-subdued-separator';
-
 //
 // Exports
 //
@@ -168,20 +140,9 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridContent, GridRoot, createGridScope, gridSeparatorBlockEnd, gridSeparatorInlineEnd, useGridContext };
+export { GridContent, GridRoot };
 
-export type { DxGridElement, GridContentProps, GridEditBox, GridEditing, GridRootProps, GridScopedProps };
-
-export {
-  DxEditRequest,
-  cellQuery,
-  closestCell,
-  colToA1Notation,
-  commentedClassName,
-  parseCellIndex,
-  rowToA1Notation,
-  toPlaneCellIndex,
-} from '@dxos/lit-grid';
+export type { DxGridElement, GridContentProps, GridEditBox, GridEditing, GridRootProps };
 
 export type {
   DxAxisResize,

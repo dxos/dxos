@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { Book } from '#types';
 
-import { lookupHiveBook, searchBooks } from '../operations/bookhive';
-import { browserCorsProxy } from '../operations/cors';
-import { getBooksPath } from '../paths';
+import { lookupHiveBook, searchBooks } from '../operations/bookhive.ts';
+import { browserCorsProxy } from '../operations/cors.ts';
 
 type CreateBookValues = {
   hiveId?: string;
@@ -26,7 +26,7 @@ type CreateBookValues = {
 const CreateBook = Schema.Struct({
   // Combobox over the BookHive catalog. Typing queries titles; the selected option's value is the hive id.
   hiveId: Schema.optional(
-    Schema.String.annotations({ title: 'Book' }).pipe(
+    Schema.String.annotate({ title: 'Book' }).pipe(
       OptionsLookupAnnotation.set(
         optionsLookup<CreateBookValues>()(
           ['hiveId'],
@@ -47,7 +47,7 @@ const CreateBook = Schema.Struct({
   ),
   // Prefilled from the selected catalog book; remains user-editable (and required to create).
   title: Schema.optional(
-    Schema.String.annotations({ title: 'Title' }).pipe(
+    Schema.String.annotate({ title: 'Title' }).pipe(
       AutofillAnnotation.set(
         autofill<CreateBookValues>()(['hiveId'], ({ hiveId }) =>
           hiveId
@@ -59,12 +59,12 @@ const CreateBook = Schema.Struct({
       ),
     ),
   ),
-  status: Schema.optional(Book.Status.annotations({ title: 'Status' })),
+  status: Schema.optional(Book.Status.annotate({ title: 'Status' })),
 });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Book.Book),
       inputSchema: CreateBook,
       // The embedded catalog is filled from the selected hive book on submit; its `hiveId` is what
@@ -93,13 +93,14 @@ export default Capability.makeModule(
             },
             status: props.status,
           });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            // Only the section's own "+" supplies a target; fall back to the library section so a book
-            // created from anywhere else still lands there rather than under the database type node.
-            targetNodeId: options.targetNodeId ?? getBooksPath(options.db.spaceId),
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

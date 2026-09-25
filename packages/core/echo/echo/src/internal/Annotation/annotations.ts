@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
+import * as Struct from 'effect/Struct';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import type * as Annotation from '../../Annotation';
-import { type Mutable } from '../common/proxy';
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { createAnnotationHelper } from './util';
+import type * as Annotation from '../../Annotation.ts';
+import { type Mutable } from '../common/proxy/index.ts';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types/index.ts';
+import { createAnnotationHelper } from './util.ts';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -39,13 +39,10 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
  * ECHO identifier (for a stored schema).
  * Must be an `echo:` URI.
  */
-export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
+export const TypeIdentifierAnnotationId = '~@dxos/schema/annotation/TypeIdentifier';
 
-export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
-  Function.flow(
-    SchemaAST.getAnnotation<string>(TypeIdentifierAnnotationId),
-    Option.getOrElse(() => undefined),
-  )(schema.ast);
+export const getTypeIdentifierAnnotation = (schema: Schema.Top): string | undefined =>
+  SchemaAST.getAnnotation<string>(schema.ast, TypeIdentifierAnnotationId);
 
 /**
  * @returns The schema's type identifier URI — whichever URI fits.
@@ -58,7 +55,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  * type also use it (see `Filter.type` / `getTypeURIFromSpecifier`), so both sides
  * stay symmetric without per-schema branching.
  */
-export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => {
+export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
@@ -81,10 +78,12 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
  */
 // TODO(wittjosiah): Factor out to DXN spec.
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(
-    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  Schema.check(
+    Schema.isPattern(
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+    ),
   ),
-).annotations({
+).annotate({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',
 });
@@ -93,7 +92,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/)).annotations({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -108,15 +107,14 @@ export interface TypeMeta extends Schema.Schema.Type<typeof TypeMeta> {}
 /**
  * Entity type.
  */
-export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
+export const TypeAnnotationId = '~@dxos/schema/annotation/Type';
 
 /**
  * Payload stored under {@link TypeAnnotationId}.
  */
-export const TypeAnnotation = Schema.extend(
-  TypeMeta,
-  Schema.Struct({
-    kind: Schema.Enums(EntityKind),
+export const TypeAnnotation = TypeMeta.mapFields(
+  Struct.assign({
+    kind: Schema.Enum(EntityKind),
 
     /**
      * If this is a relation, the schema of the source object.
@@ -138,35 +136,32 @@ export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation
  * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
+export const getTypeAnnotation = (schema: Schema.Top): TypeAnnotation | undefined => {
   assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
-  return Function.flow(
-    SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
-    Option.getOrElse(() => undefined),
-  )(schema.ast);
+  return SchemaAST.getAnnotation<TypeAnnotation>(schema.ast, TypeAnnotationId);
 };
 
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
+export const getEntityKind = (schema: Schema.Top): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
  * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
-export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: Schema.Top): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
  * @internal
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
+export const getSchemaVersion = (schema: Schema.Top): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
- * @example "org.example.type.contact"
+ * @example "com.example.type.contact"
  *
  * @internal (use Obj.getTypename)
  */
@@ -206,7 +201,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
- * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
+ * @example Stored schema: `echo:///01KKKG2FHWCMTR0BY00GJSVT1X`.
  *
  * @internal (use Obj.getTypeURI)
  */
@@ -230,7 +225,7 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
  * PropertyMeta (metadata for dynamic schema properties).
  * For user-defined annotations.
  */
-export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');
+export const PropertyMetaAnnotationId = '@dxos/schema/annotation/PropertyMeta';
 
 export type PropertyMetaValue = Primitive | Record<string, Primitive> | Primitive[];
 
@@ -242,14 +237,14 @@ export type PropertyMetaAnnotation = {
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
 /**
  * Apply property-level metadata to an Effect schema. Only accepts
- * `Schema.Schema.Any` — apply BEFORE wrapping the schema with
+ * `Schema.Top` — apply BEFORE wrapping the schema with
  * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
  * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
  */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
-    const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
-    return self.annotations({
+  return <A, I, R>(self: Schema.Codec<A, I, R>): Schema.Codec<A, I, R> => {
+    const existingMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(self.ast, PropertyMetaAnnotationId);
+    return self.annotate({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
         [name]: value,
@@ -258,12 +253,20 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   };
 };
 
-export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string) =>
-  Function.pipe(
-    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(prop.type),
-    Option.map((meta) => meta[name] as T),
-    Option.getOrElse(() => undefined),
-  );
+/**
+ * Reads one property-meta entry off a property. An optional property's type is a union of the
+ * annotated schema and `undefined`, whose own annotations are empty, so the members are read too.
+ */
+export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string): T | undefined => {
+  const candidates = SchemaAST.isUnion(prop.type) ? [prop.type, ...prop.type.types] : [prop.type];
+  for (const ast of candidates) {
+    const value = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId)?.[name];
+    if (value !== undefined) {
+      return value as T;
+    }
+  }
+  return undefined;
+};
 
 //
 // Reference
@@ -272,7 +275,7 @@ export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, 
 /**
  * Schema reference.
  */
-export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
+export const ReferenceAnnotationId = '@dxos/schema/annotation/Reference';
 export type ReferenceAnnotationValue = TypeAnnotation;
 export const ReferenceAnnotation = createAnnotationHelper<ReferenceAnnotationValue>(ReferenceAnnotationId);
 
@@ -283,16 +286,10 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
- */
-export const HiddenAnnotationId = Symbol.for('@dxos/schema/annotation/Hidden');
-export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
-
-/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
-export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
+export const LabelAnnotationId = '@dxos/schema/annotation/Label';
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
 
 /**
@@ -301,7 +298,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to SchemaEx.JsonPath?
-export const getLabelWithSchema = <S extends Schema.Schema.Any>(
+export const getLabelWithSchema = <S extends Schema.Top>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
@@ -340,11 +337,9 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
  * Sets the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setLabelWithSchema = <S extends Schema.Schema.Any>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
-  label: string,
-) => {
+// `object` is not typed by the schema: the annotation names the property at runtime, and TypeScript
+// cannot index-write a generic type parameter.
+export const setLabelWithSchema = (schema: Schema.Top, object: AnyProperties, label: string) => {
   const annotation = LabelAnnotation.get(schema).pipe(
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),
@@ -356,7 +351,7 @@ export const setLabelWithSchema = <S extends Schema.Schema.Any>(
  * Identifies description property or JSON path expression.
  * A string representing field accessor.
  */
-export const DescriptionAnnotationId = Symbol.for('@dxos/schema/annotation/Description');
+export const DescriptionAnnotationId = '@dxos/schema/annotation/Description';
 export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionAnnotationId);
 
 /**
@@ -364,7 +359,7 @@ export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionA
  * Lower-level version that requires explicit schema parameter.
  */
 // TODO(burdon): Convert to SchemaEx.JsonPath?
-export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
+export const getDescriptionWithSchema = <S extends Schema.Top>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
@@ -390,11 +385,7 @@ export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Sets the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
-  description: string,
-) => {
+export const setDescriptionWithSchema = (schema: Schema.Top, object: AnyProperties, description: string) => {
   const accessorOpt = DescriptionAnnotation.get(schema);
   if (Option.isNone(accessorOpt)) {
     return;
@@ -406,14 +397,14 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
+export const FormInputAnnotationId = '@dxos/schema/annotation/FormInput';
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
  * When set on a `Ref` property, the form renders the referenced object's own
  * fields inline (a nested form bound to the target) instead of a picker.
  */
-export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormInline');
+export const FormInlineAnnotationId = '@dxos/schema/annotation/FormInline';
 export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
 
 /**
@@ -423,7 +414,7 @@ export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAn
  * (rather than inferred from the element type) so the field can stay `Ref.Ref(Obj.Unknown)` and avoid pulling
  * the target's type (e.g. query-AST-laden `Trigger`) into the schema's emitted declaration.
  */
-export const FormCreateAnnotationId = Symbol.for('@dxos/schema/annotation/FormCreate');
+export const FormCreateAnnotationId = '@dxos/schema/annotation/FormCreate';
 export const FormCreateAnnotation = createAnnotationHelper<string>(FormCreateAnnotationId);
 
 /**
@@ -431,7 +422,7 @@ export const FormCreateAnnotation = createAnnotationHelper<string>(FormCreateAnn
  * drag-to-reorder list (drag handles per row). Element order is meaningful and
  * user-controllable; reordering rewrites the array.
  */
-export const FormOrderedAnnotationId = Symbol.for('@dxos/schema/annotation/FormOrdered');
+export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
 
 /**
@@ -458,7 +449,7 @@ export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrdered
  *     `,
  *   })
  */
-export const FormLayoutAnnotationId = Symbol.for('@dxos/react-ui-form/annotation/Layout');
+export const FormLayoutAnnotationId = '@dxos/react-ui-form/annotation/Layout';
 
 export type FormLayoutMap = Record<string, string>;
 
@@ -470,12 +461,12 @@ export const DEFAULT_LAYOUT_NAME = 'default';
 /**
  * Default field to be used on referenced schema to lookup the value.
  */
-export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
+export const FieldLookupAnnotationId = '@dxos/schema/annotation/FieldLookup';
 
 /**
  * Generate test data.
  */
-export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+export const GeneratorAnnotationId = '@dxos/schema/annotation/Generator';
 
 export type GeneratorAnnotationValue =
   | string
@@ -489,20 +480,24 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 
 interface MakeAnnoationsProps<T> {
   id: string;
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
+  /** Skips the FQN format check on `id`, for a pre-existing id that may already be embedded in persisted schemas. */
+  legacyId?: boolean;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
 // dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
 // At least 3 segments are required (e.g. org.dxos.annotation.example).
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
-  assertArgument(
-    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
-      props.id,
-    ),
-    'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
-  );
+  if (!props.legacyId) {
+    assertArgument(
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+        props.id,
+      ),
+      'id',
+      'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection). Pass `legacyId: true` to keep an existing non-FQN id.',
+    );
+  }
 
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
@@ -511,7 +506,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     get: (schema) => getFromAst(schema.ast, annotation),
     getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>
-      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Top>(schema: S) => S,
   };
 
   return annotation;
@@ -519,9 +514,13 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
 const IconAnnotationSchema = Schema.Struct({
   /**
-   * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
+   * Sprite icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'px--anthropic--regular').
+   *
+   * `ph--*` is Phosphor; `px--*` and `dx--*` are brand glyphs, which are sprite-only and carry no
+   * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
+   * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.pattern(/^ph--[a-z-]+--[a-z]+$/)),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
 
   /**
    * Color name.
@@ -567,6 +566,96 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
   id: 'org.dxos.annotation.icon.from-ref',
   schema: Schema.String,
 });
+
+/** Value of {@link SetParentAnnotation}. */
+export type SetParentAnnotationValue = {
+  /** Whether the field owns its targets at all. */
+  readonly value: boolean;
+  /** Whether a write takes a target that already has a parent. */
+  readonly override: boolean;
+};
+
+/**
+ * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
+ * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * `{ override: false }` claims only a target that has no parent, so the first field to reference an
+ * object becomes its parent and later fields only reference it.
+ *
+ * This is NOT an invariant: it does not guarantee that a target held here has this object as its
+ * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
+ * from re-parenting the target afterwards, a ref whose target is not resolved is left alone, and
+ * removing a ref does NOT clear the target's parent — a move between holders would otherwise lose
+ * the edge depending on write order; call `Obj.setParent(child, undefined)` explicitly. Read the
+ * parent with `Obj.getParent`; never infer it from the field.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.SetParent.set({ override: false })),
+ * })
+ * ```
+ */
+const SetParentValueSchema = Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean });
+
+const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
+  id: 'org.dxos.annotation.setParent',
+  // Schemas persisted before the value was structured store a bare boolean.
+  schema: Schema.Union([
+    SetParentValueSchema,
+    Schema.Boolean.pipe(
+      Schema.decodeTo(
+        SetParentValueSchema,
+        SchemaTransformation.transform({
+          decode: (value: boolean): SetParentAnnotationValue => ({ value, override: true }),
+          encode: ({ value }: SetParentAnnotationValue) => value,
+        }),
+      ),
+    ),
+  ]),
+});
+
+export type SetParentAnnotationOptions = {
+  readonly override?: boolean;
+};
+
+/** {@link setParentAnnotation}, with a `set` that owns by default. */
+export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotationValue>, 'set'> & {
+  set: (options?: SetParentAnnotationOptions) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...setParentAnnotation,
+  set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
+};
+
+/** Value of {@link UserTypeAnnotation}. */
+export type UserTypeAnnotationValue = {
+  /** Keys a surface filters on (e.g. which types a collection's create dialog offers); opaque to ECHO. */
+  readonly tags?: readonly string[];
+};
+
+const userTypeAnnotation = makeUserAnnotation<UserTypeAnnotationValue>({
+  id: 'org.dxos.annotation.userType',
+  schema: Schema.Struct({ tags: Schema.optional(Schema.Array(Schema.String)) }),
+});
+
+/**
+ * Marks a static type as user-facing, so it shows in pickers, the nav tree, and collections. Absent, the
+ * type is internal (like a dotfile, visible only via an advanced setting); a new type stays out of sight
+ * until someone opts it in. Stored as property meta, so it survives persisting the schema.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set());
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set({ tags: [Collection.ItemTag] }));
+ * ```
+ */
+export const UserTypeAnnotation: Omit<Annotation.Annotation<UserTypeAnnotationValue>, 'set'> & {
+  set: (value?: UserTypeAnnotationValue) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...userTypeAnnotation,
+  set: (value: UserTypeAnnotationValue = {}) => userTypeAnnotation.set(value),
+};
 
 /**
  * Options for {@link getLabel}.
@@ -621,7 +710,7 @@ export const getLabelProperty = (entity: AnyProperties): string => {
     return 'name';
   }
   return LabelAnnotation.get(schema).pipe(
-    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.flatMap((fields) => Option.fromNullishOr(fields[0])),
     Option.getOrElse(() => 'name'),
   );
 };
@@ -668,11 +757,12 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   }
 };
 
-export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
-export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
-  return SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-    Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
-    Option.map(Schema.decodeUnknownSync(annotation.schema)),
-  );
+export const getFromAst = <T>(
+  ast: SchemaAST.AST,
+  annotation: Pick<Annotation.Annotation<T>, 'key' | 'schema'>,
+): Option.Option<T> => {
+  const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);
+  return Option.fromNullishOr(meta?.[annotation.key]).pipe(Option.map(Schema.decodeUnknownSync(annotation.schema)));
 };

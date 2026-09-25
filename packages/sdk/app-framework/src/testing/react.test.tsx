@@ -8,12 +8,12 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { ActivationEvents, Capabilities } from '../common';
-import * as Role from '../common/Role';
-import { Capability, Plugin } from '../core';
-import { Surface } from '../ui';
-import { createTestApp } from './harness';
-import { render, renderSurface } from './react';
+import { Capabilities } from '../common/index.ts';
+import * as Role from '../common/Role.ts';
+import { Capability, Plugin } from '../core/index.ts';
+import { Surface } from '../ui/index.ts';
+import { createTestApp } from './harness.ts';
+import { render, renderSurface } from './react.tsx';
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' });
 
@@ -22,17 +22,17 @@ const GreetingRole = Role.make<{ message: string }>('org.dxos.test.role.greeting
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
             id: 'greeting',
             filter: Surface.makeFilter(GreetingRole),
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );

@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText } from '../llm';
-import { type ModelVariant } from '../models';
+import { generateText } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
 
 export type DraftResult = {
   readonly messageId: string;

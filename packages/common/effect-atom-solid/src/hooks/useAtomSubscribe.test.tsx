@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import { fireEvent, render, waitFor } from '@solidjs/testing-library';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { defaultRegistry } from '../registry';
-import { useAtomSet } from './useAtomSet';
-import { useAtomSubscribe } from './useAtomSubscribe';
+import { defaultRegistry } from '../registry.ts';
+import { useAtomSet } from './useAtomSet.ts';
+import { useAtomSubscribe } from './useAtomSubscribe.ts';
 
 describe('useAtomSubscribe', () => {
   beforeEach(() => {

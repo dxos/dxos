@@ -9,7 +9,16 @@
 // the seam is that nothing outside this module knows how positions were derived.
 //
 
-import { type Edge, type Graph, type Node, type Overlay, type Point, childrenOf, findNode, isGroup } from '../types';
+import {
+  type Edge,
+  type Graph,
+  type Node,
+  type Overlay,
+  type Point,
+  childrenOf,
+  findNode,
+  isGroup,
+} from '../types/index.ts';
 
 /**
  * Grid pitch. One value drives layout quantisation, drag snapping and the rendered background, so a

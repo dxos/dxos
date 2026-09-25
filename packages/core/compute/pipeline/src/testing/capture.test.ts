@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { captureSink } from './index';
+import { captureSink } from './index.ts';
 
 describe('captureSink', () => {
   test('records every committed value in order', async ({ expect }) => {

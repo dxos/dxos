@@ -2,18 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
 import { type QueryContext, QueryResultImpl } from '@dxos/echo-client';
 import { QueryAST } from '@dxos/echo-protocol';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { type Client } from '../client';
+import { type Client } from '../client/index.ts';
 
 /**
  * API for EDGE client functionality.
@@ -91,6 +93,11 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return false;
   }
 
+  hasPendingSources(): boolean {
+    // Only `run` answers; a subscription never does.
+    return true;
+  }
+
   async run(
     _ctx: Context,
     query: QueryAST.Query,
@@ -100,10 +107,11 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
 
-    const response = await this._params.edgeClient.execQuery(_ctx, this._params.spaceId, {
-      query: JSON.stringify(query),
-      reactivity: QueryReactivity.ONE_SHOT,
-    });
+    const response = await this._params.edgeClient.execQuery(
+      _ctx,
+      this._params.spaceId,
+      create(QueryRequestSchema, { query: JSON.stringify(query), reactivity: QueryReactivity.ONE_SHOT }),
+    );
 
     const results: QueryResult.EntityEntry<T>[] = [];
 

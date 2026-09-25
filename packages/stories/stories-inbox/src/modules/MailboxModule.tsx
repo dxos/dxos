@@ -5,10 +5,11 @@
 import React, { useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { GraphPath, NotFound } from '@dxos/app-toolkit';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 
@@ -33,7 +34,7 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
     // mailbox's graph node as a side effect. Without that, graph.actions(id) — which the connector
     // plugin's "Connect" action depends on — always returns empty.
     if (mailbox) {
-      NotFound.expandPath(graph, GraphPath.getObjectPathFromObject(mailbox));
+      AppGraph.expandPath(graph, GraphPath.getObjectPathFromObject(mailbox));
     }
   }, [graph, mailbox]);
 

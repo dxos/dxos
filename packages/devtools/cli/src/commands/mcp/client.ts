@@ -39,11 +39,14 @@ const TokenResponse = Schema.Struct({
   refresh_token: Schema.optional(Schema.String),
 });
 
-/** JSON-RPC envelope. MCP returns one object per request; Effect's RPC transport may batch. */
+/** JSON-RPC envelope; a body may also carry notifications or other responses, so `id` picks ours. */
 const JsonRpcMessage = Schema.Struct({
+  id: Schema.optional(Schema.Union([Schema.String, Schema.Number])),
   result: Schema.optional(Schema.Unknown),
   error: Schema.optional(Schema.Unknown),
 });
+
+const isJsonRpcMessage = Schema.is(JsonRpcMessage);
 
 const REDIRECT_URI = 'http://localhost:3000/callback';
 
@@ -56,7 +59,7 @@ const sessionPath = (profile: string, serverUrl: string): string => {
 
 export const loadSession = (profile: string, serverUrl: string): Effect.Effect<McpSession | undefined, never, never> =>
   Effect.tryPromise(() => readFile(sessionPath(profile, serverUrl), 'utf8')).pipe(
-    Effect.flatMap((raw) => Schema.decodeUnknown(Schema.parseJson(McpSession))(raw)),
+    Effect.flatMap((raw) => Schema.decodeUnknownEffect(Schema.fromJsonString(McpSession))(raw)),
     // A missing or corrupt session file is reported by the caller as "not connected".
     Effect.orElseSucceed(() => undefined),
   );
@@ -190,14 +193,20 @@ export const request = async <A, I>(
   session: McpSession,
   method: string,
   params: unknown,
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   options: { profile?: string } = {},
 ): Promise<A> => {
+  const id = Date.now();
   const send = (token: string) =>
     fetch(`${session.serverUrl}/mcp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params }),
+      headers: {
+        'Content-Type': 'application/json',
+        // Streamable HTTP servers answer 406 unless both media types are acceptable.
+        'Accept': 'application/json, text/event-stream',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
     });
 
   let response = await send(session.accessToken);
@@ -222,12 +231,43 @@ export const request = async <A, I>(
     throw new McpProtocolError({ message: `MCP ${method} failed (${response.status}): ${await response.text()}` });
   }
 
-  const raw = await response.json();
-  const message = Schema.decodeUnknownSync(JsonRpcMessage)(Array.isArray(raw) ? raw[0] : raw);
+  const message = parseMessages(response.headers.get('content-type'), await response.text())
+    .filter(isJsonRpcMessage)
+    .find((candidate) => candidate.id === id);
+  if (message === undefined) {
+    throw new McpProtocolError({ message: `MCP ${method} returned no response for request ${id}.` });
+  }
   if (message.error !== undefined) {
     throw new McpProtocolError({ message: `MCP ${method} failed: ${JSON.stringify(message.error)}` });
   }
   return Schema.decodeUnknownSync(schema)(message.result);
+};
+
+/** Flattens a JSON or `text/event-stream` body into its JSON-RPC messages, unwrapping batches. */
+const parseMessages = (contentType: string | null, body: string): unknown[] => {
+  const payloads =
+    contentType?.split(';')[0].trim().toLowerCase() === 'text/event-stream' ? serverSentEventData(body) : [body];
+  return payloads.flatMap((payload): unknown[] => {
+    const parsed: unknown = JSON.parse(payload);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  });
+};
+
+/** Returns each event's data, joining its `data:` lines as the SSE spec does. */
+const serverSentEventData = (body: string): string[] => {
+  const events: string[] = [];
+  let data: string[] = [];
+  for (const line of [...body.split(/\r\n|\r|\n/), '']) {
+    if (line === '') {
+      if (data.length > 0) {
+        events.push(data.join('\n'));
+      }
+      data = [];
+    } else if (line.startsWith('data:')) {
+      data.push(line.slice(line.startsWith('data: ') ? 6 : 5));
+    }
+  }
+  return events;
 };
 
 /** MCP requires `initialize` before any other request on a connection. */

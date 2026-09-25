@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { CodeCapabilities } from '#types';
 
@@ -19,6 +19,6 @@ import { CodeCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const atom = Atom.make<CodeCapabilities.BuildRunState>({}).pipe(Atom.keepAlive);
-    return Capability.contributes(CodeCapabilities.BuildRun, atom);
+    return Capability.contribute(CodeCapabilities.BuildRun, atom);
   }),
 );

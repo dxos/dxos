@@ -7,7 +7,7 @@ import UAParser from 'ua-parser-js';
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
-import { type MessageData } from '../message';
+import { type MessageData } from '../message.ts';
 
 let browser: string | undefined;
 let os: string | undefined;

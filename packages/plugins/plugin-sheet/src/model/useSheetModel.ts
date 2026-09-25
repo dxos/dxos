@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { type ComputeGraph } from '@dxos/compute-hyperformula';
 
-import { type Sheet } from '#types';
+import { Sheet } from '#types';
 
-import { SheetModel } from '../model';
+import { SheetModel } from '../model/index.ts';
 
 export type UseSheetModelOptions = {
   readonly?: boolean;

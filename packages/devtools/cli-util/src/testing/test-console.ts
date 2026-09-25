@@ -34,7 +34,9 @@ class TestConsoleService {
 
     this.console = {
       ...console,
-      log: (...args: readonly any[]) => Effect.sync(() => pusher('log')(...args)),
+      // v4 calls the console's methods for their side effect and discards the return value, so the
+      // capture happens inline rather than in an effect nobody runs.
+      log: (...args: readonly any[]) => pusher('log')(...args),
     };
   }
 
@@ -49,7 +51,7 @@ class TestConsoleService {
 
 // TODO(burdon): We could have a single namespace "Testing" with all test utilities.
 export namespace TestConsole {
-  export class TestConsole extends Context.Tag('TestConsole')<TestConsole, TestConsoleService>() {}
+  export class TestConsole extends Context.Service<TestConsole, TestConsoleService>()('TestConsole') {}
 
   /**
    * Extract JSON string from log arguments.
@@ -74,14 +76,14 @@ export namespace TestConsole {
   const testConsole = Layer.effect(
     TestConsole,
     Effect.gen(function* () {
-      return new TestConsoleService(yield* Effect.console);
+      return new TestConsoleService(yield* Console.Console);
     }),
   );
 
   const setConsole = Effect.gen(function* () {
     const { console } = yield* TestConsole;
-    return Console.setConsole(console);
-  }).pipe(Layer.unwrapEffect);
+    return Layer.succeed(Console.Console, console);
+  }).pipe(Layer.unwrap);
 
   export const layer = Layer.provideMerge(setConsole, testConsole);
 }

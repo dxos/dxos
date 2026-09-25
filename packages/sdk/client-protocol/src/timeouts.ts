@@ -13,6 +13,11 @@ export const PROXY_CONNECTION_TIMEOUT = 30_000;
 export const AUTH_TIMEOUT = 30_000;
 
 /**
+ * Timeout for `Client.waitUntilInitialized()`, bounding the wait on a forked `initialize()`.
+ */
+export const INITIALIZE_TIMEOUT = 30_000;
+
+/**
  * Timeout for how long the remote client will wait before assuming the connection is lost.
  */
 export const STATUS_TIMEOUT = 10_000;
@@ -29,12 +34,7 @@ export const RESOURCE_LOCK_TIMEOUT = 3_000;
 export const LOAD_PROPERTIES_TIMEOUT = 3_000;
 
 /**
- * Timeout for creating new spaces.
- */
-export const CREATE_SPACE_TIMEOUT = 5_000;
-
-/**
- * Timeout for creating new spaces.
+ * Timeout for importing a space.
  */
 export const IMPORT_SPACE_TIMEOUT = 30_000;
 

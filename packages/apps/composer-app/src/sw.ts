@@ -4,8 +4,10 @@
 
 /// <reference lib="webworker" />
 
+import { ExpirationPlugin } from 'workbox-expiration';
 import { addPlugins, cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
+import { CacheFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -101,6 +103,20 @@ cleanupOutdatedCaches();
 // `mode: 'navigate'` requests to the precached `/index.html`, which boots the SPA and
 // resolves the route client-side.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
+
+// Cache-first for the on-demand icon catalogs under /phosphor/ and /px-icons/, which are far too
+// many files to precache (~9,000) yet have to be available offline once rendered. The entry bound is
+// far above any plausible per-install footprint; no age bound, since the assets are immutable.
+registerRoute(
+  ({ url, request }) =>
+    request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith('/phosphor/') || url.pathname.startsWith('/px-icons/')),
+  new CacheFirst({
+    cacheName: 'dxos-phosphor-icons-v1',
+    plugins: [new ExpirationPlugin({ maxEntries: 2000 })],
+  }),
+);
 
 const PLUGIN_ASSET_CACHE = 'dxos-plugin-assets-v1';
 const INDEX_DB_NAME = 'dxos-plugin-asset-index';

@@ -4,41 +4,68 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Attention } from '@dxos/react-ui-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { Attention } from '@dxos/react-ui-attention/types';
 
-import { DeckCapabilities } from '../types';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor } from '../util';
-import { addCompanionPlank, updateActiveDeck } from './helpers';
+import { CompanionViewState, DeckCapabilities } from '#types';
+
+import { currentNavigation, navigateDeck } from '../url/index.ts';
+import {
+  closeCompanionPlank,
+  openCompanionPlank,
+  resolveCompanionAnchor,
+  resolveCompanionPlank,
+  updateActiveDeck,
+} from '../util/index.ts';
+
+/** Shows `companionPlanks` at once and records them in the URL, which resolves only later. */
+const showCompanions = Effect.fnUntraced(function* (
+  workspace: string,
+  active: readonly string[],
+  companionPlanks: string[] | undefined,
+) {
+  yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { companionPlanks }));
+  yield* navigateDeck({ workspace, active, companionPlanks });
+});
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      if (input.subject === null) {
-        // Closing is aimed at the plank the companion is currently beside — the attended one — since
-        // that is the only companion on screen to close. The selected variant is left intact so
-        // reopening restores the last tab.
-        const deck = yield* DeckCapabilities.getDeck();
-        const attention = yield* Capability.get(AttentionCapabilities.Attention);
-        const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: deck.companionPlanks.filter((id) => id !== plankId) }),
-        );
-      } else {
-        // The selected variant is global view state (shared with the split point), not deck state.
-        // Merge so a variant change preserves the persisted split sizes.
-        const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-        const variant = Attention.getLinkedVariant(input.subject);
-        viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({ ...prev, variant }));
-        // A companion id is `<plank>/~<variant>`, so the plank it belongs to is the subject's parent.
-        const plankId = input.subject.slice(0, input.subject.lastIndexOf('/'));
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, plankId) }),
-        );
+      const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+      const deck = yield* DeckCapabilities.getDeck();
+      const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const { workspace } = yield* currentNavigation();
+
+      const subject = input.subject;
+      if (subject === null) {
+        const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
+        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
+        yield* showCompanions(workspace, deck.active, companionPlanks);
+        return;
       }
+
+      const plankId = resolveCompanionPlank({
+        subject,
+        anchor: input.anchor,
+        planks: deck.active,
+        attended: attention.getCurrent(),
+      });
+      if (!plankId) {
+        return;
+      }
+
+      const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+      viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
+        ...prev,
+        variant: Attention.getLinkedVariant(subject),
+      }));
+
+      const companionPlanks = openCompanionPlank(deck.companionPlanks, flatten, plankId);
+      yield* showCompanions(workspace, deck.active, companionPlanks);
     }),
   ),
 );

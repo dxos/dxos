@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
-import { createBranch, getCurrentBranch, switchBranch } from './branching';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createBranch, getCurrentBranch, switchBranch } from './branching.ts';
 
 describe('branch bindings (independent instance)', () => {
   let builder: EchoTestBuilder;

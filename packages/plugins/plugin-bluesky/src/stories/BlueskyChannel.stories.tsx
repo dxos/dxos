@@ -6,27 +6,28 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from '../BlueskyPlugin';
-import { ATPROTO_BACKEND_KIND } from '../constants';
-import { translations } from '../translations';
-import { BlueskyChannel, makeBlueskyChannel } from '../types';
+import { BlueskyPlugin } from '#plugin';
+import { translations } from '#translations';
+import { BlueskyChannel, makeBlueskyChannel } from '#types';
+
+import { ATPROTO_BACKEND_KIND } from '../constants.ts';
 
 /** Public Bluesky handle whose author feed is displayed by the demo channel. */
 const DEMO_HANDLE = 'bsky.app';
@@ -50,20 +51,20 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Schema, types)],
+      capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types,
           config: new Config({
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.dxos.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },
@@ -71,9 +72,9 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Read-only channel backed by a public Bluesky author feed (no auth).
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Channel.make({
                   name: `@${DEMO_HANDLE}`,
                   backend: {
@@ -85,7 +86,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         BlueskyPlugin(),
       ],
     }),

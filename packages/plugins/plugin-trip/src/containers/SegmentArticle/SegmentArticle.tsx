@@ -34,7 +34,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
       const paths = Object.keys(changed).filter((path) => changed[path]);
-      Obj.update(segment, () => {
+      Obj.update(segment, (segment) => {
         for (const path of paths) {
           const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
           const value = Obj.getValue(values as any, parts);
@@ -50,7 +50,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <div className='grow' />
@@ -82,7 +82,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
           <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
             <Form.Viewport scroll>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>

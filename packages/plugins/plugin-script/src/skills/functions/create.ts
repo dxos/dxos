@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation, Script } from '@dxos/compute';
+import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { Create } from './definitions';
+import { Create } from './definitions.ts';
 
 export default Create.pipe(
   Operation.withHandler(
@@ -31,7 +32,7 @@ export default Create.pipe(
         name,
         source: Ref.make(script),
       });
-      yield* CollectionModel.add({ object: fn });
+      yield* DefaultParent.add({ object: fn });
 
       return {
         function: Obj.getURI(fn),
@@ -42,6 +43,6 @@ export default Create.pipe(
 
 const findTemplate = (templateId: string) =>
   Effect.promise(async () => {
-    const { templates } = await import('../../templates');
+    const { templates } = await import('../../templates/index.ts');
     return templates.find((template) => template.id === templateId);
   });

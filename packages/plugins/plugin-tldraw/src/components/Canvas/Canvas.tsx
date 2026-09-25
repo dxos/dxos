@@ -13,15 +13,15 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Obj } from '@dxos/echo';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
-import { handleSnap } from '../actions';
-import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
+import { handleSnap } from '../actions.ts';
+import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom/index.ts';
 
 const threadToolId = 'thread';
 
@@ -37,8 +37,25 @@ export type CanvasProps = {
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
+  onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
   onThreadCreate?: () => void;
+  /** Selected scene object ids (host-owned); mirrored onto the shapes stamped with that `meta.object`. */
+  selection?: readonly string[];
+  /** Shape selection changed; reported as scene object ids, never tldraw shape ids. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click on a managed shape. */
+  onActivate?: (objectId: string) => void;
 };
+
+/** Scene object ids of the selected shapes (unmanaged shapes carry no `meta.object` and are skipped). */
+const selectedObjectIds = (editor: Editor): string[] => [
+  ...new Set(
+    editor.getSelectedShapes().flatMap((shape) => (typeof shape.meta.object === 'string' ? [shape.meta.object] : [])),
+  ),
+];
+
+const sameSet = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length && left.every((id) => right.includes(id));
 
 export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
   (
@@ -49,13 +66,22 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
       hideUi = false,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
+      onSettingsChange,
       onThreadCreate,
+      selection,
+      onSelectionChange,
+      onActivate,
       ...props
     },
     forwardedRef,
   ) => {
     const adapter = useStoreAdapter(canvas);
     const [editor, setEditor] = useState<Editor>();
+    // The app's colour mode, not `prefers-color-scheme`: the two differ whenever the theme is set
+    // by hand (a dark storybook on a light OS), and tldraw would then draw light-theme black on a
+    // dark canvas.
+    const { themeMode } = useThemeContext();
+    const colorScheme = themeMode === 'dark' ? 'dark' : 'light';
 
     // Focus.
     useEffect(() => {
@@ -75,7 +101,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
               const fromInstance = from as TLInstance;
               const toInstance = to as TLInstance;
               if (fromInstance.isGridMode !== toInstance.isGridMode) {
-                settings.showGrid = toInstance.isGridMode;
+                onSettingsChange?.((current) => ({ ...current, showGrid: toInstance.isGridMode }));
               }
             }
           }
@@ -85,7 +111,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
       // TODO(burdon): Combine.
       return () => cleanup?.();
-    }, [settings, editor]);
+    }, [settings, onSettingsChange, editor]);
 
     // Editor events.
     useEffect(() => {
@@ -96,13 +122,47 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           // store, so an immediate save flushes one gesture behind (losing the final stroke).
           setTimeout(() => adapter.save());
         }
+        if (type === 'click' && name === 'double_click' && editor && onActivate) {
+          const objectId = editor.getShapeAtPoint(editor.inputs.currentPagePoint)?.meta.object;
+          if (typeof objectId === 'string') {
+            onActivate(objectId);
+          }
+        }
       };
 
       editor?.on('event', handleEvent);
       return () => {
         editor?.off('event', handleEvent);
       };
-    }, [adapter, editor]);
+    }, [adapter, editor, onActivate]);
+
+    // Selection, editor → host: the page state's `selectedShapeIds` is a session-scoped record.
+    useEffect(() => {
+      if (!editor || !onSelectionChange) {
+        return;
+      }
+      return editor.store.listen(
+        ({ changes: { updated } }) => {
+          if (Object.keys(updated).some((id) => id.startsWith('instance_page_state:'))) {
+            onSelectionChange(selectedObjectIds(editor));
+          }
+        },
+        { source: 'user', scope: 'session' },
+      );
+    }, [editor, onSelectionChange]);
+
+    // Selection, host → editor. Compared as sets so the echo of our own report is a no-op.
+    useEffect(() => {
+      if (!editor || !selection || sameSet(selectedObjectIds(editor), selection)) {
+        return;
+      }
+      editor.setSelectedShapes(
+        editor
+          .getCurrentPageShapes()
+          .filter((shape) => typeof shape.meta.object === 'string' && selection.includes(shape.meta.object))
+          .map((shape) => shape.id),
+      );
+    }, [editor, selection]);
 
     // UI state.
     useEffect(() => {
@@ -110,6 +170,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
         editor.user.updateUserPreferences({
           // TODO(burdon): Adjust snap threshold.
           isSnapMode: true,
+          colorScheme,
         });
         editor.updateInstanceState({
           isGridMode: settings?.showGrid !== false && !hideUi,
@@ -119,7 +180,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           editor.setCurrentTool('hand');
         }
       }
-    }, [editor, settings, hideUi, readonly]);
+    }, [editor, settings, hideUi, readonly, colorScheme]);
 
     // Zoom to fit.
     const { ref: resizeRef, width = 0, height } = useResizeDetector();
@@ -241,7 +302,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'dx-expander' })}
+        {...composableProps(props, { classNames: 'dx-expand' })}
         style={{ visibility: ready ? 'visible' : 'hidden' }}
         ref={containerRef}
       >
@@ -251,7 +312,6 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           key={`${Obj.getURI(canvas)}:${adapter.store.id}`}
           store={adapter.store}
           hideUi={hideUi}
-          inferDarkMode
           className='outline-hidden!'
           maxAssetSize={1024 * 1024}
           assetUrls={assetUrls}

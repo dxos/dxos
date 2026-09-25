@@ -20,15 +20,6 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -47,19 +38,16 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui-canvas"
     },
     {
       "path": "../../ui/react-ui-canvas-compute"
@@ -72,9 +60,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

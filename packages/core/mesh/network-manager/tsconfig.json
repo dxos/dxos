@@ -11,13 +11,16 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
     },
     {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/invariant"
@@ -32,25 +35,13 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/tracing"
-    },
-    {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../halo/keyring"
     },
     {
       "path": "../../protocols"
     },
     {
-      "path": "../edge-client"
-    },
-    {
       "path": "../messaging"
-    },
-    {
-      "path": "../rpc"
     },
     {
       "path": "../teleport"

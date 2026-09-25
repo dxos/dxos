@@ -4,14 +4,17 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { PluginDetail } from './PluginDetail';
+import { PluginDetail } from './PluginDetail.tsx';
 
 const plugin = Plugin.define(
   Plugin.makeMeta({
@@ -33,7 +36,12 @@ const plugin = Plugin.define(
 const meta = {
   title: 'plugins/plugin-registry/components/PluginDetail',
   component: PluginDetail,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    // `useLayout` (mobile-aware gutter sizing) needs a PluginManager providing AppCapabilities.Layout.
+    withPluginManager({ plugins: [...corePlugins(), StorybookPlugin.make({})] }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,

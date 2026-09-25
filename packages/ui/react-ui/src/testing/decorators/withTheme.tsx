@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { Tooltip } from '../../components';
-import { type ThemeContextValue, ThemeProvider } from '../../primitives';
-import { defaultTx } from '../../theme';
+import { Tooltip } from '../../components/index.ts';
+import { type ThemeContextValue, ThemeProvider } from '../../providers/index.ts';
+import { defaultTx } from '../../theme/index.ts';
 
 /**
  * Adds theme decorator.
@@ -20,7 +20,7 @@ import { defaultTx } from '../../theme';
  * empty.
  */
 export const withTheme =
-  ({ tx = defaultTx, noCache, platform }: Partial<ThemeContextValue> = {}): Decorator =>
+  ({ tx = defaultTx, platform }: Partial<ThemeContextValue> = {}): Decorator =>
   (Story, context) => {
     const {
       globals: { theme },
@@ -33,7 +33,6 @@ export const withTheme =
           tx={tx}
           themeMode={(theme as ThemeMode) || 'dark'}
           resourceExtensions={translations}
-          noCache={noCache}
           platform={platform}
         >
           <Tooltip.Provider>

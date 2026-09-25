@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { CrawlModule } from './CrawlModule';
-import { EntitiesModule } from './EntitiesModule';
-import { FactsModule } from './FactsModule';
-import { InputModule } from './InputModule';
-import { OutputModule } from './OutputModule';
-import { PipelineModule } from './PipelineModule';
-import { QueryModule } from './QueryModule';
-import { QuestionsModule } from './QuestionsModule';
+import { CrawlModule } from './CrawlModule.tsx';
+import { EntitiesModule } from './EntitiesModule.tsx';
+import { FactsModule } from './FactsModule.tsx';
+import { InputModule } from './InputModule.tsx';
+import { OutputModule } from './OutputModule.tsx';
+import { PipelineModule } from './PipelineModule.tsx';
+import { QueryModule } from './QueryModule.tsx';
+import { QuestionsModule } from './QuestionsModule.tsx';
 
-export * from './context';
-export * from './pipeline-context';
+export * from './context.ts';
+export * from './pipeline-context.ts';
 
 /**
  * Role tokens for the stories-brain modules (Facts + Pipeline). Each module is contributed as a

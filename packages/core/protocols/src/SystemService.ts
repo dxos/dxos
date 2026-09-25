@@ -2,19 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { PlatformSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { ConfigSchema } from './buf/proto/gen/dxos/config_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { protoStruct, protoTimestamp } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
-export const KeyOption = Schema.Enums({
+export const KeyOption = Schema.Enum({
   NONE: 0,
   TRUNCATE: 1,
   HUMANIZE: 2,
@@ -32,7 +35,7 @@ export const GetDiagnosticsResponse = Schema.Struct({
 });
 export interface GetDiagnosticsResponse extends Schema.Schema.Type<typeof GetDiagnosticsResponse> {}
 
-export const SystemStatus = Schema.Enums({
+export const SystemStatus = Schema.Enum({
   INACTIVE: 0,
   ACTIVE: 1,
 });
@@ -62,7 +65,7 @@ export class Rpcs extends RpcGroup.make(
    * Get the static config of the client.
    */
   Rpc.make('getConfig', {
-    success: protoMessage('dxos.config.Config'),
+    success: bufMessage(ConfigSchema),
     error: serviceError,
   }),
   /**
@@ -99,7 +102,7 @@ export class Rpcs extends RpcGroup.make(
    * Get platform Information.
    */
   Rpc.make('getPlatform', {
-    success: protoMessage('dxos.client.services.Platform'),
+    success: bufMessage(PlatformSchema),
     error: serviceError,
   }),
 ).prefix('SystemService.') {}
@@ -107,3 +110,8 @@ export class Rpcs extends RpcGroup.make(
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+/**
+ * Effect service tag for the `SystemService` RPC handlers.
+ */
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/SystemService') {}

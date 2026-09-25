@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cache-plugin-assets"
+description = "Enables the cache_plugin_assets command without any pre-configured scope."
+commands.allow = ["cache_plugin_assets"]
+
+[[permission]]
+identifier = "deny-cache-plugin-assets"
+description = "Denies the cache_plugin_assets command without any pre-configured scope."
+commands.deny = ["cache_plugin_assets"]

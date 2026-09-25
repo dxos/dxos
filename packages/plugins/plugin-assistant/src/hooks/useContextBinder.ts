@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';
@@ -16,7 +17,7 @@ export const useContextBinder = (
   space: Space | undefined,
   feed: Feed.Feed | undefined,
 ): AiContext.Binder | undefined => {
-  const registry = useContext(RegistryContext) as Registry.Registry;
+  const registry = useContext(RegistryContext) as Registry.AtomRegistry;
   const [binder, setBinder] = useState<AiContext.Binder>();
 
   useAsyncEffect(async () => {
@@ -26,7 +27,7 @@ export const useContextBinder = (
     }
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed, runtime, registry });
     await binder.open();

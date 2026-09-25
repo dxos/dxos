@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Html } from './Html';
-import { Compare, EMAIL_SAMPLES, SampleFrame } from './testing';
-import { emailDialect } from './transform-email';
+import { Html } from './Html.tsx';
+import { Compare, EMAIL_SAMPLES, SampleFrame } from './testing.tsx';
+import { emailDialect } from './transform-email.ts';
 
 //
 // The email dialect. Every story here is a light/dark comparison, because that is the judgement the
@@ -19,14 +19,14 @@ import { emailDialect } from './transform-email';
 
 type SampleId = keyof typeof EMAIL_SAMPLES;
 
-type StoryProps = {
+type StoryArgs = {
   sample: SampleId;
   loadRemoteImages?: boolean;
   /** Off for judging a single rendering in the storybook theme; on to see both at once. */
   compare?: boolean;
 };
 
-const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryProps) => {
+const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryArgs) => {
   const { html, note } = EMAIL_SAMPLES[sample];
   const body = () => <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect()} />;
   return <SampleFrame note={note}>{compare ? <Compare render={body} /> : body()}</SampleFrame>;

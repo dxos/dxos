@@ -1,0 +1,2183 @@
+{
+  "org.dxos.type.account": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.account:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.account",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string",
+            "format": "hostname"
+          },
+          "ref": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.type.organization"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["name", "domain", "ref"]
+      },
+      "kind": {
+        "type": "string",
+        "enum": ["airline", "rail", "hotel", "car", "cruise", "travel", "other"]
+      },
+      "accountNumber": {
+        "type": "string"
+      },
+      "displayName": {
+        "type": "string"
+      },
+      "tier": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["active", "expired"]
+      },
+      "notes": {
+        "type": "string"
+      },
+      "accessTokens": {
+        "type": "array",
+        "items": {
+          "$id": "/schemas/echo/ref",
+          "$ref": "/schemas/echo/ref",
+          "reference": {
+            "schema": {
+              "$ref": "dxn:org.dxos.type.accessToken"
+            },
+            "schemaVersion": "0.1.0"
+          }
+        }
+      }
+    },
+    "required": ["provider", "id"],
+    "propertyOrder": [
+      "provider",
+      "kind",
+      "accountNumber",
+      "displayName",
+      "tier",
+      "status",
+      "notes",
+      "accessTokens",
+      "id"
+    ],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--identification-card--regular",
+          "hue": "teal"
+        }
+      },
+      "labelProp": ["displayName"]
+    }
+  },
+  "org.dxos.relation.anchoredTo": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.relation.anchoredTo:0.1.0",
+    "entityKind": "relation",
+    "typename": "org.dxos.relation.anchoredTo",
+    "version": "0.1.0",
+    "relationTarget": {
+      "$ref": "dxn:org.dxos.schema.anyObject"
+    },
+    "relationSource": {
+      "$ref": "dxn:org.dxos.schema.anyObject"
+    },
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "anchor": {
+        "type": "string"
+      },
+      "branch": {
+        "type": "string"
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": ["id", "anchor", "branch"],
+    "additionalProperties": false
+  },
+  "org.dxos.type.channel": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.channel:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.channel",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "backend": {
+        "type": "object",
+        "required": ["kind", "config"],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "config": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.schema.anyObject"
+              },
+              "schemaVersion": "0.0.0"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["kind", "config"]
+      }
+    },
+    "required": ["backend", "id"],
+    "propertyOrder": ["name", "backend", "id"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--hash--regular",
+          "hue": "rose"
+        }
+      }
+    }
+  },
+  "org.dxos.relation.employer": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.relation.employer:0.1.0",
+    "entityKind": "relation",
+    "typename": "org.dxos.relation.employer",
+    "version": "0.1.0",
+    "relationTarget": {
+      "$ref": "dxn:org.dxos.type.organization"
+    },
+    "relationSource": {
+      "$ref": "dxn:org.dxos.type.person"
+    },
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "role": {
+        "type": "string"
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "startDate": {
+        "type": "string"
+      },
+      "endDate": {
+        "type": "string"
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": ["id", "role", "active", "startDate", "endDate"],
+    "additionalProperties": false,
+    "description": "An employing organization of a person."
+  },
+  "org.dxos.type.event": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.event:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.event",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "title": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "tool"]
+          },
+          "contact": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.type.person"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          },
+          "identityDid": {
+            "type": "string"
+          },
+          "identityKey": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["role", "contact", "identityDid", "identityKey", "email", "name"]
+      },
+      "attendees": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": ["user", "assistant", "tool"]
+            },
+            "contact": {
+              "$id": "/schemas/echo/ref",
+              "$ref": "/schemas/echo/ref",
+              "reference": {
+                "schema": {
+                  "$ref": "dxn:org.dxos.type.person"
+                },
+                "schemaVersion": "0.1.0"
+              }
+            },
+            "identityDid": {
+              "type": "string"
+            },
+            "identityKey": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["role", "contact", "identityDid", "identityKey", "email", "name"]
+        }
+      },
+      "startDate": {
+        "type": "string"
+      },
+      "endDate": {
+        "type": "string"
+      },
+      "allDay": {
+        "type": "boolean"
+      },
+      "location": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "street": {
+            "type": "string",
+            "description": "The street address.",
+            "examples": ["1600 Amphitheatre Pkwy"]
+          },
+          "extended": {
+            "type": "string",
+            "description": "An address extension such as an apartment number, C/O or alternative name.",
+            "examples": ["Apt 1", "Suite 2"]
+          },
+          "locality": {
+            "type": "string",
+            "description": "The locality in which the street address is, and which is in the region.",
+            "examples": ["Mountain View", "Bangkok"]
+          },
+          "region": {
+            "type": "string",
+            "description": "The region in which the locality is, and which is in the country.",
+            "examples": ["CA", "NY"]
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "The postal code.",
+            "examples": ["12345", "A1A 1A1"]
+          },
+          "postOfficeBoxNumber": {
+            "type": "string",
+            "description": "The post office box number for PO Box addresses."
+          },
+          "country": {
+            "type": "string",
+            "description": "The country in 2-letter ISO 3166-1 alpha-2 format.",
+            "examples": ["US", "SG"]
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["street", "extended", "locality", "region", "postalCode", "postOfficeBoxNumber", "country"]
+      }
+    },
+    "required": ["id", "owner", "attendees", "startDate", "endDate"],
+    "propertyOrder": ["id", "title", "description", "owner", "attendees", "startDate", "endDate", "allDay", "location"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--calendar-dot--regular",
+          "hue": "rose"
+        }
+      },
+      "labelProp": ["title"]
+    }
+  },
+  "org.dxos.type.file": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.file:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.file",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "data": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:org.dxos.type.blob"
+          },
+          "schemaVersion": "0.1.0"
+        }
+      },
+      "timestamp": {
+        "type": "string"
+      }
+    },
+    "required": ["data", "id"],
+    "propertyOrder": ["name", "data", "timestamp", "id"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--file--regular",
+          "hue": "indigo"
+        }
+      }
+    }
+  },
+  "org.dxos.relation.hasConnection": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.relation.hasConnection:0.1.0",
+    "entityKind": "relation",
+    "typename": "org.dxos.relation.hasConnection",
+    "version": "0.1.0",
+    "relationTarget": {
+      "$ref": "dxn:org.dxos.type.organization"
+    },
+    "relationSource": {
+      "$ref": "dxn:org.dxos.type.organization"
+    },
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "kind": {
+        "type": "string",
+        "description": "The kind of relationship.",
+        "examples": ["customer", "vendor", "investor"]
+      }
+    },
+    "required": ["id", "kind"],
+    "propertyOrder": ["id", "kind"],
+    "additionalProperties": false,
+    "description": "A relationship between two organizations."
+  },
+  "org.dxos.relation.hasRelationship": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.relation.hasRelationship:0.1.0",
+    "entityKind": "relation",
+    "typename": "org.dxos.relation.hasRelationship",
+    "version": "0.1.0",
+    "relationTarget": {
+      "$ref": "dxn:org.dxos.type.person"
+    },
+    "relationSource": {
+      "$ref": "dxn:org.dxos.type.person"
+    },
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "kind": {
+        "type": "string",
+        "description": "The kind of relationship.",
+        "examples": ["friend", "colleague", "family", "parent", "spouse"]
+      }
+    },
+    "required": ["id", "kind"],
+    "propertyOrder": ["id", "kind"],
+    "additionalProperties": false,
+    "description": "A relationship between two people."
+  },
+  "org.dxos.relation.hasSubject": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.relation.hasSubject:0.1.0",
+    "entityKind": "relation",
+    "typename": "org.dxos.relation.hasSubject",
+    "version": "0.1.0",
+    "relationTarget": {
+      "$ref": "dxn:org.dxos.schema.anyObject"
+    },
+    "relationSource": {
+      "$ref": "dxn:org.dxos.schema.anyObject"
+    },
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": ["id"],
+    "additionalProperties": false
+  },
+  "org.dxos.type.message": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.message:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.message",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "parentMessage": {
+        "type": "string",
+        "description": "A Universally Unique Lexicographically Sortable Identifier",
+        "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+      },
+      "threadId": {
+        "type": "string"
+      },
+      "created": {
+        "type": "string",
+        "description": "ISO date string when the message was sent.",
+        "annotations": {
+          "generator": "date.iso8601"
+        }
+      },
+      "sender": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "tool"]
+          },
+          "contact": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.type.person"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          },
+          "identityDid": {
+            "type": "string"
+          },
+          "identityKey": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Identity of the message sender.",
+        "propertyOrder": ["role", "contact", "identityDid", "identityKey", "email", "name"]
+      },
+      "blocks": {
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": ["_tag", "objectId", "version"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["anchor"]
+                },
+                "objectId": {
+                  "type": "string",
+                  "description": "A Universally Unique Lexicographically Sortable Identifier",
+                  "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+                },
+                "version": {
+                  "$id": "/schemas/unknown",
+                  "title": "unknown"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "objectId", "version", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "before", "after"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["change"]
+                },
+                "before": {
+                  "type": "string"
+                },
+                "after": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "before", "after", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "url"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["file"]
+                },
+                "url": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "mediaType": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "url", "name", "mediaType", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["image"]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "source": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": ["type", "mediaType", "data"],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["base64"]
+                        },
+                        "mediaType": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "propertyOrder": ["type", "mediaType", "data"]
+                    },
+                    {
+                      "type": "object",
+                      "required": ["type", "url"],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["http"]
+                        },
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "propertyOrder": ["type", "url"]
+                    }
+                  ]
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "id", "source", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "data"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["json"]
+                },
+                "disposition": {
+                  "type": "string",
+                  "enum": ["user", "synthetic", "cot", "version-pin"]
+                },
+                "data": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "disposition", "data", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "text"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["proposal"]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "text", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["reasoning"]
+                },
+                "reasoningText": {
+                  "type": "string"
+                },
+                "redactedText": {
+                  "type": "string"
+                },
+                "signature": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "reasoningText", "redactedText", "signature", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "reference"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["reference"]
+                },
+                "reference": {
+                  "$id": "/schemas/echo/ref",
+                  "$ref": "/schemas/echo/ref",
+                  "reference": {
+                    "schema": {
+                      "$ref": "dxn:org.dxos.schema.anyObject"
+                    },
+                    "schemaVersion": "0.0.0"
+                  }
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "reference", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "options"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["select"]
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "options", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "statusText"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["status"]
+                },
+                "statusText": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "statusText", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "text"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["suggestion"]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "text", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["stats"]
+                },
+                "mimeType": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "usage": {
+                  "type": "object",
+                  "required": [],
+                  "properties": {
+                    "inputTokens": {
+                      "type": "number"
+                    },
+                    "outputTokens": {
+                      "type": "number"
+                    },
+                    "totalTokens": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "propertyOrder": ["inputTokens", "outputTokens", "totalTokens"]
+                },
+                "toolCalls": {
+                  "type": "number"
+                },
+                "errors": {
+                  "type": "number"
+                },
+                "duration": {
+                  "type": "number",
+                  "description": "Duration in ms."
+                },
+                "finishReason": {
+                  "type": "string",
+                  "enum": ["stop", "length", "content-filter", "tool-calls", "error", "pause", "other", "unknown"]
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": [
+                "_tag",
+                "mimeType",
+                "message",
+                "model",
+                "usage",
+                "toolCalls",
+                "errors",
+                "duration",
+                "finishReason",
+                "pending"
+              ]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "role"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["surface"]
+                },
+                "role": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [],
+                  "properties": {},
+                  "additionalProperties": {
+                    "$id": "/schemas/unknown",
+                    "title": "unknown"
+                  },
+                  "propertyOrder": []
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "role", "data", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "text"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["text"]
+                },
+                "mimeType": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "disposition": {
+                  "type": "string",
+                  "enum": ["user", "synthetic", "cot", "version-pin"]
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "mimeType", "text", "disposition", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "content"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["summary"]
+                },
+                "content": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "content", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["toolkit"]
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "toolCallId", "name", "input", "providerExecuted"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["toolCall"]
+                },
+                "toolCallId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "input": {
+                  "type": "string"
+                },
+                "providerExecuted": {
+                  "type": "boolean"
+                },
+                "operationKey": {
+                  "type": "string"
+                },
+                "operationName": {
+                  "type": "string"
+                },
+                "operationIcon": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": [
+                "_tag",
+                "toolCallId",
+                "name",
+                "input",
+                "providerExecuted",
+                "operationKey",
+                "operationName",
+                "operationIcon",
+                "pending"
+              ]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "toolCallId", "name", "providerExecuted"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["toolResult"]
+                },
+                "toolCallId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "result": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$schema": "http://json-schema.org/draft-07/schema#",
+                      "type": "object",
+                      "properties": {
+                        "_tag": {
+                          "type": "string",
+                          "enum": ["~@dxos/types/ContentBlock.ContentBlockResult"]
+                        },
+                        "content": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": ["_tag", "text"],
+                                "properties": {
+                                  "_tag": {
+                                    "type": "string",
+                                    "enum": ["text"]
+                                  },
+                                  "mimeType": {
+                                    "type": "string"
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "disposition": {
+                                    "type": "string",
+                                    "enum": ["user", "synthetic", "cot", "version-pin"]
+                                  },
+                                  "pending": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "propertyOrder": ["_tag", "mimeType", "text", "disposition", "pending"]
+                              },
+                              {
+                                "$schema": "http://json-schema.org/draft-07/schema#",
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "_tag": {
+                                    "type": "string",
+                                    "enum": ["image"]
+                                  },
+                                  "source": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "required": ["type", "mediaType", "data"],
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": ["base64"]
+                                          },
+                                          "mediaType": {
+                                            "type": "string"
+                                          },
+                                          "data": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "additionalProperties": false,
+                                        "propertyOrder": ["type", "mediaType", "data"]
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": ["type", "url"],
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": ["http"]
+                                          },
+                                          "url": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "additionalProperties": false,
+                                        "propertyOrder": ["type", "url"]
+                                      }
+                                    ]
+                                  },
+                                  "pending": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["_tag"],
+                                "propertyOrder": ["_tag", "id", "source", "pending"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "$schema": "http://json-schema.org/draft-07/schema#",
+                                "type": "object",
+                                "properties": {
+                                  "_tag": {
+                                    "type": "string",
+                                    "enum": ["file"]
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "mediaType": {
+                                    "type": "string"
+                                  },
+                                  "pending": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["_tag", "url"],
+                                "propertyOrder": ["_tag", "url", "name", "mediaType", "pending"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["_tag", "content"],
+                      "propertyOrder": ["_tag", "content"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "error": {
+                  "type": "string"
+                },
+                "providerExecuted": {
+                  "type": "boolean"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": ["_tag", "toolCallId", "name", "result", "error", "providerExecuted", "pending"]
+            },
+            {
+              "type": "object",
+              "required": ["_tag", "started", "text"],
+              "properties": {
+                "_tag": {
+                  "type": "string",
+                  "enum": ["transcript"]
+                },
+                "started": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "corrected": {
+                  "type": "string"
+                },
+                "references": {
+                  "type": "array",
+                  "items": {
+                    "$id": "/schemas/echo/ref",
+                    "$ref": "/schemas/echo/ref",
+                    "reference": {
+                      "schema": {
+                        "$ref": "dxn:org.dxos.schema.anyObject"
+                      },
+                      "schemaVersion": "0.0.0"
+                    }
+                  }
+                },
+                "candidates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["text", "kind", "start", "end"],
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": ["noun", "proper-noun"]
+                      },
+                      "start": {
+                        "type": "number"
+                      },
+                      "end": {
+                        "type": "number"
+                      },
+                      "suggested": {
+                        "type": "object",
+                        "required": ["typename"],
+                        "properties": {
+                          "typename": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "propertyOrder": ["typename"]
+                      }
+                    },
+                    "additionalProperties": false,
+                    "propertyOrder": ["text", "kind", "start", "end", "suggested"]
+                  }
+                },
+                "translation": {
+                  "type": "string"
+                },
+                "pending": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": [
+                "_tag",
+                "started",
+                "text",
+                "corrected",
+                "references",
+                "candidates",
+                "translation",
+                "pending"
+              ]
+            }
+          ]
+        },
+        "description": "Contents of the message.",
+        "default": []
+      },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["ref"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "ref": {
+              "$id": "/schemas/echo/ref",
+              "$ref": "/schemas/echo/ref",
+              "reference": {
+                "schema": {
+                  "$ref": "dxn:org.dxos.schema.anyObject"
+                },
+                "schemaVersion": "0.0.0"
+              }
+            },
+            "contentId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["name", "ref", "contentId"]
+        },
+        "description": "Files or objects attached to the message (e.g. email attachments)."
+      },
+      "properties": {
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "additionalProperties": {
+          "$id": "/schemas/any",
+          "title": "any"
+        },
+        "description": "Custom properties for specific message types (e.g. attention context, email subject, etc.).",
+        "propertyOrder": []
+      }
+    },
+    "required": ["id", "created", "sender", "blocks"],
+    "propertyOrder": ["id", "parentMessage", "threadId", "created", "sender", "blocks", "attachments", "properties"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--note--regular",
+          "hue": "rose"
+        }
+      },
+      "labelProp": ["properties.subject"]
+    }
+  },
+  "org.dxos.type.organization": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.organization:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.organization",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "title": "Name",
+        "annotations": {
+          "generator": {
+            "generator": "company.name",
+            "probability": 1
+          }
+        }
+      },
+      "description": {
+        "type": "string",
+        "title": "Description",
+        "annotations": {
+          "generator": {
+            "generator": "lorem.paragraphs",
+            "args": [
+              {
+                "min": 1,
+                "max": 3
+              }
+            ]
+          }
+        }
+      },
+      "status": {
+        "type": "string",
+        "enum": ["prospect", "qualified", "active", "commit", "reject"],
+        "title": "Status",
+        "annotations": {
+          "meta": {
+            "singleSelect": {
+              "options": [
+                {
+                  "id": "prospect",
+                  "title": "Prospect",
+                  "color": "indigo"
+                },
+                {
+                  "id": "qualified",
+                  "title": "Qualified",
+                  "color": "purple"
+                },
+                {
+                  "id": "active",
+                  "title": "Active",
+                  "color": "amber"
+                },
+                {
+                  "id": "commit",
+                  "title": "Commit",
+                  "color": "emerald"
+                },
+                {
+                  "id": "reject",
+                  "title": "Reject",
+                  "color": "red"
+                }
+              ]
+            }
+          },
+          "generator": {
+            "generator": "helpers.arrayElement",
+            "args": [["prospect", "qualified", "active", "commit", "reject"]]
+          }
+        },
+        "format": "single-select"
+      },
+      "image": {
+        "type": "string",
+        "title": "Image",
+        "annotations": {
+          "generator": "image.url"
+        }
+      },
+      "website": {
+        "type": "string",
+        "description": "URL",
+        "title": "Website",
+        "pattern": "^(\\w+?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*\\/?$",
+        "annotations": {
+          "generator": "internet.url"
+        },
+        "format": "url"
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": ["name", "description", "status", "image", "website", "id"],
+    "additionalProperties": false,
+    "description": "An organization.",
+    "title": "Organization",
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--building-office--regular",
+          "hue": "neutral"
+        }
+      },
+      "labelProp": ["name"]
+    }
+  },
+  "org.dxos.type.outline": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.outline:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.outline",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "content": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:org.dxos.type.text"
+          },
+          "schemaVersion": "0.1.0"
+        }
+      },
+      "taskSet": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:org.dxos.type.taskSet"
+          },
+          "schemaVersion": "0.2.0"
+        }
+      }
+    },
+    "required": ["content", "id"],
+    "propertyOrder": ["name", "content", "taskSet", "id"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--tree-structure--regular",
+          "hue": "indigo"
+        }
+      }
+    }
+  },
+  "org.dxos.type.person": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.person:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.person",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "fullName": {
+        "type": "string",
+        "title": "Full Name",
+        "annotations": {
+          "generator": {
+            "generator": "person.fullName",
+            "probability": 1
+          }
+        }
+      },
+      "preferredName": {
+        "type": "string",
+        "title": "Preferred Name"
+      },
+      "nickname": {
+        "type": "string",
+        "title": "Nickname"
+      },
+      "image": {
+        "type": "string",
+        "title": "Image",
+        "annotations": {
+          "generator": "image.url"
+        }
+      },
+      "organization": {
+        "allOf": [
+          {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.type.organization"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        ],
+        "description": "Current employer",
+        "title": "Employer",
+        "annotations": {
+          "meta": {
+            "referenceProperty": "name"
+          }
+        }
+      },
+      "jobTitle": {
+        "type": "string",
+        "title": "Job Title"
+      },
+      "department": {
+        "type": "string",
+        "title": "Department"
+      },
+      "notes": {
+        "type": "string",
+        "title": "Notes"
+      },
+      "emails": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string",
+              "description": "Email address",
+              "title": "Email",
+              "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              "annotations": {
+                "generator": "internet.email"
+              },
+              "format": "email"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["label", "value"]
+        }
+      },
+      "identities": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["label", "value"]
+        }
+      },
+      "phoneNumbers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["label", "value"]
+        },
+        "title": "Phone Numbers"
+      },
+      "addresses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "street": {
+                  "type": "string",
+                  "description": "The street address.",
+                  "examples": ["1600 Amphitheatre Pkwy"]
+                },
+                "extended": {
+                  "type": "string",
+                  "description": "An address extension such as an apartment number, C/O or alternative name.",
+                  "examples": ["Apt 1", "Suite 2"]
+                },
+                "locality": {
+                  "type": "string",
+                  "description": "The locality in which the street address is, and which is in the region.",
+                  "examples": ["Mountain View", "Bangkok"]
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The region in which the locality is, and which is in the country.",
+                  "examples": ["CA", "NY"]
+                },
+                "postalCode": {
+                  "type": "string",
+                  "description": "The postal code.",
+                  "examples": ["12345", "A1A 1A1"]
+                },
+                "postOfficeBoxNumber": {
+                  "type": "string",
+                  "description": "The post office box number for PO Box addresses."
+                },
+                "country": {
+                  "type": "string",
+                  "description": "The country in 2-letter ISO 3166-1 alpha-2 format.",
+                  "examples": ["US", "SG"]
+                }
+              },
+              "additionalProperties": false,
+              "propertyOrder": [
+                "street",
+                "extended",
+                "locality",
+                "region",
+                "postalCode",
+                "postOfficeBoxNumber",
+                "country"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["label", "value"]
+        }
+      },
+      "urls": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string",
+              "description": "URL",
+              "title": "URL",
+              "default": "https://example.com",
+              "pattern": "^(\\w+?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*\\/?$",
+              "annotations": {
+                "generator": "internet.url"
+              },
+              "format": "url"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["label", "value"]
+        }
+      },
+      "birthday": {
+        "type": "string",
+        "title": "Birthday",
+        "annotations": {
+          "generator": "date.iso8601"
+        }
+      },
+      "fields": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["label", "value"],
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["category", "label", "value"]
+        }
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": [
+      "fullName",
+      "preferredName",
+      "nickname",
+      "image",
+      "organization",
+      "jobTitle",
+      "department",
+      "notes",
+      "emails",
+      "identities",
+      "phoneNumbers",
+      "addresses",
+      "urls",
+      "birthday",
+      "fields",
+      "id"
+    ],
+    "additionalProperties": false,
+    "title": "Person",
+    "annotations": {
+      "labelProp": ["preferredName", "fullName", "nickname"]
+    }
+  },
+  "org.dxos.type.pipeline": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.pipeline:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.pipeline",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "annotations": {
+          "generator": "commerce.productName"
+        }
+      },
+      "description": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string",
+        "description": "URL",
+        "title": "Image",
+        "pattern": "^(\\w+?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*\\/?$",
+        "format": "url"
+      },
+      "columns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "order", "view"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "order": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "view": {
+              "$id": "/schemas/echo/ref",
+              "$ref": "/schemas/echo/ref",
+              "reference": {
+                "schema": {
+                  "$ref": "dxn:org.dxos.type.view"
+                },
+                "schemaVersion": "0.1.0"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["name", "order", "view"]
+        }
+      }
+    },
+    "required": ["columns", "id"],
+    "propertyOrder": ["name", "description", "image", "columns", "id"],
+    "additionalProperties": false,
+    "title": "Pipeline",
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--path--regular",
+          "hue": "purple"
+        }
+      },
+      "labelProp": ["name"]
+    }
+  },
+  "org.dxos.type.task": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.task:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.task",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string",
+        "title": "Title",
+        "annotations": {
+          "generator": {
+            "generator": "lorem.words",
+            "args": [
+              {
+                "min": 3,
+                "max": 10
+              }
+            ]
+          }
+        }
+      },
+      "priority": {
+        "type": "string",
+        "enum": ["none", "low", "medium", "high", "urgent"],
+        "title": "Priority",
+        "annotations": {
+          "meta": {
+            "singleSelect": {
+              "options": [
+                {
+                  "id": "none",
+                  "title": "None",
+                  "color": "gray"
+                },
+                {
+                  "id": "low",
+                  "title": "Low",
+                  "color": "indigo"
+                },
+                {
+                  "id": "medium",
+                  "title": "Medium",
+                  "color": "purple"
+                },
+                {
+                  "id": "high",
+                  "title": "High",
+                  "color": "amber"
+                },
+                {
+                  "id": "urgent",
+                  "title": "Urgent",
+                  "color": "red"
+                }
+              ]
+            }
+          },
+          "generator": {
+            "generator": "helpers.arrayElement",
+            "args": [["none", "low", "medium", "high", "urgent"]]
+          }
+        },
+        "format": "single-select"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["todo", "in-progress", "done", "failed", "cancelled"],
+        "title": "Status",
+        "annotations": {
+          "meta": {
+            "singleSelect": {
+              "options": [
+                {
+                  "id": "todo",
+                  "title": "Todo",
+                  "color": "indigo"
+                },
+                {
+                  "id": "in-progress",
+                  "title": "In Progress",
+                  "color": "purple"
+                },
+                {
+                  "id": "done",
+                  "title": "Done",
+                  "color": "amber"
+                },
+                {
+                  "id": "failed",
+                  "title": "Failed",
+                  "color": "red"
+                },
+                {
+                  "id": "cancelled",
+                  "title": "Cancelled",
+                  "color": "gray"
+                }
+              ]
+            }
+          },
+          "generator": {
+            "generator": "helpers.arrayElement",
+            "args": [["todo", "in-progress", "done"]]
+          }
+        },
+        "format": "single-select"
+      },
+      "assignee": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "tool"]
+          },
+          "contact": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:org.dxos.type.person"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          },
+          "identityDid": {
+            "type": "string"
+          },
+          "identityKey": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "title": "Assignee",
+        "propertyOrder": ["role", "contact", "identityDid", "identityKey", "email", "name"]
+      },
+      "estimate": {
+        "type": "number",
+        "title": "Estimate"
+      },
+      "description": {
+        "type": "string",
+        "title": "Description",
+        "annotations": {
+          "generator": {
+            "generator": "lorem.paragraphs",
+            "args": [
+              {
+                "min": 1,
+                "max": 3
+              }
+            ]
+          }
+        }
+      }
+    },
+    "required": ["title", "id"],
+    "propertyOrder": ["title", "priority", "status", "assignee", "estimate", "description", "id"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--check-circle--regular",
+          "hue": "neutral"
+        }
+      },
+      "labelProp": ["title"]
+    }
+  },
+  "org.dxos.type.taskSet": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.taskSet:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.taskSet",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "annotations": {
+          "generator": "commerce.productName"
+        }
+      },
+      "description": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string",
+        "description": "URL",
+        "title": "Image",
+        "pattern": "^(\\w+?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*\\/?$",
+        "format": "url"
+      }
+    },
+    "required": ["id"],
+    "propertyOrder": ["name", "description", "image", "id"],
+    "additionalProperties": false,
+    "title": "Task Set",
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--check-square-offset--regular",
+          "hue": "indigo"
+        }
+      },
+      "labelProp": ["name"]
+    }
+  },
+  "org.dxos.type.thread": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.thread:0.2.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.thread",
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["staged", "active", "resolved"]
+      },
+      "messages": {
+        "type": "array",
+        "items": {
+          "$id": "/schemas/echo/ref",
+          "$ref": "/schemas/echo/ref",
+          "reference": {
+            "schema": {
+              "$ref": "dxn:org.dxos.type.message"
+            },
+            "schemaVersion": "0.1.0"
+          }
+        }
+      },
+      "agent": {
+        "type": "object",
+        "required": ["enabled", "mode"],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["auto", "mention"]
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["enabled", "mode"]
+      }
+    },
+    "required": ["messages", "id"],
+    "propertyOrder": ["name", "status", "messages", "agent", "id"],
+    "additionalProperties": false
+  },
+  "org.dxos.type.transcript": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:org.dxos.type.transcript:0.1.0",
+    "entityKind": "object",
+    "typename": "org.dxos.type.transcript",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "started": {
+        "type": "string"
+      },
+      "ended": {
+        "type": "string"
+      },
+      "feed": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:org.dxos.type.feed"
+          },
+          "schemaVersion": "0.1.0"
+        }
+      },
+      "summary": {
+        "type": "string"
+      },
+      "summaryUpdatedAt": {
+        "type": "string"
+      },
+      "resolvedReferents": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["surface", "referent"],
+          "properties": {
+            "surface": {
+              "type": "string"
+            },
+            "referent": {
+              "type": "string"
+            },
+            "ref": {
+              "$id": "/schemas/echo/ref",
+              "$ref": "/schemas/echo/ref",
+              "reference": {
+                "schema": {
+                  "$ref": "dxn:org.dxos.schema.anyObject"
+                },
+                "schemaVersion": "0.0.0"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "propertyOrder": ["surface", "referent", "ref"]
+        }
+      },
+      "pipeline": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:org.dxos.schema.anyObject"
+          },
+          "schemaVersion": "0.0.0"
+        }
+      }
+    },
+    "required": ["feed", "id"],
+    "propertyOrder": ["started", "ended", "feed", "summary", "summaryUpdatedAt", "resolvedReferents", "pipeline", "id"],
+    "additionalProperties": false,
+    "annotations": {
+      "meta": {
+        "org.dxos.annotation.icon": {
+          "icon": "ph--subtitles--regular",
+          "hue": "sky"
+        }
+      }
+    }
+  }
+}

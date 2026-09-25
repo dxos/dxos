@@ -2,23 +2,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Share> = SpaceOperation.Share.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { space, type, authMethod, multiUse, target } = input;
       const invitation = space.share({ type, authMethod, multiUse, target });
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.share',
-        properties: {
-          spaceId: space.id,
-        },
-      });
 
       return invitation;
     }),

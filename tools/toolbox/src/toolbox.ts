@@ -7,15 +7,15 @@ import { execSync } from 'child_process';
 import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import fs from 'fs';
-import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
-import { dirname, join, relative } from 'path';
+import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
+import YAML from 'yaml';
 
-import { loadJson, saveJson, sortJson } from './util';
-import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
+import { loadJson, saveJson, sortJson } from './util/index.ts';
+import { type PackageJson, type Project, ProjectGraph } from './util/project-graph.ts';
 
 const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
   keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);
@@ -24,7 +24,66 @@ const raise = (err: Error) => {
   throw err;
 };
 
-const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts'];
+/**
+ * Export subpaths that ship a bundler plugin; consumed from dist in every runtime (see `pkg-lint`'s
+ * `build-tool-source-export` rule). A package whose bundler plugin sits at the overloaded `./plugin`
+ * subpath — where `@dxos/plugin-*` packages put browser code — opts out via `withCustomExports`
+ * instead, since moon tags (which `pkg-lint` uses to tell the two apart) aren't visible here.
+ */
+const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+
+/**
+ * A package consumed from dist declares it by omitting `source`, which is what keeps node/bun and
+ * vite resolving it the same way (see `pkg-lint`'s `dist-runtime-tag` rule).
+ */
+const isDistRuntime = (projectPath: string): boolean => {
+  const moonPath = join(projectPath, 'moon.yml');
+  if (!existsSync(moonPath)) {
+    return false;
+  }
+
+  return YAML.parse(fs.readFileSync(moonPath, 'utf8'))?.tags?.includes('dist-runtime') ?? false;
+};
+
+/** Recovers the source a `types` target was emitted from, preferring the extension present on disk. */
+const sourceForTypes = (projectPath: string, types: string): string => {
+  const base = types.replace('./dist/types/src', './src').replace(/\.d\.ts$/, '');
+  return base + (['.ts', '.tsx'].find((ext) => existsSync(join(projectPath, base + ext))) ?? '.ts');
+};
+
+/** Maps a package's `vite.config.ts` entry sources to their entry names, which name the build output. */
+const readBuildEntries = (projectPath: string): Map<string, string> => {
+  const entries = new Map<string, string>();
+  const configPath = join(projectPath, 'vite.config.ts');
+  if (!existsSync(configPath)) {
+    return entries;
+  }
+
+  for (const [, name, source] of fs
+    .readFileSync(configPath, 'utf8')
+    .matchAll(/^\s*'?([\w$/-]+)'?:\s*'(src\/[^']+)',/gm)) {
+    entries.set(`./${source}`, name);
+  }
+
+  return entries;
+};
+
+/**
+ * Expands a source-only `imports` target into the `source`/`types`/`default` triple: a single target
+ * answers every condition with TypeScript source, which a consumer resolves out of `src/`.
+ */
+const expandSourceOnlyImport = (projectPath: string, source: string, buildEntries: Map<string, string>) => {
+  const entry = buildEntries.get(source);
+  if (!entry) {
+    return undefined;
+  }
+
+  return {
+    source,
+    types: source.replace(/^\.\/src\//, './dist/types/src/').replace(/\.tsx?$/, '.d.ts'),
+    default: `./dist/lib/${entry}.mjs`,
+  };
+};
 
 export type ToolboxConfig = {
   project?: {
@@ -37,20 +96,6 @@ export type ToolboxConfig = {
   };
   tsconfig?: {
     fixedKeys?: string[];
-    pathMapping?: {
-      /**
-       * Root packages that will use tsconfig paths.
-       * Used to verify dep graph integrity.
-       * Ensures there are no "holes" in the dependency graph where a package
-       * in the middle of the graph is not included while its dependencies are.
-       */
-      roots?: string[];
-
-      /**
-       * Array of globs for package names.
-       */
-      include: string[];
-    };
     noDirectOutDir?: boolean;
     noProjectReferences?: boolean;
   };
@@ -157,21 +202,6 @@ export class Toolbox {
   }
 
   /**
-   * Resolves NX substitutions in the project.json file (e.g {projectRoot}).
-   */
-  resolveProjectOption(project: Project, option: string | undefined): string | undefined {
-    if (!option) {
-      return option;
-    }
-
-    if (typeof option !== 'string') {
-      throw new TypeError(`Expected string, got ${typeof option}`);
-    }
-
-    return option.replace(/\{projectRoot\}/g, project.path);
-  }
-
-  /**
    * Update root workspace file.
    * - Sort
    *
@@ -221,7 +251,6 @@ export class Toolbox {
     const apps = [
       '@dxos/composer-app',
       '@dxos/composer-crx',
-      '@dxos/composer-dxos-org',
       '@dxos/docs',
       '@dxos/todomvc',
       'tasks',
@@ -254,16 +283,18 @@ export class Toolbox {
     groupB.sort();
 
     const config = {
-      $schema: 'https://unpkg.com/@changesets/config@3.1.4/schema.json',
+      $schema: 'https://unpkg.com/@changesets/config@4.0.0/schema.json',
       // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
       changelog: '@changesets/changelog-git',
       commit: false,
+      // Pinned rather than left on `auto` so a generated CHANGELOG matches what CI's `oxfmt --check` expects.
+      format: 'oxfmt',
       access: 'public',
       baseBranch: 'main',
       updateInternalDependencies: 'patch',
       // Only workspace-protocol ranges drive dependent bumps; pnpm rewrites them at pack time. Regular and
-      // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so an in-range
-      // minor does not force a major on the dependent.
+      // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so a published
+      // consumer resolving the group is not pinned to one exact version.
       bumpVersionsWithWorkspaceProtocolOnly: true,
       // Two lockstep version groups: [A] published core/SDK + all other versioned private @dxos packages
       // (internal tooling/tests — versioned in sync with core but not published), [B] plugins + cli. Apps
@@ -279,14 +310,6 @@ export class Toolbox {
       // @next ships as snapshot releases (manual `changeset version --snapshot next`); calculated base
       // version + commit suffix yields e.g. `0.10.0-next-<commit>`.
       snapshot: { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{commit}' },
-      // Only bump a peerDependent when the dependency actually leaves its range. The default (`false`)
-      // forces a *major* on the dependent for ANY non-patch change, which a fixed group then propagates to
-      // the whole group. Paired with the local `@changesets/assemble-release-plan` patch (a 0.x breaking
-      // peer change is a minor, not a major), this yields correct semver: 0.x minor → 0.(n+1), post-1.0
-      // minor → stays in place, breaking → major.
-      ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH: {
-        onlyUpdatePeerDependentsWhenOutOfRange: true,
-      },
     };
 
     const changesetDir = join(this.rootDir, '.changeset');
@@ -447,83 +470,6 @@ export class Toolbox {
     }
   }
 
-  async updateTsConfigPaths(): Promise<void> {
-    const regexes = Array.from(this.config.tsconfig?.pathMapping?.include ?? []).map((pattern) =>
-      globrex(pattern, { extended: true, globstar: true }),
-    );
-
-    const includedPackages = this.graph.projects.filter((project) =>
-      regexes.some((re) => {
-        return relative(this.rootDir!, project.path).match(re.regex);
-      }),
-    );
-
-    if (this.config.tsconfig?.pathMapping?.roots) {
-      const roots = this.config.tsconfig.pathMapping.roots;
-      if (!roots.every((root) => this.graph.hasPackage(root))) {
-        throw new Error('Missing packages');
-      }
-
-      const allDepsFromRoot = this.graph.getTransitiveWorkspaceDeps(roots);
-      const missingPackages = this.graph.projects.filter(
-        (project) =>
-          !roots.includes(project.name) &&
-          allDepsFromRoot.includes(project.name) &&
-          !includedPackages.includes(project) &&
-          this.graph
-            .getWorkspaceDependencies(project.name, { devDeps: false })
-            .some((dep) => includedPackages.find((p) => p.name === dep) != null),
-      );
-      if (missingPackages.length > 0) {
-        console.error(
-          `These packages must be included in the path mapping config file because their dependencies are included:\n${missingPackages
-            .map(
-              (p) =>
-                `${relative(this.rootDir, p.path)} because it depends on ${this.graph
-                  .getWorkspaceDependencies(p.name)
-                  .filter((dep) => includedPackages.find((p) => p.name === dep) != null)
-                  .join(', ')}`,
-            )
-            .join('\n')}`,
-        );
-        // TODO(thure): Lit packages which use decorators need to be “missing” by this definition in order to work.
-        // throw new Error('Missing packages');
-      }
-    }
-
-    const tsconfigPaths = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.paths.json'));
-    tsconfigPaths.compilerOptions.paths = Object.fromEntries(
-      (
-        await Promise.all(
-          includedPackages.map(async (project) => {
-            const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
-            const entryPoints = projectJson?.targets?.compile?.options?.entryPoints;
-            if (!Array.isArray(entryPoints)) {
-              return [];
-            }
-            const entries = entryPoints.map((entryPoint) => {
-              entryPoint = this.resolveProjectOption(project, entryPoint);
-              let entryId = relative(join(project.path, 'src'), entryPoint);
-              if (entryPoint.endsWith('index.ts')) {
-                entryId = dirname(entryId);
-              } else if (JS_EXTENSIONS.some((ext) => entryPoint.endsWith(ext))) {
-                entryId = entryId.slice(0, -JS_EXTENSIONS.find((ext) => entryPoint.endsWith(ext))!.length);
-              }
-
-              return { path: relative(project.path, entryPoint), entryId };
-            });
-            return entries.map(({ path, entryId }) => [
-              join(project.name, entryId),
-              [relative(this.rootDir, join(project.path, path))],
-            ]);
-          }),
-        )
-      ).flat(), // TODO(dmaretskyi): Entrypoints.
-    );
-
-    await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
-  }
-
   async updateTsConfigAll(): Promise<void> {
     const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
     tsconfigAll.references = this.graph.projects
@@ -657,14 +603,29 @@ export class Toolbox {
       }
 
       const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
+      const distRuntime = isDistRuntime(project.path);
 
       for (const [key, config] of Object.entries(packageJson.exports ?? {})) {
         if (typeof config !== 'object' || typeof config.types !== 'string') {
           continue;
         }
-        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
-        if (!existsSync(join(project.path, src))) {
+        if (distRuntime) {
+          delete config.source;
+          continue;
+        }
+        // Bundler-plugin entrypoints ship dist only: a `source` condition here lets an app's
+        // importSource resolver pull their Node-only source into a browser bundle (`pkg-lint`
+        // errors on it). Strip rather than skip, so a stale one is removed on the next run.
+        if (BUILD_TOOL_EXPORT.test(key)) {
+          delete config.source;
+          continue;
+        }
+        // A conditional `source` routes per build condition, and `types` names only one branch.
+        const src = typeof config.source === 'object' ? config.source : sourceForTypes(project.path, config.types);
+        // An unverifiable target would replace a hand-written entry with a broken one.
+        if (typeof src === 'string' && !existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
+          continue;
         }
         // Ensure 'source' is first in the exports map so it takes precedence over 'browser'
         // when oxc-resolver matches conditions in exports map order.
@@ -684,13 +645,29 @@ export class Toolbox {
         }
       }
 
-      for (const [key, config] of Object.entries(packageJson.imports ?? {})) {
+      const buildEntries = readBuildEntries(project.path);
+      const packageImports = typeof packageJson.imports === 'object' ? packageJson.imports : {};
+      for (const [key, config] of Object.entries(packageImports)) {
+        if (typeof config === 'string') {
+          if (!/^\.\/src\/.+\.tsx?$/.test(config)) {
+            continue;
+          }
+          const expanded = expandSourceOnlyImport(project.path, config, buildEntries);
+          if (expanded) {
+            packageImports[key] = expanded;
+          } else {
+            console.log(`No build entry for ${project.name} import "${key}": ${config}`);
+          }
+          continue;
+        }
         if (typeof config !== 'object' || typeof config.types !== 'string') {
           continue;
         }
-        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
-        if (!existsSync(join(project.path, src))) {
+        const src = typeof config.source === 'object' ? config.source : sourceForTypes(project.path, config.types);
+        // An unverifiable target would replace a hand-written entry with a broken one.
+        if (typeof src === 'string' && !existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
+          continue;
         }
         // Ensure 'source' is first in the imports map.
         if (Object.keys(config)[0] !== 'source') {

@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useMapZoomHandler } from '../../hooks';
-import { type GeoMarker } from '../../types';
-import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map';
+import { useMapZoomHandler } from '../../hooks/index.ts';
+import { type GeoMarker } from '../../types.ts';
+import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map.tsx';
 
 type StoryArgs = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
 
@@ -27,14 +27,14 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
       {urlProp && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 spellCheck={false}
                 placeholder='API KEY'
                 value={key}
                 onChange={(ev) => setKey(ev.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
       )}

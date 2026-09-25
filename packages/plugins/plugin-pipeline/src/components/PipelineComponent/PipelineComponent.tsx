@@ -2,34 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, slottable } from '@dxos/react-ui';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { PipelineColumn } from './PipelineColumn';
+import { PipelineColumn } from './PipelineColumn.tsx';
+import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineContext.tsx';
 
 type ItemProps = {
   item: Obj.Unknown;
   projectionModel?: ProjectionModel;
+  /** The card's menu, for the item to contribute its actions to. */
+  menu?: MenuActions;
 };
-
-const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
 //
 // Root
 //
 
-type PipelineContextValue = {
+export type PipelineContextValue = {
   Item: FC<ItemProps>;
   // TODO(wittjosiah): Support adding items.
   //  If the created item doesn't match the current query, it will not be visible.
@@ -38,12 +39,6 @@ type PipelineContextValue = {
 };
 
 type PipelineRootProps = PropsWithChildren<PipelineContextValue>;
-
-const PIPELINE_ROOT = 'Pipeline.Root';
-
-const [PipelineRootContext, usePipeline] = createContext<PipelineContextValue>(PIPELINE_ROOT, {
-  Item: itemNoOp,
-});
 
 const PipelineRoot = ({ children, ...contextValue }: PipelineRootProps) => (
   <PipelineRootContext {...contextValue}>{children}</PipelineRootContext>
@@ -63,12 +58,11 @@ type PipelineContentProps = PropsWithChildren<{
 
 const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
   ({ asChild, model, children, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : 'div';
     return (
       <Board.Root model={model}>
-        <Comp {...composableProps(props)} ref={forwardedRef}>
+        <ark.div asChild={asChild} {...composableProps(props)} ref={forwardedRef}>
           {children}
-        </Comp>
+        </ark.div>
       </Board.Root>
     );
   },
@@ -135,6 +129,4 @@ export const PipelineComponent = {
   Toolbar: PipelineToolbar,
 };
 
-export { usePipeline };
-
-export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineContextValue, PipelineRootProps };
+export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineRootProps };

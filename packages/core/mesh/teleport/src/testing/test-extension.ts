@@ -2,14 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  TestRpcRequestSchema,
+  TestRpcResponseSchema,
+  TestService as TestServiceDesc,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
-import { type ExtensionContext, type TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport.ts';
+
+type TestService = BufService<typeof TestServiceDesc>;
 
 interface TestExtensionCallbacks {
   onOpen?: () => Promise<void>;
@@ -38,21 +47,15 @@ export class TestExtension implements TeleportExtension {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
-          voidCall: async (request) => {
-            // Ok.
-          },
-          testCall: async (request) => {
-            return {
-              data: request.data,
-            };
-          },
+          voidCall: async () => create(EmptySchema, {}),
+          testCall: async (request) => create(TestRpcResponseSchema, { data: request.data }),
         },
       },
       timeout: 2000,
@@ -80,7 +83,10 @@ export class TestExtension implements TeleportExtension {
 
   async test(message = 'test'): Promise<void> {
     await this.open.wait({ timeout: 2000 });
-    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 1500);
+    const res = await asyncTimeout(
+      this._rpc.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: message })),
+      1500,
+    );
     invariant(res.data === message);
   }
 

@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
-import { getSession } from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Agent, Chat } from '../../../types';
-import { Relay } from './definitions';
+import { Relay } from './definitions.ts';
 
 /**
  * The relay pattern (plugin-projects PLAN.md phase C): one trigger per subscribed feed runs this
@@ -39,7 +40,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
           // forwards the event rather than silently dropping it.
           const relevant = yield* qualifyEvent(chat, event).pipe(
             Effect.retry({ times: 1 }),
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.sync(() => {
                 log.warn('relay qualification failed; forwarding event', { error });
                 return true;
@@ -51,16 +52,13 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
           }
         }
 
-        const feed = yield* Database.load(chat.feed).pipe(
-          Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load relay chat feed.'))),
-        );
-        // The durable session recovers steering from its spawn annotation; passing the ref here
-        // keeps the reuse identity honest (a repointed ref respawns the process).
-        const session = yield* getSession(feed, { instructions: chat.instructions });
+        // The durable session is bound to the chat, so it recovers its steering (and its queue)
+        // from the chat itself on every rehydration.
+        const session = yield* AgentService.getSession(chat, { location: chat.remote ? 'edge' : 'local' });
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
   Operation.opaqueHandler,
@@ -92,7 +90,9 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
               You are a qualifying agent that determines if the event is relevant to the agent.
               Respond with true if the event is relevant to the agent, false otherwise.
               If you are not sure, return true.
+
               The qualified events will be forwarded to the larger agent that will process them.
+
               <agent id="${agent ? Obj.getURI(agent) : 'unknown'}" name="${agent?.name ?? ''}">
                 <instructions>
                 ${instructionsText}

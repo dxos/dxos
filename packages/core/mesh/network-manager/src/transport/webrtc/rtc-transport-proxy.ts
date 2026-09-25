@@ -2,30 +2,50 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Writable } from 'node:stream';
+import { create } from '@bufbuild/protobuf';
+import * as Cause from 'effect/Cause';
+import type * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import type * as Fiber from 'effect/Fiber';
+import * as Stream from 'effect/Stream';
 
-import { Event, scheduleTask } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
+import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ConnectionResetError, ConnectivityError, TimeoutError } from '@dxos/protocols';
-import { type BridgeEvent, type BridgeService, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { arrayToBuffer } from '@dxos/util';
+import { ConnectivityError } from '@dxos/protocols';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import {
+  CloseRequestSchema,
+  ConnectionRequestSchema,
+  DetailsRequestSchema,
+  SignalRequestSchema,
+  StatsRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/rtc_pb';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type RTCService } from '@dxos/protocols/rpc';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
+import { bindDataChannel } from './rtc-data-channel.ts';
 
-const RPC_TIMEOUT = 10_000;
-const CLOSE_RPC_TIMEOUT = 3000;
-const RESP_MIN_THRESHOLD = 500;
+const RPC_TIMEOUT = '10 seconds' as const;
+/** Above {@link RPC_TIMEOUT}, since a close queues behind the host's own peer-connection teardown
+ * in a tab the browser may be throttling as a background page. */
+const CLOSE_RPC_TIMEOUT = '15 seconds' as const;
 
 export type RtcTransportProxyOptions = TransportOptions & {
-  bridgeService: BridgeService;
+  rtcService: RTCService.Client;
 };
 
+/**
+ * A transport whose `RTCPeerConnection` lives in another thread (the tab), reached over effect-rpc.
+ *
+ * Only signalling crosses the rpc boundary: once the remote side hands over the `RTCDataChannel` it
+ * is transferred into this thread, and the wire protocol reads and writes it directly.
+ */
 export class RtcTransportProxy extends Resource implements Transport {
   private readonly _proxyId = PublicKey.random();
 
@@ -33,103 +53,59 @@ export class RtcTransportProxy extends Resource implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  private _serviceStream: Stream<BridgeEvent> | undefined;
+  private _events: Fiber.Fiber<void, never> | undefined;
+  private _unbind: (() => void) | undefined;
+  /** The service transfers the established `RTCDataChannel` over this channel's other end. */
+  private _handover: MessageChannel | undefined;
 
   constructor(private readonly _options: RtcTransportProxyOptions) {
     super();
   }
 
   protected override async _open(): Promise<void> {
-    let stream: Stream<BridgeEvent>;
-    try {
-      stream = this._options.bridgeService.open(
-        {
-          proxyId: this._proxyId,
-          remotePeerKey: this._options.remotePeerKey,
-          ownPeerKey: this._options.ownPeerKey,
-          topic: this._options.topic,
-          initiator: this._options.initiator ?? false,
+    const handover = new MessageChannel();
+    this._handover = handover;
+    handover.port1.onmessage = ({ data }: MessageEvent<RTCDataChannel>) => this._bindChannel(data);
+    handover.port1.start();
+
+    this._events = this._options.rtcService['RTCService.open']({
+      request: create(ConnectionRequestSchema, {
+        proxyId: fromPublicKey(this._proxyId),
+        remotePeerKey: this._options.remotePeerKey,
+        ownPeerKey: this._options.ownPeerKey,
+        topic: this._options.topic,
+        initiator: this._options.initiator ?? false,
+      }),
+      channelPort: handover.port2,
+    }).pipe(
+      Stream.runForEach((signal) => Effect.promise(() => this._handleSignal(signal))),
+      // `matchCause`, not `match`: a defect in the rpc transport would otherwise leave the fiber
+      // dead and the transport waiting forever for a connection that can never arrive.
+      Effect.matchCause({
+        // The stream ends when the remote connection closes.
+        onSuccess: () => void this.close(),
+        onFailure: (cause) => {
+          if (Cause.hasInterruptsOnly(cause)) {
+            return;
+          }
+          const error = Cause.squash(cause);
+          this._raiseIfOpen(error instanceof Error ? error : new Error(String(error)));
         },
-        { timeout: RPC_TIMEOUT },
-      );
-    } catch (error: any) {
-      this.errors.raise(error);
-      return;
-    }
-
-    this._serviceStream = stream;
-
-    stream.waitUntilReady().then(
-      () => {
-        stream.subscribe(
-          async (event: BridgeEvent) => {
-            log('rtc transport proxy event', event);
-            if (event.connection) {
-              await this._handleConnection(event.connection);
-            } else if (event.data) {
-              this._handleData(event.data);
-            } else if (event.signal) {
-              await this._handleSignal(event.signal);
-            }
-          },
-          (err) => {
-            log('rtc bridge stream closed', { err });
-            if (err) {
-              this._raiseIfOpen(err);
-            } else {
-              void this.close();
-            }
-          },
-        );
-
-        const connectorStream = new Writable({
-          write: (chunk, _, callback) => {
-            const sendStartMs = Date.now();
-            this._options.bridgeService
-              .sendData({ proxyId: this._proxyId, payload: chunk }, { timeout: RPC_TIMEOUT })
-              .then(
-                () => {
-                  if (Date.now() - sendStartMs > RESP_MIN_THRESHOLD) {
-                    log('slow response, delaying callback');
-                    scheduleTask(this._ctx, () => callback(), RESP_MIN_THRESHOLD);
-                  } else {
-                    callback();
-                  }
-                },
-                (err: any) => {
-                  callback();
-                  this._raiseIfOpen(err);
-                },
-              );
-          },
-        });
-
-        connectorStream.on('error', (err) => {
-          this._raiseIfOpen(err);
-        });
-
-        this._options.stream.pipe(connectorStream);
-      },
-      (error) => {
-        if (error) {
-          this._raiseIfOpen(error);
-        } else {
-          void this.close();
-        }
-      },
+      }),
+      Effect.runFork,
     );
   }
 
   protected override async _close(): Promise<void> {
-    try {
-      await this._serviceStream?.close();
-      this._serviceStream = undefined;
-    } catch (err: any) {
-      log.catch(err);
-    }
+    this._teardown();
 
     try {
-      await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: CLOSE_RPC_TIMEOUT });
+      await this._run(
+        this._options.rtcService['RTCService.close'](
+          create(CloseRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
+        ),
+        CLOSE_RPC_TIMEOUT,
+      );
     } catch (err: any) {
       log.catch(err);
     }
@@ -138,43 +114,77 @@ export class RtcTransportProxy extends Resource implements Transport {
   }
 
   async onSignal(signal: Signal): Promise<void> {
-    this._options.bridgeService
-      .sendSignal({ proxyId: this._proxyId, signal }, { timeout: RPC_TIMEOUT })
-      .catch((err) => this._raiseIfOpen(decodeError(err)));
+    this._run(
+      this._options.rtcService['RTCService.sendSignal'](
+        create(SignalRequestSchema, { proxyId: fromPublicKey(this._proxyId), signal }),
+      ),
+    ).catch((err) => this._raiseIfOpen(err));
   }
 
-  private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
-    if (connectionEvent.error) {
-      this.errors.raise(decodeError(connectionEvent.error));
+  async getDetails(): Promise<string> {
+    try {
+      const response = await this._run(
+        this._options.rtcService['RTCService.getDetails'](
+          create(DetailsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
+        ),
+      );
+      return response.details;
+    } catch (err) {
+      return 'rtc-svc unreachable';
+    }
+  }
+
+  async getStats(): Promise<TransportStats | undefined> {
+    try {
+      const response = await this._run(
+        this._options.rtcService['RTCService.getStats'](
+          create(StatsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
+        ),
+      );
+      return response.stats as TransportStats | undefined;
+    } catch (err) {
+      log('transport stats unavailable', { err });
+      return undefined;
+    }
+  }
+
+  /**
+   * Called when the underlying proxy service becomes unavailable.
+   */
+  forceClose(): void {
+    this._teardown();
+    this.closed.emit();
+  }
+
+  private _teardown(): void {
+    this._events?.interruptUnsafe();
+    this._events = undefined;
+    this._unbind?.();
+    this._unbind = undefined;
+    this._handover?.port1.close();
+    this._handover = undefined;
+  }
+
+  private _bindChannel(channel: RTCDataChannel): void {
+    if (!this.isOpen) {
+      log.verbose('channel handed over after the transport was closed');
+      channel.close();
       return;
     }
 
-    switch (connectionEvent.state) {
-      case ConnectionState.CONNECTED: {
-        this.connected.emit();
-        break;
-      }
-      case ConnectionState.CLOSED: {
-        await this.close();
-        break;
-      }
-    }
+    this._unbind = bindDataChannel(channel, this._options.stream, {
+      onOpen: () => this.connected.emit(),
+      onClose: () => this.close().then(() => {}),
+      onError: (error) => this._raiseIfOpen(error),
+    });
   }
 
-  private _handleData(dataEvent: BridgeEvent.DataEvent): void {
+  private async _handleSignal(signal: Signal): Promise<void> {
+    invariant(signal, 'Signal event carries no payload.');
     try {
-      // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
-      this._options.stream.write(arrayToBuffer(dataEvent.payload));
-    } catch (error: any) {
-      this._raiseIfOpen(error);
-    }
-  }
-
-  private async _handleSignal(signalEvent: BridgeEvent.SignalEvent): Promise<void> {
-    try {
-      await this._options.sendSignal(signalEvent.payload);
+      await this._options.sendSignal(signal);
     } catch (error) {
-      const type = signalEvent.payload.payload.data?.type;
+      const type = signalType(signal);
       if (type === 'offer' || type === 'answer') {
         this._raiseIfOpen(
           new ConnectivityError({ message: `Session establishment failed: ${type} couldn't be sent.` }),
@@ -183,31 +193,8 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  async getDetails(): Promise<string> {
-    try {
-      const response = await this._options.bridgeService.getDetails(
-        { proxyId: this._proxyId },
-        { timeout: RPC_TIMEOUT },
-      );
-      return response.details;
-    } catch (err) {
-      return 'bridge-svc unreachable';
-    }
-  }
-
-  async getStats(): Promise<TransportStats> {
-    try {
-      const response = await this._options.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
-      return response.stats as TransportStats;
-    } catch (err) {
-      return {
-        bytesSent: 0,
-        bytesReceived: 0,
-        packetsSent: 0,
-        packetsReceived: 0,
-        rawStats: 'bridge-svc unreachable',
-      };
-    }
+  private _run<A>(effect: Effect.Effect<A, Error>, timeout: Duration.Input = RPC_TIMEOUT): Promise<A> {
+    return EffectEx.runPromise(effect.pipe(Effect.timeout(timeout), Effect.orDie));
   }
 
   private _raiseIfOpen(error: any): void {
@@ -217,26 +204,18 @@ export class RtcTransportProxy extends Resource implements Transport {
       log.info('error swallowed because transport was closed', { message: error.message });
     }
   }
-
-  /**
-   * Called when underlying proxy service becomes unavailable.
-   */
-  forceClose(): void {
-    void this._serviceStream?.close();
-    this.closed.emit();
-  }
 }
 
 export class RtcTransportProxyFactory implements TransportFactory {
-  private _bridgeService: BridgeService | undefined;
+  private _rtcService: RTCService.Client | undefined;
   private _connections = new Set<RtcTransportProxy>();
 
   /**
-   * Sets the current BridgeService to be used to open connections.
+   * Sets the current service to be used to open connections.
    * Calling this method will close any existing connections.
    */
-  setBridgeService(bridgeService: BridgeService | undefined): this {
-    this._bridgeService = bridgeService;
+  setRtcService(rtcService: RTCService.Client | undefined): this {
+    this._rtcService = rtcService;
     for (const connection of this._connections) {
       connection.forceClose();
     }
@@ -244,8 +223,8 @@ export class RtcTransportProxyFactory implements TransportFactory {
   }
 
   createTransport(options: TransportOptions): Transport {
-    invariant(this._bridgeService, 'RtcTransportProxyFactory is not ready to open connections');
-    const transport = new RtcTransportProxy({ ...options, bridgeService: this._bridgeService });
+    invariant(this._rtcService, 'RtcTransportProxyFactory is not ready to open connections');
+    const transport = new RtcTransportProxy({ ...options, rtcService: this._rtcService });
     this._connections.add(transport);
     transport.closed.on(() => {
       this._connections.delete(transport);
@@ -254,15 +233,8 @@ export class RtcTransportProxyFactory implements TransportFactory {
   }
 }
 
-const decodeError = (err: Error | string) => {
-  const message = typeof err === 'string' ? err : err.message;
-  if (message.includes('CONNECTION_RESET')) {
-    return new ConnectionResetError({ message });
-  } else if (message.includes('TIMEOUT')) {
-    return new TimeoutError({ message });
-  } else if (message.includes('CONNECTIVITY_ERROR')) {
-    return new ConnectivityError({ message });
-  } else {
-    return typeof err === 'string' ? new Error(err) : err;
-  }
+/** The SDP type inside a signal's opaque `Struct` payload, where it names one. */
+const signalType = (signal: Signal): unknown => {
+  const data = signal.payload?.data;
+  return typeof data === 'object' && data !== null && !Array.isArray(data) ? data.type : undefined;
 };

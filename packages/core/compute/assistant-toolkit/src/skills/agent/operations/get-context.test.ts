@@ -6,17 +6,17 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { Outline } from '@dxos/types';
 
-import { OperationTestLayer } from '../../../testing';
-import { Agent, Chat } from '../../../types';
-import AgentSkillDef from '../skill';
-import * as AgentSkillOperations from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import AgentSkillDef from '../skill.ts';
+import * as AgentSkillOperations from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -46,14 +46,11 @@ describe('GetContext', () => {
         const { agent, conversation } = yield* setupBoundAgent();
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        const { text } = yield* Chat.ensureOutlineText(chat);
-        Obj.update(text, (text) => {
-          text.content = Outline.upsertChecklistItems(text.content, [{ title: 'Buy eggs', done: false }]);
-        });
+        const { db } = yield* Database.Service;
+        Chat.addTask(db, chat, 'Buy eggs');
         yield* Database.flush();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));
-
         expect(context.checklist).toContain('Buy eggs');
       },
       Effect.provide(OperationTestLayer),
@@ -73,7 +70,7 @@ const setupBoundAgent = Effect.fnUntraced(function* () {
   const chat = yield* Agent.loadChat(agent);
   const chatFeed = chat?.feed?.target;
   invariant(chatFeed, 'Agent chat feed not found.');
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed: chatFeed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(agent)] }));
 

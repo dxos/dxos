@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Instructions, Skill } from '@dxos/compute';
+import { useActivationSignal } from '@dxos/app-framework/ui';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Form } from '@dxos/react-ui-form';
 
 const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
@@ -38,6 +40,10 @@ export const InstructionsEditor = ({
   readonly,
   fields = DEFAULT_FIELDS,
 }: InstructionsEditorProps) => {
+  // Signalled here rather than by each embedding surface: a `skills` row renders blank until the
+  // modules gated on this event contribute their definitions.
+  useActivationSignal(AppActivationEvents.AssistantStart);
+
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);
 
@@ -80,24 +86,14 @@ export const InstructionsEditor = ({
       getOptions={getRefOptions}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.FieldSet filter={(props) => props.filter((prop) => fieldSet.has(prop.name.toString()))} />
+      <Form.Fields filter={(props) => props.filter((prop) => fieldSet.has(prop.name.toString()))} />
     </Form.Root>
   );
 };
 
-// System objects (e.g. SpaceProperties) carry `HiddenAnnotation` on their type; they are infrastructure,
-// not user content, so they are excluded from the context picker.
-const isSystemObject = (object: Entity.Any): boolean => {
-  if (!Obj.isObject(object)) {
-    return false;
-  }
-  const typeEntity = Obj.getType(object);
-  if (!typeEntity) {
-    return false;
-  }
-
-  return HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
-};
+// System objects (e.g. SpaceProperties) are infrastructure, not user content, so they are excluded
+// from the context picker.
+const isSystemObject = (object: Entity.Any): boolean => Obj.isObject(object) && !TypeOptions.isUserObject(object);
 
 // Ref-picker options shared by the routine form's skill and object fields: surface a secondary line
 // per candidate — a Skill's registry key, otherwise the object's typename — and sort by label, so the

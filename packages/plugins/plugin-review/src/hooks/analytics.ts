@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { useOnTransition } from '@dxos/react-ui';
 import { type ContentBlock, type Message } from '@dxos/types';
 

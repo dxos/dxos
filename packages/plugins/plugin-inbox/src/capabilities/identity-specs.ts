@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { identitySpecs } from '@dxos/extractor-lib';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 /**
  * Identity rules for Person and Organization — the types this plugin materialises from mail.
@@ -19,6 +19,6 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return identitySpecs.map((spec) => Capability.contributes(SpaceCapabilities.IdentitySpec, spec));
+    return Capability.contributeAll(SpaceCapabilities.IdentitySpec, identitySpecs);
   }),
 );

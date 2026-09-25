@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { EnableSkills, QuerySkills } from './operations/definitions';
+import { EnableSkills, QuerySkills } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.skillManager';
 

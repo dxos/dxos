@@ -8,8 +8,8 @@ import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import { JsonView } from './JsonView';
-import { Placeholder } from './Placeholder';
+import { JsonView } from './JsonView.tsx';
+import { Placeholder } from './Placeholder.tsx';
 
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
@@ -81,7 +81,7 @@ export const MasterDetailTable = ({
   );
 
   return (
-    <div className={mx('h-full divide-y divide-separator', gridLayout)}>
+    <div className={mx('h-full divide-y divide-subdued-separator', gridLayout)}>
       <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
       <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-s')}>
         {selected ? (

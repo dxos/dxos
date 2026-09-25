@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { CapabilityManager } from '@dxos/app-framework';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type { Client } from '@dxos/client';
 import type { Label } from '@dxos/react-ui';
 

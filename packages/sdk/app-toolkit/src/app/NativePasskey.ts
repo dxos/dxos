@@ -16,7 +16,7 @@
 //   The iOS entitlements file also needs webcredentials:composer.space and a deployment target bump to 16.0+.
 
 import { log } from '@dxos/log';
-import { isTauri } from '@dxos/util';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 /** Result from the native passkey registration command. */
 export type NativePasskeyRegistrationResult = {
@@ -41,6 +41,17 @@ export type NativePasskeyLoginResult = {
 /** Domain for the Composer app (used for passkey RP ID, app links, and share links). */
 export const APP_DOMAIN = 'composer.space';
 
+/**
+ * WebAuthn relying party id for the current page.
+ * Deployments under `composer.space` (labs, staging) must pin the apex domain: the hub verifies
+ * assertions against it, and the rpId is baked into the credential at creation. Local development
+ * falls back to the page host, since `composer.space` is not a valid rp id there.
+ */
+export const getRelyingPartyId = (): string => {
+  const hostname = globalThis.location?.hostname ?? APP_DOMAIN;
+  return hostname === APP_DOMAIN || hostname.endsWith(`.${APP_DOMAIN}`) ? APP_DOMAIN : hostname;
+};
+
 /** Normalize URL-safe base64 to standard base64 and decode to bytes. */
 export const decodeUrlSafeBase64 = (encoded: string): Uint8Array => {
   const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
@@ -56,8 +67,7 @@ export const supportsNativePasskeys = (): boolean => {
   if (!isTauri()) {
     return false;
   }
-  const platform = ((navigator as any).userAgentData?.platform || navigator.platform)?.toLowerCase();
-  return platform?.startsWith('mac') === true;
+  return getHostPlatform() === 'macos';
 };
 
 /**

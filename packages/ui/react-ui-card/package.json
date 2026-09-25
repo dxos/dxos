@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-card",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Shared card-composition primitives (Row, CardTile, Avatar).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,7 +12,11 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -44,8 +48,8 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

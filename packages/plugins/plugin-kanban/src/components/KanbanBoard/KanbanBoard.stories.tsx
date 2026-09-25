@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Filter, JsonSchema, Obj, Query, type View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
-import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
 import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
@@ -19,7 +19,7 @@ import { KanbanCardTileSimple } from '#testing';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { KanbanBoard } from './KanbanBoard';
+import { KanbanBoard } from './KanbanBoard.tsx';
 
 random.seed(1);
 

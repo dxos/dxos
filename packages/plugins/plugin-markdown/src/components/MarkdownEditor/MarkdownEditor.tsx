@@ -4,18 +4,18 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom';
-import { createContext } from '@radix-ui/react-context';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { createContext } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
@@ -29,11 +29,11 @@ import {
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
-} from './MarkdownEditorContent';
+} from './MarkdownEditorContent.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
-} from './MarkdownEditorToolbar';
+} from './MarkdownEditorToolbar.tsx';
 
 //
 // Context
@@ -44,7 +44,7 @@ type MarkdownEditorContextValue = Merge<
     id: string;
     attendableId?: string;
   },
-  Pick<ExtensionsOptions, 'compact' | 'viewMode'>,
+  Pick<ExtensionsOptions, 'compact' | 'viewMode' | 'editorStateStore'>,
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
 >;
 
@@ -74,6 +74,10 @@ export type MarkdownEditorProviderProps = Merge<
   Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
+/**
+ * Builds the editor's extensions and menu options and shares them with `MarkdownEditor.Content` and
+ * `MarkdownEditor.Toolbar`. `attendableId` reaches the extensions so inline embeds nest under it.
+ */
 export const MarkdownEditorProvider = ({
   children,
   id,
@@ -94,7 +98,7 @@ export const MarkdownEditorProvider = ({
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
   // Widget portals driven by xmlTags.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
@@ -102,6 +106,7 @@ export const MarkdownEditorProvider = ({
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
+    attendableId,
     object,
     compact,
     viewMode,
@@ -140,11 +145,12 @@ export const MarkdownEditorProvider = ({
       attendableId,
       compact,
       viewMode,
+      editorStateStore,
       onAction,
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -160,41 +166,46 @@ MarkdownEditorProvider.displayName = 'MarkdownEditor.Provider';
 
 const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
-type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
+type MarkdownEditorContentProps = Omit<
+  NaturalMarkdownEditorContentProps,
+  'id' | 'extensions' | 'toolbarState' | 'editorStateStore'
+>;
 
-const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
-  ({ compact: compactProp, ...props }, _forwardedRef) => {
-    const {
-      id,
-      attendableId,
-      compact = compactProp,
-      viewMode,
-      onFileUpload,
-    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
-    const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEditorContentProps) => {
+  const {
+    id,
+    attendableId,
+    compact = compactProp,
+    viewMode,
+    editorStateStore,
+    onFileUpload,
+  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+  const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-    const handleRef = useCallback(
-      (view: EditorView | null) => {
-        setController(createEditorController(view));
-      },
-      [setController],
-    );
+  const handleRef = useCallback(
+    (view: EditorView | null) => {
+      setController(createEditorController(view));
+    },
+    [setController],
+  );
 
-    return (
-      <NaturalMarkdownEditorContent
-        {...composableProps(props)}
-        id={id}
-        attendableId={attendableId}
-        compact={compact}
-        viewMode={viewMode}
-        toolbarState={state as Atom.Writable<EditorToolbarState>}
-        extensions={extensions}
-        onFileUpload={onFileUpload}
-        ref={handleRef}
-      />
-    );
-  },
-);
+  return (
+    <NaturalMarkdownEditorContent
+      // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
+      // DOM `className` the inner component never reads, dropping the caller's classes.
+      {...props}
+      id={id}
+      attendableId={attendableId}
+      compact={compact}
+      viewMode={viewMode}
+      editorStateStore={editorStateStore}
+      toolbarState={state as Atom.Writable<EditorToolbarState>}
+      extensions={extensions}
+      onFileUpload={onFileUpload}
+      ref={handleRef}
+    />
+  );
+};
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
@@ -246,6 +257,3 @@ export const MarkdownEditor = {
 };
 
 export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps };
-
-/** @deprecated Use `MarkdownEditorProviderProps`. */
-export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

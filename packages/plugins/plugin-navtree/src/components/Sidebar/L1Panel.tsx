@@ -5,28 +5,40 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { Node } from '@dxos/app-graph';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph } from '@dxos/plugin-graph';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Empty, Tree } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import {
+  Banner,
+  DensityProvider,
+  Icon,
+  IconButton,
+  ScrollArea,
+  Tabs,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Tree } from '@dxos/react-ui-list';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_ITEM } from '../NavTree';
-import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
+import { NAV_TREE_ITEM } from '../NavTree/index.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
 
 /**
- * Delay before the unavailable-workspace message appears: a workspace whose space is still loading has
- * no graph node yet and materializes into a real panel on its own, so it must not flash during that window.
+ * Width held for the item-end slot, whose surface resolves after the tree has painted: a
+ * `min-content` track would start collapsed and re-truncate every label when it lands. Sized to
+ * what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
  */
+const ITEM_END_SIZE = '1.25rem';
+
+/** Delay before a pending or unavailable workspace renders anything. */
 const RENDER_DELAY = '1s';
 
 export type L1PanelProps = {
@@ -35,7 +47,9 @@ export type L1PanelProps = {
   /** The tab's workspace id, which may name a workspace that has no graph node. */
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
-  item?: Node.Node;
+  item?: AppGraphNode.Node;
+  /** Whether the workspace this tab names is known to be missing, rather than still on its way. */
+  unavailable?: boolean;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -45,8 +59,9 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1Panel$ = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const pending = item?.properties.pending === true;
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
@@ -67,21 +82,37 @@ const L1Panel$ = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => 
       // reference a missing element.
       {...(!item && { 'aria-labelledby': undefined })}
       {...(isCurrent && {
-        'data-testid': item ? 'navtree.workspace.visible' : 'navtree.workspace.unavailable',
+        'data-testid': pending
+          ? 'navtree.workspace.pending'
+          : item
+            ? 'navtree.workspace.visible'
+            : 'navtree.workspace.unavailable',
       })}
       {...(!open && { inert: true })}
     >
       {shouldRenderContent &&
-        (item ? (
+        (pending ? (
+          <div
+            role='status'
+            aria-label={t('pending-workspace.label')}
+            className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
+            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+          >
+            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+          </div>
+        ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          <Empty
-            label={t('workspace-unavailable.description')}
-            // Second grid row, so the message clears the rail exactly as the tree does, and hugging its
-            // top rather than stretching to the row's full height.
-            classNames='row-start-2 self-start animate-fade-in'
-            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-          />
+          unavailable && (
+            <Banner.Empty
+              key={id}
+              label={t('workspace-unavailable.description')}
+              // Second grid row, so the message clears the rail exactly as the tree does, and
+              // hugging its top rather than stretching to the row's full height.
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+            />
+          )
         ))}
     </Tabs.Panel>
   );
@@ -93,9 +124,9 @@ const useIsActivatedWorkspace = (id: string): boolean => {
   const edges = useEdges(graph, id);
 
   return useMemo(() => {
-    const childIds = edges[Graph.relationKey('child')] ?? [];
+    const childIds = edges[AppGraph.relationKey('child')] ?? [];
     return childIds.some((childId) => {
-      const child = Graph.getNode(graph, childId);
+      const child = AppGraph.getNode(graph, childId);
       if (Option.isNone(child)) {
         return false;
       }
@@ -111,13 +142,13 @@ const L1PanelContent = ({
   path,
   item,
   onBack,
-}: Pick<L1PanelProps, 'open' | 'path' | 'onBack'> & { item: Node.Node }) => {
+}: Pick<L1PanelProps, 'open' | 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
   const navTreeContext = useNavTreeContext();
 
   return (
     <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root thin orientation='vertical'>
+      <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
             classNames='pt-[2px]'
@@ -125,12 +156,11 @@ const L1PanelContent = ({
             id={item.id}
             rootId={item.id}
             path={path}
-            levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+            gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
-            blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
+            getDropKind={navTreeContext.getDropKind}
             canSelect={navTreeContext.canSelect}
             onOpenChange={navTreeContext.onOpenChange}
             onSelect={navTreeContext.onSelect}
@@ -145,11 +175,11 @@ const L1PanelContent = ({
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: Node.Node }) => {
+const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
   const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = GraphPath.isPinnedWorkspace(item.id);
+  const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
@@ -157,7 +187,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
+      className='grid w-full items-center dx-app-drag dx-density-lg'
+      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
         <IconButton
@@ -185,8 +217,8 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
 };
 
 type L1MenuActions = {
-  menuActions: Node.Action[];
-  onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
+  menuActions: AppGraphNode.Action[];
+  onAction: (action: AppGraphNode.Action, params?: AppGraphNode.InvokeProps) => void;
 };
 
 /**
@@ -199,7 +231,7 @@ const MenuActions = ({
   menuActions,
   onAction,
 }: {
-  item: Node.Node;
+  item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -217,39 +249,36 @@ const MenuActions = ({
         size={4}
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
-        onClick={() => onAction(menuActions[0] as Node.Action)}
+        onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
       />
     );
   }
 
   return (
-    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-      <Menu.Trigger asChild>
-        <IconButton
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          iconOnly
-          size={4}
-          label={t('tree-item-actions.label')}
-          data-testid='navtree.treeItem.actionsLevel0'
-        />
-      </Menu.Trigger>
-      <Menu.Content group={item} items={menuActions as MenuItem[]} />
-    </Menu.Root>
+    <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
+      <IconButton
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon='ph--dots-three-vertical--regular'
+        iconOnly
+        size={4}
+        label={t('tree-item-actions.label')}
+        data-testid='navtree.treeItem.actionsLevel0'
+      />
+    </ActionMenu>
   );
 };
 
 /**
  * Builds the menu actions for the L1 panel header.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: Node.Node }): L1MenuActions => {
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: AppGraphNode.Node }): L1MenuActions => {
   const runAction = useActionRunner();
 
   const menuActions = getListActions(useActions(item));
 
   const onAction = useCallback(
-    (action: Node.Action, params?: Node.InvokeProps) => {
+    (action: AppGraphNode.Action, params?: AppGraphNode.InvokeProps) => {
       void runAction(action, { ...params, path });
     },
     [runAction, path],
@@ -258,4 +287,4 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: N
   return { menuActions, onAction };
 };
 
-export const L1Panel = memo(L1Panel$);
+export const L1Panel = memo(L1PanelInner);

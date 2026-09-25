@@ -26,7 +26,7 @@ import {
   loadFixtureMessages,
   trackProgress,
   writeResponses,
-} from '../testing/harness';
+} from '../testing/harness/index.ts';
 import {
   ARTIFACT_BEST_OPEN,
   ARTIFACT_DRAFTS,
@@ -35,7 +35,7 @@ import {
   ARTIFACT_OWNER,
   ARTIFACT_OWNER_EMAIL,
   ARTIFACT_PROFILES,
-} from './defs';
+} from './defs.ts';
 
 // Qualitative artifacts for the overnight report — the outputs to eyeball, not graded scores:
 //   topics.md        — the mailbox's topics, each summarized, with its threads.

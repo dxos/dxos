@@ -9,6 +9,7 @@ import { setupPage } from '@dxos/test-utils/playwright';
 export class AppManager {
   page!: Page;
   private _initialized = false;
+  private _close?: () => Promise<void>;
 
   constructor(private readonly _browser: Browser) {}
 
@@ -17,11 +18,16 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, {});
+    const { page, close } = await setupPage(this._browser, {});
     this.page = page;
+    this._close = close;
     await page.getByTestId('client-0').waitFor({ state: 'visible' });
     await page.getByTestId('client-1').waitFor({ state: 'visible' });
     this._initialized = true;
+  }
+
+  async close(): Promise<void> {
+    await this._close?.();
   }
 
   // Getters

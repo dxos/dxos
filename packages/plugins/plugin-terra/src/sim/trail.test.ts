@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Terra, TerraObject } from '../types';
-import { evaluate, initialState } from './motion';
-import { type TrailSpec, trailPuffs } from './trail';
+import { Terra, TerraObject } from '#types';
+
+import { evaluate, initialState } from './motion.ts';
+import { type TrailSpec, trailPuffs } from './trail.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'trail-1' } }));
 

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Database, type Entity, type Filter } from '@dxos/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
@@ -25,7 +25,7 @@ export const useGraphModel = (
       return;
     }
 
-    const newModel = new SpaceGraphModel(registry);
+    const newModel = new SpaceGraphModel({ registry });
     void newModel.open(db);
     setModel(newModel);
 

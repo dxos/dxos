@@ -6,13 +6,13 @@ import { Octokit } from '@octokit/core';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { SettingsOperation } from '@dxos/app-toolkit';
-import { type Script } from '@dxos/compute';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Clipboard, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -94,29 +94,29 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   }, [object, githubToken]);
 
   return (
-    <div className='flex flex-col'>
-      <Form.Section title={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
-
+    <Form.FieldSet label={t('script-publish-settings.label')} description={t('script-publish-settings.description')}>
       {!githubToken && (
-        <div className='flex flex-col py-form-gap'>
-          <Message.Root valence='info'>
-            <Message.Title>{t('no-github-token.label')}</Message.Title>
-          </Message.Root>
-          <div className='flex pt-form-gap'>
+        <Flex column classNames='py-form-gap'>
+          <Banner.Root valence='info'>
+            <Banner.Content>
+              <Banner.Title>{t('no-github-token.label')}</Banner.Title>
+            </Banner.Content>
+          </Banner.Root>
+          <Flex classNames='pt-form-gap'>
             <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       )}
 
       {githubToken && (
-        <div className='flex justify-end gap-2'>
-          {gistUrl && <Clipboard.IconButton value={gistUrl} />}
+        <Flex gap='sm' justify='end'>
+          {gistUrl && <SystemIconButton.Clipboard iconOnly value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
           </Button>
-        </div>
+        </Flex>
       )}
-    </div>
+    </Form.FieldSet>
   );
 };
 

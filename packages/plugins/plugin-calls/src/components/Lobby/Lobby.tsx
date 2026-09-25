@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
@@ -12,9 +12,9 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-import { Toolbar, type ToolbarProps } from '../Call';
-import { VideoObject } from '../Media';
-import { ResponsivePanel } from '../ResponsiveGrid';
+import { Toolbar, type ToolbarProps } from '../Call/index.ts';
+import { VideoObject } from '../Media/index.ts';
+import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
 
 // TODO(wittjosiah): Repurpose lobby for preview.
 
@@ -87,7 +87,7 @@ LobbyPreview.displayName = 'LobbyPreview';
 type LobbyToolbarProps = ThemedClassName<
   {
     roomId: string;
-  } & Pick<ToolbarProps, 'onJoin'>
+  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>
 >;
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {

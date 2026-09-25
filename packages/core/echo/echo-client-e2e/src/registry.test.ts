@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Registry, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Registry, Type } from '@dxos/echo';
 import { makeRegistry, registryLayer, registryLayerWithUpstream } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -20,8 +22,8 @@ const makeObj = (props: { key?: string; version?: string; value: number }) =>
 describe('Registry', () => {
   test('add/get/remove/list', ({ expect }) => {
     const registry = makeRegistry();
-    const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
-    const b = makeObj({ key: 'org.example.type.b', version: '2.0.0', value: 2 });
+    const a = makeObj({ key: 'com.example.type.a', version: '1.0.0', value: 1 });
+    const b = makeObj({ key: 'com.example.type.b', version: '2.0.0', value: 2 });
 
     registry.add([a, b]);
     expect(registry.list()).toHaveLength(2);
@@ -34,8 +36,8 @@ describe('Registry', () => {
   });
 
   test('upstream delegation', ({ expect }) => {
-    const upstreamObj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 100 });
-    const localObj = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 200 });
+    const upstreamObj = makeObj({ key: 'com.example.type.foo', version: '1.0.0', value: 100 });
+    const localObj = makeObj({ key: 'com.example.type.bar', version: '1.0.0', value: 200 });
 
     const upstream = makeRegistry({ initial: [upstreamObj] });
     const local = makeRegistry({ upstream, initial: [localObj] });
@@ -45,28 +47,28 @@ describe('Registry', () => {
     expect(
       local
         .list()
-        .map((o) => (o as any).value)
+        .map((o) => (o as TestSchema.Expando).value)
         .sort(),
     ).toEqual([100, 200]);
   });
 
   test('local overrides upstream by id', ({ expect }) => {
-    const original = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 100 });
+    const original = makeObj({ key: 'com.example.type.foo', version: '1.0.0', value: 100 });
     const override = Obj.make(TestSchema.Expando, {
       id: original.id,
-      [Obj.Meta]: { key: 'org.example.type.foo', version: '2.0.0' },
+      [Obj.Meta]: { key: 'com.example.type.foo', version: '2.0.0' },
       value: 999,
     });
 
     const upstream = makeRegistry({ initial: [original] });
     const local = makeRegistry({ upstream, initial: [override] });
 
-    expect((local.get(original.id) as any).value).toBe(999);
+    expect((local.get(original.id) as TestSchema.Expando).value).toBe(999);
     expect(local.list()).toHaveLength(1);
   });
 
   test('Effect layer provides registry', async ({ expect }) => {
-    const obj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 42 });
+    const obj = makeObj({ key: 'com.example.type.foo', version: '1.0.0', value: 42 });
 
     const program = Effect.gen(function* () {
       const registry = yield* Registry.Service;
@@ -75,16 +77,16 @@ describe('Registry', () => {
 
     const result = await EffectEx.runAndForwardErrors(program.pipe(Effect.provide(registryLayer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
-    expect((result[0] as any).value).toBe(42);
+    expect((result[0] as TestSchema.Expando).value).toBe(42);
   });
 
   test('layerWithUpstream wires upstream from environment', async ({ expect }) => {
-    const upstreamObj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 1 });
-    const localObj = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 2 });
+    const upstreamObj = makeObj({ key: 'com.example.type.foo', version: '1.0.0', value: 1 });
+    const localObj = makeObj({ key: 'com.example.type.bar', version: '1.0.0', value: 2 });
 
     const program = Effect.gen(function* () {
       const registry = yield* Registry.Service;
-      return registry.list().map((o) => (o as any).value);
+      return registry.list().map((o) => (o as TestSchema.Expando).value);
     });
 
     const stack = Layer.provide(
@@ -113,19 +115,19 @@ describe('Registry', () => {
     // Short-form (without dxn: prefix) is not a valid DXN and does not resolve.
     expect(registry.getByURI(`${typename}:${version}`)).toBeUndefined();
     // Missing DXN.
-    expect(registry.getByURI('dxn:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(registry.getByURI('dxn:com.example.Bar:1.0.0')).toBeUndefined();
   });
 
   test('add keyed entity and getByURI', ({ expect }) => {
     const registry = makeRegistry();
-    const obj = makeObj({ key: 'org.example.function.translate', version: '0.1.0', value: 1 });
+    const obj = makeObj({ key: 'com.example.function.translate', version: '0.1.0', value: 1 });
     registry.add([obj]);
 
     // Resolvable by versioned and unversioned key DXN.
-    expect(registry.getByURI('dxn:org.example.function.translate:0.1.0')).toBe(obj);
-    expect(registry.getByURI('dxn:org.example.function.translate')).toBe(obj);
+    expect(registry.getByURI('dxn:com.example.function.translate:0.1.0')).toBe(obj);
+    expect(registry.getByURI('dxn:com.example.function.translate')).toBe(obj);
     // Missing key DXN.
-    expect(registry.getByURI('dxn:org.example.function.missing')).toBeUndefined();
+    expect(registry.getByURI('dxn:com.example.function.missing')).toBeUndefined();
 
     // Type entities remain resolvable via the same generic lookup.
     registry.add([Type.Type]);
@@ -135,17 +137,17 @@ describe('Registry', () => {
 
     // Index entries are removed alongside the entity.
     expect(registry.remove(obj.id)).toBe(true);
-    expect(registry.getByURI('dxn:org.example.function.translate:0.1.0')).toBeUndefined();
-    expect(registry.getByURI('dxn:org.example.function.translate')).toBeUndefined();
+    expect(registry.getByURI('dxn:com.example.function.translate:0.1.0')).toBeUndefined();
+    expect(registry.getByURI('dxn:com.example.function.translate')).toBeUndefined();
   });
 
   test('getByURI resolves through upstream', ({ expect }) => {
     const upstream = makeRegistry({
-      initial: [makeObj({ key: 'org.example.function.summarize', version: '0.2.0', value: 1 })],
+      initial: [makeObj({ key: 'com.example.function.summarize', version: '0.2.0', value: 1 })],
     });
     const local = makeRegistry({ upstream });
-    expect(local.getByURI('dxn:org.example.function.summarize:0.2.0')).toBeDefined();
-    expect(local.getByURI('dxn:org.example.function.summarize')).toBeDefined();
+    expect(local.getByURI('dxn:com.example.function.summarize:0.2.0')).toBeDefined();
+    expect(local.getByURI('dxn:com.example.function.summarize')).toBeDefined();
   });
 
   test('type entities are surfaced in list()', ({ expect }) => {
@@ -159,14 +161,14 @@ describe('Registry', () => {
 
   test('query by type returns matching entities', ({ expect }) => {
     const registry = makeRegistry();
-    const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
+    const a = makeObj({ key: 'com.example.type.a', version: '1.0.0', value: 1 });
     const b = Obj.make(TestSchema.Expando, { value: 2 });
     registry.add([a, b, Type.Type]);
 
     // Filter by Expando type — matches a and b but not the Type entity.
     const expandoResults = registry.query(Filter.type(TestSchema.Expando)).results;
     expect(expandoResults).toHaveLength(2);
-    expect(expandoResults.map((o) => (o as any).value).sort()).toEqual([1, 2]);
+    expect(expandoResults.map((o) => o.value).sort()).toEqual([1, 2]);
 
     // Filter by Type.Type — matches only the type entity.
     const typeResults = registry.query(Filter.type(Type.Type)).results;
@@ -175,14 +177,45 @@ describe('Registry', () => {
 
   test('query with metaKey filter returns matching entities', ({ expect }) => {
     const registry = makeRegistry();
-    const a = makeObj({ key: 'org.example.fn.translate', version: '1.0.0', value: 10 });
-    const b = makeObj({ key: 'org.example.fn.summarize', version: '2.0.0', value: 20 });
+    const a = makeObj({ key: 'com.example.fn.translate', version: '1.0.0', value: 10 });
+    const b = makeObj({ key: 'com.example.fn.summarize', version: '2.0.0', value: 20 });
     const c = makeObj({ value: 30 });
     registry.add([a, b, c]);
 
-    const q = registry.query(Query.select(Filter.key('org.example.fn.translate')));
+    const q = registry.query(Query.select(Filter.key('com.example.fn.translate')));
     expect(q.results).toHaveLength(1);
-    expect((q.results[0] as any).value).toBe(10);
+    expect((q.results[0] as TestSchema.Expando).value).toBe(10);
+  });
+
+  test('text filters evaluate in memory over property values and meta keys', ({ expect }) => {
+    const registry = makeRegistry();
+    const task = Obj.make(TestSchema.Expando, {
+      [Obj.Meta]: { key: 'com.example.operation.fn.taskCreate', version: '1.0.0' },
+      name: 'Create Task',
+      description: 'Creates a task in the set.',
+    });
+    const query = Obj.make(TestSchema.Expando, {
+      [Obj.Meta]: { key: 'com.example.fn.queryObjects', version: '1.0.0' },
+      name: 'Query Objects',
+      description: 'Queries objects in a space.',
+    });
+    registry.add([task, query]);
+
+    // Case-insensitive, and every term must match — across property values.
+    const byText = registry.query(
+      Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.text('CREATES task'))),
+    ).results;
+    expect(byText).toHaveLength(1);
+    expect((byText[0] as TestSchema.Expando).name).toBe('Create Task');
+
+    // Meta is part of the serialized entity, so a registry key is searchable too.
+    const byKey = registry.query(Query.select(Filter.text('queryObjects'))).results;
+    expect(byKey).toHaveLength(1);
+    expect((byKey[0] as TestSchema.Expando).name).toBe('Query Objects');
+
+    expect(registry.query(Query.select(Filter.text('creates nonexistent'))).results).toHaveLength(0);
+    // Vector search needs an embedding index no in-memory executor has.
+    expect(registry.query(Query.select(Filter.text('task', { type: 'vector' }))).results).toHaveLength(0);
   });
 
   test('query with limit respects count', ({ expect }) => {
@@ -191,6 +224,36 @@ describe('Registry', () => {
 
     const results = registry.query(Query.select(Filter.type(TestSchema.Expando)).limit(2)).results;
     expect(results).toHaveLength(2);
+  });
+
+  test('typeAtom emits when the typename registers, and ignores unrelated churn', ({ expect }) => {
+    const registry = makeRegistry();
+    const atoms = AtomRegistry.make();
+    const atom = Registry.typeAtom(registry, 'com.example.type.late');
+    // Memoized per (registry, typename), so consumers share one atom and one subscription.
+    expect(Registry.typeAtom(registry, 'com.example.type.late')).toBe(atom);
+    expect(Registry.typeAtom(registry, 'com.example.type.other')).not.toBe(atom);
+    expect(Registry.typeAtom(makeRegistry(), 'com.example.type.late')).not.toBe(atom);
+    let emissions = 0;
+    const unsubscribe = atoms.subscribe(atom, () => emissions++);
+
+    expect(atoms.get(atom)).toBeUndefined();
+
+    const Late = Type.makeObject(DXN.make('com.example.type.late', '0.1.0'))(Schema.Struct({}));
+    registry.add([Late]);
+    expect(atoms.get(atom)).toBe(Late);
+    expect(emissions).toBeGreaterThan(0);
+
+    // The registry also holds operations, skills, and routines; their churn must not re-emit here.
+    const settled = emissions;
+    registry.add([makeObj({ key: 'com.example.fn.unrelated', value: 1 })]);
+    expect(emissions).toBe(settled);
+
+    registry.remove(Late.id);
+    expect(atoms.get(atom)).toBeUndefined();
+    expect(emissions).toBeGreaterThan(settled);
+
+    unsubscribe();
   });
 
   test('changed fires on add/remove/clear', ({ expect }) => {

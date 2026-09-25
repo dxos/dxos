@@ -63,7 +63,7 @@ key and `whoami`/documents target the same spaces.
 ```bash
 cd packages/devtools/cli   # dxos repo
 ./bin/dx profile create --template local --name mcp-local   # edge url localhost:8787
-DX_SOURCE=1 ./bin/dx -p mcp-local halo create --displayName <name>   # identity+agent+space
+DX_SOURCE=1 ./bin/dx -p mcp-local account signup <ACCESS-CODE>       # identity+account+agent+spaces
 DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 # browser joins via ?deviceInvitationCode=…, then:
 ./bin/dx -p mcp-local mcp connect http://localhost:8791/mcp
@@ -73,9 +73,9 @@ DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 
 ### Blockers (2026-08-01)
 
-1. **`halo create`/`share` are unregistered** — superseded-by-account-login comment in
-   `plugin-client/src/commands/halo/index.ts`. Re-registration patch exists (uncommitted in the
-   session worktree); run with `DX_SOURCE=1` so bun resolves TS sources.
+1. **`halo create` is gone** — it minted a local identity with no Account, so nothing it wrote
+   was admitted; bootstrap with `dx account signup <ACCESS-CODE>` instead, which needs a code the
+   hub will redeem. Run with `DX_SOURCE=1` so bun resolves TS sources.
 2. **Composer `deviceInvitationCode` race** — FIXED in dxos (#12423 carries the merged fix:
    onboarding is the single param owner + reset-and-join dialog). Applies at runtime only when
    the served Composer includes the fix; a checkout without it (e.g. main before merge) still

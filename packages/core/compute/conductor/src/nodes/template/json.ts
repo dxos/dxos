@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { deepMapValues } from '@dxos/util';
 
-import { findHandlebarVariables } from './text';
+import { findHandlebarVariables } from './text.ts';
 
 // TODO(dmaretskyi): https://www.npmjs.com/package/json-templates.
 
-export const getObjectTemplateInputSchema = (template: unknown): Schema.Schema.AnyNoContext => {
-  const inputs: Record<string, Schema.Schema.AnyNoContext> = {};
+export const getObjectTemplateInputSchema = (template: unknown): Schema.Codec<any, any> => {
+  const inputs: Record<string, Schema.Codec<any, any>> = {};
 
   const go = (value: unknown) => {
     switch (typeof value) {

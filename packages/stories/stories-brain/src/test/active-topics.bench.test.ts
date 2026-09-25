@@ -5,10 +5,10 @@
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { RESULTS_DIR } from '../testing/harness/config';
-import { fixtureExists, loadFixtureMessages } from '../testing/harness/fixture';
-import { runActiveTopics, writeActiveTopicsReports } from '../testing/harness/internal';
-import { makeActiveTopicsDeps } from '../testing/harness/pipelines/active-topics';
+import { RESULTS_DIR } from '../testing/harness/config.ts';
+import { fixtureExists, loadFixtureMessages } from '../testing/harness/fixture.ts';
+import { runActiveTopics, writeActiveTopicsReports } from '../testing/harness/internal/index.ts';
+import { makeActiveTopicsDeps } from '../testing/harness/pipelines/active-topics.ts';
 
 // The Active Topics experiment (spec 2026-07-13): over the private fixture, cluster + score topics,
 // split active/suggested, fully populate the active ones, and write morning-review reports. Guarded by

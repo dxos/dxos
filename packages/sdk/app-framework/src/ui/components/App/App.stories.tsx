@@ -9,9 +9,9 @@ import React, { useEffect } from 'react';
 import { DXN } from '@dxos/keys';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import { Capability, Plugin } from '../../../core';
-import { useApp } from '../../hooks';
+import { Capabilities } from '../../../common/index.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { useApp } from '../../hooks/index.ts';
 
 // Minimal plugin that contributes a ReactRoot.
 const TestPlugin = Plugin.define<{ error?: boolean }>(
@@ -23,10 +23,10 @@ const TestPlugin = Plugin.define<{ error?: boolean }>(
 ).pipe(
   Plugin.addModule(({ error }) => ({
     id: 'TestMain',
-    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.ReactRoot],
     activate: () =>
       Effect.succeed([
-        Capability.contributes(Capabilities.ReactRoot, {
+        Capability.contribute(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.test.root',
           root: () => {
             useEffect(() => {

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
-import type * as Statement from '@effect/sql/Statement';
 import { type AsyncIterator, wrap } from 'asynciterator';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as Statement from 'effect/unstable/sql/Statement';
 import { DataFactory, type Quad, type Term as RdfTerm } from 'n3';
 
 import { EffectEx } from '@dxos/effect';
@@ -66,6 +66,8 @@ export const makeSqliteSource = (sql: SqlClient.SqlClient) => {
     if (bound(g)) {
       filters.push(sql`g = ${g.termType === 'DefaultGraph' ? '' : g.value}`);
     }
+    // Rows are materialized rather than streamed: `sql`…`.stream` dies with "executeStream not
+    // implemented" on @effect/sql-sqlite-node, the client every node-side crawl and replay binds.
     const query = filters.length
       ? sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE ${sql.and(filters)}`
       : sql<Row>`SELECT s, p, o, oType, g FROM triples`;

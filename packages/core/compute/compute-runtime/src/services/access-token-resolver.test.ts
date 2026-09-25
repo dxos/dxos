@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { accessTokenResolverFromEdge, accessTokenResolverFromService } from './access-token-resolver';
+import { accessTokenResolverFromEdge, accessTokenResolverFromService } from './access-token-resolver.ts';
 
 const SPACE_ID = SpaceId.random();
 

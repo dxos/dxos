@@ -2,17 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
+import { fromBinary } from '@bufbuild/protobuf';
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { bufRegistry } from '@dxos/protocols/buf-registry';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
-// TODO(burdon): Move util to SyntaxHighlighter.
-export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  return <JsonHighlighter classNames='dx-expander' data={data} replacer={replacer(truncate)} />;
+export type JsonViewProps = {
+  data?: object;
+  truncate?: boolean;
+  /** Off for a section inside a larger scrolling panel, where a JSONPath input per block is noise. */
+  filter?: boolean;
 };
+
+/** Highlighted JSON in its own scrolling viewport, with a JSONPath filter unless embedded. */
+export const JsonView: FC<JsonViewProps> = ({ data, truncate = true, filter = true }) => (
+  <Syntax.Root data={data} replacer={replacer(truncate)}>
+    <Syntax.Content>
+      {filter && <Syntax.Filter />}
+      <Syntax.Viewport>
+        <Syntax.Code />
+      </Syntax.Viewport>
+    </Syntax.Content>
+  </Syntax.Root>
+);
 
 // TODO(burdon): Factor out.
 // TODO(mykola): Add proto schema. Decode bytes.
@@ -45,13 +60,14 @@ const replacer =
         return Buffer.from(value.data).toString('hex');
       }
 
-      if (value?.['@type'] === 'google.protobuf.Any') {
+      if (value?.$typeName === 'google.protobuf.Any') {
         try {
-          const codec = schema.getCodecForType(value.type_url);
-          return {
-            '@type': value.type_url,
-            ...codec.decode(value.value),
-          };
+          // `typeUrl` may carry a prefix (`type.googleapis.com/example.Message`), which the
+          // registry keys do not.
+          const desc = bufRegistry.getMessage(value.typeUrl.slice(value.typeUrl.lastIndexOf('/') + 1));
+          if (desc) {
+            return { '@type': value.typeUrl, ...fromBinary(desc, value.value) };
+          }
         } catch {}
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keyring",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Halo Keyring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,8 +25,8 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -37,10 +37,8 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/sql": "catalog:",
     "effect": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

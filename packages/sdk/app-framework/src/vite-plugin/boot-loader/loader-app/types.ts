@@ -33,6 +33,18 @@ export type StatusPayload = {
 };
 
 /**
+ * One plugin the loader's activation row can draw. Registered up front as an icon lookup; the row
+ * itself only grows as plugins actually activate, since most enabled plugins activate lazily on
+ * first use and would otherwise sit dim for the whole boot.
+ */
+export type PluginEntry = {
+  /** Stable id the host activates this entry by — the plugin's slug (e.g. `markdown`). */
+  id: string;
+  /** Sprite symbol name from the plugin's meta (e.g. `ph--text-aa--regular`). */
+  icon?: string;
+};
+
+/**
  * Imperative facade exposed on `window.__bootLoader`, installed by the inlined
  * loader bundle and driven by the host app (the React relay forwards `useApp`'s
  * startup progress through it).
@@ -40,8 +52,22 @@ export type StatusPayload = {
 export type BootLoaderApi = {
   /** Update the visible status line. */
   status: (payload: StatusPayload) => void;
+  /** Register the icon of every plugin that could activate; draws nothing on its own. */
+  plugins: (entries: PluginEntry[]) => void;
+  /** Add this plugin's icon to the activation row; unregistered ids are ignored. */
+  activated: (id: string) => void;
   /** Enter host-driven progress — `fraction` ∈ [0, 1]. */
   progress: (fraction?: number) => void;
+  /**
+   * Report that startup has outrun its budget without failing it, offering the user a way out.
+   *
+   * Dev-only: production still treats the deadline as fatal, because a user watching a hung boot
+   * has no diagnostics to gain by waiting. In development the run is usually just slow (a cold
+   * OPFS, a rebuild, a paused debugger), and killing it destroys the state worth inspecting — so
+   * the loader keeps running and offers `onAbort`, which raises the same failure the deadline
+   * used to raise on its own.
+   */
+  stalled: (onAbort: () => void) => void;
   /** Play the dismissal outro, then remove the loader DOM (graceful path). */
   ready: () => void;
   /** Remove the loader DOM immediately (fast-load backstop / terminal). */
@@ -63,8 +89,15 @@ export type BootLoaderConfig = {
   rootId?: string;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  markFilter?: string;
   /** Initial status text rendered before the host fires its first `status(...)`. */
   status?: string;
+  /**
+   * URL of the icon sprite the activation row draws from, fetched at mount and inlined. A static
+   * asset rather than a bundle import, so the loader can request it before any app JS loads.
+   */
+  spritePath?: string;
 };
 
 /** Fallback backdrop id when no config is present (kept in sync with `loader.ts` + the CSS). */

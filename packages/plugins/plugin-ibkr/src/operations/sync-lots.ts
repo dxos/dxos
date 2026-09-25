@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
-import { IBKR_SOURCE, tickerSource } from '../constants';
-import { parseClosedLots, parseOpenLots } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
-import { latestReportFromFeed } from './feed';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { IBKR_SOURCE, tickerSource } from '../constants.ts';
+import { parseClosedLots, parseOpenLots } from '../services/index.ts';
+import { latestReportFromFeed } from './feed.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.SyncLots> = IbkrOperation.SyncLots.pipe(
   Operation.withHandler(
@@ -75,10 +76,10 @@ const syncLotsFromReport = Effect.fn(function* (portfolio: Ibkr.Portfolio, repor
       const lot = yield* Database.add(
         Obj.make(Ibkr.Lot, {
           [Obj.Meta]: { keys: [{ source: IBKR_SOURCE, id: foreignId }] },
+          [Obj.Parent]: portfolio,
           ...fields,
         }),
       );
-      Obj.setParent(lot, portfolio);
       existingByKey.set(foreignId, lot);
       created++;
     }

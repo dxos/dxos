@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { DiscordComponent } from './DiscordComponent';
+import { DiscordComponent } from './DiscordComponent.tsx';
 
 export const DiscordPanel = () => (
   <DiscordComponent.Root>
-    <div className='h-full grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <div className='dx-fill grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden'>
       <DiscordComponent.Header />
       <DiscordComponent.Channels />
       <DiscordComponent.Content />

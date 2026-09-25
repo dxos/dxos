@@ -9,10 +9,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 
+import { ClientPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ClientPlugin } from '../../ClientPlugin';
-import { JoinDialog } from './JoinDialog';
+import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>

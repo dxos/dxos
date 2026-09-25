@@ -7,10 +7,11 @@ import type { Manifold } from 'manifold-3d';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { joinSolids, serializeManifold } from '../../engine';
-import { Model } from '../../types';
-import { type ActionHandler, disposeSceneObject } from '../action';
-import { type ToolContext, getSelectedObjectIds } from '../tool-context';
+import { Model } from '#types';
+
+import { joinSolids, serializeManifold } from '../../engine/index.ts';
+import { type ActionHandler, disposeSceneObject } from '../action.ts';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context.ts';
 
 /** Joins (unions) selected objects into a single merged object. */
 export class JoinObjectsAction implements ActionHandler {
@@ -66,7 +67,6 @@ export class JoinObjectsAction implements ActionHandler {
       }
       scene.objects.push(Ref.make(newObject));
     });
-    Obj.setParent(newObject, scene);
 
     for (const objId of objectsToDelete) {
       disposeSceneObject(ctx, objId);

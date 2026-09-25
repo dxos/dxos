@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
+import * as Command from 'effect/unstable/cli/Command';
 
-import { publish } from './publish';
-import { publishPackage } from './publish-package';
-import { publishPublisher } from './publish-publisher';
-import { records } from './records';
-import { unpublish } from './unpublish';
-import { verify } from './verify';
+import { publishPackage } from './publish-package.ts';
+import { publishPublisher } from './publish-publisher.ts';
+import { publish } from './publish.ts';
+import { records } from './records.ts';
+import { unpublish } from './unpublish.ts';
+import { verify } from './verify.ts';
 
 /**
  * `dx registry *` — commands for publishing and inspecting records that the
@@ -24,7 +24,7 @@ import { verify } from './verify';
  * - `verify` — write a publisher.verification record (indexed only from the configured verifier).
  * - `records` — list everything the authenticated repo has published under `org.dxos.experimental.*`.
  */
-export const registry: Command.Command<any, any, any, any> = Command.make('registry').pipe(
+export const registry: Command.Command<any, any, any, any, any> = Command.make('registry').pipe(
   Command.withDescription('Publish to and inspect the AT Protocol-backed DXOS plugin registry.'),
   Command.withSubcommands([publish, publishPackage, publishPublisher, unpublish, verify, records]),
 );

@@ -22,9 +22,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -192,6 +194,7 @@ op createMap
 
 ```mdl
 op toggleMapView
+  key: org.dxos.operation.map.setControlType
   desc: Toggles the active MapState between map and globe rendering modes.
   input:
   output: void
@@ -283,7 +286,7 @@ feat F-7: Tile providers via API keys
 ## Acceptance
 
 ```mdl
-test T-1: Create map without view
+scenario T-1: Create map without view
   given: a space with no external schema
   when: user creates a Map with only a name
   then:
@@ -292,7 +295,7 @@ test T-1: Create map without view
 ```
 
 ```mdl
-test T-2: Create map with view
+scenario T-2: Create map with view
   given: a schema typename exists with a GeoPoint field 'location'
   when: user creates a Map selecting that typename and 'location' as locationFieldName
   then:
@@ -301,7 +304,7 @@ test T-2: Create map with view
 ```
 
 ```mdl
-test T-3: Toggle map/globe
+scenario T-3: Toggle map/globe
   given: MapArticle is rendered in map mode
   when: toggleMapView operation is invoked
   then:
@@ -310,7 +313,7 @@ test T-3: Toggle map/globe
 ```
 
 ```mdl
-test T-4: Malformed GeoPoint omitted
+scenario T-4: Malformed GeoPoint omitted
   given: a Map view with 3 rows; 1 row has a null GeoPoint
   when: MapArticle renders
   then:
@@ -319,14 +322,14 @@ test T-4: Malformed GeoPoint omitted
 ```
 
 ```mdl
-test T-5: Object properties editor shown
+scenario T-5: Object properties editor shown
   given: a Map object is selected
   when: the object properties panel opens
   then: MapViewEditor is rendered with the current typename and field selections pre-filled
 ```
 
 ```mdl
-test T-6: Companion offered for a provided object
+scenario T-6: Companion offered for a provided object
   given: a plugin contributes a MarkerProvider matching type Foo, and a Foo object is open
   when: the app graph is built for that object
   then:
@@ -335,10 +338,61 @@ test T-6: Companion offered for a provided object
 ```
 
 ```mdl
-test T-7: MapTiler tiles when key configured
+scenario T-7: MapTiler tiles when key configured
   given: settings contain an apiKey for domain 'maptiler.com'
   when: MapArticle renders in map mode
   then: the Leaflet tile layer uses the MapTiler URL (key in query); otherwise OSM
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+plugin-map is NOT in `getDefaults` under any environment (not even `isDev`) — it is OFF by default
+in every build. Enabling is a UI action (Settings -> plugin registry).
+
+```mdl
+test QA-1: Create a map over a dataset, see markers, toggle to globe
+  desc: The core map round-trip — create a Map from an existing GeoPoint-bearing dataset, confirm
+    markers render, then flip to globe mode.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-map is enabled — it is OFF by default in every environment
+    - a schema typename with a GeoPoint field "location" exists in the space, with at least one
+      row populated
+    - no Map named "QA Map" exists — ABORT rather than deleting one this test did not create
+  steps:
+    - name: Create the map
+      do: In the navtree, click + on a collection and choose Map. Name it "QA Map", select the
+        typename, and pick "location" as the geolocation field.
+      capture: created
+      expect: a Map named "QA Map" appears under the collection; a View is created and
+        Map.view references it
+      note: |
+        NO `invoke` — op:createMap has no `key:`; no `org.dxos.operation.map.createMap` (or
+        similar) is registered in `src/types/MapOperation.ts` — only `setControlType` is. Creation
+        goes through the create-object UI factory (`capabilities/create-object.ts`). This step is
+        human-only.
+    - name: See markers render
+      do: Open "QA Map" as an article.
+      expect: one pin appears per row with a valid GeoPoint on the location field; rows with a
+        missing/malformed GeoPoint are silently omitted
+    - name: Toggle to globe
+      do: Click the map/globe toggle in the toolbar.
+      invoke: [op:toggleMapView] { type: "globe" }
+      expect: GlobeControl renders in place of MapControl, and any other open map surface reflects
+        the same mode (MapState is plugin-scoped)
+  after:
+    - name: Delete the map
+      do: Right-click "QA Map" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
 ```
 
 ---
@@ -370,8 +424,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vendor-hyperformula",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -13,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./src/hyperformula.d.ts",
-      "default": "./dist/lib/neutral/hyperformula.mjs"
+      "default": "./dist/lib/hyperformula.mjs"
     }
   },
   "files": [

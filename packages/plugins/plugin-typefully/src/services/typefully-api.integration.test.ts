@@ -6,11 +6,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector/types';
+import { AccessToken, Connection } from '@dxos/link';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
-import { makeTypefullyPublisherService } from './typefully-api';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
+import { makeTypefullyPublisherService } from './typefully-api.ts';
 
 //
 // Live integration test against the real Typefully v2 API. Skipped unless TYPEFULLY_API_KEY is set,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as AtomRef from '@effect-atom/atom/AtomRef';
+import type * as AtomRef from 'effect/unstable/reactivity/AtomRef';
 import { type Accessor, createMemo, createSignal, onCleanup } from 'solid-js';
 
 /**

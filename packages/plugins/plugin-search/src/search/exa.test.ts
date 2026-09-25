@@ -8,7 +8,7 @@ import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { search } from './exa';
+import { search } from './exa.ts';
 
 describe.skip('Search', () => {
   describe('Query-based', () => {
@@ -77,7 +77,7 @@ describe.skip('Search', () => {
 });
 
 const COMPOSER_DXOS_DOC = `
-![img](https://dxos.network/dxos-logotype-blue.png)
+![img](https://media.dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 
 ## What is Composer?

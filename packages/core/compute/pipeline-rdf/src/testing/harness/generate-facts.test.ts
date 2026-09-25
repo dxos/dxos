@@ -10,10 +10,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FactStore } from '../../store';
-import { type ExtractDocument } from '../../types';
-import { queuedAiService } from '../index';
-import { generateFacts } from './generate-facts';
+import { FactStoreLive } from '../../store/index.ts';
+import { type ExtractDocument } from '../../types/index.ts';
+import { queuedAiService } from '../index.ts';
+import { generateFacts } from './generate-facts.ts';
 
 // Realistic source text — the input a real connector (Gmail/Discord) would feed in.
 const SOURCE_DOCS: readonly ExtractDocument[] = [
@@ -90,7 +90,7 @@ const STUB_PAYLOADS: readonly unknown[] = [
   },
 ];
 
-const TestLayer = FactStore.layer.pipe(
+const TestLayer = FactStoreLive.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(queuedAiService(STUB_PAYLOADS)),
 );

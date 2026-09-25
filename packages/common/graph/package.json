@@ -1,6 +1,6 @@
 {
   "name": "@dxos/graph",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Low-level graph API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,38 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./GraphBuilder": {
+      "source": "./src/GraphBuilder.ts",
+      "types": "./dist/types/src/GraphBuilder.d.ts",
+      "import": "./dist/lib/GraphBuilder.mjs"
+    },
+    "./GraphEdge": {
+      "source": "./src/GraphEdge.ts",
+      "types": "./dist/types/src/GraphEdge.d.ts",
+      "import": "./dist/lib/GraphEdge.mjs"
+    },
+    "./GraphModel": {
+      "source": "./src/GraphModel.ts",
+      "types": "./dist/types/src/GraphModel.d.ts",
+      "import": "./dist/lib/GraphModel.mjs"
+    },
+    "./GraphNode": {
+      "source": "./src/GraphNode.ts",
+      "types": "./dist/types/src/GraphNode.d.ts",
+      "import": "./dist/lib/GraphNode.mjs"
+    },
+    "./GraphNodeMatcher": {
+      "source": "./src/GraphNodeMatcher.ts",
+      "types": "./dist/types/src/GraphNodeMatcher.d.ts",
+      "import": "./dist/lib/GraphNodeMatcher.mjs"
+    },
+    "./Retention": {
+      "source": "./src/Retention.ts",
+      "types": "./dist/types/src/Retention.d.ts",
+      "import": "./dist/lib/Retention.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -27,14 +58,15 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "fast-check": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

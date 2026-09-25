@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
 
 import { RuntimeServiceError } from '@dxos/errors';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
@@ -40,10 +41,24 @@ export class FeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  ['FeedService.insertIntoFeed'](request: FeedProtocol.InsertIntoFeedRequest): Effect.Effect<void, Error> {
+  /**
+   * The queue-backed store has no change-notification mechanism in this runtime, so this pushes a
+   * single snapshot (the same one `queryFeed` would return) rather than live updates.
+   */
+  ['FeedService.subscribeFeed'](
+    request: FeedProtocol.QueryFeedRequest,
+  ): EffectStream.Stream<FeedProtocol.QueryResult, Error> {
+    return EffectStream.fromEffect(this['FeedService.queryFeed'](request));
+  }
+
+  /** The queue service reports no block ids; readers identify these blocks by their positions instead. */
+  ['FeedService.insertIntoFeed'](
+    request: FeedProtocol.InsertIntoFeedRequest,
+  ): Effect.Effect<FeedProtocol.InsertIntoFeedResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         using _ = await this._queueService.insertIntoQueue(this._ctx, request);
+        return {};
       },
       catch: (error) => {
         const { subspaceTag, spaceId, feedId } = request;
@@ -81,5 +96,15 @@ export class FeedServiceImpl implements FeedService.Handlers {
     _request: FeedProtocol.GetSyncStateRequest,
   ): Effect.Effect<FeedProtocol.GetSyncStateResponse, Error> {
     return Effect.succeed({ namespaces: [] });
+  }
+
+  /**
+   * The Cloudflare queue-backed runtime has no sync backlog to report (no-op, matching
+   * {@link FeedServiceImpl."FeedService.getSyncState"}); emits the same empty snapshot once.
+   */
+  ['FeedService.subscribeSyncState'](
+    _request: FeedProtocol.GetSyncStateRequest,
+  ): EffectStream.Stream<FeedProtocol.GetSyncStateResponse, Error> {
+    return EffectStream.succeed<FeedProtocol.GetSyncStateResponse>({ namespaces: [] });
   }
 }

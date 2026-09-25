@@ -4,9 +4,9 @@
 
 import { line } from 'd3';
 
-import { type D3Callable, type Point } from '../../util';
-import { getCircumferencePoints } from '../../util';
-import { type GraphLayoutNode } from '../types';
+import { type D3Callable, type Point } from '../../util/index.ts';
+import { getCircumferencePoints } from '../../util/index.ts';
+import { type GraphLayoutNode } from '../types.ts';
 
 const createLine = line();
 

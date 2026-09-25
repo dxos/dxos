@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplates } from '../templates';
+import { defaultTemplates } from '../templates/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return defaultTemplates.map((template) => Capability.contributes(ProjectCapabilities.Template, template));
+    return Capability.contributeAll(ProjectCapabilities.Template, defaultTemplates);
   }),
 );

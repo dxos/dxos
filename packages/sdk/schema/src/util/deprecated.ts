@@ -3,11 +3,10 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 
 /**
@@ -19,9 +18,9 @@ const getSimpleType = (node: SchemaAST.AST): string | undefined => {
   if (
     SchemaAST.isDeclaration(node) ||
     SchemaAST.isObjectKeyword(node) ||
-    SchemaAST.isTypeLiteral(node) ||
+    SchemaAST.isObjects(node) ||
     // TODO(wittjosiah): Tuples are actually arrays.
-    SchemaEx.isTupleType(node) ||
+    SchemaEx.isArrays(node) ||
     SchemaEx.isDiscriminatedUnion(node)
   ) {
     return 'object';
@@ -63,7 +62,7 @@ export type SchemaFieldDescription = {
 /**
  * @deprecated
  */
-export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
+export const mapSchemaToFields = (schema: Schema.Codec<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
   SchemaEx.visit(
     schema.ast,
@@ -81,7 +80,7 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
  * @deprecated
  */
 const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
-  if (SchemaAST.isTypeLiteral(type)) {
+  if (SchemaAST.isObjects(type)) {
     return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
   } else if (SchemaAST.isNumberKeyword(type)) {
     return { type: TypeEnum.Number };
@@ -91,20 +90,16 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; ty
     return { type: TypeEnum.String };
   }
 
-  if (SchemaAST.isRefinement(type)) {
-    return toFieldValueType(type.from);
-  }
+  // v4 has no `Refinement` wrapper: a refined node IS its base node with checks attached, so the
+  // keyword branches above already matched it and there is nothing left to unwrap.
 
   // TODO(zan): How should we be thinking about transformations?
   //  See https://effect.website/docs/guides/schema/projections
   //  - Which of these are we storing in the database?
   //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
   if (SchemaAST.isTransformation(type)) {
-    const identifier = SchemaAST.getIdentifierAnnotation(type);
-    if (identifier._tag === 'Some') {
-      if (identifier.value === 'DateFromString') {
-        return { type: TypeEnum.String, format: Format.TypeFormat.Date };
-      }
+    if (SchemaAST.getAnnotation<string>(type, SchemaAST.IdentifierAnnotationId) === 'DateFromString') {
+      return { type: TypeEnum.String, format: Format.TypeFormat.Date };
     }
   }
 

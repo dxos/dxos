@@ -15,8 +15,8 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core';
-import { translationKey } from '../../translations';
+import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core/index.ts';
+import { translationKey } from '../../translations.ts';
 
 // Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,
 // so none of plugin-assistant's app-framework-coupled renderers are pulled in.
@@ -203,7 +203,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
   );
 
   return (
-    <div className={mx('grid grid-rows-[1fr_auto] min-h-0 bg-base-surface', classNames)}>
+    <div className={mx('grid grid-rows-[1fr_auto] min-h-0 dx-base-surface', classNames)}>
       {/* `data-hue` gives the `<prompt>` bubbles their panel tokens (see MarkdownStream). */}
       <div data-hue='blue' className='contents'>
         <MarkdownStream registry={registry} options={streamOptions} slots={compactSlots} ref={setController} />

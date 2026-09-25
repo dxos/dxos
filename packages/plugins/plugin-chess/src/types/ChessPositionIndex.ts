@@ -7,22 +7,21 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
 
 /** Side the reviewed player may play in indexed games. */
-export const Side = Schema.Literal('white', 'black');
+export const Side = Schema.Literals(['white', 'black']);
 export type Side = Schema.Schema.Type<typeof Side>;
 
 /** Games that reached a normalized FEN while the reviewed player was on this side. */
 export const PositionEntry = Schema.Struct({
-  games: Schema.mutable(Schema.Array(Ref.Ref(Game.Game))).pipe(FormInputAnnotation.set(false)),
+  games: Schema.mutable(Schema.Array(Ref.Ref(Game.Game))).pipe(Annotation.FormInputAnnotation.set(false)),
 });
 
 export type PositionEntry = Schema.Schema.Type<typeof PositionEntry>;
 
 /** FEN-keyed lookup of {@link PositionEntry} for one side. */
-export const SideIndex = Schema.Record({ key: Schema.String, value: PositionEntry });
+export const SideIndex = Schema.Record(Schema.String, PositionEntry);
 
 export type SideIndex = Schema.Schema.Type<typeof SideIndex>;
 
@@ -42,7 +41,7 @@ export class PositionIndex extends Type.makeObject<PositionIndex>(
   DXN.make('org.dxos.type.chess.positionIndex', '0.1.0'),
 )(
   Schema.Struct({
-    index: Index.pipe(FormInputAnnotation.set(false)),
+    index: Index.pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--map-trifold--regular', hue: 'amber' })),
 ) {}
 

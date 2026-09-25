@@ -1,6 +1,6 @@
 {
   "name": "@dxos/discord-bot",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Experimental Discord bot.",
   "homepage": "https://github.com/dxos",
@@ -33,8 +33,5 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "discord.js": "catalog:"
-  },
-  "devDependencies": {
-    "@babel/core": "catalog:"
   }
 }

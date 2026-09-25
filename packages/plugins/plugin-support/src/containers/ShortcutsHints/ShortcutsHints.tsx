@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export { ShortcutsHints } from '../../components';
+export { ShortcutsHints } from '#components';

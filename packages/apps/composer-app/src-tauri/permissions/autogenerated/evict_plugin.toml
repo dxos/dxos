@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-evict-plugin"
+description = "Enables the evict_plugin command without any pre-configured scope."
+commands.allow = ["evict_plugin"]
+
+[[permission]]
+identifier = "deny-evict-plugin"
+description = "Denies the evict_plugin command without any pre-configured scope."
+commands.deny = ["evict_plugin"]

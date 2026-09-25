@@ -7,9 +7,9 @@ import * as Layer from 'effect/Layer';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { FACT_STORE_FIXTURE } from '../config';
+import { FACT_STORE_FIXTURE } from '../config.ts';
 
 export const factStoreFixtureExists = (): boolean => existsSync(FACT_STORE_FIXTURE);
 
@@ -51,7 +51,7 @@ export const factStoreLayer = (facts: readonly RDF.Fact[]): Layer.Layer<FactStor
   Layer.effect(
     FactStore,
     Effect.gen(function* () {
-      const store = FactStore.makeMemory();
+      const store = FactStoreLive.makeMemory();
       if (facts.length > 0) {
         yield* store.putFacts(facts).pipe(Effect.orDie);
       }

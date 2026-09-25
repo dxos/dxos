@@ -23,19 +23,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/errors"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keyboard"
     },
     {
       "path": "../../common/keys"
@@ -47,16 +41,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -75,6 +63,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -105,9 +96,6 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-editor"

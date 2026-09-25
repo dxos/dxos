@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-import { make } from './codec';
-import { hasCodec } from './codecs';
-import { type AnyLens, type Mapping } from './types';
+import { make } from './codec.ts';
+import { hasCodec } from './codecs.ts';
+import { type AnyLens, type Mapping } from './types.ts';
 
 //
 // A persisted lens is an ordinary ECHO object, not a new entity kind: `Type` earns its own kind
@@ -17,7 +17,7 @@ import { type AnyLens, type Mapping } from './types';
 //
 
 /** One target property's serialized mapping. Inline functions are not serializable; see {@link toObject}. */
-const Entry = Schema.Union(
+const Entry = Schema.Union([
   Schema.Struct({ property: Schema.String, kind: Schema.Literal('rename'), from: Schema.String }),
   Schema.Struct({ property: Schema.String, kind: Schema.Literal('readOnly'), from: Schema.String }),
   Schema.Struct({
@@ -27,7 +27,7 @@ const Entry = Schema.Union(
     /** Name of a codec registered via `Lens.registerCodec`. */
     codec: Schema.String,
   }),
-);
+]);
 
 type Entry = Schema.Schema.Type<typeof Entry>;
 

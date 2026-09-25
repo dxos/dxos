@@ -10,8 +10,9 @@ import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
 import { stringToFallback } from '@dxos/util';
 
-import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '../../hooks';
-import { getMessageMetadata } from '../../util';
+import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '#hooks';
+
+import { getMessageMetadata } from '../../util/index.ts';
 
 export type SuggestionThreadProps = {
   /** The base document text every source is diffed against (the editor's current content). */

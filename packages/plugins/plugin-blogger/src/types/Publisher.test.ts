@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Publisher } from './index';
+import * as Publisher from './Publisher.ts';
 
 describe('Publisher contract', () => {
   test('PublisherDraft decodes a minimal draft', () => {
@@ -15,7 +15,7 @@ describe('Publisher contract', () => {
   });
 
   test('PublisherError carries a message', () => {
-    const error = new Publisher.PublisherError('nope');
+    const error = new Publisher.PublisherError({ message: 'nope' });
     expect(error.message).toBe('nope');
   });
 });

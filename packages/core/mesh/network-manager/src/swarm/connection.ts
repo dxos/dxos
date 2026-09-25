@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
@@ -10,22 +12,22 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalBatchSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type SignalMessage, type SignalMessenger } from '../signal';
-import { type Transport, type TransportFactory, type TransportStats } from '../transport';
-import { type WireProtocol } from '../wire-protocol';
+import { type SignalMessage, type SignalMessenger } from '../signal/index.ts';
+import {
+  type Transport,
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type TransportFactory,
+  type TransportStats,
+} from '../transport/index.ts';
+import { type WireProtocol } from '../wire-protocol.ts';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
  * This value is increased exponentially.
  */
 const STARTING_SIGNALLING_DELAY = 10;
-
-/**
- * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
- */
-const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
 
 const TRANSPORT_STATS_INTERVAL = 5_000;
 
@@ -172,13 +174,24 @@ export class Connection {
       this.errors.raise(err);
     });
 
-    // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
-    this._protocol.stream.on('close', () => {
-      log('protocol stream closed');
+    // Splits the two Node stream events this replaced. `error` tore the connection down; `close`
+    // could not fire before the stream was destroyed, so it only ever confirmed a teardown already
+    // finished. The web-stream `closed` fires as soon as the muxer disposes, so acting on a clean
+    // end here would start a second teardown racing the one under way.
+    this._protocol.closed.on((err) => {
+      log('protocol stream closed', { err });
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
-        this.errors.raise(err),
-      );
+      // Scheduled on the connection's own context so that a teardown already under way — which
+      // disposes that context first — cancels this one instead of racing it. The Node `close` event
+      // this replaced could not fire before the stream was destroyed and so always arrived after
+      // teardown; the web-stream `closed` fires as soon as the muxer disposes.
+      scheduleTask(this._ctx, async () => {
+        // Caught here rather than left to the context: `close()` disposes it, and `Context.raise` is
+        // a silent no-op on a disposed context, so a later throw would vanish.
+        await this.close({ error: err ?? new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+          this.errors.raise(err),
+        );
+      });
     });
 
     scheduleTask(
@@ -376,7 +389,7 @@ export class Connection {
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
-        data: { signalBatch: { signals } },
+        data: { signalBatch: create(SignalBatchSchema, { signals }) },
       });
     } catch (err) {
       // TODO(nf): determine why instanceof doesn't work here
@@ -403,16 +416,11 @@ export class Connection {
       log('dropping signal for incorrect session id');
       return;
     }
-    invariant(msg.data.signal || msg.data.signalBatch);
     invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
-    const signals = msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
+    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals : [msg.data.signal];
     for (const signal of signals) {
-      if (!signal) {
-        continue;
-      }
-
       if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
         log('buffered signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         this._incomingSignalBuffer.push(signal);

@@ -10,20 +10,20 @@ import type * as Schema from 'effect/Schema';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
 
-import type * as Aggregate from './Aggregate';
-import type * as Collection from './Collection';
-import * as Database from './Database';
-import type * as Dataset from './Dataset';
-import type * as Feed from './Feed';
-import * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import type * as Order from './Order';
-import type * as Ref from './Ref';
-import type * as Relation from './Relation';
+import type * as Aggregate from './Aggregate.ts';
+import type * as Collection from './Collection.ts';
+import * as Database from './Database.ts';
+import type * as Dataset from './Dataset.ts';
+import type * as Feed from './Feed.ts';
+import * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import type * as Order from './Order.ts';
+import type * as Ref from './Ref.ts';
+import type * as Relation from './Relation.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
-import type * as View from './View';
+import type * as Type$ from './Type.ts';
+import type * as View from './View.ts';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -47,14 +47,14 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
       : never;
 
 /**
- * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
- * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
- * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
- * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
- * type. Consumers never read it.
+ * Phantom brand on query results that are plain records rather than entities: the flat row
+ * {@link Query.aggregate} produces, and {@link Change.Change}. Present only at the type level (never
+ * at runtime), it lets hooks like `useQuery`/`usePagination` return the record as-is instead of
+ * wrapping it in `Entity.Entity`. The brand is a required property so `T extends RecordResult`
+ * discriminates — an optional one would be satisfied by any type. Consumers never read it.
  */
-export interface AggregateResult {
-  readonly '~@dxos/echo/Query.AggregateResult': true;
+export interface RecordResult {
+  readonly '~@dxos/echo/Query.RecordResult': true;
 }
 
 export const QueryTypeId = '~@dxos/echo/Query' as const;
@@ -308,13 +308,6 @@ export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
  * A query projected to a single scalar property (see {@link Query.project}).
  */
 export type Projection<V = unknown> = internal.Projection<V>;
-
-/**
- * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
- * `query-lite` mirror can declare its own local constant with the same string literal and
- * construct structurally-compatible projections without importing this module's runtime.
- */
-export type ProjectionTypeId = internal.ProjectionTypeId;
 
 class QueryClass implements Any {
   private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
@@ -642,7 +635,7 @@ export const type: {
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
@@ -670,7 +663,11 @@ export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K
  * @returns Query for the combined results.
  */
 // TODO(dmaretskyi): Rename to `combine` or `union`.
-export const all = (...queries: Any[]): Any => {
+export const all: {
+  /** Combining queries over one type preserves it, so a union stays assignable where its arms were. */
+  <T>(...queries: Query<T>[]): Query<T>;
+  (...queries: Any[]): Any;
+} = (...queries: Any[]): Any => {
   if (queries.length === 0) {
     throw new TypeError(
       'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',

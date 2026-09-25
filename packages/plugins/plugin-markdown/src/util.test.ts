@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { getFallbackName } from './util';
+import { getFallbackName } from './util.tsx';
 
 describe('markdown utils', () => {
   it('getFallbackName', () => {
@@ -17,7 +17,7 @@ describe('markdown utils', () => {
       },
       {
         content: trim`
-          ![img](https://dxos.network/dxos-logotype-blue.png)
+          ![img](https://media.dxos.network/dxos-logotype-blue.png)
 
           # Welcome to Composer by DXOS
 
@@ -27,13 +27,17 @@ describe('markdown utils', () => {
       },
       {
         content: trim`
-          ![img](https://dxos.network/dxos-logotype-blue.png)
+          ![img](https://media.dxos.network/dxos-logotype-blue.png)
 
           ---
 
           This document is about the decetralized platform DXOS.
         `,
         expected: 'This document is about the…',
+      },
+      {
+        content: 'Pneumonoultramicroscopicsilicovolcanoconiosis',
+        expected: 'Pneumonoultramicroscopicsilicovo…',
       },
     ];
 

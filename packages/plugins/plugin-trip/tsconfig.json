@@ -22,10 +22,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/errors"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
@@ -35,9 +35,6 @@
     },
     {
       "path": "../../common/markdown"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -67,6 +64,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -74,6 +74,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-ui"
@@ -94,9 +97,6 @@
       "path": "../../ui/react-ui-geo"
     },
     {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -106,16 +106,10 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-assistant"
-    },
-    {
       "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-inbox"
@@ -134,9 +128,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

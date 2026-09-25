@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { log } from '@dxos/log';
 

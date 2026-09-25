@@ -10,7 +10,7 @@
       "path": "../../../common/errors"
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/sql-sqlite"
     },
     {
       "path": "../ai"

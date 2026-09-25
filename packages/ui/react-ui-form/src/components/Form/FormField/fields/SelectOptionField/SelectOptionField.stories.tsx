@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { SelectOption } from '@dxos/echo/Format';
@@ -11,13 +12,13 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
-import { SelectOptionField } from './SelectOptionField';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
+import { SelectOptionField } from './SelectOptionField.tsx';
 
 const TestSchema = Schema.Struct({
   options: Schema.Array(SelectOption).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const DefaultStory = () => {
   const [values, setValues] = useState<{ options: SelectOption[] }>({
@@ -39,7 +40,7 @@ const DefaultStory = () => {
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Actions />
           </Form.Content>
         </Form.Viewport>

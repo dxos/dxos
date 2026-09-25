@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { DeviceSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { DeviceProfileDocumentSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
 
 //
@@ -16,7 +18,7 @@ import { mutableArray } from './service-schemas.ts';
 //
 
 export const QueryDevicesResponse = Schema.Struct({
-  devices: Schema.optional(mutableArray(protoMessage('dxos.client.services.Device'))),
+  devices: Schema.optional(mutableArray(bufMessage(DeviceSchema))),
 });
 export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDevicesResponse> {}
 
@@ -26,8 +28,8 @@ export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDev
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('updateDevice', {
-    payload: protoMessage('dxos.halo.credentials.DeviceProfileDocument'),
-    success: protoMessage('dxos.client.services.Device'),
+    payload: bufMessage(DeviceProfileDocumentSchema),
+    success: bufMessage(DeviceSchema),
     error: serviceError,
   }),
   Rpc.make('queryDevices', {
@@ -44,4 +46,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `DevicesService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/DevicesService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/DevicesService') {}

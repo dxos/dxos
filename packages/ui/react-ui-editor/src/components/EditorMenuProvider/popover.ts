@@ -31,6 +31,13 @@ export type PopoverOptions = {
    */
   activateOnTyping?: boolean;
 
+  /**
+   * Delimiters after which an EMPTY token still opens the menu — `type:` offering every typename,
+   * say. Opt-in per consumer because the empty-token guard is load-bearing elsewhere: `RefEditor`
+   * uses `activateOnTyping` with no trigger, where an empty query would match every object.
+   */
+  activateOnDelimiters?: string[];
+
   // Trigger update.
   onTextChange?: (event: { view: EditorView; pos: number; text: string; trigger?: string }) => void;
   onClose?: (event: { view: EditorView }) => void;
@@ -51,7 +58,7 @@ export const popover = (options: PopoverOptions = {}): Extension => {
     Prec.highest(popoverKeymap(options)),
     popoverStateField,
     popoverTriggerListener(options),
-    options.activateOnTyping && popoverAutoActivate(options),
+    (options.activateOnTyping || options.activateOnDelimiters?.length) && popoverAutoActivate(options),
     popoverAnchorDecoration(options),
     modalStateField,
     options.trigger &&
@@ -117,7 +124,12 @@ const popoverAutoActivate = (options: PopoverOptions) =>
     const before = line.text.slice(0, selection.head - line.from);
     const idx = getLastIndexOf(before, options.delimiters ?? DELIMITERS);
     const token = before.slice(idx + 1);
-    if (token.length === 0) {
+    // Two independent reasons to open: mid-word under `activateOnTyping`, or immediately after a
+    // delimiter that has a list behind it. They are separate because opening on every word character
+    // moves focus to the popover on each keystroke, which is intolerable in an editor whose menu is
+    // empty for most positions.
+    const onDelimiter = token.length === 0 && (options.activateOnDelimiters ?? []).includes(before[idx]);
+    if (!onDelimiter && (!options.activateOnTyping || token.length === 0)) {
       return;
     }
     view.dispatch({

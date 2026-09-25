@@ -7,26 +7,25 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { type TerraConfigValues } from '../engine';
-import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim';
-import * as TerraObject from './TerraObject';
+import { type TerraConfigValues } from '../engine/index.ts';
+import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim/index.ts';
+import * as TerraObject from './TerraObject.ts';
 
 /** Deterministic parameters for a Terra world. All fields optional so a bare seed works. */
 export const TerraConfig = Schema.Struct({
-  seed: Schema.optional(Schema.String.annotations({ title: 'Seed' })),
-  resolution: Schema.optional(Schema.Number.annotations({ title: 'Resolution' })),
-  elevationScale: Schema.optional(Schema.Number.annotations({ title: 'Elevation scale' })),
+  seed: Schema.optional(Schema.String.annotate({ title: 'Seed' })),
+  resolution: Schema.optional(Schema.Number.annotate({ title: 'Resolution' })),
+  elevationScale: Schema.optional(Schema.Number.annotate({ title: 'Elevation scale' })),
   frequency: Schema.optional(Schema.Number),
   octaves: Schema.optional(Schema.Number),
   persistence: Schema.optional(Schema.Number),
   lacunarity: Schema.optional(Schema.Number),
   continentPower: Schema.optional(Schema.Number),
-  mountainScale: Schema.optional(Schema.Number.annotations({ title: 'Mountain scale' })),
+  mountainScale: Schema.optional(Schema.Number.annotate({ title: 'Mountain scale' })),
   maskFrequency: Schema.optional(Schema.Number),
   maskThreshold: Schema.optional(Schema.Number),
-  waterLevel: Schema.optional(Schema.Number.annotations({ title: 'Water level' })),
+  waterLevel: Schema.optional(Schema.Number.annotate({ title: 'Water level' })),
   landGain: Schema.optional(Schema.Number),
   oceanDepthBias: Schema.optional(Schema.Number),
   beachWidth: Schema.optional(Schema.Number),
@@ -34,7 +33,7 @@ export const TerraConfig = Schema.Struct({
   poles: Schema.optional(Schema.Boolean),
   snowLine: Schema.optional(Schema.Number),
   snowElevation: Schema.optional(Schema.Number),
-  treeDensity: Schema.optional(Schema.Number.annotations({ title: 'Tree density' })),
+  treeDensity: Schema.optional(Schema.Number.annotate({ title: 'Tree density' })),
   rockDensity: Schema.optional(Schema.Number),
   trees: Schema.optional(Schema.Boolean),
   rocks: Schema.optional(Schema.Boolean),
@@ -47,10 +46,16 @@ export class Terra extends Type.makeObject<Terra>(DXN.make('org.dxos.type.terra'
   Schema.Struct({
     name: Schema.optional(Schema.String),
     config: TerraConfig,
-    objects: Ref.Ref(TerraObject.TerraObject).pipe(Schema.Array, FormInputAnnotation.set(false)),
+    /** Owned objects: `SetParent` cascades each with the world. */
+    objects: Ref.Ref(TerraObject.TerraObject).pipe(
+      Schema.Array,
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
+    ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--globe-hemisphere-west--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -210,13 +215,11 @@ export const makeDemoWorld = (props?: { name?: string; config?: Partial<TerraCon
     ),
   ];
 
-  const terra = Obj.make(Terra, {
+  return Obj.make(Terra, {
     name: props?.name,
     config,
     objects: definitions.map((definition) => Ref.make(definition)),
   });
-  definitions.forEach((definition) => Obj.setParent(definition, terra));
-  return terra;
 };
 
 /** Every kind `makeRandomObject` may pick, one weight each. */

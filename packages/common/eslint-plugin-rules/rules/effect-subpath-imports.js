@@ -4,7 +4,11 @@
 
 import { createRequire } from 'node:module';
 
-const EXCLUDED_EFFECT_PACKAGES = ['@effect/vitest'];
+// TODO(wittjosiah): Drop `@effect/atom-react` and convert its ~164 importers to namespace form.
+// Effect 4 renamed `@effect-atom/atom-react` to `@effect/atom-react`, which moved it into the scope
+// this rule polices — the same call sites were compliant before the rename purely because of the
+// package name, so conforming them is unrelated to the migration and is deferred to its own change.
+const EXCLUDED_EFFECT_PACKAGES = ['@effect/vitest', '@effect/atom-react'];
 
 /**
  * Map of Effect base-package exports that come from a subpath (not a direct segment).

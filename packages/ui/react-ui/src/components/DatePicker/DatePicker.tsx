@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { format as formatDate } from 'date-fns';
+// Subpath, not the `date-fns` barrel: this component is boot-reachable via
+// `Input` -> `SegmentedInput` -> `DatePicker`, and the barrel drags the whole library with it.
+import { format as formatDate } from 'date-fns/format';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -13,18 +14,20 @@ import React, {
   useState,
 } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { useTranslation } from '../../primitives';
-import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
-import { Calendar, type DateRange } from '../Calendar';
-import { Icon } from '../Icon';
-import { Popover } from '../Popover';
+import { translationKey } from '#translations';
+
+import { useThemeContext } from '../../hooks/index.ts';
+import { useTranslation } from '../../providers/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Calendar, type DateRange } from '../Calendar/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Popover } from '../Popover/index.ts';
+import { DatePickerProvider, useDatePickerContext } from './DatePickerContext.ts';
 
 //
 // Public API.
 //
-// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a Radix Popover,
+// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a `Popover`,
 // preserving the previous slot-style namespace: `<DatePicker.Root>`, `<DatePicker.Trigger>`,
 // `<DatePicker.Content>`, `<DatePicker.Calendar>`. Multi-select is no longer supported (no
 // in-repo consumers); use `<Calendar.Root>` directly with custom state if needed.
@@ -36,17 +39,6 @@ type ValueByMode = {
   single: Date | undefined;
   range: DateRange | undefined;
 };
-
-type DatePickerContextValue = {
-  mode: DatePickerMode;
-  value: ValueByMode[DatePickerMode];
-  setValue: (next: ValueByMode[DatePickerMode]) => void;
-  withTime: boolean;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
-
-const [DatePickerProvider, useDatePickerContext] = createContext<DatePickerContextValue>('DatePicker');
 
 //
 // Root.
@@ -273,7 +265,5 @@ export const DatePicker = {
   Content: DatePickerContent,
   Calendar: DatePickerCalendar,
 };
-
-export { useDatePickerContext };
 
 export type { ValueByMode };

@@ -3,12 +3,14 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from '@babylonjs/core';
-import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { Model, type Scene } from '#types';
+import { Model, Scene, type SceneView } from '#types';
 
 import {
   SceneManager,
@@ -18,7 +20,7 @@ import {
   importOBJ,
   manifoldToBabylon,
   rawDataToBabylon,
-} from '../../engine';
+} from '../../engine/index.ts';
 import {
   DEFAULT_EDITOR_STATE,
   type EditorState,
@@ -26,12 +28,20 @@ import {
   ToolManager,
   createToolManager,
   getSelectedObjectIds,
-} from '../../tools';
-import { type DebugInfo, DebugPanel, extractSolidDebugInfo } from './DebugPanel';
+} from '../../tools/index.ts';
+import { type DebugInfo, DebugPanel } from './DebugPanel.tsx';
+import { extractSolidDebugInfo } from './solid-debug-info.ts';
+
+/** Trailing delay before a camera move is reported, so an orbit drag persists once, not per frame. */
+const CAMERA_CHANGE_DELAY = 250;
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;
   scene?: Scene.Scene;
+  /** Camera pose to start from; read once when the canvas mounts. */
+  camera?: SceneView.Camera;
+  /** Reports the camera pose after it settles (see {@link CAMERA_CHANGE_DELAY}). */
+  onCameraChange?: (camera: SceneView.Camera) => void;
   /** Atom holding unified editor state. */
   editorStateAtom: Atom.Writable<EditorState>;
   /** Reactive object count from ECHO subscription. Triggers sync when objects are added/removed. */
@@ -54,6 +64,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     {
       showFps = true,
       scene: sceneData,
+      camera: initialCamera,
+      onCameraChange,
       editorStateAtom,
       objectCount = 0,
       parentSolidsRef,
@@ -67,6 +79,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const editorState = useAtomValue(editorStateAtom);
     const editorStateRef = useRef<EditorState>(DEFAULT_EDITOR_STATE);
     editorStateRef.current = editorState;
+    // Refs: the mount effect reads the initial pose once and reports through whatever callback is current.
+    const initialCameraRef = useRef(initialCamera);
+    const onCameraChangeRef = useRef(onCameraChange);
+    onCameraChangeRef.current = onCameraChange;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -99,6 +115,23 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
       const manager = new SceneManager({ canvas });
       managerRef.current = manager;
+
+      if (initialCameraRef.current) {
+        manager.setCameraState(initialCameraRef.current);
+      }
+      // The pose is reported once a move settles, and again whenever the scene is left (unmount, or
+      // the page hidden/closed) so the last view is what the scene reopens to.
+      let cameraTimeout: ReturnType<typeof setTimeout> | undefined;
+      const reportCamera = () => {
+        clearTimeout(cameraTimeout);
+        cameraTimeout = undefined;
+        onCameraChangeRef.current?.(manager.getCameraState());
+      };
+      const cameraObserver = manager.camera.onViewMatrixChangedObservable.add(() => {
+        clearTimeout(cameraTimeout);
+        cameraTimeout = setTimeout(reportCamera, CAMERA_CHANGE_DELAY);
+      });
+      window.addEventListener('pagehide', reportCamera);
 
       // Load WASM once, then build meshes from scene objects.
       void getManifold().then((wasm) => {
@@ -350,6 +383,9 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }
         solidsRef.current.clear();
         clearInterval(fpsInterval);
+        manager.camera.onViewMatrixChangedObservable.remove(cameraObserver);
+        window.removeEventListener('pagehide', reportCamera);
+        reportCamera();
         resizeObserver.disconnect();
         manager.dispose();
         managerRef.current = null;
@@ -510,7 +546,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }}
       >
         <canvas
-          className='absolute inset-0 w-full h-full block outline-none'
+          className='dx-fullscreen dx-fill block outline-none'
           onContextMenu={(event) => event.preventDefault()}
           ref={canvasRef}
         />

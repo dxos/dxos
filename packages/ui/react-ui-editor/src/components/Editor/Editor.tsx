@@ -3,10 +3,10 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
-import { createContext } from '@radix-ui/react-context';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type PropsWithChildren,
+  Suspense,
   forwardRef,
   useCallback,
   useEffect,
@@ -19,7 +19,6 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -28,39 +27,18 @@ import {
   type EditorMenuProviderProps,
   type UseEditorMenuProps,
   useEditorMenu,
-} from '../EditorMenuProvider';
+} from '../EditorMenuProvider/index.ts';
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
-} from '../EditorToolbar';
+} from '../EditorToolbar/index.ts';
+import { type EditorController, noopController } from './controller.ts';
+import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext.ts';
 import {
-  type EditorController,
   EditorView as NaturalEditorContent,
   type EditorViewProps as NaturalEditorContentProps,
-  createEditorController,
-  noopController,
-} from './EditorView';
-
-//
-// Context
-//
-
-type EditorContextValue = {
-  controller?: EditorController;
-  setController: (controller: EditorController) => void;
-  extensions?: Extension[];
-  /** xmlTags widget portals (embedded blocks); rendered by `Editor.Blocks`, fed via `setWidgets`. */
-  widgets?: XmlWidgetState[];
-  state: Atom.Writable<EditorToolbarState>;
-};
-
-const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
-
-/**
- * Access the editor context. Must be used within `Editor.Root`.
- */
-export { useEditorContext };
+} from './EditorView.tsx';
 
 //
 // Root
@@ -202,7 +180,17 @@ const EditorBlocks = () => {
   return (
     <>
       {widgets.map(({ id, root, Component, props }) => (
-        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+        <div key={id} data-testid='editor.blocks.portal'>
+          {/* Per-portal boundary: a block that suspends (capability wait, lazy surface module) must
+              not hold the surrounding editor tree un-committed — that made embeds invisible until
+              a view-mode toggle rebuilt everything. */}
+          {createPortal(
+            <Suspense fallback={null}>
+              <Component {...props} />
+            </Suspense>,
+            root,
+          )}
+        </div>
       ))}
     </>
   );
@@ -318,5 +306,3 @@ export type {
   EditorToolbarState,
   EditorViewProps,
 };
-
-export { createEditorController };

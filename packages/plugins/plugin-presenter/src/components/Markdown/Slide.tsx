@@ -13,7 +13,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
 import styles from './styles.css?raw';
-import { theme } from './theme';
+import { theme } from './theme.ts';
 
 export type SlideProps = {
   content?: string;

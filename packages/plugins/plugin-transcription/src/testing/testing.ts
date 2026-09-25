@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -13,15 +13,15 @@ import { type ContentBlock, Message } from '@dxos/types';
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       title: 'Title',
       description: 'Product title',
     }),
-    description: Schema.String.annotations({
+    description: Schema.String.annotate({
       title: 'Description',
       description: 'Product description',
     }),
-  }),
+  }).pipe(Annotation.UserType.set()),
 );
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.

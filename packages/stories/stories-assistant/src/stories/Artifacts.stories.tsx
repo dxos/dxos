@@ -5,15 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Filter, Ref, Type, View } from '@dxos/echo';
-import { AssistantSkill } from '@dxos/plugin-assistant';
-import { ChessSkill } from '@dxos/plugin-chess';
-import { MapSkill } from '@dxos/plugin-map';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
+import * as MapSkill from '@dxos/plugin-map/MapSkill';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
@@ -27,14 +27,14 @@ type Story = StoryObj<typeof meta>;
 export const WithChess: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+      const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([
         import('@dxos/plugin-chess'),
-        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
-        plugins: [GamePlugin(), ChessPlugin()],
+        plugins: [GamePlugin.make(), ChessPlugin.make()],
         types: [Game.Game, Chess.State],
       };
     },
@@ -65,9 +65,9 @@ export const WithChess: Story = {
         }),
       );
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Game } = await import('@dxos/plugin-game');
-      const objects = await space.db.query(Filter.type(Game.Game)).run();
+      const objects = await db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, ChessSkill.key],
@@ -81,15 +81,15 @@ export const WithChess: Story = {
 export const WithMap: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Map }, { MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+      const [{ Map }, MapPlugin, TablePlugin, { Table }, { createLocationSchema: _ }] = await Promise.all([
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
-        import('@dxos/plugin-table/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
       return {
-        plugins: [MapPlugin(), TablePlugin()],
+        plugins: [MapPlugin.make(), TablePlugin.make()],
         types: [View.View, Map.Map, Table.Table],
       };
     },
@@ -114,8 +114,8 @@ export const WithMap: Story = {
       space.db.add(table);
       space.db.add(map);
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(View.View)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, MapSkill.key],
@@ -128,13 +128,13 @@ export const WithMap: Story = {
 export const WithTrip: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { Map }, { MapPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
+      const [MarkdownPlugin, { Map }, MapPlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), MapPlugin()],
+        plugins: [MarkdownPlugin.make(), MapPlugin.make()],
         types: [Map.Map],
       };
     },
@@ -174,9 +174,9 @@ export const WithTrip: Story = {
         }),
       );
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Map } = await import('@dxos/plugin-map');
-      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      const objects = await db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -188,12 +188,12 @@ export const WithTrip: Story = {
 export const WithBoard: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Board }, { BoardPlugin }] = await Promise.all([
+      const [{ Board }, BoardPlugin] = await Promise.all([
         import('@dxos/plugin-board'),
-        import('@dxos/plugin-board/plugin'),
+        import('@dxos/plugin-board/BoardPlugin'),
       ]);
       return {
-        plugins: [BoardPlugin()],
+        plugins: [BoardPlugin.make()],
         types: [Board.Board],
       };
     },
@@ -201,9 +201,9 @@ export const WithBoard: Story = {
       const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Board } = await import('@dxos/plugin-board');
-      const objects = await space.db.query(Filter.type(Board.Board)).run();
+      const objects = await db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),

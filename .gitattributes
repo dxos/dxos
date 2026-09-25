@@ -10,9 +10,10 @@ shrinkwrap.yaml              merge=binary
 npm-shrinkwrap.json          merge=binary
 yarn.lock                    merge=binary
 
-# Memoized LLM conversation caches — regenerate with
-# `ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'` if conflicts occur.
-*.conversations.json         merge=binary
+# Model-fixture conversation store: hash-addressed, single-line generated blobs. Treat as opaque —
+# no textual diff, no line-merge (regenerate with `DX_UPDATE_MODEL_FIXTURES=1` rather than resolving
+# conflicts by hand), and mark generated so GitHub collapses them in review.
+.store/**                    -diff -merge linguist-generated=true
 
 # Rush's JSON config files use JavaScript-style code comments.  The rule below prevents pedantic
 # syntax highlighters such as GitHub's from highlighting these comments as errors.  Your text editor

@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
+import { toDate } from '@dxos/protocols/buf';
+import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import * as FormBuilder from './form-builder';
+import { PlatformError } from './errors.ts';
+import * as FormBuilder from './form-builder.ts';
 
 export type FormatSpaceOptions = {
   verbose?: boolean;
@@ -37,11 +41,11 @@ const READ_TIMEOUT_SECONDS = 2;
 
 const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =>
   Effect.tryPromise(run).pipe(
-    Effect.timeoutFail({
+    Effect.timeoutOrElse({
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
-      onTimeout: () => new Error(`${label} timed out`),
+      orElse: () => Effect.fail(new PlatformError({ message: `${label} timed out` })),
     }),
-    Effect.catchAll(() => Effect.succeed(fallback)),
+    Effect.catch(() => Effect.succeed(fallback)),
   );
 
 const tryWithFallbackSync = <T>(read: () => T, fallback: T): T => {
@@ -60,11 +64,11 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
   // an enumeration command (e.g. `dx space list`).
   if (waitSeconds > 0) {
     yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: Duration.seconds(waitSeconds),
-        onTimeout: () => new Error('waitUntilReady timed out'),
+        orElse: () => Effect.fail(new PlatformError({ message: 'waitUntilReady timed out' })),
       }),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
   }
 
@@ -73,16 +77,16 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
 
   // TODO(burdon): Factor out.
   // TODO(burdon): Agent needs to restart before `ready` is available.
-  const metrics = tryWithFallbackSync(
-    () => space.internal.data.metrics,
-    undefined as { open?: Date; ready?: Date } | undefined,
-  );
-  const startup = metrics?.open && metrics?.ready ? metrics.ready.getTime() - metrics.open.getTime() : undefined;
+  const metrics = tryWithFallbackSync(() => space.internal.data.metrics, undefined);
+  const openedAt = toDate(metrics?.open);
+  const readyAt = toDate(metrics?.ready);
+  const startup = openedAt && readyAt ? readyAt.getTime() - openedAt.getTime() : undefined;
 
   // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
   // const host = client.services.services.DevtoolsHost!;
   const pipeline = tryWithFallbackSync(() => space.internal.data.pipeline, undefined);
-  const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+  const epochAssertion = pipeline?.currentEpoch?.subject?.assertion;
+  const epoch = epochAssertion && anyUnpack(epochAssertion, EpochSchema)?.number;
 
   // The sync-state read does IO; cap it so a stuck space can't hang the
   // command. Falls back to a "no peers" placeholder.
@@ -113,7 +117,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
     key,
     epoch,
     startup,
-    automergeRoot: pipeline?.spaceRootUrl,
+    automergeRoot: pipeline?.directoryUrl,
     // appliedEpoch,
     syncState: `${syncState.count} ${getSyncIndicator(syncState.up, syncState.down)} (${syncState.peers} peers)`,
   };

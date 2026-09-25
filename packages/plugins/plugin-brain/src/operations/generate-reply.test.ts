@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -13,11 +13,11 @@ import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { generateReply, replySubject } from './generate-reply';
+import { generateReply, replySubject } from './generate-reply.ts';
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
   Obj.make(Message.Message, {
@@ -44,19 +44,22 @@ const ALICE_FACT: RDF.Fact = {
 /** Stub `AiService` returning a canned body while capturing prompts for grounding assertions. */
 const capturingAiService = (text: string): { layer: Layer.Layer<AiService.AiService>; prompts: string[] } => {
   const prompts: string[] = [];
-  const layer = Layer.succeed(AiService.AiService, {
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: (options: { prompt: string }) =>
-          Effect.sync(() => {
-            prompts.push(String(options.prompt));
-            return { text, content: [] };
-          }),
-        generateObject: () => Effect.succeed({ value: {}, content: [] }),
-        streamText: () => Stream.empty,
-        // Test stub: the LanguageModel surface is wider than the three methods exercised here.
-      } as any),
-  });
+  const layer = Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: (options: { prompt: string }) =>
+            Effect.sync(() => {
+              prompts.push(String(options.prompt));
+              return { text, content: [] };
+            }),
+          generateObject: () => Effect.succeed({ value: {}, content: [] }),
+          streamText: () => Stream.empty,
+          // Test stub: the LanguageModel surface is wider than the three methods exercised here.
+        } as any),
+    }),
+  );
   return { layer, prompts };
 };
 
@@ -90,7 +93,11 @@ describe('generateReply', () => {
         const store = yield* FactStore;
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), Effect.provide(ai.layer)),
+      }).pipe(
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
+      ),
     );
 
     expect(result.subject).toBe('Re: Q2 report');
@@ -115,9 +122,9 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(FactStore.layerMemory),
-        Effect.provide(ai.layer),
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
       ),
     );
 

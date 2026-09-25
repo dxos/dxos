@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './skills';
-export * from './meta';
-export * from './types';
+export * as FilePlugin from './FilePlugin.ts';
+export * as StagedUpload from './StagedUpload.ts';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/shell",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,16 +22,15 @@
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
-      "browser": "./dist/lib/browser/react.mjs",
-      "node": "./dist/lib/node-esm/react.mjs"
+      "default": "./dist/lib/react.mjs"
+    },
+    "./translations": {
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      }
+      "default": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -40,6 +39,7 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/display-name": "workspace:*",
@@ -47,31 +47,26 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "@xstate/react": "catalog:",
     "date-fns": "catalog:",
-    "react-qr-rounded": "catalog:",
     "scheduler": "catalog:",
     "use-sync-external-store": "catalog:",
     "xstate": "catalog:"
   },
   "devDependencies": {
-    "@dxos/config": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
     "@types/react": "catalog:",

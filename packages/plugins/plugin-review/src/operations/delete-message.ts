@@ -4,26 +4,28 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
 
-import { CommentOperation } from '../types';
+import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = CommentOperation.DeleteMessage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
+    Effect.fnUntraced(function* ({ subject, anchor, message }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 
-      const msgIndex = thread.messages.findIndex((ref) => ref.target?.id === messageId);
-      const msg = thread.messages[msgIndex]?.target;
-      if (!msg) {
+      // Match on the reference's own uri, not `ref.target?.id`: `target` reads undefined until the
+      // message loads, so an unresolved ref finds nothing and the delete silently no-ops.
+      const msgIndex = thread.messages.findIndex((ref) => ref.uri === message.uri);
+      if (msgIndex === -1) {
         return { messageIndex: -1 };
       }
+      const msg = yield* Effect.promise(() => thread.messages[msgIndex].load());
 
       if (msgIndex === 0 && thread.messages.length === 1) {
         // TODO(wittjosiah): This doesn't support restoring the thread.
@@ -41,7 +43,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = Co
           spaceId: db.spaceId,
           threadId: thread.id,
           threadLength: thread.messages.length,
-          messageId,
+          messageId: msg.id,
         },
       });
 

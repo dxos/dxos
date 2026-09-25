@@ -2,13 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { getInvocationUrl } from '@dxos/compute-runtime';
+import type * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { bufWkt, createBuf, fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  ClaimSchema,
+  type Credential,
+  CredentialSchema,
+  ServiceAccessSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Get the function URL for a given script and client configuration
@@ -70,18 +77,21 @@ export const updateFunctionMetadata = (
 };
 
 export const getAccessCredential = (identityKey: PublicKey): Credential => {
-  return {
-    issuer: identityKey,
-    issuanceDate: new Date(),
-    subject: {
-      id: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.ServiceAccess',
-        'serverName': 'hub.dxos.network',
-        'serverKey': identityKey,
-        identityKey,
-        'capabilities': ['composer:beta'],
-      },
-    },
-  };
+  const key = fromPublicKey(identityKey);
+  return createBuf(CredentialSchema, {
+    issuer: key,
+    issuanceDate: fromDate(new Date()),
+    subject: createBuf(ClaimSchema, {
+      id: key,
+      assertion: bufWkt.anyPack(
+        ServiceAccessSchema,
+        createBuf(ServiceAccessSchema, {
+          serverName: 'hub.dxos.network',
+          serverKey: key,
+          identityKey: key,
+          capabilities: ['composer:beta'],
+        }),
+      ),
+    }),
+  });
 };

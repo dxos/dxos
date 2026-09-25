@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { ToolResults } from './ToolResults';
+import { translations } from '#translations';
+
+import { ToolResults } from './ToolResults.tsx';
 
 const meta: Meta<typeof ToolResults> = {
   title: 'ui/react-ui-introspect/ToolResults',

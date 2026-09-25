@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './share';
+export * from './share.ts';

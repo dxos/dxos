@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Obj } from '@dxos/echo';
 
-import { IBKR_SOURCE } from '../constants';
-import { IbkrConnectionError, IbkrSyncError } from '../errors';
-import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
-import { getOrCreatePortfolioFeed } from './feed';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { IBKR_SOURCE } from '../constants.ts';
+import { IbkrConnectionError, IbkrSyncError } from '../errors.ts';
+import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const getCredential = Effect.gen(function* () {
   const credential = yield* Credential.CredentialsService.getCredential({ service: IBKR_SOURCE });

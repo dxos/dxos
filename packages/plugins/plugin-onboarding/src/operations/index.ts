@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as OnboardingOperation from './definitions';
+import { RegisterOAuthRecovery } from './definitions.ts';
+import { RedeemOAuthRecovery } from './definitions.ts';
+import { CompleteOAuthRegistration } from './definitions.ts';
 
-export const OnboardingOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./complete-oauth-registration'),
-  () => import('./import-exemplar-space'),
-  () => import('./redeem-oauth-recovery'),
-  () => import('./register-oauth-recovery'),
-);
+export * as OnboardingOperation from './definitions.ts';
+
+export const OnboardingOperationHandlerSet = OperationHandlerSet.lazy([
+  CompleteOAuthRegistration.pipe(Operation.lazyHandler(() => import('./complete-oauth-registration.ts'))),
+  RedeemOAuthRecovery.pipe(Operation.lazyHandler(() => import('./redeem-oauth-recovery.ts'))),
+  RegisterOAuthRecovery.pipe(Operation.lazyHandler(() => import('./register-oauth-recovery.ts'))),
+]);

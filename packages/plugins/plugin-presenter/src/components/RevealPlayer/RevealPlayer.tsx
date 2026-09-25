@@ -145,16 +145,19 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       };
     });
 
-    // TOOD(burdon): Trap cursor keys (otherwise tabster grabs focus.)
+    // TODO(burdon): Trap cursor keys (otherwise the enclosing focus group grabs focus.)
     return (
       <div
         {...composableProps(props, {
-          classNames: ['dx-container grid place-items-center bg-scrim-surface', fullscreen && 'absolute inset-0'],
+          classNames: [
+            'dx-expand overflow-hidden grid place-items-center bg-scrim-surface',
+            fullscreen && 'dx-fullscreen',
+          ],
         })}
         ref={forwardedRef}
       >
-        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
-          <div ref={deckDivRef} className='absolute inset-0 reveal'>
+        <div className='relative aspect-video dx-fill h-auto max-h-full overflow-hidden'>
+          <div ref={deckDivRef} className='dx-fullscreen reveal'>
             {/* React hoists these to <head>; they must not be wrapped in <style> (which only renders CSS text). */}
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
             <link rel='preconnect' href='https://fonts.googleapis.com' />
@@ -162,7 +165,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
               rel='stylesheet'
               href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             />
-            <div className={mx('slides', !fullscreen && 'bg-base-surface p-8')}>
+            <div className={mx('slides', !fullscreen && 'dx-base-surface p-8')}>
               <div />
               <section {...{ 'data-markdown': [] }}>
                 <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>

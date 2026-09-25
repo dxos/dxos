@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -41,9 +40,9 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/readable-stream": "catalog:",
+    "hypercore": "catalog:",
     "hypercore-protocol": "catalog:"
   },
   "publishConfig": {

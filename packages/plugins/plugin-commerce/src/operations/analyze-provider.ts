@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { SearchOperation } from '../types';
-import { cleanHtml, fetchPage, isCrxRenderAvailable, summarizeStructure } from '../util';
+import { SearchOperation } from '#types';
+
+import { cleanHtml, fetchPage, isCrxRenderAvailable, summarizeStructure } from '../util/index.ts';
 
 // Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB
 // raw; `cleanHtml` strips scripts/styles/noise so the model sees the repeating listing structure.

@@ -21,19 +21,13 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -45,7 +39,10 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
@@ -12,8 +12,8 @@ import { type Stage } from '@dxos/pipeline';
 import { FactStore, type RDF, generateQuery } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type StoreError } from '../errors';
-import { QuestionStore } from '../stores';
+import { type StoreError } from '../errors.ts';
+import { QuestionStore } from '../stores/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -58,12 +58,11 @@ export type AnswerOptions = {
  */
 export const answerOpenQuestions = (
   options: AnswerOptions = {},
-): Effect.Effect<number, StoreError, QuestionStore | FactStore | AiService.AiService> =>
+): Effect.Effect<number, StoreError, QuestionStore.QuestionStore | FactStore | AiService.AiService> =>
   Effect.gen(function* () {
     const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-    const questions = yield* QuestionStore;
     const factStore = yield* FactStore;
-    const open = (yield* questions.list('open')).filter((question) => question.attempts < maxAttempts);
+    const open = (yield* QuestionStore.list('open')).filter((question) => question.attempts < maxAttempts);
     let answered = 0;
     for (const question of open) {
       const attempt = Effect.gen(function* () {
@@ -78,12 +77,12 @@ export const answerOpenQuestions = (
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
-        }).pipe(Effect.provide(AiService.model(DEFAULT_MODEL)));
+        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)));
         const text = value.answer?.trim();
         if (!text) {
           return false;
         }
-        yield* questions.answer(
+        yield* QuestionStore.answer(
           question.id,
           text,
           facts.map((fact) => fact.id),
@@ -91,7 +90,7 @@ export const answerOpenQuestions = (
         return true;
       });
       const ok = yield* attempt.pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.logWarning(`answer-questions: ${question.id} left open — ${error}`).pipe(Effect.as(false)),
         ),
       );
@@ -99,7 +98,7 @@ export const answerOpenQuestions = (
         answered++;
       } else {
         // Count the miss so a question that never resolves stops being retried at every boundary.
-        yield* questions.recordAttempt(question.id);
+        yield* QuestionStore.recordAttempt(question.id);
       }
     }
     return answered;
@@ -113,5 +112,5 @@ export const answerQuestionsStage = (): Stage.Stage<
   Type.Event,
   Type.Event,
   StateError,
-  QuestionStore | FactStore | AiService.AiService | StateStore
+  QuestionStore.QuestionStore | FactStore | AiService.AiService | StateStore.StateStore
 > => tapStage('answer-questions', ['ThreadEnd', 'ChannelEnd'], () => answerOpenQuestions().pipe(Effect.asVoid));

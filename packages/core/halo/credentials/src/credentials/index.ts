@@ -2,8 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './assertions';
-export * from './credential-factory';
-export * from './credential-generator';
-export * from './signing';
-export * from './verifier';
+export * from './assertions.ts';
+export * from './credential-factory.ts';
+export * from './credential-keys.ts';
+export * from './credential-generator.ts';
+export * from './credentials-document.ts';
+export * from './feed-payload.ts';
+export * from './signing.ts';
+export * from './space-invitation-notice.ts';
+export * from './verifier.ts';

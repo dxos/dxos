@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Instructions, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
@@ -16,8 +18,8 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { makeRoutine } from '../../util';
-import { RoutineCard } from './RoutineCard';
+import { makeRoutine } from '../../util/index.ts';
+import { RoutineCard } from './RoutineCard.tsx';
 
 const types = [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Text.Text];
 

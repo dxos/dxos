@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Note, Score, Sequence, Track } from '#types';
+import { Note, Score, Sequence, Track } from '#types';
 
-import { type LeadSheetDocument } from './lead-sheet';
+import { type LeadSheetDocument } from './lead-sheet.ts';
 
 /**
  * Mutable view of a Score subject — usable inside `Obj.update` callbacks.

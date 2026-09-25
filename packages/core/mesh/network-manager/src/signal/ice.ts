@@ -4,14 +4,14 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Services_IceProvider } from '@dxos/protocols/buf/dxos/config_pb';
 import { isNonNullable } from '@dxos/util';
 
 export interface IceProvider {
   getIceServers: () => Promise<RTCIceServer[]>;
 }
 
-export const createIceProvider = (iceProviders: Runtime.Services.IceProvider[]): IceProvider => {
+export const createIceProvider = (iceProviders: Runtime_Services_IceProvider[]): IceProvider => {
   let cachedIceServers: RTCIceServer[];
   return {
     getIceServers: async () => {

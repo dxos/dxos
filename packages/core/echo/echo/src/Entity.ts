@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
-import * as internal from './internal';
-import * as objInternal from './internal/Obj';
-import type * as Ref from './Ref';
-import type * as Relation from './Relation';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import type * as Ref from './Ref.ts';
+import type * as Relation from './Relation.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -72,11 +72,9 @@ export interface Unknown extends OfKind<Kind> {}
  * isn't an `UnknownTypeSchema<_, K>` (there's no single `K`) and carries no
  * `TypeAnnotation`.
  */
-export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-) as unknown as Schema.Schema<Unknown>;
+export const Unknown: Schema.Codec<Unknown> = Schema.StructWithRest(Schema.Struct({ id: Schema.String }), [
+  Schema.Record(Schema.String, Schema.Unknown),
+]) as unknown as Schema.Codec<Unknown>;
 
 /**
  * Snapshot of an Obj or Relation.
@@ -233,9 +231,9 @@ export const getDatabase = (entity: Unknown | Snapshot): any | undefined => inte
  * Returns read-only meta when passed a regular entity or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): internal.EntityMeta;
+export function getMeta(entity: Mutable<Unknown>): internal.Meta;
 export function getMeta(entity: Unknown | Snapshot): internal.ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.EntityMeta | internal.ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.Meta | internal.ReadonlyMeta {
   return internal.getMetaChecked(entity);
 }
 

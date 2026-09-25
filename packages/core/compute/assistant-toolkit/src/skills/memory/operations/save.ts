@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 
-import { Memory } from '../../../types/Memory';
-import { SaveMemory } from './definitions';
+import { Memory } from '../../../types/Memory.ts';
+import { SaveMemory } from './definitions.ts';
 
 export default SaveMemory.pipe(
   Operation.withHandler(

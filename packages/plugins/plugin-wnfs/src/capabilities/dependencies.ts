@@ -4,25 +4,34 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as Capability from '@dxos/app-framework/Capability';
+import { log } from '@dxos/log';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { WnfsCapabilities } from '#types';
 
-import * as Blockstore from '../blockstore';
+import * as Blockstore from '../blockstore.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
+    const client = yield* ClientCapabilities.Client;
+    // `config` is initialized-only, and this event wave can land before the forked client
+    // initialization completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
+    const apiHost = client.config.values.runtime?.services?.edge?.url;
+    if (!apiHost) {
+      // WNFS stores blocks on edge; without an endpoint the module contributes nothing.
+      log('wnfs blockstore disabled: EDGE services not configured');
+      return [];
+    }
     const blockstore = Blockstore.create(apiHost);
     yield* Effect.tryPromise(() => blockstore.open());
 
     const instances: WnfsCapabilities.Instances = {};
 
     return [
-      Capability.contributes(WnfsCapabilities.Blockstore, blockstore),
-      Capability.contributes(WnfsCapabilities.Instances, instances),
+      Capability.contribute(WnfsCapabilities.Blockstore, blockstore),
+      Capability.contribute(WnfsCapabilities.Instances, instances),
     ];
   }),
 );

@@ -19,6 +19,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/feed-store"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -31,13 +34,10 @@
       "path": "../../common/random-access-storage"
     },
     {
-      "path": "../../common/sql-sqlite"
-    },
-    {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -46,16 +46,13 @@
       "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-host"
-    },
-    {
       "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../core/mesh/rpc"
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/protocols"

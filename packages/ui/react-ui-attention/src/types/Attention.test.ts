@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import {
@@ -13,7 +13,7 @@ import {
   getSegmentId,
   isLinkedSegment,
   linkedSegment,
-} from './Attention';
+} from './Attention.ts';
 
 describe('AttentionManager', () => {
   test('takes an initial attended id', ({ expect }) => {

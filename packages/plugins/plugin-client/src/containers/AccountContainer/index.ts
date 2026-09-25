@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { AccountContainer as default } from './AccountContainer';
+export { AccountContainer as default } from './AccountContainer.tsx';

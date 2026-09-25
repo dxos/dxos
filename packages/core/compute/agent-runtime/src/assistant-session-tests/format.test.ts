@@ -7,7 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill, Template } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -15,11 +18,11 @@ import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const OrganizationList = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.organizationList'),
+    key: DXN.make('com.example.operation.organizationList'),
     name: 'Organization List',
     description: 'List organizations',
   },

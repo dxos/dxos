@@ -8,7 +8,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
-import { Demo, NetworkToggle } from './components';
+import { Demo, NetworkToggle } from './components/index.ts';
 
 const App = () => {
   return (

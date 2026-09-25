@@ -5,7 +5,8 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
@@ -15,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
+import { type TemplateChangeCallback, TemplateForm } from './TemplateForm.tsx';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.

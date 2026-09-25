@@ -2,32 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { BaseError } from '@dxos/errors';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
-import { authorize, initialize, saveSession } from './client';
+import { authorize, initialize, saveSession } from './client.ts';
 
 class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect failed') {}
 
 export const connect = Command.make(
   'connect',
   {
-    url: Args.text({ name: 'url' }).pipe(
-      Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
-    ),
-    spaceId: Options.text('space-id').pipe(
+    url: Args.String('url').pipe(Args.withDescription('MCP server URL (e.g. https://mcp.dxos.network).')),
+    spaceId: Options.String('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),
-      Options.repeated,
+      Options.atLeast(0),
     ),
-    haloSpaceId: Options.text('halo-space-id').pipe(
+    haloSpaceId: Options.String('halo-space-id').pipe(
       Options.withDescription('HALO space id. Only needed when the identity has no registered agent.'),
       Options.optional,
     ),
@@ -56,7 +55,7 @@ export const connect = Command.make(
       try: () =>
         authorize({
           serverUrl: url,
-          identityKey: identity.identityKey.toHex(),
+          identityKey: requirePublicKey(identity.identityKey).toHex(),
           spaceIds,
           haloSpaceId: Option.getOrUndefined(haloSpaceId),
         }),

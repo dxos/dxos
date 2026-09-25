@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { inferObjectOrder, inferRecordOrder } from './order';
+import { inferObjectOrder, inferRecordOrder } from './order.ts';
 
 describe('Object order', () => {
   test('infers correct order for nonempty record & order', () => {

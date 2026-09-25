@@ -6,17 +6,21 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ModuleContainer } from './ModuleContainer';
+import { ModuleContainer } from './ModuleContainer.tsx';
 
 // Example module role tokens (role-only dispatch). A real storybook defines these alongside its
 // module surfaces; here they exercise the container in isolation from any plugin.
@@ -47,10 +51,10 @@ const ExampleSurfacesPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'org.dxos.storybook.storyModules.surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'panelA',
             filter: Surface.makeFilter(PanelA),
@@ -67,7 +71,7 @@ const ExampleSurfacesPlugin = Plugin.define(
             component: () => <ExamplePanel label='Panel C' />,
           }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -81,7 +85,7 @@ const meta: Meta<typeof ModuleContainer> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -89,7 +93,7 @@ const meta: Meta<typeof ModuleContainer> = {
               yield* Effect.promise(() => space.waitUntilReady());
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         ExampleSurfacesPlugin(),
       ],
     }),

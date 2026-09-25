@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -30,14 +29,11 @@ export const getStatus = () =>
     }
   }).pipe(
     // TODO(wittjosiah): Tagged error.
-    Effect.catchSome((error) => {
-      if (error instanceof Error && error.message === 'Identity not available') {
-        // TODO(wittjosiah): Error coloring for logs.
-        return Option.some(Console.error(error.message));
-      } else {
-        return Option.none();
-      }
-    }),
+    // TODO(wittjosiah): Error coloring for logs.
+    Effect.catchIf(
+      (error) => error instanceof Error && error.message === 'Identity not available',
+      (error) => Console.error((error as Error).message),
+    ),
   );
 
 // TODO(wittjosiah): Admin functionality to provide to specify an identity.

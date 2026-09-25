@@ -26,7 +26,7 @@ import {
   SurfaceSchema,
   SymbolDetailSchema,
   SymbolMatchSchema,
-} from './output-schemas';
+} from './output-schemas.ts';
 import {
   FindSymbolInput,
   GetPackageInput,
@@ -39,7 +39,7 @@ import {
   ListSchemasInput,
   ListSurfacesInput,
   ListSymbolsInput,
-} from './schemas';
+} from './schemas.ts';
 
 /**
  * Pure metadata for a single MCP tool — what an MCP client needs to know
@@ -157,7 +157,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   list_capabilities: {
     title: 'List capability contributions',
     description: trim`
-      List Capability.contributes(<key>, ...) calls across the monorepo. Use this to discover which capability
+      List Capability.contribute(<key>, ...) calls across the monorepo. Use this to discover which capability
       keys are produced (or required) by which plugins. Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
     inputSchema: ListCapabilitiesInput,

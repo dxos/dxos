@@ -7,21 +7,23 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Artifact, Lightbox, Variant } from '#types';
+import { Lightbox, MediaArtifact, Variant } from '#types';
 
-import { StudioPlugin } from '../../StudioPlugin';
-import { LightboxArticle } from './LightboxArticle';
+import { StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
+import { LightboxArticle } from './LightboxArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -50,8 +52,14 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
-          types: [Lightbox.Lightbox, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
+        ClientPlugin.make({
+          types: [
+            Lightbox.Lightbox,
+            MediaArtifact.MediaArtifact,
+            Variant.Variant,
+            Instructions.Instructions,
+            Text.Text,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -61,33 +69,27 @@ const meta = {
               // Seed Artifacts (each with a cover variant) and place them across the board grid.
               Obj.update(lightbox, (lightbox) => {
                 for (let index = 0; index < 5; index++) {
-                  const artifact = Artifact.make({ name: `Artifact ${index + 1}`, kind: 'image' });
-                  const variant = space.db.add(
-                    Variant.make({
-                      contentType: 'image/png',
-                      url: `https://picsum.photos/seed/lb-${index}/512/512`,
-                    }),
-                  );
-                  Obj.setParent(variant, artifact);
-                  Obj.update(artifact, (artifact) => {
-                    artifact.variants = [Ref.make(variant)];
-                    artifact.cover = Ref.make(variant);
+                  const added = makeMockArtifact({
+                    db: space.db,
+                    name: `MediaArtifact ${index + 1}`,
+                    prompt: `Lightbox study ${index + 1}: a still life in warm light.`,
+                    generated: true,
                   });
-                  const added = space.db.add(artifact);
                   lightbox.items.push(Ref.make(added));
                   lightbox.layout.cells[added.id] = {
                     x: (index % 3) * 2,
                     y: Math.floor(index / 3) * 2,
-                    width: 2,
-                    height: 2,
+                    w: 2,
+                    h: 2,
                   };
                 }
               });
             }),
         }),
         StudioPlugin(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
+        StubProjectsPlugin(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
       ],
     }),
   ],

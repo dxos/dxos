@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Place, Routing } from '@dxos/plugin-trip/types';
+import type * as Place from '@dxos/plugin-trip/Place';
+import * as Routing from '@dxos/plugin-trip/Routing';
 
-import { geocode } from './NominatimClient';
-import { parseRoutes } from './osrm-mapping';
-import { fetchRoute } from './OsrmClient';
+import { geocode } from './NominatimClient.ts';
+import { parseRoutes } from './osrm-mapping.ts';
+import { fetchRoute } from './OsrmClient.ts';
 
 export const OSRM_SERVICE_ID = 'osrm';
 

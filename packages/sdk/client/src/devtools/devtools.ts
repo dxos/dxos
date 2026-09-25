@@ -4,19 +4,22 @@
 
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 
 import { ClientRpcServer, type Halo, type Space, makeHandlersFromRpc } from '@dxos/client-protocol';
-import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
+import { Spaces } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { DXN, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
-import { type Client } from '../client';
-import { SpaceState } from '../echo';
+import { type Client } from '../client/index.ts';
+import { SpaceState } from '../echo/index.ts';
+import { type DebugPortController, getDebugPortController } from './debug-port-controller.ts';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -31,11 +34,10 @@ exposeModule('@automerge/automerge', A);
  */
 export interface DevtoolsHook {
   client?: Client;
-  host?: ClientServicesHost;
 
   tracing: TraceProcessor;
 
-  spaces?: Accessor<Space | DataSpace>;
+  spaces?: Accessor<Space | Spaces.DataSpace>;
   feeds?: Accessor<FeedWrapper>;
   halo?: Halo;
 
@@ -46,6 +48,12 @@ export interface DevtoolsHook {
   get?(id: string): Promise<any>;
 
   openClientRpcServer: () => Promise<boolean>;
+
+  /**
+   * Agent debug port — evaluates snippets delivered by a loopback `composer-recovery.js` server.
+   * Off until explicitly started; never persisted.
+   */
+  debugPort: DebugPortController;
 
   openDevtoolsApp?: () => void;
 
@@ -87,10 +95,9 @@ export interface DevtoolsHook {
 
 export type MountOptions = {
   client?: Client;
-  host?: ClientServicesHost;
 };
 
-export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
+export const mountDevtoolsHooks = ({ client }: MountOptions) => {
   let server: ClientRpcServer;
   let devtoolsRpcPort: MessagePort | undefined;
   let diagnostics: DiagnosticMetadata[] = [];
@@ -98,8 +105,15 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   const hook: DevtoolsHook = {
     // To debug client from console using 'window.__DXOS__.client'.
     client,
-    host,
     tracing: TRACE_PROCESSOR,
+    // `resume` is a no-op unless this tab persisted a live session before the reload, so mounting the
+    // hook can never switch the port on by itself — it only carries an already-authorized session
+    // across a navigation the user did not intend to end it (an OAuth redirect, a HMR reload).
+    debugPort: (() => {
+      const controller = getDebugPortController();
+      controller.resume();
+      return controller;
+    })(),
 
     openClientRpcServer: async () => {
       if (!client) {
@@ -206,7 +220,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.openDevtoolsApp = async () => {
-      const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+      // No default target: when no remote source is configured the devtools app decides on its own.
+      const vault = client.config?.values.runtime?.client?.remoteSource;
 
       // Check if we're serving devtools locally on the usual port.
       let hasLocalDevtools = false;
@@ -219,7 +234,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       const devtoolsApp = hasLocalDevtools
         ? 'http://localhost:5174/'
         : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      const devtoolsUrl = vault ? `${devtoolsApp}?target=${vault}` : devtoolsApp;
       window.open(devtoolsUrl, '_blank');
     };
 
@@ -233,15 +248,14 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.exportProfile = async () => {
-      const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
+      const { Storage } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
-      const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
+      const { storage } = Storage.createStorageObjects(storageConfig);
 
       log.info('begin profile export', { storageConfig });
-      const archive = await exportProfileData({ storage, level });
+      const archive = await Storage.exportProfileData({ storage });
 
       log.info('done profile export', { storageEntries: archive.storage.length });
 
@@ -253,47 +267,25 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } =
-        await import('@dxos/client-services');
+      const { Storage } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});
 
-      const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
+      const { storage } = Storage.createStorageObjects(storageConfig);
 
-      const archive = decodeProfileArchive(data);
+      const archive = Storage.decodeProfileArchive(data);
       log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
 
-      await importProfileData({ storage, level }, archive);
+      await Storage.importProfileData({ storage }, archive);
 
       log.info('done profile import');
 
       window.location.reload();
     };
   }
-  if (host) {
-    hook.spaces = createAccessor({
-      getAll: () => Array.from(host.context.dataSpaceManager?.spaces.values() ?? []),
-      getByKey: (key) => host.context.dataSpaceManager?.spaces.get(key),
-      getSearchMap: () =>
-        new Map(
-          Array.from(host.context.dataSpaceManager?.spaces.values() ?? []).flatMap((space) => [
-            [space.key.toHex(), space],
-          ]),
-        ),
-    });
-
-    hook.feeds = createAccessor({
-      getAll: () => Array.from(host.context.feedStore?.feeds.values() ?? []),
-      getByKey: (key) => host.context.feedStore?.feeds.find((feed) => feed.key.equals(key)),
-      getSearchMap: () =>
-        new Map(Array.from(host.context.feedStore?.feeds.values() ?? []).flatMap((feed) => [[feed.key.toHex(), feed]])),
-    });
-  }
-
   ((globalThis as any).__DXOS__ as DevtoolsHook) = hook;
 
   let warningShown = false;
@@ -310,6 +302,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 };
 
 export const unmountDevtoolsHooks = () => {
+  // The port evaluates against these globals; leaving it polling after they are gone is never wanted.
+  getDebugPortController().stop();
   delete (globalThis as any).__DXOS__;
   delete (globalThis as any).dxos;
 };

@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { GetCurrentDate, SetAlarm } from './operations/definitions';
+import { GetCurrentDate, SetAlarm } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.alarm';
 

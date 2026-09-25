@@ -6,4 +6,4 @@
 // plugin variants can use it without pulling the table components.
 // TODO(wittjosiah): Factor this out into a package that does not carry a UI dependency at all.
 
-export * as Table from './Table';
+export * as Table from './Table.ts';

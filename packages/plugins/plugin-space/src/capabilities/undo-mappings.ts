@@ -4,23 +4,26 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
+import { type PublicKey } from '@dxos/keys';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceOperation } from '#types';
 
-import { SpaceOperationConfig } from '../operations/helpers';
+import { SpaceOperationConfig } from '../operations/helpers.ts';
 
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;
-  observability?: boolean;
+  createJoinUrl: (spaceKey: PublicKey) => string;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, observability }: UndoMappingsOptions) {
+  Effect.fnUntraced(function* ({ createInvitationUrl, createJoinUrl }: UndoMappingsOptions) {
     return [
-      Capability.contributes(Capabilities.UndoMapping, [
+      Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: SpaceOperation.DeleteField,
           inverse: SpaceOperation.RestoreField,
@@ -41,18 +44,27 @@ export default Capability.makeModule(
             indices: output.indices,
             wasActive: output.wasActive,
           }),
-          message: (input, _output) => {
-            const ns = Entity.getTypename(input.objects[0]);
-            return ns && input.objects.length === 1
+          // Read off the output: the input names the entities either directly or by reference, and
+          // only the output is guaranteed to carry the entities that were actually removed.
+          message: (_input, output) => {
+            const removed = output.objects[0];
+            const ns = removed && Entity.getTypename(removed);
+            return ns && output.objects.length === 1
               ? ['object-deleted.label', { ns: [ns, meta.profile.key] }]
               : ['objects-deleted.label', { ns: meta.profile.key }];
           },
         }),
+        UndoMapping.make({
+          operation: SpaceOperation.SetArchived,
+          inverse: SpaceOperation.SetArchived,
+          deriveContext: (input, output) => ({ objects: output.objects, archived: !input.archived }),
+          message: (input) => [
+            input.archived ? 'objects-archived.label' : 'objects-unarchived.label',
+            { ns: meta.profile.key },
+          ],
+        }),
       ]),
-      Capability.contributes(SpaceOperationConfig, {
-        createInvitationUrl,
-        observability: observability ?? false,
-      }),
+      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
     ];
   }),
 );

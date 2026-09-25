@@ -4,12 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Outline } from '@dxos/types';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
+import { Outline, RemoteSession } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Journal } from '#types';
 
 export const translations = [
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {
@@ -34,16 +36,34 @@ export const translations = [
         'delete-object.label': 'Delete outline',
         'object-deleted.label': 'Outline deleted',
       },
+      [Type.getTypename(RemoteSession.RemoteSession)]: {
+        'typename.label': 'Agent session',
+        'typename.label_zero': 'Agent sessions',
+        'typename.label_one': 'Agent session',
+        'typename.label_other': 'Agent sessions',
+        'object-name.placeholder': 'New agent session',
+        'rename-object.label': 'Rename agent session',
+        'delete-object.label': 'Delete agent session',
+        'object-deleted.label': 'Agent session deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Tasks',
+        'task-artifacts.label': 'Artifacts',
+        'task-questions.label': 'Questions',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
-        'task-status.todo.label': 'Todo',
-        'task-status.in-progress.label': 'In progress',
-        'task-status.done.label': 'Done',
-        'task-status.failed.label': 'Failed',
-        'task-status.cancelled.label': 'Cancelled',
+        'filter.label': 'Filter tasks',
+        'filter.placeholder': 'Filter',
+        'filter-clear.label': 'Clear filter',
+        'filter-status.label': 'Filter by status',
+        'filter-status-all.label': 'Show all statuses',
+        'filter-status-none.label': 'Hide all statuses',
+        'backlog.label': 'Backlog',
+        'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',
+        'delete-task.label': 'Delete task',
+        'task-deleted.label': 'Task deleted',
+        'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',

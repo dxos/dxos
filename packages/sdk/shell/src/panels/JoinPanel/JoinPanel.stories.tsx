@@ -5,15 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ConfirmReset } from '../../steps';
-import { StorybookDialog } from '../../story-components';
-import { translations } from '../../translations';
-import { JoinPanelImpl } from './JoinPanel';
-import { type JoinPanelImplProps } from './JoinPanelProps';
-import { IdentityInputImpl } from './steps';
+import { ConfirmReset } from '../../steps/index.ts';
+import { StorybookDialog } from '../../story-components/index.ts';
+import { translations } from '../../translations.ts';
+import { JoinPanelImpl } from './JoinPanel.tsx';
+import { type JoinPanelImplProps } from './JoinPanelProps.ts';
+import { IdentityInputImpl } from './steps/index.ts';
 
 const DefaultStory = (props: JoinPanelImplProps) => {
   return (
@@ -91,7 +91,7 @@ export const HaloInvitationAuthenticator: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'halo-invitation-authenticator',
-    invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
+    invitationAuthMethods: { Halo: Invitation_AuthMethod.SHARED_SECRET },
   },
 };
 
@@ -99,7 +99,7 @@ export const HaloInvitationAuthenticatorFailed: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'halo-invitation-authenticator',
-    invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
+    invitationAuthMethods: { Halo: Invitation_AuthMethod.SHARED_SECRET },
     failed: new Set<'Halo' | 'Space'>(['Halo']),
   },
 };

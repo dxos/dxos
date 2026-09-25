@@ -6,8 +6,9 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import { type Provider } from '../types';
-import { extractResults } from '../util';
+import { Provider } from '#types';
+
+import { extractResults } from '../util/index.ts';
 
 // Cleaned (script/style-stripped) capture of a real AutoTrader UK results page. The raw multi-MB
 // "Save Page As" is gitignored; this committed sample is produced by `cleanHtml` (see fixtures/README).

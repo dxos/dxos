@@ -1,11 +1,59 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import {
+  AppGraphBuilder,
+  Commands,
+  CreateObject,
+  Dashboard,
+  DefaultParent,
+  IdentityCreated,
+  NavigationHandler,
+  NavigationTargetResolver,
+  ObservabilityMappings,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  Repair,
+  Schema,
+  SettingsSync,
+  SkillDefinition,
+  SpacesAvailable,
+  SpaceSettings,
+  SpaceState,
+  Translations,
+  UndoMappings,
+} from '#capabilities';
+import { meta } from '#meta';
+import { SpaceSchema } from '#types';
 
-export const SpacePlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta)
+  .pipe(
+    Plugin.addModule(AppGraphBuilder),
+    // TODO(wittjosiah): Could some of these commands make use of operations?
+    Plugin.addModule(Commands),
+    Plugin.addModule(CreateObject),
+    Plugin.addModule(Dashboard),
+    Plugin.addModule(DefaultParent),
+    Plugin.addModule(IdentityCreated),
+    Plugin.addModule(NavigationHandler),
+    Plugin.addModule(NavigationTargetResolver),
+    Plugin.addModule(ObservabilityMappings),
+    Plugin.addModule(OperationHandler),
+    Plugin.addModule(PluginAsset),
+    Plugin.addModule(ReactSurface),
+    Plugin.addModule(Repair),
+    Plugin.addModule(Schema),
+    Plugin.addModule(SettingsSync),
+    Plugin.addModule(SkillDefinition),
+    Plugin.addModule(SpacesAvailable),
+    Plugin.addModule(SpaceSettings),
+    Plugin.addModule(SpaceState),
+  )
+  // `pipe` has overloads only up to 20 arguments, and this plugin has more modules than that.
+  .pipe(Plugin.addModule(Translations), Plugin.addModule(UndoMappings), Plugin.make);
 
-export { SpaceOperationHandlerSet } from './operations';
+export default SpacePlugin;

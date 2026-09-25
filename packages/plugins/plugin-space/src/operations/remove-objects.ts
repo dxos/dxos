@@ -3,37 +3,43 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { getSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { SpaceProperties } from '@dxos/client-protocol';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Collection, Database, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-      const entities = input.objects;
-
-      const space = getSpace(entities[0] as Obj.Unknown);
+      // Optional: a headless host (edge operation-service, `dx mcp serve`) has a capability manager
+      // but contributes no layout, and removal must still unlink and delete there.
+      const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
       invariant(
-        space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
+        (input.objects == null) !== (input.refs == null),
+        'Pass exactly one of `objects` (held) or `refs` (referenced).',
+      );
+      const { db } = yield* Database.Service;
+      const entities = input.objects ?? (yield* Effect.forEach(input.refs ?? [], (ref) => Database.load(ref)));
+      invariant(
+        entities.every((entity) => Entity.isEntity(entity) && Entity.getDatabase(entity)?.spaceId === db.spaceId),
+        `Every object must belong to space ${db.spaceId}.`,
       );
 
-      const parentCollection =
-        input.target ??
-        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
+      const parentCollection = input.target ?? (yield* loadRootCollection());
       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.
       const indices = entities.map((entity) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
-          ? parentCollection.objects.findIndex((ref) => ref.target === entity)
+          ? parentCollection.objects.findIndex((ref) => ref.peek() === entity)
           : -1,
       );
 
@@ -41,13 +47,17 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       // too — a project's chats are the live case. Collected before the removal, while the parent
       // edges still resolve; a plank left pointing at a removed object cannot be closed by the user.
       const descendantIds = yield* collectOwnedDescendantIds(entities);
-      const wasActive = [...entities.map((entity) => entity.id), ...descendantIds]
-        .map((id) => layout.active.find((graphId) => graphId.endsWith(id)))
-        .filter(isNonNullable);
+      const wasActive = Option.match(layout, {
+        onNone: () => [],
+        onSome: (layout) =>
+          [...entities.map((entity) => entity.id), ...descendantIds]
+            .map((id) => layout.active.find((graphId) => graphId.endsWith(id)))
+            .filter(isNonNullable),
+      });
 
       for (const entity of entities) {
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
-          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+          const index = parentCollection.objects.findIndex((ref) => ref.peek() === entity);
           if (index !== -1) {
             Obj.update(parentCollection, (parentCollection) => {
               parentCollection.objects.splice(index, 1);
@@ -55,8 +65,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
           }
         }
 
-        const db = Entity.getDatabase(entity);
-        db?.remove(entity);
+        db.remove(entity);
       }
 
       if (wasActive.length > 0) {
@@ -73,6 +82,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
   ),
 );
 export default handler;
+
+const loadRootCollection = Effect.fnUntraced(function* () {
+  const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
+  const ref = properties
+    ? Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+    : undefined;
+  return ref ? yield* Database.load(ref) : undefined;
+});
 
 /**
  * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what

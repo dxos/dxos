@@ -4,22 +4,23 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { URI } from '@dxos/keys';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime } from '../testing';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { TestRuntime } from '../testing/index.ts';
 import {
   type ComputeGraph,
   ComputeGraphModel,
@@ -29,7 +30,7 @@ import {
   defineComputeNode,
   logCustomEvent,
   synchronizedComputeFunction,
-} from '../types';
+} from '../types/index.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(
@@ -48,7 +49,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Graph as a fiber runtime', () => {
-  it.scoped(
+  it.effect(
     'simple adder node',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -69,7 +70,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'composition',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -89,7 +90,7 @@ describe('Graph as a fiber runtime', () => {
   );
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
-  it.scoped.skip(
+  it.effect.skip(
     'composition (with shortcut)',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -109,7 +110,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -130,7 +131,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'if-else',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -138,8 +139,8 @@ describe('Graph as a fiber runtime', () => {
 
         const result = yield* runtime.runGraph(URI.make('dxn:test:g4'), ValueBag.make({ condition: true, value: 1 }));
 
-        expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
-        expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
+        expect(yield* Effect.result(result.values.true)).toEqual(Result.succeed(1));
+        expect(yield* Effect.result(result.values.false)).toEqual(Result.fail(NotExecuted));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -177,73 +178,68 @@ const view = defineComputeNode({
 
 const g1 = () => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g1') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
-    .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: URI.make('dxn:test:sum') });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' });
+  model.createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
 
   return model;
 };
 
 const g2a = (g1: URI.URI) => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) })
-    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
-    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
-    .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
-    .createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' })
-    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) });
+  model.createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' });
+  model.createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' });
+  model.createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' });
+  model.createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
 };
 
 const g2b = (g1: ComputeGraph) => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' })
-    .createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' })
-    .createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' })
-    .createEdge({ node: 'X', property: 'sum' }, { node: g1, property: 'number2' })
-    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' });
+  model.createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' });
+  model.createEdge({ node: 'X', property: 'sum' }, { node: g1, property: 'number2' });
+  model.createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
 };
 
 const g3 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
-    .createNode({ id: 'V1', type: URI.make('dxn:test:viewer') })
-    .createNode({ id: 'V2', type: URI.make('dxn:test:viewer') })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
-    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: URI.make('dxn:test:sum') });
+  model.createNode({ id: 'V1', type: URI.make('dxn:test:viewer') });
+  model.createNode({ id: 'V2', type: URI.make('dxn:test:viewer') });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
 
   return model;
 };
 
 const g4 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: 'if' })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' })
-    .createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' })
-    .createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' })
-    .createEdge({ node: 'X', property: 'false' }, { node: 'O', property: 'false' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: 'if' });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' });
+  model.createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' });
+  model.createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' });
+  model.createEdge({ node: 'X', property: 'false' }, { node: 'O', property: 'false' });
 
   return model;
 };

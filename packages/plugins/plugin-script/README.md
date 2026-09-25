@@ -10,7 +10,7 @@ version: 1
 runtime:
   client:
     edgeFeatures:
-      echoReplicator: true
+      subductionReplicator: true
   services:
     edge:
       url: https://edge.dxos.workers.dev/

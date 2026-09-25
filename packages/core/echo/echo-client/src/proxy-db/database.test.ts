@@ -2,25 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
+import * as Predicate from 'effect/Predicate';
+import * as Scope from 'effect/Scope';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Err, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { RpcClosedError, makeInProcessClient } from '@dxos/protocols';
+import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { clone, getObjectCore } from '../echo-handler';
-import { EchoTestBuilder, createTmpPath } from '../testing';
+import { getObjectCore } from '../echo-handler/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing/index.ts';
+
+/** Narrows `db.rootUrl` once at the point the database is known to have persisted its root, per `no-casts`. */
+const getRootUrl = (db: DatabaseImpl): string => {
+  invariant(db.rootUrl, 'Database has no rootUrl.');
+  return db.rootUrl;
+};
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -70,12 +81,12 @@ describe('Database', () => {
       });
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
-      rootUrl = db.rootUrl!;
+      rootUrl = getRootUrl(db);
       db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
       const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
-      await sleep(500); // Wait for the object to be saved.
+      await db.flush(); // Wait for the object to be saved.
       await testPeer.close();
     }
 
@@ -194,7 +205,7 @@ describe('Database', () => {
 
     {
       const db = await peer.createDatabase(spaceKey);
-      rootUrl = db.rootUrl!;
+      rootUrl = getRootUrl(db);
 
       ({ id } = db.add(Obj.make(TestSchema.Expando, { name: 'Object 1' })));
       await db.flush();
@@ -229,10 +240,12 @@ describe('Database', () => {
     const { db } = await createDbWithTypes();
 
     const task = Obj.make(TestSchema.Task, { title: 'test' });
+    const taskType = Obj.getType(task);
+    invariant(taskType, 'Task has no type.');
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
-    expect(Type.getSchema(Obj.getType(task)!).ast).to.eq(Type.getSchema(TestSchema.Task).ast);
+    expect(Type.getSchema(taskType).ast).to.eq(Type.getSchema(TestSchema.Task).ast);
     expect(Obj.getTypeURI(task)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
     expect(Obj.getTypename(task)).to.eq('com.example.type.task');
 
@@ -258,8 +271,10 @@ describe('Database', () => {
     {
       const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
-      expect(container.records).to.have.length(1);
-      expect(container.records![0].type).to.eq(TestSchema.RecordType.WORK);
+      const { records } = container;
+      invariant(records);
+      expect(records).to.have.length(1);
+      expect(records[0].type).to.eq(TestSchema.RecordType.WORK);
     }
   });
 
@@ -271,22 +286,25 @@ describe('Database', () => {
       await db.flush();
 
       Obj.update(container, (container) => {
-        container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
-        container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
+        const { objects } = container;
+        invariant(objects);
+        objects.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
+        objects.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
       });
     }
 
     {
       const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
-      expect(container.objects).to.have.length(2);
-      const target1 = await container.objects![0].load();
-      const target2 = await container.objects![1].load();
-      // TODO(wittjosiah): Fix.
-      // assert(Obj.instanceOf(TestSchema.Expando, target1));
-      // assert(Obj.instanceOf(TestSchema.Expando, target2));
-      expect((target1 as any).foo).to.equal(100);
-      expect((target2 as any).bar).to.equal(200);
+      const { objects: containerObjects } = container;
+      invariant(containerObjects);
+      expect(containerObjects).to.have.length(2);
+      const target1 = await containerObjects[0].load();
+      const target2 = await containerObjects[1].load();
+      invariant(Obj.instanceOf(TestSchema.Expando, target1));
+      invariant(Obj.instanceOf(TestSchema.Expando, target2));
+      expect(target1.foo).to.equal(100);
+      expect(target2.bar).to.equal(200);
     }
   });
 
@@ -298,17 +316,24 @@ describe('Database', () => {
       await db.flush();
 
       Obj.update(container, (container) => {
-        container.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
-        container.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
+        const { objects } = container;
+        invariant(objects);
+        objects.push(Ref.make(Obj.make(TestSchema.Task, {})));
+        objects.push(Ref.make(Obj.make(TestSchema.Person, {})));
       });
     }
 
     {
       const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
-      expect(container.objects).to.have.length(2);
-      expect(Obj.getTypename(container.objects![0].target!)).to.equal(Type.getTypename(TestSchema.Task));
-      expect(Obj.getTypename(container.objects![1].target!)).to.equal(Type.getTypename(TestSchema.Person));
+      const { objects: containerObjects } = container;
+      invariant(containerObjects);
+      expect(containerObjects).to.have.length(2);
+      const [taskTarget, personTarget] = [containerObjects[0].target, containerObjects[1].target];
+      invariant(taskTarget);
+      invariant(personTarget);
+      expect(Obj.getTypename(taskTarget)).to.equal(Type.getTypename(TestSchema.Task));
+      expect(Obj.getTypename(personTarget)).to.equal(Type.getTypename(TestSchema.Person));
     }
   });
 
@@ -333,7 +358,7 @@ describe('Database', () => {
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1);
+    const task2 = Obj.clone(task1, { retainId: true });
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
@@ -381,18 +406,22 @@ describe('Database', () => {
       }),
     );
 
-    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('com.example.type.task');
-    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:com.example.type.task:0.1.0');
+    const { subTasks } = task;
+    invariant(subTasks);
+    const subTaskTarget = subTasks[0].target;
+    invariant(subTaskTarget);
+    expect(Obj.getTypename(subTaskTarget)).to.eq('com.example.type.task');
+    expect(JSON.parse(JSON.stringify(subTasks[0].target))['@type']).to.eq('dxn:com.example.type.task:0.1.0');
   });
 
   test('versions', async () => {
     const { db } = await createDbWithTypes();
     const task = db.add(Obj.make(TestSchema.Task, { title: 'Main task' }));
-    const version1 = Obj.version(task as any);
+    const version1 = Obj.version(task);
     expect(Obj.isVersion(version1)).to.be.true;
     expect(Obj.versionValid(version1)).to.be.true;
 
-    const version2 = Obj.version(task as any);
+    const version2 = Obj.version(task);
     expect(Obj.isVersion(version2)).to.be.true;
     expect(Obj.versionValid(version2)).to.be.true;
     expect(Obj.compareVersions(version1, version2)).to.eq('equal');
@@ -400,7 +429,7 @@ describe('Database', () => {
     Obj.update(task, (task) => {
       task.title = 'Main task 2';
     });
-    const version3 = Obj.version(task as any);
+    const version3 = Obj.version(task);
     expect(Obj.isVersion(version3)).to.be.true;
     expect(Obj.versionValid(version3)).to.be.true;
     expect(Obj.compareVersions(version1, version3)).to.eq('different');
@@ -409,22 +438,33 @@ describe('Database', () => {
 
   describe('object collections', () => {
     test('assignment', async () => {
-      const root = newTask();
+      const root = Obj.make(TestSchema.Task, { subTasks: [] });
       expect(root.subTasks).to.have.length(0);
 
       Obj.update(root, (root) => {
-        range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
-        root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
+        const { subTasks } = root;
+        invariant(subTasks);
+        range(3).forEach(() => subTasks.push(Ref.make(Obj.make(TestSchema.Task, { subTasks: [] }))));
+        subTasks.push(
+          Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })),
+          Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })),
+        );
       });
 
-      expect(root.subTasks).to.have.length(5);
-      expect(root.subTasks!.length).to.eq(5);
+      const { subTasks } = root;
+      invariant(subTasks);
+      expect(subTasks).to.have.length(5);
+      expect(subTasks.length).to.eq(5);
       expect(JSON.parse(JSON.stringify(root, undefined, 2)).subTasks).to.have.length(5);
 
       // Iterators.
-      const ids = root.subTasks!.map((task: any) => task.target!.id);
-      root.subTasks!.forEach((task: any, i: number) => expect(task.target!.id).to.eq(ids[i]));
-      expect(Array.from(root.subTasks!.values())).to.have.length(5);
+      const targetId = (task: (typeof subTasks)[number]) => {
+        invariant(task.target);
+        return task.target.id;
+      };
+      const ids = subTasks.map(targetId);
+      subTasks.forEach((task, i) => expect(targetId(task)).to.eq(ids[i]));
+      expect(Array.from(subTasks.values())).to.have.length(5);
 
       Obj.update(root, (root) => {
         root.subTasks = [
@@ -433,18 +473,22 @@ describe('Database', () => {
           Ref.make(Obj.make(TestSchema.Task, {})),
         ];
       });
-      expect(root.subTasks!.length).to.eq(3);
+      const { subTasks: updatedSubTasks } = root;
+      invariant(updatedSubTasks);
+      expect(updatedSubTasks.length).to.eq(3);
 
       await addToDatabase(root);
     });
 
     test('splice', async () => {
-      const root = newTask();
+      const root = Obj.make(TestSchema.Task, { subTasks: [] });
       Obj.update(root, (root) => {
-        root.subTasks = range(3).map((_i) => Ref.make(newTask()));
+        root.subTasks = range(3).map((_i) => Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })));
       });
       Obj.update(root, (root) => {
-        root.subTasks!.splice(0, 2, Ref.make(newTask()));
+        const { subTasks } = root;
+        invariant(subTasks);
+        subTasks.splice(0, 2, Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })));
       });
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
@@ -453,7 +497,9 @@ describe('Database', () => {
     test('array of plain objects', async () => {
       const root = Obj.make(TestSchema.Container, { records: [] });
       Obj.update(root, (root) => {
-        root.records!.push({
+        const { records } = root;
+        invariant(records);
+        records.push({
           title: 'test',
           contacts: [Ref.make(Obj.make(TestSchema.Person, { name: 'tester' }))],
         });
@@ -461,16 +507,28 @@ describe('Database', () => {
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
-      const queriedContainer = (await db.query(Filter.type(TestSchema.Container)).run())[0]!;
-      expect(queriedContainer.records!.length).to.equal(1);
-      expect(queriedContainer.records![0]!.contacts![0]!.target!.name).to.equal('tester');
+      const [queriedContainer] = await db.query(Filter.type(TestSchema.Container)).run();
+      invariant(queriedContainer);
+      const { records: queriedRecords } = queriedContainer;
+      invariant(queriedRecords);
+      expect(queriedRecords.length).to.equal(1);
+      const [record] = queriedRecords;
+      invariant(record);
+      const { contacts } = record;
+      invariant(contacts);
+      const [contact] = contacts;
+      invariant(contact);
+      invariant(contact.target);
+      expect(contact.target.name).to.equal('tester');
     });
 
     test('reset array', async () => {
       const { db, obj: root } = await addToDatabase(Obj.make(TestSchema.Container, { records: [] }));
 
       Obj.update(root, (root) => {
-        root.records!.push({ title: 'one' });
+        const { records } = root;
+        invariant(records);
+        records.push({ title: 'one' });
       });
       expect(root.records).to.have.length(1);
 
@@ -482,7 +540,9 @@ describe('Database', () => {
       expect(root.records).to.have.length(0);
 
       Obj.update(root, (root) => {
-        root.records!.push({ title: 'two' });
+        const { records } = root;
+        invariant(records);
+        records.push({ title: 'two' });
       });
       expect(root.records).to.have.length(1);
       await db.flush();
@@ -523,11 +583,11 @@ describe('Database', () => {
       if (!Exit.isFailure(exit)) {
         throw new Error('Expected failure');
       }
-      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
     });
 
     test('fails with object-not-found when object was removed from database', async ({ expect }) => {
@@ -541,12 +601,12 @@ describe('Database', () => {
       if (!Exit.isFailure(exit)) {
         throw new Error('Expected failure');
       }
-      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-      expect((error as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+      expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
     });
   });
 
@@ -588,7 +648,7 @@ describe('Database', () => {
   describe('ref atom deletion reactivity', () => {
     test('ref.atom fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -608,7 +668,7 @@ describe('Database', () => {
 
     test('Obj.atom(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -629,7 +689,7 @@ describe('Database', () => {
 
     test('Obj.atomReactive(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -646,6 +706,149 @@ describe('Database', () => {
 
       expect(fireCount).toBeGreaterThan(0);
       expect(registry.get(atom)).toBeUndefined();
+    });
+  });
+
+  test('a parent atom follows the parent edge', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const task = db.add(Obj.make(TestSchema.Task, { title: 'x' }));
+    const first = db.add(Obj.make(TestSchema.Person, { name: 'first', tasks: [Ref.make(task)] }));
+    const second = db.add(Obj.make(TestSchema.Person, { name: 'second', tasks: [Ref.make(task)] }));
+    Obj.setParent(task, first);
+    await db.flush();
+
+    const registry = AtomRegistry.make();
+    const atom = Obj.parentAtom(task);
+    registry.subscribe(atom, () => {});
+    expect(registry.get(atom)?.id).toBe(first.id);
+
+    Obj.setParent(task, second);
+    await expect.poll(() => registry.get(atom)?.id).toBe(second.id);
+  });
+
+  test('a property traversal returns targets in array order', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+    // Reversed against creation, so the array order cannot coincide with id order.
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.toReversed().map(Ref.make) }));
+    await db.flush();
+
+    const results = await db.query(Query.select(Filter.entity(person)).reference('tasks')).run();
+    expect(results.map((task) => task.title)).toEqual(['three', 'two', 'one']);
+  });
+
+  test('a property traversal follows the array as it is reordered and extended', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.map(Ref.make) }));
+    await db.flush();
+
+    const registry = AtomRegistry.make();
+    const atom = db.query(Query.select(Filter.entity(person)).reference('tasks')).atom;
+    registry.subscribe(atom, () => {});
+    const titles = () => registry.get(atom).map((task) => task.title);
+    await expect.poll(titles).toEqual(['one', 'two', 'three']);
+
+    Obj.update(person, (person) => {
+      person.tasks = [person.tasks![2], person.tasks![0], person.tasks![1]];
+    });
+    await expect.poll(titles).toEqual(['three', 'one', 'two']);
+
+    const four = db.add(Obj.make(TestSchema.Task, { title: 'four' }));
+    Obj.update(person, (person) => {
+      person.tasks!.push(Ref.make(four));
+    });
+    await expect.poll(titles).toEqual(['three', 'one', 'two', 'four']);
+  });
+
+  describe('loading deleted targets', () => {
+    // Refs read back off the holder carry no inlined target, so these exercise the resolver.
+    const setup = async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+      const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.map((task) => Ref.make(task)) }));
+      await db.flush();
+      invariant(person.tasks, 'Person has no tasks.');
+      return { db, person, tasks, refs: person.tasks };
+    };
+
+    test('ref.load fails for a deleted target and resolves it when deleted are included', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      db.remove(tasks[0]);
+
+      const [ref] = refs;
+      expect(ref.target).toBeUndefined();
+      await expect(ref.load()).rejects.toThrow();
+      await expect(ref.tryLoad()).resolves.toBeUndefined();
+      expect(await ref.load({ deleted: 'include' })).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('an inlined target is checked too', async ({ expect }) => {
+      const { db, tasks } = await setup();
+      const ref = Ref.make(tasks[0]);
+      db.remove(tasks[0]);
+
+      await expect(ref.load()).rejects.toThrow();
+      expect(await ref.load({ deleted: 'include' })).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('Database.load fails with EntityNotFoundError for a deleted target', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      db.remove(tasks[0]);
+
+      const [ref] = refs;
+      const exit = await Effect.runPromiseExit(Database.load(ref));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(await EffectEx.runPromise(Database.load(ref, { deleted: 'include' }))).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('a property traversal drops a deleted target', async ({ expect }) => {
+      const { db, person, tasks } = await setup();
+      db.remove(tasks[1]);
+
+      const titles = await db
+        .query(Query.select(Filter.entity(person)).reference('tasks'))
+        .run()
+        .then((results) => results.map((task) => task.title));
+      expect(titles.toSorted()).toEqual(['one', 'three']);
+    });
+
+    test('the ref atom family is keyed structurally', async ({ expect }) => {
+      const { person } = await setup();
+      // Separate reads: each yields a fresh Ref instance addressing the same target.
+      const [first] = person.tasks ?? [];
+      const [second] = person.tasks ?? [];
+
+      expect(Obj.atom(first)).toBe(Obj.atom(second));
+      expect(Obj.atom(first, { deleted: 'include' })).toBe(Obj.atom(second, { deleted: 'include' }));
+      expect(Obj.atom(first)).not.toBe(Obj.atom(first, { deleted: 'include' }));
+    });
+
+    test('Obj.atom(ref, { deleted: "include" }) resolves a target removed before the atom is read', async ({
+      expect,
+    }) => {
+      const { db, refs, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const [ref] = refs;
+      db.remove(tasks[0]);
+
+      const atom = Obj.atom(ref, { deleted: 'include' });
+      registry.subscribe(atom, () => {});
+      await expect.poll(() => registry.get(atom)).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('Obj.atom(ref, { deleted: "include" }) keeps a removed target', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const [ref] = refs;
+
+      const atom = Obj.atom(ref, { deleted: 'include' });
+      expect(registry.get(atom)).not.toBeUndefined();
+
+      db.remove(tasks[0]);
+
+      expect(registry.get(atom)).toMatchObject({ id: tasks[0].id });
+      expect(registry.get(Obj.atom(ref))).toBeUndefined();
     });
   });
 
@@ -669,13 +872,8 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Runtime.isFiberFailure(error)).toBe(true);
-        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
-        const failures = Chunk.toArray(Cause.failures(cause));
-        expect(failures.length).toBeGreaterThan(0);
-        const getReactiveError = failures[0];
-        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
-        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('no-database');
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
       }
     });
 
@@ -690,25 +888,133 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Runtime.isFiberFailure(error)).toBe(true);
-        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
-        const failures = Chunk.toArray(Cause.failures(cause));
-        expect(failures.length).toBeGreaterThan(0);
-        const getReactiveError = failures[0];
-        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
-        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-        expect((getReactiveError as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+        expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
       }
+    });
+  });
+
+  describe('flush over a lost connection', () => {
+    test('an object added before the service disconnects makes flush throw', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      db.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+      connection.disconnect();
+
+      await expect(db.flush({ indexes: false })).rejects.toThrow(RpcClosedError);
+    });
+
+    test('an update made before the service disconnects makes flush throw', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      const existing = db.add(Obj.make(TestSchema.Expando, { name: 'before' }));
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      Obj.update(existing, (existing) => {
+        existing.name = 'after';
+      });
+      connection.disconnect();
+
+      await expect(db.flush({ indexes: false })).rejects.toThrow(RpcClosedError);
+    });
+
+    test('an object added while the service is disconnected reaches the host after it reconnects', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      connection.disconnect();
+      db.add(Obj.make(TestSchema.Expando, { name: 'added while disconnected' }));
+      await expect(db.flush({ indexes: false })).rejects.toThrow();
+
+      await connection.reconnect();
+      await db.flush();
+
+      const reader = await peer.openLastDatabase({ client: await peer.createClient() });
+      const names = (await reader.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
+      expect(names).toContain('added while disconnected');
     });
   });
 });
 
-const expectObjects = (echoObjects: any[], expectedObjects: any) => {
+const expectObjects = <T>(echoObjects: readonly T[], expectedObjects: unknown): void => {
   expect(mapEchoToPlainJsObject(echoObjects)).to.deep.eq(expectedObjects);
 };
 
-const mapEchoToPlainJsObject = (array: any[]): any[] => {
-  return array.map((o) => (Array.isArray(o) ? mapEchoToPlainJsObject(o) : { ...o }));
+const mapEchoToPlainJsObject = <T>(array: readonly T[]): unknown[] => {
+  return array.map((entry) => (Array.isArray(entry) ? mapEchoToPlainJsObject(entry) : { ...entry }));
 };
 
-const newTask = () => Obj.make(TestSchema.Task, { subTasks: [] });
+/**
+ * Whether a data service call carries a write. `DataService.flush` and a subscription update with nothing to add or remove
+ * carry none, so a flush through a lost connection can only fail for the writes it drops.
+ */
+const carriesWrite = (key: string | symbol, request: unknown): boolean => {
+  switch (key) {
+    case 'DataService.createDocument':
+    case 'DataService.update':
+      return true;
+    case 'DataService.updateSubscription':
+      return (['addIds', 'removeIds'] as const).some(
+        (field) => Predicate.hasProperty(request, field) && Array.isArray(request[field]) && request[field].length > 0,
+      );
+    default:
+      return false;
+  }
+};
+
+/**
+ * Connects the peer's client through a connection whose calls carrying writes fail once `disconnect` is called. A call in flight
+ * when it drops still reaches the host but loses its response. `reconnect` replaces it the way a dedicated worker leader
+ * change does.
+ */
+const connectServices = async (peer: EchoTestPeer) => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const connect = async (dataHandlers: DataService.Handlers) => {
+    const [dataService, queryService] = await EffectEx.runPromise(
+      Effect.all([
+        makeInProcessClient(DataService.Rpcs, dataHandlers),
+        makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      ]).pipe(Effect.provideService(Scope.Scope, scope)),
+    );
+    peer.client._updateServices({ dataService, queryService });
+  };
+  let connected = true;
+  const whileConnected = <A, E>(effect: Effect.Effect<A, E>) =>
+    Effect.suspend((): Effect.Effect<A, E | RpcClosedError> =>
+      connected ? effect : Effect.fail(new RpcClosedError()),
+    );
+  await connect(
+    new Proxy(peer.host.dataService, {
+      get: (target, key) => {
+        const value = Reflect.get(target, key);
+        if (typeof value !== 'function') {
+          return value;
+        }
+        const call = value.bind(target);
+        return (...args: unknown[]) =>
+          carriesWrite(key, args[0])
+            ? whileConnected(call(...args)).pipe(
+                Effect.tap(() => Effect.promise(() => sleep(0)).pipe(Effect.andThen(whileConnected(Effect.void)))),
+              )
+            : call(...args);
+      },
+    }),
+  );
+  return {
+    disconnect: () => {
+      connected = false;
+    },
+    reconnect: async () => {
+      await connect(peer.host.dataService);
+      await peer.client._notifyReconnect();
+    },
+  };
+};

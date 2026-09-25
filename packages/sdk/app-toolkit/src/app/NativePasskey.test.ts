@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { afterEach, describe, test, vi } from 'vitest';
 
-import * as NativePasskey from './NativePasskey';
+import * as NativePasskey from './NativePasskey.ts';
 
 /**
  * Build a minimal WebAuthn attestation object for testing.
@@ -119,6 +119,28 @@ const concat = (...arrays: Uint8Array[]): Uint8Array => {
   }
   return result;
 };
+
+describe('getRelyingPartyId', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.for([
+    ['composer.space', 'composer.space'],
+    ['labs.composer.space', 'composer.space'],
+    ['staging.composer.space', 'composer.space'],
+    ['localhost', 'localhost'],
+    ['dxos-composer.netlify.app', 'dxos-composer.netlify.app'],
+  ])('%s -> %s', ([hostname, expected], { expect }) => {
+    vi.stubGlobal('location', { hostname });
+    expect(NativePasskey.getRelyingPartyId()).toBe(expected);
+  });
+
+  test('falls back to the app domain outside a browser', ({ expect }) => {
+    vi.stubGlobal('location', undefined);
+    expect(NativePasskey.getRelyingPartyId()).toBe(NativePasskey.APP_DOMAIN);
+  });
+});
 
 describe('extractPublicKeyFromAttestation', () => {
   test('extracts ES256 public key from attestation object', ({ expect }) => {

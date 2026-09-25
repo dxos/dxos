@@ -2,21 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { SpaceState, getSpace } from '@dxos/client/echo';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { SpaceState, getSpace } from '@dxos/react-client/echo';
-import { Attention } from '@dxos/react-ui-attention';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -41,9 +46,15 @@ const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.Meeti
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read reactively so extensions establish a dependency and heal once these capabilities
+    // land (dependency modules contribute individually, not batched per wave).
+    const callManagerAtom = yield* Capability.atom(CallsCapabilities.Manager);
+    const meetingStateAtom = yield* Capability.atom(MeetingCapabilities.State);
+    const operationInvokerAtom = yield* Capability.atom(Capabilities.OperationInvoker);
+
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'shareCallLink',
         type: Channel.Channel,
         actions: (channel, get) => {
@@ -72,12 +83,16 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'callCompanion',
+        relation: AppNode.companion,
         type: Channel.Channel,
         connector: (channel, get) =>
           Effect.gen(function* () {
-            const callManager = yield* Capability.get(CallsCapabilities.Manager);
+            const [callManager] = get(callManagerAtom);
+            if (!callManager) {
+              return [];
+            }
             const channelUri = Obj.getURI(channel);
             const joined = get(callManager.joinedAtom);
             const roomId = get(callManager.roomIdAtom);
@@ -85,7 +100,10 @@ export default Capability.makeModule(
               return [];
             }
 
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const data = get(activeMeetingOrPlaceholderFamily(store));
 
             return [
@@ -103,12 +121,16 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'callTranscript',
+        relation: AppNode.companion,
         type: Channel.Channel,
         actions: (channel, get) =>
           Effect.gen(function* () {
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const transcriptionManager = get(transcriptionManagerFamily(store));
             const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
             return [
@@ -121,10 +143,11 @@ export default Capability.makeModule(
                     const db = Obj.getDatabase(channel);
                     invariant(db);
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
-                    const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
-                      target: db,
-                      object: createResult.object,
-                    });
+                    const addResult = yield* Operation.invoke(
+                      SpaceOperation.AddObject,
+                      { object: createResult.object },
+                      { spaceId: db.spaceId },
+                    );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                     yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
                     meeting = addResult.object as Meeting.Meeting;
@@ -161,7 +184,10 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
         connector: (channel, get) =>
           Effect.gen(function* () {
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const meeting = get(activeMeetingFamily(store));
             if (!meeting) {
               return [];
@@ -181,12 +207,16 @@ export default Capability.makeModule(
 
       // While in this meeting's call, show the whole meeting article as a companion so the primary
       // plank can hold the call (its Call tab).
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'meetingCallCompanion',
+        relation: AppNode.companion,
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.gen(function* () {
-            const callManager = yield* Capability.get(CallsCapabilities.Manager);
+            const [callManager] = get(callManagerAtom);
+            if (!callManager) {
+              return [];
+            }
             const joined = get(callManager.joinedAtom);
             const roomId = get(callManager.roomIdAtom);
             if (!joined || roomId !== Obj.getURI(meeting)) {
@@ -207,7 +237,7 @@ export default Capability.makeModule(
 
       // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"
       // while the event has no meeting yet, otherwise "Open meeting" (where the call is started/joined).
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'createMeetingForEvent',
         type: Event.Event,
         actions: (event, get) =>
@@ -224,7 +254,10 @@ export default Capability.makeModule(
 
             // Graph-action Effects lack `Operation.Service` in context, so `Operation.invoke` fails here;
             // call the captured `OperationInvoker` capability directly instead.
-            const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+            const [invoker] = get(operationInvokerAtom);
+            if (!invoker) {
+              return [];
+            }
 
             if (meeting) {
               return [
@@ -262,6 +295,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

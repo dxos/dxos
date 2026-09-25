@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, NavigationOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, EID } from '@dxos/echo';
 import { Position } from '@dxos/util';
 
-import { ClientCapabilities } from '../types';
+import { ClientCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigationTargets> =
   NavigationOperation.ResolveNavigationTargets.pipe(
@@ -18,7 +20,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
       Effect.fn(function* ({ query }) {
         const capabilities = yield* Capability.Service;
         const client = yield* Capability.get(ClientCapabilities.Client).pipe(
-          Effect.catchAll(() => Effect.succeed(undefined)),
+          Effect.catch(() => Effect.succeed(undefined)),
         );
 
         // Resolvers read a space database to derive a navigation path, so this handler lives with the
@@ -43,7 +45,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
 
         const resolvers = capabilities.getAll(AppCapabilities.NavigationTargetResolver);
         const results = yield* Effect.forEach(resolvers, (resolver) =>
-          resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
+          resolver(query).pipe(Effect.catch(() => Effect.succeed([]))),
         ).pipe(Effect.provide(Database.layer(space.db)));
 
         // Best-first, as the operation's output promises. Sort is stable, so resolvers that declare no

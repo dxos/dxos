@@ -12,10 +12,10 @@
   ],
   "references": [
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"

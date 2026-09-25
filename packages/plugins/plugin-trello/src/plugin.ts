@@ -2,10 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { AppGraphBuilder, Connector, OperationHandler, PluginAsset, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const TrelloPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const TrelloPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
 
-export { TrelloOperationHandlerSet } from './operations';
+export default TrelloPlugin;

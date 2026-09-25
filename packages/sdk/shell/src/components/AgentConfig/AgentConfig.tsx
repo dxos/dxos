@@ -7,8 +7,8 @@ import React from 'react';
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { type AgentFormProps } from '../DeviceList';
+import { translationKey } from '../../translations.ts';
+import { type AgentFormProps } from '../DeviceList/index.ts';
 
 // TODO(burdon): Deprecated? Docs required.
 export const AgentConfig = ({

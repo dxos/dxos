@@ -9,7 +9,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
-import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Field, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
@@ -19,38 +19,37 @@ export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
 
 export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
+  // TODO(burdon): Guard.
   const [selectedObject] = useQuery(
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
   );
 
   return (
-    <Clipboard.Provider>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Input.Root>
-              <Input.TextInput disabled placeholder='Search...' />
-            </Input.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Grid rows={2} classNames='divide-y divide-separator'>
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
-                <ObjectsTree
-                  db={space.db}
-                  onSelect={(entity) => setSelectedId(entity.id)}
-                  onOpen={onOpen}
-                  canOpen={canOpen}
-                />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-            {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
-          </Grid>
-        </Panel.Content>
-      </Panel.Root>
-    </Clipboard.Provider>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Field.Root>
+            <Field.Input disabled placeholder='Search...' />
+          </Field.Root>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Grid rows={2} classNames='divide-y divide-subdued-separator'>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
+              <ObjectsTree
+                db={space.db}
+                onSelect={(entity) => setSelectedId(entity.id)}
+                onOpen={onOpen}
+                canOpen={canOpen}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+          {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
+        </Grid>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

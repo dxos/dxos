@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Message } from '@dxos/react-ui';
+import { Banner } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
-import { InitializeEmpty } from './InitializeEmpty';
-import { useTargetConnection } from './useTargetConnection';
+import { InitializeEmpty } from './InitializeEmpty.tsx';
+import { useTargetConnection } from './useTargetConnection.ts';
 
 export type InitializeProps<T extends Obj.Any> = {
   /** The object whose Connection we're connecting / syncing. */
@@ -21,8 +21,8 @@ export type InitializeProps<T extends Obj.Any> = {
 };
 
 /**
- * Shared empty-state body for "initialize / connect this thing" panels. Renders a warning message
- * that depends on whether a `Connection` is bound to `target`. The connect action is contributed to
+ * Shared empty-state body for "initialize / connect this thing" panels. Renders a message that
+ * depends on whether a `Connection` is bound to `target`. The connect action is contributed to
  * the article toolbar by the connector plugin (via the type's `ConnectorAuthAnnotation`); the sync
  * action is inlined in the article toolbar.
  *
@@ -36,9 +36,13 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
-          <Message.Root valence='warning'>
-            <Message.Title>{message}</Message.Title>
-          </Message.Root>
+          // A connected-but-empty target is a statement of fact, not something to act on — only the
+          // missing connection is, so the warning valence stays with it.
+          <Banner.Root valence={connection ? 'info' : 'warning'}>
+            <Banner.Content>
+              <Banner.Title>{message}</Banner.Title>
+            </Banner.Content>
+          </Banner.Root>
         )}
       </InitializeEmpty>
     );

@@ -1,8 +1,8 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './schema';
-
-export * as RoutineCapabilities from './RoutineCapabilities';
-export * as RoutineOperation from './RoutineOperation';
+export * as Routine from './Routine.ts';
+export * as RoutineCapabilities from './RoutineCapabilities.ts';
+export * as RoutineEvents from './RoutineEvents.ts';
+export * as RoutineOperation from './RoutineOperation.ts';

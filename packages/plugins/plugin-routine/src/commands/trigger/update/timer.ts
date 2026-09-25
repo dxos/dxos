@@ -2,22 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { Cron, Enabled, Input, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
+import { RoutineCommandError } from '../../errors.ts';
+import { Cron, Enabled, Input, TriggerId } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util.ts';
 
 export const timer = Command.make(
   'timer',
@@ -40,7 +42,7 @@ export const timer = Command.make(
       const dxn = EID.make({ entityId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (!trigger.spec || trigger.spec?.kind !== 'timer') {
-        return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Invalid trigger type: ${trigger.spec?.kind}` }));
       }
 
       const currentFn = yield* updateFunction(trigger, options.functionId);
@@ -77,7 +79,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
   const shouldChangeFunction = yield* Option.match(functionIdOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the function${currentFunctionName ? ` (current: ${currentFunctionName})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -91,7 +93,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
-      return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+      return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
     }
     Obj.update(trigger, (trigger) => {
       trigger.runnable = Ref.make(foundFn);
@@ -101,7 +103,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 
   if (!currentFn) {
     const runnableId = trigger.runnable?.uri.toString() ?? 'unknown';
-    return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
+    return yield* Effect.fail(new RoutineCommandError({ message: `Invalid reference for ${runnableId}` }));
   }
 
   return currentFn;
@@ -115,7 +117,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
   const currentCron = trigger.spec?.kind === 'timer' ? trigger.spec.cron : undefined;
   const shouldChangeCron = yield* Option.match(cronOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the cron expression${currentCron ? ` (current: ${currentCron})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -124,7 +126,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
   if (shouldChangeCron) {
     const cron = yield* Option.match(cronOption, {
       onNone: () =>
-        Prompt.text({
+        Prompt.String({
           message: `Enter cron expression${currentCron ? ` (current: ${currentCron})` : ''}:`,
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
@@ -152,7 +154,7 @@ const updateInput = Effect.fn(function* (
     onNone: () =>
       Effect.gen(function* () {
         yield* Console.log(`Current input: ${currentInputStr}`);
-        return yield* Prompt.confirm({
+        return yield* Prompt.Confirm({
           message: 'Change input?',
           initial: false,
         }).pipe(Prompt.run);
@@ -182,7 +184,7 @@ const updateEnabled = Effect.fn(function* (
 ) {
   const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),

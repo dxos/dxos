@@ -7,20 +7,18 @@
 // per leaf field, with nested Struct fields contributing a header row plus
 // recursively-indented children, and arrays expanded as `[index]` rows.
 //
-// Designed to drive a hierarchical editor over schemas produced by
-// `@dxos/effect-proto` (e.g. the proto-generated `dxos.config.Config`
-// schema), but works for any Effect Struct schema.
+// Works for any Effect Struct schema.
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactElement, type ReactNode, type RefAttributes } from 'react';
 
+import { SchemaAST } from '@dxos/effect';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 export type ObjectTreeProps<T> = {
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
   value: T;
 };
 
@@ -50,20 +48,17 @@ export const ObjectTree = ObjectTreeImpl as unknown as <T>(
 ) => ReactElement | null;
 
 /**
- * Peel wrappers that don't affect the runtime shape: Refinements pass their
- * `from`, Suspends resolve via `f()`, and Transformations expose the encoded
- * (input) side. Repeated unwrapping handles chains like `Schema.suspend ->
- * Refinement -> TypeLiteral`.
+ * Peel wrappers that don't affect the runtime shape: Suspends resolve via `thunk()` and a
+ * transformed schema exposes its encoded (input) side. Repeated unwrapping handles chains like
+ * `Schema.suspend -> transformation -> TypeLiteral`. Effect 4 has no `Refinement` node — a refined
+ * type is the node itself carrying checks, so there is nothing to peel there.
  */
 const unwrap = (ast: SchemaAST.AST): SchemaAST.AST => {
-  if (SchemaAST.isRefinement(ast)) {
-    return unwrap(ast.from);
-  }
   if (SchemaAST.isSuspend(ast)) {
-    return unwrap(ast.f());
+    return unwrap(ast.thunk());
   }
   if (SchemaAST.isTransformation(ast)) {
-    return unwrap(ast.from);
+    return unwrap(SchemaAST.toEncoded(ast));
   }
   return ast;
 };
@@ -94,7 +89,7 @@ const Node = ({ ast, value, label, depth }: NodeProps) => {
 
   // Struct: header row + indented children. Skipping the header at depth 0
   // keeps the root flush-left.
-  if (SchemaAST.isTypeLiteral(inner) && isPlainObject(value)) {
+  if (SchemaAST.isObjects(inner) && isPlainObject(value)) {
     const childDepth = label === null ? depth : depth + 1;
     return (
       <>
@@ -112,9 +107,9 @@ const Node = ({ ast, value, label, depth }: NodeProps) => {
     );
   }
 
-  // Array (`Schema.Array(X)` -> TupleType with single rest element).
-  if (SchemaAST.isTupleType(inner) && Array.isArray(value)) {
-    const elemType = inner.rest[0]?.type;
+  // Array (`Schema.Array(X)` -> TupleType with single rest element; v4's `rest` holds the node itself).
+  if (SchemaAST.isArrays(inner) && Array.isArray(value)) {
+    const elemType = inner.rest[0];
     return (
       <>
         {label !== null && <Row label={label} value={`Array(${value.length})`} depth={depth} kind='group' />}

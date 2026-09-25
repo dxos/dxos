@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
+import { Annotation, DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
 
-import { ViewModel } from '../types';
+import { ViewModel } from '../types/index.ts';
 
 /**
  * @deprecated Use (@dxos/echo/testing)
@@ -16,7 +16,7 @@ export class Example extends Type.makeObject<Example>(DXN.make('com.example.type
   Schema.Struct({
     name: Schema.optional(
       Schema.String.pipe(
-        Schema.annotations({
+        Schema.annotate({
           description: 'Full name.',
         }),
       ),
@@ -29,7 +29,7 @@ export class Example extends Type.makeObject<Example>(DXN.make('com.example.type
     //     zip: Schema.optional(
     //       Schema.String.pipe(
     //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
-    //         Schema.annotations({
+    //         Schema.annotate({
     //           description: 'ZIP code.',
     //         }),
     //       ),
@@ -38,7 +38,7 @@ export class Example extends Type.makeObject<Example>(DXN.make('com.example.type
     // ),
     admin: Schema.optional(Schema.Boolean),
     rating: Schema.optional(Schema.Number),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 export const testSchema = Type.makeObjectFromJsonSchema({

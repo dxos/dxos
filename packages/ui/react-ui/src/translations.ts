@@ -10,10 +10,18 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'empty.label': 'No items',
+
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',
         'toolbar-delete.label': 'Delete',
+
+        'floating-panel.minimize.label': 'Minimize',
+        'floating-panel.maximize.label': 'Maximize',
+        'floating-panel.restore.label': 'Restore',
+
+        'drawer.resize.label': 'Resize drawer',
 
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
@@ -21,6 +29,7 @@ export const translations = [
         'system-button.unbookmark.label': 'Remove bookmark',
         'system-button.expand.label': 'Expand',
         'system-button.collapse.label': 'Collapse',
+        'system-button.ai.label': 'Run AI',
         'system-button.add.label': 'Add',
         'system-button.delete.label': 'Delete',
         'system-button.edit.label': 'Edit',
@@ -28,6 +37,7 @@ export const translations = [
         'system-button.upload.label': 'Upload',
         'system-button.download.label': 'Download',
         'system-button.clipboard.label': 'Copy',
+        'system-button.copied.label': 'Copied',
 
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',

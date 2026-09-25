@@ -3,29 +3,16 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Piece, type PieceProps } from './Piece';
-import { Square, type SquareProps } from './Square';
-import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';
-
-export type GameboardContextValue<M extends GameboardModel<any>> = {
-  model: M;
-  dragging?: boolean; // TODO(burdon): Change to PieceRecord.
-  promoting?: PieceRecord;
-  onPromotion: (move: Move) => void;
-};
-
-const [GameboardContextProvider, useRadixGameboardContext] = createContext<GameboardContextValue<any>>('Gameboard');
-
-const useGameboardContext = <M extends GameboardModel<any>>(consumerName: string): GameboardContextValue<M> => {
-  return useRadixGameboardContext(consumerName);
-};
+import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext.ts';
+import { Piece, type PieceProps } from './Piece.tsx';
+import { Square, type SquareProps } from './Square.tsx';
+import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types.ts';
 
 //
 // Root
@@ -106,7 +93,7 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
       <div
-        className={mx(grow && 'dx-size-container dx-expander grid place-content-center', classNames)}
+        className={mx(grow && 'dx-container-type-size dx-expand grid place-content-center', classNames)}
         ref={forwardedRef}
       >
         {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}
@@ -127,8 +114,6 @@ export const Gameboard = {
   Piece,
   Square,
 };
-
-export { useGameboardContext };
 
 export type {
   GameboardContentProps,

@@ -6,8 +6,8 @@ import { globSync } from 'glob';
 import { join, relative } from 'node:path';
 import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget, SyntaxKind } from 'ts-morph';
 
-import { formatSymbolRef } from '../refs';
-import type { SourceLocation, SymbolKind } from '../types';
+import { formatSymbolRef } from '../refs.ts';
+import type { SourceLocation, SymbolKind } from '../types.ts';
 
 // stderr-only — stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 
-import * as Organization from './Organization';
+import * as Organization from './Organization.ts';
 
 /**
  * Reference to an external service or company.

@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
@@ -68,16 +69,14 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   }
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
-          <RoutineForm db={db} routine={subject} />
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <RoutineForm db={db} routine={subject} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

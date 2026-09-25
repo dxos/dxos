@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from '../core';
-import * as Selection from './Selection';
-import { Manager } from './ViewState';
+import { createDefaultBackends } from '../core/index.ts';
+import * as Selection from './Selection.ts';
+import { Manager } from './ViewState.ts';
 
 describe('selection helpers', () => {
   test('aspect declares a memory-backed aspect', ({ expect }) => {

@@ -4,10 +4,10 @@
 
 import React, { useRef } from 'react';
 
-import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
-import { type PredicateItem } from '../types';
+import { type PredicateItem } from '../types.ts';
 
 export type PredicateListProps = ThemedClassName<{
   predicates: PredicateItem[];
@@ -44,7 +44,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-auto'>
         {predicates.length === 0 ? (
-          <Empty label='No predicates.' />
+          <Banner.Empty label='No predicates.' />
         ) : (
           <Listbox.Root value={selected} onValueChange={onSelect}>
             <Listbox.Content aria-label='Predicates'>

@@ -6,13 +6,13 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { Card } from '@dxos/react-ui';
 
 import { CanvasComponent } from '#components';
 
-export type TldrawCardProps = DrawingVariantSurfaceProps;
+export type TldrawCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
 export const TldrawCard = ({ canvas, editable = false }: TldrawCardProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));

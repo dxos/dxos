@@ -5,18 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, ScrollArea } from '../../components';
-import { withLayout, withTheme } from '../../testing';
-import { Column } from './Column';
+import { Field, Icon, ScrollArea } from '../../components/index.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Column } from './Column.tsx';
 
 const List = () => {
   return (
     <ScrollArea.Root centered>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <Input.Root key={i}>
-            <Input.TextInput value={`Item ${i}`} readOnly />
-          </Input.Root>
+          <Field.Root key={i}>
+            <Field.Input value={`Item ${i}`} readOnly />
+          </Field.Root>
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
@@ -38,9 +38,9 @@ const DefaultStory = () => {
 
       <Column.Center asChild>
         <div>
-          <Input.Root>
-            <Input.TextInput placeholder='Search' />
-          </Input.Root>
+          <Field.Root>
+            <Field.Input placeholder='Search' />
+          </Field.Root>
         </div>
       </Column.Center>
 
@@ -48,9 +48,9 @@ const DefaultStory = () => {
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
             {Array.from({ length: 100 }).map((_, i) => (
-              <Input.Root key={i}>
-                <Input.TextInput value={`Item ${i}`} readOnly />
-              </Input.Root>
+              <Field.Root key={i}>
+                <Field.Input value={`Item ${i}`} readOnly />
+              </Field.Root>
             ))}
           </div>
         </ScrollArea.Viewport>
@@ -88,9 +88,9 @@ export const Default: Story = {};
 const InputList = ({ items = 50 }: { items?: number }) => (
   <div className='flex flex-col gap-2'>
     {Array.from({ length: items }).map((_, index) => (
-      <Input.Root key={index}>
-        <Input.TextInput value={`Item ${index + 1}`} readOnly />
-      </Input.Root>
+      <Field.Root key={index}>
+        <Field.Input value={`Item ${index + 1}`} readOnly />
+      </Field.Root>
     ))}
   </div>
 );
@@ -128,10 +128,10 @@ export const WithCenter: Story = {
       </Column.Center>
       <Column.Center classNames='flex flex-col'>
         <p>This text is inside Column.Center. It sits in the central column between the gutters.</p>
-        <Input.Root>
-          <Input.Label>Name</Input.Label>
-          <Input.TextInput placeholder='Enter name' />
-        </Input.Root>
+        <Field.Root>
+          <Field.Label>Name</Field.Label>
+          <Field.Input placeholder='Enter name' />
+        </Field.Root>
       </Column.Center>
       <Column.Center>
         <h2>Footer (Column.Center)</h2>
@@ -141,8 +141,8 @@ export const WithCenter: Story = {
 };
 
 /**
- * ScrollArea auto-bleeds inside Column.Root (via [.dx-column_&]:col-span-full).
- * No Column.Bleed wrapper needed.
+ * ScrollArea auto-bleeds inside Column.Root (via `[.dx-column-root_&]:col-span-full` in its theme).
+ * No bleed wrapper needed.
  */
 export const WithScrollAreaAutoBleed: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
@@ -159,6 +159,38 @@ export const WithScrollAreaAutoBleed: Story = {
       <Column.Center>
         <h2>Footer (Column.Center)</h2>
       </Column.Center>
+    </Column.Root>
+  ),
+};
+
+/**
+ * A section labels a run of content and keeps the tracks open beneath it: the heading and plain
+ * content land in the content track, while a `Column.Row` inside still reaches the gutters. That is
+ * the shape a detail pane is — headings, prose, and rows with a leading control.
+ */
+export const Sections: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[30rem]' })],
+  render: () => (
+    <Column.Root gutter='md' gap='lg'>
+      <Column.Center>
+        <Field.Root>
+          <Field.Input value='Finalize roast curve' readOnly />
+        </Field.Root>
+      </Column.Center>
+      <Column.Section label='Activity'>
+        <p>Everything here starts at the content track, heading included.</p>
+        <p>A second line, to show the section's own row gap.</p>
+      </Column.Section>
+      <Column.Section label='Rows'>
+        {['Charge 198°C', 'Turnaround 1:35', 'Development 2:10'].map((text) => (
+          <Column.Row key={text}>
+            <Column.Block>
+              <Icon icon='ph--circle--regular' size={4} />
+            </Column.Block>
+            <span>{text}</span>
+          </Column.Row>
+        ))}
+      </Column.Section>
     </Column.Root>
   ),
 };

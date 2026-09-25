@@ -5,18 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import { Connection, Connector } from '@dxos/plugin-connector';
+import * as Capability from '@dxos/app-framework/Capability';
+import { Obj, Ref } from '@dxos/echo';
+import { AccessToken, Connection } from '@dxos/link';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
+import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants.ts';
 
-const HeyGenTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
-    title: 'API key',
-    description: 'The HeyGen API key from https://app.heygen.com/settings (API).',
-  }),
+const HeyGenTokenForm = ConnectorSpec.TokenForm({
+  title: 'API key',
+  description: 'The HeyGen API key from https://app.heygen.com/settings (API).',
 });
 type HeyGenTokenFormValues = Schema.Schema.Type<typeof HeyGenTokenForm>;
 
@@ -55,6 +53,6 @@ export const createHeyGenConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [createHeyGenConnectorEntry()]);
+    return Capability.contribute(ConnectorSpec.Connector, [createHeyGenConnectorEntry()]);
   }),
 );

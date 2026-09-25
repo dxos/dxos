@@ -4,15 +4,14 @@
 
 // @import-as-namespace
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
+import { type DiagnosticProvider as DiagnosticProviderType } from '#diagnostics';
 import { meta } from '#meta';
-
-import { type DiagnosticProvider as DiagnosticProviderType } from '../diagnostics';
 
 /**
  * Plugins contribute diagnostic providers via this capability.
  */
-export const DiagnosticProvider = Capability.make<DiagnosticProviderType>(
-  `${meta.profile.key}.capability.diagnostic-provider`,
+export const DiagnosticProvider = Capability.make<DiagnosticProviderType>()(
+  `${meta.profile.key}.capability.diagnosticProvider`,
 );

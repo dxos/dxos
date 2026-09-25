@@ -5,9 +5,34 @@
 import { syntaxTree } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
-import Mermaid from 'mermaid';
+import Mermaid, { type MermaidConfig } from 'mermaid';
 
-export type MermaidOptions = {};
+export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
+
+/**
+ * Ties the diagram to the design system on top of whichever theme is active. The SVG is inlined
+ * into the editor, so `var(--color-…)` resolves against the page in both colour modes; mermaid's
+ * own `themeVariables` cannot do this, since it derives a palette from them with colour math that
+ * needs concrete colours.
+ */
+const DEFAULT_THEME_CSS = `
+  .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: var(--color-card-surface); stroke: var(--color-separator); }
+  .label text, .node text, .nodeLabel, .edgeLabel, .label span { color: var(--color-base-fg); fill: var(--color-base-fg); }
+  .edgePath .path, .flowchart-link { stroke: var(--color-subdued); }
+  .edgeLabel { background-color: var(--color-group-surface); }
+  .marker { fill: var(--color-subdued); stroke: var(--color-subdued); }
+`;
+
+/** The full mermaid config for the editor's colour mode; `options` win over the defaults. */
+const createConfig = (options: MermaidOptions, dark: boolean): MermaidConfig => ({
+  darkMode: dark,
+  theme: dark ? 'dark' : 'neutral',
+  themeCSS: DEFAULT_THEME_CSS,
+  // Native SVG text labels: the strict-mode sanitizer strips foreignObject HTML label
+  // content (mermaid 10.9.4 with dompurify 3.x), leaving unlabeled nodes.
+  flowchart: { htmlLabels: false },
+  ...options,
+});
 
 /**
  * Extension to create mermaid diagrams.
@@ -17,7 +42,10 @@ export type MermaidOptions = {};
  * `@dxos/ui-editor`'s markdown bundle rather than here: `codeLanguages` is read once when the
  * markdown parser is built, so an extension contributed afterwards cannot add a fenced-code language.
  */
-export const mermaid = (_: MermaidOptions = {}): Extension => {
+export const mermaid = (options: MermaidOptions = {}): Extension => {
+  // One config per colour mode, built once: the widget's identity includes its config, so a fresh
+  // object per rebuild would replace (and re-render) every diagram on each selection change.
+  const configs = { light: createConfig(options, false), dark: createConfig(options, true) };
   return [
     ViewPlugin.fromClass(
       class {
@@ -29,7 +57,16 @@ export const mermaid = (_: MermaidOptions = {}): Extension => {
 
         update(update: ViewUpdate) {
           // Always rebuild decorations when selection changes to handle arrow key navigation.
-          if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
+          // A colour-mode switch arrives as a reconfiguration, so compare the facet as well.
+          const themeChanged =
+            update.state.facet(EditorView.darkTheme) !== update.startState.facet(EditorView.darkTheme);
+          if (
+            update.docChanged ||
+            update.viewportChanged ||
+            update.selectionSet ||
+            update.focusChanged ||
+            themeChanged
+          ) {
             this.decorations = this.buildDecorations(update.view);
           }
         }
@@ -54,7 +91,12 @@ export const mermaid = (_: MermaidOptions = {}): Extension => {
                       const label = content.split(' ')[0];
 
                       // Create widget.
-                      const widget = new MermaidWidget(`mermaid-${node.from}`, content, label);
+                      const widget = new MermaidWidget(
+                        `mermaid-${node.from}`,
+                        content,
+                        view.state.facet(EditorView.darkTheme) ? configs.dark : configs.light,
+                        label,
+                      );
 
                       // Find the line after the code block to place the widget.
                       const endLine = view.state.doc.lineAt(node.to);
@@ -114,7 +156,7 @@ export const mermaid = (_: MermaidOptions = {}): Extension => {
         position: 'relative',
         display: 'inline-flex',
         width: '100%',
-        maring: '4px 0',
+        margin: '4px 0',
         padding: '16px',
         justifyContent: 'center',
         backgroundColor: 'var(--color-group-surface)',
@@ -145,13 +187,15 @@ class MermaidWidget extends WidgetType {
   constructor(
     private readonly _id: string,
     private readonly _source: string,
+    private readonly _config: MermaidConfig,
     private readonly _label?: string,
   ) {
     super();
   }
 
+  // The config too: a widget kept across a colour-mode switch would keep the old theme's SVG.
   override eq(other: this) {
-    return this._source === other._source;
+    return this._source === other._source && this._config === other._config;
   }
 
   override ignoreEvent(ev: Event) {
@@ -164,21 +208,9 @@ class MermaidWidget extends WidgetType {
 
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
-      Mermaid.initialize({
-        darkMode: view.state.facet(EditorView.darkTheme),
-        theme: 'neutral',
-        // TODO(burdon): Styles.
-        // NOTE: Must specify 'base' in order to override.
-        // theme: 'base',
-        // themeVariables: {
-        //   primaryColor: getToken('extend.colors.red.100'),
-        //   primaryBorderColor: getToken('extend.colors.neutral.200'),
-        // },
-        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
-        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/sequence/styles.js
-        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/state/styles.js
-        // themeCSS: '.node rect { fill: red; }',
-      });
+      // Global, so it is applied per render; the diagram-type style files list the selectors:
+      // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
+      Mermaid.initialize(this._config);
 
       // TODO(burdon): Cache?
       const svg = await this.render(div);

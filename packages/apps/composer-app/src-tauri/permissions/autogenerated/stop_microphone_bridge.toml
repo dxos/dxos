@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-stop-microphone-bridge"
+description = "Enables the stop_microphone_bridge command without any pre-configured scope."
+commands.allow = ["stop_microphone_bridge"]
+
+[[permission]]
+identifier = "deny-stop-microphone-bridge"
+description = "Denies the stop_microphone_bridge command without any pre-configured scope."
+commands.deny = ["stop_microphone_bridge"]

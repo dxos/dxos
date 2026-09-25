@@ -9,20 +9,30 @@
     @apply border border-un-accent;
     &[aria-checked='true'],
     &[aria-checked='mixed'],
+    &[data-state='checked'],
+    &[data-state='indeterminate'],
     &:checked {
       @apply bg-accent-bg accent-accent-bg border-accent-bg;
     }
 
-    &:not([disabled]),
+    &:not([disabled]):not([data-disabled]),
     &[disabled='false'] {
       &:hover {
         @apply bg-un-accent-hover accent-un-accent-hover;
         &[aria-checked='true'],
         &[aria-checked='mixed'],
+        &[data-state='checked'],
+        &[data-state='indeterminate'],
         &:checked {
           @apply bg-accent-bg-hover accent-accent-bg-hover border-accent-bg-hover;
         }
       }
+    }
+
+    /* The Ark control is a div in front of a visually hidden input; the machine stamps the input's
+       keyboard focus onto it, so the ring is drawn from that attribute rather than :focus-visible. */
+    &[data-focus-visible] {
+      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)];
     }
   }
 
@@ -31,15 +41,27 @@
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
-  /* NOTE: This isn't compatible with the Radix switch. */
+  /* Sized by knobs so density can shrink the track and knob together. The knob is positioned
+     inside the border, so the inset that centres it is measured from the padding box, and the
+     track width leaves the knob that same inset once it has slid its own width to the end. */
   .dx-checkbox--switch {
-    @apply inline-block appearance-none relative shrink-0 h-5 w-8;
+    --dx-switch-h: 1.25rem;
+    --dx-switch-knob: 0.75rem;
+    --dx-switch-border: 1px;
+    --dx-switch-inset: calc((var(--dx-switch-h) - var(--dx-switch-border) * 2 - var(--dx-switch-knob)) / 2);
+    @apply inline-block appearance-none relative shrink-0;
     @apply shadow-inner transition-colors bg-un-accent;
     @apply cursor-pointer rounded-full;
+    border-width: var(--dx-switch-border);
+    height: var(--dx-switch-h);
+    width: calc(var(--dx-switch-knob) * 2 + (var(--dx-switch-inset) + var(--dx-switch-border)) * 2);
 
     &::before {
-      @apply w-3 h-3 mx-[0.1875rem] my-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
+      @apply absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
       content: '';
+      width: var(--dx-switch-knob);
+      height: var(--dx-switch-knob);
+      margin: var(--dx-switch-inset);
     }
 
     &[aria-checked='true'],
@@ -50,5 +72,20 @@
         @apply translate-x-[100%];
       }
     }
+  }
+
+  /* Density: the control's own attribute outranks (:where) any region it sits in. */
+  :where(.dx-density-sm, [data-density='sm']) .dx-checkbox--switch,
+  .dx-checkbox--switch[data-density='sm'] {
+    --dx-switch-h: 1rem;
+    --dx-switch-knob: 0.625rem;
+  }
+
+  :where(.dx-density-md, [data-density='md']) .dx-checkbox--switch,
+  .dx-checkbox--switch[data-density='md'],
+  :where(.dx-density-lg, [data-density='lg']) .dx-checkbox--switch,
+  .dx-checkbox--switch[data-density='lg'] {
+    --dx-switch-h: 1.25rem;
+    --dx-switch-knob: 0.75rem;
   }
 }

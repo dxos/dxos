@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Settings, type Update } from '#types';
+import { NativeCapabilities, Settings, Update } from '#types';
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
@@ -26,9 +26,13 @@ type UpdateActions = {
   onRelaunch: () => Promise<void>;
 };
 
-type UpdateRow = { description: string; button: ReactNode };
+type UpdateRow = {
+  description: string;
+  button: ReactNode;
+};
 
-export const NativeSettings = (_props: NativeSettingsProps) => {
+/** Update status comes from the update-manager capability, so this panel takes no settings props. */
+export const NativeSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
   const status = useAtomValue(manager.status);
@@ -57,11 +61,14 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.updates.label')} description={description}>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Field standalone label={t('settings.updates.label')} description={description}>
               {button}
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -87,6 +94,10 @@ const renderUpdateRow = (
     Match.withReturnType<UpdateRow>(),
     Match.when({ kind: 'unsupported' }, () => ({
       description: t('settings.updates.unsupported.message'),
+      button: checkButton(true),
+    })),
+    Match.when({ kind: 'dev' }, () => ({
+      description: t('settings.updates.dev.message'),
       button: checkButton(true),
     })),
     Match.when({ kind: 'idle' }, () => ({

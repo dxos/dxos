@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 // A feed-scoped query with an `order` clause must honor the ordering (routing through the host
 // indexer) rather than falling back to the client's newest-by-position tail window — feeds are not

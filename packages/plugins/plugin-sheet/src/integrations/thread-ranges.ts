@@ -5,13 +5,13 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { CommentOperation } from '@dxos/plugin-review/types';
-import { Attention } from '@dxos/react-ui-attention';
+import * as CommentOperation from '@dxos/plugin-review/CommentOperation';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';

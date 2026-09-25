@@ -53,11 +53,11 @@ export const scrollbarAutohide = ({ timeout = 800 }: ScrollbarAutohideOptions = 
 const styles = EditorView.theme({
   // Reveal the thumb only while actively scrolling.
   '.cm-scroller.cm-scrolling::-webkit-scrollbar-thumb': {
-    background: 'var(--color-scrollbar-thumb)',
+    backgroundColor: 'var(--color-scrollbar-thumb)',
   },
   // Suppress the base theme's hover-reveal (higher specificity via `:not(.cm-scrolling)`), so a
   // hovered/focused-but-idle editor keeps the thumb hidden.
   '&:hover .cm-scroller:not(.cm-scrolling)::-webkit-scrollbar-thumb': {
-    background: 'transparent',
+    backgroundColor: 'transparent',
   },
 });

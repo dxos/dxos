@@ -4,20 +4,21 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
+import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxOperation, Mailbox } from '../../types';
-import { REPLY_REGEXP } from '../../util';
+import { REPLY_REGEXP } from '../../util/index.ts';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
@@ -28,22 +29,26 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   // `components`/`hooks` and must not call capability hooks themselves.
   const runtime = useProcessManagerRuntime();
   const extensions = useEmailComposerExtensions(runtime, subject);
-  const onSend = useSendEmail(runtime, subject);
+  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  // No contributed generator means nothing to invoke, so the affordance is omitted rather than shown
+  // and failing — the same reason the send action is gated on a provider.
+  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const onSend = useSendEmail(runtime, subject, sendOperations);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.
   const { invokePromise } = useOperationInvoker();
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes.find((candidate) => Obj.getURI(candidate) === subject.properties?.mailbox);
-  const canGenerate = mailbox !== undefined && !!subject.properties?.inReplyTo;
+  const canGenerate = mailbox !== undefined && !!subject.properties?.inReplyTo && replyGenerator !== undefined;
   // Remounts the editor after a generated body lands (the editor only reads its initial value).
   const [generation, setGeneration] = useState(0);
   const handleGenerate = useCallback(async () => {
-    if (!mailbox || !spaceId) {
+    if (!mailbox || !spaceId || !replyGenerator) {
       return;
     }
     const result = await invokePromise(
-      InboxOperation.GenerateReply,
+      replyGenerator.getOperation(),
       { mailbox: Ref.make(mailbox), message: subject },
       { spaceId },
     );
@@ -62,7 +67,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
       });
       setGeneration((current) => current + 1);
     }
-  }, [invokePromise, mailbox, spaceId, subject]);
+  }, [invokePromise, mailbox, replyGenerator, spaceId, subject]);
 
   const menuActions = useMenuBuilder(
     () =>
@@ -75,7 +80,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
                 'generate',
                 {
                   label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
-                  icon: 'ph--sparkle--regular',
+                  icon: AI_ACTION_ICON,
                   testId: 'inbox.draft.generate',
                 },
                 handleGenerate,
@@ -86,11 +91,9 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} className='dx-document'>
-      <Panel.Toolbar>
-        <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-          <Menu.Toolbar />
-        </Menu.Root>
+    <Panel.Root role={role} classNames='dx-document'>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />

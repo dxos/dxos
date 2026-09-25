@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './PluginDetail';
+export * from './PluginDetail.tsx';

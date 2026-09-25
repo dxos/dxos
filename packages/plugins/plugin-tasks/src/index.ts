@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './meta';
-export * from './operations';
-export * from './types';
+export * as TasksPlugin from './TasksPlugin.ts';
+export * from '#meta';
+export * from '#types';

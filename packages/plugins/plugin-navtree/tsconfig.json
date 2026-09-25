@@ -25,7 +25,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -35,9 +35,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -61,6 +58,9 @@
       "path": "../../ui/lit-ui"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -76,16 +76,10 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-deck"
@@ -94,13 +88,7 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-space"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

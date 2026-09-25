@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as SlackOperation from './SlackOperation';
+export * as SlackEvents from './SlackEvents.ts';
+export * as SlackOperation from './SlackOperation.ts';

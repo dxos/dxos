@@ -73,6 +73,32 @@ export const isReservedKey = (key: string): boolean =>
   RESERVED_KEYS.has(key) || Key.SpaceId.isValid(key) || Key.EntityId.isValid(key);
 
 /**
+ * Read the leading `/<anchor>/<workspace>` workspace token, without a key table. `Option.none()` for
+ * a pathname that does not open with the anchor key followed by a workspace segment.
+ */
+export const readWorkspace = (pathname: string): Option.Option<string> => {
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
+  const [anchor, workspace] = trimmed.split('/');
+  return anchor === WORKSPACE_KEY && workspace ? Option.some(workspace) : Option.none();
+};
+
+/**
+ * A pathname's decoded, slash-trimmed body, or `undefined` when it is not a valid encoding.
+ * `decodeURIComponent` throws on a stray `%`, which a pathname from the address bar or history can
+ * carry.
+ */
+const decode = (pathname: string): string | undefined => {
+  try {
+    return decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  } catch {
+    return undefined;
+  }
+};
+
+/**
  * Parse a browser pathname into a workspace plus an ordered chain of pairs, against a
  * caller-supplied key table.
  *
@@ -86,7 +112,10 @@ export const isReservedKey = (key: string): boolean =>
  * following workspace segment. Callers route a `none` to a not-found page.
  */
 export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUrl> => {
-  const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
   const segments = trimmed.length > 0 ? trimmed.split('/') : [];
 
   const workspaceKey = segments[0];

@@ -10,8 +10,8 @@ const usage = `Usage: automerge-list.js <DXOS.sqlite> [--json]
 Lists automerge document ids sorted by combined chunk size (largest first).
 
 Examples:
-  node automerge-list.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
-  node automerge-list.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite --json
+  node automerge-list.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
+  node automerge-list.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite --json
 `;
 
 const main = () => {

@@ -4,13 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, Script, Trigger } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { getRoutinesSettingsPath } from '../paths';
-import { RoutineOperation } from '../types';
+import { RoutineOperation } from '#types';
+
+import { getRoutinesSettingsPath } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
   RoutineOperation.CreateTriggerFromTemplate.pipe(
@@ -53,10 +57,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
           }
         }
 
-        yield* Operation.invoke(SpaceOperation.AddObject, {
-          object: trigger,
-          target: db,
-        });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: trigger }, { spaceId: db.spaceId });
         yield* Operation.invoke(LayoutOperation.Open, {
           subject: [getRoutinesSettingsPath(db.spaceId)],
           workspace: GraphPath.getSpacePath(db.spaceId),

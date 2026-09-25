@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Instructions, Routine, type Trigger } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import type * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
-import { runInstructionsRef } from './run-instructions';
+import { runInstructionsRef } from './run-instructions.ts';
 
 /** Strip a stale `instructions` binding from a trigger input. */
 const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
@@ -55,14 +57,13 @@ export const makeRoutine = ({
   trigger?: Trigger.Trigger;
 }): Routine.Routine => {
   const routine = Routine.make({ ...props, triggers });
+  // `SetParent` on `spec.instructions` / `triggers` makes each write declare the parent edge too.
   if (instructions) {
-    Obj.setParent(instructions, routine);
     Obj.update(routine, (routine) => {
       routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
     });
   }
   if (trigger) {
-    Obj.setParent(trigger, routine);
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });

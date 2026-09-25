@@ -22,7 +22,7 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -46,13 +46,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/react-ui"
@@ -83,9 +83,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

@@ -1,0 +1,156 @@
+name: PR Deploy
+
+# Deploys the composer-app bundle built by pr-build.yml as a Cloudflare Worker preview Version
+# (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `dev` env — same EDGE
+# instance the build already targets (DX_EDGE_BASE_URL in pr-build.yml) and its dev-tier bindings, so PR
+# previews never touch production data. Deliberately not the `preview` environment: that Worker
+# (preview.composer.space) serves dogfooders against EDGE production. Uses workflow_run so this workflow
+# executes from the BASE branch (trusted), which means secrets are safe to use here. The untrusted PR code
+# never runs in this workflow — we only download the pre-built artifact.
+#
+# TODO(wittjosiah): stays on GitHub Actions, along with pr-build.yml. This workflow's
+# actions/download-artifact step (run-id: github.event.workflow_run.id) failed "Unable to download
+# artifact(s): Not Found" on every attempt once pr-build.yml moved to Depot CI (#12779) - a
+# Depot-executed run's synthesized workflow_run.id apparently doesn't resolve through GitHub's real
+# artifact API. Revisit once Depot CI's workflow_run + cross-run artifact handoff is confirmed working.
+
+on:
+  workflow_run:
+    workflows: ['PR Build']
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # Only the config is needed (not a full checkout) to resolve the `dev` env's Worker name + bindings.
+      - name: Checkout wrangler config
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            packages/apps/composer-app/wrangler.jsonc
+          sparse-checkout-cone-mode: false
+
+      - name: Download preview bundle
+        uses: actions/download-artifact@v5
+        with:
+          name: composer-preview-bundle
+          path: preview
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read deploy metadata
+        id: meta
+        run: |
+          PR_NUMBER=$(cat preview/preview-meta/pr-number)
+          HEAD_SHA=$(cat preview/preview-meta/head-sha)
+          # Validate — guard against a malicious artifact injecting arbitrary values.
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER" >&2
+            exit 1
+          fi
+          if ! [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid head SHA: $HEAD_SHA" >&2
+            exit 1
+          fi
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "preview_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Install wrangler
+        run: npm install --global wrangler@^4.59.1
+
+      - name: Exclude Worker script from asset upload
+        run: echo '_worker.js' > preview/packages/apps/composer-app/out/composer/.assetsignore
+
+      - name: Deploy preview version
+        id: deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          wrangler versions upload \
+            --config packages/apps/composer-app/wrangler.jsonc \
+            --env dev \
+            --preview-alias "${{ steps.meta.outputs.preview_alias }}" \
+            --assets preview/packages/apps/composer-app/out/composer \
+            preview/packages/apps/composer-app/out/composer/_worker.js \
+            | tee deploy.log
+          # wrangler prints both a per-version URL and the stable alias URL — the alias is the one that
+          # stays constant across pushes to the same PR, so it must be matched by its own label, not by
+          # position (a plain "first workers.dev URL" grep would grab the per-version one instead).
+          URL=$(grep 'Version Preview Alias URL:' deploy.log | grep -Eo 'https://[a-z0-9.-]+\.workers\.dev')
+          if [[ -z "$URL" ]]; then
+            echo "Could not find a preview URL in wrangler's output" >&2
+            exit 1
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Comment preview URL on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.meta.outputs.pr_number }}
+          header: composer-preview
+          message: |
+            ${{ steps.deploy.outputs.url }}
+
+      # The footer keeps the preview URL visible at the top of the PR, where reviewers look, rather than
+      # buried in a comment thread. Delimited by HTML markers so each redeploy replaces the previous
+      # footer in place instead of appending a duplicate.
+      - name: Update preview footer in PR body
+        uses: actions/github-script@v7
+        env:
+          # Passed as env rather than interpolated into the script body so untrusted artifact-derived
+          # values can never be expanded as code.
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+        with:
+          script: |
+            const BEGIN = '<!-- composer-preview:begin -->';
+            const END = '<!-- composer-preview:end -->';
+            const url = process.env.PREVIEW_URL;
+            const prNumber = Number(process.env.PR_NUMBER);
+
+            // The PR number comes from the artifact, which untrusted PR code produced — a PR could build
+            // an artifact naming someone else's PR and redirect this trusted write. Only the commit that
+            // triggered this run is trustworthy, so require the PR to actually be associated with it.
+            const { data: associated } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.payload.workflow_run.head_sha,
+            });
+            if (!associated.some((pr) => pr.number === prNumber)) {
+              core.setFailed(`PR #${prNumber} is not associated with ${context.payload.workflow_run.head_sha}.`);
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const body = pr.body ?? '';
+            const footer = [BEGIN, '---', `🚀 Composer preview: ${url}`, END].join('\n');
+            // Strip every marked block, including duplicates left by an earlier malformed body, then
+            // re-append one — the strip-and-append is idempotent where an in-place splice would not be.
+            const stripped = body
+              .replaceAll(new RegExp(`${BEGIN}[\\s\\S]*?${END}`, 'g'), '')
+              .trimEnd();
+            const next = (stripped ? `${stripped}\n\n` : '') + footer + '\n';
+            if (next === body) {
+              core.info('Preview footer already up to date.');
+              return;
+            }
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              body: next,
+            });

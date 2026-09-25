@@ -18,9 +18,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect-proto"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -33,9 +30,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -45,13 +39,7 @@
       "path": "../../core/echo/echo-doc"
     },
     {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/react-client"
@@ -64,6 +52,9 @@
     },
     {
       "path": "../lit-ui"
+    },
+    {
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"

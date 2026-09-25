@@ -3,10 +3,10 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Database, type Entity, type Format, type Obj, type Type } from '@dxos/echo';
+import type { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Palette } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
@@ -38,7 +38,8 @@ export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
 export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
+  /** Marks the field touched, so its error may show; the event is not read. */
+  onBlur: (event?: FocusEvent<HTMLElement>) => void;
   onValueChange: (type: SchemaAST.AST, value: T) => void;
 };
 
@@ -65,17 +66,29 @@ export type FormFieldRendererProps<T = any> = {
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
-  /** Whether the field is required (non-optional in the schema); surfaces a trailing asterisk on the label. */
+  /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
 } & FormFieldStateProps<T>;
 
-export type FormFieldRenderer = FC<FormFieldRendererProps>;
+/** Where a row puts its label: above the control, or beside it on one line, after a toggle. */
+export type FormFieldLabelPlacement = 'above' | 'beside';
+
+/**
+ * A field renderer. The built-in ones are controls the dispatcher places in a `Form.Field` row;
+ * `standalone` declares that a control holds several labelled inputs (a coordinate pair), so the
+ * row's label is text rather than a `<label>`; `labelPlacement` that the row lays its label beside
+ * the control (a toggle). A renderer from `fieldMap` renders its own row.
+ */
+export type FormFieldRenderer = FC<FormFieldRendererProps> & {
+  standalone?: boolean;
+  labelPlacement?: FormFieldLabelPlacement;
+};
 
 export type FormFieldMap = Record<string, FormFieldRenderer>;
 
 export type FormFieldProvider = (props: {
   prop: string;
-  schema: Schema.Schema<any>;
+  schema: Schema.Codec<any, any>;
   fieldProps: FormFieldRendererProps;
 }) => ReactElement | null | undefined;
 
@@ -88,11 +101,15 @@ export type FormFieldProvider = (props: {
  * The type parameter S links the form schema's decoded type to the createObject values argument,
  * ensuring the schema and the handler agree on the shape of the form data.
  */
-export type CreateEntryOverride<S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext> = {
+export type CreateEntryOverride<S extends Schema.Codec<any, any> = Schema.Codec<any, any>> = {
   /** Replaces the raw ECHO type schema for the inline create form. */
   inputSchema?: S;
-  /** Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema. */
-  createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown>;
+  /**
+   * Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema.
+   * Resolves to `undefined` where the create only starts the work and no object exists yet — the
+   * ref slot is then left unset rather than pointed at nothing.
+   */
+  createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown | undefined>;
 };
 
 /**

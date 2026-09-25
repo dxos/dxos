@@ -8,19 +8,19 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
+import { ConnectorSpec } from '#types';
 
-import { isCursorForConnection } from '../../util';
-import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
+import * as Binding from '../../Binding.ts';
+import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors.ts';
 
 describe('reconcileCursors', () => {
   let builder: EchoTestBuilder;
@@ -38,9 +38,9 @@ describe('reconcileCursors', () => {
   // The handler derives its own Database from the connection ref, matching the
   // production connectors (composer's invoker has no `databaseResolver`).
   const MaterializeExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.materializeExampleTarget') },
-    input: MaterializeTargetInput,
-    output: MaterializeTargetOutput,
+    meta: { key: DXN.make('com.example.operation.test.materializeExampleTarget') },
+    input: ConnectorSpec.MaterializeTargetInput,
+    output: ConnectorSpec.MaterializeTargetOutput,
   });
 
   const materializeHandler = MaterializeExampleTarget.pipe(
@@ -67,12 +67,12 @@ describe('reconcileCursors', () => {
   // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
   // cursor reconciliation.
   const SyncExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.reconcileCursors.sync') },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    meta: { key: DXN.make('com.example.operation.test.reconcileCursors.sync') },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
-  const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
+  const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
@@ -92,7 +92,7 @@ describe('reconcileCursors', () => {
   const reconcile = (
     db: Database.Database,
     connection: Connection.Connection,
-    connector: ConnectorEntry,
+    connector: ConnectorSpec.ConnectorEntry,
     selected: ReadonlyArray<SyncTargetSelection>,
     existingTarget?: Ref.Ref<Obj.Unknown>,
   ) =>
@@ -104,7 +104,7 @@ describe('reconcileCursors', () => {
   const queryCursors = (db: Database.Database, connection: Connection.Connection) =>
     Database.query(Filter.type(Cursor.Cursor)).run.pipe(
       Effect.provide(Database.layer(db)),
-      Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
+      Effect.map((cursors) => cursors.filter((cursor) => Binding.isForConnection(cursor, connection))),
       EffectEx.runAndForwardErrors,
     );
 

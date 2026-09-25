@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { type BookingSearch } from '#types';
+import { BookingSearch } from '#types';
 
-import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
+import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment.ts';
 
 const OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight',

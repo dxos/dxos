@@ -8,20 +8,21 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import {
   Column,
   type ColumnRootProps,
+  DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Field,
   IconButton,
   type IconButtonProps,
-  Input,
   ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
+  useInColumn,
   useMergeRefs,
   useTranslation,
   withColumn,
 } from '@dxos/react-ui';
-import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
-import { type Merge } from '@dxos/util';
+import { type MakeOptional, type Merge } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -33,16 +34,19 @@ import {
   useFormContext,
   useFormHandler,
   useKeyHandler,
-} from '../../hooks';
-import { formTheme } from './Form.theme';
-import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
-import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
+} from '../../hooks/index.ts';
+import { formTheme } from './Form.theme.ts';
+import { type FormFieldsProps } from './FormFields/index.ts';
+import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout/index.ts';
 
 //
 // Root
 //
 
 export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
+  Omit<FormContextValue<T>, 'form'>,
+  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
+  Omit<FormFieldsProps<T>, 'path' | 'schema'>,
   PropsWithChildren<{
     /**
      * Called when the form is submitted and passes validation.
@@ -53,10 +57,7 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  }>,
-  Omit<FormContextValue<T>, 'form'>,
-  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
-  Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
+  }>
 >;
 
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
@@ -95,20 +96,39 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
     const styles = formTheme.styles({ variant });
+    const inColumn = useInColumn();
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
     // instead of landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
+
+    // Inside a host Column (a Card, a Dialog body), the host already owns the gutter: place the
+    // body in its content track rather than nesting a second grid, which is what made form fields
+    // inset differently from the card title above them. Non-scrolling only — a scrolling viewport
+    // needs its own gutter to host the scrollbar.
+    if (inColumn && !scroll) {
+      return (
+        <Column.Center
+          {...composableProps(props, { classNames: ['w-full min-w-0', styles.viewport()] })}
+          ref={forwardedRef}
+        >
+          {children}
+        </Column.Center>
+      );
+    }
+
+    // Forwarded props land on the OUTERMOST element, never on the inner ScrollArea. A host places
+    // this component by passing placement down (`Panel.Content asChild` merges `[grid-area:content]`
+    // into it); on an inner element that name belongs to no line of the enclosing Column grid, and
+    // CSS answers an unmatched name by fabricating an implicit row rather than ignoring it — which
+    // silently pushed the form into a phantom second row (AUDIT.md §3).
     if (scroll) {
       return (
-        <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
-          <ScrollArea.Root
-            {...composableProps(props, { classNames: styles.viewport() })}
-            orientation='vertical'
-            centered
-            padding
-            thin
-            ref={forwardedRef}
-          >
+        <Column.Root
+          {...composableProps(props, { classNames: ['dx-expand', span, styles.viewport()] })}
+          gutter={gutter}
+          ref={forwardedRef}
+        >
+          <ScrollArea.Root orientation='vertical' centered padding thin>
             <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
@@ -162,40 +182,17 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
 FormContent.displayName = FORM_CONTENT_NAME;
 
 //
-// FieldSet
-//
-
-const FORM_FIELDSET_NAME = 'Form.FieldSet';
-
-export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
-
-/** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
-export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
-  const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-  const styles = formTheme.styles({ variant });
-  return (
-    <FormFieldSet
-      schema={form.schema}
-      classNames={styles.fieldSet({ class: classNames })}
-      {...contextProps}
-      {...props}
-    />
-  );
-};
-
-FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
-
-//
 // Layout
 //
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 
-export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+export type FormLayoutProps = MakeOptional<NaturalFormLayoutProps, 'schema'>;
 
 /** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
 export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
   const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
+
   const resolvedSchema = schema ?? form.schema;
   if (!resolvedSchema) {
     return null;
@@ -212,9 +209,12 @@ FormLayoutController.displayName = FORM_LAYOUT_NAME;
 
 const FORM_ACTIONS_NAME = 'Form.Actions';
 
-export type FormActionsProps = ThemedClassName<{}>;
+export type FormActionsProps = ThemedClassName<{
+  submitLabel?: string;
+  submitIcon?: string;
+}>;
 
-export const FormActions = ({ classNames }: FormActionsProps) => {
+export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave, onCancel },
@@ -238,6 +238,9 @@ export const FormActions = ({ classNames }: FormActionsProps) => {
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
+          // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
+          // commits; the attribute is inert anywhere else.
+          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
@@ -245,9 +248,9 @@ export const FormActions = ({ classNames }: FormActionsProps) => {
           type='submit'
           variant='primary'
           disabled={!canSave}
-          icon='ph--check--regular'
+          icon={submitIcon ?? 'ph--check--regular'}
           iconEnd
-          label={t('save-button.label')}
+          label={submitLabel ?? t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />
@@ -257,62 +260,6 @@ export const FormActions = ({ classNames }: FormActionsProps) => {
 };
 
 FormActions.displayName = FORM_ACTIONS_NAME;
-
-//
-// Section
-//
-
-const FORM_SECTION_NAME = 'Form.Section';
-
-export type FormSectionProps = ThemedClassName<{
-  title?: string;
-  description?: string;
-}>;
-
-export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, title, description, ...props }, forwardedRef) => {
-    const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
-    const styles = formTheme.styles({ variant });
-    return (
-      <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        {(title || description) && (
-          <div className={styles.sectionHeader()}>
-            {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-            {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
-          </div>
-        )}
-        {children}
-      </div>
-    );
-  },
-);
-
-FormSection.displayName = FORM_SECTION_NAME;
-
-//
-// Group
-//
-
-const FORM_GROUP_NAME = 'Form.Group';
-
-export type FormGroupProps = ThemedClassName<PropsWithChildren>;
-
-/**
- * A bordered card grouping related rows/controls (e.g. an entity card in a list).
- * Layout-only and context-free — unlike `Form.FieldSet` it is not schema-driven.
- */
-export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {
-  const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
-  const styles = formTheme.styles({ variant });
-
-  return (
-    <div {...composableProps(props, { classNames: styles.group() })} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
-
-FormGroup.displayName = FORM_GROUP_NAME;
 
 //
 // Submit
@@ -353,24 +300,26 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
 FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
-// Error
+// ErrorText
 //
 
-const FORM_ERROR_NAME = 'Form.Error';
+const FORM_ERROR_TEXT_NAME = 'Form.ErrorText';
 
-export type FormErrorProps = ThemedClassName<PropsWithChildren>;
+export type FormErrorTextProps = ThemedClassName<PropsWithChildren>;
 
 /** Form-level error/validation message (e.g. a failed submit), styled via the error valence. */
-export const FormError = ({ children, classNames }: FormErrorProps) => {
+export const FormErrorText = ({ children, classNames }: FormErrorTextProps) => {
   if (!children) {
     return null;
   }
 
   return (
-    <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames}>{children}</Input.Validation>
-    </Input.Root>
+    <Field.Root validationValence='error'>
+      <Field.ErrorText classNames={classNames} data-testid='form.error'>
+        {children}
+      </Field.ErrorText>
+    </Field.Root>
   );
 };
 
-FormError.displayName = FORM_ERROR_NAME;
+FormErrorText.displayName = FORM_ERROR_TEXT_NAME;

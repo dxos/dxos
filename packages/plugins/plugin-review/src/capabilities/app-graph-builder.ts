@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
-import { Channel } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import { Position } from '@dxos/util';
 
@@ -21,35 +21,24 @@ import { meta } from '#meta';
 import { CommentOperation } from '#types';
 
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
-import { getAnchor } from '../util/message';
-
-/** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
-const whenCommentableObject = NodeMatcher.whenAll(
-  NodeMatcher.whenEchoObjectMatches,
-  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
-);
+import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
+import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-
-    const getCommentConfig = (typename: string) =>
-      capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
+    // Read through the atom: a config contributed after the relation expands has to reach the matcher.
+    const commentConfigsAtom = yield* Capability.atom(AppCapabilities.CommentConfig);
 
     const getAnchorResolver = (typename: string) =>
       capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commentsCompanion',
-        match: (node, get) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
-            return Option.none();
-          }
-          const typename = Obj.getTypename(node.data);
-          const commentConfig = typename ? getCommentConfig(typename) : undefined;
-          return commentConfig ? Option.some(node) : Option.none();
-        },
+        relation: AppNode.companion,
+        match: (node, get) =>
+          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -61,16 +50,10 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commentToolbar',
-        match: (node, get) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
-            return Option.none();
-          }
-          const typename = Obj.getTypename(node.data);
-          const commentConfig = typename ? getCommentConfig(typename) : undefined;
-          return commentConfig ? Option.some(node) : Option.none();
-        },
+        match: (node, get) =>
+          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
         actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
@@ -80,8 +63,7 @@ export default Capability.makeModule(
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const typename = Obj.getTypename(object);
-                const config = typename ? getCommentConfig(typename) : undefined;
+                const config = getCommentConfig(capabilities, object);
                 if (!config) {
                   return;
                 }
@@ -100,6 +82,7 @@ export default Capability.makeModule(
                 // Fallback (non-editor objects): anchor to the current selection, or create an
                 // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
                 // placeholder is not a cursor range the resolver could span.
+                const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);
                 const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
                 yield* Operation.invoke(CommentOperation.Create, {
@@ -124,6 +107,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

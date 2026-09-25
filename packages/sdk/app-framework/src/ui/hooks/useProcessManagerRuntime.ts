@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import { Operation, ServiceResolver } from '@dxos/compute';
+import type { ServiceNotAvailableError } from '@dxos/compute/errors';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 
-import { Capabilities } from '../../common';
-import { useCapability } from './useCapabilities';
+import { Capabilities } from '../../common/index.ts';
+import { useCapability } from './useCapabilities.ts';
 
 /**
  * Resolve the shared {@link Capabilities.ProcessManagerRuntime} from the plugin context.
@@ -24,6 +26,11 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * Build a callback that runs an effect on the {@link Capabilities.ProcessManagerRuntime}
  * with space-scoped services resolved via {@link ServiceResolver.provide}.
  *
+ * Arguments passed to the returned callback are forwarded to `fn`, and the effect's result comes
+ * back as the callback's promise — rejecting with the effect's failure (`E`), with
+ * {@link ServiceNotAvailableError} when a tag cannot be resolved for the space, or with a
+ * `TypeError` when called while `spaceId` is still `undefined`.
+ *
  * The `tags` tuple must list every service the effect requires (beyond the
  * fixed {@link Capabilities.ProcessManagerRuntimeServices}); these services are
  * resolved for the given `spaceId` through the runtime's service resolver.
@@ -34,34 +41,46 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * space-scoped services like `Database.Service`) without each call site having
  * to thread the id through manually.
  */
-export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, any>[], T>(
+export const useSpaceCallback = <
+  const Tags extends readonly Context.Key<any, any>[],
+  TArgs extends readonly unknown[],
+  T,
+  E,
+>(
   spaceId: SpaceId | undefined,
   tags: Tags,
-  fn: () => Effect.Effect<T, any, Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
+  fn: (
+    ...args: TArgs
+  ) => Effect.Effect<T, E, Context.Service.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
   deps?: DependencyList,
-): (() => Promise<T>) => {
+): ((...args: TArgs) => Promise<T>) => {
   const runtime = useProcessManagerRuntime();
-  return useCallback(() => {
-    if (spaceId === undefined) {
-      throw new TypeError('Space not provided to useSpaceCallback');
-    }
-    const layer = Layer.merge(
-      ServiceResolver.provide({ space: spaceId }, ...tags),
-      Operation.withInvocationOptions({ spaceId }),
-    );
-    return runtime.runPromise(fn().pipe(Effect.provide(layer)) as Effect.Effect<T, any, any>);
+  return useCallback(
+    (...args: TArgs) => {
+      if (spaceId === undefined) {
+        throw new TypeError('Space not provided to useSpaceCallback');
+      }
+      const layer = Layer.merge(
+        ServiceResolver.provide({ space: spaceId }, ...tags),
+        Operation.withInvocationOptions({ spaceId }),
+      );
+      return runtime.runPromise(
+        fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, E | ServiceNotAvailableError, any>,
+      );
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runtime, spaceId, ...(deps ?? [])]);
+    [runtime, spaceId, ...(deps ?? [])],
+  );
 };
 
 /**
  * Suspensefully resolve a single space-scoped service via the
  * {@link Capabilities.ProcessManagerRuntime}'s service resolver.
  */
-export const useSpaceService = <T extends Context.Tag<any, any>>(
+export const useSpaceService = <T extends Context.Key<any, any>>(
   tag: T,
   spaceId: SpaceId | undefined,
-): Context.Tag.Service<T> | undefined => {
+): Context.Service.Shape<T> | undefined => {
   const runtime = useProcessManagerRuntime();
   const promise = useMemo(() => {
     if (spaceId === undefined) {
@@ -69,7 +88,7 @@ export const useSpaceService = <T extends Context.Tag<any, any>>(
     }
     const layer = ServiceResolver.provide({ space: spaceId }, tag);
     const effect = Effect.flatMap(tag, (service) => Effect.succeed(service)).pipe(Effect.provide(layer));
-    return runtime.runPromiseExit(effect as Effect.Effect<Context.Tag.Service<T>, any, any>);
+    return runtime.runPromiseExit(effect as Effect.Effect<Context.Service.Shape<T>, any, any>);
   }, [runtime, spaceId, tag]);
   if (!promise) {
     return undefined;

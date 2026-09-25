@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolbox",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,7 +31,8 @@
     "deep-equal": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.sortby": "catalog:",
-    "sort-package-json": "catalog:"
+    "sort-package-json": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@types/deep-equal": "catalog:",

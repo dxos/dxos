@@ -1,6 +1,6 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * as Settings from './Settings';
-export * as ThemeCapabilities from './ThemeCapabilities';
+export * as Settings from './Settings.ts';
+export * as ThemeCapabilities from './ThemeCapabilities.ts';

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RoutineCapabilities } from '@dxos/plugin-routine';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { makeScheduledRoutine } from './scaffold';
+import { makeScheduledRoutine } from './scaffold.ts';
 
 /** The research skill drives the brief; web-search, markdown, and database tools support it. */
 const SKILL_KEYS = [
@@ -31,7 +31,6 @@ export const researchBrief: RoutineCapabilities.Template = {
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',
   // Scheduled space-level research — not meaningful for a specific object companion.
-  appliesTo: (subject) => subject == null,
   scaffold: ({ name }) =>
     makeScheduledRoutine({
       name: name ?? 'Research Brief',

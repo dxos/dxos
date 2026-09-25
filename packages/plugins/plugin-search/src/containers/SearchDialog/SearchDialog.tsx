@@ -5,17 +5,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
+import { type SearchResult } from '@dxos/react-ui-search';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 import { meta } from '#meta';
-import { type SearchResult } from '#types';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
@@ -29,7 +30,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
-  const objects = useQuery(space?.db, buildSearchQuery(query));
+  // Scope the FTS query to user-facing types so results match what the app can render.
+  const typeUris = useSearchableTypeUris(space);
+  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
@@ -67,8 +70,14 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
-        <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+        <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
+          <SearchList.Input
+            classNames='px-0'
+            autoFocus
+            escapeBehavior='dismiss'
+            placeholder={t('search.placeholder')}
+            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {query && allResults.length === 0 && <SearchList.Empty />}
             {allResults.map((result) => (

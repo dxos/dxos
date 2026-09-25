@@ -13,15 +13,15 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import * as internal from './internal';
-import * as entityInternal from './internal/Entity';
-import * as objInternal from './internal/Obj';
-import * as Obj from './Obj';
-import type * as Ref from './Ref';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import * as entityInternal from './internal/Entity/index.ts';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import * as Obj from './Obj.ts';
+import type * as Ref from './Ref.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 export type Endpoints<Source, Target> = {
   [Source]: Source;
@@ -62,11 +62,11 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
  * ```
  */
 // TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Relation,
       typename: 'org.dxos.schema.anyRelation',

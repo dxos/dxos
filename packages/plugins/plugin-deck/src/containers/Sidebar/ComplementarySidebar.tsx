@@ -5,19 +5,19 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
+import { PlankLoading } from '#components';
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
-import { layoutAppliesTopbar } from '../../util';
-import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
-import { ToggleComplementarySidebarButton } from './SidebarButton';
+import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts';
+import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
+import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
@@ -35,43 +35,35 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);
   const activeId = activeCompanion && Attention.getLinkedVariant(activeCompanion.id);
-  const [internalValue, setInternalValue] = useState(activeId);
+  const [selectedVariant, setSelectedVariant] = useState(activeId);
 
   useEffect(() => {
-    setInternalValue(activeId);
+    setSelectedVariant(activeId);
   }, [activeId]);
 
   const handleTabClick = useCallback(
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
-      if (nextValue === activeId) {
+      if (nextValue === selectedVariant) {
         updateState((state) => ({
           ...state,
           complementarySidebarState: state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
         }));
       } else {
-        setInternalValue(nextValue);
+        setSelectedVariant(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
         void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokePromise, updateState],
+    [state.complementarySidebarState, selectedVariant, invokePromise, updateState],
   );
 
-  const data = useMemo(
-    () =>
-      activeCompanion && {
-        id: activeCompanion.id,
-        subject: activeCompanion.data,
-      },
-    [activeCompanion?.id, activeCompanion?.data],
-  );
-
+  const hasPersistedPanel = current !== undefined;
   useEffect(() => {
-    if (!activeId) {
+    if (!hasPersistedPanel) {
       void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokePromise]);
+  }, [hasPersistedPanel, invokePromise]);
 
   return (
     <Main.ComplementarySidebar
@@ -79,14 +71,14 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
-      <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
+      <Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
           data-tauri-drag-region
           style={iconSize(5)}
           className={mx(
-            'absolute z-1 inset-y-0 end-0 w-(--dx-r0-size)!',
+            'absolute z-5 inset-y-0 end-0 w-(--dx-r0-size)!',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
@@ -102,7 +94,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 data-value={Attention.getLinkedVariant(companion.id)}
                 {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
                 variant={
-                  activeId === Attention.getLinkedVariant(companion.id)
+                  selectedVariant === Attention.getLinkedVariant(companion.id)
                     ? state.complementarySidebarState === 'expanded'
                       ? 'primary'
                       : 'ghost'
@@ -124,20 +116,27 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         </div>
 
         {/* R1 Content. */}
-        {activeId &&
-          companions.map((companion) => (
-            <Tabs.Panel
-              key={Attention.getLinkedVariant(companion.id)}
-              value={Attention.getLinkedVariant(companion.id)}
-              classNames={[
-                'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-              ]}
-              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
-            >
-              <ComplementarySidebarPanel companion={companion} activeId={activeId} data={data} />
-            </Tabs.Panel>
-          ))}
+        {companions.map((companion) => (
+          <Tabs.Panel
+            key={Attention.getLinkedVariant(companion.id)}
+            value={Attention.getLinkedVariant(companion.id)}
+            classNames={[
+              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+            ]}
+            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+          >
+            <ComplementarySidebarPanel
+              companion={companion}
+              mounted={isDeckCompanionMounted({
+                mount: companion.properties.mount,
+                variant: Attention.getLinkedVariant(companion.id),
+                selectedVariant,
+                sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
+              })}
+            />
+          </Tabs.Panel>
+        ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
   );
@@ -145,24 +144,21 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
 type ComplementarySidebarPanelProps = {
   companion: DeckCompanion;
-  activeId: string;
-  data?: {
-    id: string;
-    subject: any;
-  };
+  mounted: boolean;
 };
 
-const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const data = useMemo(() => ({ id: companion.id, subject: companion.data }), [companion.id, companion.data]);
 
-  if (Attention.getLinkedVariant(companion.id) !== activeId && !data) {
+  if (!mounted) {
     return null;
   }
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
+        <Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
           <IconButton
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
@@ -175,7 +171,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
           <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='bg-r1-surface'>
+      <Panel.Content classNames='dx-r1-surface'>
         <Surface.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}

@@ -7,17 +7,17 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { DevtoolsContextProvider } from '../hooks';
-import { ObjectsTree } from './ObjectsTree';
-import { ObjectViewer } from './ObjectViewer';
+import { DevtoolsContextProvider } from '../hooks/index.ts';
+import { ObjectsTree } from './ObjectsTree.tsx';
+import { ObjectViewer } from './ObjectViewer.tsx';
 
 random.seed(1);
 
@@ -51,7 +51,7 @@ const meta = {
   render: ObjectsPanelStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column', classNames: 'w-[20rem]' }),
     withDevtoolsContext,
     withClientProvider({
       createIdentity: true,
@@ -160,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-fg'>
+      <div className='dx-expand overflow-hidden text-base-fg'>
         <ObjectsTree db={space.db} />
       </div>
     );
@@ -175,7 +175,7 @@ export const WithDetails: Story = {
     }
     const [selectedObject, setSelectedObject] = useState<Entity.Snapshot | null>(null);
     return (
-      <div className='flex grid grid-rows_[1fr_1fr]'>
+      <div className='dx-expand overflow-hidden grid grid-rows-[1fr_1fr]'>
         <ObjectsTree db={space.db} onSelect={setSelectedObject} />
         <div className='border-separator! border-s border-t'>
           {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}

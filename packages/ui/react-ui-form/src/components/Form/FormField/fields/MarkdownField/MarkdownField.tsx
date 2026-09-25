@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
@@ -15,7 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { presentationFor } from '../../presentation.tsx';
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -28,10 +28,10 @@ export const MarkdownField = ({
   type,
   readonly,
   placeholder,
+  presentation,
   db,
   getValue,
   onValueChange,
-  ...props
 }: FormFieldRendererProps) => {
   const isRef = Ref.isRefType(type);
 
@@ -70,11 +70,8 @@ export const MarkdownField = ({
     );
   };
 
-  return (
-    <FormRow readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
-      {({ value }) => renderEditor(value)}
-    </FormRow>
-  );
+  const value = getValue();
+  return presentationFor(presentation).isStatic ? renderStatic(value) : renderEditor(value);
 };
 
 /** Read-only static rendering for a `Ref<Text>` value: resolve the ref and print its content. */

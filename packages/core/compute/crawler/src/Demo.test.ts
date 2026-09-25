@@ -16,13 +16,13 @@ import { expect } from 'vitest';
 import { Pipeline } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';
 
-import { AgentRegistry } from './AgentRegistry';
-import * as Crawler from './Crawler';
-import { agentProfileStage } from './stages/agent-profile';
-import { extractFactsStage } from './stages/extract-facts';
-import { extractTopics } from './stages/topics';
-import { type Fixture, TestLayer } from './testing';
-import type * as Type from './types';
+import * as AgentRegistry from './AgentRegistry.ts';
+import * as Crawler from './Crawler.ts';
+import { agentProfileStage } from './stages/agent-profile.ts';
+import { extractFactsStage } from './stages/extract-facts.ts';
+import { extractTopics } from './stages/topics.ts';
+import { type Fixture, TestLayer } from './testing/index.ts';
+import type * as Type from './types.ts';
 
 const FIXTURE_URL = new URL('../../pipeline-rdf/src/testing/discord-messages.json', import.meta.url);
 const fixture: Fixture = JSON.parse(readFileSync(FIXTURE_URL, 'utf8'));
@@ -43,7 +43,7 @@ describe('demo', () => {
         );
         const summary = { ...(yield* Crawler.summarize()), steps: yield* Ref.get(steps) };
 
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const store = yield* FactStore;
 
         const agents = yield* registry.list();

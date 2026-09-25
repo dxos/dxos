@@ -6,31 +6,24 @@ import React, {
   type ComponentPropsWithoutRef,
   type ForwardedRef,
   type PropsWithChildren,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import {
-  DropdownMenu,
-  Icon,
-  ScrollArea,
-  ScrollAreaRootProps,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Icon, Menu, ScrollArea, ScrollAreaRootProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
+
+import { StackContext, useStack, useStackContext } from './StackContext.ts';
 
 //
 // Types
@@ -58,7 +51,7 @@ export type StackContextValue = {
   onDelete: (id: string) => void;
 };
 
-type StackContextType = StackContextValue & {
+export type StackContextType = StackContextValue & {
   /** Container id used to scope Mosaic drag/drop. */
   id: string;
   eventHandler: DndContainerHandler;
@@ -66,19 +59,6 @@ type StackContextType = StackContextValue & {
   viewport: HTMLElement | null;
   setViewport: (element: HTMLElement | null) => void;
 };
-
-const StackContext = createContext<StackContextType | undefined>(undefined);
-
-const useStackContext = (consumer: string): StackContextType => {
-  const context = useContext(StackContext);
-  if (!context) {
-    throw new Error(`\`${consumer}\` must be used within \`Stack.Root\`.`);
-  }
-  return context;
-};
-
-/** Section-level callbacks consumed by stack sections. */
-export const useStack = (): StackContextValue => useStackContext('useStack');
 
 //
 // Root
@@ -219,50 +199,50 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>
-      <div className='p-1 bg-toolbar-surface'>
-        <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
-          <DropdownMenu.Trigger asChild>
+      <div className='p-1 dx-toolbar-surface'>
+        <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+          <Menu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>
               <Icon icon={icon} classNames='transition-opacity' />
             </AttentionSigilButton>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Content>
+              <Menu.Viewport>
                 {isCollapsed ? (
-                  <DropdownMenu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
+                  <Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
                     <Icon icon='ph--arrows-out-line-vertical--regular' />
                     <span className='ms-2 grow'>{t('expand.label')}</span>
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ) : (
-                  <DropdownMenu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
+                  <Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
                     <Icon icon='ph--arrows-in-line-vertical--regular' />
                     <span className='ms-2 grow'>{t('collapse.label')}</span>
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 )}
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item onClick={() => onAdd(id)} data-testid='section.add'>
+                <Menu.Separator />
+                <Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>
                   <Icon icon='ph--plus--regular' />
                   <span className='ms-2 grow'>{t('add-section.label')}</span>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
+                </Menu.Item>
+                <Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
                   <Icon icon='ph--arrow-line-up--regular' />
                   <span className='ms-2 grow'>{t('move-up.label')}</span>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
+                </Menu.Item>
+                <Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
                   <Icon icon='ph--arrow-line-down--regular' />
                   <span className='ms-2 grow'>{t('move-down.label')}</span>
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
                   <Icon icon='ph--trash--regular' />
                   <span className='ms-2 grow'>{t('remove-section.label')}</span>
-                </DropdownMenu.Item>
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+                </Menu.Item>
+              </Menu.Viewport>
+              <Menu.Arrow />
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
       </div>
       <div className='p-1'>
         {/* Inline glyph (not a sprite `Icon`) so the handle stays visible in the tile's native drag image. */}

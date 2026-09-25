@@ -6,9 +6,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { beforeEach, describe, test } from 'vitest';
 
-import { type Range } from '../../../types';
-import { join } from '../../../util';
-import { type Item, listItemToString, outlinerTree, treeFacet } from './tree';
+import { type Range } from '../../../types/index.ts';
+import { join } from '../../../util/index.ts';
+import { type Item, listItemToString, outlinerTree, treeFacet } from './tree.ts';
 
 const lines = [
   '- [ ] 1',
@@ -163,5 +163,44 @@ describe('tree (advanced)', () => {
       const last = tree.find(getPos(6))!;
       expect(tree.lastDescendant(item).index).to.eq(last.index);
     }
+  });
+});
+
+describe('tree (islands)', () => {
+  // Two top-level lists with prose between them: each list attaches to the root, and the prose belongs
+  // to no item rather than being swallowed as the previous item's continuation.
+  test('a second top-level list is a sibling of the first, not a child of its last item', ({ expect }) => {
+    const doc = join('- [ ] A', '- [ ] B', '', 'Prose between lists.', '', '- [ ] C');
+    const state = EditorState.create({ doc, extensions });
+    const tree = state.facet(treeFacet);
+    expect(tree.children.map((item) => item.level)).to.deep.eq([0, 0, 0]);
+    const [, b, c] = tree.children;
+    expect(c.parent).to.eq(tree);
+    expect(b.children).to.have.length(0);
+    // B ends at its own line; the prose is outside every item.
+    expect(state.doc.sliceString(b.lineRange.from, b.lineRange.to)).to.eq('- [ ] B');
+    expect(tree.find(doc.indexOf('Prose'))).to.be.undefined;
+    expect(tree.find(doc.indexOf('C'))).to.eq(c);
+  });
+
+  // A bare marker mid-typing (`-`, `- [ ]`) is a list item with no content yet; its ranges must stay
+  // inside the document, or the decorations ask for a line past the end.
+  test('a marker being typed keeps its ranges inside the document', ({ expect }) => {
+    for (const doc of ['-', '- [ ] A\nProse\n-', '- [ ] A\nProse\n- ', '- [ ] A\n- [ ]', '- [ ] A\n- [ ] ']) {
+      const tree = EditorState.create({ doc, extensions }).facet(treeFacet);
+      tree.traverse((item) => {
+        expect(item.contentRange.from, doc).to.be.at.most(item.contentRange.to);
+        expect(item.contentRange.to, doc).to.be.at.most(doc.length);
+        expect(item.lineRange.to, doc).to.be.at.most(doc.length);
+      });
+    }
+  });
+
+  test('leading prose belongs to no item', ({ expect }) => {
+    const doc = join('# Heading', '', 'Intro.', '', '- [ ] A');
+    const tree = EditorState.create({ doc, extensions }).facet(treeFacet);
+    expect(tree.find(0)).to.be.undefined;
+    expect(tree.find(doc.indexOf('Intro'))).to.be.undefined;
+    expect(tree.children).to.have.length(1);
   });
 });

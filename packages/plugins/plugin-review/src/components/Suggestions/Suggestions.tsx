@@ -4,13 +4,16 @@
 
 import React from 'react';
 
+import { useObject } from '@dxos/echo-react';
+import { type Text } from '@dxos/schema';
 import { type GroupPolicy } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '../../hooks';
-import { SuggestionAuthors } from './SuggestionAuthors';
-import { SuggestionSources } from './SuggestionSources';
-import { SuggestionThread } from './SuggestionThread';
+import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '#hooks';
+
+import { SuggestionAuthors } from './SuggestionAuthors.tsx';
+import { SuggestionSources } from './SuggestionSources.tsx';
+import { SuggestionThread } from './SuggestionThread.tsx';
 
 type VersionedObject = Parameters<typeof Branch.bind>[0];
 
@@ -22,8 +25,8 @@ const DEFAULT_GROUP: GroupPolicy = { maxGap: 24, respectBlockBoundaries: true };
 export type SuggestionsProps = {
   /** The versioned document whose `kind:'suggestion'` branches are reviewed. */
   document?: VersionedObject;
-  /** The base (main) content every suggestion branch is diffed against. */
-  base: string;
+  /** The base (main) text every suggestion branch is diffed against. */
+  base?: Text.Text;
   group?: GroupPolicy;
   authorLabels?: Record<string, string>;
   /** Author palette hues keyed by DID; aligns each suggestion's colour with its author's avatar/tag. */
@@ -82,17 +85,19 @@ export const Suggestions = ({
               onToggle={onToggleAuthor}
             />
           )}
-          <SuggestionThread
-            base={base}
-            sources={buildSuggestionSources(resolved.filter(({ author }) => !hidden.has(author)))}
-            group={group ?? DEFAULT_GROUP}
-            authorLabels={authorLabels}
-            authorHues={authorHues}
-            onAccept={onAccept}
-            onReject={onReject}
-            onSelect={onSelect}
-            selected={selected}
-          />
+          {resolved.length > 0 && (
+            <LiveSuggestionThread
+              base={base}
+              sources={buildSuggestionSources(resolved.filter(({ author }) => !hidden.has(author)))}
+              group={group ?? DEFAULT_GROUP}
+              authorLabels={authorLabels}
+              authorHues={authorHues}
+              onAccept={onAccept}
+              onReject={onReject}
+              onSelect={onSelect}
+              selected={selected}
+            />
+          )}
         </>
       )}
     </SuggestionSources>
@@ -100,3 +105,11 @@ export const Suggestions = ({
 };
 
 Suggestions.displayName = 'Suggestions';
+
+const LiveSuggestionThread = ({
+  base,
+  ...props
+}: Omit<React.ComponentProps<typeof SuggestionThread>, 'base'> & { base?: Text.Text }) => {
+  const [content = ''] = useObject(base, 'content');
+  return <SuggestionThread base={content} {...props} />;
+};

@@ -1,8 +1,7 @@
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2025 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 /** Context for items - stable, doesn't change when query changes */
 export type SearchListItemContextValue = {

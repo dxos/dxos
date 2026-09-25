@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Toolbox } from './toolbox';
+import { Toolbox } from './toolbox.ts';
 
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
@@ -41,7 +41,6 @@ if (argModuleStats) {
   // await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
-  // await toolbox.updateTsConfigPaths();
   await toolbox.updateTsConfigAll();
 }
 

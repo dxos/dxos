@@ -10,9 +10,6 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {

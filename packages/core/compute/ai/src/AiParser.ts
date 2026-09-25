@@ -4,14 +4,13 @@
 
 // @import-as-namespace
 
-import type * as Response from '@effect/ai/Response';
-import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type * as Response from 'effect/unstable/ai/Response';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -19,7 +18,7 @@ import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
-import { type StreamBlock, StreamTransform } from './parser';
+import { type StreamBlock, StreamTransform } from './parser/index.ts';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -37,6 +36,13 @@ enum ModelTags {
    * Used by DeepSeek.
    */
   THINK = 'think',
+
+  /**
+   * Chain of thought.
+   * Not prescribed by the instructions, but models write it unprompted; without the alias it
+   * falls through to the unknown-tag fallback and surfaces as literal text.
+   */
+  REASONING = 'reasoning',
   STATUS = 'status',
   ARTIFACT = 'artifact',
 
@@ -55,7 +61,10 @@ enum ModelTags {
   SURFACE = 'surface',
 }
 
-export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
+export interface ParseResponseCallbacks<
+  Tools extends Record<string, Tool.Any> = any,
+  Mode extends Response.ToolParametersMode = Response.ToolParametersMode,
+> {
   /**
    * Called when the stream begins.
    */
@@ -64,7 +73,7 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: Response.StreamPart<Tools>) => Effect.Effect<void>;
+  onPart: (part: Response.StreamPart<Tools, Mode>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -91,7 +100,10 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
   emitPartial?: boolean;
 }
 
-export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
+export interface ParseResponseOptions<
+  Tools extends Record<string, Tool.Any>,
+  Mode extends Response.ToolParametersMode = Response.ToolParametersMode,
+> extends ParseResponseCallbacks<Tools, Mode> {
   /**
    * Whether to parse reasoning tags: <cot> and <think>.
    */
@@ -107,15 +119,15 @@ export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> ex
  * nothing until the producer fiber yields (e.g. after many SSE parts or end of stream).
  */
 export const parseResponse =
-  <Tools extends Record<string, Tool.Any>>({
+  <Tools extends Record<string, Tool.Any>, Mode extends Response.ToolParametersMode = Response.ToolParametersMode>({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
     emitPartial = false,
-  }: Partial<ParseResponseOptions<Tools>> = {}) =>
-  <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  }: Partial<ParseResponseOptions<Tools, Mode>> = {}) =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<Tools, Mode>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.unwrap(
       Effect.gen(function* () {
         const transformer = new StreamTransform();
@@ -159,6 +171,13 @@ export const parseResponse =
         });
 
         const emitPartialBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          // An unclosed unknown tag would be serialized as its literal text (the fallback below),
+          // which flashes raw markup at the reader mid-stream; the text still arrives, complete,
+          // when the tag closes or the stream flushes.
+          if (streamBlock.type === 'tag' && !streamBlock.closed && !isModelTag(streamBlock.tag)) {
+            return;
+          }
+
           const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
           if (parsed) {
             parsed.pending = true;
@@ -180,7 +199,28 @@ export const parseResponse =
           }
         });
 
-        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
+        /**
+         * Finalizes a block left open when the stream ends mid-block, or when the provider opens the
+         * next block without closing this one; it would otherwise stay pending forever and invisible
+         * to the tool runner.
+         */
+        const flushBlock = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
+          if (!block) {
+            return;
+          }
+          log.warn('flushing unterminated block', { type: block._tag });
+          block.pending = false;
+          yield* emitFullBlock(block, out);
+          if (block._tag === 'toolCall') {
+            toolCalls++;
+          }
+          block = undefined;
+        });
+
+        const handlePart = Effect.fnUntraced(function* (
+          part: Response.StreamPart<Tools, Mode>,
+          out: ContentBlock.Any[],
+        ) {
           log('part', { type: part.type });
           yield* onPart(part);
           switch (part.type) {
@@ -279,7 +319,9 @@ export const parseResponse =
             }
 
             case 'tool-params-start': {
-              invariant(!block);
+              // Providers streaming parallel tool calls (the OpenAI dialect) may open the next call
+              // before closing the previous one; aborting the turn there loses the whole response.
+              yield* flushBlock(out);
               block = {
                 _tag: 'toolCall',
                 toolCallId: part.id,
@@ -300,7 +342,17 @@ export const parseResponse =
             }
 
             case 'tool-params-end': {
-              invariant(block?._tag === 'toolCall');
+              // A provider that batches its terminators (the OpenAI dialect, where the wire format
+              // has none per call) sends the end for a call already flushed when the next one
+              // opened. That block is complete, so the late terminator is redundant — closing the
+              // block that happens to be open instead would emit it under the wrong call's end.
+              if (block?._tag !== 'toolCall' || block.toolCallId !== part.id) {
+                log.warn('tool call terminator does not match the open block', {
+                  id: part.id,
+                  open: block?._tag === 'toolCall' ? block.toolCallId : block?._tag,
+                });
+                break;
+              }
               block.pending = false;
               yield* emitFullBlock(block, out);
               toolCalls++;
@@ -320,7 +372,12 @@ export const parseResponse =
                   _tag: 'toolResult',
                   toolCallId: part.id,
                   name: part.name,
-                  result: JSON.stringify(part.result),
+                  // `JSON.stringify(undefined)` is `undefined`, not a string. A tool that answers
+                  // with nothing — which is what a handler whose result failed its own schema
+                  // produces — then persists a block with no `result`, and every later request over
+                  // that conversation dies decoding it (`Missing key at [n]["result"]`). One bad
+                  // block must not brick the whole thread.
+                  result: part.result === undefined ? 'null' : JSON.stringify(part.result),
                   providerExecuted: part.providerExecuted,
                 } satisfies ContentBlock.ToolResult,
                 out,
@@ -329,17 +386,18 @@ export const parseResponse =
             }
 
             case 'reasoning-start': {
-              invariant(!block);
+              yield* flushBlock(out);
               block = {
                 _tag: 'reasoning',
                 reasoningText: '',
                 pending: true,
               } satisfies ContentBlock.Reasoning;
-              if (part.metadata.anthropic?.type === 'thinking') {
-                block.signature = part.metadata.anthropic.signature;
+              const info = part.metadata.anthropic?.info;
+              if (info?.type === 'thinking') {
+                block.signature = info.signature;
               }
-              if (part.metadata.anthropic?.type === 'redacted_thinking') {
-                block.redactedText = part.metadata.anthropic.redactedData;
+              if (info?.type === 'redacted_thinking') {
+                block.redactedText = info.redactedData;
               }
               yield* emitPartialContentBlock(block, out);
               break;
@@ -366,22 +424,23 @@ export const parseResponse =
 
             case 'response-metadata': {
               yield* flushText(out);
-              stats.model = Option.getOrUndefined(part.modelId);
+              stats.model = part.modelId;
               log('metadata', { metadata: part });
               break;
             }
 
             case 'finish': {
               yield* flushText(out);
-              const { inputTokens, outputTokens, totalTokens } = part.usage;
+              yield* flushBlock(out);
+              const { inputTokens, outputTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
               stats.finishReason = part.reason;
               stats.toolCalls = toolCalls;
               stats.usage = {
-                inputTokens,
-                outputTokens,
-                totalTokens,
+                inputTokens: inputTokens.total ?? 0,
+                outputTokens: outputTokens.total ?? 0,
+                totalTokens: (inputTokens.total ?? 0) + (outputTokens.total ?? 0),
               };
               yield* emitFullBlock(
                 {
@@ -407,19 +466,21 @@ export const parseResponse =
         yield* onBegin();
 
         const main = input.pipe(
-          Stream.mapConcatEffect((part) =>
+          Stream.mapEffect((part) =>
             Effect.gen(function* () {
               const out: ContentBlock.Any[] = [];
               yield* handlePart(part, out);
               return out;
             }),
           ),
+          Stream.flattenIterable,
         );
 
         const epilogue = Stream.fromIterableEffect(
           Effect.gen(function* () {
             const out: ContentBlock.Any[] = [];
             yield* flushText(out);
+            yield* flushBlock(out);
             log('end', { blocks, parts, summary: stats });
             yield* onEnd(stats);
             return out;
@@ -429,6 +490,8 @@ export const parseResponse =
         return Stream.concat(main, epilogue);
       }),
     );
+
+const isModelTag = (tag: string): boolean => (Object.values(ModelTags) as string[]).includes(tag);
 
 /**
  * @returns Mutable content block made from stream block.
@@ -454,7 +517,8 @@ const makeContentBlock = (
     case 'tag': {
       switch (block.tag) {
         case ModelTags.COT:
-        case ModelTags.THINK: {
+        case ModelTags.THINK:
+        case ModelTags.REASONING: {
           const content = block.content
             .map((block) => {
               switch (block.type) {

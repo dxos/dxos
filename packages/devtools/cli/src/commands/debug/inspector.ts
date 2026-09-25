@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 import * as Inspector from 'node:inspector/promises';
 
 import { ClientService } from '@dxos/client';

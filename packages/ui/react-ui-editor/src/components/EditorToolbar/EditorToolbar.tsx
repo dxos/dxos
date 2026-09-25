@@ -3,22 +3,28 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  ActionToolbar,
+  type MenuAction,
+  MenuBuilder,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { addBlocks } from './blocks';
-import { addFormatting } from './formatting';
-import { addHeadings } from './headings';
-import { addImageUpload } from './image';
-import { addLists } from './lists';
-import { addSearch } from './search';
-import { type EditorToolbarState } from './types';
-import { type ViewModeItem, addViewMode } from './view-mode';
+import { addBlocks } from './blocks.ts';
+import { addFormatting } from './formatting.ts';
+import { addHeadings } from './headings.ts';
+import { addImageUpload } from './image.ts';
+import { addLists } from './lists.ts';
+import { addSearch } from './search.ts';
+import { type EditorToolbarState } from './types.ts';
+import { type ViewModeItem, addViewMode } from './view-mode.ts';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 
@@ -51,7 +57,7 @@ export type EditorToolbarProps = ThemedClassName<
     role?: string;
     attendableId?: string;
     /** Handler for executing actions. Required when customActions use Operation.invoke. */
-    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
+    onAction?: (action: MenuAction, params: AppGraphNode.InvokeProps) => void;
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 
@@ -60,9 +66,7 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 
   return (
     <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
-      <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} />
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />
     </ElevationProvider>
   );
 });

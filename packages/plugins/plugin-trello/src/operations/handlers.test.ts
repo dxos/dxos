@@ -2,33 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
-import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
-import { Kanban } from '@dxos/plugin-kanban';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
-import getTrelloBoardsHandler from './get-trello-boards';
-import materializeTrelloTargetHandler from './materialize-target';
-import syncTrelloBoardHandler from './sync';
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
+import getTrelloBoardsHandler from './get-trello-boards.ts';
+import materializeTrelloTargetHandler from './materialize-target.ts';
+import syncTrelloBoardHandler from './sync.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
 type TrelloList = TrelloApi.TrelloList;
 
 // Stub the network layer so handlers run against fixtures, not real Trello.
-vi.mock('../services/trello-api', async () => {
-  const actual = await vi.importActual<typeof import('../services/trello-api')>('../services/trello-api');
+vi.mock('../services/trello-api.ts', async () => {
+  const actual = await vi.importActual<typeof import('../services/trello-api.ts')>('../services/trello-api.ts');
   const boards: TrelloBoard[] = [
     {
       id: 'board-a',
@@ -197,7 +197,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         throw new Error('expected external cursor');
       }
       return binding;
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FetchHttpClient.layer));
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), FetchHttpClient.layer)));
 
   test('full flow: GetTrelloBoards (discovery) → bind selection → SyncTrelloBoard syncs only chosen boards', async ({
     expect,
@@ -228,9 +228,9 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     expect(kanbansAfterBind).toHaveLength(1);
     expect(binding.spec.snapshots).toBeUndefined();
 
-    // 3. Sync: reconciles the bound board's cards.
+    // 3. Sync: fans out over the connection's bindings and reconciles each bound board's cards.
     const result = await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(binding) })
+      .handler({ connection: Ref.make(connection) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(result.pulled.added).toBe(1);
 
@@ -251,7 +251,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
   });
 
   test('failing fetch on a board writes lastError on its binding', async ({ expect }) => {
-    const trelloApi = await import('../services/trello-api');
+    const trelloApi = await import('../services/trello-api.ts');
     // Make fetchLists fail for board-b only.
     const fetchLists = trelloApi.fetchLists as unknown as ReturnType<typeof vi.fn>;
     fetchLists.mockImplementation((boardId: string) => {
@@ -268,7 +268,8 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       .handler({ connection: Ref.make(connection) })
       .pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
-    // Bind both boards.
+    // Both boards on ONE connection, so the single fan-out covers both: the failing binding must not
+    // interrupt or skip its healthy sibling (`Binding.syncAll` collects every outcome before failing).
     const bindingA = await bindTarget(db, connection, { id: 'board-a', name: 'Board A' }).pipe(
       EffectEx.runAndForwardErrors,
     );
@@ -277,17 +278,15 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     );
     expect(discovered.targets).toHaveLength(2);
 
-    // Board A syncs cleanly.
-    await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(bindingA) })
-      .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
+    // One invocation for the account; it fails because board B did.
+    const outcome = await syncTrelloBoardHandler
+      .handler({ connection: Ref.make(connection) })
+      .pipe(stubOperationService, Effect.provide(layer), Effect.result, EffectEx.runAndForwardErrors);
+    expect(outcome._tag).toBe('Failure');
+
+    // Board A still synced, and board B carries the reason.
     expect(bindingA.lastError).toBeUndefined();
     expect(bindingA.lastTick).toBeDefined();
-
-    // Board B fails — the sync handler fails and stamps the error on the binding.
-    await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(bindingB) })
-      .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
     expect(bindingB.lastError).toContain('boom');
     expect(bindingB.lastTick).toBeUndefined();
   });

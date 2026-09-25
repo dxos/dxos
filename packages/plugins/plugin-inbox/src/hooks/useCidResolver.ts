@@ -68,7 +68,7 @@ export const useCidResolver = (
           return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.catchAll(() => Effect.succeed(undefined)),
+          Effect.catch(() => Effect.succeed(undefined)),
         ),
       );
     };

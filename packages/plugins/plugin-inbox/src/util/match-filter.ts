@@ -22,6 +22,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: string[]): boolean
   if (!ast || typeof ast !== 'object') {
     return false;
   }
+
   switch (ast.type) {
     case 'and':
       return Array.isArray(ast.filters) && ast.filters.every((sub: any) => matchesAst(sub, message, tags));

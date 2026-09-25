@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
@@ -33,7 +35,7 @@ import { type Comment } from '@dxos/ui-editor/types';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorController } from '../components';
+import { Editor, type EditorController } from '../components/index.ts';
 
 random.seed(123);
 
@@ -125,7 +127,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
     <Editor.Root ref={editorRef} extensions={extensions}>
       <Editor.Content>
         <Editor.Toolbar classNames='dx-document' attendableId={DOCUMENT_ID} customActions={customActions} />
-        <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
+        <div className='dx-expand dx-document dx-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
         <CommentsList

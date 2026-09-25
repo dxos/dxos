@@ -4,10 +4,10 @@
 
 import { drag, pointer, select } from 'd3';
 
-import { type SVGContext } from '../../hooks';
-import { type Point } from '../../util';
-import { type GraphLayoutNode } from '../types';
-import { type GraphProjector } from './graph-projector';
+import { type SVGContext } from '../../hooks/index.ts';
+import { type Point } from '../../util/index.ts';
+import { type GraphLayoutNode } from '../types.ts';
+import { type GraphProjector } from './graph-projector.ts';
 
 enum Mode {
   MOVE = 0,

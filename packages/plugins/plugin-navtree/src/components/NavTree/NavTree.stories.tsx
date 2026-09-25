@@ -2,33 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
-import { storybookGraphBuilders } from '#testing';
+import { NavTreePlugin } from '#plugin';
+import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
-
-import { NavTreePlugin } from '../../NavTreePlugin';
 
 random.seed(1234);
 
-const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
+const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>()('org.dxos.test.storyState');
+
+// How many times a row's selection asked the layout to open it: the observable a story has, since
+// the tree's selection here is a model the stubbed layout never updates.
+let opens = 0;
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
@@ -76,7 +84,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       <Panel.Root
         {...attentionAttrs}
         role='article'
-        classNames='w-[30rem] shrink-0 h-full bg-base-surface border-e border-separator'
+        classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Content classNames='grid'>
@@ -85,14 +93,14 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
-            <Input.Root>
-              <Input.Label>Level 1 (group)</Input.Label>
-            </Input.Root>
-            <div className={mx(container, 'bg-base-surface')}>
-              <Input.Root>
-                <Input.Label>Level 2 (base)</Input.Label>
-                <Input.TextArea placeholder='Enter text' />
-              </Input.Root>
+            <Field.Root>
+              <Field.Label>Level 1 (group)</Field.Label>
+            </Field.Root>
+            <div className={mx(container, 'dx-base-surface')}>
+              <Field.Root>
+                <Field.Label>Level 2 (base)</Field.Label>
+                <Field.Textarea placeholder='Enter text' />
+              </Field.Root>
             </div>
           </div>
         </Panel.Content>
@@ -131,41 +139,49 @@ const UnavailableWorkspaceStory = () => {
   return <DefaultStory />;
 };
 
+const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
+  withLayout({ layout: 'fullscreen' }),
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      StorybookPlugin.make({
+        initialState: { sidebarState: 'expanded' },
+      }),
+
+      NavTreePlugin(),
+    ],
+    capabilities: () => {
+      const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
+      return [
+        Capability.contribute(StoryState, storyStateAtom),
+        Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders(graphOptions)),
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
+              Effect.gen(function* () {
+                const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+                registry.set(storyStateAtom, { tab: subject });
+              }),
+            ),
+            Operation.withHandler(LayoutOperation.Open, () =>
+              Effect.sync((): readonly string[] => {
+                opens += 1;
+                return [];
+              }),
+            ),
+          ),
+        ),
+      ];
+    },
+  }),
+];
+
 const meta = {
   title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin({
-          initialState: { sidebarState: 'expanded' },
-        }),
-
-        NavTreePlugin(),
-      ],
-      capabilities: () => {
-        const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
-        return [
-          Capability.contributes(StoryState, storyStateAtom),
-          Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contributes(
-            Capabilities.OperationHandler,
-            OperationHandlerSet.make(
-              Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
-                Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-                  registry.set(storyStateAtom, { tab: subject });
-                }),
-              ),
-            ),
-          ),
-        ];
-      },
-    }),
-  ],
+  decorators: navTreeDecorators(),
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -180,13 +196,13 @@ export const Default: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
-    // Plugin startup is async; the treegrid only appears after the Startup event
+    // Plugin startup is async; the tree only appears after the Startup event
     // fires and the graph is built. Use a generous timeout so slower CI runners
     // don't race the default 1 s limit.
-    const treegridElement = await canvas.findByRole('treegrid', {}, { timeout: 10000 });
-    const treegridParent = treegridElement.parentElement;
-    if (treegridParent) {
-      await userEvent.click(treegridParent);
+    const treeElement = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    const treeParent = treeElement.parentElement;
+    if (treeParent) {
+      await userEvent.click(treeParent);
     }
 
     // Press Escape
@@ -224,11 +240,61 @@ export const Default: Story = {
   },
 };
 
+/** Opening a row's action menu is not choosing the row: the menu stays open and the selection stays put. */
+export const RowMenu: Story = {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const tree = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    // A row's actions arrive once the row is hovered; level 0 is the workspace header outside the
+    // tree, so a row's menu is level 1 or deeper.
+    await userEvent.hover(await within(tree).findByText('Object 2', {}, { timeout: 10000 }));
+    const trigger = (
+      await within(tree).findAllByTestId(/navtree\.treeItem\.actionsLevel[1-9]/, {}, { timeout: 10000 })
+    )[0];
+    // The `treeitem` carries `aria-selected` for a leaf and a branch alike (a branch's visible row is
+    // its control, and its columns are siblings of it, not descendants).
+    const row = trigger.closest<HTMLElement>('[role="treeitem"]')!;
+    const selectedBefore = row.getAttribute('aria-selected');
+
+    opens = 0;
+    await userEvent.click(trigger);
+    const menu = await within(document.body).findByRole('menu');
+    await expect(menu).toBeVisible();
+    await expect(trigger).toHaveAttribute('data-state', 'open');
+    await expect(row.getAttribute('aria-selected')).toBe(selectedBefore);
+    // The operation is invoked asynchronously, so a beat before reading the count.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await expect(opens).toBe(0);
+
+    // The row itself still navigates.
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(within(row).getByTestId('treeItem.heading'));
+    await waitFor(() => expect(opens).toBe(1));
+  },
+};
+
 export const UnavailableWorkspace: Story = {
   render: UnavailableWorkspaceStory,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    // Plugin startup plus the message's own render delay; allow for a slow CI runner.
     await canvas.findByTestId('navtree.workspace.unavailable', {}, { timeout: 15000 });
+  },
+};
+
+export const PendingWorkspaces: Story = {
+  decorators: navTreeDecorators({ spaces: 'pending' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const items = await canvas.findAllByTestId('spacePlugin.space.pending', {}, { timeout: 15000 });
+    await expect(items).toHaveLength(3);
+  },
+};
+
+export const NoWorkspacesYet: Story = {
+  decorators: navTreeDecorators({ spaces: 'none' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('treeView.userAccount.pending', {}, { timeout: 15000 });
+    await expect(canvas.queryAllByTestId(/^spacePlugin\.space/)).toHaveLength(0);
   },
 };

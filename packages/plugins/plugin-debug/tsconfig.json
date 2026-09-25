@@ -13,6 +13,7 @@
   ],
   "include": [
     "dx.config.ts",
+    "scripts/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -23,6 +24,12 @@
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -40,13 +47,19 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/assistant-toolkit"
@@ -59,6 +72,9 @@
     },
     {
       "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/compute/operation"
@@ -79,7 +95,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/config"
@@ -106,16 +128,49 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-terminal"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-chess"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-game"
+    },
+    {
+      "path": "../plugin-google"
     },
     {
       "path": "../plugin-graph"
@@ -130,6 +185,15 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-sandbox"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {
@@ -137,6 +201,9 @@
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

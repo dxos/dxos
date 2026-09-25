@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { parseTrades } from '../services';
-import { IbkrOperation } from '../types';
-import { latestReport } from './feed';
+import { IbkrOperation } from '#types';
+
+import { parseTrades } from '../services/index.ts';
+import { latestReport } from './feed.ts';
 
 const lastWeekCutoff = (): string => {
   const date = new Date();

@@ -23,7 +23,7 @@ export interface Identity {
   readonly hue?: string;
 }
 
-export class AgentIdentity extends Context.Tag('@dxos/compute/AgentIdentity')<AgentIdentity, Identity>() {}
+export class AgentIdentity extends Context.Service<AgentIdentity, Identity>()('@dxos/compute/AgentIdentity') {}
 
 /**
  * The current author DID, or `undefined` when no {@link AgentIdentity} is in scope (e.g. a human-

@@ -8,8 +8,8 @@ import { Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
-import * as Segment from './Segment';
-import * as Trip from './Trip';
+import * as Segment from './Segment.ts';
+import * as Trip from './Trip.ts';
 
 describe('Trip', () => {
   let builder: EchoTestBuilder;

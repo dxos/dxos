@@ -6,16 +6,22 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
+import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
-import { type DatabaseImpl } from '../proxy-db';
-import { type QueryContext, type SourceEntry } from './query-context';
-import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing } from './util';
-import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
+import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
+import {
+  getTargetSpacesForQuery,
+  isSimpleSelectionQuery,
+  queryAggregateNeedsIndex,
+  queryHasWindowing,
+  queryTargetsSpacesOrFeeds,
+} from './util.ts';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor.ts';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -49,6 +55,12 @@ export interface QuerySource {
    * false so callers can defer the initial subscription event until real results arrive.
    */
   isSynchronous(): boolean;
+
+  /**
+   * Whether this source serves the current query and has yet to answer it. An asynchronous source
+   * stops pending once its first answer has been integrated, or once it fails.
+   */
+  isPending(): boolean;
 
   /**
    * One-shot query.
@@ -120,6 +132,13 @@ export class GraphQueryContext implements QueryContext {
       return false;
     }
     return Array.from(this._sources).some((source) => source.isSynchronous());
+  }
+
+  hasPendingSources(): boolean {
+    if (!this._query) {
+      return true;
+    }
+    return Array.from(this._sources).some((source) => source.isPending());
   }
 
   async run(
@@ -196,6 +215,7 @@ export class SpaceQuerySource implements QuerySource {
       allCores: () => _database.allObjectCores(),
       getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
       areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
+      areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
@@ -233,9 +253,10 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const resultIds = new Set(this._results.map((result) => result.id));
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       // If any updated object was in previous results, invalidate.
-      if (this._results!.find((result) => result.id === objectId)) {
+      if (resultIds.has(objectId)) {
         return true;
       }
 
@@ -285,10 +306,20 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   isSynchronous(): boolean {
-    // The working set serves space-scoped selections synchronously. Feed-only queries and queries
-    // with order/skip/limit clauses contribute nothing here (see `queryHasWindowing`), so they are
-    // not synchronous from this source's perspective.
-    return this._query !== undefined && this._servesSpaceScope(this._query) && !queryHasWindowing(this._query);
+    // The working set serves space-scoped selections synchronously. Feed-only queries, queries
+    // with order/skip/limit clauses (see `queryHasWindowing`) and aggregates the executor declines
+    // contribute nothing here, so they are not synchronous from this source's perspective.
+    return (
+      this._query !== undefined &&
+      this._servesSpaceScope(this._query) &&
+      !queryHasWindowing(this._query) &&
+      !queryAggregateNeedsIndex(this._query)
+    );
+  }
+
+  /** The working set is scanned on read, so this source never has an answer outstanding. */
+  isPending(): boolean {
+    return false;
   }
 
   getResults(): SourceEntry<Obj.Unknown>[] {
@@ -372,6 +403,10 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
+    if (queryContainsChanges(query)) {
+      return false;
+    }
+
     const targetSpaces = getTargetSpacesForQuery(query);
     // Disabled by spaces filter.
     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {
@@ -379,17 +414,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     // Disabled if the from clause has explicit scopes but none target spaces or feeds (e.g. registry-only).
-    let hasExplicitNonEmptyScope = false;
-    let hasSpaceOrFeedScope = false;
-    QueryAST.visit(query, (node) => {
-      if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
-        hasExplicitNonEmptyScope = true;
-        if (node.from.scopes.some((s) => s._tag === 'space' || s._tag === 'feed')) {
-          hasSpaceOrFeedScope = true;
-        }
-      }
-    });
-    if (hasExplicitNonEmptyScope && !hasSpaceOrFeedScope) {
+    if (!queryTargetsSpacesOrFeeds(query)) {
       return false;
     }
 
@@ -416,12 +441,17 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
+    // A core whose body has not landed matches nothing — there is no document to filter against.
+    const structure = core.getObjectStructure();
+    if (structure === undefined) {
+      return false;
+    }
     return (
       this._database.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchDoc(filter, {
         id: core.id,
-        doc: core.getObjectStructure(),
+        doc: structure,
         spaceId: this.spaceId,
       })
     );

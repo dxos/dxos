@@ -5,13 +5,13 @@
 import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type DeckOperation } from '#types';
+import { DeckOperation } from '#types';
 
-import { type PlankCapabilities } from './useDeckPlank';
+import { type PlankCapabilities } from './useDeckPlank.ts';
 
 export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
 
@@ -29,9 +29,11 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { invokePromise } = useOperationInvoker();
+    // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
+    // target from attention instead would close whichever plank happened to be attended.
     const handleCloseCompanion = useCallback(() => {
-      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
-    }, [invokePromise]);
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null, anchor: primary });
+    }, [invokePromise, primary]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl

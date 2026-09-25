@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { BaseError } from './base';
+import { BaseError } from './base.ts';
 
 export class ApiError extends BaseError.extend('ApiError', 'API error') {}
 

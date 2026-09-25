@@ -7,13 +7,26 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Stream from 'effect/Stream';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
-import type * as Trace from './Trace';
-import { Instructions } from './types';
+import type * as Trace from './Trace.ts';
+import { Instructions } from './types/index.ts';
+
+/**
+ * Structural view of the `Chat` object (`@dxos/assistant/Chat`): the durable conversation an agent
+ * runs on, carrying its message feed and the instructions steering it. Declared structurally
+ * because `@dxos/assistant` sits above this package.
+ */
+export interface Conversation extends Obj.Unknown {
+  readonly feed: Ref.Ref<Feed.Feed>;
+  readonly instructions?: Ref.Ref<Instructions.Instructions>;
+  /** The selected model, a ref whose URI is the model DXN; unset runs the agent's default. */
+  readonly model?: Ref.Ref<Obj.Unknown>;
+}
 
 /**
  * Service interface for the agent session manager.
@@ -21,9 +34,10 @@ import { Instructions } from './types';
  */
 export interface Service {
   /**
-   * Gets or creates a session for a feed.
+   * Gets or creates a session for a chat. The agent process is bound to the chat (its spawn
+   * target), reading the feed, the steering instructions and the model from it.
    */
-  getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
+  getSession: (chat: Conversation, options?: GetSessionOptions) => Effect.Effect<Session, never, Database.Service>;
 
   /**
    * Hydrates agent processes persisted by a previous session.
@@ -32,14 +46,22 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
+
+/** Re-exported so callers importing this module as a namespace avoid `AgentService.AgentService.key`. */
+export const key = AgentService.key;
 
 /**
  * Handle to an agent session.
  */
 export interface Session {
   /**
-   * The feed that the session is associated with.
+   * The chat that the session is associated with.
+   */
+  readonly chat: Conversation;
+
+  /**
+   * The feed carrying the chat's messages.
    */
   readonly feed: Feed.Feed;
 
@@ -59,6 +81,12 @@ export interface Session {
   submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
 
   /**
+   * True while the agent is working on a turn (running, or waiting on a tool call or alarm); false
+   * when it is idle awaiting input, or terminal.
+   */
+  readonly running: Atom.Atom<boolean>;
+
+  /**
    * Wait until agent has completed its work.
    */
   waitForCompletion: () => Effect.Effect<void>;
@@ -73,26 +101,33 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    *
    * When forking a collector from a short-lived parent (e.g. `useEffect` +
-   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDaemon} so the
+   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 }
 
-export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
+  AgentService.use((service) => service.getSession(...args));
 
-export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
+export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
+  AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
-  readonly model?: DXN.DXN;
-  // The catalog's shared model ids are served by several providers, so the provider must accompany
-  // the model into the agent process — the id alone does not identify a resolver.
+  // The model is read off the chat (see `Conversation.model`), but the catalog's shared model ids are
+  // served by several providers, so the provider must still accompany it into the agent process —
+  // the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
   /**
-   * Instructions steering the conversation (typically the Chat's `instructions` ref), persisted as a
-   * spawn annotation so a re-hydrated process recovers it. Read at spawn only: repointing requires a
-   * process restart (same staleness model as `model`/`provider`).
+   * Where the agent runs. `local` executes it in this runtime; `edge` spawns it on the remote host
+   * reached through `RemoteProcessManager.Service`, so the conversation continues with the client
+   * closed. Read at spawn only, like `model` — moving a live conversation between runtimes would
+   * mean handing one process's durable state to another.
+   *
+   * @default 'local'
    */
-  readonly instructions?: Ref.Ref<Instructions.Instructions>;
+  readonly location?: AgentLocation;
 }
+
+export type AgentLocation = 'local' | 'edge';

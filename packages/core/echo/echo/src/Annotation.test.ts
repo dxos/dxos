@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as JsonSchema from './JsonSchema.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Type from './Type.ts';
 
 describe('Annotation', () => {
   describe('make', () => {
@@ -443,7 +444,7 @@ describe('Annotation', () => {
     // Record-valued annotation mirroring a per-key ordering (e.g. SectionOrderAnnotation).
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const Container = Type.makeObject(DXN.make('com.example.type.container', '0.1.0'))(
       Schema.Struct({ name: Schema.String }),
@@ -455,7 +456,7 @@ describe('Annotation', () => {
       });
 
     test('atomProperty reads the typed slice for a key', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
 
@@ -464,7 +465,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty returns undefined for a missing key or annotation', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
 
       const missingAnnotation = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
@@ -476,7 +477,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty updates when its own key changes', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'] });
 
@@ -493,7 +494,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty reflects only its own key', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
 
@@ -505,8 +506,16 @@ describe('Annotation', () => {
       expect(registry.get(atomA)).toEqual(['x', 'y']);
     });
 
+    test('atom is one atom per target and annotation', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      expect(Annotation.atom(obj, OrderAnnotation)).toBe(Annotation.atom(obj, OrderAnnotation));
+      expect(Annotation.atom(obj, OrderAnnotation)).not.toBe(
+        Annotation.atom(Obj.make(Container, { name: 'B' }), OrderAnnotation),
+      );
+    });
+
     test('atom exposes the whole annotation value as an Option', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
 
       const wholeAtom = Annotation.atom(obj, OrderAnnotation);
@@ -520,11 +529,11 @@ describe('Annotation', () => {
   describe('reactive in-place mutation', () => {
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.mutable-order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const RefOrderAnnotation = Annotation.make({
       id: 'org.dxos.test.mutable-ref-order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Ref.Ref(Obj.Unknown))),
     });
     const Item = Type.makeObject(DXN.make('com.example.type.mutableItem', '0.1.0'))(
       Schema.Struct({ name: Schema.String }),
@@ -534,7 +543,7 @@ describe('Annotation', () => {
     );
 
     test('push to an annotation array in place without Annotation.set', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
 
@@ -549,7 +558,7 @@ describe('Annotation', () => {
     });
 
     test('splice an annotation array in place reorders the value', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y', 'z'] }));
 
@@ -588,7 +597,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty notifies subscribers when a Ref array is reordered in place', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       const a = Obj.make(Item, { name: 'a' });
       const b = Obj.make(Item, { name: 'b' });
@@ -614,7 +623,7 @@ describe('Annotation', () => {
     });
 
     test('reorder snapshot does not touch ref targets (tolerates cyclic targets)', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       const a = Obj.make(Item, { name: 'a' });
       // The annotation on `obj` holds a ref back to `obj`, so a loaded target forms a cycle —
@@ -636,7 +645,7 @@ describe('Annotation', () => {
     });
 
     test('Annotation.update mutates in place (wraps its own change)', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
 
@@ -680,6 +689,126 @@ describe('Annotation', () => {
         // OrderAnnotation values must be string arrays; a number element violates the schema.
         // @ts-expect-error intentional type violation to exercise runtime validation
         expect(() => Annotation.set(obj, OrderAnnotation, { typeA: [1] })).toThrow();
+      });
+    });
+  });
+
+  describe('UserType', () => {
+    test('reads back the tags it was set with', ({ expect }) => {
+      const plain = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set());
+      const tagged = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a', 'b'] }));
+      const untyped = Schema.Struct({ name: Schema.String });
+
+      expect(Annotation.UserType.get(plain).pipe(Option.getOrUndefined)).toEqual({});
+      expect(Annotation.UserType.get(tagged).pipe(Option.getOrUndefined)).toEqual({ tags: ['a', 'b'] });
+      expect(Option.isNone(Annotation.UserType.get(untyped))).toBe(true);
+    });
+
+    test('survives persisting the schema', ({ expect }) => {
+      const schema = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a'] }));
+      const restored = JsonSchema.toEffectSchema(JsonSchema.toJsonSchema(schema));
+
+      expect(Annotation.UserType.get(restored).pipe(Option.getOrUndefined)).toEqual({ tags: ['a'] });
+    });
+  });
+
+  describe('SetParent', () => {
+    class Body extends Type.makeObject<Body>(DXN.make('com.example.type.setParentBody', '0.1.0'))(
+      Schema.Struct({ text: Schema.String }),
+    ) {}
+
+    class Holder extends Type.makeObject<Holder>(DXN.make('com.example.type.setParentHolder', '0.1.0'))(
+      Schema.Struct({
+        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set())),
+        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
+        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
+        linked: Schema.optional(Ref.Ref(Body)),
+      }),
+    ) {}
+
+    test('parents the targets of annotated fields on creation', ({ expect }) => {
+      const body = Obj.make(Body, { text: 'body' });
+      const section = Obj.make(Body, { text: 'section' });
+      const config = Obj.make(Body, { text: 'config' });
+      const linked = Obj.make(Body, { text: 'linked' });
+      const holder = Obj.make(Holder, {
+        body: Ref.make(body),
+        sections: [Ref.make(section)],
+        nested: { config: Ref.make(config) },
+        linked: Ref.make(linked),
+      });
+
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
+      expect(Obj.getParent(config)?.id).toBe(holder.id);
+      // An un-annotated ref field is a plain reference, not ownership.
+      expect(Obj.getParent(linked)).toBeUndefined();
+    });
+
+    test('parents the target on write, and re-parents when the ref moves', ({ expect }) => {
+      const holder = Obj.make(Holder, { sections: [] });
+      const other = Obj.make(Holder, { sections: [] });
+      const body = Obj.make(Body, { text: 'body' });
+      expect(Obj.getParent(body)).toBeUndefined();
+
+      Obj.update(holder, (holder) => {
+        holder.body = Ref.make(body);
+      });
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
+
+      Obj.update(other, (other) => {
+        other.body = Ref.make(body);
+      });
+      expect(Obj.getParent(body)?.id).toBe(other.id);
+    });
+
+    test('appending to an annotated array field parents the appended target', ({ expect }) => {
+      const holder = Obj.make(Holder, { sections: [] });
+      const section = Obj.make(Body, { text: 'section' });
+
+      Obj.update(holder, (holder) => {
+        holder.sections.push(Ref.make(section));
+      });
+
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
+    });
+
+    describe('override: false', () => {
+      class Shelf extends Type.makeObject<Shelf>(DXN.make('com.example.type.setParentShelf', '0.1.0'))(
+        Schema.Struct({
+          items: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set({ override: false })),
+        }),
+      ) {}
+
+      test('claims a target that has no parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+
+        expect(Obj.getParent(body)?.id).toBe(shelf.id);
+      });
+
+      test('leaves a target that already has a parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const parent = Obj.make(Holder, { sections: [Ref.make(body)] });
+        const shelf = Obj.make(Shelf, { items: [] });
+
+        Obj.update(shelf, (shelf) => {
+          shelf.items.push(Ref.make(body));
+        });
+
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
+      });
+
+      test('a later overriding field still takes the target', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+        const parent = Obj.make(Holder, { sections: [] });
+
+        Obj.update(parent, (parent) => {
+          parent.sections.push(Ref.make(body));
+        });
+
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
       });
     });
   });

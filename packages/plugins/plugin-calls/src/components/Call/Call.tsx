@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { useDebugMode } from '#hooks';
 import { CallsCapabilities } from '#types';
 
-import { type CallManager } from '../../calls';
-import { AudioStream } from '../Media';
-import { ParticipantGrid } from '../Participant';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { type CallManager } from '../../calls/index.ts';
+import { AudioStream } from '../Media/index.ts';
+import { ParticipantGrid } from '../Participant/index.ts';
+import { Toolbar, type ToolbarProps } from './Toolbar.tsx';
 
 //
 // Root
@@ -60,7 +60,7 @@ const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
 const CallViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: 'relative dx-container flex flex-col' })} ref={forwardedRef}>
+  <div {...composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
     {children}
   </div>
 ));
@@ -72,9 +72,15 @@ CallViewport.displayName = CALL_VIEWPORT_NAME;
 //
 
 // Resolves the manager directly (not via Call.Root): audio playback is global and is mounted at
-// the app root (react-root) outside any Call.Root.
+// the app root (react-root) outside any Call.Root. The manager rides the client-initialized
+// event and this root mounts eagerly, so read it optionally and render nothing until it exists
+// (an empty audio sink is correct while there is no call).
 const CallAudio = () => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = useOptionalCapability(CallsCapabilities.Manager);
+  return call ? <CallAudioStream call={call} /> : null;
+};
+
+const CallAudioStream = ({ call }: { call: CallManager }) => {
   const audioTracksToPlay = useAtomValue(call.audioTracksToPlayAtom);
   return <AudioStream tracks={audioTracksToPlay} />;
 };

@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import {
-  Input,
+  Field,
   ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
@@ -18,14 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import {
-  MAX_MIN_INTERVAL_SECONDS,
-  clampSchedule,
-  describeCron,
-  fromCron,
-  scheduleIntervalSeconds,
-  scheduleToCron,
-} from './cron';
+import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron.ts';
+import { type Day, Days } from './days.ts';
+import { describeSchedule } from './describe-schedule.ts';
 
 //
 // Value model.
@@ -40,20 +35,10 @@ export const ScheduleKinds = [
   'monthly',
   'custom',
 ] as const;
+
 export type ScheduleKind = (typeof ScheduleKinds)[number];
 
 const isScheduleKind = (value: string): value is ScheduleKind => (ScheduleKinds as readonly string[]).includes(value);
-
-export const Days = [
-  { value: 'mon', label: 'Mon' },
-  { value: 'tue', label: 'Tue' },
-  { value: 'wed', label: 'Wed' },
-  { value: 'thu', label: 'Thu' },
-  { value: 'fri', label: 'Fri' },
-  { value: 'sat', label: 'Sat' },
-  { value: 'sun', label: 'Sun' },
-] as const;
-export type Day = (typeof Days)[number]['value'];
 
 /** Discriminated schedule value. Times are `HH:mm` (24h); `once.date` is `YYYY-MM-DDTHH:mm`. */
 export type ScheduleValue =
@@ -328,7 +313,7 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const Field = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+const LabelledRow = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
   <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
@@ -339,29 +324,29 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
   const { t } = useTranslation(meta.profile.key);
   switch (value.kind) {
     // case 'once':
-    // `Input.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
+    // `Field.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
     // of `Schedule.Body`'s row while still sharing the input context that wires the picker to the field.
     // return (
-    //   <Input.Root>
+    //   <Field.Root>
     //     <div>
-    //       <Field label={t('schedule.at.label')}>
-    //         <Input.DateTime
-    //           classNames='min-w-0 overflow-hidden'
+    //       <LabelledRow label={t('schedule.at.label')}>
+    //         <Field.DateTime
+    //           classNames='overflow-hidden'
     //           hourCycle={12}
     //           value={value.date ?? ''}
     //           onValueChange={(date) => onChange({ kind: 'once', date: date || undefined })}
     //         />
-    //         <Input.TriggerIcon />
-    //       </Field>
+    //         <Field.TriggerIcon />
+    //       </LabelledRow>
     //     </div>
-    //   </Input.Root>
+    //   </Field.Root>
     // );
 
     case 'hourly':
       return (
-        <Field label={t('schedule.minute.label')}>
-          <Input.Root>
-            <Input.TextInput
+        <LabelledRow label={t('schedule.minute.label')}>
+          <Field.Root>
+            <Field.Input
               type='number'
               min={0}
               max={59}
@@ -373,27 +358,27 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 onChange({ kind: 'hourly', minute });
               }}
             />
-          </Input.Root>
-        </Field>
+          </Field.Root>
+        </LabelledRow>
       );
 
     case 'daily':
       return (
-        <Field label={t('schedule.at.label')}>
-          <Input.Root>
-            <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
-          </Input.Root>
-        </Field>
+        <LabelledRow label={t('schedule.at.label')}>
+          <Field.Root>
+            <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
+          </Field.Root>
+        </LabelledRow>
       );
 
     case 'weekly':
       return (
-        <div className='@container dx-inline-size-container min-w-0 flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
-          <Field label={t('schedule.at.label')}>
-            <Input.Root>
-              <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Input.Root>
-          </Field>
+        <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
+          <LabelledRow label={t('schedule.at.label')}>
+            <Field.Root>
+              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+            </Field.Root>
+          </LabelledRow>
           <div className='flex shrink-0 items-center gap-2'>
             <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
             <div className='grid w-max shrink-0 grid-cols-7 gap-x-2'>
@@ -401,8 +386,8 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const checked = value.days.includes(day);
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
-                    <Input.Root>
-                      <Input.Checkbox
+                    <Field.Root>
+                      <Field.Checkbox
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -414,9 +399,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
-                      <Input.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Input.Label>
-                      <Input.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Input.Label>
-                    </Input.Root>
+                      <Field.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Field.Label>
+                      <Field.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Field.Label>
+                    </Field.Root>
                   </div>
                 );
               })}
@@ -428,9 +413,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
     case 'monthly':
       return (
         <div className='flex items-center gap-3'>
-          <Field label={t('schedule.day.label')}>
-            <Input.Root>
-              <Input.TextInput
+          <LabelledRow label={t('schedule.day.label')}>
+            <Field.Root>
+              <Field.Input
                 type='number'
                 min={1}
                 max={31}
@@ -442,28 +427,28 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   onChange({ ...value, day });
                 }}
               />
-            </Input.Root>
-          </Field>
-          <Field label={t('schedule.at.label')}>
-            <Input.Root>
-              <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Input.Root>
-          </Field>
+            </Field.Root>
+          </LabelledRow>
+          <LabelledRow label={t('schedule.at.label')}>
+            <Field.Root>
+              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+            </Field.Root>
+          </LabelledRow>
         </div>
       );
 
     case 'custom':
       return (
-        <Field label={t('schedule.cron.label')}>
-          <Input.Root>
-            <Input.TextInput
+        <LabelledRow label={t('schedule.cron.label')}>
+          <Field.Root>
+            <Field.Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}
               onChange={(event) => onChange({ kind: 'custom', cron: event.target.value })}
             />
-          </Input.Root>
-        </Field>
+          </Field.Root>
+        </LabelledRow>
       );
   }
 };
@@ -471,57 +456,3 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 //
 // Summary.
 //
-
-const DAY_NAMES: Record<Day, string> = {
-  mon: 'Monday',
-  tue: 'Tuesday',
-  wed: 'Wednesday',
-  thu: 'Thursday',
-  fri: 'Friday',
-  sat: 'Saturday',
-  sun: 'Sunday',
-};
-
-/** Format a `HH:mm` (24h) time as a 12-hour clock string, e.g. `9:00 AM`. */
-const formatTime = (time: string): string => {
-  const [h, m] = time.split(':').map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) {
-    return time;
-  }
-
-  const period = h < 12 ? 'AM' : 'PM';
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
-};
-
-const withZone = (text: string, timezone?: string): string => (timezone ? `${text} ${timezone}` : text);
-
-/** Human-readable summary of the schedule, suitable for the header. */
-// TODO(wittjosiah): Just use cronstrue for all cases?
-export const describeSchedule = (value: ScheduleValue, timezone?: string): string => {
-  switch (value.kind) {
-    // case 'once':
-    //   return value.date
-    //     ? `Runs once at ${formatTime(value.date.slice(11))} on ${value.date.slice(0, 10)}`
-    //     : 'Runs once';
-    case 'hourly':
-      return `Runs every hour at minute ${value.minute}`;
-    case 'daily':
-      return withZone(`Runs every day at ${formatTime(value.time)}`, timezone);
-    case 'weekly': {
-      const days =
-        value.days.length === 0
-          ? 'no days'
-          : value.days.length === 1
-            ? DAY_NAMES[value.days[0]]
-            : Days.filter((d) => value.days.includes(d.value))
-                .map((d) => d.label)
-                .join(', ');
-      return withZone(`Runs every ${days} at ${formatTime(value.time)}`, timezone);
-    }
-    case 'monthly':
-      return withZone(`Runs monthly on day ${value.day} at ${formatTime(value.time)}`, timezone);
-    case 'custom':
-      return withZone(describeCron(value.cron), timezone);
-  }
-};

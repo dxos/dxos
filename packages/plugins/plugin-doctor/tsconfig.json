@@ -23,7 +23,10 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/log"
@@ -41,13 +44,13 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -62,7 +65,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

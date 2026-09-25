@@ -10,9 +10,9 @@ import { DXN, Ref, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
 
-import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
-import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
-import { randomText } from './util';
+import { SpaceObjectGenerator, TestObjectGenerator } from './generator.ts';
+import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types.ts';
+import { randomText } from './util.ts';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
@@ -36,18 +36,18 @@ export enum TestSchemaType {
  */
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({
-    title: Schema.String.annotations({ description: 'title of the document' }),
+    title: Schema.String.annotate({ description: 'title of the document' }),
     content: Schema.String,
   }).pipe(Type.makeObject(DXN.make(TestSchemaType.document, '0.1.0')));
 
   const organization = Schema.Struct({
-    name: Schema.String.annotations({ description: 'name of the company or organization' }),
-    website: Schema.optional(Schema.String.annotations({ description: 'public website URL' })),
-    description: Schema.String.annotations({ description: 'short summary of the company' }),
+    name: Schema.String.annotate({ description: 'name of the company or organization' }),
+    website: Schema.optional(Schema.String.annotate({ description: 'public website URL' })),
+    description: Schema.String.annotate({ description: 'short summary of the company' }),
   }).pipe(Type.makeObject(DXN.make(TestSchemaType.organization, '0.1.0')));
 
   const contact = Schema.Struct({
-    name: Schema.String.annotations({ description: 'name of the person' }),
+    name: Schema.String.annotate({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
     org: Schema.optional(Ref.Ref(organization)),
     lat: Schema.optional(Schema.Number),
@@ -55,7 +55,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   }).pipe(Type.makeObject(DXN.make(TestSchemaType.contact, '0.1.0')));
 
   const project = Schema.Struct({
-    name: Schema.String.annotations({ description: 'name of the project' }),
+    name: Schema.String.annotate({ description: 'name of the project' }),
     description: Schema.String,
     website: Schema.String,
     repo: Schema.String,

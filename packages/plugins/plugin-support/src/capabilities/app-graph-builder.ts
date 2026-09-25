@@ -4,22 +4,26 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { Annotation, Obj } from '@dxos/echo';
-import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
-import { Attention } from '@dxos/react-ui-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { WelcomeDismissedAnnotation } from '../annotations';
-import { SHORTCUTS_DIALOG } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants.ts';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -31,22 +35,36 @@ const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.pro
 const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.profile.key }];
 const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
 const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
-const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.profile.key }];
-const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.profile.key }];
+
+const makeHelpCompanion = () =>
+  AppNode.makeCompanion({
+    variant: 'help',
+    label: HELP_COMPANION_LABEL,
+    icon: 'ph--info--regular',
+    data: 'help',
+    position: Position.last,
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+    // Read the settings through their atom so the "discord" extension establishes a reactive
+    // dependency and re-evaluates when the setting changes or the capability lands (dependency
+    // modules contribute individually, not batched per wave).
+    const settingsCapabilityAtom = yield* Capability.atom(SupportCapabilities.Settings);
+
+    const showHelpCompanions = (get: Atom.AtomContext): boolean => {
+      const [settingsAtom] = get(settingsCapabilityAtom);
+      return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
+    };
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: HelpOperation.Start.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -63,7 +81,7 @@ export default Capability.makeModule(
                 testId: 'helpPlugin.openHelp',
               },
             }),
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'openShortcuts',
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -85,26 +103,27 @@ export default Capability.makeModule(
       // Plank companion: contributes a "Help" panel for every ECHO object
       // article. The panel surface (`help-companion` in react-surface)
       // renders the owning plugin's `meta.description`.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'helpCompanion',
-        match: NodeMatcher.whenEchoObject,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'help',
-              label: HELP_COMPANION_LABEL,
-              icon: 'ph--info--regular',
-              data: 'help',
-              position: Position.last,
-            }),
-          ]),
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObject,
+        connector: (_object, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
+      }),
+
+      AppGraphBuilder.createExtension({
+        id: 'homeHelpCompanion',
+        relation: AppNode.companion,
+        match: (node) =>
+          node.type === SpaceSchema.SPACE_HOME_NODE_TYPE ? Option.some(node) : Option.none<AppGraphNode.Node>(),
+        connector: (_node, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
       }),
 
       // Deck companion: feedback / help tab in the complementary sidebar (R1).
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'help',
-        match: NodeMatcher.whenRoot,
+        relation: AppNode.companion,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -121,10 +140,15 @@ export default Capability.makeModule(
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
       // Hidden by default; toggled via the showDiscordCompanion setting.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'discord',
-        match: NodeMatcher.whenRoot,
+        relation: AppNode.companion,
+        match: GraphNodeMatcher.whenRoot,
         connector: (_root, get) => {
+          const [settingsAtom] = get(settingsCapabilityAtom);
+          if (!settingsAtom) {
+            return Effect.succeed([]);
+          }
           const settings = get(settingsAtom);
           if (!settings.showDiscordCompanion) {
             return Effect.succeed([]);
@@ -140,60 +164,8 @@ export default Capability.makeModule(
           ]);
         },
       }),
-
-      // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
-      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
-      // conditional on the personal space and the welcome not being dismissed — read reactively via
-      // the space properties atom so the actions appear/disappear live without a React re-render cycle.
-      GraphBuilder.createExtension({
-        id: 'spaceHomeActions',
-        match: (node): Option.Option<Space> => {
-          const space = (node.properties as { space?: unknown }).space;
-          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
-        },
-        actions: (space, get) => {
-          const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
-          const isDismissed = properties
-            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-            : false;
-          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
-          if (!showActions) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            Node.makeAction({
-              id: HelpOperation.Start.meta.key,
-              data: Effect.fnUntraced(function* () {
-                yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, showHints: true }));
-                yield* Operation.invoke(HelpOperation.Start);
-              }),
-              properties: {
-                label: START_TOUR_LABEL,
-                icon: 'ph--path--regular',
-                iconOnly: false,
-                disposition: 'toolbar',
-                testId: 'supportPlugin.startTour',
-              },
-            }),
-            Node.makeAction({
-              id: HelpOperation.HideWelcome.meta.key,
-              data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(HelpOperation.HideWelcome, { space });
-              }),
-              properties: {
-                label: HIDE_WELCOME_LABEL,
-                icon: 'ph--eye-slash--regular',
-                iconOnly: false,
-                disposition: 'toolbar',
-                testId: 'supportPlugin.hideWelcome',
-              },
-            }),
-          ]);
-        },
-      }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

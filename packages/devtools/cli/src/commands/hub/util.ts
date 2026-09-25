@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Config from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import path from 'node:path';
 
 import { ConfigService } from '@dxos/client';
@@ -19,7 +19,13 @@ export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error'
 
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  return config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+  const url = config.values?.runtime?.services?.hub?.url;
+  if (!url) {
+    // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+    // was edited — report that rather than silently substituting a DXOS-operated host.
+    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+  }
+  return url;
 });
 
 /**
@@ -35,7 +41,7 @@ export const hubApiRequest = <T>(
   options?: { body?: unknown; query?: Record<string, string> },
 ) =>
   Effect.gen(function* () {
-    const apiKey = yield* Config.string('DX_HUB_API_KEY');
+    const apiKey = yield* Config.String('DX_HUB_API_KEY');
     const baseUrl = yield* hubBaseUrl;
 
     const url = new URL(path.join(baseUrl, apiPath));
@@ -58,7 +64,7 @@ export const hubApiRequest = <T>(
 
     const envelope = result as unknown as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new HubApiError({ message: envelope.message }));
+      return yield* Effect.fail(new HubApiError({ message: envelope.message }));
     }
     return envelope.data as T;
   });

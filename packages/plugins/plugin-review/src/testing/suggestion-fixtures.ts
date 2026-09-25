@@ -3,7 +3,7 @@
 //
 
 import { Text as EchoText, Obj } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { random } from '@dxos/random';
 import { type Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
@@ -75,8 +75,8 @@ export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.
   for (const agent of STORY_AGENTS) {
     const branch = await Branch.suggestion(doc, parent, agent.did);
     const binding = await Branch.bind(doc, branch);
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', agent.content);
+    Obj.update(binding.object, (object) => {
+      EchoText.update(object, 'content', agent.content);
     });
     binding.dispose();
   }

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, formatSpace, getSpace, print, printSpace, spaceIdWithDefault } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -39,7 +39,7 @@ export const info = Command.make(
   'info',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    wait: Options.integer('wait').pipe(
+    wait: Options.Int('wait').pipe(
       Options.withDescription(
         'Wait up to this many seconds for the space to reach SPACE_READY. Default 0 — read whatever state is available immediately.',
       ),

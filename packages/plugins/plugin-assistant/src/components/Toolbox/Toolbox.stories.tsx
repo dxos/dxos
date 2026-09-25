@@ -17,7 +17,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 
 import { translations } from '#translations';
 
-import { Toolbox, type ToolboxProps } from './Toolbox';
+import { Toolbox, type ToolboxProps } from './Toolbox.tsx';
 
 const DefaultStory = (props: ToolboxProps) => {
   return <Toolbox {...props} classNames='h-[15rem] w-[30rem] py-1 rounded-xs border border-separator' />;
@@ -31,7 +31,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

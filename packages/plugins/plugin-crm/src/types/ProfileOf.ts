@@ -23,15 +23,15 @@ export class ProfileOf extends Type.makeRelation<ProfileOf>(
   Schema.Struct({
     id: Obj.ID,
     sources: Schema.Array(Schema.String).pipe(
-      Schema.annotations({ description: 'URLs or provider identifiers that contributed to the profile.' }),
+      Schema.annotate({ description: 'URLs or provider identifiers that contributed to the profile.' }),
     ),
     lastResearchedAt: Format.DateTime.pipe(
-      Schema.annotations({ description: 'Timestamp of the most recent research run.' }),
+      Schema.annotate({ description: 'Timestamp of the most recent research run.' }),
     ),
     summary: Schema.optional(
-      Schema.String.pipe(Schema.annotations({ description: 'Short abstract of the profile (1-2 sentences).' })),
+      Schema.String.pipe(Schema.annotate({ description: 'Short abstract of the profile (1-2 sentences).' })),
     ),
-  }).annotations({
+  }).annotate({
     description: 'Links a Profile Document to the Person or Organization it describes.',
   }),
 ) {}

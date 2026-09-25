@@ -2,44 +2,48 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { concatUint8Arrays } from '@dxos/util';
 
-import { Framer, decodeFrame, encodeFrame } from './framer';
+import { type DuplexStream, connectDuplexStreams, readAll } from './duplex-stream.ts';
+import { Framer, decodeFrame, encodeFrame } from './framer.ts';
 
-const pipeWithRandomizedChunks = (from: NodeJS.ReadableStream, to: NodeJS.WritableStream): (() => void) => {
-  let buffers: Buffer[] = [];
-  from.on('data', (data) => {
-    buffers.push(data);
-  });
+/**
+ * Re-chunks the byte flow at random boundaries, so framing is exercised against splits that do not
+ * line up with frames — which is the whole point of this test.
+ */
+const pipeWithRandomizedChunks = (from: ReadableStream<Uint8Array>, to: WritableStream<Uint8Array>): (() => void) => {
+  let buffers: Uint8Array[] = [];
+  const writer = to.getWriter();
+
+  // The read rejects when the test finishes and cancels the pipe.
+  void readAll(from, (data) => buffers.push(data)).catch(() => {});
 
   // Flush data every millisecond.
   const intervalId = setInterval(() => {
-    const buffer = Buffer.concat(buffers);
-
-    // console.log('flushing total', buffer.length)
+    const buffer = concatUint8Arrays(...buffers);
+    buffers = [];
 
     let offset = 0;
     while (offset < buffer.length) {
       const chunkLength = Math.min(Math.floor(Math.random() * buffer.length * 1.2) + 1, buffer.length - offset);
-      // console.log('flush', chunkLength)
-      to.write(buffer.slice(offset, offset + chunkLength));
+      void writer.write(buffer.subarray(offset, offset + chunkLength));
       offset += chunkLength;
     }
-    buffers = [];
   }, 1);
 
   return () => {
     clearInterval(intervalId);
+    void writer.close().catch(() => {});
   };
 };
 
-const pipe = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream): (() => void) => {
-  const cleanA = pipeWithRandomizedChunks(a, b);
-  const cleanB = pipeWithRandomizedChunks(b, a);
+const pipe = (a: DuplexStream, b: DuplexStream): (() => void) => {
+  const cleanA = pipeWithRandomizedChunks(a.readable, b.writable);
+  const cleanB = pipeWithRandomizedChunks(b.readable, a.writable);
   return () => {
     cleanA();
     cleanB();
@@ -72,8 +76,8 @@ describe('Framer', () => {
       void peer1.port.send(message);
     });
 
-    const framesSent: Buffer[] = [];
-    const framesReceived: Buffer[] = [];
+    const framesSent: Uint8Array[] = [];
+    const framesReceived: Uint8Array[] = [];
     let subscribed = false;
 
     // console.log('Start sending frames\n=================\n')
@@ -97,12 +101,12 @@ describe('Framer', () => {
           // console.log("subscribing")
           peer2.port.subscribe((message) => {
             // console.log('rcv', message.length)
-            framesReceived.push(Buffer.from(message));
+            framesReceived.push(new Uint8Array(message));
           });
         }
 
-        await sleep(2); // Must be longer the pipe's flush interval
-        expect(framesReceived.length).to.deep.eq(framesSent.length);
+        // Wait until every sent frame has been delivered rather than guessing the pipe's flush interval.
+        await expect.poll(() => framesReceived.length).toEqual(framesSent.length);
         for (const i in framesSent) {
           expect(framesReceived[i]).to.deep.eq(framesSent[i], `Frame ${i} does not match`);
         }
@@ -115,17 +119,17 @@ describe('Framer', () => {
     const peer1 = new Framer();
     const peer2 = new Framer();
 
-    pipeline(peer1.stream, peer2.stream, peer1.stream, () => {});
+    connectDuplexStreams(peer1.stream, peer2.stream);
 
     // Peer 1 loops messages back to peer 2.
     peer1.port.subscribe((message) => {
       void peer1.port.send(message);
     });
 
-    const framesSent: Buffer[] = [];
-    const framesReceived: Buffer[] = [];
+    const framesSent: Uint8Array[] = [];
+    const framesReceived: Uint8Array[] = [];
     peer2.port.subscribe((message) => {
-      framesReceived.push(Buffer.from(message));
+      framesReceived.push(new Uint8Array(message));
     });
 
     const TOTAL_FRAMES = 1000;

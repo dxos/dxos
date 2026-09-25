@@ -6,7 +6,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -62,8 +63,10 @@ export const runHooks = <R>({
           // through verbatim — the hook's operation reads any conversation state it needs itself.
           yield* invoke(operation, { ...hook.input });
         }).pipe(
-          Effect.catchAllCause((cause) =>
-            Effect.sync(() => log.warn('skill hook failed', { phase, skill: Skill.getKey(skill), cause })),
+          Effect.catchCause((cause) =>
+            // Meta key rather than `Skill.getKey`: a space-authored skill has none, and an error
+            // report must not itself throw.
+            Effect.sync(() => log.warn('skill hook failed', { phase, skill: Obj.getMeta(skill).key, cause })),
           ),
         );
       }

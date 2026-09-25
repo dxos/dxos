@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import DOMPurify from 'dompurify';
 import React, {
   CSSProperties,
@@ -17,20 +16,25 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { iconSize } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface, iconSize } from '@dxos/ui-theme';
+import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { Button, IconButton } from '../Button';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
-import { Image, type ImageProps } from '../Image';
-import { DropdownMenu } from '../Menu';
-import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
+import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider } from '../../providers/DensityProvider/index.ts';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Button, IconButton } from '../Button/index.ts';
+import { Column, type ColumnRootProps } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Image, type ImageProps } from '../Image/index.ts';
+import { Menu } from '../Menu/index.ts';
+import {
+  type ToolbarActionIconButtonProps,
+  type ToolbarDragHandleProps,
+  type ToolbarMenuProps,
+} from '../Toolbar/index.ts';
 
 //
 // Root
@@ -42,9 +46,21 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
-  /** Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
-   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`. */
+  /** Material-style elevation, 0–5, onto the surface ladder; the card is `raised` (3) by default. */
+  'elevation'?: ElevationLevel;
+  /**
+   * Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
+   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
+   */
   'subgrid'?: boolean;
+  /**
+   * Width of the card's leading/trailing gutter tracks. Defaults to `lg` (chrome-sized inset for
+   * headers and rows); a card whose whole body is a form should use `sm` so the fields inset like
+   * a standalone form rather than by the card's chrome.
+   */
+  'gutter'?: ColumnRootProps['gutter'];
+  /** Vertical gap between the card's rows; defaults to `sm` (the card's standard `gap-1`). */
+  'gap'?: ColumnRootProps['gap'];
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -62,24 +78,36 @@ type CardRootProps = {
  * overrides via `classNames` — land directly on the grid container.
  * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
  * work because `composable()` preserves the COMPOSABLE marker that slottable parents
- * check before warning, and Radix `Slot` merges the parent's props onto the inner
- * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
+ * check before warning, and `asChild` merges the parent's props onto the inner
+ * `<div>` exactly the way `slottable`'s `ark.div` did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, subgrid, density, ...props }, forwardedRef) => {
+  (
+    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, elevation, ...props },
+    forwardedRef,
+  ) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
       <Column.Root
         asChild
-        gutter='lg'
+        gutter={gutter}
         subgrid={subgrid}
-        classNames={tx('card.root', { border, fullWidth }, className)}
+        gap={gap}
+        classNames={tx('card.root', { border, fullWidth, surface: elevationSurface(elevation) }, className)}
         role={role ?? 'group'}
       >
-        <div {...rest} {...(id && { 'data-object-id': id })} ref={forwardedRef}>
-          {children}
+        <div
+          {...rest}
+          {...(id && { 'data-object-id': id })}
+          {...elevationAttrs(elevation)}
+          data-density={density}
+          ref={forwardedRef}
+        >
+          {/* As in Toolbar.Root: the attribute cascades `--dx-control`, but controls that stamp their
+              own `data-density` from context would shadow it, so the context is provided too. */}
+          {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
         </div>
       </Column.Root>
     );
@@ -107,18 +135,17 @@ const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(
   ({ children, asChild, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    // `@radix-ui/react-primitive` has no `header` node; the intrinsic element handles asChild via Slot.
-    const Comp = asChild ? Slot : 'header';
 
     return (
-      <Comp
+      <ark.header
+        asChild={asChild}
         {...rest}
         style={{ ...iconSize(5), ...style }}
         className={tx('card.header', {}, className)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.header>
     );
   },
 );
@@ -202,13 +229,13 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
   const { t } = useTranslation(translationKey);
   // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
   // propagate through the React tree rather than the DOM, so without this both the trigger and the
-  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // item selection reach the card's handler and activate it on the way past. The factory's `asChild`
   // composes the trigger handler, so the menu still opens.
   const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
     <CardBlock end>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger disabled={!items?.length} asChild>
+      <Menu.Root>
+        <Menu.Trigger disabled={!items?.length} asChild>
           <IconButton
             onClick={stopPropagation}
             iconOnly
@@ -216,25 +243,25 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
             icon='ph--dots-three-vertical--regular'
             label={t('toolbar-menu.label')}
           />
-        </DropdownMenu.Trigger>
+        </Menu.Trigger>
         {(items?.length ?? 0) > 0 && (
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content onClick={stopPropagation}>
-              <DropdownMenu.Viewport>
+          <Menu.Portal>
+            <Menu.Content onClick={stopPropagation}>
+              <Menu.Viewport>
                 {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
-                  <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                  <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
                     {icon && <Icon icon={icon} />}
                     {label}
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ))}
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
+              </Menu.Viewport>
+              <Menu.Arrow />
+            </Menu.Content>
+          </Menu.Portal>
         )}
-      </DropdownMenu.Root>
+      </Menu.Root>
     </CardBlock>
   );
 }
@@ -286,12 +313,11 @@ const CARD_TITLE_NAME = 'Card.Title';
 const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'heading' });
-  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Comp {...rest} className={tx('card.title', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('card.title', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -305,13 +331,12 @@ const CARD_BODY_NAME = 'Card.Body';
 
 const CardBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
   return (
-    <Comp {...rest} className={tx('card.body', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('card.body', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -334,12 +359,12 @@ type CardSectionProps = { title?: ReactNode };
 const CardSection = slottable<HTMLDivElement, CardSectionProps>(
   ({ children, asChild, title, role, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const titleId = useId();
 
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
         role={role ?? (title ? 'group' : 'none')}
         aria-labelledby={title ? titleId : undefined}
@@ -352,7 +377,7 @@ const CardSection = slottable<HTMLDivElement, CardSectionProps>(
           </div>
         )}
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -365,7 +390,13 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { fullWidth?: boolean };
+type CardRowProps = {
+  fullWidth?: boolean;
+  /** A selectable row (a stats table); the row itself is the target, its cells carry no controls. */
+  onClick?: MouseEventHandler<HTMLDivElement>;
+  /** The selected row, exposed as `aria-current`. */
+  current?: boolean;
+};
 
 /**
  * A row inside a Card.
@@ -375,20 +406,21 @@ type CardRowProps = { fullWidth?: boolean };
  *   `Card.Block` placement is inert in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
+  ({ children, asChild, fullWidth, current, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
+        aria-current={current ? 'true' : undefined}
         style={{ ...iconSize(4), ...style }}
         className={tx('card.row', { fullWidth }, className)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -419,12 +451,17 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
   ({ children, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant }, className)} ref={forwardedRef}>
-        <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
-      </Comp>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        role={role ?? 'none'}
+        className={tx('card.text', { variant })}
+        ref={forwardedRef}
+      >
+        <span className={tx('card.text-span', { variant, truncate }, className)}>{children}</span>
+      </ark.div>
     );
   },
 );
@@ -518,6 +555,12 @@ const CARD_ACTION_NAME = 'Card.Action';
 
 type CardActionProps = {
   icon?: string;
+  /**
+   * Leading gutter content, taking precedence over `icon` — e.g. a person's avatar, which reads better
+   * than a generic glyph on a row that stands for someone. Must be non-interactive: the row is itself a
+   * button, so anything focusable here would nest inside it.
+   */
+  leading?: ReactNode;
   label: string;
   /** Short trailing text (e.g. an age); kept at full width while the label truncates around it. */
   annotation?: string;
@@ -525,15 +568,22 @@ type CardActionProps = {
   onClick?: () => void;
 };
 
-function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, annotation, onClick }: CardActionProps) {
+function CardAction({
+  icon,
+  leading,
+  actionIcon = 'ph--arrow-right--regular',
+  label,
+  annotation,
+  onClick,
+}: CardActionProps) {
   const { tx } = useThemeContext();
+  // Resolved once so the guard and the content cannot disagree: the guard used `||` while the content
+  // used `??`, so a falsy-but-valid `leading` (0, '', false) rendered nothing at all. Also drops a
+  // non-null assertion on `icon`.
+  const gutter = leading ?? (icon ? <Icon icon={icon} size={4} /> : undefined);
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon && (
-        <CardBlock>
-          <Icon icon={icon} size={4} />
-        </CardBlock>
-      )}
+      {gutter !== undefined && <CardBlock>{gutter}</CardBlock>}
       <span className={tx('card.action-content', {})}>
         <span className={tx('card.action-label', {})}>{label}</span>
         {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}

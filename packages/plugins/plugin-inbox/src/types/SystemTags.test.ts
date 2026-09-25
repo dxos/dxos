@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Tag } from '@dxos/echo';
@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Builder } from '../testing/builder';
-import * as Mailbox from './Mailbox';
-import * as SystemTags from './SystemTags';
+import { Builder } from '../testing/builder.ts';
+import * as Mailbox from './Mailbox.ts';
+import * as SystemTags from './SystemTags.ts';
 
 describe('SystemTags', () => {
   let builder: EchoTestBuilder;

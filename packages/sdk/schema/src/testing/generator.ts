@@ -3,14 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, DXN, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { GeneratorAnnotationId, type GeneratorAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
+import {
+  Annotation,
+  type Database,
+  DXN,
+  type Entity,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Relation,
+  Type,
+} from '@dxos/echo';
 import { type AnyProperties, getSchemaReference } from '@dxos/echo/internal';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { EffectEx, SchemaEx } from '@dxos/effect';
+import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
@@ -89,7 +97,7 @@ export const createRelationFactory =
         invariant(Type.isRelation(type), 'RelationSpec.type must be a relation type');
 
         // Resolve the source/target object typenames declared on the relation type.
-        const annotation = getTypeAnnotation(Type.getSchema(type));
+        const annotation = Annotation.getTypeAnnotation(Type.getSchema(type));
         const sourceTypename = annotation?.sourceSchema && DXN.getName(annotation.sourceSchema);
         const targetTypename = annotation?.targetSchema && DXN.getName(annotation.targetSchema);
         invariant(sourceTypename && targetTypename, 'Relation type must declare source and target types');
@@ -159,13 +167,17 @@ const createValue = <S extends Type.AnyObj>(
   property: SchemaEx.SchemaProperty,
   force = false,
 ): any | undefined => {
+  // v4 annotations are a plain record; the accessor returns the value or `undefined`.
   const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
-  if (Option.isSome(defaultValue)) {
-    return structuredClone(defaultValue.value);
+  if (defaultValue !== undefined) {
+    return structuredClone(defaultValue);
   }
 
   // Generator value from annotation.
-  const annotation = SchemaEx.findAnnotation<GeneratorAnnotationValue>(property.type, GeneratorAnnotationId);
+  const annotation = SchemaEx.findAnnotation<Annotation.GeneratorAnnotationValue>(
+    property.type,
+    Annotation.GeneratorAnnotationId,
+  );
   if (annotation) {
     const {
       generator: generatorName,
@@ -207,7 +219,10 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
     for (const property of SchemaEx.getProperties(Type.getSchema(schema).ast)) {
       if (!property.isOptional || randomBoolean()) {
         if (Ref.isRefType(property.type)) {
-          const jsonSchema = SchemaEx.findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
+          const jsonSchema = SchemaEx.findAnnotation<JsonSchema.JsonSchema>(
+            property.type,
+            SchemaAST.JSONSchemaAnnotationId,
+          );
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);

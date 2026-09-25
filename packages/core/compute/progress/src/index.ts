@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Progress from './Progress';
+export * as Progress from './Progress.ts';

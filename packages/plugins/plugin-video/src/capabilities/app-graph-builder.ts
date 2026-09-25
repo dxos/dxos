@@ -5,19 +5,19 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
-
 // Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
 // evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
-// whole AI stack into early boot (this module activates on SetupAppGraph). The operations are
-// lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu item is invoked.
-import * as Video from '../types/Video';
+// whole AI stack into early boot (this module contributes `AppCapabilities.AppGraphBuilder`). The
+// operations are lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu
+// item is invoked.
 
 /**
  * Contributes the video operations to a Video object's app-graph node, so they appear in the
@@ -29,10 +29,10 @@ export default Capability.makeModule(
     // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the
     // AI stack stays out of early boot. Each action references its concrete operation (the three ops
     // have distinct output types, so a name-indexed helper would not typecheck).
-    const loadOps = () => Effect.promise(() => import('../types/VideoOperation'));
+    const loadOps = () => Effect.promise(() => import('../types/VideoOperation.ts'));
     const scope = (video: Video.Video) => ({ spaceId: Obj.getDatabase(video)?.spaceId });
 
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'videoActions',
       match: (node) => (Obj.instanceOf(Video.Video, node.data) ? Option.some(node.data as Video.Video) : Option.none()),
       actions: (video) =>
@@ -79,6 +79,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
   }),
 );

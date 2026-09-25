@@ -7,9 +7,9 @@ import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGro
 
 import { translationKey } from '#translations';
 
-import type { ActionGraphProps } from './hooks';
-import { MenuSeparatorType } from './types';
-import { createMenuAction, createMenuItemGroup } from './util';
+import type { ActionGraphProps } from './hooks/index.ts';
+import { MenuSeparatorType } from './types.ts';
+import { createMenuAction, createMenuItemGroup } from './util.ts';
 
 /** Default trigger for toolbar overflow (⋮) dropdown menus. */
 const overflowMenuProperties = {
@@ -41,7 +41,7 @@ export interface ActionGroupBuilder {
   /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
 
-  /** Add a switch action rendered as a labeled Input.Switch. */
+  /** Add a switch action rendered as a labeled Field.Switch. */
   switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
 
   /** Add a nested action group. */

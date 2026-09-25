@@ -4,15 +4,16 @@
 
 import React, { useCallback } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
-import { type UseVersioningResult } from '../../hooks';
-import { type ReviewCapabilities } from '../../types';
-import { authorHue } from '../../util';
-import { VersionBanner } from './VersionBanner';
+import { type UseVersioningResult } from '#hooks';
+import { ReviewCapabilities } from '#types';
+
+import { authorHue } from '../../util/index.ts';
+import { VersionBanner } from './VersionBanner.tsx';
 
 export type VersionToolbarProps = {
   versioning: UseVersioningResult;
@@ -28,7 +29,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
 
   // Resolve a branch's display label. Suggestion branches are named by author DID (`suggestion: <did>`);
   // show the author's display name if set (resolved against space members), otherwise the raw DID.
-  const members = useMembers(getSpace(document)?.id);
+  const members = useMembers(document && Obj.getDatabase(document)?.spaceId);
   const label = useCallback(
     (branch: Branch.Branch) => {
       if (branch.kind === 'suggestion' && branch.creator) {

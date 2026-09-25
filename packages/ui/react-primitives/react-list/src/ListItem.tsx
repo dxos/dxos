@@ -2,169 +2,100 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { CheckboxProps } from '@radix-ui/react-checkbox';
-import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
-import * as Collapsible from '@radix-ui/react-collapsible';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type ComponentRef,
-  type Dispatch,
-  type ForwardRefExoticComponent,
-  type RefAttributes,
-  type SetStateAction,
-  forwardRef,
-} from 'react';
+import { Collapsible } from '@ark-ui/react/collapsible';
+import { ark } from '@ark-ui/react/factory';
+import React, { type ComponentProps, forwardRef } from 'react';
 
-import { useId } from '@dxos/react-hooks';
+import { useControllableState, useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, type ListScopedProps, useListContext } from './List';
-
-const LIST_ITEM_NAME = 'ListItem';
-
-type ListItemScopedProps<P> = P & { __listItemScope?: Scope };
-
-interface ListItemData {
-  id: string;
-  labelId?: string;
-  selected?: CheckboxProps['checked'];
-  open?: boolean;
-}
-
-type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & RefAttributes<HTMLLIElement> &
-  ComponentPropsWithoutRef<'li'> & {
-    defaultOpen?: boolean;
-    onOpenChange?: (nextOpen: boolean) => void;
-  } & {
-    onSelectedChange?: CheckboxProps['onCheckedChange'];
-    defaultSelected?: CheckboxProps['defaultChecked'];
-  };
-
-type ListItemElement = ComponentRef<'li'>;
-
-const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
-
-type ListItemContextValue = {
-  headingId: string;
-  open: boolean;
-  selected: CheckboxProps['checked'];
-  setSelected: Dispatch<SetStateAction<CheckboxProps['checked']>>;
-};
-
-const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
-
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> &
-  RefAttributes<HTMLParagraphElement> & {
-    asChild?: boolean;
-  };
+import { LIST_NAME, useListContext } from './ListContext.ts';
+import {
+  LIST_ITEM_NAME,
+  type ListItemElement,
+  type ListItemHeadingProps,
+  type ListItemProps,
+  ListItemProvider,
+  useListItemContext,
+} from './ListItemContext.ts';
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
-  ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
-    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const Comp = asChild ? Slot : Primitive.div;
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME);
     return (
-      <Comp {...props} id={headingId} ref={forwardedRef}>
+      <ark.div asChild={asChild} {...props} id={headingId} ref={forwardedRef}>
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
 
-type ListItemOpenTriggerProps = ListItemScopedProps<CollapsibleTriggerProps>;
+type ListItemOpenTriggerProps = ComponentProps<typeof Collapsible.Trigger>;
 
 const ListItemOpenTrigger = Collapsible.Trigger;
 
 type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content>;
 
-const ListItemCollapsibleContent: ForwardRefExoticComponent<CollapsibleContentProps> = Collapsible.Content;
+const ListItemCollapsibleContent = Collapsible.Content;
 
-const ListItem = forwardRef<ListItemElement, ListItemProps>(
-  (props: ListItemScopedProps<ListScopedProps<ListItemProps>>, forwardedRef) => {
-    const id = useId('listItem', props.id);
+const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListItemProps, forwardedRef) => {
+  const id = useId('listItem', props.id);
 
-    const {
-      __listScope,
-      __listItemScope,
-      children,
-      selected: propsSelected,
-      defaultSelected,
-      onSelectedChange,
-      open: propsOpen,
-      defaultOpen,
-      onOpenChange,
-      collapsible,
-      labelId,
-      ...listItemProps
-    } = props;
-    const { selectable } = useListContext(LIST_NAME, __listScope);
+  const {
+    children,
+    selected: propsSelected,
+    defaultSelected,
+    onSelectedChange,
+    open: propsOpen,
+    defaultOpen,
+    onOpenChange,
+    collapsible,
+    labelId,
+    ...listItemProps
+  } = props;
+  const { selectable } = useListContext(LIST_NAME);
 
-    const [selected = false, setSelected] = useControllableState({
-      prop: propsSelected,
-      defaultProp: defaultSelected,
-      onChange: onSelectedChange,
-    });
+  const [selected = false, setSelected] = useControllableState({
+    prop: propsSelected,
+    defaultProp: defaultSelected,
+    onChange: onSelectedChange,
+  });
 
-    const [open = false, setOpen] = useControllableState({
-      prop: propsOpen,
-      defaultProp: defaultOpen,
-      onChange: onOpenChange,
-    });
+  const [open = false, setOpen] = useControllableState({
+    prop: propsOpen,
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
+  });
 
-    const headingId = useId('listItem__heading', labelId);
+  const headingId = useId('listItem__heading', labelId);
 
-    const listItem = (
-      <Primitive.li
-        {...listItemProps}
-        id={id}
-        ref={forwardedRef}
-        aria-labelledby={headingId}
-        {...(selectable && { 'role': 'option', 'aria-selected': !!selected })}
-        {...(open && { 'aria-expanded': true })}
-      >
-        {children}
-      </Primitive.li>
-    );
+  const listItem = (
+    <ark.li
+      {...listItemProps}
+      id={id}
+      ref={forwardedRef}
+      aria-labelledby={headingId}
+      {...(selectable && { 'role': 'option', 'aria-selected': !!selected })}
+      {...(open && { 'aria-expanded': true })}
+    >
+      {children}
+    </ark.li>
+  );
 
-    return (
-      <ListItemProvider
-        scope={__listItemScope}
-        headingId={headingId}
-        open={open}
-        selected={selected}
-        setSelected={setSelected}
-      >
-        {collapsible ? (
-          <Collapsible.Root asChild open={open} onOpenChange={setOpen}>
-            {listItem}
-          </Collapsible.Root>
-        ) : (
-          listItem
-        )}
-      </ListItemProvider>
-    );
-  },
-);
+  return (
+    <ListItemProvider headingId={headingId} open={open} selected={selected} setSelected={setSelected}>
+      {collapsible ? (
+        <Collapsible.Root asChild open={open} onOpenChange={({ open }) => setOpen(open)}>
+          {listItem}
+        </Collapsible.Root>
+      ) : (
+        listItem
+      )}
+    </ListItemProvider>
+  );
+});
 
 ListItem.displayName = LIST_ITEM_NAME;
 
-export {
-  LIST_ITEM_NAME,
-  ListItem,
-  ListItemCollapsibleContent,
-  ListItemHeading,
-  ListItemOpenTrigger,
-  createListItemScope,
-  useListItemContext,
-};
+export { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger };
 
-export type {
-  ListItemCollapsibleContentProps,
-  ListItemHeadingProps,
-  ListItemOpenTriggerProps,
-  ListItemProps,
-  ListItemScopedProps,
-};
+export type { ListItemCollapsibleContentProps, ListItemOpenTriggerProps };

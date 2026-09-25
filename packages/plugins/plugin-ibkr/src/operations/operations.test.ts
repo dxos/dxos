@@ -4,25 +4,27 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import { Ibkr, IbkrOperation } from '../types';
-import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
-import GetPortfolioHandler from './get-portfolio';
-import GetTradesHandler from './get-trades';
-import ImportPortfolioReportHandler from './import-portfolio';
-import MaterializeInstrumentHandler from './materialize-instrument';
-import SyncLotsHandler from './sync-lots';
-import SyncPortfolioReportHandler from './sync-portfolio';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants.ts';
+import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals.ts';
+import GetPortfolioHandler from './get-portfolio.ts';
+import GetTradesHandler from './get-trades.ts';
+import ImportPortfolioReportHandler from './import-portfolio.ts';
+import MaterializeInstrumentHandler from './materialize-instrument.ts';
+import SyncLotsHandler from './sync-lots.ts';
+import SyncPortfolioReportHandler from './sync-portfolio.ts';
 
 const xml = readFileSync(fileURLToPath(new URL('../services/__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
 const tickersFixture = readFileSync(
@@ -273,7 +275,9 @@ const run = <T>(
   creds: typeof credentials = [],
 ): Promise<T> =>
   EffectEx.runPromise(
-    effect.pipe(Effect.provide(Database.layer(db)), Effect.provide(configuredCredentialsLayer(creds))) as Effect.Effect<
+    effect.pipe(
+      Effect.provide(Layer.provideMerge(Database.layer(db), configuredCredentialsLayer(creds))),
+    ) as Effect.Effect<
       T,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       any,
@@ -289,7 +293,9 @@ const runSyncLots = (
     SyncLotsHandler.handler(input).pipe(
       Effect.provideService(Operation.Service, {
         invoke: (operation, invokeInput) => {
-          if (operation === IbkrOperation.MaterializeInstrument) {
+          // Compared by key: v4 types the invoked operation generically, so the two `Definition`
+          // instantiations no longer overlap for a reference comparison.
+          if (operation.meta.key === IbkrOperation.MaterializeInstrument.meta.key) {
             return MaterializeInstrumentHandler.handler(
               invokeInput as Parameters<typeof MaterializeInstrumentHandler.handler>[0],
             ).pipe(Effect.provide(Database.layer(db)));
@@ -298,7 +304,7 @@ const runSyncLots = (
         },
         schedule: () => Effect.void,
         invokePromise: async () => ({ error: new Error('Not available') }),
-      } as Context.Tag.Service<typeof Operation.Service>),
+      } as Context.Service.Shape<typeof Operation.Service>),
     ),
     db,
   );

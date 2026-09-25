@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Response from '@effect/ai/Response';
 import { describe, it, vi } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Response from 'effect/unstable/ai/Response';
 
 import { type ContentBlock } from '@dxos/types';
 
-import * as AiParser from './AiParser';
+import * as AiParser from './AiParser.ts';
+import * as ScriptedLanguageModel from './testing/ScriptedLanguageModel.ts';
 
 describe('parser', () => {
   describe('accumulation', () => {
@@ -20,8 +21,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -37,8 +37,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello,', ' world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -54,8 +53,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<status>I am thinking...</status>'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -71,8 +69,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!']), ...toolCall('123', 'foo', { bar: 'baz' })])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -98,8 +95,7 @@ describe('parser', () => {
           ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -122,8 +118,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...reasoning('My thoughts are...'), ...text(['Hello, world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -143,8 +138,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<cot>My thoughts are...</cot>'])])
           .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -156,12 +150,44 @@ describe('parser', () => {
     );
 
     it.effect(
+      'reasoning tags get parsed to reasoning blocks',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<reasoning>My thoughts are...</reasoning>'])])
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          {
+            _tag: 'reasoning',
+            reasoningText: 'My thoughts are...',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'an unclosed unknown tag is not emitted as a raw partial',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<custom>partial content'])])
+          .pipe(AiParser.parseResponse({ emitPartial: true }))
+          .pipe(Stream.runCollect);
+
+        // No partial carries the raw markup; the literal text arrives once, on the final flush.
+        const partials = result.filter((block) => block.pending);
+        expect(partials).toEqual([]);
+        expect(result.at(-1)).toEqual({
+          _tag: 'text',
+          text: '<custom>partial content',
+        });
+      }),
+    );
+
+    it.effect(
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<think>My thoughts are...</think>'])])
           .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -177,8 +203,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(splitByWord('<toolkit/>'))])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -195,8 +220,7 @@ describe('parser', () => {
           ...text([`<surface role='integration-prompt' data='{"service":"gmail.com"}' />`]),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -215,8 +239,7 @@ describe('parser', () => {
           ...text([`<surface role="integration-prompt">{"service":"gmail.com"}</surface>`]),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -233,8 +256,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text([`<surface role="integration-prompt" />`])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -252,8 +274,7 @@ describe('parser', () => {
           ...text(splitByWord('<select><option>Yes</option><option>No</option></select>')),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -273,8 +294,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<name>Claude</name>'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -293,8 +313,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['You sent `<foo>`, which looks like a tag'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           { _tag: 'text', text: 'You sent `' },
@@ -311,8 +330,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['My name is <name>Claude</name>.'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           { _tag: 'text', text: 'My name is ' },
@@ -323,31 +341,38 @@ describe('parser', () => {
     );
 
     // Repro: third <reasoning> block in a chat doc — multi-line content with newlines,
-    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags
-    // around it. Verify all three reasoning blocks are preserved verbatim.
+    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags around it.
+    // `<reasoning>` parses like `<cot>` now (models write it unprompted); the content must still
+    // arrive verbatim, one block per tag.
     it.effect(
       'multi-line reasoning content with quotes and list items is preserved',
       Effect.fn(function* ({ expect }) {
-        const r1 = '<reasoning>The user wants me to summarize.</reasoning>';
-        const r2 = '<reasoning>The magazine has 10 posts already curated.</reasoning>';
+        const r1 = 'The user wants me to summarize.';
+        const r2 = 'The magazine has 10 posts already curated.';
         const r3 = [
-          '<reasoning>The magazine has 10 posts, but several are duplicates. Unique articles:',
+          'The magazine has 10 posts, but several are duplicates. Unique articles:',
           '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' – US politics live" - About Cole Allen.',
           '2. "Australia news live: UK inquiry says \'cracks already beginning to show\' on Aukus" - Live blog.',
-          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.</reasoning>',
+          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.',
         ].join('\n');
-        const input = [r1, '<status>Loading…</status>', r2, '<status>OK</status>', r3, 'Done.'].join('\n');
+        const input = [
+          `<reasoning>${r1}</reasoning>`,
+          '<status>Loading…</status>',
+          `<reasoning>${r2}</reasoning>`,
+          '<status>OK</status>',
+          `<reasoning>${r3}</reasoning>`,
+          'Done.',
+        ].join('\n');
 
         const result = yield* makeInputStream([...text(splitByCharacter(input))])
-          .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
+          .pipe(Stream.runCollect);
 
-        const reasonings = result.filter((b) => b._tag === 'text' && b.text.startsWith('<reasoning>'));
+        const reasonings = result.filter((b) => b._tag === 'reasoning');
         expect(reasonings).toHaveLength(3);
-        expect(reasonings[0]).toEqual({ _tag: 'text', text: r1 });
-        expect(reasonings[1]).toEqual({ _tag: 'text', text: r2 });
-        expect(reasonings[2]).toEqual({ _tag: 'text', text: r3 });
+        expect(reasonings[0]).toEqual({ _tag: 'reasoning', reasoningText: r1 });
+        expect(reasonings[1]).toEqual({ _tag: 'reasoning', reasoningText: r2 });
+        expect(reasonings[2]).toEqual({ _tag: 'reasoning', reasoningText: r3 });
       }),
     );
 
@@ -368,8 +393,7 @@ describe('parser', () => {
           ),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -474,6 +498,151 @@ describe('parser', () => {
             ] satisfies ContentBlock.Any[]
           ).map((block) => [block]),
         );
+      }),
+    );
+
+    it.effect(
+      'tool call truncated by malformed parameters is finalized before the stats block',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: '123', name: 'foo', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: '123', delta: '{"objects": echo:///01' }),
+          Response.makePart('finish', {
+            reason: 'stop',
+            usage: { inputTokens: { total: 0 }, outputTokens: { total: 0 } },
+          }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result.map((block) => block._tag)).toEqual(['toolCall', 'stats']);
+        expect(result[0]).toEqual({
+          _tag: 'toolCall',
+          toolCallId: '123',
+          name: 'foo',
+          input: '{"objects": echo:///01',
+          providerExecuted: false,
+        });
+        expect(result[1]).toMatchObject({ _tag: 'stats', toolCalls: 1 });
+      }),
+    );
+
+    it.effect(
+      'a tool call opened while another is still open closes the previous one',
+      Effect.fn(function* ({ expect }) {
+        // Providers streaming parallel tool calls (the OpenAI dialect) end each call only after
+        // the last one has started; aborting there lost the whole turn.
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: 'call_a', name: 'alpha', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_a', delta: '{"x":1}' }),
+          Response.makePart('tool-params-start', { id: 'call_b', name: 'beta', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_b', delta: '{"y":2}' }),
+          Response.makePart('tool-params-end', { id: 'call_b' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          { _tag: 'toolCall', toolCallId: 'call_a', name: 'alpha', input: '{"x":1}', providerExecuted: false },
+          { _tag: 'toolCall', toolCallId: 'call_b', name: 'beta', input: '{"y":2}', providerExecuted: false },
+        ]);
+      }),
+    );
+
+    it.effect(
+      'reasoning opened while a tool call is still open closes the tool call',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: 'call_a', name: 'alpha', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_a', delta: '{"x":1}' }),
+          Response.makePart('reasoning-start', { id: 'r1' }),
+          Response.makePart('reasoning-delta', { id: 'r1', delta: 'hmm' }),
+          Response.makePart('reasoning-end', { id: 'r1' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result.map((block) => block._tag)).toEqual(['toolCall', 'reasoning']);
+      }),
+    );
+
+    it.effect(
+      'a provider that defers every tool-params-end still yields one block per call',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          // Driven through the scripted model rather than hand-built parts, so the whole
+          // LanguageModel path is exercised: this is the shape the OpenAI dialect produces and the
+          // one that aborted the agent turn with `invariant violation [!block]`.
+          const result = yield* LanguageModel.streamText({ prompt: 'ignored' })
+            .pipe(AiParser.parseResponse())
+            .pipe(Stream.runCollect);
+
+          expect(result.filter((block) => block._tag === 'toolCall')).toEqual([
+            { _tag: 'toolCall', toolCallId: 'toolu_0_0', name: 'alpha', input: '{"x":1}', providerExecuted: false },
+            { _tag: 'toolCall', toolCallId: 'toolu_0_1', name: 'beta', input: '{"y":2}', providerExecuted: false },
+          ]);
+        },
+        Effect.provide(
+          ScriptedLanguageModel.scriptedLanguageModelLayer([
+            {
+              parts: [
+                ScriptedLanguageModel.toolCall('alpha', { x: 1 }),
+                ScriptedLanguageModel.toolCall('beta', { y: 2 }),
+              ],
+              deferToolEnds: true,
+            },
+          ]),
+        ),
+      ),
+    );
+
+    it.effect(
+      'a tool result with no value still carries a serialized result',
+      Effect.fn(function* ({ expect }) {
+        // `JSON.stringify(undefined)` is `undefined`, so this used to persist a block with no
+        // `result` key at all, and every later request over that conversation died decoding it.
+        const result = yield* makeInputStream([
+          Response.makePart('tool-result', {
+            id: '123',
+            name: 'foo',
+            result: undefined,
+            encodedResult: undefined,
+            isFailure: false,
+            providerExecuted: false,
+            preliminary: false,
+          }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toHaveLength(1);
+        const block = result[0] as Extract<ContentBlock.Any, { _tag: 'toolResult' }>;
+        expect(block._tag).toEqual('toolResult');
+        expect(typeof block.result).toEqual('string');
+        // Survives the round trip a conversation actually makes it through.
+        expect(JSON.parse(JSON.stringify({ ...block }))).toHaveProperty('result');
+      }),
+    );
+
+    it.effect(
+      'tool call truncated by malformed parameters is still emitted',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: '123', name: 'foo', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: '123', delta: '{"objects": echo:///01' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          {
+            _tag: 'toolCall',
+            toolCallId: '123',
+            name: 'foo',
+            input: '{"objects": echo:///01',
+            providerExecuted: false,
+          },
+        ]);
       }),
     );
   });

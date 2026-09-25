@@ -5,8 +5,8 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { createClient, createClientContextProvider } from '../testing/util';
-import { useDevices } from './useDevices';
+import { createClient, createClientContextProvider } from '../testing/util.tsx';
+import { useDevices } from './useDevices.ts';
 
 describe('useDevices', () => {
   test('lists existing devices', async () => {

@@ -7,8 +7,8 @@ import { type Event, type SingleOrArray } from 'xstate';
 
 import { type Space } from '@dxos/react-client/echo';
 
-import { type InvitationManagerProps } from '../../steps';
-import { type SpaceManagerProps } from './SpaceManager';
+import { type InvitationManagerProps } from '../../steps/index.ts';
+import { type SpaceManagerProps } from './SpaceManager.tsx';
 
 export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & { properties: { name?: string } };
 

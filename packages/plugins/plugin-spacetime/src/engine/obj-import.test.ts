@@ -8,8 +8,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 
-import { importGLBDirect } from './glb-import';
-import { importOBJ } from './obj-import';
+import { importGLBDirect } from './glb-import.ts';
+import { importOBJ } from './obj-import.ts';
 
 describe('importOBJ', () => {
   let wasm: ManifoldToplevel;

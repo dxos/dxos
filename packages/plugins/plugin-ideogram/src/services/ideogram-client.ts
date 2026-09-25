@@ -5,11 +5,11 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { GenerationService } from '@dxos/plugin-studio/types';
+import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants';
-import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';
-import { decodeIdeogramConfig } from './ideogram-request';
+import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants.ts';
+import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping.ts';
+import { decodeIdeogramConfig } from './ideogram-request.ts';
 
 /** Builds the Ideogram `/generate` request body (fields nested under `image_request`). */
 const toRequestBody = (request: GenerationService.GenerationRequest) => {
@@ -62,14 +62,14 @@ export const generateWithIdeogram = async (
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new GenerationService.GenerationError(`Ideogram request failed (${response.status}): ${detail}`);
+    throw new GenerationService.GenerationError({ message: `Ideogram request failed (${response.status}): ${detail}` });
   }
 
   // `Response.json()` is typed `any`; assign to the response type (no cast) and guard the shape so an
   // unexpected envelope fails loudly rather than mapping to silent garbage.
   const json: IdeogramGenerateResponse = await response.json();
   if (typeof json !== 'object' || json === null) {
-    throw new GenerationService.GenerationError('Ideogram returned an unexpected response shape.');
+    throw new GenerationService.GenerationError({ message: 'Ideogram returned an unexpected response shape.' });
   }
   return { variants: mapIdeogramResponse(json, decodeIdeogramConfig(request)) };
 };

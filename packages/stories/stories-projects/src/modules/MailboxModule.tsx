@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading } from '@dxos/react-ui/testing';
 

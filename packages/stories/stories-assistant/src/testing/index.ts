@@ -4,8 +4,12 @@
 
 export { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
-export * from './data';
-export * from './decorators';
-export * from './objects';
-export * from './schema';
-export * from './snapshot';
+export * from './calculator.ts';
+export * from './data.ts';
+export * from './decorators.tsx';
+export * from './objects.ts';
+export * from './prompt.ts';
+export * from './schema.ts';
+export * from './agent-claude-plugin.ts';
+export * from './helpdesk-space.ts';
+export * from './voyage-space.ts';

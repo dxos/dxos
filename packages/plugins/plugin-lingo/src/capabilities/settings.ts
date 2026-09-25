@@ -1,0 +1,31 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { createKvsStore } from '@dxos/effect';
+
+import { meta } from '#meta';
+import { LingoCapabilities, LingoSettings } from '#types';
+
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.profile.key,
+      schema: LingoSettings.Settings,
+      defaultValue: LingoSettings.defaults,
+    });
+
+    return [
+      Capability.contribute(LingoCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
+        prefix: meta.profile.key,
+        schema: LingoSettings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

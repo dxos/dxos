@@ -9,11 +9,11 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { ClientPlugin } from '../../ClientPlugin';
-import { InvitationsContainer } from './InvitationsContainer';
+import { InvitationsContainer } from './InvitationsContainer.tsx';
 
 const meta = {
   title: 'plugins/plugin-client/containers/InvitationsContainer',

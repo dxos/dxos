@@ -6,7 +6,7 @@ import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
 import { Doc } from '@dxos/echo-doc';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { getDeep } from '@dxos/util';
 
 /**

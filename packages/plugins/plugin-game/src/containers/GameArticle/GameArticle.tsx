@@ -11,7 +11,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Game, GameCapabilities } from '#types';
+import { Game, GameCapabilities } from '#types';
 
 export type GameArticleProps = AppSurface.ObjectArticleProps<Game.Game>;
 

@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Path from 'effect/Path';
+import * as Command from 'effect/unstable/cli/Command';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { Config } from '@dxos/client';
 import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 
-import { printProfile } from './util';
+import { printProfile } from './util.ts';
 
 export const list = Command.make(
   'list',
@@ -31,7 +31,7 @@ export const list = Command.make(
         const configPath = path.join(profileDir, filename);
         const configContent = yield* fs
           .readFileString(configPath)
-          .pipe(Effect.catchTag('SystemError', () => Effect.succeed('{}')));
+          .pipe(Effect.catchTag('PlatformError', () => Effect.succeed('{}')));
         const configValues = Yaml.parse(configContent) ?? {};
         const config = new Config(configValues);
         return {

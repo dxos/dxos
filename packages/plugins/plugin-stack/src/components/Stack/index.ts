@@ -2,4 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Stack';
+export { useStack } from './StackContext.ts';
+
+export * from './Stack.tsx';

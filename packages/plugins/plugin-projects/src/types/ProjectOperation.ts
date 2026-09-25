@@ -6,27 +6,110 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Chat } from '@dxos/assistant-toolkit';
-import { Operation, Project, Routine } from '@dxos/compute';
-import { Database, Obj, Type } from '@dxos/echo';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Chat from '@dxos/assistant/Chat';
+import { AgentService } from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Task } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+/**
+ * Every project verb the project skill drives, and the only module it needs for them.
+ *
+ * `Create` is the one that reaches beyond compute/echo: templates are a capability, so it declares
+ * `Capability.Service`. That costs a remote host (edge operation-service, workerd) nothing it does
+ * not already load — the workerd capability barrel imports `@dxos/app-framework/Capability`
+ * itself — and a host contributing no templates still creates a blank project, because the handler
+ * appends the built-in blank as a fallback. The mailbox pipelines, which do pull an app-only graph
+ * (`@dxos/plugin-inbox`, `@dxos/ai`), live in `ProjectMailboxOperation` for that reason.
+ */
 
 /**
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
- * projects without reaching into plugin internals. Resolves the template (blank by default),
+ * projects without reaching into plugin internals. Resolves the template (the default one when unspecified),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
+ *
+ * A generic object create makes one empty object; this one returns a whole wired graph, and the
+ * navigation path to the result.
  */
+/**
+ * Opens one conversation about a list of tasks: a new chat, filed in the space, carrying them in its
+ * `tasks` checklist in the order given, so the agent starts with the work already in front of it.
+ *
+ * One chat for the whole list rather than one per task: a reader delegating three tasks is handing
+ * over a body of work, and three parallel sessions could not see each other's results.
+ *
+ * The checklist is a plain ref array, so a delegated task keeps the task set it came from — the chat
+ * works on it, it does not take it.
+ */
+export const DelegateTaskToChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.delegateTaskToChat'),
+    name: 'Delegate Tasks To Chat',
+    description: 'Creates a chat for one or more tasks and places them in its checklist.',
+    icon: 'ph--chat-text--regular',
+  },
+  // `AgentService` because the operation runs the chat's first turn: a message written to the
+  // feed is a message nobody read.
+  services: [Capability.Service, Database.Service, AgentService],
+  input: Schema.Struct({
+    // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
+    // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
+    tasks: Schema.Array(Ref.Ref(Task.Task)),
+  }),
+  output: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Renders one task as a self-contained prompt for an external coding agent and copies it to the
+ * clipboard — the task's content, its addresses (task, task set, project, space), and what the
+ * project is about, so a session started from it can reach the live objects rather than work from a
+ * transcription.
+ *
+ * The prompt tells the agent to assign itself to the task first, which is what makes the handoff
+ * visible in the app: the row shows `started` and an assistant assignee the moment the agent picks
+ * it up, exactly as an in-app delegation does.
+ */
+export const CopyTaskPrompt = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.copyTaskPrompt'),
+    name: 'Copy Task Prompt',
+    description:
+      'Builds an agent prompt for a task (content, addresses, project context) and copies it to the clipboard.',
+    icon: 'ph--clipboard-text--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task).annotate({ description: 'The task to write a prompt for.' }),
+  }),
+  // Returned as well as copied: a host with no clipboard (a headless client, an agent calling the
+  // verb) still gets the prompt, and the copy is the UI affordance on top of it.
+  output: Schema.Struct({
+    prompt: Schema.String,
+  }),
+}).pipe(Operation.mutation('none'));
+
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Project', icon: 'ph--stack--regular' },
+  meta: {
+    // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
+    // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
+    key: DXN.make('org.dxos.operation.projects.create'),
+    name: 'Create Project',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    icon: 'ph--stack--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Template id (`ProjectCapabilities.Template`); defaults to the blank template. */
+    /** Template id (`ProjectCapabilities.Template`); defaults to the default template. */
     templateId: Schema.optional(Schema.String),
     /** The object the project is created for (passed to the template's `appliesTo`/`scaffold`). */
     subject: Schema.optional(Obj.Unknown),
@@ -36,26 +119,114 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-});
+}).pipe(Operation.mutation('write'));
 
-export const CreateChat = Operation.make({
-  meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },
-  services: [Capability.Service, Database.Service],
+/**
+ * The detail read behind a project reference: per-task-set open/total counts, the outline's text,
+ * and the artifact inventory with typenames — derived figures and a ref walk that a generic read
+ * would leave the caller to do one object at a time.
+ */
+export const GetProject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.get'),
+    name: 'Get Project',
+    description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
+    icon: 'ph--info--regular',
+  },
+  services: [Database.Service],
   input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
+    project: Ref.Ref(Project.Project),
   }),
   output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    id: Schema.String,
+    name: Schema.optional(Schema.String),
+    status: Schema.optional(Project.ProjectStatus),
+    description: Schema.optional(Schema.String),
+    taskSet: Schema.optional(
+      Schema.Struct({
+        id: Schema.String,
+        name: Schema.optional(Schema.String),
+        openCount: Schema.Number,
+        totalCount: Schema.Number,
+      }),
+    ),
+    /** The project's checklist markdown, when it has an outline. */
+    outline: Schema.optional(Schema.Struct({ id: Schema.String, content: Schema.String })),
+    artifacts: Schema.Array(Schema.Struct({ id: Schema.String, typename: Schema.String })),
   }),
+}).pipe(Operation.mutation('none'));
+
+//
+// Artifacts — the project's work products. The skill's own verbs: `Project.artifacts` is a plain
+// ref array, but adding is idempotent by entity id, which a generic object patch cannot be.
+//
+
+/**
+ * Files an object into `Project.artifacts`, idempotently. The array is plain refs, but membership is
+ * compared by entity id — the same object can be addressed local or space-qualified — so a generic
+ * patch would need a read-modify-write and would still double-file a differently-spelled URI.
+ */
+export const ArtifactAdd = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.addArtifact'),
+    name: 'Add project artifact',
+    icon: 'ph--stack-plus--regular',
+    description: trim`
+      Files an object into a project's artifacts collection.
+      Use this after creating an object (document, outline, sheet, contact, …) while working in a
+      project's context, so the project owns it and it appears in the project's artifacts list.
+      When the object was produced for a task on your checklist, pass that task too, so the finished
+      task shows what it made. Adding the same object twice is a no-op.
+    `,
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({
+      description: 'The project to file into (its reference is in the chat context).',
+    }),
+    object: Ref.Ref(Obj.Unknown).annotate({
+      description: 'The object to file as an artifact.',
+    }),
+    task: Schema.optional(
+      Ref.Ref(Task.Task).annotate({
+        description:
+          'The task this object was produced for, when working one — records it on the task as well, ' +
+          'so a finished task shows what it made.',
+      }),
+    ),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+}).pipe(Operation.mutation('write'));
+
+/** One artifact row: enough to identify and load the object, without inlining its content. */
+export const ArtifactInfo = Schema.Struct({
+  dxn: Schema.String,
+  typename: Schema.optional(Schema.String),
+  label: Schema.optional(Schema.String),
 });
 
-export const CreateRoutine = Operation.make({
-  meta: { key: makeKey('createRoutine'), name: 'Create Project Routine', icon: 'ph--lightning--regular' },
-  services: [Capability.Service, Database.Service],
+/**
+ * Lists the project's artifacts as identity-only rows (DXN, typename, label) rather than inlining
+ * their content, and degrades a broken ref to a placeholder row instead of failing the listing.
+ */
+export const ArtifactList = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.listArtifact'),
+    name: 'List project artifacts',
+    icon: 'ph--stack--regular',
+    description: trim`
+      Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
+      Use this to find what the project already holds before searching the whole space; load an
+      artifact's content with the database-load tool when needed.
+    `,
+  },
   input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
+    project: Ref.Ref(Project.Project).annotate({
+      description: 'The project whose artifacts to list (its reference is in the chat context).',
+    }),
   }),
   output: Schema.Struct({
-    routine: Type.getSchema(Routine.Routine),
+    artifacts: Schema.Array(ArtifactInfo),
   }),
-});
+  services: [Database.Service],
+}).pipe(Operation.mutation('none'));

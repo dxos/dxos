@@ -45,7 +45,7 @@ describe('renderViaCrx', () => {
   });
 
   test('isCrxRenderAvailable reflects the dataset marker', async ({ expect }) => {
-    const { isCrxRenderAvailable } = await import('./renderViaCrx');
+    const { isCrxRenderAvailable } = await import('./renderViaCrx.ts');
     expect(isCrxRenderAvailable()).toBe(false);
     setAvailable(true);
     expect(isCrxRenderAvailable()).toBe(true);
@@ -53,7 +53,7 @@ describe('renderViaCrx', () => {
 
   test('renderViaCrx resolves with the rendered HTML on a successful ack', async () => {
     setAvailable(true);
-    const { renderViaCrx } = await import('./renderViaCrx');
+    const { renderViaCrx } = await import('./renderViaCrx.ts');
     const uninstall = installFakeRelay((id) => ({
       version: 1,
       id,
@@ -69,13 +69,13 @@ describe('renderViaCrx', () => {
 
   test('renderViaCrx fails when the extension is unavailable', async () => {
     setAvailable(false);
-    const { renderViaCrx } = await import('./renderViaCrx');
+    const { renderViaCrx } = await import('./renderViaCrx.ts');
     await expect(EffectEx.runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/not available/);
   });
 
   test('renderViaCrx fails on a non-ok ack', async () => {
     setAvailable(true);
-    const { renderViaCrx } = await import('./renderViaCrx');
+    const { renderViaCrx } = await import('./renderViaCrx.ts');
     const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: false, error: 'forbiddenOrigin' }));
     await expect(EffectEx.runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/forbiddenOrigin/);
     uninstall();
@@ -89,14 +89,14 @@ describe('fetchPage routing', () => {
   });
 
   test('uses the edge proxy when rendering is not requested', async () => {
-    const { fetchPage } = await import('./fetch');
+    const { fetchPage } = await import('./fetch.ts');
     const body = await EffectEx.runAndForwardErrors(fetchPage({ method: 'GET', url: 'https://example.com' }));
     expect(body).toEqual('PROXY_BODY');
     expect(proxyFetchLegacy).toHaveBeenCalledTimes(1);
   });
 
   test('falls back to the edge proxy when render is requested but the extension is absent', async () => {
-    const { fetchPage } = await import('./fetch');
+    const { fetchPage } = await import('./fetch.ts');
     const body = await EffectEx.runAndForwardErrors(
       fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }),
     );
@@ -106,7 +106,7 @@ describe('fetchPage routing', () => {
 
   test('renders via the extension when requested and available', async () => {
     setAvailable(true);
-    const { fetchPage } = await import('./fetch');
+    const { fetchPage } = await import('./fetch.ts');
     const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: true, html: 'RENDERED', finalUrl: 'https://x' }));
     const body = await EffectEx.runAndForwardErrors(
       fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }),
@@ -118,7 +118,7 @@ describe('fetchPage routing', () => {
 
   test('never renders a POST request (uses the proxy)', async () => {
     setAvailable(true);
-    const { fetchPage } = await import('./fetch');
+    const { fetchPage } = await import('./fetch.ts');
     const body = await EffectEx.runAndForwardErrors(
       fetchPage({ method: 'POST', url: 'https://example.com', body: 'x' }, { render: true }),
     );

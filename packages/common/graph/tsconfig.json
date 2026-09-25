@@ -19,19 +19,22 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../async"
     },
     {
       "path": "../debug"
     },
     {
+      "path": "../effect"
+    },
+    {
+      "path": "../errors"
+    },
+    {
       "path": "../invariant"
     },
     {
-      "path": "../random"
+      "path": "../log"
     },
     {
       "path": "../util"

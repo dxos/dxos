@@ -3,13 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
-import { Button, Icon, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
@@ -102,7 +102,13 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   const showDescriptionToggle = descriptionOverflows || expanded;
 
   // The editable subset of the schema; catalog fields are omitted (read-only above).
-  const activitySchema = useMemo(() => omitId(Type.getSchema(Book.Book)).pipe(Schema.pick(...ACTIVITY_FIELDS)), []);
+  const activitySchema = useMemo(
+    // `SchemaAST.pick`, not `mapFields`: `omitId` returns a `Codec`, which carries no field
+    // literals for a struct operation.
+    () =>
+      Schema.make<Schema.Codec<any, any>>(SchemaAST.pick(omitId(Type.getSchema(Book.Book)).ast, [...ACTIVITY_FIELDS])),
+    [],
+  );
 
   // The activity form is uncontrolled — seeded once from the object, then each change written straight
   // back to it — mirroring ObjectProperties. A controlled `values` form re-seeds on every reactive
@@ -118,7 +124,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
       if (paths.length === 0) {
         return;
       }
-      Obj.update(book, () => {
+      Obj.update(book, (book) => {
         for (const path of paths) {
           Obj.setValue(book, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
         }
@@ -131,32 +137,32 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <div role='none' className='mli-auto flex max-is-[48rem] flex-col gap-4 p-4'>
+        <Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
-              <img src={cover} alt='' className='is-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
+              <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <div role='none' className='grid is-[8rem] aspect-[2/3] shrink-0 place-items-center rounded bg-input'>
+              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
                 <Icon icon='ph--book--regular' size={8} classNames='text-description' />
-              </div>
+              </Flex>
             )}
-            <div role='none' className='flex min-is-0 flex-col gap-2'>
+            <Flex column gap='sm' classNames='min-w-0'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
                 <p className='text-description'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
-              <div role='none' className='flex flex-wrap items-center gap-1'>
+              <Flex gap='xs' align='center' wrap>
                 {live.status && <Tag hue='info'>{STATUS_LABELS[live.status]}</Tag>}
                 {live.owned && <Tag hue='neutral'>{t('owned.label')}</Tag>}
-              </div>
+              </Flex>
               {(publication || externalLinks.length > 0) && (
                 <p className='text-sm text-description'>
                   {publication}
                   {externalLinks.map((link, index) => (
-                    <React.Fragment key={link.label}>
+                    <Fragment key={link.label}>
                       {(publication || index > 0) && ' · '}
                       <a
                         href={link.href}
@@ -166,27 +172,27 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                       >
                         {link.label}
                       </a>
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                 </p>
               )}
               {catalog?.genres && catalog.genres.length > 0 && (
-                <div role='none' className='flex flex-wrap gap-1'>
+                <Flex gap='xs' wrap>
                   {catalog.genres.map((genre) => (
                     <Tag key={genre} hue='neutral'>
                       {genre}
                     </Tag>
                   ))}
-                </div>
+                </Flex>
               )}
-            </div>
+            </Flex>
           </section>
 
           {/* Description — stored as markdown (converted from BookHive's HTML on ingest). */}
           {description && (
             <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
               <h2 className='text-base font-semibold'>{t('description.label')}</h2>
-              <div ref={descriptionRef} role='none' className={expanded ? '' : 'max-bs-52 overflow-hidden'}>
+              <div ref={descriptionRef} className={expanded ? '' : 'max-h-52 overflow-hidden'}>
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (
@@ -207,11 +213,11 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               onValuesChanged={handleChange}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Root>
           </section>
-        </div>
+        </Flex>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

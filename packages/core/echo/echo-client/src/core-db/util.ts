@@ -7,8 +7,8 @@ import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 
-import { type ChangeEvent } from '../automerge';
-import { type DocumentChanges } from './types';
+import { type ChangeEvent } from '../automerge/index.ts';
+import { type DocumentChanges } from './types.ts';
 
 export const getInlineAndLinkChanges = (event: ChangeEvent<DatabaseDirectory>) => {
   const inlineChangedObjectIds = new Set<string>();
@@ -37,4 +37,24 @@ export const getInlineAndLinkChanges = (event: ChangeEvent<DatabaseDirectory>) =
     inlineChangedObjects: [...inlineChangedObjectIds],
     linkedDocuments,
   };
+};
+
+/**
+ * Object ids whose entry was removed from a directory's `objects` or `links` map.
+ *
+ * Read from the patches rather than diffed against the working set: a root change accompanies every
+ * object write, so a scan would run on the hot path.
+ */
+export const getRemovedObjectIds = (event: ChangeEvent<DatabaseDirectory>): string[] => {
+  const removed = new Set<string>();
+  for (const patch of event.patches) {
+    if (
+      patch.action === 'del' &&
+      patch.path.length === 2 &&
+      (patch.path[0] === 'objects' || patch.path[0] === 'links')
+    ) {
+      removed.add(patch.path[1] as string);
+    }
+  }
+  return [...removed];
 };

@@ -1,0 +1,7 @@
+{
+  "key": "com.example.plugin.traversal",
+  "name": "Traversal Plugin",
+  "description": "A manifest whose asset path escapes its directory once decoded. Must never be installed.",
+  "version": "0.0.1",
+  "assets": ["index.mjs", "..%5Coutside.mjs"]
+}

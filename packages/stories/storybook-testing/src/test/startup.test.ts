@@ -6,10 +6,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
-import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { RpcClosedError } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -58,11 +59,11 @@ describe('ClientPlugin startup', () => {
 
     // Phase 1: Lazy-load plugins.
     let phaseStart = performance.now();
-    const [{ PluginManager, ProcessManagerPlugin }, { ClientPlugin }, { GraphPlugin }, { ClientCapabilities }] =
+    const [{ PluginManager, ProcessManagerPlugin }, ClientPlugin, GraphPlugin, { ClientCapabilities }] =
       await Promise.all([
         import('@dxos/app-framework'),
-        import('@dxos/plugin-client/plugin'),
-        import('@dxos/plugin-graph/plugin'),
+        import('@dxos/plugin-client/ClientPlugin'),
+        import('@dxos/plugin-graph/GraphPlugin'),
         import('@dxos/plugin-client'),
       ]);
     mark('dynamic imports', phaseStart);
@@ -70,7 +71,7 @@ describe('ClientPlugin startup', () => {
     // Phase 2: Create PluginManager with core plugins + ClientPlugin.
     phaseStart = performance.now();
 
-    const clientPlugin = ClientPlugin({
+    const clientPlugin = ClientPlugin.make({
       config: localConfig,
       onClientInitialized: ({ client }) =>
         Effect.gen(function* () {
@@ -104,7 +105,7 @@ describe('ClientPlugin startup', () => {
     });
 
     // Minimal set of framework plugins needed for ClientPlugin to activate.
-    const plugins: Plugin.Plugin[] = [GraphPlugin(), ProcessManagerPlugin(), clientPlugin];
+    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin(), clientPlugin];
 
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
@@ -136,9 +137,10 @@ describe('ClientPlugin startup', () => {
     const eventStarts: Record<string, number> = {};
     const startupDone = new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Startup timed out after 30s')), 30_000);
+      // v4's `subscribe` yields a `Subscription` read through `PubSub.take`, not a `Queue`.
       PubSub.subscribe(manager.activation).pipe(
-        Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+        Effect.flatMap((subscription) =>
+          PubSub.take(subscription).pipe(
             Effect.tap(({ event, state, error: activationError }) =>
               Effect.sync(() => {
                 if (state === 'activating') {
@@ -167,20 +169,22 @@ describe('ClientPlugin startup', () => {
       );
     });
 
-    // Phase 3: Fire activation events (mirrors useApp behavior).
+    // Phase 3: Fire the startup activation event (mirrors useApp behavior).
     phaseStart = performance.now();
-    await Effect.all([
-      manager.activate(ActivationEvents.SetupReactSurface),
-      manager.activate(ActivationEvents.Startup),
-    ]).pipe(Effect.runPromise);
+    await manager.activate(ActivationEvents.Startup).pipe(Effect.runPromise);
     mark('activation (core events)', phaseStart);
 
     await startupDone;
     mark('total startup', totalStart);
 
-    // Verify client is ready.
+    // Verify client is ready. `initialize()` is forked off the startup pass, so Startup completing
+    // no longer implies an initialized client — that is the point of the fork, and reading `halo`
+    // before it settles trips the client's own not-initialized invariant.
     const client = manager.capabilities.get(ClientCapabilities.Client) as Client;
     expect(client).toBeDefined();
+    phaseStart = performance.now();
+    await client.waitUntilInitialized();
+    mark('client initialize (forked off startup)', phaseStart);
     expect(client.halo.identity.get()).toBeDefined();
 
     // Print summary.

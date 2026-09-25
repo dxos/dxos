@@ -6,6 +6,17 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
+/**
+ * The rescuer renderings that end the flow. Its third, the connecting branch carrying
+ * `invitation-rescuer-cancel`, is not one: every invitation passes through it on the way to the auth
+ * code.
+ */
+const RESCUER_DEAD_ENDS =
+  "[data-testid='invitation-rescuer-reset']:visible, [data-testid='invitation-rescuer-blank-reset']:visible";
+
+/** Covers the swarm connection, introduction and authenticator handshake the guest waits through. */
+const AUTH_CODE_TIMEOUT = 30_000;
+
 /** @deprecated */
 export class ScopedShellManager {
   page!: Page;
@@ -58,11 +69,13 @@ export class ScopedShellManager {
   async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope): Promise<void> {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
-    const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // Wait for the input to be both visible and enabled before filling. The input is conditionally
-    // mounted based on the invitation state machine (connectingSpaceInvitation →
-    // inputtingSpaceVerificationCode), so a fixed sleep races the transition.
-    await input.waitFor({ state: 'visible' });
+    // Every step stays mounted and inactive ones are hidden, so only a visible input or rescuer counts.
+    const input = peer.locator(`[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible`);
+    const deadEnd = peer.locator(RESCUER_DEAD_ENDS);
+    await input.or(deadEnd).first().waitFor({ state: 'visible', timeout: AUTH_CODE_TIMEOUT });
+    if (await deadEnd.first().isVisible()) {
+      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step`);
+    }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }

@@ -4,31 +4,30 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { FeedOperation, Subscription } from '../types';
-import { makeSnippet, stripHtml } from '../util/text';
-import { browserCorsProxy, fetchArticle } from './sources';
+import { FeedOperation, Subscription } from '#types';
+
+import { makeSnippet, stripHtml } from '../util/text.ts';
+import { ArticleFetchError } from './errors.ts';
+import { browserCorsProxy, fetchArticle } from './sources/index.ts';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ post: postRef, force }) {
-      // The Post is a queue item (its source Subscription lives in space.db).
-      // Resolve the source Subscription first; everything that needs a
-      // Database / Space binding comes from there. The Post's own
-      // `Obj.getDatabase` link isn't reliably set on every code path that
-      // produces a queue-decoded proxy, but the Subscription is always in
-      // space.db.
+      // Resolve the source Subscription first: it carries the database binding. The Post is a queue
+      // item, and its own `Obj.getDatabase` link is not reliably set on every code path that produces
+      // a queue-decoded proxy, whereas the Subscription is always in the space database.
       const post = postRef.target;
       invariant(post, 'Post ref target not loaded.');
       const subscription = post.source?.target;
       if (!subscription || !post.link) {
         return;
       }
-      const space = getSpace(subscription);
-      invariant(space, 'Subscription is not in a space.');
+      const db = Obj.getDatabase(subscription);
+      invariant(db, 'Subscription is not in a space.');
       // Idempotent by default (first-open auto-load); `force` re-fetches for the reader's refresh.
       if (!force) {
         const existing = yield* Effect.tryPromise(() => Subscription.findPostContent(subscription, post));
@@ -44,7 +43,7 @@ export default FeedOperation.LoadPostContent.pipe(
       const inlineContent = post.content;
       if (subscription.type === 'standard-site' && inlineContent) {
         yield* Effect.tryPromise(() =>
-          Subscription.appendPostContent(space, subscription, {
+          Subscription.appendPostContent(db, subscription, {
             post,
             text: inlineContent,
             snippet: makeSnippet(stripHtml(inlineContent)),
@@ -61,7 +60,7 @@ export default FeedOperation.LoadPostContent.pipe(
           if (text) {
             // Store the body plus refined snippet/imageUrl derived from the full article — preferred
             // over the description-derived defaults wherever the Post is rendered.
-            await Subscription.appendPostContent(space, subscription, {
+            await Subscription.appendPostContent(db, subscription, {
               post,
               text,
               snippet: makeSnippet(stripHtml(text)),
@@ -69,7 +68,7 @@ export default FeedOperation.LoadPostContent.pipe(
             });
           }
         },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: ArticleFetchError.wrap(),
       });
     }),
   ),

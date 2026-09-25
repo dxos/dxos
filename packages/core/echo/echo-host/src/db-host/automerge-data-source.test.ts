@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { AutomergeDataSource, headsCodec } from './automerge-data-source';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeDataSource, headsCodec } from './automerge-data-source.ts';
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
 const OTHER_TYPE = DXN.make('com.example.type.other', '0.1.0');
@@ -119,7 +119,7 @@ describe('AutomergeDataSource', () => {
     const doc2Heads = headsCodec.encode(getHeads(handle2.doc()!));
 
     // Modify doc1 to have new heads.
-    handle1.change((doc) => {
+    handle1.change((doc: DatabaseDirectory) => {
       doc.objects!['obj-1'].data.title = 'Doc 1 Updated';
     });
     await host.flush(Context.default());
@@ -326,5 +326,107 @@ describe('AutomergeDataSource', () => {
 
     expect(result.objects).toHaveLength(1);
     expect(result.objects[0].spaceId).toBe(spaceId);
+  });
+
+  test('a late-arriving old change lands in its own hour and is counted once', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+
+    const handle = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Original' } }),
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+
+    const firstResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { activity: true }),
+    );
+    expect(firstResult.activity).toEqual([expect.objectContaining({ documentId: handle.documentId, full: true })]);
+    const firstChanges = firstResult.activity![0].changes;
+    expect(firstChanges.length).toBeGreaterThan(0);
+    const now = Date.now();
+    for (const change of firstChanges) {
+      expect(Math.abs(change.time - now)).toBeLessThan(5_000);
+    }
+    const firstCursor = firstResult.cursors[0];
+
+    const OLD_MS = Date.now() - 30 * 24 * 3_600_000;
+    const OLD_S = Math.floor(OLD_MS / 1000);
+    handle.change(
+      (doc: DatabaseDirectory) => {
+        // A string field is spliced character-by-character in this Automerge build and would not exercise `ops === 1`.
+        doc.objects!['obj-1'].data.count = 42;
+      },
+      { time: OLD_S },
+    );
+    await host.flush(Context.default());
+
+    const cursorsAfterFirstCall: IndexCursor[] = [
+      {
+        indexName: 'activity',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle.documentId,
+        cursor: firstCursor.cursor,
+      },
+    ];
+    const secondResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), cursorsAfterFirstCall, { activity: true }),
+    );
+    expect(secondResult.activity).toEqual([
+      { spaceId, documentId: handle.documentId, full: false, changes: [{ time: OLD_S * 1000, ops: 1 }] },
+    ]);
+    const secondCursor = secondResult.cursors[0];
+
+    const cursorsAfterSecondCall: IndexCursor[] = [
+      {
+        indexName: 'activity',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle.documentId,
+        cursor: secondCursor.cursor,
+      },
+    ];
+    const thirdResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), cursorsAfterSecondCall, { activity: true }),
+    );
+    expect(thirdResult.activity).toEqual([]);
+  });
+
+  test('a branch document counted before its root was read is discarded once the root names it', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+    const dataSource = new AutomergeDataSource(host);
+    const toCursors = (result: { cursors: { resourceId: string | null; cursor: string | number }[] }): IndexCursor[] =>
+      result.cursors.map(({ resourceId, cursor }) => ({
+        indexName: 'activity',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId,
+        cursor,
+      }));
+
+    const branch = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'On a branch' } }),
+    });
+    await host.flush(Context.default());
+    const first = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { activity: true }),
+    );
+    expect(first.activity).toEqual([expect.objectContaining({ documentId: branch.documentId, full: true })]);
+    expect(first.activity![0].changes.length).toBeGreaterThan(0);
+
+    const root = await createDatabaseDirectory(host, spaceId, {});
+    root.change((doc: DatabaseDirectory) => {
+      doc.branches = { 'obj-1': { feature: { members: { 'obj-1': branch.url } } } };
+    });
+    await host.flush(Context.default());
+    await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const second = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), toCursors(first), { activity: true }),
+    );
+    expect(second.activity).toContainEqual({ spaceId, documentId: branch.documentId, full: true, changes: [] });
+    expect(second.activity).toContainEqual(expect.objectContaining({ documentId: root.documentId }));
   });
 });

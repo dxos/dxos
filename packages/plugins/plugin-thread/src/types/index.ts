@@ -1,7 +1,8 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './channel-backend';
-export * as ThreadCapabilities from './ThreadCapabilities';
-export * as ThreadOperation from './ThreadOperation';
+export * as ChannelBackend from './ChannelBackend.ts';
+export * as ThreadCapabilities from './ThreadCapabilities.ts';
+export * as ThreadEvents from './ThreadEvents.ts';
+export * as ThreadOperation from './ThreadOperation.ts';

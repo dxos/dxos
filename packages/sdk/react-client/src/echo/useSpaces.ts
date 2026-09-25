@@ -7,7 +7,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 /**
  * Get a specific Space using its id.

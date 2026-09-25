@@ -4,9 +4,8 @@
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
 
+import { useExtractedObjects } from '#hooks';
 import { Mailbox } from '#types';
-
-import { useExtractedObjects } from '../../hooks';
 
 /**
  * Merges objects from `ExtractedFrom` relations (live space-db sources) with those recorded on

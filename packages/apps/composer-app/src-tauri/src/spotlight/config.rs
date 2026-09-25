@@ -23,7 +23,7 @@ impl Default for SpotlightConfig {
         Self {
             title: "Composer Quick Access".to_string(),
             width: 680.0,
-            height: 420.0,
+            height: 400.0,
             shortcut: "Alt+Space".to_string(),
         }
     }

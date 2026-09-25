@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type CSSProperties,
@@ -18,12 +16,14 @@ import React, {
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { useFocusGroup } from '@dxos/react-focus';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { prefersReducedMotion, useFlip } from './useFlip';
-import { useMasonryLayout } from './useMasonryLayout';
+import { prefersReducedMotion, useFlip } from './useFlip.ts';
+import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
 const REVEAL_SETTLE_MS = 80;
@@ -174,10 +174,10 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   onSelect?: (id: string, event: MouseEvent) => void;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
-   * viewport) to render the grid in a plain block instead of a nested scroll container — the grid is
-   * then sized by `dx-column` rather than by a `ScrollArea.Root`, which `Masonry.Content` provides
-   * and which is therefore not needed. Nesting scroll containers also risks collapsing the measured
-   * width to the scrollbar gutter, which would suppress the grid entirely (see the width gate below).
+   * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
+   * the `ScrollArea.Root` that `Masonry.Content` provides is then not needed. Nesting scroll
+   * containers also risks collapsing the measured width to the scrollbar gutter, which would
+   * suppress the grid entirely (see the width gate below).
    * @default true
    */
   scroll?: boolean;
@@ -253,14 +253,15 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       return () => clearTimeout(deadline);
     }, []);
 
-    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
-    // arrows move focus through the items as flat next/previous-focusable, giving
-    // predictable wrap-around in DOM order.
-    const arrowNavigationAttrs = useArrowNavigationGroup({
+    // Arrow-key navigation across tiles. The `both` axis moves focus through the items as flat
+    // next/previous in DOM order on all four arrows; `tabbable` keeps each tile its own tab stop.
+    const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({
       axis: 'both',
       memorizeCurrent: true,
       tabbable: true,
+      cyclic: true,
     });
+    const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
     // The viewport is the full-width scroll container; its centered+padded theme
     // (with `--gutter` set to the gap) balances the scrollbar into symmetric inline
@@ -283,9 +284,9 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                 transition: animate && !prefersReducedMotion() ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
               },
             })}
-            {...arrowNavigationAttrs}
+            {...focusGroupProps}
             role='list'
-            ref={forwardedRef}
+            ref={gridRef}
           >
             {items.map((item, index) => {
               const id = ids[index];
@@ -305,7 +306,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                   // the column, or a narrow (single-column, mobile) container overflows
                   // and shows a horizontal scrollbar.
                   className={[
-                    '[&>*]:min-w-0!',
+                    '*:min-w-0!',
                     selectable && 'cursor-pointer',
                     selected && 'rounded-md ring-2 ring-inset ring-primary-500',
                   ]
@@ -333,13 +334,13 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       </>
     );
 
-    // `dx-column` (not `dx-expander`) in the non-scrolling case: it gives the definite inline size
-    // the width gate needs (`w-full min-w-0`) without claiming the block axis, which would fight the
-    // surrounding flow — the grid's height comes from the computed layout.
+    // Not `dx-expand` in the non-scrolling case: the width gate needs a definite inline size
+    // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
+    // the grid's height comes from the computed layout.
     return scroll ? (
       <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
     ) : (
-      <div className='dx-column' ref={viewportRef}>
+      <div className='flex-1 w-full min-w-0' ref={viewportRef}>
         {grid}
       </div>
     );

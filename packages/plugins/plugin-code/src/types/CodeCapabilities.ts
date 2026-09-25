@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 /**
  * Diagnostic shape mirroring `compiler.Diagnostic`. Re-declared here (rather
@@ -56,4 +56,6 @@ export type BuildRunState = Readonly<Record<string, ProjectBuildState | undefine
  * outside React so it survives `CodeArticle` remount and so the agent can
  * (later) read/write build status without going through the editor.
  */
-export const BuildRun = Capability.make<Atom.Writable<BuildRunState>>(`${meta.profile.key}.capability.build-run`);
+export const BuildRun = Capability.makeSingleton<Atom.Writable<BuildRunState>>()(
+  `${meta.profile.key}.capability.buildRun`,
+);

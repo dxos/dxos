@@ -14,8 +14,8 @@ import { TerraPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Terra, TerraCapabilities } from '#types';
 
-import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import { TerraArticle } from './TerraArticle';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing/index.ts';
+import { TerraArticle } from './TerraArticle.tsx';
 
 type StoryArgs = Partial<Terra.TerraConfig>;
 
@@ -45,13 +45,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+// A bare manager, not `TerraPlugin()`: these stories exercise TerraArticle's fallback cache, which
+// only runs while the PlanetCache capability is unregistered.
+export const Default: Story = {
+  decorators: [withPluginManager()],
+};
 
 export const Hires: Story = {
   args: {
     resolution: 512,
     seed: 'terra-4',
   },
+  decorators: [withPluginManager()],
 };
 
 const ObjectsStory = () => {
@@ -61,6 +66,7 @@ const ObjectsStory = () => {
 
 export const Objects: Story = {
   render: () => <ObjectsStory />,
+  decorators: [withPluginManager()],
 };
 
 const CachedStory = () => {

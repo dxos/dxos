@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { buildRollups } from './rollups';
+import { buildRollups } from './rollups.ts';
 
 describe('buildRollups', () => {
   test('aggregates per sender: counts, contact span, cadence, threads', ({ expect }) => {

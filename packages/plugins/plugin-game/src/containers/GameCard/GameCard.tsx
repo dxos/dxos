@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 
-import { type Game, GameCapabilities } from '#types';
+import { Game, GameCapabilities } from '#types';
 
 export type GameCardProps = AppSurface.ObjectCardProps<Game.Game>;
 

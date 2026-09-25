@@ -6,9 +6,9 @@ import { describe, test } from 'vitest';
 
 import { ProjectionMapper } from '@dxos/react-ui-canvas';
 
-import { pointSubtract, round } from '../layout';
-import { resizeAxis } from './useDragMonitor';
-import { createSnap } from './useSnap';
+import { pointSubtract, round } from '../layout/index.ts';
+import { resizeAxis } from './useDragMonitor.ts';
+import { createSnap } from './useSnap.ts';
 
 const PITCH = 32;
 const BOUNDS = { min: 128, max: 960, symmetric: false };

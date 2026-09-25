@@ -10,9 +10,9 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { BookInfo } from './BookInfo';
-import { BookReader } from './BookReader';
-import { type EpubReaderHandle } from './EpubReader';
+import { BookInfo } from './BookInfo.tsx';
+import { BookReader } from './BookReader.tsx';
+import { type EpubReaderHandle } from './EpubReader.tsx';
 
 export type BookArticleProps = AppSurface.ObjectArticleProps<Book.Book>;
 
@@ -48,7 +48,7 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
               />
             </>
           )}
-          <div role='none' className='grow' />
+          <div className='grow' />
           <Toolbar.ToggleGroup
             type='single'
             value={viewMode}

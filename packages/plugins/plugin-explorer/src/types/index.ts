@@ -1,6 +1,7 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * as ExplorerAction from './ExplorerAction';
-export * as Graph from './Graph';
+export * as ExplorerAction from './ExplorerAction.ts';
+export * as ExplorerEvents from './ExplorerEvents.ts';
+export * as Graph from './Graph.ts';

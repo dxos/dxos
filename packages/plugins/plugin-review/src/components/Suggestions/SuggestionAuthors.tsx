@@ -7,7 +7,7 @@ import React from 'react';
 import { Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type SuggestionAuthorRow = {
   /** The author's identity DID. */

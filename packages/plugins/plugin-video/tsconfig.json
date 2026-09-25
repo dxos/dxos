@@ -19,16 +19,13 @@
   ],
   "references": [
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -58,6 +55,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -67,7 +67,7 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/react-primitives/react-hooks"
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -82,9 +82,6 @@
       "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/ui"
     },
     {
@@ -97,9 +94,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-markdown"
     },
     {
@@ -107,9 +101,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

@@ -4,8 +4,8 @@
 
 import { addons } from 'storybook/preview-api';
 
-import { DOWNLOAD_EVENT, LOGS_DATA_EVENT } from './constants';
-import { triggerLogsDownload } from './trigger-download';
+import { DOWNLOAD_EVENT, LOGS_DATA_EVENT } from './constants.ts';
+import { triggerLogsDownload } from './trigger-download.ts';
 
 /**
  * Requests the current story's buffered logs from `preview.tsx`'s `LogBuffer` and downloads them

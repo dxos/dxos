@@ -5,9 +5,9 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { Reply } from './definitions';
+import { Reply } from './definitions.ts';
 
 export default Reply.pipe(
   Operation.withHandler(

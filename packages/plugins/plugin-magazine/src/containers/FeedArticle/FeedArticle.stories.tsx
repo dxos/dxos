@@ -13,9 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { PostStack, type PostStackAction } from '#components';
 import { generateFeed, generatePosts } from '#testing';
-import { type Subscription } from '#types';
+import { Subscription } from '#types';
 
-type FeedArticleStoryProps = {
+type FeedArticleStoryArgs = {
   feedUrl?: string;
 };
 
@@ -26,7 +26,7 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
     let cancelled = false;
     const load = async () => {
       if (feedUrl) {
-        const { fetchRss } = await import('../../operations/sources/rss');
+        const { fetchRss } = await import('../../operations/sources/rss.ts');
         const result = await EffectEx.runPromise(fetchRss(feedUrl, { corsProxy: '/api/rss?url=' }));
         if (!cancelled) {
           setData(result);
@@ -50,7 +50,7 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
   return data;
 };
 
-const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
+const DefaultStory = ({ feedUrl }: FeedArticleStoryArgs) => {
   const data = useFeedData(feedUrl);
   const [currentPostId, setCurrentPostId] = useState<string>();
 
@@ -67,13 +67,13 @@ const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
   const { feed, posts } = data;
 
   return (
-    <Panel.Root role='article' className='dx-document'>
+    <Panel.Root role='article' classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>{feed.name}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content asChild>
         <PostStack id='story-feed' posts={posts} currentId={currentPostId} onAction={handleAction} />
       </Panel.Content>
     </Panel.Root>

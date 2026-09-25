@@ -4,16 +4,15 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { useSettingsState } from '@dxos/app-framework/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { pingExtension } from '../../util';
-
-export type CrxSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+import { pingExtension } from '../../util/index.ts';
 
 type TestState =
   | { kind: 'idle' }
@@ -21,8 +20,15 @@ type TestState =
   | { kind: 'ok'; message: string }
   | { kind: 'error'; message: string };
 
-export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) => {
+export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
+
+/**
+ * Settings panel for the browser extension: edits the plugin's schema-driven settings and offers a
+ * round-trip connection test against the extension's content relay.
+ */
+export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
   // Round-trip a ping to the extension and report its identity (or why it failed).
@@ -44,17 +50,21 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      readonly={readonly}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            description={t('settings.description')}
+            actions={readonly ? undefined : <SettingsScope prefix={subject.prefix} />}
+          >
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('test.title')}>
-            <div className='flex gap-2'>
+          <Form.FieldSet label={t('test.title')}>
+            <Flex gap='sm'>
               <IconButton
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
@@ -63,24 +73,24 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
               />
 
               {/* role=status + aria-live so screen readers announce the async outcome. */}
-              <div className='flex items-center'>
+              <Flex align='center'>
                 <span
                   role='status'
                   aria-live='polite'
                   className={
                     test.kind === 'ok'
-                      ? 'text-sm text-success'
+                      ? 'text-sm text-success-text'
                       : test.kind === 'error'
-                        ? 'text-sm text-error'
+                        ? 'text-sm text-error-text'
                         : 'text-sm text-description'
                   }
                 >
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
                   {test.kind === 'pending' ? t('test.pending.message') : ''}
                 </span>
-              </div>
-            </div>
-          </Form.Section>
+              </Flex>
+            </Flex>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -12,7 +12,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { ParquetReadError, type ParquetRow, parquetSource } from './parquet';
+import { ParquetReadError, type ParquetRow, parquetSource } from './parquet.ts';
 
 // git clone https://huggingface.co/datasets/corbt/enron-emails
 
@@ -55,11 +55,11 @@ describe('parquetSource', () => {
 
   test('fails with ParquetReadError for a missing file', async ({ expect }) => {
     const result = await EffectEx.runPromise(
-      parquetSource([join(dir, 'missing.parquet')]).pipe(Stream.runCollect, Effect.either),
+      parquetSource([join(dir, 'missing.parquet')]).pipe(Stream.runCollect, Effect.result),
     );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left).toBeInstanceOf(ParquetReadError);
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      expect(result.failure).toBeInstanceOf(ParquetReadError);
     }
   });
 });

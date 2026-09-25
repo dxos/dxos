@@ -4,19 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
-import { DeckCapabilities } from '../types';
+import { DeckCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary> =
   LayoutOperation.UpdateComplementary.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const panelChanged = state.complementarySidebarPanel !== input.subject;
-        const next = input.subject ? 'expanded' : (input.state ?? state.complementarySidebarState);
+        const selectsPanel = input.subject !== undefined;
+        const panelChanged = selectsPanel && state.complementarySidebarPanel !== input.subject;
+        const next = input.state ?? (selectsPanel ? 'expanded' : state.complementarySidebarState);
         const stateChanged = next !== state.complementarySidebarState;
 
         if (panelChanged || stateChanged) {

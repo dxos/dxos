@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Video from './Video';
-export * as VideoOperation from './VideoOperation';
+export * as VideoEvents from './VideoEvents.ts';
+export * as VideoOperation from './VideoOperation.ts';

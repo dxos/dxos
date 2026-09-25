@@ -9,14 +9,15 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { AssistantTestLayer } from '../testing';
-import * as AgentService from './AgentService';
-import { type DelegationStrategy } from './delegation-strategy';
+import { AssistantTestLayer } from '../testing/index.ts';
+import * as AgentService from './AgentService.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
 
 const { text, scriptedAiService } = ScriptedLanguageModel;
 
@@ -28,7 +29,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -62,7 +63,7 @@ const delegationHarness: DelegationHarness = { pending: [], completed: [] };
  * (the real strategy is covered by `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`).
  */
 const StubDelegationStrategy: DelegationStrategy = {
-  reconcile: (_feed, activeIds) =>
+  reconcile: (_chat, activeIds) =>
     Effect.succeed(
       delegationHarness.pending
         .filter((work) => !activeIds.has(work.id))
@@ -75,7 +76,7 @@ const StubDelegationStrategy: DelegationStrategy = {
           }),
         })),
     ),
-  onComplete: (_feed, id, exit) =>
+  onComplete: (_chat, id, exit) =>
     Effect.sync(() => {
       delegationHarness.completed.push({ id, exit });
       delegationHarness.pending = delegationHarness.pending.filter((work) => work.id !== id);
@@ -91,7 +92,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('AgentProcess delegation lifecycle (scripted)', () => {
-  it.scoped(
+  it.effect(
     'delegates work to a sub-agent and folds the result back on completion',
     Effect.fnUntraced(
       function* (_) {

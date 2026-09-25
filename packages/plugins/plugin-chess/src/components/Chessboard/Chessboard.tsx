@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -25,10 +25,10 @@ import {
   getRawPgn,
 } from '@dxos/react-ui-gameboard';
 
-import { type Chess } from '#types';
+import { Chess } from '#types';
 
-import { Info, type InfoProps } from './Info';
-import { ExtendedChessModel } from './types';
+import { Info, type InfoProps } from './Info.tsx';
+import { ExtendedChessModel } from './types.ts';
 
 export interface ChessboardController {
   setMoveNumber(index: number): void;

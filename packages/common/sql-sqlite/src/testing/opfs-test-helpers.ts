@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import * as OpfsPool from '../OpfsPool';
-import * as SqliteClient from '../SqliteClient';
+import * as OpfsPool from '../OpfsPool.ts';
+import * as SqliteClient from '../SqliteClient.ts';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
 

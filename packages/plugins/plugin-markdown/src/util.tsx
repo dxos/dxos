@@ -4,7 +4,7 @@
 
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { type TypedObjectSerializer } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { Markdown } from '#types';
 
@@ -93,7 +93,7 @@ export const getFallbackName = (content = ''): string => {
           result = next;
         }
 
-        return result + '…';
+        return (result || text.slice(0, maxLen)) + '…';
       }
 
       return text;
@@ -118,7 +118,7 @@ export const setFallbackName = debounce((doc: Markdown.Document, content = '') =
   }
 }, 200);
 
-export const serializer: TypedObjectSerializer<Markdown.Document> = {
+export const serializer: SpaceSchema.TypedObjectSerializer<Markdown.Document> = {
   serialize: async ({ object }): Promise<string> => {
     const { content } = await object.content.load();
     return JSON.stringify({ name: object.name, fallbackName: object.fallbackName, content });

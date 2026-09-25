@@ -10,13 +10,10 @@
   ],
   "references": [
     {
-      "path": "../packages/common/keys"
-    },
-    {
       "path": "../packages/core/echo/echo"
     },
     {
-      "path": "../packages/sdk/app-framework"
+      "path": "../packages/core/protocols"
     },
     {
       "path": "../packages/sdk/client"

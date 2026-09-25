@@ -6,13 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Computes driving routes for a trip's `road` segments. Resolves the registered `RoutingService`
@@ -23,7 +19,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const PlanRoute = Operation.make({
   meta: {
-    key: makeKey('planRoute'),
+    key: DXN.make('org.dxos.operation.trip.planRoute'),
     name: 'Plan route',
     description: 'Compute driving routes between the cities on the trip’s road segments.',
     icon: 'ph--path--regular',

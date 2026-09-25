@@ -5,11 +5,11 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Dialog, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
 
-import { Action, TextInput } from '../components';
-import { translationKey } from '../translations';
-import { type StepProps } from './StepProps';
+import { Action, TextInput } from '../components/index.ts';
+import { translationKey } from '../translations.ts';
+import { type StepProps } from './StepProps.ts';
 
 export type ConfirmResetMode = 'join-new-identity' | 'recover' | 'reset-storage';
 
@@ -78,10 +78,12 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Message.Root valence='error' classNames='mb-2'>
-        <Message.Title>{resolvedTitle}</Message.Title>
-        <Message.Content>{resolvedMessage}</Message.Content>
-      </Message.Root>
+      <Banner.Root valence='error'>
+        <Banner.Content classNames='mb-trim-md'>
+          <Banner.Title>{resolvedTitle}</Banner.Title>
+          <Banner.Body>{resolvedMessage}</Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
       <TextInput
         {...{ validationMessage }}
         disabled={disabled}

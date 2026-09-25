@@ -5,17 +5,18 @@
 import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
+import { toPublicKey } from '@dxos/protocols/buf';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
 import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useSections } from '../hooks';
+import { useSections } from '../hooks/index.ts';
 
 export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='dx-container flex'>
+    <div className='dx-expand flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
         <ErrorBoundary key={pathname} name='devtools.root'>
@@ -33,7 +34,7 @@ const Sidebar = () => {
   const sections = useSections();
   return (
     <ScrollArea.Root orientation='vertical' classNames='w-[180px] border-e border-separator'>
-      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm ps-4 py-1'>{section.title}</div>
@@ -66,11 +67,11 @@ const Footer = () => {
       <div className='flex flex-col w-full text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Identity</div>
-          <div className='font-mono'>{identity?.identityKey.truncate()}</div>
+          <div className='font-mono'>{toPublicKey(identity?.identityKey)?.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Device</div>
-          <div className='font-mono'>{device?.deviceKey.truncate()}</div>
+          <div className='font-mono'>{toPublicKey(device?.deviceKey)?.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Version</div>

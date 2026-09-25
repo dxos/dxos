@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger } from '@dxos/compute';
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trigger from '@dxos/compute/Trigger';
 // QueryAST is referenced indirectly through `Type.InstanceType<typeof ...EventSchema>`
 // in the emitted .d.ts; the namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -132,7 +132,7 @@ export class InvocationTraceEndEvent extends Type.makeObject<InvocationTraceEndE
     // TODO(burdon): Remove ms suffix.
     timestamp: Schema.Number,
 
-    outcome: Schema.Enums(InvocationOutcome),
+    outcome: Schema.Enum(InvocationOutcome),
 
     error: Schema.optional(SerializedError),
   }),
@@ -144,7 +144,7 @@ export const TraceEventLog = Schema.Struct({
   timestamp: Schema.Number,
   level: Schema.String,
   message: Schema.String,
-  context: Schema.optional(Schema.Object),
+  context: Schema.optional(Schema.ObjectKeyword),
 });
 
 export class TraceEvent extends Type.makeObject<TraceEvent>(DXN.make('org.dxos.type.traceEvent', '0.1.0'))(

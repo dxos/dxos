@@ -13,11 +13,11 @@ import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { arrayMove } from '@dxos/util';
 
-import { useContainerDebug } from '../../hooks';
-import { DefaultStackTile, TestItem } from '../../testing';
-import { Focus } from '../Focus';
-import { Mosaic, MosaicStackProps } from './Mosaic';
-import { MosaicStack } from './Stack';
+import { useContainerDebug } from '../../hooks/index.ts';
+import { DefaultStackTile, TestItem } from '../../testing/index.ts';
+import { Focus } from '../Focus/index.ts';
+import { Mosaic, MosaicStackProps } from './Mosaic.ts';
+import { MosaicStack } from './Stack.tsx';
 
 random.seed(999);
 
@@ -97,7 +97,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
           </Focus.Group>
         </Panel.Content>
         {props.debug && (
-          <Panel.Statusbar className='h-[40dvh]'>
+          <Panel.Statusbar classNames='h-[40dvh]'>
             <DebugInfo />
           </Panel.Statusbar>
         )}
@@ -144,7 +144,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
           </Mosaic.Container>
         </Panel.Content>
         {props.debug && (
-          <Panel.Statusbar className='h-[40dvh]'>
+          <Panel.Statusbar classNames='h-[40dvh]'>
             <DebugInfo />
           </Panel.Statusbar>
         )}

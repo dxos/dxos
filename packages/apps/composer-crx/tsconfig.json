@@ -28,25 +28,13 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/config"

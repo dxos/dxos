@@ -10,10 +10,10 @@ import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
-import { TRADINGVIEW_SOURCE } from '../../constants';
-import { Ibkr } from '../../types';
-import { InstrumentCard } from './InstrumentCard';
+import { TRADINGVIEW_SOURCE } from '../../constants.ts';
+import { InstrumentCard } from './InstrumentCard.tsx';
 
 // Fictional instrument only — this is a public repo (never real holdings).
 const DefaultStory = () => {

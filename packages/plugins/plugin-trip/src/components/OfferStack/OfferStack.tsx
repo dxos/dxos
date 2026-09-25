@@ -17,12 +17,12 @@ import {
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
-import { type BookingSearch as BookingSearchType } from '#types';
+import { BookingSearch } from '#types';
 
-export type OfferSelectHandler = (offer: BookingSearchType.FlightOffer) => void;
+export type OfferSelectHandler = (offer: BookingSearch.FlightOffer) => void;
 
 type OfferTileData = {
-  offer: BookingSearchType.FlightOffer;
+  offer: BookingSearch.FlightOffer;
   onSelect?: OfferSelectHandler;
 };
 
@@ -95,7 +95,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
 OfferTile.displayName = 'OfferTile';
 
 export type OfferStackProps = ThemedClassName<{
-  offers?: readonly BookingSearchType.FlightOffer[];
+  offers?: readonly BookingSearch.FlightOffer[];
   currentId?: string;
   onSelect?: OfferSelectHandler;
 }>;

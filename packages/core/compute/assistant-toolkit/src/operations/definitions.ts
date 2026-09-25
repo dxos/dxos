@@ -5,16 +5,17 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { Instructions, Operation, Trace } from '@dxos/compute';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
-import * as Chat from '../types/Chat';
-
 export const RunInstructions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.runInstructions'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.runInstructions'),
     name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',
@@ -26,7 +27,7 @@ export const RunInstructions = Operation.make({
      * Input object or data.
      * References get auto-resolved.
      */
-    input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
+    input: Schema.Any.pipe(Schema.annotate({ title: 'Input' })),
 
     /**
      * When set, runs in this chat (history, queue, and bound context). Routine skills and context objects are merged into the conversation for this request.
@@ -34,11 +35,11 @@ export const RunInstructions = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default dxn:com.anthropic.model.claude-opus-4-8.default
+     * @default `dxn:com.anthropic.model.claude-opus-5.default`.
      */
     model: Schema.optional(DXN.Schema),
 
-    systemInstructions: Schema.optional(Schema.String).annotations({
+    systemInstructions: Schema.optional(Schema.String).annotate({
       description: 'Additional system instructions to add to the system prompt.',
     }),
   }),

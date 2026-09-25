@@ -3,12 +3,11 @@
 //
 
 import { sleep } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
-import { createCodecEncoding } from '@dxos/hypercore';
+import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { random } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
-import { type FeedWriter } from '../feed-writer';
+import { type HypercoreWriter } from '../hypercore-writer.ts';
 
 export type TestItem = {
   id: string;
@@ -16,7 +15,7 @@ export type TestItem = {
   value: string;
 };
 
-export const defaultCodec: Codec<any> = {
+export const defaultCodec: ValueCodec<any> = {
   encode: (obj: any) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString()),
 };
@@ -40,7 +39,7 @@ export class TestGenerator<T extends {}> {
   constructor(private readonly _generate: TestBlockGenerator<T>) {}
 
   async writeBlocks(
-    writer: FeedWriter<T>,
+    writer: HypercoreWriter<T>,
     {
       count = 1,
       delay,

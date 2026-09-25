@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-solid",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "SolidJS integration for @dxos/app-framework",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,7 +32,6 @@
     "@dxos/web-context-solid": "workspace:*"
   },
   "devDependencies": {
-    "@effect-atom/atom": "catalog:",
     "@solidjs/testing-library": "catalog:",
     "effect": "catalog:",
     "solid-js": "catalog:",

@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { composeStories } from '@storybook/react';
+import { composeStories } from '@storybook/react-vite';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import * as stories from './OrderedList.stories';
+import * as stories from './OrderedList.stories.tsx';
 
 // Tests exercise the master-detail editor variant directly — the most feature-rich shape
 // of the compound (drag handle + clickable title + expand caret + detail panel + delete).

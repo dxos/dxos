@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { ConfigService } from '@dxos/config';
+import { layerMemory } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import { ClientService } from './client-service';
+import { ClientService, layer } from './client-service.ts';
 
-const TestLayer = Function.pipe(ClientService.layer, Layer.provideMerge(ConfigService.layerMemory));
+const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 
 describe('ClientService', () => {
   it('should initialize', { timeout: 10_000 }, async () => {
@@ -27,10 +27,7 @@ describe('ClientService', () => {
   it('can create identity', async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
-      const identity = yield* Effect.tryPromise({
-        try: () => client.halo.createIdentity(),
-        catch: (error) => error as Error,
-      });
+      const identity = yield* Effect.tryPromise(() => client.halo.createIdentity());
       return identity;
     }).pipe(Effect.provide(TestLayer));
     const identity = await EffectEx.runAndForwardErrors(program);

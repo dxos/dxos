@@ -3,13 +3,13 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { DataFactory, type Quad } from 'n3';
 
-import { migrate } from '../sqlite/schema';
-import { insertQuads, makeSqliteSource } from './sqlite-source';
+import { migrate } from '../sqlite/schema.ts';
+import { insertQuads, makeSqliteSource } from './sqlite-source.ts';
 
 const { namedNode, literal } = DataFactory;
 const TestLayer = SqliteClient.layer({ filename: ':memory:' });

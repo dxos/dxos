@@ -10,11 +10,9 @@ import { Dnd } from '@dxos/react-ui-dnd';
 import { useDeckState } from '#hooks';
 import { DeckCapabilities } from '#types';
 
-import { Deck } from '../Deck';
-import { ActiveNode } from './ActiveNode';
-import { Dialog } from './Dialog';
-import { PopoverContent, PopoverRoot } from './Popover';
-import { Toaster, type ToasterProps } from './Toast';
+import { Deck } from '../Deck/index.ts';
+import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '../Overlays/index.ts';
+import { ActiveNode } from './ActiveNode.tsx';
 
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 

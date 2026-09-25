@@ -3,18 +3,18 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
 
-import { SemanticIndexError } from './errors';
-import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
-import { FactPipeline } from './pipeline';
+import { SemanticIndexError } from './errors.ts';
+import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract.ts';
+import { FactPipeline } from './pipeline.ts';
 import {
   type DocumentFacts,
   extractFacts,
@@ -22,11 +22,11 @@ import {
   indexFactsStage,
   normalizeEntityId,
   normalizeFactsStage,
-} from './stages';
-import { FactStore } from './store';
-import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
-import { type ExtractDocument } from './types';
-import { type Fact } from './types';
+} from './stages/index.ts';
+import { FactStore, FactStoreLive } from './store/index.ts';
+import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
+import { type ExtractDocument } from './types/index.ts';
+import { type Fact } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -86,12 +86,12 @@ const QUESTION_OUTPUT = {
   ],
 };
 
-const TestLayer = FactStore.layer.pipe(
+const TestLayer = FactStoreLive.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
-const FailingLayer = FactStore.layer.pipe(
+const FailingLayer = FactStoreLive.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -267,7 +267,7 @@ describe('FactPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
-      const layer = FactStore.layer.pipe(
+      const layer = FactStoreLive.layer.pipe(
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );
@@ -427,7 +427,7 @@ describe('FactPipeline', () => {
         facts: [{ subject: 'Composer', predicate: 'discussedIn', object: 'Discord', factuality: 'CT+', polarity: '+' }],
       });
       // In-memory (browser/test) store layer — no SQLite.
-      const layer = FactStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
+      const layer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
         const docs = loadDiscordDocs();
         yield* FactPipeline.run(docs);

@@ -6,18 +6,20 @@ import { Compartment, type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { Markdown, type UseEditorBinding, type ViewModeSelection } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { useEditorContext } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { type SuggestionSource, changeBarGutter, type suggestionsOverlay } from '@dxos/ui-editor';
 
-import { SuggestionSourcesProvider, VersionToolbar } from '../components';
-import { applyViewModeSelection } from './review-lifecycle';
-import { useReviewExtensions } from './useReviewExtensions';
-import { useVersionedEditor } from './useVersionedEditor';
-import { useVersioning } from './useVersioning';
+import { SuggestionSourcesProvider, VersionToolbar } from '#components';
+
+import { applyViewModeSelection } from './review-lifecycle.ts';
+import { useReviewExtensions } from './useReviewExtensions.ts';
+import { useVersionedEditor } from './useVersionedEditor.ts';
+import { useVersioning } from './useVersioning.ts';
 
 // The compare/diff overlay is swapped in and out through a compartment so toggling Compare
 // reconfigures the live editor rather than remounting it (which would rebind automerge and lose
@@ -30,13 +32,21 @@ const compareCompartment = new Compartment();
  * the review affordances (suggest overlay, tracked changes, multi-author ambient overlay, compare
  * overlay, version banner) ride along. Contributed via `MarkdownCapabilities.EditorBindingHook`.
  */
-export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMode, onViewModeChange, diffView }) => {
+export const useMarkdownEditorBinding: MarkdownCapabilities.UseEditorBinding = ({
+  object,
+  id,
+  viewMode,
+  onViewModeChange,
+  diffView,
+}) => {
   const identity = useIdentity();
   const versioning = useVersioning(object);
-  // The accepted base (`main`) the review overlays diff against; subscribed so it tracks keystrokes.
-  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-  const mainContent = docContent ?? textContent;
+  const mainText = useResolveRef(
+    Obj.instanceOf(Markdown.Document, object) ? object.content : Obj.instanceOf(Text.Text, object) ? object : undefined,
+  );
+  const ambientSuggesting = versioning.selection.kind === 'current' && versioning.mode === 'suggesting';
+  const [liveMainContent] = useObject(ambientSuggesting ? mainText : undefined, 'content');
+  const mainContent = ambientSuggesting ? liveMainContent : mainText?.content;
 
   const editor = useVersionedEditor({ object, versioning, identity, mainContent, diffView, viewMode, id });
   const review = useReviewExtensions({ object, versioning, editor, identity, mainContent, diffView });
@@ -99,7 +109,7 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
   // event function, so a contradictory pair — a stale readonly view mode surviving into Suggesting —
   // cannot be stored (see review-lifecycle.ts).
   const selectViewMode = useCallback(
-    (selection: ViewModeSelection) => {
+    (selection: MarkdownCapabilities.ViewModeSelection) => {
       const next = applyViewModeSelection({ mode: versioning.mode, viewMode }, selection);
       versioning.setMode(next.mode);
       if (next.viewMode !== undefined && next.viewMode !== viewMode) {

@@ -16,9 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -56,9 +53,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../storybook-testing"
     }
   ]
 }

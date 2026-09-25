@@ -6,15 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-import * as BookingSearch from './BookingSearch';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+import * as BookingSearch from './BookingSearch.ts';
 
 /**
  * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves
@@ -23,7 +19,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const SearchBookings = Operation.make({
   meta: {
-    key: makeKey('searchBookings'),
+    key: DXN.make('org.dxos.operation.trip.searchBookings'),
     name: 'Search Bookings',
     description: 'Search for flights (and other bookings) across the enabled booking providers.',
     icon: 'ph--magnifying-glass--regular',

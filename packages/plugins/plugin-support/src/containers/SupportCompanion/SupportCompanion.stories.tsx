@@ -5,16 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Support } from '#types';
 
-import { SupportCompanion } from './SupportCompanion';
+import { SupportCompanion } from './SupportCompanion.tsx';
 
 // Minimal plugin that registers Support.Ticket and carries a few screenshot URLs
 // in its meta so the resolver can map the ticket's typename back to a plugin
@@ -28,13 +28,13 @@ const TestPluginMeta = {
   ],
 };
 const TestPlugin = Plugin.define(TestPluginMeta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
+  Plugin.addModule(AppCapability.schema([Support.Ticket])),
   Plugin.make,
 );
 
 const DefaultStory = () => {
   const ticket = useMemo(() => Support.make({ title: 'Example ticket' }), []);
-  return <SupportCompanion companionTo={ticket} />;
+  return <SupportCompanion companionTo={ticket} attendableId='story' />;
 };
 
 const meta = {

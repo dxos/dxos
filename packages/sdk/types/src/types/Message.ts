@@ -7,11 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as ContentBlock from './ContentBlock';
+import * as Actor from './Actor.ts';
+import * as ContentBlock from './ContentBlock.ts';
 
 /**
  * A file or object attached to a message, separate from its (textual/streamed) `blocks`. The
@@ -43,30 +42,34 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
     threadId: Schema.optional(Schema.String),
     /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
     created: Schema.String.pipe(
-      Schema.annotations({ description: 'ISO date string when the message was sent.' }),
-      GeneratorAnnotation.set('date.iso8601'),
+      Schema.annotate({ description: 'ISO date string when the message was sent.' }),
+      Annotation.GeneratorAnnotation.set('date.iso8601'),
     ),
-    sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
-    blocks: Schema.Array(ContentBlock.Any).annotations({
+    sender: Actor.Actor.pipe(Schema.annotate({ description: 'Identity of the message sender.' })),
+    blocks: Schema.Array(ContentBlock.Any).annotate({
       description: 'Contents of the message.',
       default: [],
     }),
     attachments: Schema.optional(
-      Schema.Array(Attachment).annotations({
+      Schema.Array(Attachment).annotate({
         description: 'Files or objects attached to the message (e.g. email attachments).',
       }),
     ),
 
-    /** Custom properties for specific message types (e.g. attention context, email subject, etc.). */
+    /**
+     * Custom properties for specific message types (e.g. attention context, email subject, etc.).
+     * @deprecated Use annotations.
+     **/
     // TODO(dmaretskyi): Add tool call ID here.
     properties: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+      Schema.Record(Schema.String, Schema.Any).annotate({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),
   }).pipe(
-    LabelAnnotation.set(['properties.subject']),
+    Annotation.LabelAnnotation.set(['properties.subject']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

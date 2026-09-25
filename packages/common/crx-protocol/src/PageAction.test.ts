@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { PageAction } from './index';
+import { PageAction } from './index.ts';
 
 describe('PageAction schema', () => {
   test('decodes a valid list request', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 1, id: 'req-1' });
-    expect(Either.isRight(decoded)).toBe(true);
+    const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)({ version: 1, id: 'req-1' });
+    expect(Result.isSuccess(decoded)).toBe(true);
   });
 
   test('rejects a list request with a wrong version', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 2, id: 'req-1' });
-    expect(Either.isLeft(decoded)).toBe(true);
+    const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)({ version: 2, id: 'req-1' });
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test('round-trips an invoke ack', ({ expect }) => {

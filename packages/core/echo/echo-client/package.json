@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-client",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "ECHO client-side database runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,15 +18,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
       "import": "./dist/lib/internal.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -38,35 +38,29 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/index-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/sql-sqlite": "workspace:*",
-    "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:",
-    "eventemitter3": "catalog:",
-    "fast-deep-equal": "catalog:"
+    "eventemitter3": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
-    "@dxos/test-utils": "workspace:*"
+    "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "fast-deep-equal": "catalog:"
   },
   "publishConfig": {
     "access": "public"

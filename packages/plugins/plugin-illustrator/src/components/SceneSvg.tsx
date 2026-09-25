@@ -1,0 +1,552 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type MouseEvent, useId, useMemo } from 'react';
+
+import { Scene } from '@dxos/diagram';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+/**
+ * Text sizes per scene weight for a standard UI font. Proportional to `Layout.FONT_METRICS`
+ * (which measures tldraw's chunkier draw font), so text always fits boxes sized by the dialects.
+ */
+const FONT_SIZE: Record<Scene.Weight, number> = { s: 13, m: 18, l: 27, xl: 34 };
+const LINE_H: Record<Scene.Weight, number> = { s: 20, m: 26, l: 38, xl: 48 };
+
+const MARGIN = 40;
+
+type Rect = { x: number; y: number; w: number; h: number };
+type Point = Scene.Point;
+
+const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
+  const { x = 0, y = 0 } = object.origin ?? {};
+  const scale = object.scale ?? 1;
+  return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
+};
+
+const center = (rect: Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
+
+/** Point where the segment from a rect's center toward `target` crosses the rect border. */
+const clipToBorder = (rect: Rect, target: Point): Point => {
+  const source = center(rect);
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  let t = 1;
+  if (dx !== 0) {
+    t = Math.min(t, ((dx > 0 ? rect.x + rect.w : rect.x) - source.x) / dx);
+  }
+  if (dy !== 0) {
+    t = Math.min(t, ((dy > 0 ? rect.y + rect.h : rect.y) - source.y) / dy);
+  }
+  return { x: source.x + dx * t, y: source.y + dy * t };
+};
+
+const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
+
+/** Average glyph advance as a fraction of font size, for wrap estimates (UI sans). */
+const CHAR_EM = 0.6;
+
+/** Greedy word wrap per input line; SVG text has no native wrapping. */
+const wrapLines = (text: string, maxChars: number): string[] =>
+  text.split('\n').flatMap((line) => {
+    if (line.length <= maxChars) {
+      return [line];
+    }
+    const lines: string[] = [];
+    let current = '';
+    for (const word of line.split(' ')) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length > maxChars && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    return [...lines, current];
+  });
+
+const RADIUS = 8;
+
+/** Rect path rounding only the top or bottom corners; the opposite edge stays square. */
+const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corners: 'top' | 'bottom'): string => {
+  // Clamp so small rects cannot produce self-overlapping path segments.
+  const radius = Math.min(cornerRadius, w / 2, h / 2);
+  return corners === 'top'
+    ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
+        `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
+    : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
+        `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
+};
+
+/** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
+/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
+const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
+  'grey': 'text-neutral-400 dark:text-neutral-500',
+  'light-blue': 'text-sky-500',
+  'light-green': 'text-emerald-500',
+  'yellow': 'text-amber-500',
+  'light-violet': 'text-violet-500',
+  'orange': 'text-orange-500',
+  'light-red': 'text-rose-500',
+};
+
+const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+
+/** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
+const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
+
+type Resolved = {
+  viewBox: string;
+  /** Absolute box rects keyed by `objectId/elementId`, for arrow binding. */
+  registry: Map<string, Rect>;
+  objects: readonly Scene.WorldObject[];
+};
+
+const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
+  const registry = new Map<string, Rect>();
+  const points: Point[] = [];
+  for (const object of objects) {
+    const { x = 0, y = 0 } = object.origin ?? {};
+    const scale = object.scale ?? 1;
+    for (const element of object.elements) {
+      switch (element.kind) {
+        case 'rect':
+        case 'ellipse':
+        case 'diamond':
+        case 'triangle':
+        case 'portal': {
+          const rect = rectOf(object, element);
+          registry.set(`${object.id}/${element.id}`, rect);
+          points.push(rect, { x: rect.x + rect.w, y: rect.y + rect.h });
+          break;
+        }
+        case 'line':
+        case 'curve': {
+          points.push(...element.points.map((point) => ({ x: x + point.x * scale, y: y + point.y * scale })));
+          break;
+        }
+        case 'arrow': {
+          for (const terminal of [element.start, element.end]) {
+            if (terminal) {
+              points.push({ x: x + terminal.x * scale, y: y + terminal.y * scale });
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  }
+
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(0, ...xs) - MARGIN;
+  const minY = Math.min(0, ...ys) - MARGIN;
+  const maxX = Math.max(MARGIN, ...xs) + MARGIN;
+  const maxY = Math.max(MARGIN, ...ys) + MARGIN;
+
+  return {
+    objects,
+    registry,
+    viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`,
+  };
+};
+
+type MultilineTextProps = {
+  cx: number;
+  cy: number;
+  text: string;
+  weight: Scene.Weight;
+  /** Wrap to this width (scene px), as `Diagnostics` assumes a box label does; unbounded when absent. */
+  width?: number;
+  className?: string;
+};
+
+/** Inset kept between a box label and the box's sides. */
+const LABEL_INSET = 12;
+
+const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineTextProps) => {
+  const room = width === undefined ? Infinity : width - LABEL_INSET * 2;
+  const lines = wrapLines(text, Math.max(4, Math.floor(room / (FONT_SIZE[weight] * CHAR_EM))));
+  // A word longer than the box cannot wrap (a class name has no spaces), so the font shrinks to fit it.
+  const longest = Math.max(...lines.map((line) => line.length));
+  const fit = Math.min(1, room / (longest * FONT_SIZE[weight] * CHAR_EM));
+  const lineH = LINE_H[weight] * fit;
+  return (
+    <text
+      x={cx}
+      y={cy - ((lines.length - 1) * lineH) / 2}
+      textAnchor='middle'
+      dominantBaseline='central'
+      fontSize={FONT_SIZE[weight] * fit}
+      className={mx('fill-current', className)}
+    >
+      {lines.map((line, index) => (
+        <tspan key={index} x={cx} dy={index === 0 ? 0 : lineH}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+};
+
+/** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
+type MarkerIds = Record<Exclude<Scene.ArrowHead, 'none'> | 'circle', string>;
+
+type ElementProps = {
+  object: Scene.WorldObject;
+  element: Scene.Element;
+  registry: Map<string, Rect>;
+  markers: MarkerIds;
+};
+
+const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
+  const { x = 0, y = 0 } = object.origin ?? {};
+  const scale = object.scale ?? 1;
+  const map = (point: Point): Point => ({ x: x + point.x * scale, y: y + point.y * scale });
+  const weight = element.weight ?? 'm';
+
+  switch (element.kind) {
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle': {
+      const rect = rectOf(object, element);
+      const mid = center(rect);
+      const tinted = element.fill === 'tint';
+      const fill = tinted
+        ? undefined
+        : element.fill === 'solid'
+          ? 'fill-neutral-100 dark:fill-neutral-800'
+          : 'fill-transparent';
+      const style = tinted ? TINT : undefined;
+      const shape =
+        element.kind === 'ellipse' ? (
+          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} style={style} />
+        ) : element.kind === 'diamond' ? (
+          <polygon
+            points={`${mid.x},${rect.y} ${rect.x + rect.w},${mid.y} ${mid.x},${rect.y + rect.h} ${rect.x},${mid.y}`}
+            className={fill}
+            style={style}
+          />
+        ) : element.kind === 'triangle' ? (
+          <polygon
+            points={`${mid.x},${rect.y} ${rect.x + rect.w},${rect.y + rect.h} ${rect.x},${rect.y + rect.h}`}
+            className={fill}
+            style={style}
+          />
+        ) : element.corners === 'top' || element.corners === 'bottom' ? (
+          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
+        ) : (
+          <rect
+            x={rect.x}
+            y={rect.y}
+            width={rect.w}
+            height={rect.h}
+            rx={element.corners === 'none' ? 0 : RADIUS}
+            className={fill}
+            style={style}
+          />
+        );
+      return (
+        <g
+          className={mx('stroke-current', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+        >
+          {shape}
+          {element.text && (
+            <MultilineText
+              cx={mid.x}
+              cy={mid.y}
+              text={element.text}
+              weight={weight}
+              width={rect.w}
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
+    case 'circle': {
+      const mid = map({ x: element.cx, y: element.cy });
+      return (
+        <g className={mx('stroke-current fill-transparent', colorClass(element.color))} strokeWidth={1.5}>
+          <circle cx={mid.x} cy={mid.y} r={element.r * scale} />
+          {element.text && <MultilineText cx={mid.x} cy={mid.y} text={element.text} weight={weight} />}
+        </g>
+      );
+    }
+    case 'line':
+    case 'curve': {
+      const points = element.points.map(map);
+      return (
+        <polyline
+          points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+          className={mx('stroke-current fill-none', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+        />
+      );
+    }
+    case 'text': {
+      const anchor = map(element);
+      const textWeight = element.weight ?? 's';
+      const fontSize = FONT_SIZE[textWeight];
+      const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
+      const lines = wrapLines(element.text, maxChars);
+      return (
+        <text
+          x={anchor.x}
+          y={anchor.y + LINE_H[textWeight] / 2}
+          fontSize={fontSize}
+          className={mx('fill-current', colorClass(element.color))}
+        >
+          {lines.map((line, index) => (
+            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H[textWeight]}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      );
+    }
+    case 'portal': {
+      // A window onto another drawing; without nesting the frame stands in for its content.
+      const rect = rectOf(object, element);
+      return (
+        <g
+          className={mx('stroke-current fill-transparent', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={strokeDash[element.stroke ?? 'dashed']}
+        >
+          <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={RADIUS} />
+          {element.text && (
+            <MultilineText
+              cx={center(rect).x}
+              cy={rect.y + LINE_H.s}
+              text={element.text}
+              weight='s'
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
+    case 'arrow': {
+      // Bound refs resolve via the registry, clipping the center-to-center segment at each border
+      // and dropping the `#port`: the SVG renderer has no ports.
+      const ref = (value: string) => registry.get(Scene.resolveRef(value, object.id));
+      const fromRect = element.from ? ref(element.from) : undefined;
+      const toRect = element.to ? ref(element.to) : undefined;
+      const start = fromRect
+        ? clipToBorder(fromRect, toRect ? center(toRect) : map(element.end ?? { x: 0, y: 0 }))
+        : element.start
+          ? map(element.start)
+          : undefined;
+      const end = toRect
+        ? clipToBorder(toRect, fromRect ? center(fromRect) : map(element.start ?? { x: 0, y: 0 }))
+        : element.end
+          ? map(element.end)
+          : undefined;
+      if (!start || !end) {
+        return null;
+      }
+      const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+      const head = element.head ?? 'arrow';
+      return (
+        <g className={mx('stroke-current', colorClass(element.color))}>
+          <line
+            x1={start.x}
+            y1={start.y}
+            x2={end.x}
+            y2={end.y}
+            strokeWidth={1.5}
+            strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+            markerEnd={head === 'none' ? undefined : `url(#${markers[head]})`}
+            markerStart={element.tail === 'circle' ? `url(#${markers.circle})` : undefined}
+          />
+          {element.text && (
+            <MultilineText
+              cx={mid.x}
+              cy={mid.y - LINE_H.s / 2}
+              text={element.text}
+              weight='s'
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
+    default:
+      return null;
+  }
+};
+
+export type SceneSvgProps = ThemedClassName<{
+  objects: readonly Scene.WorldObject[];
+  /** Draw the alignment grid at this spacing (scene px). */
+  grid?: number;
+  /** Selected object ids; rendering is controlled, the host owns the state. */
+  selection?: readonly string[];
+  /** Click selects one object (shift/meta toggles); clicking the background clears. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click. */
+  onActivate?: (objectId: string) => void;
+}>;
+
+/**
+ * SVG backend for the scene DSL: renders world objects directly (no canvas editor), resolving
+ * bound arrow refs against box borders and drawing the UML end markers. Selection is host-owned
+ * and optional — pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
+ * Space) and `onActivate` (double-click, Enter) to make objects interactive; persistence stays
+ * with the variant that holds the canvas.
+ */
+export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
+  const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
+  // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
+  const instanceId = useId();
+  const markers: MarkerIds = {
+    arrow: `${instanceId}-arrow`,
+    triangle: `${instanceId}-triangle`,
+    crowsfoot: `${instanceId}-crowsfoot`,
+    circle: `${instanceId}-circle`,
+  };
+  const gridId = `${instanceId}-grid`;
+  const selected = useMemo(() => new Set(selection), [selection]);
+  const interactive = Boolean(onSelectionChange || onActivate);
+
+  const handleSelect = (objectId: string, event: MouseEvent<SVGGElement>) => {
+    // Object clicks stop here so the background handler below does not immediately clear them.
+    event.stopPropagation();
+    if (!onSelectionChange) {
+      return;
+    }
+    const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
+    onSelectionChange(
+      toggle
+        ? selected.has(objectId)
+          ? [...selected].filter((id) => id !== objectId)
+          : [...selected, objectId]
+        : [objectId],
+    );
+  };
+
+  return (
+    <svg
+      viewBox={viewBox}
+      className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}
+      onClick={onSelectionChange && selected.size > 0 ? () => onSelectionChange([]) : undefined}
+    >
+      <defs>
+        {/* UML end markers. `auto-start-reverse` lets the same shapes serve as head or tail. */}
+        <marker
+          id={markers.arrow}
+          viewBox='0 0 10 10'
+          refX='9'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto-start-reverse'
+        >
+          <path d='M 0 1 L 9 5 L 0 9 z' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
+        <marker
+          id={markers.triangle}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          {/* Hollow: filled with the surface so the line does not show through the triangle. */}
+          <path
+            d='M 1 1 L 11 6 L 1 11 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.crowsfoot}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 0 6 L 11 1 M 0 6 L 11 6 M 0 6 L 11 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.circle}
+          viewBox='0 0 10 10'
+          refX='2'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto'
+        >
+          <circle cx='5' cy='5' r='3' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
+        {grid && (
+          <pattern id={gridId} width={grid} height={grid} patternUnits='userSpaceOnUse'>
+            <path d={`M ${grid} 0 L 0 0 0 ${grid}`} className='fill-none stroke-neutral-500/20' strokeWidth={1} />
+          </pattern>
+        )}
+      </defs>
+      {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill={`url(#${gridId})`} />}
+      {objects.map((object) => (
+        <g
+          key={object.id}
+          data-object={object.id}
+          data-selected={selected.has(object.id) || undefined}
+          // Keyboard: Tab focuses an object, Space selects it, Enter selects and activates it.
+          tabIndex={interactive ? 0 : undefined}
+          role={interactive ? 'button' : undefined}
+          aria-label={interactive ? object.id : undefined}
+          aria-pressed={interactive ? selected.has(object.id) : undefined}
+          className={mx(
+            interactive && 'cursor-pointer outline-none focus-visible:[&>*]:stroke-accent-text',
+            selected.has(object.id) && 'text-accent-text',
+          )}
+          onClick={interactive ? (event) => handleSelect(object.id, event) : undefined}
+          onDoubleClick={
+            onActivate
+              ? (event) => {
+                  event.stopPropagation();
+                  onActivate(object.id);
+                }
+              : undefined
+          }
+          onKeyDown={
+            interactive
+              ? (event) => {
+                  if (event.key === ' ' || event.key === 'Enter') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelectionChange?.(event.shiftKey ? [...selected, object.id] : [object.id]);
+                    if (event.key === 'Enter') {
+                      onActivate?.(object.id);
+                    }
+                  }
+                }
+              : undefined
+          }
+        >
+          {object.elements.map((element) => (
+            <SceneElement key={element.id} object={object} element={element} registry={registry} markers={markers} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+};

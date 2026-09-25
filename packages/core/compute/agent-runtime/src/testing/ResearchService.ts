@@ -71,10 +71,9 @@ export interface Service {
   completeAllTasks: () => Effect.Effect<void>;
 }
 
-export class ResearchService extends Context.Tag('@dxos/functions-runtime/testing/ResearchService')<
-  ResearchService,
-  Service
->() {}
+export class ResearchService extends Context.Service<ResearchService, Service>()(
+  '@dxos/functions-runtime/testing/ResearchService',
+) {}
 
 export const layer = Layer.effect(
   ResearchService,
@@ -87,8 +86,7 @@ export const layer = Layer.effect(
         task.state = 'completed';
         const result = getTestData().research[task.website];
         if (!result) {
-          yield* Effect.die(new Error(`No research found for ${task.website}`));
-          return;
+          return yield* Effect.die(new Error(`No research found for ${task.website}`));
         }
         yield* Deferred.succeed(task.deferred, result);
       });

@@ -7,20 +7,19 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
-import type { EntityNotFoundError } from '@dxos/echo/Err';
+import { Database, DXN, type Error as EchoError, Filter, Ref, Registry } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import Handlebars from '@dxos/vendor-kbn-handlebars';
 
-import { FunctionNotFoundError } from '../errors';
-import * as Operation from '../Operation';
+import { FunctionNotFoundError } from '../errors.ts';
+import * as Operation from '../Operation.ts';
 
 /**
  * Template input kind determines how template variables are resolved.
  */
-export const InputKind = Schema.Literal(
+export const InputKind = Schema.Literals([
   'value', // Literal value.
   'operation',
   // 'pass-through',
@@ -29,7 +28,7 @@ export const InputKind = Schema.Literal(
   // 'resolver',
   // 'context',
   // 'schema',
-);
+]);
 
 export type InputKind = Schema.Schema.Type<typeof InputKind>;
 
@@ -54,7 +53,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Ref.Ref(Text.Text).annotations({ description: 'Markdown + Handlebars template.' }),
+  source: Ref.Ref(Text.Text).annotate({ description: 'Markdown + Handlebars template.' }),
 
   /**
    * NOTE: We use an array rather than map so that updating variable names in the template doesn't disconnect existing inputs.
@@ -86,7 +85,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template,
-): Effect.Effect<string, EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
+): Effect.Effect<string, EchoError.EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const entries = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {
@@ -108,12 +107,12 @@ export const processTemplate = (
 
             // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
             const fn = Operation.deserialize(results[0]);
-            const result = yield* Operation.invoke(fn, undefined as any).pipe(Effect.orDie);
+            const result = yield* Operation.invoke(fn, undefined).pipe(Effect.orDie);
             return [input.name, result] as const;
           }
 
           default: {
-            return yield* Effect.dieMessage(`Unsupported input kind: ${input.kind}`);
+            return yield* Effect.die(new Error(`Unsupported input kind: ${input.kind}`));
           }
         }
       }),

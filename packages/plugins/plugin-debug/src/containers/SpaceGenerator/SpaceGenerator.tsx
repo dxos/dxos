@@ -4,18 +4,33 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { useProgress } from '@dxos/app-toolkit/ui';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { Drawing } from '@dxos/plugin-illustrator';
-import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
+import { EffectEx } from '@dxos/effect';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import {
+  Field,
+  Flex,
+  IconButton,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  useAsyncEffect,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -25,7 +40,9 @@ import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
-const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+const recordTypes = [Organization.Organization, Person.Person, Task.Task];
+
+const TOAST_DURATION = 5_000;
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -33,12 +50,19 @@ export type SpaceGeneratorProps = {
 };
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
-  ({ space, onCreateObjects, children, ...props }, forwardedRef) => {
+  ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
+    const { t } = useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
+    const manager = usePluginManager();
+    const allTemplates = useCapabilities(AppCapabilities.SpaceTemplate);
+
+    useEffect(() => {
+      EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
+    }, [manager]);
 
     // Register types.
     useAsyncEffect(async () => {
@@ -51,8 +75,18 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
       );
 
-      return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
-    }, [client, invokePromise, presets]);
+      const allTemplateGenerators = new Map<string, ObjectGenerator<any>>(
+        allTemplates.map((template) => [
+          template.id,
+          async (space) => {
+            await template.apply({ client, space });
+            return [];
+          },
+        ]),
+      );
+
+      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...allTemplateGenerators]);
+    }, [client, invokePromise, presets, allTemplates]);
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
@@ -84,6 +118,54 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
+    // TODO(wittjosiah): Custom toast required — `notify` labels are fixed at invocation, so a
+    //  result-dependent count cannot be reported through it. Drop these once operation notify
+    //  supports dynamic labels.
+    const handleReset = useCallback(async () => {
+      if (!window.confirm(t('remove-all-objects.confirm.description'))) {
+        return;
+      }
+      const { data } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, {
+        spaceId: space.id,
+        notify: { error: ['remove-all-objects.error.title', { ns: meta.profile.key }] },
+      });
+      if (data) {
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/remove-all-objects`,
+          icon: 'ph--trash--regular',
+          duration: TOAST_DURATION,
+          title: ['remove-all-objects.toast.title', { ns: meta.profile.key }],
+          description: ['remove-all-objects.toast.description', { ns: meta.profile.key, count: data.objectIds.length }],
+        });
+      }
+      await updateInfo();
+    }, [space, invokePromise, updateInfo, t]);
+
+    const handleCollectGarbage = useCallback(async () => {
+      if (!window.confirm(t('collect-garbage.confirm.description'))) {
+        return;
+      }
+      const { data } = await invokePromise(SpaceOperation.CollectGarbage, undefined, {
+        spaceId: space.id,
+        notify: { error: ['collect-garbage.error.title', { ns: meta.profile.key }] },
+      });
+      if (data) {
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/collect-garbage`,
+          icon: 'ph--recycle--regular',
+          duration: TOAST_DURATION,
+          title: ['collect-garbage.toast.title', { ns: meta.profile.key }],
+          description:
+            data.removedDocuments === 0
+              ? ['collect-garbage.toast.empty.description', { ns: meta.profile.key }]
+              : ['collect-garbage.toast.description', { ns: meta.profile.key, count: data.removedDocuments }],
+        });
+      }
+      await updateInfo();
+    }, [space, invokePromise, updateInfo, t]);
+
+    const menuActions = useSpaceGeneratorMenu({ updateInfo, handleReset, handleCollectGarbage });
+
     const handleCreateData = useCallback(
       async (typename: string) => {
         const constructor = typeMap.get(typename);
@@ -93,17 +175,18 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
           await updateInfo();
         }
       },
-      [typeMap, count, space, onCreateObjects, updateInfo],
+      [space, typeMap, count, updateInfo, onCreateObjects],
     );
 
     return (
+      // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
+      // is not an attendable surface, so without it every action renders disabled.
+
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar>
-          <Toolbar.Root classNames='dx-document'>
-            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-            <Toolbar.Separator />
-            <Input.Root>
-              <Input.TextInput
+          <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
+            <Field.Root>
+              <Field.Input
                 type='number'
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
@@ -113,8 +196,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 value={count}
                 onChange={(event) => setCount(parseInt(event.target.value))}
               />
-            </Input.Root>
-          </Toolbar.Root>
+            </Field.Root>
+          </ActionToolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ScrollArea.Root thin orientation='vertical'>
@@ -140,6 +223,15 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 label='Presets'
                 onClick={handleCreateData}
               />
+              {allTemplates.length > 0 && (
+                <SchemaTable
+                  classNames='py-1'
+                  types={allTemplates.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
+                  objects={info.objects}
+                  label='Space Templates'
+                  onClick={handleCreateData}
+                />
+              )}
               <ProgressGenerator classNames='py-1' />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -151,15 +243,55 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
 SpaceGenerator.displayName = 'SpaceGenerator';
 
+/**
+ * Toolbar actions for the space generator. The toolbar's own action items hold the pending state —
+ * each awaits its invoke, disables only itself while in flight, and guards re-entry — so nothing
+ * here tracks that. The trailing gap separator pushes any sibling rendered after `Menu.Items` to the
+ * end of the toolbar.
+ */
+const useSpaceGeneratorMenu = ({
+  updateInfo,
+  handleReset,
+  handleCollectGarbage,
+}: {
+  updateInfo: () => Promise<void>;
+  handleReset: () => Promise<void>;
+  handleCollectGarbage: () => Promise<void>;
+}) =>
+  useMenuBuilder(
+    (): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'refresh',
+          { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', testId: 'spaceGenerator.refresh' },
+          () => void updateInfo(),
+        )
+        .action(
+          'reset',
+          { label: 'Reset space', icon: 'ph--trash--regular', testId: 'spaceGenerator.reset' },
+          handleReset,
+        )
+        .action(
+          'collect',
+          { label: 'Collect garbage', icon: 'ph--recycle--regular', testId: 'spaceGenerator.collectGarbage' },
+          handleCollectGarbage,
+        )
+        .separator('gap')
+        .build(),
+    [updateInfo, handleReset, handleCollectGarbage],
+  );
+
 // Stable key for the test progress monitor within the shared registry.
 const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
 
 type ProgressGeneratorProps = ThemedClassName;
 
-// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised.
+// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised —
+// and renders the meter here too, since the rail's only lives inside a popover the user must open,
+// which made a working monitor look like a broken one.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-  const monitor = useProgress(TEST_PROGRESS_NAME);
+  const monitor = useProgressMonitor(TEST_PROGRESS_NAME);
   const running = monitor?.status === 'running';
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
@@ -209,16 +341,21 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   );
 
   return (
-    <div className={mx('flex items-center gap-2 py-1', classNames)}>
-      <span className='grow'>Progress Monitor</span>
-      {running ? (
-        <IconButton
-          icon='ph--x--regular'
-          label='Cancel test progress'
-          onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
-        />
-      ) : (
-        <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+    <div className={mx('flex flex-col gap-1 py-1', classNames)}>
+      <Flex gap='sm' align='center'>
+        <span className='grow'>Progress Monitor</span>
+        {running ? (
+          <IconButton
+            icon='ph--x--regular'
+            label='Cancel test progress'
+            onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
+          />
+        ) : (
+          <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+        )}
+      </Flex>
+      {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
+        <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}
     </div>
   );

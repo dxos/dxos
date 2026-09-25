@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
 
-import { ChessComOperation } from '../types';
+import { ChessComOperation } from '#types';
 
 export default ChessComOperation.ClearSyncedGames.pipe(
   Operation.withHandler(
@@ -28,7 +28,6 @@ export default ChessComOperation.ClearSyncedGames.pipe(
       const states = yield* Feed.query(oldFeed, Filter.type(Chess.State)).run;
 
       const newFeed = yield* Database.add(Feed.make());
-      Obj.setParent(newFeed, account);
       Obj.update(account, (account) => {
         account.games = Ref.make(newFeed);
       });

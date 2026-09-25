@@ -4,15 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, GraphPath, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as Plugin$ from '@dxos/app-framework/Plugin';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+import { SettingsPath } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,9 +27,9 @@ export default Capability.makeModule(
     const settingsAtom = capabilities.atom(AppCapabilities.Settings);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'action',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -42,13 +47,13 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'core',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            Node.make({
-              id: SETTINGS_ID,
+            AppGraphNode.make({
+              id: SettingsPath.SETTINGS_ID,
               type: meta.profile.key,
               properties: {
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
@@ -60,10 +65,15 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'plugin', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(GraphPath.getSpacePath(SETTINGS_ID)),
+        url: {
+          key: 'plugin',
+          kind: 'item',
+          path: [],
+          workspace: (workspace) => workspace === SettingsPath.SETTINGS_ID,
+        },
+        match: GraphNodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -85,14 +95,15 @@ export default Capability.makeModule(
                 }),
               )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
-                Node.make({
-                  id: `${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
+                AppGraphNode.make({
+                  id: `${SettingsPath.SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {
                     label: meta.profile.name ?? meta.profile.key,
+                    // The plugin's own hue is dropped so the settings list reads as one uniform group.
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
-                    iconHue: meta.profile.icon?.hue,
+                    testId: `settings.${meta.profile.key}`,
                   },
                 }),
               ),
@@ -101,6 +112,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

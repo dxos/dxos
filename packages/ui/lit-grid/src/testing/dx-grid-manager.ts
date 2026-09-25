@@ -4,7 +4,7 @@
 
 import { type Locator, type Page, expect } from '@playwright/test';
 
-import type { DxGridPlanePosition } from '../types';
+import type { DxGridPlanePosition } from '../types.ts';
 
 /**
  * Test helper for managing dx-grid interactions and assertions in Playwright tests.
@@ -21,6 +21,21 @@ export class DxGridManager {
 
   async ready(): Promise<void> {
     return this.grid.locator('.dx-grid').waitFor({ state: 'visible' });
+  }
+
+  cellEditor(): Locator {
+    return this.page.getByTestId('grid.cell-editor').getByRole('textbox');
+  }
+
+  /**
+   * Resolves once the cell editor can receive keystrokes. Its container paints a frame before the
+   * text editor mounts inside it and takes focus, so keys sent on container visibility alone are
+   * dropped and the edit commits empty.
+   */
+  async cellEditorReady(): Promise<Locator> {
+    const editor = this.cellEditor();
+    await expect(editor).toBeFocused();
+    return editor;
   }
 
   planes(): Locator {

@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Schedule, type ScheduleValue } from './Schedule';
+import { Schedule, type ScheduleValue } from './Schedule.tsx';
 
 const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInterval?: number }) => {
   const [value, setValue] = useState<ScheduleValue>(initial);
@@ -17,7 +17,7 @@ const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInt
   return (
     <div className='p-4 flex flex-col gap-3'>
       <Schedule.Root
-        classNames='bg-card-surface border border-separator rounded-sm p-2'
+        classNames='dx-card-surface border border-separator rounded-sm p-2'
         timezone='EDT'
         minInterval={minInterval}
         value={value}

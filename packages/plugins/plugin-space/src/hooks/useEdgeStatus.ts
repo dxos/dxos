@@ -5,18 +5,23 @@
 import { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import {
+  type EdgeStatus,
+  EdgeStatus_ConnectionState,
+  EdgeStatusSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 
-const NOT_CONNECTED: EdgeStatus = {
-  state: EdgeStatus.ConnectionState.NOT_CONNECTED,
+const NOT_CONNECTED: EdgeStatus = buf.create(EdgeStatusSchema, {
+  state: EdgeStatus_ConnectionState.NOT_CONNECTED,
   rtt: 0,
   uptime: 0,
   rateBytesUp: 0,
   rateBytesDown: 0,
   messagesSent: 0,
   messagesReceived: 0,
-};
+});
 
 /**
  * Subscribes to the EDGE connection status, which the client refreshes about once a second while connected.
@@ -27,7 +32,7 @@ export const useEdgeStatus = (): EdgeStatus => {
   useEffect(() => {
     const stream = client.services.services.EdgeAgentService?.queryEdgeStatus();
     stream?.subscribe(
-      ({ status }) => setStatus(status),
+      ({ status }) => setStatus(status ?? NOT_CONNECTED),
       (err) => err && log.catch(err),
     );
 

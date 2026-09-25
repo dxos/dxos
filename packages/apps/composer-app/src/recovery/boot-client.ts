@@ -2,12 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Client, type LocalClientServices, fromHost } from '@dxos/client';
-import { mountDevtoolsHooks } from '@dxos/client/devtools';
-import { Config, defs } from '@dxos/config';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import * as Effect from 'effect/Effect';
 
-import { setupConfig } from '../util';
+import { Client } from '@dxos/client';
+import { Devtools } from '@dxos/client-services';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
+import { type LocalClientServices, fromHost } from '@dxos/client/local';
+import { Config, defs } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
+import { setupConfig } from '../util/index.ts';
 
 let bootedClient: Client | undefined;
 
@@ -24,24 +30,27 @@ export const bootRecoveryClient = async (): Promise<Client> => {
     return bootedClient;
   }
 
+  // This client hosts echo in-page; automerge is slim-resolved and must be initialized before
+  // it (see util/automerge-wasm.ts).
+  await initEchoHostWasm();
+
   const base = await setupConfig();
   const config = new Config(
     {
       runtime: {
         client: {
-          servicesMode: defs.Runtime.Client.ServicesMode.HOST,
+          servicesMode: defs.Runtime_Client_ServicesMode.HOST,
           disableP2pReplication: true,
           enableVectorIndexing: false,
           signalTelemetryEnabled: false,
           edgeFeatures: {
             feedReplicator: false,
-            echoReplicator: false,
             subductionReplicator: false,
             signaling: false,
             agents: false,
           },
           storage: {
-            sqliteMode: Runtime.Client.Storage.SqliteMode.OPFS,
+            sqliteMode: Runtime_Client_Storage_SqliteMode.OPFS,
           },
         },
         services: {
@@ -79,11 +88,13 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   if (!bootedClient) {
     throw new Error('Client not booted');
   }
-  const host = (bootedClient.services as LocalClientServices).host;
-  if (!host) {
-    throw new Error('Client services host unavailable');
-  }
-  return host.exportSqliteDatabase();
+  const devtoolsHost = await EffectEx.runPromise(
+    (bootedClient.services as LocalClientServices).stack
+      .getServiceResolver()
+      .resolve(Devtools.DevtoolsHostService, {})
+      .pipe(Effect.orDie, Effect.scoped),
+  );
+  return devtoolsHost.exportSqliteDatabase();
 };
 
 export const destroyRecoveryClient = async (): Promise<void> => {

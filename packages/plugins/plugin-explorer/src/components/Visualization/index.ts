@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Visualization';
-export * from './variants';
+export * from './Visualization.tsx';
+export * from './variants.ts';

@@ -10,7 +10,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { ResearchInputQueue } from '../testing/schema';
+import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchInputModule = () => {
   const space = useActiveSpace();
@@ -55,7 +55,7 @@ type DebugCardProps = {
 
 const DebugCard = ({ object }: DebugCardProps) => {
   return (
-    <div className='border border-separator rounded-lg p-4 bg-surface'>
+    <div className='border border-separator rounded-lg p-4 dx-base-surface'>
       <div className='flex items-center justify-between mb-2'>
         <h3 className='font-medium text-lg'>{Entity.getLabel(object)}</h3>
         <p className='flex gap-2 items-center'>

@@ -4,19 +4,18 @@
 
 // @import-as-namespace
 
-import type { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
+import { SchemaAST } from '@dxos/effect';
 
-import * as Runnable from '../Runnable';
-import type * as TriggerEvent from './TriggerEvent';
+import * as Runnable from '../Runnable.ts';
+import type * as TriggerEvent from './TriggerEvent.ts';
 
 /**
  * Type discriminator for TriggerType.
@@ -29,7 +28,7 @@ export type Kind = (typeof Kinds)[number];
 const kindLiteralAnnotations = { title: 'Kind' };
 
 export const EmailSpec = Schema.Struct({
-  kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('email').annotate(kindLiteralAnnotations),
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
@@ -40,8 +39,8 @@ export const specEmail = (): EmailSpec => ({ kind: 'email' });
 
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const FeedSpec = Schema.Struct({
-  kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
-  feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
+  kind: Schema.Literal('feed').annotate(kindLiteralAnnotations),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).annotate({ title: 'Feed' })),
 });
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
@@ -57,21 +56,21 @@ export const specFeed = (feed: Feed.Feed): FeedSpec => ({
  * Subscription.
  */
 export const SubscriptionSpec = Schema.Struct({
-  kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('subscription').annotate(kindLiteralAnnotations),
 
   // TODO(burdon): Issue.
   query: Schema.Struct({
-    raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
+    raw: Schema.optional(Schema.String.annotate({ title: 'Query' })),
     ast: QueryAST.Query,
   }),
 
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
-      deep: Schema.optional(Schema.Boolean.annotations({ title: 'Nested' })),
+      deep: Schema.optional(Schema.Boolean.annotate({ title: 'Nested' })),
       // Debounce changes (delay in ms).
-      delay: Schema.optional(Schema.Number.annotations({ title: 'Delay' })),
-    }).annotations({ title: 'Options' }),
+      delay: Schema.optional(Schema.Number.annotate({ title: 'Delay' })),
+    }).annotate({ title: 'Options' }),
   ),
 });
 export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
@@ -99,7 +98,7 @@ export const specSubscription = (
  * Direct invocation only; never scheduled by the dispatcher (invoked on demand by a caller).
  */
 export const DirectSpec = Schema.Struct({
-  kind: Schema.Literal('direct').annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('direct').annotate(kindLiteralAnnotations),
 });
 export type DirectSpec = Schema.Schema.Type<typeof DirectSpec>;
 
@@ -112,8 +111,8 @@ export const specDirect = (): DirectSpec => ({ kind: 'direct' });
  * Cron timer.
  */
 export const TimerSpec = Schema.Struct({
-  kind: Schema.Literal('timer').annotations(kindLiteralAnnotations),
-  cron: Schema.String.annotations({
+  kind: Schema.Literal('timer').annotate(kindLiteralAnnotations),
+  cron: Schema.String.annotate({
     title: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
@@ -129,15 +128,15 @@ export const specTimer = (cron: string): TimerSpec => ({ kind: 'timer', cron });
  * Webhook.
  */
 export const WebhookSpec = Schema.Struct({
-  kind: Schema.Literal('webhook').annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('webhook').annotate(kindLiteralAnnotations),
   method: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Method',
       [OptionsAnnotationId]: ['GET', 'POST'],
     }),
   ),
   port: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       title: 'Port',
     }),
   ),
@@ -156,11 +155,9 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations(
-  {
-    title: 'Trigger',
-  },
-);
+export const Spec = Schema.Union([EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec]).annotate({
+  title: 'Trigger',
+});
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
@@ -174,7 +171,7 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  *   mailbox: { '/': 'echo://AAA/ZZZ' }
  * }
  */
-export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.Any });
+export const InputTemplate = Schema.Record(Schema.String, Schema.Any);
 
 /**
  * Function trigger.
@@ -188,7 +185,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Wired programmatically (see plugin-routine's `wireTriggers`); not user-editable, so hidden from forms.
      */
     runnable: Ref.Ref(Runnable.Runnable).pipe(
-      Schema.annotations({ title: 'Runnable' }),
+      Schema.annotate({ title: 'Runnable' }),
       Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
@@ -201,10 +198,10 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Runs this trigger on the edge rather than locally.
      * When unset, the trigger runs locally on the client.
      */
-    remote: Schema.Boolean.pipe(Schema.annotations({ title: 'Remote' }), Schema.optional),
+    remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Concurrency',
         default: 1,
         description: 'Maximum number of concurrent invocations of the trigger.',
@@ -219,7 +216,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * @deprecated Remove and enforce a single input node in all compute graphSchema.
      */
     inputNodeId: Schema.String.pipe(
-      Schema.annotations({ title: 'Input Node ID' }),
+      Schema.annotate({ title: 'Input Node ID' }),
       Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
@@ -228,7 +225,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Passed as the input data to the runnable.
      */
     input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }), HiddenAnnotation.set(true)),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' })),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
@@ -313,7 +310,6 @@ export interface Monitor {
 /**
  * Service for monitoring trigger executions.
  */
-export class TriggerMonitorService extends Context.Tag('@dxos/functions/TriggerMonitorService')<
-  TriggerMonitorService,
-  Monitor
->() {}
+export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
+  '@dxos/functions/TriggerMonitorService',
+) {}

@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
+import { osTranslations } from '@dxos/ui-theme';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
@@ -49,25 +50,31 @@ export const spaceActionsCache = new Map<
     state: SpaceState;
     hasPendingMigration: boolean;
     migrating: boolean;
-    actions: Node.NodeArg<Node.ActionData<Operation.Service>>[];
+    actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[];
   }
 >();
-export const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>();
+export const spaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>();
 
 //
 // Static Labels
 //
 
+export const ADD_TO_COLLECTION_LABEL: Label = ['add-to-collection.label', { ns: osTranslations }];
 export const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add-view-to-schema.label', META_NS];
+export const ARCHIVE_OBJECT_LABEL: Label = ['archive-object.label', META_NS];
 export const COPY_LINK_LABEL: Label = ['copy-link.label', META_NS];
 export const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create-object-in-collection.label', META_NS];
 export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.label', META_NS];
 export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
 export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
 export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
+export const PENDING_SPACE_LABEL: Label = ['pending-space.label', META_NS];
+export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
 export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
+export const SHOW_ORIGINAL_LABEL: Label = ['show-original.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];
+export const UNARCHIVE_OBJECT_LABEL: Label = ['unarchive-object.label', META_NS];
 
 //
 // Helpers
@@ -81,19 +88,6 @@ export const checkPendingMigration = (space: Space) => {
       Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined) !==
         Migrations.targetVersion)
   );
-};
-
-export const downloadBlob = async (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-
-  document.body.appendChild(anchor);
-  anchor.click();
-
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
 };
 
 //
@@ -118,7 +112,7 @@ export type ViewIndex = {
  * type URI via getTypeURIFromQuery are included.
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
-export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
+export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypeUri = new Map<string, Obj.Any[]>();

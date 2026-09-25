@@ -5,13 +5,13 @@
 import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Column, Panel, ScrollArea } from '@dxos/react-ui';
+import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
@@ -19,7 +19,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SpaceHomeContent, SpaceHomePinBottom } from '#types';
+import { SpaceSurface } from '#types';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -35,25 +35,27 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
  */
 export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
   const { actions, onAction } = useMenuActions(attendableId);
+  const layout = useLayout();
+  // The card-scale gutter is a fifth of a phone viewport; mobile steps down to the dialog scale.
+  const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
-        <Column.Root style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+        <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
-              <div className='dx-document flex flex-col gap-4 pb-12'>
-                <Surface.Surface type={SpaceHomeContent} data={{ space }} />
-              </div>
+              <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
+                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
+              </Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Surface type={SpaceHomePinBottom} data={{ space }} limit={1} />
+            <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>

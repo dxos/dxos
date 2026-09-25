@@ -6,4 +6,4 @@ export {
   ConnectionSettingsArticle,
   type ConnectionSettingsArticleProps,
   ConnectionSettingsArticle as default,
-} from './ConnectionSettingsArticle';
+} from './ConnectionSettingsArticle.tsx';

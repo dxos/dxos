@@ -9,15 +9,39 @@ import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-import { type HeadingLevel, markdownTheme } from '../../../styles';
-import { type RenderCallback } from '../../../types';
-import { wrapWithCatch } from '../../../util';
-import { adjustChanges } from './changes';
-import { image } from './image';
-import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
-import { table } from './table';
+import { type HeadingLevel, markdownTheme } from '../../../styles/index.ts';
+import { type RenderCallback } from '../../../types/index.ts';
+import { wrapWithCatch } from '../../../util/index.ts';
+import { isWidgetLink } from '../../widgets/link-widgets.ts';
+import { adjustChanges } from './changes.ts';
+import { image } from './image.ts';
+import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles.ts';
+import { table } from './table.ts';
 
-export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
+/** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
+const linkMark = (url: string, withButton = false) =>
+  Decoration.mark({
+    tagName: 'a',
+    attributes: {
+      class: withButton ? 'cm-link cm-link-with-button' : 'cm-link',
+      href: url,
+      rel: 'noreferrer',
+      target: '_blank',
+      // The document is reached with the caret, not with Tab: an anchor left tabbable inside the
+      // editing host takes the stop that leaves the editor, so a linked field becomes a trap.
+      tabindex: '-1',
+    },
+  });
+
+export type NodeData =
+  | {
+      name: 'Link';
+      url: string;
+    }
+  | {
+      name: 'Image';
+      url: string;
+    };
 
 export interface DecorateOptions {
   /**
@@ -27,7 +51,10 @@ export interface DecorateOptions {
   numberedHeadings?: { from: number; to?: number };
   // TODO(burdon): Additional padding for each line.
   listPaddingLeft?: number;
-  // TODO(burdon): Use consistently.
+  /**
+   * Leaves a link or image undecorated. A link some registered link widget claims (`objectLinks`,
+   * a plugin's matcher) is always left to the widget, without being named here.
+   */
   skip?: (node: NodeData) => boolean;
   // TODO(burdon): Remove.
   renderLinkButton?: RenderCallback<{ url: string }>;
@@ -227,6 +254,21 @@ const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 /**
  * Checks if cursor is inside text.
  */
+/** GFM autolinks match schemeless hosts and bare email addresses, which are not usable as `href`. */
+const normalizeUrl = (text: string): string | undefined => {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(text)) {
+    return text;
+  }
+  if (/^www\./i.test(text)) {
+    return `https://${text}`;
+  }
+  if (text.includes('@')) {
+    return `mailto:${text}`;
+  }
+
+  return undefined;
+};
+
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -521,7 +563,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const editing = editingRange(state, node, focus);
         if (urlNode && marks.length >= 2) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
-          if (options.skip?.({ name: 'Link', url })) {
+          if (isWidgetLink(state, url) || options.skip?.({ name: 'Link', url })) {
             break;
           }
           if (!editing) {
@@ -531,15 +573,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           decoRanges.push({
             from: marks[0].to,
             to: !editing && options.renderLinkButton ? node.to : marks[1].from,
-            deco: Decoration.mark({
-              tagName: 'a',
-              attributes: {
-                class: options.renderLinkButton ? 'cm-link cm-link-with-button' : 'cm-link',
-                href: url,
-                rel: 'noreferrer',
-                target: '_blank',
-              },
-            }),
+            deco: linkMark(url, !!options.renderLinkButton),
           });
 
           if (!editing) {
@@ -552,6 +586,51 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                   })
                 : hide,
             });
+          }
+        }
+        break;
+      }
+
+      //
+      // Bare URLs (GFM autolink) and `<url>` autolinks.
+      // Autolink > [LinkMark, URL, LinkMark] | URL
+      //
+
+      case 'URL': {
+        // The `[label](url)` form is decorated by the `Link` case above, which owns the whole node.
+        const parent = node.node.parent;
+        if (parent?.name === 'Link' || parent?.name === 'Image') {
+          break;
+        }
+
+        // Not gated on a link widget's claim: widgets replace `[label](url)` and image nodes, never a
+        // bare URL, which would otherwise render as neither a link nor a chip.
+        const text = state.sliceDoc(node.from, node.to);
+        const url = normalizeUrl(text);
+        if (!url || options.skip?.({ name: 'Link', url })) {
+          break;
+        }
+
+        decoRanges.push({
+          from: node.from,
+          to: node.to,
+          deco: Decoration.mark({
+            tagName: 'a',
+            attributes: {
+              class: 'cm-link',
+              href: url,
+              rel: 'noreferrer',
+              target: '_blank',
+              // See `linkMark`: a tabbable anchor inside the editing host traps Tab.
+              tabindex: '-1',
+            },
+          }),
+        });
+
+        // The angle brackets of `<url>` are markup, so they are hidden unless the cursor is inside.
+        if (parent?.name === 'Autolink' && !editingRange(state, parent, focus)) {
+          for (const mark of parent.getChildren('LinkMark')) {
+            atomicDecoRanges.push({ from: mark.from, to: mark.to, deco: hide });
           }
         }
         break;

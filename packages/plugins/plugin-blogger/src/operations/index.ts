@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as BloggerOperation from './definitions';
+import { SyncPosts } from './definitions.ts';
+import { AddPublication } from './definitions.ts';
+import { AddPost } from './definitions.ts';
 
-export const BloggerOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-post'),
-  () => import('./add-publication'),
-  () => import('./sync-posts'),
-);
+export * as BloggerOperation from './definitions.ts';
+
+export const BloggerOperationHandlerSet = OperationHandlerSet.lazy([
+  AddPost.pipe(Operation.lazyHandler(() => import('./add-post.ts'))),
+  AddPublication.pipe(Operation.lazyHandler(() => import('./add-publication.ts'))),
+  SyncPosts.pipe(Operation.lazyHandler(() => import('./sync-posts.ts'))),
+]);

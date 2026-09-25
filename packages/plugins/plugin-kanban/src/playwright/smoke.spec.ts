@@ -6,7 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { BoardManager } from './board-manager';
+import { BoardManager } from './board-manager.ts';
 
 const PORT = 9011;
 const STORY_URL = storybookUrl('plugins-plugin-kanban-containers-kanban--mutable-schema', PORT);
@@ -14,16 +14,25 @@ const STORY_URL = storybookUrl('plugins-plugin-kanban-containers-kanban--mutable
 test.describe('Kanban MutableSchema', () => {
   let page: Page;
   let board: BoardManager;
+  let close: (() => Promise<void>) | undefined;
 
-  test.beforeEach(async ({ browser }) => {
+  test.beforeEach(async ({ browser, browserName }) => {
+    // TODO(wittjosiah): Deferred on webkit — the story intermittently never paints a column within the
+    //   45s budget, an arrival-order race in `storybook dev`'s on-demand module serving that storybook's
+    //   error boundary swallows into an eternally "preparing" story (CI run 31313740371). The fix is to
+    //   run e2e against a BUILT storybook — a bundle has a fixed evaluation order, so the race cannot
+    //   exist — but the first spike is blocked: the built story never renders. Fix that, then unskip.
+    test.skip(browserName === 'webkit');
+
     // Larger viewport to avoid triggering scroll-assist behaviour on simple drag operations.
-    ({ page } = await setupPage(browser, { url: STORY_URL, viewportSize: { width: 1920, height: 1080 } }));
+    ({ page, close } = await setupPage(browser, { url: STORY_URL, viewportSize: { width: 1920, height: 1080 } }));
     board = new BoardManager(page.locator('body'));
     await board.waitUntilReady();
   });
 
   test.afterEach(async () => {
-    await page.close();
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so the context may not exist.
+    await close?.();
   });
 
   test('rearrange columns', async () => {

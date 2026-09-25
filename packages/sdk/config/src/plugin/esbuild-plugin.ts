@@ -4,8 +4,8 @@
 
 import type { Plugin } from 'esbuild';
 
-import { definitions } from './definitions';
-import { type ConfigPluginOpts } from './types';
+import { definitions } from './definitions.ts';
+import { type ConfigPluginOpts } from './types.ts';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   return {

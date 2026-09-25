@@ -4,18 +4,18 @@
 
 import '../../styles/graph.css';
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type Graph } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { SVG } from '../components';
+import { SVG } from '../components/index.ts';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -25,12 +25,12 @@ import {
   createGraphDrag,
   createMarkers,
   linkerRenderer,
-} from '../graph';
-import { useGrid, useSvgContext, useZoom } from '../hooks';
-import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
+} from '../graph/index.ts';
+import { useGrid, useSvgContext, useZoom } from '../hooks/index.ts';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing/index.ts';
 
 type ComponentProps = PropsWithChildren<{
-  graph: () => Graph.Graph<TestNode, Graph.Edge.Any>;
+  graph: () => GraphModel.Data<TestNode, GraphEdge.Any>;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
   interval?: number;
@@ -47,7 +47,7 @@ const Component = ({
   grid: showGrid = false,
 }: ComponentProps) => {
   const registry = useContext(RegistryContext);
-  const model = useMemo(() => new TestGraphModel(registry, graphFactory()), [registry, graphFactory]);
+  const model = useMemo(() => new TestGraphModel({ registry, graph: graphFactory() }), [registry, graphFactory]);
 
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);

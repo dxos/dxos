@@ -3,44 +3,64 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, GraphPath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { Attention } from '@dxos/react-ui-attention';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Reactive read: the connector may evaluate before the client module finishes
+    // activating; the atom dependency re-evaluates it when the client lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    // TODO(wittjosiah): Factor out initialized atom?
+    const initializedClientAtom = Atom.make((get) => {
+      const [client] = get(clientAtom);
+      if (client && !client.initialized) {
+        void client.waitUntilInitialized().then(() => get.setSelf(client));
+        return undefined;
+      }
+      return client;
+    });
+    // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
+    // `AppCapabilities.Layout`; hoisting the atom lets the connector heal reactively if it lands.
+    const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceSearch',
-        match: NodeMatcher.whenRoot,
-        connector: (node, get) =>
-          Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
+        relation: AppNode.companion,
+        match: GraphNodeMatcher.whenRoot,
+        connector: (_node, get) =>
+          Effect.sync(() => {
+            const client = get(initializedClientAtom);
+            const [layoutAtom] = get(layoutCapabilityAtom);
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
-            const space = spaceId ? client.spaces.get(spaceId) : null;
+            const space = client && spaceId ? client.spaces.get(spaceId) : undefined;
 
             return [
               AppNode.makeDeckCompanion({
                 id: Attention.linkedSegment('search'),
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
-                data: space,
+                data: space ?? null,
               }),
             ];
-          }).pipe(Effect.orDie),
+          }),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -53,8 +73,8 @@ export default Capability.makeModule(
                 label: ['search-action.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
-                  macos: 'shift+meta+f',
-                  windows: 'shift+alt+f',
+                  macos: 'meta+k',
+                  windows: 'ctrl+k',
                 },
               },
             },
@@ -62,6 +82,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

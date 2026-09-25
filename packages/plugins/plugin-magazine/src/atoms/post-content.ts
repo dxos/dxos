@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Obj } from '@dxos/echo';
 
-import { Subscription } from '../types';
+import { Subscription } from '#types';
 
 /** This Post's fetched body (newest {@link Subscription.PostContent} entry), or undefined. */
 export const postContentAtom = Atom.family((post: Subscription.Post) =>

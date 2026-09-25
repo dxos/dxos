@@ -9,7 +9,7 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { Person } from '@dxos/types';
 
-import { TestDatabaseLayer, testStoragePath } from './layer';
+import { TestDatabaseLayer, testStoragePath } from './layer.ts';
 
 describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect(

@@ -2,17 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
-import * as Entity from './Entity';
-import { SnapshotKindId } from './internal';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import type * as Type from './Type';
+import type * as Change from './Change.ts';
+import * as Entity from './Entity.ts';
+import { getProxyTarget } from './internal/common/proxy/proxy-utils.ts';
+import { EventId } from './internal/common/proxy/symbols.ts';
+import { RefTypeId, SnapshotKindId } from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import type * as Type from './Type.ts';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -106,8 +110,7 @@ describe('Obj', () => {
 
     test('getSnapshot preserves parent', ({ expect }) => {
       const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
-      const child = Obj.make(TestSchema.Person, { name: 'child' });
-      Obj.setParent(child, parent);
+      const child = Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'child' });
 
       const snapshot = Obj.getSnapshot(child);
 
@@ -590,6 +593,132 @@ describe('Obj', () => {
     });
   });
 
+  describe('atom', () => {
+    test('an unobserved atom is released by its registry', async ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      registry.subscribe(Obj.atom(obj), () => {}, { immediate: true })();
+      await settle();
+      expect(registry.getNodes().size).toBe(0);
+    });
+
+    test('a ref atom removed before its target loads leaves no subscription', async ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const listeners = () => (getProxyTarget(obj) as any)[EventId].listenerCount();
+      const baseline = listeners();
+      let resolve!: (target: TestSchema.Person) => void;
+      const load = new Promise<TestSchema.Person>((resolveLoad) => (resolve = resolveLoad));
+      const ref = { [RefTypeId]: RefTypeId, target: undefined, onResolved: () => () => {}, load: () => load } as any;
+
+      registry.subscribe(Obj.atom(ref), () => {}, { immediate: true })();
+      await settle();
+      resolve(obj);
+      await settle();
+      expect(listeners()).toBe(baseline);
+    });
+  });
+
+  describe('atomProperty', () => {
+    test('is one atom per object and key', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const ref = Ref.make(obj);
+      expect(Obj.atomProperty(obj, 'name')).toBe(Obj.atomProperty(obj, 'name'));
+      expect(Obj.atomProperty(obj, 'name')).not.toBe(Obj.atomProperty(obj, 'email'));
+      expect(Obj.atomProperty(ref, 'name')).toBe(Obj.atomProperty(Ref.make(obj), 'name'));
+    });
+
+    test('fires only when the observed property changes', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [] });
+
+      const tasksAtom = Obj.atomProperty(obj, 'tasks');
+      let fires = 0;
+      registry.subscribe(tasksAtom, () => {
+        fires++;
+      });
+      expect(registry.get(tasksAtom)).toEqual([]);
+      // Mounting may notify once with the initial value; only the delta after this matters.
+      const baseline = fires;
+
+      // Writes to other properties must not re-fire an array-valued atom: comparing fresh snapshots by
+      // identity is unequal for arrays/objects on every notification.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      Obj.update(obj, (obj) => {
+        obj.name = 'Carol';
+      });
+      expect(fires).toBe(baseline);
+
+      // A genuine change to the observed property still fires.
+      const task = Obj.make(TestSchema.Task, { title: 'x' });
+      Obj.update(obj, (obj) => {
+        // Optional-chained for the mutator's widened type; the length assertion below catches a no-op.
+        obj.tasks?.push(Ref.make(task));
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(tasksAtom)).toHaveLength(1);
+
+      // Still silent for unrelated writes once the array holds refs: `Ref` mints a fresh wrapper per
+      // property read, so identity comparison would re-fire here every time (see `elementEquals`).
+      Obj.update(obj, (obj) => {
+        obj.name = 'Dana';
+      });
+      expect(fires).toBe(baseline + 1);
+    });
+
+    test('a ref-valued property keeps its uri and re-fires only on a different target', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const orgA = Obj.make(TestSchema.Organization, { name: 'A' });
+      const orgB = Obj.make(TestSchema.Organization, { name: 'B' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(orgA) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      // The snapshot must stay a usable ref: a shallow spread drops `uri`, which is a prototype
+      // getter over a private field, and every consumer reading the DXN off it sees `undefined`.
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgA).uri.toString());
+      const baseline = fires;
+
+      // Unrelated writes are silent — refs compare by URI, not identity.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      expect(fires).toBe(baseline);
+
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(orgB);
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
+    });
+
+    test('a ref-valued property re-fires when only the inlined target is dropped', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const org = Obj.make(TestSchema.Organization, { name: 'A' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(org) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      registry.get(employerAtom);
+      const baseline = fires;
+
+      // Same URI, different value: the inlined target is part of the ref's encoded form, so dropping
+      // it is a change the consumer must see rather than one the URI comparison swallows.
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(org).noInline();
+      });
+      expect(fires).toBe(baseline + 1);
+    });
+  });
+
   describe('Obj.updateFrom', () => {
     test('returns false when values already match', () => {
       const target = Obj.make(TestSchema.Organization, { name: 'Acme', properties: { region: 'EU' } });
@@ -719,3 +848,37 @@ describe('Obj', () => {
     });
   });
 });
+
+describe('Obj.getChanges', () => {
+  test('requires an object bound to a database', ({ expect }) => {
+    const task = Obj.make(TestSchema.Task, { title: 'draft' });
+    expect(() => Obj.getChanges(task)).toThrow('not bound to a database');
+    expect(() => Obj.getChanges(task, { property: 'title' })).toThrow('not bound to a database');
+  });
+
+  test('types before/after as the object snapshot, or as the selected property', () => {
+    // Type-level only: never invoked, since the object has no database.
+    const _types = (task: TestSchema.Task) => {
+      const [change] = Obj.getChanges(task);
+      expectTypeOf(change.before).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.after).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.heads).toEqualTypeOf<readonly string[]>();
+      expectTypeOf(change).toEqualTypeOf<Change.ValueChange<Obj.Snapshot<TestSchema.Task>>>();
+
+      const [titleChange] = Obj.getChanges(task, { property: 'title' });
+      expectTypeOf(titleChange.after).toEqualTypeOf<string | undefined>();
+      expectTypeOf(titleChange).toEqualTypeOf<Change.Change<string | undefined>>();
+
+      // @ts-expect-error not a property of Task.
+      Obj.getChanges(task, { property: 'status' });
+    };
+
+    // With no type argument, `Change.Change` stays the `Filter.changes` query row.
+    expectTypeOf<Change.Change>().toHaveProperty('ops');
+    expectTypeOf<Change.Change>().not.toHaveProperty('before');
+    expectTypeOf<Change.Change<number>>().toHaveProperty('before').toEqualTypeOf<number | undefined>();
+  });
+});
+
+// The registry removes nodes on `setImmediate`.
+const settle = () => new Promise((resolve) => setImmediate(resolve));

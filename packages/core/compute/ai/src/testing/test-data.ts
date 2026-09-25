@@ -4,7 +4,7 @@
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 
-import { Contact, Organization, Project, Task } from './test-schema';
+import { Contact, Organization, Project, Task } from './test-schema.ts';
 
 // TODO(burdon): Remove and use standard test data.
 

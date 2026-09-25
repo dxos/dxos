@@ -20,11 +20,11 @@ export type SoundEffect = 'Click' | 'StartRecording' | 'StopRecording' | 'JoinCa
  */
 // TODO(burdon): Package assets.
 const SOUND_EFFECTS: Record<SoundEffect, string> = {
-  Click: 'https://dxos.network/sound-click.wav',
-  StartRecording: 'https://dxos.network/sound-on.wav',
-  StopRecording: 'https://dxos.network/sound-off.wav',
-  JoinCall: 'https://dxos.network/sound-call-join.mp3',
-  LeaveCall: 'https://dxos.network/sound-call-leave.mp3',
+  Click: 'https://media.dxos.network/sound-click.wav',
+  StartRecording: 'https://media.dxos.network/sound-on.wav',
+  StopRecording: 'https://media.dxos.network/sound-off.wav',
+  JoinCall: 'https://media.dxos.network/sound-call-join.mp3',
+  LeaveCall: 'https://media.dxos.network/sound-call-leave.mp3',
 };
 
 export const useSoundEffect = (effect?: SoundEffect) => {

@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 
 import { isNonNullable } from '@dxos/util';
 
-import { documentId } from '../state/selection';
+import { documentId } from '../state/selection.ts';
 
 export type ListenerOptions = {
   onFocus?: (event: { id: string; focusing: boolean }) => void;

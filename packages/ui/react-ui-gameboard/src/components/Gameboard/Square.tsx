@@ -10,21 +10,25 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useGameboardContext } from './Gameboard';
-import { type Location, isPiece } from './types';
-import { type DOMRectBounds } from './util';
+import { useGameboardContext } from './GameboardContext.ts';
+import { type Location, isPiece, locationToString } from './types.ts';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
 
+const SQUARE_NAME = 'Square';
+
+/**
+ * A square is a cell of its board's grid, not an absolutely positioned box: absolute bounds come from
+ * `offsetLeft`/`offsetWidth`, which are integers, so squares laid over fractional grid tracks leave
+ * hairline gaps where the rounding steps. Pieces are positioned from measurements; squares are the
+ * measurement.
+ */
 export type SquareProps = ThemedClassName<{
   location: Location;
-  bounds: DOMRectBounds;
   label?: string;
 }>;
 
-const SQUARE_NAME = 'Square';
-
-export const Square = memo(({ location, bounds, label, classNames }: SquareProps) => {
+export const Square = memo(({ location, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
   const { model } = useGameboardContext(SQUARE_NAME);
@@ -61,11 +65,11 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
   return (
     <div
       ref={ref}
-      style={bounds}
+      data-location={locationToString(location)}
       className={mx(
-        'absolute flex justify-center items-center border-2 box-border select-none',
-        classNames,
+        'relative flex justify-center items-center border-2 box-border select-none',
         state === 'validMove' ? 'border-neutral-800' : 'border-transparent',
+        classNames,
       )}
     >
       {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}

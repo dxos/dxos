@@ -2,17 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ElevationProvider } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  ActionToolbar,
+  type ActionToolbarProps,
+  createMenuAction,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type CodeCapabilities } from '#types';
+import { CodeCapabilities } from '#types';
 
-export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+export type CodeToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;
   onBuild: () => void;
   onRun: () => void;
@@ -20,10 +26,10 @@ export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
 };
 
 /**
- * Toolbar for `CodeArticle`. Wraps a `Menu.Toolbar` with two actions —
+ * Toolbar for `CodeArticle`. Wraps a `ActionToolbar` with two actions —
  * Build and Run — built through the standard `useMenuActions` /
  * `createMenuAction` idiom so the article's attendable identity threads
- * through `Menu.Root` (and so the actions show up uniformly with other
+ * through `ActionToolbar` (and so the actions show up uniformly with other
  * toolbar-driven articles in the deck).
  */
 export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeToolbarProps) => {
@@ -42,9 +48,7 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
 
   return (
     <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar />
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} />
     </ElevationProvider>
   );
 };

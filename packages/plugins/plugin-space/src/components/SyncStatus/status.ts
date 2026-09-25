@@ -55,18 +55,3 @@ export const getIcon = (status: Status) => {
       return 'ph--cloud-check--regular';
   }
 };
-
-/**
- * Valence for the indicator: no connection with unsynced work is an error, a stall is a warning
- * that may still resolve on its own, so it pulses rather than latching red.
- */
-export const getStatusStyle = (status: Status): string | undefined => {
-  switch (status) {
-    case 'disconnected':
-      return 'text-error-text';
-    case 'stalled':
-      return 'text-warning-text animate-pulse';
-    default:
-      return undefined;
-  }
-};

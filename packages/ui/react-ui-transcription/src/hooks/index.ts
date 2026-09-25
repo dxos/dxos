@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useAudioFile';
-export * from './useAudioTrack';
-export * from './useFeedModelAdapter';
-export * from './useIsSpeaking';
-export * from './useRecordingPipeline';
-export * from './useSpeechRecognition';
-export * from './useTranscriber';
+export * from './useAudioFile.ts';
+export * from './useAudioTrack.ts';
+export * from './useFeedModelAdapter.ts';
+export * from './useIsSpeaking.ts';
+export * from './useRecordingPipeline.ts';
+export * from './useSpeechRecognition.ts';
+export * from './useTranscriber.ts';

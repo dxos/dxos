@@ -5,7 +5,13 @@
 import { getIndices, getIndicesAbove, getIndicesBelow, getIndicesBetween, sortByIndex } from '@tldraw/indices';
 import { describe, expect, test } from 'vitest';
 
-import { addressFromA1Notation, addressToA1Notation, inRange, rangeFromA1Notation, rangeToA1Notation } from './types';
+import {
+  addressFromA1Notation,
+  addressToA1Notation,
+  inRange,
+  rangeFromA1Notation,
+  rangeToA1Notation,
+} from './types.ts';
 
 describe('cell', () => {
   test('posToA1Notation', () => {

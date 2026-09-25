@@ -6,8 +6,8 @@ import type * as Schema from 'effect/Schema';
 
 import { Obj, type Type } from '@dxos/echo';
 
-import { plan as compile, readSource } from './mapping';
-import { getOverlay } from './overlay';
+import { plan as compile, readSource } from './mapping.ts';
+import { getOverlay } from './overlay.ts';
 import {
   type AnyLens,
   type CodedMapping,
@@ -16,7 +16,7 @@ import {
   type Plan,
   type ResolvedEntry,
   type Write,
-} from './types';
+} from './types.ts';
 
 const read = (obj: Obj.Unknown | Obj.Snapshot) => (property: string) => Obj.getValue(obj, [property]);
 
@@ -79,7 +79,7 @@ const invert = (view: Record<string, unknown>, obj: Obj.Unknown, id: string, pla
  * itself, and one with no counterpart stores itself in the object's annotation dictionary. Neither
  * convenience is silent — `Lens.coverage` reports what was decided.
  */
-export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
+export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   id: string,
   source: S,
   target: T,
@@ -100,7 +100,7 @@ export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schem
  * Define a lens whose transform is opaque — parsing, tree construction, serialization: anything no
  * per-property mapping can express. Indistinguishable from `make` to every consumer.
  */
-export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
+export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   id: string,
   source: S,
   target: T,
@@ -116,7 +116,7 @@ export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Sche
 /** The instance type a target declares, whether it is an ECHO type or a plain schema. */
 export type TargetOf<T> = T extends Type.AnyObj
   ? Type.InstanceType<T>
-  : T extends Schema.Schema<infer A, any, any>
+  : T extends Schema.Codec<infer A, any, any>
     ? A
     : never;
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,17 +43,14 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./transport/tcp": {
-      "source": "./src/transport/tcp/index.ts",
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "import": "./dist/lib/transport/tcp.mjs"
     }
@@ -67,26 +64,25 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "node-datachannel": "catalog:"
   },
   "devDependencies": {
-    "@dxos/edge-client": "workspace:*",
-    "@dxos/keyring": "workspace:*",
+    "@effect/platform-browser": "catalog:",
     "fetch-mock": "catalog:"
   },
   "publishConfig": {

@@ -18,8 +18,8 @@ import {
   useContext,
 } from 'solid-js';
 
-import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type GeoMarker } from '../../types.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 // TODO(burdon): Guess initial location.
 
@@ -247,9 +247,9 @@ const MapMarkers = (props: MapMarkersProps) => {
       markerList.forEach(({ title, location }) => {
         const marker = L.marker(location, {
           icon: new L.Icon({
-            iconUrl: 'https://dxos.network/marker-icon.png',
-            iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
-            shadowUrl: 'https://dxos.network/marker-shadow.png',
+            iconUrl: 'https://media.dxos.network/marker-icon.png',
+            iconRetinaUrl: 'https://media.dxos.network/marker-icon-2x.png',
+            shadowUrl: 'https://media.dxos.network/marker-shadow.png',
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],

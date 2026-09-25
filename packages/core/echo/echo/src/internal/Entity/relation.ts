@@ -3,24 +3,24 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 
 // Type-only imports (erased at runtime — no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
-import type * as Obj from '../../Obj';
-import type * as Type from '../../Type';
+import type * as Obj from '../../Obj.ts';
+import type * as Type from '../../Type.ts';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
+} from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -31,7 +31,7 @@ import {
   RelationTargetId,
   type UnknownTypeSchema,
   getStaticTypeSchema,
-} from '../common/types';
+} from '../common/types/index.ts';
 
 export {
   ATTR_RELATION_SOURCE,
@@ -42,8 +42,8 @@ export {
   RelationTargetId,
 };
 
-import { toJsonSchema } from '../JsonSchema';
-import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import { toJsonSchema } from '../JsonSchema/index.ts';
+import { type EchoTypeSchema, makeEchoTypeSchema } from './entity.ts';
 
 /**
  * Source and target props on relations.
@@ -96,7 +96,7 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
  * are the resolved endpoint instance types (see {@link RelationEndpointInstance}).
  */
 export type EchoRelationSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   SourceInstance extends Obj.Unknown,
   TargetInstance extends Obj.Unknown,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -130,16 +130,24 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoRelationSchema<Self, RelationEndpointInstance<Source>, RelationEndpointInstance<Target>, Fields> => {
-    invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+    invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
 
-    // Extract fields from the schema if available (Struct schemas have .fields).
+    // Struct schemas expose `.fields`; retained for the schema's public field map.
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
-    const ast = SchemaAST.annotations(schemaWithId.ast, {
+    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+    // rebuilding drops index signatures, which is how `Expando` and other record-shaped types are
+    // declared. (`mapFields` is unavailable here -- it is a `Struct` method and `self` is generic.)
+    const schemaWithId = new SchemaAST.Objects(
+      self.ast.propertySignatures.some((property) => property.name === 'id')
+        ? self.ast.propertySignatures
+        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
+      self.ast.indexSignatures,
+    );
+    const ast = SchemaAST.annotate(schemaWithId, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
       [TypeAnnotationId]: {
@@ -151,7 +159,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
       } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
 
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Relation,
         typename,
         version,
@@ -172,7 +180,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
   };
 };
 
-export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
+export const getDXNForRelationSchemaRef = (schema: Schema.Top): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
@@ -191,7 +199,7 @@ export const makeRelationType = (options: {
   dxn: DXN.DXN;
   source: RelationEndpoint;
   target: RelationEndpoint;
-  schema: Schema.Schema.Any;
+  schema: Schema.Top;
   id?: EntityId;
 }): Type.RelationClass<unknown, unknown, unknown, unknown, {}> => {
   const type = EchoRelationSchema({

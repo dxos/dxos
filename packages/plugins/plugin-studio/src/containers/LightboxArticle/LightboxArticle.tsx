@@ -2,39 +2,77 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Project from '@dxos/compute/Project';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Card, Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Board, type BoardController, type BoardRootProps, type Layout, resizeToFit } from '@dxos/react-ui-board';
+import {
+  Board,
+  type BoardController,
+  type BoardRootProps,
+  type CellLayout,
+  type Layout,
+  resizeToFit,
+} from '@dxos/react-ui-board';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { ArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact, type Lightbox } from '#types';
+import { Lightbox, MediaArtifact } from '#types';
 
-const isArtifact = Obj.instanceOf(Artifact.Artifact);
+const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
+
+/** A new card's footprint on the board. */
+const CELL_SIZE = 2;
+
+/**
+ * The first cell inside the board's bounds not covered by an existing cell, scanning rows from the
+ * top-left origin. Falls back to the origin on a full board, where the float resolver pushes the
+ * overlap aside.
+ */
+const nextFreeCell = (
+  cells: Record<string, CellLayout>,
+  bounds: { columns: number; rows: number },
+): Pick<CellLayout, 'x' | 'y'> => {
+  const occupied = (x: number, y: number) =>
+    Object.values(cells).some(
+      (cell) =>
+        x < cell.x + (cell.w ?? 1) && x + CELL_SIZE > cell.x && y < cell.y + (cell.h ?? 1) && y + CELL_SIZE > cell.y,
+    );
+  for (let y = 0; y + CELL_SIZE <= bounds.rows; y += 1) {
+    for (let x = 0; x + CELL_SIZE <= bounds.columns; x += 1) {
+      if (!occupied(x, y)) {
+        return { x, y };
+      }
+    }
+  }
+  return { x: 0, y: 0 };
+};
 
 export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightbox>;
 
 /**
- * A spatial "lightbox" of {@link Artifact}s laid out on a `Board` (react-ui-board). Each artifact
+ * A spatial "lightbox" of {@link MediaArtifact}s laid out on a `Board` (react-ui-board). Each artifact
  * renders as its cover-variant card (the `CardContent` surface); dragging persists cell positions.
  * The same artifacts can also be viewed as a `Collection` masonry — layout is a view, not a schema.
  */
 export const LightboxArticle = ({ role, subject: lightbox, attendableId }: LightboxArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
+  const { invokePromise } = useOperationInvoker();
 
   const [items] = useObject(lightbox, 'items');
   const itemsAtom = useMemo(
     () =>
       Atom.make((get) => {
-        const result: Artifact.Artifact[] = [];
+        const result: MediaArtifact.MediaArtifact[] = [];
         for (const ref of items ?? []) {
           const obj = get(Obj.atomReactive(ref));
           if (obj && isArtifact(obj)) {
@@ -50,10 +88,13 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
   const controller = useRef<BoardController>(null);
   const [zoom, setZoom] = useState(1);
 
-  const layout = useMemo<Layout>(() => ({ items: lightbox.layout.cells }), [lightbox.layout.cells]);
+  // A snapshot, so a cell added or moved is a new value; reading `lightbox.layout` directly would
+  // hand the memo the same proxy every render and the new cell never appears.
+  const [boardLayout] = useObject(lightbox, 'layout');
+  const layout = useMemo<Layout>(() => ({ items: Lightbox.cells(boardLayout) }), [boardLayout]);
   const bounds = useMemo(
-    () => ({ columns: lightbox.layout.size.width, rows: lightbox.layout.size.height }),
-    [lightbox.layout.size.width, lightbox.layout.size.height],
+    () => ({ columns: boardLayout.size.width, rows: boardLayout.size.height }),
+    [boardLayout.size.width, boardLayout.size.height],
   );
 
   const handleChange = useCallback<NonNullable<BoardRootProps['onChange']>>(
@@ -65,45 +106,118 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
     [lightbox],
   );
 
+  // The create dialog places the artifact in the space; the lightbox item and the owning project's
+  // artifacts array are what make it this lightbox's, so both links are written here. A cell's own
+  // `+` names the cell; the toolbar's takes the next free one.
+  const handleAddArtifact = useCallback(
+    async (position?: Pick<CellLayout, 'x' | 'y'>) => {
+      const db = Obj.getDatabase(lightbox);
+      if (!db) {
+        return;
+      }
+      const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
+        target: db,
+        typename: Type.getTypename(MediaArtifact.MediaArtifact),
+        navigable: false,
+      });
+      // The dialog was opened on the artifact typename, and the object it made is already in memory.
+      const artifact = ref?.target;
+      if (!artifact || !isArtifact(artifact)) {
+        return;
+      }
+      // The project link goes first: it is the write that can fail (the operation loads and flushes
+      // the project), and the lightbox write after it is in-memory and cannot, so a failure leaves
+      // neither link rather than a lightbox item the project does not own.
+      const project = Obj.getParent(lightbox);
+      if (project && Obj.instanceOf(Project.Project, project)) {
+        const { error } = await invokePromise(
+          ProjectOperation.ArtifactAdd,
+          { project: Ref.make(project), object: Ref.make(artifact) },
+          { spaceId: db.spaceId, notify: { error: ['add-artifact.error.title', { ns: meta.profile.key }] } },
+        );
+        if (error) {
+          return;
+        }
+      }
+      Obj.update(lightbox, (lightbox) => {
+        lightbox.items.push(Ref.make(artifact));
+        lightbox.layout.cells[artifact.id] = {
+          ...(position ?? nextFreeCell(Lightbox.cells(lightbox.layout), bounds)),
+          w: CELL_SIZE,
+          h: CELL_SIZE,
+        };
+      });
+    },
+    [lightbox, bounds, invokePromise],
+  );
+
+  const menuActions = useMenuBuilder(
+    (): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'add-artifact',
+          {
+            label: ['add-artifact.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            disposition: 'toolbar',
+          },
+          () => void handleAddArtifact(),
+        )
+        .separator()
+        .action(
+          'center',
+          {
+            label: ['center.label', { ns: meta.profile.key }],
+            icon: 'ph--crosshair--regular',
+            disposition: 'toolbar',
+            disabled: !hasAttention,
+          },
+          () => controller.current?.center(),
+        )
+        .action(
+          'zoom',
+          {
+            label: ['zoom.label', { ns: meta.profile.key }],
+            icon: zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular',
+            disposition: 'toolbar',
+            disabled: !hasAttention,
+          },
+          () => setZoom((value) => (value < 1 ? 1 : 0.5)),
+        )
+        .build(),
+    [handleAddArtifact, hasAttention, zoom],
+  );
+
   return (
     <Board.Root
       ref={controller}
       layout={layout}
       bounds={bounds}
       mode='float'
-      resolver={resizeToFit}
       zoom={zoom}
+      resolver={resizeToFit}
       onChange={handleChange}
+      onAdd={({ x, y }) => void handleAddArtifact({ x, y })}
     >
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.IconButton
-              icon='ph--crosshair--regular'
-              iconOnly
-              label={t('center.label')}
-              disabled={!hasAttention}
-              onClick={() => controller.current?.center()}
-            />
-            <Toolbar.IconButton
-              icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-              iconOnly
-              label={t('zoom.label')}
-              disabled={!hasAttention}
-              onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
-            />
-          </Toolbar.Root>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Board.Container classNames='absolute inset-0'>
+          <Board.Container>
             <Board.Viewport>
               <Board.Backdrop />
               <Board.Content>
                 {artifacts.map((artifact) => {
                   const itemLayout = layout.items[artifact.id];
                   return itemLayout ? (
-                    <Board.Cell item={artifact} key={artifact.id} layout={itemLayout}>
-                      <ArtifactCard subject={artifact} />
+                    <Board.Cell
+                      item={artifact}
+                      key={artifact.id}
+                      layout={itemLayout}
+                      title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
+                    >
+                      <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
                   ) : null;
                 })}

@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import type { EntityId } from './entity-id';
-import type { SpaceId } from './space-id';
-import type * as URI from './URI';
+import type { EntityId } from './entity-id.ts';
+import type { SpaceId } from './space-id.ts';
+import type * as URI from './URI.ts';
 
 // Canonical-form regex covering all accepted EID shapes.
 //   echo://<spaceId>/<objectId>
@@ -33,7 +33,7 @@ const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
  * - `echo://<spaceId>` — space.
  * - `echo:///<objectId>` — local (space-less) object.
  *
- * @deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
+ * Deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
  * triple-slash `echo:///<objectId>` form. It is still accepted on read (and normalized by `parse`)
  * so existing persisted data keeps resolving, but it is no longer produced — do not emit it in new
  * code. Construct local EIDs with `make({ entityId })`.
@@ -60,22 +60,26 @@ export const isEID = (value: unknown): value is EID => typeof value === 'string'
  * compare equal.
  */
 export const parse = (uri: string): EID => {
-  if (!ECHO_URI_REGEXP.test(uri)) {
+  const eid = tryParse(uri);
+  if (eid === undefined) {
     throw new Error(`Invalid EID: ${uri}`);
   }
-  const legacy = LOCAL_LEGACY_RE.exec(uri);
-  return (legacy ? `echo:///${legacy[1]}` : uri) as EID;
+  return eid;
 };
 
 /**
  * Like `parse` but returns undefined on failure instead of throwing.
+ *
+ * Validates rather than catching `parse`, because rejection is the common case on the query path —
+ * every type filter tests each candidate's typename as an EID first — and the `Error` that used to
+ * allocate, with its stack, dominated it.
  */
 export const tryParse = (uri: string): EID | undefined => {
-  try {
-    return parse(uri);
-  } catch {
+  if (!ECHO_URI_REGEXP.test(uri)) {
     return undefined;
   }
+  const legacy = LOCAL_LEGACY_RE.exec(uri);
+  return (legacy ? `echo:///${legacy[1]}` : uri) as EID;
 };
 
 /**
@@ -153,17 +157,15 @@ export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 /**
  * Effect Schema for EID validation.
  */
-// Identity-encoded schema (`Schema<EID, EID>`) so consumers can refine generic
-// schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
-// with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
-// runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
-  Schema.filter((value): value is EID => isEID(value), {
-    message: () => 'Invalid EID: must start with echo:',
+// Identity-encoded (`Schema<EID, EID>`) so consumers can refine without the encode/decode types
+// diverging; `refine` leaves `Encoded = string`, and the runtime form is the same branded string.
+const Schema_: Schema.Codec<EID, EID> = Schema.String.pipe(
+  Schema.refine((value): value is EID => isEID(value), {
+    message: 'Invalid EID: must start with echo:',
   }),
-  Schema.annotations({
+  Schema.annotate({
     title: 'EID',
     description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:///<objectId>',
   }),
-) as unknown as Schema.Schema<EID, EID>;
+) as unknown as Schema.Codec<EID, EID>;
 export { Schema_ as Schema };

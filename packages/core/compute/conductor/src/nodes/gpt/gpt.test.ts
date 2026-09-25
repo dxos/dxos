@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { type Credential, Operation, Trace } from '@dxos/compute';
+import type * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -16,8 +18,8 @@ import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeNodeContext, ValueBag } from '../../types';
-import { type GptInput, gptNode } from './gpt';
+import { ValueBag, layerNoop as computeNodeContextLayerNoop } from '../../types/index.ts';
+import { type GptInput, gptNode } from './gpt.ts';
 
 const ENABLE_LOGGING = true;
 
@@ -71,8 +73,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
         },
-        Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(ComputeNodeContext.layerNoop),
+        Effect.provide(Layer.provideMerge(Trace.writerLayerNoop, computeNodeContextLayerNoop)),
       ),
       60_000,
     );
@@ -109,8 +110,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
         },
-        Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(ComputeNodeContext.layerNoop),
+        Effect.provide(Layer.provideMerge(Trace.writerLayerNoop, computeNodeContextLayerNoop)),
       ),
       60_000,
     );

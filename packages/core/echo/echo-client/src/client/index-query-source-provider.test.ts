@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as EffectScope from 'effect/Scope';
-import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -17,16 +16,11 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryRequest,
-  type QueryResponse,
-  type QueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
-import { type ObjectUpdate } from './index-query-source-provider';
-import { IndexQuerySource } from './index-query-source-provider';
+import { type ObjectUpdate } from './index-query-source-provider.ts';
+import { IndexQuerySource } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -34,7 +28,7 @@ const mockGraph = {} as Hypergraph.Hypergraph;
 /** No-op update signal for tests that don't exercise re-hydration. */
 const noopUpdateEvent = new Event<ObjectUpdate>();
 
-const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query => ({
+const makeScopedQuery = (scopes: QueryAST.Scope[]): QueryAST.Query => ({
   type: 'from',
   query: {
     type: 'select',
@@ -46,19 +40,22 @@ const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query => ({
   },
   from: {
     _tag: 'scope',
-    scopes: [Scope.space({ id: spaceId })],
+    scopes,
   },
 });
 
+const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query =>
+  makeScopedQuery([Scope.space({ id: spaceId })]);
+
 describe('IndexQuerySource', () => {
   test('does not start a REACTIVE remote query until open() is called', async () => {
-    const calls: QueryRequest[] = [];
+    const calls: QueryService.QueryRequest[] = [];
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return Stream.async<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -67,7 +64,7 @@ describe('IndexQuerySource', () => {
 
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -92,13 +89,13 @@ describe('IndexQuerySource', () => {
   });
 
   test('update() then run() issues only a ONE_SHOT remote query when not open', async () => {
-    const calls: QueryRequest[] = [];
+    const calls: QueryService.QueryRequest[] = [];
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return Stream.async<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -107,7 +104,7 @@ describe('IndexQuerySource', () => {
 
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -128,6 +125,59 @@ describe('IndexQuerySource', () => {
     expect(calls[0].reactivity).toBe(QueryReactivity.ONE_SHOT);
   });
 
+  // Regression: a registry-only query forwarded to the remote QueryService fails the whole
+  // query on edge — the query host rejects space-less queries ("Query must specify at least one
+  // spaceId in options") and `GraphQueryContext.run`'s fail-fast merge discards the
+  // `RegistryQuerySource`'s results. Surfaced by `projectCreate` over MCP (`SpaceOperation.
+  // AddObject`'s type lookup is registry-scoped); dxos/edge mcp-operations project, DESIGN §6.
+  test('registry-only queries never reach the remote service', async () => {
+    const calls: QueryService.QueryRequest[] = [];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) => {
+        calls.push(request);
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
+        });
+      },
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async () => undefined,
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+
+    // `open()` subscribes to the shared `noopUpdateEvent` and `update()` opens a reactive
+    // stream; close on teardown so neither outlives the test, including when an assertion throws.
+    onTestFinished(() => source.close());
+
+    const registryOnlyQuery = makeScopedQuery([Scope.registry()]);
+
+    // One-shot: resolves empty locally without a remote round-trip.
+    const results = await source.run(Context.default(), registryOnlyQuery);
+    expect(results).toEqual([]);
+    expect(calls).toHaveLength(0);
+
+    // Reactive: no remote stream is opened either. A registry-only query never targets spaces/feeds,
+    // so `update()` returns before scheduling anything async — the assertion needs no wait.
+    source.open();
+    source.update(registryOnlyQuery);
+    expect(calls).toHaveLength(0);
+
+    // A mixed-scope query (space + registry) still queries the index for the space part.
+    const mixedQuery = makeScopedQuery([Scope.space({ id: SpaceId$.random() }), Scope.registry()]);
+    source.update(mixedQuery);
+    await expect.poll(() => calls).toHaveLength(1);
+    expect(calls[0].reactivity).toBe(QueryReactivity.REACTIVE);
+  });
+
   test('re-hydrates reactive results when a previously-unavailable object loads', async () => {
     const spaceId = SpaceId$.random();
     const objectId = EntityId.random();
@@ -137,11 +187,11 @@ describe('IndexQuerySource', () => {
     // Fake entity at the loader boundary — only `id` is read by the source under test.
     let loaded: Entity.Unknown | undefined;
 
-    let emit: ((results: QueryResult[]) => void) | undefined;
+    let emit: ((results: QueryService.QueryResult[]) => void) | undefined;
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) =>
-        Stream.async<QueryResponse>((streamEmit) => {
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((streamEmit) => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,
@@ -150,7 +200,7 @@ describe('IndexQuerySource', () => {
     const updateEvent = new Event<ObjectUpdate>();
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => loaded,
         updateEvent,
@@ -187,6 +237,152 @@ describe('IndexQuerySource', () => {
     expect(source.getResults().map((entry) => entry.id)).toEqual([objectId]);
 
     void ctx.dispose();
+  });
+
+  // Regression: a per-hit 2-second budget dropped any object whose load outran it, with only a log
+  // line, so a one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no
+  // second pass — read the short result as the whole set.
+  test('a slow load is waited for rather than dropped', async () => {
+    const spaceId = SpaceId$.random();
+    const prompt = EntityId.random();
+    const slow = EntityId.random();
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: prompt, spaceId, rank: 0 },
+                  { id: slow, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === slow) {
+            // Longer than the budget this used to be held to.
+            await new Promise((resolve) => setTimeout(resolve, 2_500));
+          }
+          return { id: objectId } as unknown as Entity.Unknown;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
+
+  // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single
+  // document that never arrived held the query open for the whole 20s and then reported itself as
+  // an "index query" timeout — naming the index, which had in fact answered in microseconds.
+  // Blocks AI chat in production (`assistant.createChat`, `assistant.generateHomeSuggestions`).
+  describe('an answered index query is not charged for stalled hydration', () => {
+    test('the index-query budget is not spent on hydration, and the error names the stall', async () => {
+      const spaceId = SpaceId$.random();
+      const stalled = EntityId.random();
+
+      const service = await makeQueryClient({
+        'QueryService.setConfig': () => Effect.void,
+        'QueryService.execQuery': (request) =>
+          EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+            // The host answers immediately: the index is not the slow party.
+            queueMicrotask(
+              () => void emit.single({ queryId: request.queryId, results: [{ id: stalled, spaceId, rank: 0 }] }),
+            );
+          }),
+        'QueryService.reindex': () => Effect.void,
+      });
+
+      const source = new IndexQuerySource({
+        service,
+        runtime: EffectContext.empty(),
+        objectLoader: {
+          // Models an unavailable document: `loadObject` never settles (see `query-api-stall.test.ts`).
+          loadObject: () => new Promise<Entity.Unknown | undefined>(() => {}),
+          updateEvent: noopUpdateEvent,
+        },
+        graph: mockGraph,
+        // The index-query budget is an order of magnitude larger than the hydration budget, so a
+        // failure attributable to it cannot be reached within this test's runtime.
+        queryTimeout: 5_000,
+        hydrationTimeout: 100,
+      });
+      onTestFinished(() => source.close());
+
+      const started = Date.now();
+      await expect(source.run(Context.default(), makeQuery(spaceId))).rejects.toThrow(
+        /index query result hydration \(1 of 1 objects did not load/,
+      );
+      // Settled on the hydration budget, not the index-query one.
+      expect(Date.now() - started).toBeLessThan(2_000);
+    });
+
+    test('reactive queries publish the hits that did hydrate and re-hydrate the stalled one', async () => {
+      const spaceId = SpaceId$.random();
+      const stalled = EntityId.random();
+
+      let emit: ((results: QueryService.QueryResult[]) => void) | undefined;
+      const service = await makeQueryClient({
+        'QueryService.setConfig': () => Effect.void,
+        'QueryService.execQuery': (request) =>
+          EffectEx.streamFromEmitter<QueryService.QueryResponse>((streamEmit) => {
+            emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
+          }),
+        'QueryService.reindex': () => Effect.void,
+      });
+
+      const updateEvent = new Event<ObjectUpdate>();
+      let available = false;
+      const source = new IndexQuerySource({
+        service,
+        runtime: EffectContext.empty(),
+        objectLoader: {
+          loadObject: ({ objectId }) =>
+            available
+              ? Promise.resolve({ id: objectId } as unknown as Entity.Unknown)
+              : new Promise<Entity.Unknown | undefined>(() => {}),
+          updateEvent,
+        },
+        graph: mockGraph,
+        hydrationTimeout: 100,
+      });
+      onTestFinished(() => source.close());
+
+      const nextChanged = () => new Promise<void>((resolve) => source.changed.once(() => resolve()));
+
+      source.open();
+      source.update(makeQuery(spaceId));
+      await expect.poll(() => emit).toBeDefined();
+      invariant(emit);
+
+      // The stalled hit is not published, but the pass completes on the hydration budget.
+      const settled = nextChanged();
+      emit([{ id: stalled, spaceId, rank: 0 }]);
+      await settled;
+      expect(source.getResults()).toEqual([]);
+
+      // Once the document arrives the remembered record is re-hydrated without a host round-trip.
+      available = true;
+      const rehydrated = nextChanged();
+      updateEvent.emit({ spaceId, objectIds: [stalled] });
+      await rehydrated;
+      expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
+    });
   });
 });
 

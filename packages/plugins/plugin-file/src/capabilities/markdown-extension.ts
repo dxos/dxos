@@ -4,30 +4,30 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities, type MarkdownExtensionProvider } from '@dxos/plugin-markdown/types';
-import { getSpace } from '@dxos/react-client/echo';
+import * as Capability from '@dxos/app-framework/Capability';
+import { Obj } from '@dxos/echo';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
-import { image } from '../extensions';
+import { image } from '../extensions/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
+    const provider: MarkdownCapabilities.MarkdownExtensionProvider = ({ document, viewMode }) => {
       if (viewMode === 'source') {
         return undefined;
       }
 
       if (document) {
-        const space = getSpace(document);
-        if (!space) {
+        const db = Obj.getDatabase(document);
+        if (!db) {
           return undefined;
         }
-        return [image({ space })];
+        return [image({ db })];
       }
 
       return undefined;
     };
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [provider]);
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [provider]);
   }),
 );

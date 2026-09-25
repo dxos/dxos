@@ -5,11 +5,12 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import { log } from '@dxos/log';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
-import { MarkdownCapabilities, MarkdownOperation } from '../types';
+import { MarkdownCapabilities, MarkdownOperation } from '#types';
 
 const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
@@ -17,15 +18,23 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, cursor, id }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
-      const entry = editorViews.get(subject);
+      // Views register under `attendableId ?? documentId`, and callers hold one or the other — a
+      // companion knows its context plank's attendable id, the graph knows the object URI. Accept
+      // either so a caller holding the id the view did not register under still reaches it.
+      const entry = editorViews.get(subject) ?? editorViews.getByDocumentId(subject);
       if (!entry) {
+        // Loud, because the failure is otherwise invisible: the comment stays highlighted on whichever
+        // thread was current while the app-side selection has already moved on.
+        log.warn('no editor view for anchor target', { subject });
         return;
       }
 
       // When a thread ref is supplied, delegate to the shared editor helper which
-      // scrolls (only if not already visible) and marks the comment current.
+      // scrolls (only if not already visible) and marks the comment current. The helper matches by
+      // the thread's bare entity id (how the comment-sync extension keys its ranges), not its URI.
       if (id) {
-        scrollCommentIntoView(entry.view, id, SCROLL_OPTIONS);
+        const thread = yield* Effect.promise(() => id.load());
+        scrollCommentIntoView(entry.view, thread.id, SCROLL_OPTIONS);
         return;
       }
 

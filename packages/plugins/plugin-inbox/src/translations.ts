@@ -52,25 +52,27 @@ export const translations = [
 
         'no-message.message': 'Select a message to view it',
 
-        'action-archive.menu': 'Archive',
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'draft.label': 'New message',
         'event.label': 'Event',
         'facts.label': 'Facts',
-        'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync',
-        'empty-mailbox.message': 'Mailbox empty',
+        'empty-mailbox.message': 'No messages',
 
+        'analyze-mailbox.label': 'Analyze',
+        'stop-analyze-mailbox.label': 'Stop',
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
+        'message-companion.label': 'Message',
+        'no-message-selected.message': 'Select a message.',
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
         'mailbox-sync.label': 'Mailbox Sync',
@@ -86,7 +88,6 @@ export const translations = [
 
         'view-mode.menu': 'View mode',
         'view-mode-html.menu': 'HTML',
-        'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
 
@@ -115,6 +116,9 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
         'message-toolbar-ai-reply.menu': 'AI reply',
+        'message-toolbar-archive.menu': 'Archive',
+        'message-toolbar-create-project.menu': 'Create Project',
+        'message-toolbar-move-to-inbox.menu': 'Move to Inbox',
         'draft-toolbar.label': 'Draft toolbar',
         'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',
@@ -137,12 +141,17 @@ export const translations = [
         'delete-filter.label': 'Delete filter',
 
         'mailboxes-section.label': 'Mailboxes',
+        'inbox.label': 'Inbox',
+        'starred.label': 'Starred',
+        'important.label': 'Important',
         'all-mail.label': 'All Mail',
         'sent.label': 'Sent',
         'drafts.label': 'Drafts',
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.filter.placeholder': 'Filter subscriptions…',
+        'subscriptions.no-results.message': 'No matching subscriptions.',
         'subscriptions.count.label': '{{email}} · {{count}} messages',
         'subscriptions.remove.label_zero': 'Remove',
         'subscriptions.remove.label_one': 'Remove ({{count}})',
@@ -161,6 +170,8 @@ export const translations = [
         'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
         'draft-message.title': 'Draft',
+        'conversation-summary.title': 'Summary',
+        'summary-provenance.label': '{{model}} · {{age}}',
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 

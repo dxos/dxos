@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Message, request, serve } from '../index';
-import { createMockPeer } from './index';
+import { Message, request, serve } from '../index.ts';
+import { createMockPeer } from './index.ts';
 
 describe('MockComposer', () => {
   test('extension -> Composer list request is answered', async ({ expect }) => {

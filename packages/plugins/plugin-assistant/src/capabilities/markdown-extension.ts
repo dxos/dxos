@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
-import { promptRunExtension } from '../extensions';
+import { promptRunExtension } from '../extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, viewMode }) => {
         if (viewMode === 'source') {
           return undefined;

@@ -14,14 +14,15 @@ import {
   type Identity,
   type Scene,
   applyCommands as applyContentCommands,
-  makeBuilder,
   nextIndex,
-} from '@dxos/plugin-illustrator/model';
+} from '@dxos/diagram';
+import { makeBuilder } from '@dxos/plugin-illustrator/model';
 
-import { Tldraw } from '../types';
-import { elementBoxes, readScene } from './read';
-import { DOCUMENT_ID, PAGE_ID } from './RecordBuilder';
-import { renderObject } from './render';
+import { Tldraw } from '#types';
+
+import { elementBoxes, readScene } from './read.ts';
+import { DOCUMENT_ID, PAGE_ID } from './RecordBuilder.ts';
+import { renderObject } from './render.ts';
 
 const isShape = (record: any) => record?.typeName === 'shape';
 

@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -28,7 +29,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.SetCurrentChat> =
         const db = Obj.getDatabase(companionTo);
         if (db) {
           const { data } = yield* Effect.promise(() =>
-            operationInvoker.invokePromise(AssistantOperation.CreateChat, { db, addToSpace: false }),
+            operationInvoker.invokePromise(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId }),
           );
           if (data?.object) {
             yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({

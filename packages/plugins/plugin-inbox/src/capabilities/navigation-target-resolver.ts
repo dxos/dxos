@@ -4,52 +4,31 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Database, Type } from '@dxos/echo';
-import { DXN, EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
 
-import { getMailboxPath } from '../paths';
+import { getMailboxPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const resolver: AppCapabilities.NavigationTargetResolver = (query) =>
-      Effect.gen(function* () {
-        if (!query?.uri) {
-          return [
-            {
-              path: getPluginSettingsSectionPath(meta.profile.key),
-              label: 'Inbox settings',
-              type: 'settings',
-            },
-          ];
-        }
-
-        const targetUri = EID.tryParse(query.uri) ?? DXN.tryMake(query.uri);
-        if (!targetUri) {
-          return [];
-        }
-
-        const { db } = yield* Database.Service;
-        const ref = db.makeRef(targetUri);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
-        if (!object || !Mailbox.instanceOf(object)) {
-          return [];
-        }
-
-        return [
+    return Capability.contribute(
+      AppCapabilities.NavigationTargetResolver,
+      NavigationResolver.forType(Mailbox.Mailbox, {
+        getPath: ({ spaceId, objectId }) => getMailboxPath(spaceId, objectId),
+        getLabel: (mailbox) => mailbox.name ?? '',
+        pages: [
           {
-            path: getMailboxPath(db.spaceId, object.id),
-            label: (object as Mailbox.Mailbox).name ?? '',
-            type: Type.getTypename(Mailbox.Mailbox),
+            path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
+            label: 'Inbox settings',
+            type: 'settings',
           },
-        ];
-      });
-
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+        ],
+      }),
+    );
   }),
 );

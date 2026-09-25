@@ -19,7 +19,7 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Unit, trim } from '@dxos/util';
 
-import { httpPlugin } from '../bundler/plugins/http-plugin-esbuild';
+import { httpPlugin } from '../bundler/plugins/http-plugin-esbuild.ts';
 
 type BundleOptions = {
   entryPoint: string;
@@ -161,7 +161,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
       Array.filter((_) => !!filesInOutput.find(([name]) => name === _.path)),
       Array.map((_) => _.original!),
       Array.dedupe,
-      Array.sort(Order.string),
+      Array.sort(Order.String),
     );
     console.log(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
   }

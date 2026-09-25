@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
@@ -67,6 +67,21 @@ export const FeedQueryResult = Schema.Struct({
    */
   nextCursor: Schema.String,
   prevCursor: Schema.String,
+  /**
+   * Set on a `subscribeFeed` push that carries only what changed since the previous push: `objects`
+   * then holds just the blocks written since, and {@link positions} and {@link removed} describe the
+   * blocks sent before. Absent on a full snapshot, which replaces everything the reader holds.
+   */
+  delta: Schema.optional(Schema.Boolean),
+  /**
+   * On a delta: blocks sent earlier whose position was assigned, moved or cleared, by the block id
+   * stamped into each object's `@meta`.
+   */
+  positions: Schema.optional(
+    mutableArray(Schema.Struct({ block: Schema.String, position: Schema.NullOr(Schema.Number) })),
+  ),
+  /** On a delta: ids of blocks sent earlier that the store no longer holds. */
+  removed: Schema.optional(mutableArray(Schema.String)),
 });
 export interface FeedQueryResult extends Schema.Schema.Type<typeof FeedQueryResult> {}
 
@@ -80,6 +95,16 @@ export const InsertIntoFeedRequest = Schema.Struct({
   objects: Schema.optional(mutableArray(Schema.String)),
 });
 export interface InsertIntoFeedRequest extends Schema.Schema.Type<typeof InsertIntoFeedRequest> {}
+
+export const InsertIntoFeedResponse = Schema.Struct({
+  /**
+   * Id of the block each object was written to, in request order, as stamped into the `@meta` of
+   * objects read back. Lets a writer recognise its own blocks without comparing their content;
+   * absent from a store that does not stamp block ids.
+   */
+  blocks: Schema.optional(mutableArray(Schema.String)),
+});
+export interface InsertIntoFeedResponse extends Schema.Schema.Type<typeof InsertIntoFeedResponse> {}
 
 export const DeleteFromFeedRequest = Schema.Struct({
   subspaceTag: Schema.String,
@@ -148,8 +173,19 @@ export class Rpcs extends RpcGroup.make(
     success: FeedQueryResult,
     error: serviceError,
   }),
+  /**
+   * Pushes a new query snapshot whenever the feed's contents change, so a client can subscribe
+   * instead of polling {@link queryFeed} on a timer.
+   */
+  Rpc.make('subscribeFeed', {
+    payload: QueryFeedRequest,
+    success: FeedQueryResult,
+    error: serviceError,
+    stream: true,
+  }),
   Rpc.make('insertIntoFeed', {
     payload: InsertIntoFeedRequest,
+    success: InsertIntoFeedResponse,
     error: serviceError,
   }),
   Rpc.make('deleteFromFeed', {
@@ -165,6 +201,16 @@ export class Rpcs extends RpcGroup.make(
     success: GetSyncStateResponse,
     error: serviceError,
   }),
+  /**
+   * Pushes a new sync-state snapshot whenever the feed backlog changes, so a client can subscribe
+   * instead of polling {@link getSyncState} on a timer.
+   */
+  Rpc.make('subscribeSyncState', {
+    payload: GetSyncStateRequest,
+    success: GetSyncStateResponse,
+    error: serviceError,
+    stream: true,
+  }),
 ).prefix('FeedService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
@@ -174,4 +220,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `FeedService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/FeedService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/FeedService') {}

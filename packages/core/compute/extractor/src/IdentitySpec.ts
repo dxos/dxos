@@ -66,13 +66,13 @@ export const identityKeys = <S extends Type.AnyObj>(
  * {@link ExtractorRegistry}: consuming plugins build the layer from whatever registration mechanism
  * they use, so this package stays framework-free.
  */
-export class IdentityRegistry extends Context.Tag('@dxos/extractor/IdentityRegistry')<
+export class IdentityRegistry extends Context.Service<
   IdentityRegistry,
   {
     readonly get: (typename: string) => Effect.Effect<IdentitySpec | undefined>;
     readonly all: () => Effect.Effect<ReadonlyArray<IdentitySpec>>;
   }
->() {}
+>()('@dxos/extractor/IdentityRegistry') {}
 
 export const fromIdentitySpecs = (specs: ReadonlyArray<IdentitySpec<any>>) => {
   const byTypename = new Map(specs.map((spec) => [Type.getTypename(spec.type), spec as IdentitySpec]));

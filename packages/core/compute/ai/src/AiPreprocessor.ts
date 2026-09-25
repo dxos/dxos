@@ -4,20 +4,25 @@
 
 // @import-as-namespace
 
-import * as Prompt from '@effect/ai/Prompt';
+// Side-effect import: the provider augments `Prompt.ReasoningPartOptions` with its `anthropic` key,
+// which line ~438 reads. It has to stay type-only so the provider is not pulled into the bundle, and
+// a type-only side-effect import has no form that satisfies both rules — a namespace binding would
+// be unused, and a runtime import would ship the module.
+// oxlint-disable-next-line @dxos/rules/effect-subpath-imports
+import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import { flow } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
-import { bufferToArray } from '@dxos/util';
+import { bufferToArray, safeParseJson } from '@dxos/util';
 
-import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -114,6 +119,9 @@ export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = 
       }
       case 'tool': {
         for (const part of message.content) {
+          if (part.type !== 'tool-result') {
+            continue;
+          }
           totalTokens += TokenX.estimateTokenCount(part.name);
           totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
         }
@@ -143,6 +151,9 @@ const estimatePartTokens = (part: Prompt.UserMessagePart | Prompt.AssistantMessa
     case 'tool-result':
       return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.result));
     case 'file':
+      return 0;
+    default:
+      // Approval request/response parts carry no content to estimate.
       return 0;
   }
 };
@@ -241,6 +252,22 @@ const convertUserMessagePart: (
   },
 );
 
+/**
+ * Tool-call params for the prompt, falling back to the literal unparsed string when the model
+ * emitted input that is not valid JSON. Degrades rather than fails: the block is already in the
+ * durable history, so raising here would make every subsequent request over the conversation
+ * unrecoverable. The raw text is kept so the model sees what it actually wrote.
+ */
+const parseToolInputOrRaw = (raw: string, toolCallId: string): unknown => {
+  const parsed = safeParseJson<Record<string, unknown>>(raw);
+  if (parsed === undefined) {
+    // Failed to parse as JSON; send the raw string so the model sees what it actually wrote.
+    // Anthropic API requires JSON, so we send a placeholder object with the raw string.
+    return { raw };
+  }
+  return parsed;
+};
+
 const parseToolJson = (
   raw: string,
   context: { field: 'result' | 'input'; toolCallId: string },
@@ -330,11 +357,14 @@ const makeToolResultPart = (
   block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
   result: unknown,
   isFailure: boolean,
-): Prompt.ToolMessagePart =>
+): Prompt.ToolResultPart =>
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    result,
+    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // part fails the decode of the entire prompt, permanently, for a conversation that already
+    // holds one. Normalized here so a history written before the parser guard still replays.
+    result: result === undefined ? null : result,
     isFailure,
     providerExecuted: false,
   });
@@ -345,7 +375,7 @@ const makeToolResultPart = (
  */
 const buildToolResultPart = (
   block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
-): Effect.Effect<Prompt.ToolMessagePart, PromptPreprocesorError, never> =>
+): Effect.Effect<Prompt.ToolResultPart, PromptPreprocesorError, never> =>
   Effect.gen(function* () {
     const hasError = block.error != null;
     const result = hasError
@@ -428,20 +458,24 @@ const convertAssistantMessagePart: (
           text: block.text,
         });
       case 'reasoning': {
-        const anthropicOptions = block.redactedText
-          ? { type: 'redacted_thinking' as const, redactedData: block.redactedText }
-          : block.signature
-            ? { type: 'thinking' as const, signature: block.signature }
-            : undefined;
+        const info: NonNullable<NonNullable<Prompt.ReasoningPartOptions['anthropic']>['info']> | undefined =
+          block.redactedText
+            ? { type: 'redacted_thinking', redactedData: block.redactedText }
+            : block.signature
+              ? { type: 'thinking', signature: block.signature }
+              : undefined;
         return Prompt.makePart('reasoning', {
           text: block.reasoningText ?? '',
-          ...(anthropicOptions ? { options: { anthropic: anthropicOptions } } : {}),
+          ...(info ? { options: { anthropic: { info } } } : {}),
         });
       }
 
       case 'toolCall': {
-        const params =
-          block.input === '' ? {} : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
+        // Tool-call input is authored by the model and can be malformed. Failing here would fail
+        // every future request over this conversation, since the bad block stays in the history;
+        // the raw text plus the paired tool-result error (see `callTool`) is what the model needs
+        // to see its own mistake and retry.
+        const params = block.input === '' ? {} : parseToolInputOrRaw(block.input, block.toolCallId);
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,
@@ -586,6 +620,9 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       const nextMessage = prompt.content[messageIndex + 1];
       if (nextMessage?.role === 'tool') {
         for (const toolResult of nextMessage.content) {
+          if (toolResult.type !== 'tool-result') {
+            continue;
+          }
           const idx = unsatisfiedToolCalls.findIndex((call) => call.id === toolResult.id);
           if (idx !== -1) {
             unsatisfiedToolCalls.splice(idx, 1);
@@ -702,6 +739,10 @@ const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       case 'tool': {
         const filtered: Prompt.ToolMessagePart[] = [];
         for (const part of message.content) {
+          if (part.type !== 'tool-result') {
+            filtered.push(part);
+            continue;
+          }
           const next = processUserOrAssistantPart(part);
           if (next !== undefined) {
             filtered.push(next as any);
@@ -763,9 +804,9 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
 /**
  * Groups consecutive assistant messages into a single message.
  */
-const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = flow(
+const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = Function.flow(
   (messages) =>
-    Array.isNonEmptyReadonlyArray(messages)
+    Array.isReadonlyArrayNonEmpty(messages)
       ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
       : [],
   Array.map(mergeMessages),

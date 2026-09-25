@@ -13,9 +13,9 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Input, Message, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Banner, Field, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { translationKey } from '#translations';
@@ -43,17 +43,17 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
     const { t } = useTranslation(translationKey);
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <div className='p-form-chrome'>
-            <Message.Root valence='error'>
-              {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Content>{error instanceof Error ? error.message : String(error)}</Message.Content>
-            </Message.Root>
-          </div>
+          <Banner.Root valence='error'>
+            <Banner.Content classNames='m-form-padding'>
+              {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
+              <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
+            </Banner.Content>
+          </Banner.Root>
         )}
-        {state === 'empty' && <Empty label={t('no-result.message')} />}
+        {state === 'empty' && <Banner.Empty label={t('no-result.message')} />}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -114,23 +114,23 @@ const ResultTable = ({ data }: { data: unknown }) => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter-results.placeholder')}</Input.Label>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
+              <Field.Input
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty label={t('no-matching-rows.message')} />
+                <Banner.Empty label={t('no-matching-rows.message')} />
               ) : (
                 <Listbox.Viewport>
                   <Listbox.Content

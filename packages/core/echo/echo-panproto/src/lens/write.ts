@@ -4,8 +4,8 @@
 
 import { Obj, Text } from '@dxos/echo';
 
-import { setOverlay } from './overlay';
-import { type Write } from './types';
+import { setOverlay } from './overlay.ts';
+import { type Write } from './types.ts';
 
 /**
  * Apply a batch of writes to the base object as a single change.

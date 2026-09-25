@@ -10,11 +10,11 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
+import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { ClientPlugin } from '../../ClientPlugin';
-import { DevicesContainer } from './DevicesContainer';
+import { DevicesContainer } from './DevicesContainer.tsx';
 
 const meta = {
   title: 'plugins/plugin-client/containers/DevicesContainer',

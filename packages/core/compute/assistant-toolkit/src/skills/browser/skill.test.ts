@@ -7,29 +7,30 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { OperationHandlerSet, Skill } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { Person } from '@dxos/types';
 
-import { DatabaseHandlers, DatabaseSkill } from '../database';
-import BrowserSkill from './skill';
+import { ChatContextHandlers, ChatContextSkill } from '../chat-context/index.ts';
+import BrowserSkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownOperationHandlerSet),
+  operationHandlers: OperationHandlerSet.merge(ChatContextHandlers, MarkdownOperationHandlerSet.handlers),
   types: [Skill.Skill, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection, Feed.Feed],
-  skills: [BrowserSkill.make(), MarkdownSkill.make(), DatabaseSkill.make()],
+  skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
   tracing: 'pretty',
 });
 
@@ -40,7 +41,7 @@ describe('Browser', { tags: ['manual'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          skills: [BrowserSkill.make(), MarkdownSkill.make(), DatabaseSkill.make()],
+          skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
         });
         yield* agent.submitPrompt(`
           Scrape effect blog at https://effect.website/blog and find the content of last 3 articles.
@@ -57,6 +58,6 @@ describe('Browser', { tags: ['manual'] }, () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['sync'] },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000, tags: ['sync'] },
   );
 });

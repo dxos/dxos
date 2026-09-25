@@ -7,11 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { safeStringify } from '@dxos/util';
 
-import * as Database from './Database';
-import * as Json from './Json';
-
-/** Mint a random ECHO object id usable as both a stub-db key and a DXN payload. */
-const newId = (): string => EntityId.random();
+import * as Database from './Database.ts';
+import * as Json from './Json.ts';
 
 /** Build a fake encoded ref for a local-space object id. */
 const encodeRef = (id: string): { '/': string } => ({ '/': EID.make({ entityId: id }) });
@@ -39,7 +36,7 @@ describe('createRefReplacer', () => {
   });
 
   test('inlines refs at default depth (1)', () => {
-    const id = newId();
+    const id = EntityId.random();
     const target = { name: 'inlined' };
     const replacer = Json.createRefReplacer({ db: makeStubDb({ [id]: target }) });
     const subject = { ref: encodeRef(id) };
@@ -47,7 +44,7 @@ describe('createRefReplacer', () => {
   });
 
   test('does not follow refs when depth is 0', () => {
-    const id = newId();
+    const id = EntityId.random();
     const target = { name: 'inlined' };
     const ref = encodeRef(id);
     const replacer = Json.createRefReplacer({ db: makeStubDb({ [id]: target }), depth: 0 });
@@ -55,8 +52,8 @@ describe('createRefReplacer', () => {
   });
 
   test('inlines refs across multiple levels up to depth', () => {
-    const innerId = newId();
-    const middleId = newId();
+    const innerId = EntityId.random();
+    const middleId = EntityId.random();
     const inner = { name: 'inner' };
     const middle = { ref: encodeRef(innerId) };
     const outer = { ref: encodeRef(middleId) };
@@ -72,7 +69,7 @@ describe('createRefReplacer', () => {
   });
 
   test('leaves refs encoded when the target is missing in the db', () => {
-    const ref = encodeRef(newId());
+    const ref = encodeRef(EntityId.random());
     const replacer = Json.createRefReplacer({ db: makeStubDb({}) });
     expect(stringifyWith(replacer, { ref })).toEqual({ ref });
   });
@@ -99,8 +96,8 @@ describe('createRefReplacer', () => {
   });
 
   test('inlines refs inside arrays', () => {
-    const idA = newId();
-    const idB = newId();
+    const idA = EntityId.random();
+    const idB = EntityId.random();
     const a = { name: 'a' };
     const b = { name: 'b' };
     const replacer = Json.createRefReplacer({ db: makeStubDb({ [idA]: a, [idB]: b }) });
@@ -110,7 +107,7 @@ describe('createRefReplacer', () => {
   });
 
   test('walks nested objects recursively', () => {
-    const innerId = newId();
+    const innerId = EntityId.random();
     const inner = { name: 'inner' };
     const replacer = Json.createRefReplacer({ db: makeStubDb({ [innerId]: inner }) });
     const subject = { outer: { mid: { ref: encodeRef(innerId) } } };
@@ -132,8 +129,8 @@ describe('createRefReplacer', () => {
     // Simulates the ECHO-object branch: `db.getObjectById` returns a live proxy, the replacer
     // calls `.toJSON()` to get the encoded form, then continues walking that form. A ref nested
     // inside the target should be inlined when there's depth budget remaining.
-    const outerId = newId();
-    const innerId = newId();
+    const outerId = EntityId.random();
+    const innerId = EntityId.random();
     const inner = { name: 'inner' };
     const target = {
       toJSON: () => ({ nestedRef: encodeRef(innerId) }),
@@ -147,7 +144,7 @@ describe('createRefReplacer', () => {
   test('depth budget counts ref hops, not tree depth — a ref deep in a plain tree still resolves', () => {
     // A ref nested under arbitrarily many plain objects is one ref hop from the root, so
     // `depth: 1` resolves it. `depth: 0` leaves it encoded.
-    const innerId = newId();
+    const innerId = EntityId.random();
     const inner = { name: 'inner' };
     const subject = { a: { b: { c: { d: { ref: encodeRef(innerId) } } } } };
 
@@ -163,7 +160,7 @@ describe('createRefReplacer', () => {
     // wrapper short-circuits the root call without forwarding it to the user's filter. The
     // replacer must therefore work on a per-call basis — not as a one-shot root tree walk.
     // This regression-tests that integration: the `content` ref must inline.
-    const targetId = newId();
+    const targetId = EntityId.random();
     const target = { toJSON: () => ({ name: 'README content' }) };
     const document = { id: '01ABC', name: 'README', content: encodeRef(targetId) };
 

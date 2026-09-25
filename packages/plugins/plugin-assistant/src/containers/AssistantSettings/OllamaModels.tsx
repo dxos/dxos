@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { AssistantCapabilities, type Ollama } from '#types';
+import { AssistantCapabilities, Ollama } from '#types';
 
 /** Quick-pick model names (Ollama pull tags) sourced from the curated catalog. */
 const QUICK_PICKS = Model.forProvider(Provider.ollama.id).map((model) => model.backend);
@@ -92,8 +92,8 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
   const empty = state.models.length === 0 && pulling.length === 0;
 
   return (
-    <Form.Section title={t('settings.ollama.title')}>
-      <Form.Row label={t('settings.ollama.installed.label')}>
+    <Form.FieldSet label={t('settings.ollama.title')}>
+      <Form.Field standalone label={t('settings.ollama.installed.label')}>
         {state.kind === 'failed' && state.error ? (
           // Connection-level failure has no associated model, so it shows inline as the row content.
           <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
@@ -116,9 +116,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
               return (
                 <ListItem
                   key={model.name}
-                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'
+                  className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <div className='flex items-center gap-2'>
+                  <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
                     <IconButton
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
@@ -140,13 +140,13 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
                       }
                     />
-                  </div>
+                  </Flex>
                   {(size || loadedLabel || error) && (
-                    <div className='flex items-center gap-2 text-sm'>
+                    <Flex gap='sm' align='center' classNames='text-sm'>
                       {size && <span className='text-description'>{size}</span>}
                       {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
                       {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
-                    </div>
+                    </Flex>
                   )}
                 </ListItem>
               );
@@ -157,8 +157,11 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
                 : (progress?.status ?? t('settings.ollama.pulling.label'));
               return (
-                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'>
-                  <div className='flex items-center gap-2'>
+                <ListItem
+                  key={name}
+                  className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
+                >
+                  <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
                     <IconButton
                       icon='ph--x--regular'
@@ -166,16 +169,16 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       label={t('settings.ollama.cancel.label')}
                       onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
-                  </div>
+                  </Flex>
                   <span className='text-sm text-description'>{status}</span>
                 </ListItem>
               );
             })}
           </List>
         )}
-      </Form.Row>
+      </Form.Field>
 
-      <Form.Row label={t('settings.ollama.pull.label')}>
+      <Form.Field label={t('settings.ollama.pull.label')}>
         {/* Pull failures for not-yet-installed models surface here (no model row to attach to). */}
         {Object.entries(state.errors)
           .filter(([name]) => !installed.has(name))
@@ -219,12 +222,11 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
                 ))}
               </Combobox.List>
-              <Combobox.Arrow />
             </Combobox.Content>
           </Combobox.Portal>
         </Combobox.Root>
-      </Form.Row>
-    </Form.Section>
+      </Form.Field>
+    </Form.FieldSet>
   );
 };
 

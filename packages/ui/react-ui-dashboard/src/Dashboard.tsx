@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import { ark } from '@ark-ui/react/factory';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
 
+import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
   type ComposableProps,
   type SlottableProps,
@@ -22,7 +20,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { type UnitFormat } from '@dxos/util';
 
-import { type ActivityDatum, buildCalendar } from './util';
+import { type ActivityDatum, buildCalendar } from './util.ts';
 
 const DASHBOARD_NAME = 'Dashboard';
 
@@ -78,11 +76,14 @@ type DashboardContentProps = SlottableProps;
  * Grid layout container for dashboard sections.
  */
 const DashboardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...composableProps(props, { classNames: 'grid content-start gap-2 p-2' })} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...composableProps(props, { classNames: 'grid content-start gap-2 p-2' })}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -98,14 +99,14 @@ type DashboardStatsProps = SlottableProps;
  * Auto-fit grid of stat cards.
  */
 const DashboardStats = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps(props, { classNames: 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -121,14 +122,14 @@ type DashboardStatProps = SlottableProps;
  * Single stat card; composes StatLabel and StatValue.
  */
 const DashboardStat = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
-      {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm bg-group-surface p-2' })}
+    <ark.div
+      asChild={asChild}
+      {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm dx-group-surface p-2' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -263,8 +264,13 @@ type DashboardActivityCustomProps = {
 
 type DashboardActivityProps = ComposableProps<DashboardActivityCustomProps>;
 
+// Shared row template keeps the day-label column and the weeks grid vertically aligned.
+const activityRows = 'max-content repeat(7, var(--dx-dashboard-cell, 0.75rem))';
+
 /**
  * GitHub-style activity matrix: week columns by day rows, colored by intensity.
+ * Never scrolls horizontally: when the weeks overflow, the oldest are clipped on the left
+ * so the most recent weeks stay pinned to the right; day labels remain visible.
  */
 const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProps>(
   ({ data, weeks = 52, endDate, locale, children: _children, ...props }, forwardedRef) => {
@@ -273,43 +279,56 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
     const dayFormat = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: 'short' }), [locale]);
 
     return (
-      <div
-        {...composableProps(props, {
-          classNames: 'grid gap-[3px] overflow-x-auto',
-          // Fixed cell tracks keep cells the same size regardless of the number of weeks;
-          // the label column is max-content so leftover free space is not distributed to it.
-          style: { gridTemplateColumns: `max-content repeat(${weeks}, var(--dx-dashboard-cell, 0.75rem))` },
-        })}
-        ref={forwardedRef}
-      >
-        {calendar.months.map(({ weekIndex, month, year }) => (
-          <span
-            key={`${year}-${month}`}
-            style={{ gridColumn: weekIndex + 2, gridRow: 1 }}
-            className='whitespace-nowrap text-xs text-description'
-          >
-            {monthFormat.format(new Date(year, month, 1))}
+      // min-w-0 lets the matrix shrink inside grid/flex parents instead of widening them.
+      <div {...composableProps(props, { classNames: 'flex min-w-0 gap-[3px]' })} ref={forwardedRef}>
+        <div className='grid gap-[3px]' style={{ gridTemplateRows: activityRows }}>
+          {/* Zero-width spacer reserves the month-row height so day rows align with cell rows. */}
+          <span aria-hidden className='text-xs'>
+            {'​'}
           </span>
-        ))}
-        {dayLabelRows.map((day) => (
-          <span
-            key={day}
-            style={{ gridColumn: 1, gridRow: day + 2 }}
-            className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+          {dayLabelRows.map((day) => (
+            <span
+              key={day}
+              style={{ gridRow: day + 2 }}
+              className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+            >
+              {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
+            </span>
+          ))}
+        </div>
+        {/* justify-end overflows surplus weeks past the clipped left edge, pinning recent weeks right. */}
+        <div className='flex justify-end overflow-hidden'>
+          <div
+            className='grid gap-[3px]'
+            style={{
+              gridTemplateRows: activityRows,
+              // Fixed cell tracks keep cells the same size regardless of the number of weeks.
+              gridTemplateColumns: `repeat(${weeks}, var(--dx-dashboard-cell, 0.75rem))`,
+            }}
           >
-            {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
-          </span>
-        ))}
-        {calendar.cells.map((cell) => (
-          <span
-            key={cell.key}
-            style={{ gridColumn: cell.week + 2, gridRow: cell.day + 2 }}
-            className={mx('aspect-square min-w-0 rounded-xs', activityLevels[cell.level])}
-            data-level={cell.level}
-            data-date={cell.key}
-            title={`${cell.key}: ${cell.value}`}
-          />
-        ))}
+            {calendar.months.map(({ weekIndex, month, year }) => (
+              <span
+                key={`${year}-${month}`}
+                style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
+                // justify-self-end sets the label's right edge on its week column so overflow
+                // extends left, keeping the last month label unclipped at the pinned right edge.
+                className='justify-self-end whitespace-nowrap text-xs text-description'
+              >
+                {monthFormat.format(new Date(year, month, 1))}
+              </span>
+            ))}
+            {calendar.cells.map((cell) => (
+              <span
+                key={cell.key}
+                style={{ gridColumn: cell.week + 1, gridRow: cell.day + 2 }}
+                className={mx('rounded-xs', activityLevels[cell.level])}
+                data-level={cell.level}
+                data-date={cell.key}
+                title={`${cell.key}: ${cell.value}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   },

@@ -5,14 +5,15 @@
 import * as localForage from 'localforage';
 import React from 'react';
 
+import { toPublicKey } from '@dxos/protocols/buf';
 import { PublicKey } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { humanize } from '@dxos/util';
 
-import { PublicKeySelector } from '../components';
-import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
+import { PublicKeySelector } from '../components/index.ts';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks/index.ts';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -23,14 +24,16 @@ export const SpaceSelector = () => {
 
   const handleSelect = (spaceKey?: PublicKey) => {
     setState((state) => {
-      const haloSpaceKey = identity?.spaceKey;
+      const haloSpaceKey = toPublicKey(identity?.spaceKey);
       if (haloSpaceKey && spaceKey?.equals(haloSpaceKey)) {
         return { ...state, haloSpaceKey: spaceKey, space: undefined, spaceInfo: undefined };
       } else {
         return {
           ...state,
           space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
-          spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
+          spaceInfo: spaceKey
+            ? spacesInfo.find((spaceInfo) => toPublicKey(spaceInfo.key)?.equals(spaceKey))
+            : undefined,
           haloSpaceKey: undefined,
         };
       }
@@ -48,8 +51,10 @@ export const SpaceSelector = () => {
     }
   }, []);
 
+  const haloSpaceKey = toPublicKey(identity?.spaceKey);
+
   const getLabel = (key: PublicKey) => {
-    if (identity?.spaceKey && key.equals(identity.spaceKey)) {
+    if (haloSpaceKey && key.equals(haloSpaceKey)) {
       return 'HALO';
     }
     const space = spaces.find((space) => space.key.equals(key));
@@ -57,7 +62,7 @@ export const SpaceSelector = () => {
   };
 
   const spaceKeys = spaces.map((space) => space.key);
-  identity?.spaceKey && spaceKeys.push(identity.spaceKey);
+  haloSpaceKey && spaceKeys.push(haloSpaceKey);
   return (
     <PublicKeySelector
       placeholder='Select space'

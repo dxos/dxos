@@ -6,12 +6,13 @@ import { describe, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { WebSocketMuxer } from './edge-ws-muxer';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { WebSocketMuxer } from './edge-ws-muxer.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -25,7 +26,8 @@ const { FakeWebSocket } = vi.hoisted(() => {
   class FakeWebSocket {
     static instances: FakeWebSocket[] = [];
 
-    readyState = 1;
+    // Browsers hand back a socket in CONNECTING (0) until the handshake completes.
+    readyState = 0;
     protocol = '';
     binaryType = 'nodebuffer';
     onopen: (() => void) | null = null;
@@ -43,6 +45,10 @@ const { FakeWebSocket } = vi.hoisted(() => {
     }
 
     send(data: unknown): void {
+      if (this.readyState === 0) {
+        // Matches the DOM spec: `send()` on a CONNECTING socket throws `InvalidStateError`.
+        throw new Error("Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.");
+      }
       this.sent.push(data);
     }
 
@@ -54,7 +60,7 @@ const { FakeWebSocket } = vi.hoisted(() => {
 
 vi.mock('isomorphic-ws', () => ({ default: FakeWebSocket }));
 
-const { EdgeWsConnection } = await import('./edge-ws-connection');
+const { EdgeWsConnection } = await import('./edge-ws-connection.ts');
 
 const testIdentity: EdgeIdentity = {
   peerKey: 'test-peer-key',
@@ -117,6 +123,26 @@ describe('EdgeWsConnection', () => {
     expect(bufWkt.anyUnpack(messageA.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
     expect(bufWkt.anyUnpack(messageB.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
   });
+
+  for (const [name, wsProtocol] of [
+    ['V0', EdgeWebsocketProtocol.V0],
+    ['muxer', EdgeWebsocketProtocol.V1],
+  ] as const) {
+    test(`buffers messages sent while the socket is still connecting (${name})`, async ({ expect }) => {
+      const { connection, ws } = await createTestConnection(0);
+      ws.protocol = wsProtocol;
+
+      expect(() => connection.send(textMessage(MESSAGE_A_CONTENT))).not.toThrow();
+      expect(ws.sent).toHaveLength(0);
+
+      ws.readyState = 1;
+      ws.onopen?.();
+      await vi.waitFor(() => expect(ws.sent.length).toBeGreaterThan(0));
+
+      const payloads = ws.sent.filter((data) => typeof data !== 'string');
+      expect(payloads).toHaveLength(1);
+    });
+  }
 });
 
 /**
@@ -189,7 +215,7 @@ const buildSegmentedChunks = async (contents: string[]): Promise<Uint8Array[][]>
   return chunksByMessage;
 };
 
-const openTestConnection = async (expectedMessages: number) => {
+const createTestConnection = async (expectedMessages: number) => {
   const received: Message[] = [];
   const allReceived = new Trigger();
   const connection = new EdgeWsConnection(
@@ -213,7 +239,13 @@ const openTestConnection = async (expectedMessages: number) => {
 
   const ws = FakeWebSocket.instances.at(-1);
   invariant(ws, 'FakeWebSocket instance not created');
-  ws.onopen?.();
 
   return { connection, ws, received, allReceived };
+};
+
+const openTestConnection = async (expectedMessages: number) => {
+  const handle = await createTestConnection(expectedMessages);
+  handle.ws.readyState = 1;
+  handle.ws.onopen?.();
+  return handle;
 };

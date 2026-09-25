@@ -4,16 +4,18 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Prompt from '@effect/ai/Prompt';
-import * as Response from '@effect/ai/Response';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import type * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Response from 'effect/unstable/ai/Response';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -35,13 +37,15 @@ export const SCRIPTED_MODEL_ID = 'scripted-model';
 const EPOCH = '1970-01-01T00:00:00.000Z';
 
 /** Zero-valued token usage; scripted turns carry no real accounting. */
-const ZERO_USAGE = { inputTokens: 0, outputTokens: 0, totalTokens: 0 } as const;
+const ZERO_USAGE = { inputTokens: { total: 0 }, outputTokens: { total: 0 } } as const;
 
 /**
- * A single fragment emitted within a scripted turn. Build with {@link text} / {@link toolCall}.
+ * A single fragment emitted within a scripted turn. Build with {@link text} / {@link reasoning} /
+ * {@link toolCall}.
  */
 export type ScriptedPart =
   | { readonly _tag: 'text'; readonly text: string }
+  | { readonly _tag: 'reasoning'; readonly text: string }
   | { readonly _tag: 'toolCall'; readonly name: string; readonly input: unknown; readonly id?: string };
 
 /**
@@ -49,15 +53,35 @@ export type ScriptedPart =
  * provider error (exercises the loop's error propagation).
  */
 export type ScriptedTurn =
-  | { readonly parts: readonly ScriptedPart[]; readonly finishReason?: Response.FinishReason }
+  | {
+      readonly parts: readonly ScriptedPart[];
+      readonly finishReason?: Response.FinishReason;
+      /**
+       * Emit every `tool-params-end` at the end of the turn instead of after the call it closes,
+       * so a second call opens while the first is still open. The OpenAI dialect (DeepSeek, LM
+       * Studio) carries no per-call terminator on the wire — an adapter has to synthesize one, and
+       * one that synthesizes them all at `finish_reason` produces exactly this. Scripts it so a
+       * consumer tracking a single open tool call is tested against the shape rather than only
+       * against well-nested Anthropic output.
+       */
+      readonly deferToolEnds?: boolean;
+      /** Held before the turn's first part, so a UI driven by the script sees a turn in flight. */
+      readonly delay?: Duration.Input;
+    }
   | { readonly fail: AiError.AiError };
 
 /** Scripts a text fragment. */
 export const text = (content: string): ScriptedPart => ({ _tag: 'text', text: content });
 
+/** Scripts a reasoning (thinking) fragment, emitted as the provider-native reasoning parts. */
+export const reasoning = (content: string): ScriptedPart => ({ _tag: 'reasoning', text: content });
+
 /**
  * Scripts a tool call. `name` must match a tool registered on the toolkit under test; `input` is
  * serialized as the tool arguments. Supply `id` to assert against a specific tool-call id.
+ *
+ * `input` may be a function, called when the turn is emitted: a script is fixed before the session
+ * starts, so an argument naming an object the session creates (a ref, an id) only exists by then.
  */
 export const toolCall = (name: string, input: unknown, id?: string): ScriptedPart => ({
   _tag: 'toolCall',
@@ -68,6 +92,10 @@ export const toolCall = (name: string, input: unknown, id?: string): ScriptedPar
 
 const isFailure = (turn: ScriptedTurn): turn is { readonly fail: AiError.AiError } => 'fail' in turn;
 
+/** Tool arguments are JSON, so a function can only be a deferred input. */
+const resolveInput = (part: { readonly input: unknown }): unknown =>
+  typeof part.input === 'function' ? part.input() : part.input;
+
 /**
  * The request a routing predicate inspects: the flattened system prompt, the concatenated text
  * of all non-system messages (in order), and the raw prompt for advanced matching.
@@ -76,6 +104,8 @@ export type ScriptedRequest = {
   readonly system: string;
   readonly text: string;
   readonly prompt: Prompt.Prompt;
+  /** Names of the tools the caller offered on this call. */
+  readonly tools: readonly string[];
 };
 
 /**
@@ -90,8 +120,15 @@ export type ScriptedRoute = {
   readonly turns: readonly ScriptedTurn[];
 };
 
-/** A plain sequential script, or a routed script for cooperating sessions. */
-export type Script = readonly ScriptedTurn[] | readonly ScriptedRoute[];
+/**
+ * Computes each turn from the request rather than reading it from a fixed list, for a script that
+ * must serve any number of conversations (a long-lived app rather than one test). `index` is the
+ * global call count.
+ */
+export type ScriptedTurnGenerator = (request: ScriptedRequest, index: number) => ScriptedTurn;
+
+/** A plain sequential script, a routed script for cooperating sessions, or a turn generator. */
+export type Script = readonly ScriptedTurn[] | readonly ScriptedRoute[] | ScriptedTurnGenerator;
 
 /** Route predicate matching a substring anywhere in the system prompt or message text. */
 export const promptIncludes =
@@ -100,7 +137,7 @@ export const promptIncludes =
     request.system.includes(needle) || request.text.includes(needle);
 
 /** Flattens a prompt into the text a routing predicate matches against. */
-const flattenRequest = (prompt: Prompt.Prompt): ScriptedRequest => {
+const flattenRequest = ({ prompt, tools }: LanguageModel.ProviderOptions): ScriptedRequest => {
   let system = '';
   let text = '';
   for (const message of prompt.content) {
@@ -114,13 +151,15 @@ const flattenRequest = (prompt: Prompt.Prompt): ScriptedRequest => {
       }
     }
   }
-  return { system, text, prompt };
+  return { system, text, prompt, tools: tools.map((tool) => tool.name) };
 };
 
 // A route script is distinguished structurally: every route has a `match` predicate, turns never do.
-const isRouteScript = (script: Script): script is readonly ScriptedRoute[] => script.length > 0 && 'match' in script[0];
+const isRouteScript = (
+  script: readonly ScriptedTurn[] | readonly ScriptedRoute[],
+): script is readonly ScriptedRoute[] => script.length > 0 && 'match' in script[0];
 
-const toRoutes = (script: Script): readonly ScriptedRoute[] =>
+const toRoutes = (script: readonly ScriptedTurn[] | readonly ScriptedRoute[]): readonly ScriptedRoute[] =>
   isRouteScript(script) ? script : [{ match: () => true, turns: script }];
 
 /** A turn with no explicit reason finishes on `tool-calls` when it emits a tool call, else `stop`. */
@@ -148,24 +187,39 @@ const encodeStreamTurn = (
   parts: readonly ScriptedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
+  { deferToolEnds = false }: { deferToolEnds?: boolean } = {},
 ): Response.StreamPartEncoded[] => {
   const out: Response.StreamPartEncoded[] = [responseMetadata(turnIndex)];
+  const deferred: Response.StreamPartEncoded[] = [];
   parts.forEach((part, partIndex) => {
     if (part._tag === 'text') {
       const id = `text_${turnIndex}_${partIndex}`;
       out.push({ type: 'text-start', id });
       out.push({ type: 'text-delta', id, delta: part.text });
       out.push({ type: 'text-end', id });
+    } else if (part._tag === 'reasoning') {
+      const id = `reasoning_${turnIndex}_${partIndex}`;
+      out.push({ type: 'reasoning-start', id });
+      out.push({ type: 'reasoning-delta', id, delta: part.text });
+      out.push({ type: 'reasoning-end', id });
     } else {
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
-      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(part.input) });
-      out.push({ type: 'tool-params-end', id });
+      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(resolveInput(part)) });
+      (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
     }
   });
+  out.push(...deferred);
   out.push(finishPart(reason));
   return out;
 };
+
+const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: 'scripted',
+    operation: { name: 'chat' },
+    request: { model: 'scripted' },
+  });
 
 /** Encodes a turn as the aggregated parts a non-streaming `generateText` would return. */
 const encodeTurn = (
@@ -177,8 +231,15 @@ const encodeTurn = (
   parts.forEach((part, partIndex) => {
     if (part._tag === 'text') {
       out.push({ type: 'text', text: part.text });
+    } else if (part._tag === 'reasoning') {
+      out.push({ type: 'reasoning', text: part.text });
     } else {
-      out.push({ type: 'tool-call', id: toolCallId(part, turnIndex, partIndex), name: part.name, params: part.input });
+      out.push({
+        type: 'tool-call',
+        id: toolCallId(part, turnIndex, partIndex),
+        name: part.name,
+        params: resolveInput(part),
+      });
     }
   });
   out.push(finishPart(reason));
@@ -186,30 +247,35 @@ const encodeTurn = (
 };
 
 const exhausted = (index: number, length: number, route: string): AiError.AiError =>
-  new AiError.UnknownError({
+  new AiError.AiError({
     module: 'ScriptedLanguageModel',
     method: 'generateText',
-    description: `Scripted model exhausted: route ${route} requested turn ${index} but the script has only ${length}.`,
+    reason: new AiError.UnknownError({
+      description: `Scripted model exhausted: route ${route} requested turn ${index} but the script has only ${length}.`,
+    }),
   });
 
 const snippet = (raw: string): string => (raw.length > 160 ? `${raw.slice(0, 160)}…` : raw);
 
 const unmatched = (request: ScriptedRequest): AiError.AiError =>
-  new AiError.UnknownError({
+  new AiError.AiError({
     module: 'ScriptedLanguageModel',
     method: 'generateText',
-    description: `No scripted route matched the request. system=${JSON.stringify(snippet(request.system))} text=${JSON.stringify(snippet(request.text))}`,
+    reason: new AiError.UnknownError({
+      description: `No scripted route matched the request. system=${JSON.stringify(snippet(request.system))} text=${JSON.stringify(snippet(request.text))}`,
+    }),
   });
 
 /**
- * Constructs a {@link LanguageModel.Service} that replays a script: a plain turn list is consumed
+ * Constructs a {@link LanguageModel.LanguageModel} that replays a script: a plain turn list is consumed
  * sequentially; a routed script dispatches each call to the first matching {@link ScriptedRoute},
  * each with its own cursor. Prefer the layer helpers ({@link scriptedLanguageModelLayer} /
  * {@link scriptedAiService}) at call sites.
  */
-export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.Service> =>
+export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
-    const routes = toRoutes(script);
+    const generator = typeof script === 'function' ? script : undefined;
+    const routes = typeof script === 'function' ? [] : toRoutes(script);
     // Per-route script position. The Request semaphore serializes turns within a session, and
     // cooperating sessions interleave deterministically in tests, so plain monotonic cursors are
     // race-free; Refs keep them explicit and inspectable rather than closure variables.
@@ -218,9 +284,13 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     // order, not the per-route cursor.
     const calls = yield* Ref.make(0);
 
-    const nextTurn = (prompt: Prompt.Prompt) =>
+    const nextTurn = (options: LanguageModel.ProviderOptions) =>
       Effect.gen(function* () {
-        const request = flattenRequest(prompt);
+        const request = flattenRequest(options);
+        if (generator) {
+          const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
+          return { index, turn: generator(request, index) };
+        }
         const routeIndex = routes.findIndex((route) => route.match(request));
         if (routeIndex < 0) {
           return yield* Effect.fail(unmatched(request));
@@ -238,21 +308,31 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     return yield* LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
-          const { index, turn } = yield* nextTurn(options.prompt);
+          annotate(options.span);
+          const { index, turn } = yield* nextTurn(options);
           if (isFailure(turn)) {
             return yield* Effect.fail(turn.fail);
+          }
+          if (turn.delay !== undefined) {
+            yield* Effect.sleep(turn.delay);
           }
           return encodeTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts));
         }),
       streamText: (options) =>
         Stream.unwrap(
           Effect.gen(function* () {
-            const { index, turn } = yield* nextTurn(options.prompt);
+            annotate(options.span);
+            const { index, turn } = yield* nextTurn(options);
             if (isFailure(turn)) {
               return Stream.fail(turn.fail);
             }
+            if (turn.delay !== undefined) {
+              yield* Effect.sleep(turn.delay);
+            }
             return Stream.fromIterable(
-              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts)),
+              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {
+                deferToolEnds: turn.deferToolEnds,
+              }),
             );
           }),
         ),
@@ -272,13 +352,11 @@ export const __testing = {
 export const scriptedLanguageModelLayer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
   Layer.effect(LanguageModel.LanguageModel, makeScriptedLanguageModel(script));
 
-// A single shared model memo per script: sessions in separate processes each call `model()`, and
-// separate model instances would each start their script from turn zero.
-const sharedModel = (script: Script): AiService.Service => {
+// A single shared model memo per script: sessions in separate processes each call `languageModel()`,
+// and separate model instances would each start their script from turn zero.
+const sharedModel = (script: Script): AiService.LanguageModelResolver => {
   const model = Effect.runSync(Effect.cached(makeScriptedLanguageModel(script)));
-  return {
-    model: () => Layer.effect(LanguageModel.LanguageModel, model),
-  };
+  return () => Layer.effect(LanguageModel.LanguageModel, model);
 };
 
 /**
@@ -288,15 +366,15 @@ const sharedModel = (script: Script): AiService.Service => {
  * cursors) — the seam that lets one script drive a supervisor and its sub-agents.
  */
 export const scriptedAiService = (script: Script): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, sharedModel(script));
+  Layer.succeed(AiService.AiService, AiService.make({ languageModel: sharedModel(script) }));
 
 /**
  * Middleware form of {@link scriptedAiService} for `AssistantPlugin({ aiServiceMiddleware })`:
- * replaces the AI service the plugin would construct with the scripted model, so full plugin-stack
- * tests and storybooks run offline. Shares one script cursor across `model()` calls, like
- * {@link scriptedAiService}.
+ * replaces the language models the plugin would resolve with the scripted model, so full plugin-stack
+ * tests and storybooks run offline; decision models still resolve upstream. Shares one script cursor
+ * across `languageModel()` calls, like {@link scriptedAiService}.
  */
 export const scriptedAiServiceMiddleware = (script: Script): ((upstream: AiService.Service) => AiService.Service) => {
-  const service = sharedModel(script);
-  return () => service;
+  const languageModel = sharedModel(script);
+  return (upstream) => ({ ...upstream, languageModel });
 };

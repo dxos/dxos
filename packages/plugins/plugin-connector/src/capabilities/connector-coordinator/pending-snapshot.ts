@@ -5,7 +5,7 @@
 import { type Key } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { pendingConnectionStorageKey } from '../../constants';
+import { pendingConnectionStorageKey } from '../../constants.ts';
 
 /** Snapshot of an in-flight OAuth flow persisted in `localStorage` for redirect-flow connectors. */
 export type PendingSnapshot = {
@@ -15,10 +15,13 @@ export type PendingSnapshot = {
   connectorId: string;
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   connectionSnapshot: { name: string; connectorId: string };
-  /** Serialized DXN of the existing target to bind the first new selection to. */
-  existingTargetDxn?: string;
-  /** `mode: 'reauth'` only — serialized DXN of the existing AccessToken to refresh in place. */
-  reauthAccessTokenDxn?: string;
+  /**
+   * `Ref.uri` of the existing target to bind the first new selection to — an `echo:` EID, not a
+   * `dxn:` DXN (a DXN names a type or capability and cannot address an object).
+   */
+  existingTargetUri?: string;
+  /** `mode: 'reauth'` only — `Ref.uri` (`echo:` EID) of the existing AccessToken to refresh in place. */
+  reauthAccessTokenUri?: string;
 };
 
 export const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {

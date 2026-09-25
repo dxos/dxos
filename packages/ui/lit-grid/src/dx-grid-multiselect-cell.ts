@@ -33,9 +33,11 @@ export class DxGridMultiselectCell extends LitElement {
       data-dx-grid-accessory="invoke-multiselect"
       data-dx-grid-action="accessory"
     >
-      ${this.values.length > 0
-        ? this.values.map(({ label }) => html`<span class="dx-grid__cell__multiselect__value">${label}</span>`)
-        : html`<span class="dx-grid__cell__multiselect__placeholder">${this.placeholder}</span>`}
+      ${
+        this.values.length > 0
+          ? this.values.map(({ label }) => html`<span class="dx-grid__cell__multiselect__value">${label}</span>`)
+          : html`<span class="dx-grid__cell__multiselect__placeholder">${this.placeholder}</span>`
+      }
       <span role="none" class="dx-grid__cell__multiselect__separator"></span>
       <svg><use href="/icons.svg#ph--caret-down--regular" /></svg>
     </button>`;

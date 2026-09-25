@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
-import { type HttpRequest } from './bindRequest';
-import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx';
+import { type HttpRequest } from './bindRequest.ts';
+import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx.ts';
 
-export class FetchError extends Error {}
+export class FetchError extends BaseError.extend('CommerceFetchError', 'Fetch failed.') {}
 
 /** Perform an HTTP request through the DXOS edge proxy and return the response body as text. */
 export const fetchViaProxy = (request: HttpRequest): Effect.Effect<string, FetchError> =>
@@ -22,11 +23,11 @@ export const fetchViaProxy = (request: HttpRequest): Effect.Effect<string, Fetch
         body: request.body,
       });
       if (!response.ok) {
-        throw new FetchError(`HTTP ${response.status} for ${request.url}`);
+        throw new FetchError({ message: `HTTP ${response.status} for ${request.url}` });
       }
       return response.text();
     },
-    catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 export type FetchPageOptions = {
@@ -58,7 +59,7 @@ export const fetchPage = (request: HttpRequest, options: FetchPageOptions = {}):
     return fetchViaProxy(request);
   }
   return renderViaCrx(request.url, { waitForSelector: options.waitForSelector, active: options.active }).pipe(
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url: request.url, error: error.message });
       return fetchViaProxy(request);
     }),

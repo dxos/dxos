@@ -5,12 +5,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
+import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -68,17 +71,17 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      subject: [getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
-      <Input.Root>
-        <Input.Label>{t('feed-sync.label')}</Input.Label>
-        <div className='flex flex-row items-center'>
-          <Input.Switch
+    <Form.FieldSet>
+      <Field.Root>
+        <Field.Label>{t('feed-sync.label')}</Field.Label>
+        <Flex align='center'>
+          <Field.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -88,9 +91,9 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
           {syncTrigger && (
             <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
           )}
-        </div>
-      </Input.Root>
-    </Form.Section>
+        </Flex>
+      </Field.Root>
+    </Form.FieldSet>
   );
 };
 

@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { CrmPlugin } from '@dxos/plugin-crm/plugin';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Clients';
 
@@ -22,7 +22,7 @@ const meta: Meta<typeof ModuleContainer> = {
     mailboxName: MAILBOX_NAME,
     // Own the skills the template binds: crm (CrmPlugin), webSearch + database (AssistantPlugin),
     // markdown (MarkdownPlugin). A skill whose plugin is absent renders as an unnamed row.
-    plugins: [CrmPlugin(), AssistantPlugin(), MarkdownPlugin()],
+    plugins: [CrmPlugin.make(), AssistantPlugin.make(), MarkdownPlugin.make()],
   }),
   args: {
     layout: [

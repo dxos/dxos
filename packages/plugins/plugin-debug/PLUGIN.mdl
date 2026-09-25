@@ -4,7 +4,7 @@ name: DebugPlugin
 version: 0.1.0
 ---
 
-Developer debugging utilities for `DXOS` Composer — synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. Rendered under a Debug node in the SYSTEM navigation group, a sibling of the Devtools inspector (`org.dxos.plugin.devtools`).
+Developer debugging utilities for `DXOS` Composer — a debug panel (console, log viewer, and every developer tool as a navtree) docked as the deck's bottom drawer or floated as a window, synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. The panel is a navtree over a hidden `root/debug` app-graph category that this plugin contributes; the Devtools inspector (`org.dxos.plugin.devtools`) attaches its tree there too. Nothing under `root/debug` appears in the main navtree, opens in the deck, or has a URL.
 
 ## Extensions
 
@@ -15,6 +15,7 @@ The following extension dialects are used in this document.
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -32,11 +33,100 @@ type DebugPluginOptions
     persistStats?: boolean      # persist the stats-panel store to localStorage (default true)
 ```
 
+```mdl
+type DebugPanelMode
+  literals: docked | floating   # docked = the deck's bottom drawer (default); floating = a FloatingPanel window
+```
+
+```mdl
+type DebugPanelViewState
+  desc: Persisted (localStorage) so a debugging session survives the reloads it provokes; the floating window's open/closed state is not part of it (the drawer's is deck state).
+  fields:
+    nodeId?: string             # qualified id of the selected page (e.g. root/debug/devtools/client/config)
+    open: string[]              # path keys of the expanded branches
+    mode?: DebugPanelMode       # which host shows the panel; absent reads as docked
+    position?: Point            # where the floating panel was last dragged
+    size?: Size                 # the size the floating panel was last resized to
+```
+
+## App graph
+
+```mdl
+feat DebugCategory
+  desc: |
+    A hidden `debug` category on the app-graph root: node `root/debug`, type
+    `GraphPath.GroupTypes.debug`, `data: null`, `disposition: hidden`, not draggable or droppable.
+    `hidden` is what the main navtree already filters, so no consumer has to learn about the
+    category. Tool plugins attach with `AppNodeMatcher.whenDebugGroup`; every tool is a global node
+    (no per-space enumeration) and a space-scoped tool resolves the active workspace's space at
+    render time. Nothing under `root/debug` declares a URL binding.
+```
+
+| Node                        | Type                | Article                    |
+|-----------------------------|---------------------|----------------------------|
+| `root/debug/debug`          | `DebugNodes.id`     | branch (no article); open with the console selected on a pristine panel |
+| `root/debug/debug/console`  | `DebugNodes.Console`| Console (agent debug shell)|
+| `root/debug/debug/logs`     | `DebugNodes.Logs`   | Log viewer                 |
+| `root/debug/debug/space`    | `DebugNodes.SpaceType` | Generate objects (active space) |
+| `root/debug/devtools/...`   | contributed by `org.dxos.plugin.devtools` | Client / HALO / ECHO / MESH / EDGE inspectors, App Graph, SDK Explorer, CLI |
+
+## Components
+
+```mdl
+component DebugPanel
+  desc: |
+    The debug surface in parts (`DebugPanel.Root` / `Body` / `Sidebar` / `Main`) with two hosts
+    that share one `Root` context, so selection and open branches carry over when the panel moves:
+    `DebugPanelDrawer` renders it in the deck's bottom drawer (`AppSurface.Drawer`,
+    `org.dxos.role.drawer`) and `DebugPanelStatus` hosts it in a `FloatingPanel`. `Root` owns the
+    selection, the expanded branches and the mode (DebugPanelViewState); `Body` is the `Splitter`
+    over `Sidebar` — a `Tree` over `root/debug` via `useGraphTreeModel`
+    (`@dxos/plugin-graph/hooks`) — and `Main`, the selected node's article surface.
+    `DebugPanelHeader` is the title-bar control both hosts share: a dock/float switch
+    (`debugPanel.mode`) and, for the drawer, a close (`debugPanel.close`). Selecting a row never
+    touches the deck, attention, or the URL; the drawer is not a plank and never takes attention.
+  props:
+    contextId?: string          # view-state context; defaults to the status-rail singleton
+  state:
+    nodeId?: string             # selected page
+    open: string[]              # expanded branch path keys
+    mode: DebugPanelMode        # docked (default) or floating
+  actions:
+    select(nodeId: string)      # a leaf shows its article; a branch (data: null) toggles instead
+    setOpen(pathKey: string, isOpen: boolean)
+    setMode(mode: DebugPanelMode)  # float: close the drawer, open the window; dock: close the window, open the drawer
+  layout: |
+    ┌─ Main.Drawer (docked, default) ──────────────────────┐
+    │ Debug                                          ⇱ ×  │
+    ├─ Sidebar (Tree) ──┬─ Main (article surface) ────────┤
+    │ ▾ Debug           │                                  │
+    │   ▸ Console       │  Config JSON / log table /       │
+    │     Logs          │  generator / ...                 │
+    │     Generate obj. │                                  │
+    │ ▾ DevTools        │  (console and logs stay mounted  │
+    │   ▾ Client        │   while another page is shown)   │
+    │       Config      │                                  │
+    └───────────────────┴──────────────────────────────────┘
+    Floating: the same Sidebar/Main under a FloatingPanel title bar (⇲ dock, — minimize, ×).
+```
+
 ## Features
 
 ```mdl
+feat DebugPanel
+  desc: |
+    A status-bar button shows the debug panel: docked (the default) it toggles the deck's bottom
+    drawer via `LayoutOperation.UpdateDrawer`, so the planks reflow above it, its height is dragged
+    from the top edge and persists with the deck's layout, and fullscreen hides it; floating, it
+    opens the panel as a window over the app. The title bar's dock/float control moves the panel
+    between the two with the same tool selected. The sidebar lists Debug (Console, Logs, Generate
+    objects — a pristine panel opens Debug with the console selected) and DevTools, and the
+    selection, open branches, and mode persist across reloads.
+```
+
+```mdl
 feat GenerateObjects
-  desc: Create configurable batches of synthetic ECHO objects into a space collection.
+  desc: Create configurable batches of synthetic ECHO objects into the active workspace's space, from the Debug → Generate objects page of the panel.
 ```
 
 ```mdl
@@ -56,5 +146,153 @@ feat Wireframe
 
 ```mdl
 feat StatsPanel
-  desc: A transient-stats panel rendering the shared telemetry store.
+  desc: |
+    The shared telemetry store (`AppCapabilities.StatsPanel`) as one `StatCard` per plugin
+    compartment. Rendered on the plugin's own `org.dxos.plugin.debug.surface.stats` role (with an
+    empty-state card) and contributed to `AppSurface.DevtoolsOverview` at position 20 (no card when
+    the store is empty), so it stacks under the devtools cards in the Stats companion.
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+plugin-debug is a dev-only utility plugin: it defaults on in `isDev` builds (see
+`packages/apps/composer-app/src/plugin-defs.tsx`), off otherwise.
+
+```mdl
+test QA-1: Insert Lorem ipsum from the slash menu
+  desc: The one debug feature with a real operation behind it — the MenuExtension contribution used as the worked example in plugin-markdown's QA-3.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open and contains at least one collection
+    - plugin-debug is enabled (dev-only default; see above)
+    - attendableId: an empty document is open in the editor, its attendable id
+  steps:
+    - name: Open the command menu
+      do: With the caret on an empty line, type `/`.
+      expect: the popup lists a "Debug" group containing "Lorem ipsum", below the built-in groups
+      note: |
+        NO `invoke` — opening the popup is a real keystroke and CodeMirror does not observe
+        synthetic input events. Human-only step; an agent run reports it unverified.
+    - name: Insert a paragraph
+      do: Select "Lorem ipsum".
+      invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
+      expect: a paragraph of placeholder prose appears at the caret
+      assert: return view.state.doc.length > 0;
+  after:
+    - name: Clear the document
+      do: Select all and delete.
+      expect: the editor is empty and the document body is an empty string
+```
+
+```mdl
+test QA-2: Generate synthetic objects into a collection
+  desc: The SpaceGenerator UI (GenerateObjects) — no operation exists behind it, so this is a human-only sanity check that the debug tooling itself works.
+  actors: human
+  covers: [GenerateObjects, SpaceObjectsBrowser]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, empty of synthetic objects
+    - plugin-debug is enabled (dev-only default; see above)
+  steps:
+    - name: Open the debug panel and generate objects
+      do: |
+        Click the status-bar debug button (terminal icon), then in the panel's sidebar open
+        Debug → Generate objects. Set the batch size (e.g. 5) and press `+` on
+        `org.dxos.type.document`.
+      expect: |
+        the type's count rises by 5, the documents appear in the space-objects browser, and the
+        main navtree's SYSTEM group still shows only Database (no DevTools or Debug node)
+      note: NO `invoke` — GenerateObjects has no operation; it is a UI-only synthetic-data generator.
+  after:
+    - name: Remove the generated objects
+      do: Select the generated documents in the space-objects browser and delete them.
+      expect: the collection returns to its prior state
+```
+
+```mdl
+test QA-3: Walk the review-queue demo space
+  desc: |
+    The demo script for the Review template (`samples/review`): seed a space holding one project whose
+    finished tasks carry merged dxos/dxos pull requests with their screenshots and demo recordings,
+    and whose tasks in review carry the PRs still open — then walk it the way a reviewer would.
+  actors: both
+  status: passing  # 2026-09-24, agent run recorded as a demo video
+  given:
+    - an identity exists
+    - defaultSpace: the default space, which is where the run returns to
+    - plugin-debug, plugin-projects, plugin-tasks, plugin-file and plugin-video are enabled (dev-only defaults)
+    - the browser can reach raw.githubusercontent.com, which serves the screenshots
+  before:
+    - name: Seed the space
+      do: Create a space from the "Composer — Review queue" template.
+      invoke: org.dxos.operation.debug.createSpaceFromTemplate { id: "org.dxos.plugin-debug.template.review" }
+      capture: seeded
+      expect: a space named "Composer — Review queue" appears in the space list
+      assert: return $snapshot.spaces.some((s) => s.id === $result.spaceId)
+      note: |
+        The template fetches four PNGs while it applies, so on a cold server the step takes up to a minute.
+        A screenshot the browser cannot reach is kept as an external blob naming its URL — this step still
+        passes, and the image step below is where that shows.
+    - name: Find the project
+      do: Open the space and expand Projects in the navtree.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.project" }
+      space: $seeded.spaceId
+      capture: projects
+      expect: Projects lists one project, "Composer polish"
+      assert: return $result.results.length === 1 && $result.results[0].label === 'Composer polish'
+  steps:
+    - name: Open the project's tasks
+      do: Click "Composer polish", then its Tasks tab.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$seeded.spaceId/ai/org.dxos.type.project/$projects.results[0].dxn.objectId"] }
+      expect: |
+        seven tasks: three done, each with a violet merged `#` pill and image or video tags; two in review,
+        each with a green open `#` pill and a video tag; one started; one to do
+      assert: |
+        const tasks = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run();
+        const count = (status) => tasks.filter((task) => task.status === status).length;
+        const opened = $snapshot.planks.some((plank) => plank.subject?.dxn === $projects.results[0].dxn);
+        return opened && tasks.length === 7 && count('done') === 3 && count('review') === 2;
+      note: The Tasks tab is a view switch inside the plank, so the human clicks it; the agent judges from the database.
+    - name: Look at a finished task's screenshot
+      do: On "Run desktop OAuth in the system browser", click the `oauth-pending.png` tag.
+      expect: a preview card shows the screenshot of the sign-in form waiting on the provider
+      assert: |
+        const blobs = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.blob'))).run();
+        return blobs.length === 4 && blobs.every((blob) => blob.data._tag === 'inline' && blob.size > 0);
+      note: NO `invoke` — the tag is a pointer gesture on the task row, with no operation behind it.
+    - name: Review an open pull request
+      do: On "Switch identities in place instead of a reset and reload" (in review), click the `#13336` pill.
+      expect: the preview names dxos/dxos#13336, state open, by dmaretskyi
+      assert: |
+        const prs = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.pullRequest'))).run();
+        return prs.filter((pr) => pr.state === 'open').map((pr) => pr.number).sort().join() === '12952,13336';
+      note: NO `invoke` — as above.
+    - name: Watch a finished task's demo
+      do: On "Count down a toast's remaining time", click the "Toast countdown demo" tag, then Open from its ⋮ menu.
+      expect: |
+        the video opens in the project's plank (breadcrumb "Composer polish » Toast countdown demo") and plays
+        the toast counting down; the Transcript tab says transcripts are for YouTube videos only, and no error
+        toast appears
+      assert: |
+        return $snapshot.planks.some((plank) => plank.subject?.typename === 'org.dxos.type.video') &&
+          !$snapshot.toasts.some((toast) => toast.title === 'Transcription failed.') && $stepErrors.length === 0;
+      note: NO `invoke` — as above. The recording streams from its URL into the player; nothing is written.
+  after:
+    - name: Delete the space
+      do: Open the space's settings and delete the space.
+      invoke: org.dxos.operation.space.delete { space: Space($seeded.spaceId) }
+      expect: the space leaves the space list
+      assert: return !$snapshot.spaces.some((s) => s.id === $seeded.spaceId)
+    - name: Return to the default space
+      do: Pick the default space in the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: the workspace is the default space and no error is logged
+      assert: return $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0
 ```

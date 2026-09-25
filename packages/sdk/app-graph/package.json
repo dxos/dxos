@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-graph",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Constructs knowledge graphs for the purpose of building applications on top of",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,32 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AppGraph": {
+      "source": "./src/AppGraph.ts",
+      "types": "./dist/types/src/AppGraph.d.ts",
+      "import": "./dist/lib/AppGraph.mjs"
+    },
+    "./AppGraphBuilder": {
+      "source": "./src/AppGraphBuilder.ts",
+      "types": "./dist/types/src/AppGraphBuilder.d.ts",
+      "import": "./dist/lib/AppGraphBuilder.mjs"
+    },
+    "./AppGraphNode": {
+      "source": "./src/AppGraphNode.ts",
+      "types": "./dist/types/src/AppGraphNode.d.ts",
+      "import": "./dist/lib/AppGraphNode.mjs"
+    },
+    "./CreateAtom": {
+      "source": "./src/atoms.ts",
+      "types": "./dist/types/src/atoms.d.ts",
+      "import": "./dist/lib/atoms.mjs"
+    },
+    "./PathResolution": {
+      "source": "./src/path-resolution.ts",
+      "types": "./dist/types/src/path-resolution.d.ts",
+      "import": "./dist/lib/path-resolution.mjs"
+    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -44,22 +70,20 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -68,10 +92,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

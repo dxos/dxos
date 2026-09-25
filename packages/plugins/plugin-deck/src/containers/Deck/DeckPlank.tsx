@@ -2,29 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { findFirstFocusable } from '@dxos/react-focus';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
-import { type ResolvedPart } from '#types';
+import { DeckSchema } from '#types';
 
-import { CompanionPlank } from './CompanionPlank';
-import { PlankControls } from './PlankControls';
-import { PlankErrorFallback, PlankLoading } from './PlankFallback';
-import { useDeckPlank } from './useDeckPlank';
-
-const PLANK_LOADING = <PlankLoading />;
+import { focusPane } from '../../util/index.ts';
+import { CompanionPlank } from './CompanionPlank.tsx';
+import { focusContent } from './focus-content.ts';
+import { PlankControls } from './PlankControls.tsx';
+import { PlankErrorFallback } from './PlankFallback.tsx';
+import { useDeckPlank } from './useDeckPlank.ts';
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
   fullscreen?: boolean;
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
@@ -51,11 +52,13 @@ export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, cla
 DeckPlank.displayName = 'DeckPlank';
 
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
-  const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
+  const { attention } = useAttentionContext('DeckPlank');
   const {
     node,
+    unresolved,
+    notFoundNode,
     capabilities,
     sigilActions,
     popoverAnchorId,
@@ -84,40 +87,58 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [invokePromise, active],
   );
 
-  // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
-  // `scrollIntoView`; focus the pane so it gains attention, then clear the one-shot flag. Scrolling is
-  // owned by the deck viewport, which positions the plank past the pile of spines, so this focus must
-  // not scroll on its own.
-  useEffect(() => {
-    if (scrollIntoView === id) {
-      rootRef.current?.focus({ preventScroll: true });
+  // A layout effect, since attention is derived from focus and focus has to move in the task that
+  // inserted this plank or its first painted frame reads as unattended. Scrolling is owned by the deck
+  // viewport, which positions the plank past the pile of spines, so this focus must not scroll.
+  // The wait for a lazy article's content, held outside the effect: clearing the intent below re-runs
+  // the effect at once, which must not cancel a wait it just started.
+  const contentFocusRef = useRef<(() => void) | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (scrollIntoView?.id === id) {
+      contentFocusRef.current?.();
+      if (scrollIntoView.focus === 'content') {
+        // Straight into the content: a keyboard navigation that landed on the plank itself would need
+        // a second Enter before the reader could type.
+        contentFocusRef.current = focusContent(rootRef.current);
+      } else if (scrollIntoView.focus !== false) {
+        focusPane(rootRef.current);
+      } else if (attention && rootRef.current) {
+        Attention.attendElement(attention, rootRef.current);
+      }
       onScrollIntoView(undefined);
     }
-  }, [scrollIntoView, id, onScrollIntoView]);
+  }, [scrollIntoView, id, onScrollIntoView, attention]);
+  useLayoutEffect(() => () => contentFocusRef.current?.(), []);
 
-  // Tabster's focus group should move focus to Main on Escape, but something blocks it; handle directly.
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        switch (event.key) {
-          case 'Escape':
-            event.currentTarget.closest('main')?.focus();
-            break;
-          case 'Enter':
-            findFirstFocusable(event.currentTarget)?.focus();
-            break;
-        }
+  // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.
+  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      switch (event.key) {
+        case 'Escape':
+          event.currentTarget.closest('main')?.focus();
+          break;
+        case 'Enter':
+          findFirstFocusable(event.currentTarget)?.focus();
+          break;
       }
-    },
-    [findFirstFocusable],
+    }
+  }, []);
+
+  // Stable reference so Plank's useMemo on articleData doesn't bust every render. An unresolved plank
+  // addresses the not-found article rather than its own (absent) node, while the shell below stays
+  // keyed to the real plank id so close, focus and attention keep working.
+  const articleData = useMemo(
+    () => (unresolved ? { path, attendableId: NotFound.NOT_FOUND_PATH } : { path }),
+    [path, unresolved],
   );
 
-  // Stable reference so Plank's useMemo on articleData doesn't bust every render.
-  const articleData = useMemo(() => ({ path }), [path]);
+  // The plank the URL names, before anything has resolved: an id and nothing else.
+  const loadingNode = useMemo(() => ({ id }), [id]);
 
-  if (!node) {
-    return PLANK_LOADING;
-  }
+  // Memoized so the navbar and footer surfaces see one data reference per node: an inline literal
+  // would hand them a fresh object every render, which the surface metrics flag as unstable data.
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  const shellData = useMemo(() => ({ subject: shellNode?.data }), [shellNode?.data]);
 
   const controls = (
     <PlankControls
@@ -129,22 +150,37 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     />
   );
 
+  const headless = fullscreen;
+
+  if (!shellNode) {
+    return (
+      <Plank
+        ref={rootRef}
+        node={loadingNode}
+        attendableId={id}
+        related={part === 'complementary'}
+        pending
+        controls={controls}
+        headless={headless}
+        onKeyDown={handleKeyDown}
+        classNames={classNames}
+      />
+    );
+  }
+
   const navbarEnd =
     part !== 'complementary' ? (
-      <Surface.Surface type={AppSurface.NavbarEnd} data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+      <Surface.Surface type={AppSurface.NavbarEnd} data={shellData satisfies AppSurface.NavbarEndData} />
     ) : undefined;
 
   const sigilFooter = (
-    <Surface.Surface type={AppSurface.MenuFooter} data={{ subject: node.data } satisfies AppSurface.MenuFooterData} />
+    <Surface.Surface type={AppSurface.MenuFooter} data={shellData satisfies AppSurface.MenuFooterData} />
   );
-
-  // In fullscreen the toolbar is hidden so the content fills the viewport.
-  const headless = fullscreen;
 
   return (
     <Plank
       ref={rootRef}
-      node={node}
+      node={shellNode}
       attendableId={id}
       related={part === 'complementary'}
       actions={sigilActions}
@@ -157,7 +193,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       navbarEnd={navbarEnd}
       sigilFooter={sigilFooter}
       fallback={PlankErrorFallback}
-      placeholder={PLANK_LOADING}
       headless={headless}
       onKeyDown={handleKeyDown}
       classNames={classNames}

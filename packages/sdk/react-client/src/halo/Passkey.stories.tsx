@@ -8,14 +8,19 @@ import React, { useCallback } from 'react';
 import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  RecoverIdentityRequest_ExternalSignatureSchema,
+  RecoverIdentityRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Button } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useClient } from '../client';
-import { withClientProvider } from '../testing';
-import { useCredentials } from './useCredentials';
-import { useIdentity } from './useIdentity';
+import { useClient } from '../client/index.ts';
+import { withClientProvider } from '../testing/index.ts';
+import { useCredentials } from './useCredentials.ts';
+import { useIdentity } from './useIdentity.ts';
 
 const getNewChallenge = () => Math.random().toString(36).substring(2);
 
@@ -90,16 +95,21 @@ const Test = () => {
       })
       .catch(log.error);
     const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-    await client.services.services.IdentityService.recoverIdentity({
-      external: {
-        lookupKey,
-        deviceKey,
-        controlFeedKey,
-        signature: Buffer.from((credential as any).response.signature),
-        clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
-        authenticatorData: Buffer.from((credential as any).response.authenticatorData),
-      },
-    });
+    await client.services.services.IdentityService.recoverIdentity(
+      buf.create(RecoverIdentityRequestSchema, {
+        request: {
+          case: 'external',
+          value: buf.create(RecoverIdentityRequest_ExternalSignatureSchema, {
+            lookupKey: fromPublicKey(lookupKey),
+            deviceKey: fromPublicKey(deviceKey),
+            controlFeedKey: fromPublicKey(controlFeedKey),
+            signature: Buffer.from((credential as any).response.signature),
+            clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+            authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+          }),
+        },
+      }),
+    );
   }, []);
 
   return (
@@ -115,7 +125,7 @@ const Test = () => {
           Authenticate with Passkey
         </Button>
       </div>
-      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded-sm'>
+      <div className='flex flex-col min-w-[28rem] divide-y divide-subdued-separator border border-separator rounded-sm'>
         <JsonHighlighter data={{ identity, credentials: credentials.length }} />
       </div>
     </>
@@ -127,17 +137,17 @@ const config = new Config({
     client: {
       edgeFeatures: {
         agents: true,
-        echoReplicator: true,
         feedReplicator: true,
+        subductionReplicator: true,
         signaling: true,
       },
     },
     services: {
       edge: {
-        url: 'wss://edge-main.dxos.workers.dev/',
+        url: 'https://preview.dxos.network/',
         // url: 'ws://localhost:8787',
       },
-      iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
+      iceProviders: [{ urls: 'https://dxos.network/ice' }],
     },
   },
 });

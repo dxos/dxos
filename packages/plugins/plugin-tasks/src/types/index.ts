@@ -1,9 +1,11 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './util';
-
-export * as Journal from './Journal';
-export * as OutlineOperation from './OutlineOperation';
-export * as TaskOperation from './TaskOperation';
+export * as Journal from './Journal.ts';
+export * as TasksCapabilities from './TasksCapabilities.ts';
+export * as OutlineOperation from './OutlineOperation.ts';
+export * as RemoteSessionOperation from './RemoteSessionOperation.ts';
+export * as TaskOperation from './TaskOperation.ts';
+export * as TasksEvents from './TasksEvents.ts';
+export * as TasksUtil from './TasksUtil.ts';

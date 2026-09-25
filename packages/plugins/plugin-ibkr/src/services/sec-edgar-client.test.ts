@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, test } from 'vitest';
 
-import { SEC_COMPANY_FACTS_URL, SEC_COMPANY_TICKERS_URL } from '../constants';
-import { fetchEdgarFundamentals, resetSecEdgarCacheForTests, resolveCik } from './sec-edgar-client';
+import { SEC_COMPANY_FACTS_URL, SEC_COMPANY_TICKERS_URL } from '../constants.ts';
+import { fetchEdgarFundamentals, resetSecEdgarCacheForTests, resolveCik } from './sec-edgar-client.ts';
 
 const tickersFixture = readFileSync(
   fileURLToPath(new URL('./__fixtures__/sec-company-tickers.json', import.meta.url)),

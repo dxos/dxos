@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-export const getTextTemplateInputSchema = (text: string): Schema.Schema.AnyNoContext => {
+export const getTextTemplateInputSchema = (text: string): Schema.Codec<any, any> => {
   const variables = findHandlebarVariables(text);
   return Schema.Struct(Object.fromEntries(variables.map((property) => [property, Schema.Any])));
 };

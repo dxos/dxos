@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import * as SchemaAST from 'effect/SchemaAST';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
+import { createContext } from '@dxos/react-hooks';
 
 import { type FieldContext, type FormFieldStateProps } from '#types';
 
-import { type FormVariant } from '../components/Form/Form.theme';
-import { type FormHandler } from './useFormHandler';
+import { type FormVariant } from '../components/Form/Form.theme.ts';
+import { type FormHandler } from './useFormHandler.ts';
 
 //
 // Context

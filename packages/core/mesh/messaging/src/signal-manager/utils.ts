@@ -2,37 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { subscribeStream } from '@dxos/protocols';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DevicesService, type IdentityService } from '@dxos/protocols/rpc';
 
 export const setIdentityTags = ({
   identityService,
   devicesService,
-  runtime = Runtime.defaultRuntime,
+  runtime = Context.empty(),
   setTag,
 }: {
   identityService: IdentityService.Client;
   devicesService: DevicesService.Client;
-  runtime?: Runtime.Runtime<never>;
+  runtime?: Context.Context<never>;
   setTag: (k: string, v: string) => void;
 }) => {
-  subscribeStream(runtime, identityService.IdentityService.queryIdentity(undefined), {
+  subscribeStream(runtime, identityService['IdentityService.queryIdentity'](undefined), {
     onData: (idqr) => {
       if (!idqr?.identity?.identityKey) {
         log('empty response from identity service', { idqr });
         return;
       }
 
-      setTag('identityKey', idqr.identity.identityKey.truncate());
+      setTag('identityKey', toPublicKey(idqr.identity.identityKey)?.truncate() ?? '');
     },
   });
 
-  subscribeStream(runtime, devicesService.DevicesService.queryDevices(undefined), {
+  subscribeStream(runtime, devicesService['DevicesService.queryDevices'](undefined), {
     onData: (dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
@@ -45,7 +46,7 @@ export const setIdentityTags = ({
         log('no current device', { device: dqr });
         return;
       }
-      setTag('deviceKey', thisDevice.deviceKey.truncate());
+      setTag('deviceKey', toPublicKey(thisDevice.deviceKey)?.truncate() ?? '');
     },
   });
 };

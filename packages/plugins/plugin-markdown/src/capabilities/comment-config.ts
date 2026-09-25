@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { MarkdownOperation } from '#types';
-import { Markdown } from '#types';
+import { Markdown, MarkdownOperation } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {
@@ -18,7 +17,7 @@ const activate = Effect.fnUntraced(function* () {
     selectionMode: 'multi-range',
     scrollToAnchor: MarkdownOperation.ScrollToAnchor,
   };
-  return Capability.contributes(AppCapabilities.CommentConfig, config);
+  return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });
 
 export default activate;

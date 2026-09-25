@@ -5,32 +5,108 @@
 - When performing complex tasks maintain a plan.
 - NEVER use the `send_later` tool.
 
-## Response mode
+## Mode
 
-- Desktop clients don't expose custom slash commands, so the response-verbosity
-  mode is toggled by a sentinel in a normal message: type `$concise` or
-  `$natural` (also `$mode concise`) anywhere in a message.
-- A `UserPromptSubmit` hook (`.claude/hooks/response-mode.sh`) parses the
-  sentinel, sets the mode, and while concise injects a terseness directive into
-  every prompt. State lives in the untracked `.claude/.response-mode`.
-- When the injected `RESPONSE MODE: CONCISE` directive is present, follow it.
+- The response-verbosity mode is set with **`/mode terse`** or **`/mode normal`**.
+  `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. It must
+  lead the message, as a slash command does — so a mid-sentence mention of the
+  command cannot flip the mode. The `$mode` sentinel has been removed.
+- **`/mode focus [task]`** adds a pinned task to `terse`. `focus` is not a third
+  mode value: the hook writes `terse` to `.claude/.mode` and the task to
+  `.claude/.focus`, so every reader of the mode is unchanged and the pin is just
+  that second file existing. With no task on the line the hook reads the
+  previous user instruction out of the event's `transcript_path` and pins that —
+  deriving it in the hook keeps the pin a mechanism rather than a request that
+  the agent remember. Nothing pinnable means terse and no pin, said out loud.
+  Any write to the mode clears the pin, so naming a verbosity is how you leave
+  focus; the pin is per-worktree like the mode, so concurrent sessions in one
+  worktree share it.
+- `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
+  the JSON the `UserPromptSubmit` event carries. Run it after touching either.
+- **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
+  branch, the instruction files actually consulted (including skills loaded this
+  session), and the current mode — never the modes as numbered options, since a
+  numeric reply is the one form the hook cannot catch. This is how
+  the user asks for the worktree line again — it is a first-reply rule and is
+  deliberately not re-injected every turn.
+- A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) does the work: that event
+  carries the **raw typed text**, so it catches `/mode …` before the command
+  expands and writes the state deterministically — the expansion itself could
+  only ask the agent to comply. The same hook injects the `RESPONSE RULES` block
+  into **every** prompt. State lives in the untracked `.claude/.mode`; `normal`
+  is the default when absent.
+- The block is emitted in both modes — the invariants (numbered options, lead
+  with the answer) are state-independent and only the length clause varies.
+  Follow it whenever it is present. The worktree + files-read line is NOT in it:
+  that is a first-reply rule, carried by the `SessionStart` hook.
+- The rules themselves are canonical in `AGENTS.md` → "Responding to the user";
+  the machinery is documented in `.claude/README.md`.
+
+## Autonomous mode
+
+- **`/autonomous [task]`** pins a task the session must drive to completion
+  **without asking any questions**; `/autonomous off [reason]` ends it, and
+  `/autonomous status` reports. With no task on the line the hook adopts the
+  previous user instruction (same derivation as `/mode focus`). It must lead the
+  message, as a slash command does.
+- It is orthogonal to the verbosity mode — a run can be `terse` or `normal`, and
+  `/mode` never touches it.
+- `.claude/hooks/autonomous.sh` (`UserPromptSubmit`) writes the state and injects
+  the `AUTONOMOUS MODE` block; `.claude/hooks/autonomous-stop.sh` (`Stop`) blocks
+  the turn from ending while a run is active, at most three times per user turn.
+- The state is four untracked files: `.claude/.autonomous` (task, hook-written),
+  `.claude/.autonomous-dod` (definition of done, **agent-written, first thing**),
+  `.claude/.autonomous-user.md` (every user message verbatim, hook-written every
+  turn) and `.claude/.autonomous-log.md` (the decision log, agent-written).
+- **Answer scoping and PR-size questions from the user log**
+  (`bash .claude/scripts/autonomous.sh user show`) rather than asking — that is
+  what it is for.
+- The only clean exit is `bash .claude/scripts/autonomous.sh stop '<reason>'`,
+  with the DoD met or the blocker established; run an adversarial review of the
+  diff before you do.
+- `bash .claude/scripts/autonomous.test.sh` exercises both hooks and the backend.
+  Run it after touching any of them.
+- Doctrine lives in the `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); the machinery is documented in
+  `.claude/README.md`.
 
 ## Task planning
 
-- One sentinel: `$project VERB [ARGS]` anywhere in a message; a
-  `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects the
-  matching directive.
-  - `$project` / `$project list [all]` — numbered table of the registry
-    (`.agents/projects/registry.yml`); reply with a row number to resume.
-  - `$project new <name> [summary]` / `$project end <name>` — manage entries;
+- One command: `/dxos:project VERB [ARGS]`, leading the message (bare `/project`
+  also matches). It is shipped by the **`dxos` plugin**
+  (`tools/claude/plugins/dxos`), enabled for this repo via `extraKnownMarketplaces`
+  - `enabledPlugins` in `.claude/settings.json` — it is NOT a `.claude/` hook any
+    more. **Enabling is not installing:** run `bash .claude/scripts/bootstrap-plugins.sh`
+    once per machine — and per cloud container, where `.config/claude-code-setup.sh`
+    runs it — or every invocation answers `Unknown command`. The plugin's
+    `UserPromptSubmit` hook reads the raw text before the command expands and
+    injects the matching directive, ending with a `BACKEND:` line naming the
+    store — follow the directive and obey that line.
+  * `/dxos:project` (bare) — status of the CURRENT project: worktree + branch, the
+    registry entry's status/docs/PRs, uncommitted files (as clickable links),
+    and the next action.
+  * `/dxos:project list [all]` — numbered table of the registry
+    (backend-resolved; `.agents/projects/registry.yml` here); reply with a row
+    number to resume.
+  * `/dxos:project tasks [all|<phase>]` — the open `- [ ]` items from the current
+    project's `TASKS.md`, numbered and grouped by phase.
+  * `/dxos:project new <name>` / `/dxos:project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.
-  - `$project track <text>` — record a follow-up in the active `TASKS.md`
+  * `/dxos:project track <text>` — record a follow-up in the active `TASKS.md`
     (never a background task chip).
-  - `$project hydrate` (alias `checkpoint`) — checkpoint before stopping or
+  * `/dxos:project spawn <N...>` — spin the numbered open tasks (same numbering
+    `tasks` renders) out into background task chips. This is the ONE sanctioned
+    use of a chip; a newly discovered follow-up still goes to `track`.
+  * `/dxos:project history [all]` — table of the PRs a project produced (date,
+    author, one-sentence summary), sourced from the registry entry's `prs` and
+    enriched via `gh`.
+  * `/dxos:project help` — table of every verb and what it does.
+  * `/dxos:project hydrate` (alias `checkpoint`) — checkpoint before stopping or
     opening a PR.
-  - `$project resume [name]` — reload state at session start, always in the
+  * `/dxos:project resume [name]` — reload state at session start, always in the
     session's assigned worktree.
-- Legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` forms map to
-  the same directives.
+- The `$project` sentinel and the legacy `$track`/`$hydrate`/`$checkpoint`/
+  `$resume`/`$rehydrate` forms are **removed** — they matched anywhere in a
+  message, so prose about them fired them.
 - See the `task-planning` skill for the file format, workflow, registry, and
   handoff steps.

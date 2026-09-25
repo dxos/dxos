@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './function-worker';
+export * from './function-worker.ts';

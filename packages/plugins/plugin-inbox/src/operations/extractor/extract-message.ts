@@ -3,14 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
 /**
  * Inbox bridge over the generic `@dxos/extractor` dispatcher. Builds the extractor registry from
@@ -69,9 +70,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
               : undefined,
         },
       ).pipe(
-        Effect.provide(fromExtractors(extractors)),
-        Effect.provide(InboxResolver.Live),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          fromExtractors(extractors).pipe(
+            Layer.provideMerge(InboxResolver.Live),
+            Layer.provideMerge(Database.layer(db)),
+          ),
+        ),
       );
 
       const result = outcome.result;

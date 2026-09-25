@@ -2,11 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { File } from '@dxos/types';
-
-export * from './limits';
-export * from './types';
-
-export * as FileCapabilities from './FileCapabilities';
-export * as FileOperation from './FileOperation';
-export * as Settings from './Settings';
+export * as FileCapabilities from './FileCapabilities.ts';
+export * as FileEvents from './FileEvents.ts';
+export * as FileLimits from './FileLimits.ts';
+export * as FileOperation from './FileOperation.ts';
+export * as Settings from './Settings.ts';

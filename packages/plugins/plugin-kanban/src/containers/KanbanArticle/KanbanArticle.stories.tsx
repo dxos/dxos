@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useMemo } from 'react';
@@ -21,7 +21,8 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -32,10 +33,9 @@ import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { KanbanPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Kanban } from '#types';
-
-import { KanbanPlugin } from '../../KanbanPlugin';
 
 random.seed(0);
 
@@ -64,7 +64,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -74,9 +74,9 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       SpacePlugin({}),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       KanbanPlugin(),
     ],
   });
@@ -125,7 +125,7 @@ const DefaultComponent = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor

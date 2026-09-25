@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import ts from '@typescript/typescript6';
 import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vfs';
-import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
 
-import { builtIns, systemDefinitions } from './eval';
+import { builtIns, systemDefinitions } from './eval.ts';
 
 /**
  * Default system definitions.

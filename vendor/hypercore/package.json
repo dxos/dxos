@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vendor-hypercore",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -13,12 +13,12 @@
   "exports": {
     "./hypercore": {
       "types": "./src/hypercore.d.ts",
-      "default": "./dist/lib/browser/hypercore.mjs"
+      "default": "./dist/lib/hypercore.mjs"
     },
     "./hypercore-crypto": {
       "types": "./src/hypercore-crypto.d.ts",
       "workerd": "./src/hypercore-crypto-stub.js",
-      "default": "./dist/lib/browser/hypercore-crypto.mjs"
+      "default": "./dist/lib/hypercore-crypto.mjs"
     }
   },
   "files": [
@@ -36,7 +36,8 @@
     "hypercore": "catalog:",
     "hypercore-crypto": "catalog:",
     "hypercore-protocol": "catalog:",
-    "noise-protocol": "catalog:"
+    "noise-protocol": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

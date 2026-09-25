@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../translations.ts';
 
 /**
  * @deprecated use IconButton directly

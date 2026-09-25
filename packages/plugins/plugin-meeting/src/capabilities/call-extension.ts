@@ -5,13 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Channel } from '@dxos/types';
@@ -27,9 +29,9 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const store = capabilities.get(MeetingCapabilities.State);
+    const store = yield* MeetingCapabilities.State;
 
-    return Capability.contributes(CallsCapabilities.EventHandler, {
+    return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
@@ -59,7 +61,9 @@ export default Capability.makeModule(
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
         const { transcriptionManager } = store.state;
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
+        // transcription endpoint configured — has to be logged rather than left unhandled.
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
         void transcriptionManager?.setRecording(isSpeaking);
       },
     });

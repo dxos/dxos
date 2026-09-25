@@ -11,11 +11,11 @@ import { expect } from 'vitest';
 import { type Type } from '@dxos/crawler';
 import { Pipeline } from '@dxos/pipeline';
 
-import { DiscordPipeline } from '../pipeline';
-import { replayStream } from '../replay';
-import { ExtractedQuestionStore } from '../stores';
-import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing';
-import { detectQuestions, extractQuestionsStage } from './extract-questions';
+import { DiscordPipeline } from '../pipeline.ts';
+import { replayStream } from '../replay.ts';
+import { ExtractedQuestionStore } from '../stores/index.ts';
+import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing/index.ts';
+import { detectQuestions, extractQuestionsStage } from './extract-questions.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
@@ -51,7 +51,7 @@ describe('extractQuestionsStage', () => {
       const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
       yield* replay;
 
-      const store = yield* ExtractedQuestionStore;
+      const store = yield* ExtractedQuestionStore.ExtractedQuestionStore;
       const extracted = yield* store.list();
       // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
       expect(extracted.length).toBe(1);

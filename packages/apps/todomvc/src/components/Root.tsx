@@ -2,24 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { Config, defs } from '@dxos/config';
+import { AtomEx } from '@dxos/effect';
 import { ClientProvider, createClientServices } from '@dxos/react-client';
 
-import { getConfig } from '../config';
-import { Todo, TodoList, createTodoList } from '../types';
-import { Main } from './Main';
+import { getConfig } from '../config.ts';
+import { Todo, TodoList, createTodoList } from '../types.ts';
+import { Main } from './Main.tsx';
 
 // Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
 // the dedicated Worker hosting the ECHO services; follower tabs proxy through it.
 const createServices = (config?: Config) =>
   createClientServices(
     new Config(
-      { runtime: { client: { servicesMode: defs.Runtime.Client.ServicesMode.DEDICATED_WORKER } } },
+      { runtime: { client: { servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER } } },
       ...(config ? [config.values] : []),
     ),
     {
@@ -38,7 +38,7 @@ const createServices = (config?: Config) =>
 
 export const Root = () => {
   const navigate = useNavigate();
-  const registry = useMemo(() => Registry.make(), []);
+  const registry = useMemo(() => AtomEx.makeRegistry(), []);
 
   return (
     <ClientProvider

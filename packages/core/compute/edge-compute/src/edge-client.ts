@@ -9,8 +9,8 @@ import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Operation } from '@dxos/compute';
 import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -32,13 +32,16 @@ export type UploadWorkerArgs = {
   assets: Record<string, Uint8Array>;
 };
 
-/** @deprecated Migrate to `client.edge`. */
+/**
+ * Resolves the configured EDGE url and binds the client to the current identity.
+ *
+ * @deprecated Migrate to `client.edge`.
+ */
 export const createEdgeClient = (client: Client): EdgeHttpClient => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
   const edgeClient = new EdgeHttpClient(edgeUrl);
-  const edgeIdentity = createEdgeIdentity(client);
-  edgeClient.setIdentity(edgeIdentity);
+  edgeClient.setIdentity(createEdgeIdentity(client));
   return edgeClient;
 };
 
@@ -107,9 +110,9 @@ export const getDeployedFunctions = async (
     return Function$.pipe(
       functions,
       Array.filter((_) => Obj.getMeta(_).key !== undefined),
-      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
+      Array.sort(Order.flip(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => _.updated ?? ''))),
       Array.dedupeWith((self, that) => Obj.getMeta(self).key === Obj.getMeta(that).key),
-      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
+      Array.sort(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
     );
   } else {
     return functions;

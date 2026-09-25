@@ -5,13 +5,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Panel, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
 import { Journal as JournalComponent, type JournalProps } from '#components';
 import { meta } from '#meta';
-import { type Journal } from '#types';
+import { Journal } from '#types';
 
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
@@ -56,7 +56,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
               : 'contents',
           )}
         >
-          {showCalendar && (
+          <Show when={showCalendar}>
             <Calendar.Root ref={controllerRef}>
               <Panel.Root>
                 <Panel.Toolbar asChild>
@@ -67,7 +67,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
                 </Panel.Content>
               </Panel.Root>
             </Calendar.Root>
-          )}
+          </Show>
 
           <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
         </div>

@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import type { FeedStore } from './feed-store';
+import type { FeedStore } from './feed-store.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
+type AppendResponse = FeedProtocol.AppendResponse;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 type QueryRequest = FeedProtocol.QueryRequest;
 type QueryResponse = FeedProtocol.QueryResponse;
@@ -55,10 +55,7 @@ export class SyncServer {
   /**
    * Receive a message from a client. Handles QueryRequest and AppendRequest; sends response via sendMessage with correct peer ids.
    */
-  handleMessage(
-    ctx: Context,
-    message: ProtocolMessage,
-  ): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  handleMessage(ctx: Context, message: ProtocolMessage): Effect.Effect<void, unknown, SqlClient.SqlClient> {
     const self = this;
     log('feed sync server received message', {
       peerId: self.#peerId,
@@ -87,7 +84,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'QueryResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server query failed', {
               peerId: self.#peerId,
               recipientPeerId,
@@ -100,6 +97,7 @@ export class SyncServer {
               ctx,
               withPeerIds({
                 _tag: 'Error',
+                requestId: req.requestId,
                 message: err instanceof Error ? err.message : String(err),
               } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             );
@@ -109,7 +107,13 @@ export class SyncServer {
       case 'AppendRequest': {
         const req = message as AppendRequest;
         return Effect.gen(function* () {
-          const response = yield* self.#feedStore.append(req);
+          const result = yield* self.#feedStore.append(req);
+          // The wire message carries the protocol fields only, not the store's bookkeeping.
+          const response: AppendResponse = {
+            requestId: result.requestId,
+            positions: result.positions,
+            serverToken: result.serverToken,
+          };
           log('feed sync server append completed', {
             peerId: self.#peerId,
             recipientPeerId,
@@ -121,7 +125,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'AppendResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server append failed', {
               peerId: self.#peerId,
               recipientPeerId,
@@ -135,6 +139,7 @@ export class SyncServer {
               ctx,
               withPeerIds({
                 _tag: 'Error',
+                requestId: req.requestId,
                 message: err instanceof Error ? err.message : String(err),
               } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             );

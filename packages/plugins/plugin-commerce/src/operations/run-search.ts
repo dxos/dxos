@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { SearchOperation } from '../types';
+import { SearchOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchOperation.RunSearch.pipe(
   Operation.withHandler(
@@ -22,7 +22,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchO
           SearchOperation.RunProviderSearch,
           { search: searchRef, provider: providerRef },
           { spaceId: db.spaceId },
-        ).pipe(Effect.catchAll(() => Effect.succeed(0)));
+        ).pipe(Effect.catch(() => Effect.succeed(0)));
       }
 
       Obj.update(search, (search) => {

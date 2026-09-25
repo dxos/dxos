@@ -7,20 +7,21 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
 
-import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '../types';
-import { ChessOperationHandlerSet } from './index';
+import { ChessOperationHandlerSet } from '#operations';
+import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '#types';
+
+import * as positionIndexInternal from '../internal/position-index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: ChessOperationHandlerSet,
+  operationHandlers: ChessOperationHandlerSet.handlers,
   types: [Chess.State, Game.Game, PlayerReview.Review, ChessPositionIndex.PositionIndex],
   disableLlmMemoization: true,
 });

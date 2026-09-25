@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import type * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 /**
  * Unique identifier for opaque toolkit instances.
@@ -20,6 +19,14 @@ export const TypeId = '~@dxos/ai/OpaqueToolkit';
  * Type-level representation of the opaque toolkit identifier.
  */
 export type TypeId = typeof TypeId;
+
+/**
+ * What an opaque toolkit's layer provides, with the individual tool names erased.
+ *
+ * `Tool.Handler<any>` rather than `unknown`: as the top type, `unknown` discharges every
+ * requirement a consumer has, not just the handler ones.
+ */
+export type Handlers = Tool.Handler<any>;
 
 /**
  * Type-safe way to define toolkits where we don't know specific types of tools,
@@ -42,7 +49,7 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
   /**
    * Handlers layer.
    */
-  readonly layer: Layer.Layer<unknown, E, R>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
 
   /**
    * Handlers effect.
@@ -55,11 +62,11 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
  *
  * NOTE: Only use in place of `T extends OpaqueToolkit.Any`. Not suitable for standalone use.
  */
-export interface Any {
+export interface Any<E = any, R = any> {
   readonly [TypeId]: TypeId;
   readonly toolkit: Toolkit.Toolkit<any>;
-  readonly layer: Layer.Layer<unknown, any, any>;
-  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, any, any>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, E, R>;
 }
 
 export type InvocationRequirements<T extends Any> = T extends OpaqueToolkit<infer TR, infer _E, infer _R> ? TR : never;
@@ -72,7 +79,7 @@ export type Requirements<T extends Any> = T extends OpaqueToolkit<infer _TR, inf
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): OpaqueToolkit<Tool.Requirements<Tools>, E, R> =>
+): OpaqueToolkit<Tool.HandlerServices<Tools>, E, R> =>
   ({
     [TypeId]: TypeId,
     toolkit,
@@ -89,10 +96,9 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
  */
 export const fromContext = <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>,
-): Effect.Effect<OpaqueToolkit<Tool.Requirements<Tools>>, never, Tool.HandlersFor<Tools>> =>
-  Effect.map(
-    Effect.context<Tool.HandlersFor<Tools>>(),
-    (context): OpaqueToolkit<Tool.Requirements<Tools>> => make(toolkit, Layer.succeedContext(context)),
+): Effect.Effect<OpaqueToolkit<Tool.HandlerServices<Tools>>, never, Tool.HandlersFor<Tools>> =>
+  Effect.map(Effect.context<Tool.HandlersFor<Tools>>(), (context): OpaqueToolkit<Tool.HandlerServices<Tools>> =>
+    make(toolkit, Layer.succeedContext(context)),
   );
 
 /**
@@ -178,8 +184,8 @@ export type OpaqueTools<R = never> = Record<
   Tool.Tool<
     string,
     {
-      readonly parameters: AnyStructSchemaNoContext;
-      readonly success: Schema.Schema.AnyNoContext;
+      readonly parameters: Schema.Codec<any, any>;
+      readonly success: Schema.Codec<any, any>;
       readonly failure: typeof Schema.Never;
       readonly failureMode: Tool.FailureMode;
     },
@@ -187,33 +193,26 @@ export type OpaqueTools<R = never> = Record<
   >
 >;
 
-export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
-  readonly [Schema.TypeId]: any;
-  readonly make: any;
-  readonly Type: any;
-  readonly Encoded: any;
-  readonly Context: never;
-  readonly ast: SchemaAST.AST;
-  readonly fields: Schema.Struct.Fields;
-  readonly annotations: any;
-}
-
 /**
  * Provides an opaque toolkit to the agent.
+ *
+ * Effectful because materializing the toolkit can itself be the demand signal for the feature that
+ * contributes to it: a headless routine reaches here with no assistant UI open, and a synchronous
+ * read would return whatever happened to be registered at that instant.
  */
-export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider')<
+export class OpaqueToolkitProvider extends Context.Service<
   OpaqueToolkitProvider,
   {
-    readonly getToolkit: () => OpaqueToolkit;
+    readonly getToolkit: () => Effect.Effect<OpaqueToolkit>;
   }
->() {}
+>()('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider') {}
 
 /**
  * Layer for providing an opaque toolkit to the agent.
  */
 export const providerLayer = (toolkit: OpaqueToolkit) =>
   Layer.succeed(OpaqueToolkitProvider, {
-    getToolkit: () => toolkit,
+    getToolkit: () => Effect.succeed(toolkit),
   });
 
 /**

@@ -5,30 +5,33 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type { CleanupFn } from '@dxos/async';
+import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
-import type * as Entity from './Entity';
-import * as Err from './Err';
-import type * as Feed from './Feed';
-import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+import type * as Blob from './Blob.ts';
+import type * as Change from './Change.ts';
+import type * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import type * as Feed from './Feed.ts';
+import type * as Filter from './Filter.ts';
+import type * as Hypergraph from './Hypergraph.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
-import { isInstanceOf } from './internal/Entity/type-uri';
-import * as queryInternal from './internal/Query';
-import type { Ref } from './internal/Ref/ref';
-import type * as Obj from './Obj';
-import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import type * as Registry from './Registry';
-import type * as Type from './Type';
+import { isInstanceOf } from './internal/Entity/type-uri.ts';
+import * as queryInternal from './internal/Query/index.ts';
+import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type * as Obj from './Obj.ts';
+import type * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * `query` API function declaration.
@@ -96,6 +99,12 @@ export type FlushOptions = {
   indexes?: boolean;
 
   /**
+   * Also wait for the secondary indexes (full text), which lag the primary pass by design.
+   * @default false
+   */
+  secondaryIndexes?: boolean;
+
+  /**
    * Flush pending updates to objects and queries.
    * @default false
    */
@@ -116,8 +125,12 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
 
 /**
  * Identifier denoting an ECHO Database.
+ *
+ * Namespaced (like `@dxos/echo/Database/Service` below) rather than the bare `@dxos/echo/Database`:
+ * that key belongs to the `[ObjectDatabaseId]` accessor every ECHO object carries, and a shared
+ * registry key would make `TypeId in obj` true for every object in the graph.
  */
-export const TypeId = Symbol.for('@dxos/echo/Database');
+export const TypeId = Symbol.for('@dxos/echo/Database/TypeId');
 export type TypeId = typeof TypeId;
 
 /**
@@ -226,6 +239,12 @@ export interface Database extends Queryable {
    */
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
 
+  /**
+   * The object's history, oldest first: one entry per document change that touched the object (or,
+   * given `property`, that property). Prefer `Obj.getChanges(obj, opts)`.
+   */
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[];
+
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];
 
@@ -286,14 +305,28 @@ export interface Database extends Queryable {
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
-   * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
-   * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
+   * Rejects with `Error.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
+   * `maxSize`), `Error.BlobWriteError` (backend upload failure), or `Error.BlobNotAvailableError`
    * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
    */
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 
   /**
-   * Loads a blob's bytes. Rejects with `Err.BlobNotAvailableError` if the backend for the blob's
+   * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
+   *
+   * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
+   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * shell moving a file far too large to pass through a model. Size and content type therefore come
+   * back from the store rather than from the caller.
+   *
+   * Rejects with `Error.BlobNotAvailableError` (`reason: 'backend-not-registered'` when the storage
+   * name has no backend, `'not-found'` when the backend cannot adopt uploads or the upload is gone)
+   * or `Error.BlobWriteError` if adoption fails.
+   */
+  createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob>;
+
+  /**
+   * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
    * storage scheme is not registered, offline, or cannot find the bytes.
    */
   readBlob(blob: Blob.Blob): Promise<Uint8Array>;
@@ -318,23 +351,49 @@ export interface Database extends Queryable {
    * Subscribe to combined sync state changes.
    */
   subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
+
+  /**
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
+   * Read-only. Intended as an occasional/administrative call. See garbage-collection design notes
+   * in `@dxos/echo-host`.
+   */
+  stats(): Promise<DatabaseStats>;
+
+  /**
+   * Reclaim storage held by soft-deleted objects and the documents / feed blocks that are no longer
+   * reachable. Per-space and destructive; intended as an occasional/administrative call. See
+   * garbage-collection design notes in `@dxos/echo-host`.
+   */
+  runGarbageCollection(options?: GarbageCollectionOptions): Promise<GarbageCollectionReport>;
+
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * Derived from the directory's own maps, so clearing a space costs one change rather than a scan
+   * of its contents. The objects are dropped, not soft-deleted: they are gone from the space and
+   * their documents are reclaimed by garbage collection, on this peer and — as the change
+   * replicates — on every other. Permanent; there is nothing left to restore from.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[];
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
   return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
 };
 
-export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
+export const Database: Schema.Codec<Database> = Schema.Any.pipe(Schema.refine(isDatabase));
 
 /**
  * Effect service tag for Database dependency injection.
  */
-export class Service extends Context.Tag('@dxos/echo/Database/Service')<
+export class Service extends Context.Service<
   Service,
   {
     readonly db: Database;
   }
->() {}
+>()('@dxos/echo/Database/Service') {}
 
 /**
  * Layer that provides a Database service that throws when accessed.
@@ -342,14 +401,14 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
  */
 export const notAvailable = Layer.succeed(Service, {
   get db(): Database {
-    throw new Error('Database not available');
+    throw new globalThis.Error('Database not available');
   },
 });
 
 /**
  * Creates a Database service instance from a Database.
  */
-export const makeService = (db: Database): Context.Tag.Service<Service> => {
+export const makeService = (db: Database): Service['Service'] => {
   return {
     get db() {
       return db;
@@ -363,6 +422,13 @@ export const makeService = (db: Database): Context.Tag.Service<Service> => {
 export const layer = (db: Database): Layer.Layer<Service> => {
   return Layer.succeed(Service, makeService(db));
 };
+
+/**
+ * Stamps the database's space on every span the effect opens, so a span can be filtered by the space
+ * it ran in. Applied after `Effect.withSpan`, so the span it names is inside the annotated region.
+ */
+export const withSpaceId = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Service> =>
+  Effect.flatMap(Service, ({ db }) => effect.pipe(Effect.annotateSpans(SpanAttributes.SPACE_ID, db.spaceId)));
 
 /**
  * Returns the space ID of the database.
@@ -382,11 +448,11 @@ export const resolve: {
   <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
@@ -401,16 +467,21 @@ export const resolve: {
     );
 
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(dxn));
+      return yield* Effect.fail(new Error.EntityNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
     // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
-  }).pipe(Effect.withSpan('Database.resolve'))) as any;
+  }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
- * Loads an object reference.
+ * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
+ * for it.
+ *
+ * The options parameter means this cannot be passed point-free where the caller supplies a second
+ * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * iteratee index would land on `options`.
  *
  * Catching not found error:
  *
@@ -419,15 +490,38 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
-  function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
+  Effect.fn('Database.load')(function* (ref, options) {
+    const object = yield* Effect.promise(() => ref.tryLoad(options));
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
+      return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  },
-);
+  });
+
+/**
+ * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
+ * never throws and never triggers loading. Compose with {@link load} for a sync-when-materialized
+ * read with an async fallback, keeping the effect runnable under `Effect.runSync` when every ref
+ * is materialized (e.g. a mutation in a gesture frame):
+ *
+ * ```ts
+ * const task = Database.peek(ref) ?? (yield* Database.load(ref));
+ * ```
+ *
+ * Peek skips {@link load}'s settling — a just-added object can resolve here before it has its own
+ * document — so callers that branch (or otherwise need a settled document) must load.
+ */
+export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
+
+/**
+ * Makes a reference to an object addressed by URI, resolvable against this database.
+ * @see {@link Database.makeRef}
+ */
+export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
+  uri: URI.URI,
+): Effect.Effect<Ref<T>, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.makeRef<T>(uri))).pipe(Effect.withSpan('Database.makeRef'), withSpaceId);
 
 /**
  * Adds an object or relation to the database.
@@ -437,7 +531,7 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'), withSpaceId);
 
 /**
  * Persists a Type definition to the database.
@@ -446,6 +540,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
+    withSpaceId,
   );
 
 /**
@@ -453,7 +548,7 @@ export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, nev
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'));
+  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'), withSpaceId);
 
 /**
  * Appends entities to a feed.
@@ -462,6 +557,7 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
     Effect.withSpan('Database.appendToFeed'),
+    withSpaceId,
   );
 
 /**
@@ -471,6 +567,7 @@ export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effec
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities)))).pipe(
     Effect.withSpan('Database.deleteFromFeed'),
+    withSpaceId,
   );
 
 /**
@@ -480,6 +577,37 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
 export const flush = (opts?: FlushOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
+    withSpaceId,
+  );
+
+/**
+ * Reclaims storage held by soft-deleted objects and the documents they orphan.
+ * @see {@link Database.runGarbageCollection}
+ */
+export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
+    Effect.withSpan('Database.runGarbageCollection'),
+    withSpaceId,
+  );
+
+/**
+ * Drops every object in the space except the retained ones. Permanent.
+ * @see {@link Database.retainObjects}
+ */
+export const retainObjects = (keep: Iterable<string>) =>
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(
+    Effect.withSpan('Database.retainObjects'),
+    withSpaceId,
+  );
+
+/**
+ * Per-space storage metrics.
+ * @see {@link Database.stats}
+ */
+export const stats = () =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(
+    Effect.withSpan('Database.stats'),
+    withSpaceId,
   );
 
 /**
@@ -492,6 +620,7 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
+    withSpaceId,
     queryInternal.makeQueryResultEffect,
   );
 
@@ -540,6 +669,94 @@ export interface SyncState {
 }
 
 /**
+ * Per-space storage metrics returned by {@link Database.stats}.
+ */
+export interface DatabaseStats {
+  readonly objects: {
+    /** Live (non-deleted) objects across the root and all linked documents. */
+    readonly alive: number;
+    /** Soft-deleted objects not yet reclaimed by garbage collection. */
+    readonly deleted: number;
+  };
+  /** Automerge documents owned by the space (root + linked + branch documents). */
+  readonly documents: number;
+  /** Feeds registered for the space. */
+  readonly feeds: number;
+  /** Total feed blocks stored locally for the space. */
+  readonly feedBlocks: number;
+  /**
+   * What is resident in memory right now, as opposed to the stored counts above. Split by realm
+   * because the client and the host cache independently — a client-side working set that is never
+   * released reads as nothing at all in the host's numbers, and vice versa.
+   */
+  readonly loaded: {
+    readonly client: ClientLoadedStats;
+    readonly host: HostLoadedStats;
+  };
+}
+
+/**
+ * Client-side residency. Space-scoped except where noted.
+ */
+export interface ClientLoadedStats {
+  /** Document handles held by this space's repo proxy. */
+  readonly documents: number;
+  /** Object cores held by this space's entity manager. */
+  readonly objects: number;
+  /** Feed handles cached by this database. */
+  readonly feeds: number;
+  /** Objects resident across those feed handles — the feeds' working set, not what is stored. */
+  readonly feedObjects: number;
+  /** Entities in the runtime registry (types and other static entities), across the whole client. */
+  readonly registryTotal: number;
+}
+
+/**
+ * Host-side residency. A document on disk costs nothing until a handle for it is cached.
+ */
+export interface HostLoadedStats {
+  /** Automerge handles cached for this space. */
+  readonly documents: number;
+  /** Automerge handles cached across every space on this host. */
+  readonly documentsTotal: number;
+  /** Active reactive queries registered with the host, across every space. */
+  readonly queriesTotal: number;
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  readonly leases: number;
+}
+
+/**
+ * Options for {@link Database.runGarbageCollection}.
+ */
+export interface GarbageCollectionOptions {
+  /**
+   * Also delete stale index rows for reclaimed documents/objects.
+   * @default true
+   */
+  readonly index?: boolean;
+  /**
+   * Reserved for feed-block purge (positioned deletion markers). Not yet effective on the local
+   * host — see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
+   * @default true
+   */
+  readonly feeds?: boolean;
+}
+
+/**
+ * Report of what {@link Database.runGarbageCollection} reclaimed.
+ */
+export interface GarbageCollectionReport {
+  /** Soft-deleted objects unlinked from the space directory. */
+  readonly unlinkedObjects: number;
+  /** Automerge documents wiped from storage (chunks + heads). */
+  readonly removedDocuments: number;
+  /** Index rows deleted. */
+  readonly removedIndexEntries: number;
+  /** Feed blocks purged. */
+  readonly purgedFeedBlocks: number;
+}
+
+/**
  * Options for reading combined sync state.
  */
 export interface GetSyncStateOptions {
@@ -560,10 +777,10 @@ export const getSyncState = (options?: GetSyncStateOptions): Effect.Effect<SyncS
  * Subscribe to sync state changes.
  */
 export const subscribeToSyncState = (options?: GetSyncStateOptions): Stream.Stream<SyncState, never, Service> =>
-  Stream.asyncScoped((emit) =>
+  Stream.callback<SyncState, never, Service>((queue) =>
     Effect.gen(function* () {
       const { db } = yield* Service;
-      const cleanup = db.subscribeToSyncState((state) => emit.single(state), options);
+      const cleanup = db.subscribeToSyncState((state) => Queue.offerUnsafe(queue, state), options);
       yield* Effect.addFinalizer(() => Effect.sync(cleanup));
     }),
   );

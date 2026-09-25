@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /**
  * `dx registry publish-publisher` — publishes the authenticated user's own
@@ -24,20 +24,23 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 export const publishPublisher = Command.make(
   'publish-publisher',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.String('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.String('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    displayName: Options.text('display-name').pipe(
+    displayName: Options.String('display-name').pipe(
       Options.withDescription('Publisher display name (the human/org name shown in UIs).'),
     ),
-    bio: Options.text('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
-    homepageUrl: Options.text('homepage-url').pipe(
+    bio: Options.String('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
+    homepageUrl: Options.String('homepage-url').pipe(
       Options.withDescription('Publisher homepage URL.'),
       Options.optional,
     ),
-    contact: Options.text('contact').pipe(Options.withDescription('Contact (email, handle, etc.).'), Options.optional),
+    contact: Options.String('contact').pipe(
+      Options.withDescription('Contact (email, handle, etc.).'),
+      Options.optional,
+    ),
   },
   (options) =>
     Function.pipe(

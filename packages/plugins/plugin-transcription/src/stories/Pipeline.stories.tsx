@@ -21,16 +21,24 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { useEffect, useMemo, useState } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import {
   type CommitFn,
@@ -43,10 +51,11 @@ import {
   makeExtractionStage,
   makeSummarizationStage,
 } from '@dxos/pipeline-transcription';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -60,11 +69,10 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
+import { TranscriptionPlugin } from '#plugin';
+import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
-
-import { enableQueryIndexes } from '../testing';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -81,7 +89,7 @@ const TRANSCRIPT = trim`
   I should follow up with Michael Chen next week
 `.split('\n');
 
-// Story-only plugin exposing Markdown documents in the personal space as direct children of the graph
+// Story-only plugin exposing Markdown documents in the default space as direct children of the graph
 // root, so TranscriptionPlugin's toolbar extension can attach the record action to the doc's node.
 const StoryGraphPlugin = () =>
   Plugin.define(
@@ -90,32 +98,38 @@ const StoryGraphPlugin = () =>
       name: 'Transcription Pipeline Story Graph',
     }),
   ).pipe(
-    AppPlugin.addAppGraphModule({
-      activate: Effect.fnUntraced(function* () {
-        const capabilities = yield* Capability.Service;
-        const extensions = yield* GraphBuilder.createExtension({
-          id: 'storyDocs',
-          match: NodeMatcher.whenRoot,
-          connector: (_, get) =>
-            Effect.gen(function* () {
-              // Tolerate the teardown window when stories swap: the Client capability may already be
-              // removed while this reactive connector recomputes once more (use `getAll`, not the
-              // throwing `get`).
-              const [client] = capabilities.getAll(ClientCapabilities.Client);
-              const space = client && AppSpace.getPersonalSpace(client);
-              if (!space) {
-                return [];
-              }
+    Plugin.addModule(
+      Capability.inlineModule(
+        'AppGraphBuilder',
+        // After the client is ready: a connector that throws before it subscribes to anything
+        // reactive never re-runs, so an extension registered at startup would stay empty for good.
+        { activatesOn: ClientEvents.SpacesAvailable, provides: [AppCapabilities.AppGraphBuilder] },
+        Effect.fnUntraced(function* () {
+          const capabilities = yield* Capability.Service;
+          const extensions = yield* AppGraphBuilder.createExtension({
+            id: 'storyDocs',
+            match: GraphNodeMatcher.whenRoot,
+            connector: (_, get) =>
+              Effect.gen(function* () {
+                // Tolerate the teardown window when stories swap: the Client capability may already be
+                // removed while this reactive connector recomputes once more (use `getAll`, not the
+                // throwing `get`).
+                const [client] = capabilities.getAll(ClientCapabilities.Client);
+                const space = client && AppSpace.getDefaultSpace(client);
+                if (!space) {
+                  return [];
+                }
 
-              const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-              return docs
-                .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-                .filter(isNonNullable);
-            }),
-        });
-        return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-      }),
-    }),
+                const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+                return docs
+                  .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+                  .filter(isNonNullable);
+              }),
+          });
+          return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+        }),
+      ),
+    ),
     Plugin.make,
   )();
 
@@ -142,7 +156,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
@@ -157,7 +171,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expand(graph, attendableId, 'action');
+      void AppGraph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 
@@ -284,8 +298,8 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
-      <div className='dx-expander'>
+    <div className='dx-expand grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
+      <div className='dx-expand'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus
@@ -304,23 +318,23 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Vector indexes so extraction can link recognized Person/Organization names.
               yield* enableQueryIndexes(client.services.services);
-              yield* Effect.promise(() => seedTestData(personalSpace));
-              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => seedTestData(defaultSpace));
+              defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
+              // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
         TranscriptionPlugin(),
       ],
@@ -337,8 +351,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Live microphone via the real driver: streams transcription into the doc (requires a mic). */
-export const Live: Story = {};
+/**
+ * Live microphone via the real driver: streams transcription into the doc (requires a mic). The
+ * play pins the injection alone — the record control the transcription plugin contributes through
+ * the app graph must reach the markdown editor's toolbar — and never presses it.
+ */
+export const Live: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toolbar = await canvas.findByRole('toolbar', {}, { timeout: 10_000 });
+    await waitFor(() => expect(within(toolbar).getByTestId('transcription.record')).toBeInTheDocument(), {
+      timeout: 10_000,
+    });
+  },
+};
 
 /** Scripted: correction only (punctuation / capitalization). */
 export const WithCorrection: Story = {

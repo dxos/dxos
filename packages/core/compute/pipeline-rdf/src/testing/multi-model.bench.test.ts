@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
-import { type DocumentFacts, extractFactsStage } from '../stages';
-import { EVAL_DOCS, scoreAccuracy } from './multi-model.corpus';
+import { type DocumentFacts, extractFactsStage } from '../stages/index.ts';
+import { EVAL_DOCS, scoreAccuracy } from './multi-model.corpus.ts';
 
 // Compares pipeline-rdf fact extraction across models over the fixed gold corpus (multi-model.corpus),
 // scoring accuracy (precision/recall/F1 against the expected facts) alongside raw counts. Three local
@@ -35,8 +35,8 @@ const ALL_VARIANTS: readonly Variant[] = [
   { name: 'qwen-2.5-7b', model: 'com.alibaba.model.qwen-2-5-7b.instruct', preset: 'ollama' },
   { name: 'gemma-4-12b', model: 'com.google.model.gemma-4-12b.default', preset: 'ollama' },
   { name: 'claude-haiku', model: 'com.anthropic.model.claude-haiku-4-5.default', preset: 'edge-remote' },
-  { name: 'claude-sonnet', model: 'com.anthropic.model.claude-sonnet-4-6.default', preset: 'edge-remote' },
-  { name: 'claude-opus', model: 'com.anthropic.model.claude-opus-4-8.default', preset: 'edge-remote' },
+  { name: 'claude-sonnet', model: 'com.anthropic.model.claude-sonnet-5.default', preset: 'edge-remote' },
+  { name: 'claude-opus', model: 'com.anthropic.model.claude-opus-5.default', preset: 'edge-remote' },
 ];
 
 const ONLY = process.env.BENCH_ONLY?.split(',')

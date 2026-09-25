@@ -2,17 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Prompt from '@effect/cli/Prompt';
+import { fromBinary } from '@bufbuild/protobuf';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { schema } from '@dxos/protocols/proto';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
+import { CommandError } from '../../../errors.ts';
 
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
@@ -20,7 +23,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 
   let credentialHex = Option.getOrUndefined(credential);
   if (!credentialHex) {
-    credentialHex = yield* Prompt.text({ message: 'Enter credential (hex string)' }).pipe(Prompt.run);
+    credentialHex = yield* Prompt.String({ message: 'Enter credential (hex string)' }).pipe(Prompt.run);
   }
 
   invariant(credentialHex, 'Invalid credential.');
@@ -36,25 +39,19 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
   }
 
   yield* Effect.gen(function* () {
-    const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     const credentialBytes = yield* Effect.try({
       try: () => Buffer.from(credentialHex, 'hex'),
-      catch: (error) => new Error(`Failed to parse hex string: ${error}`),
+      catch: (error) => new CommandError({ message: 'Failed to parse hex string.', cause: error }),
     });
 
-    const verifyError = codec.protoType.verify(credentialBytes);
-    if (verifyError) {
-      yield* Effect.fail(new Error(verifyError));
-    }
-
     const credentialObj = yield* Effect.try({
-      try: () => codec.decode(credentialBytes),
-      catch: (error) => new Error(`Failed to decode credential: ${error}`),
+      try: () => fromBinary(CredentialSchema, credentialBytes),
+      catch: (error) => new CommandError({ message: 'Failed to decode credential.', cause: error }),
     });
 
     yield* Effect.tryPromise({
       try: () => client.halo.writeCredentials([credentialObj]),
-      catch: (error) => new Error(`Failed to write credential: ${error}`),
+      catch: (error) => new CommandError({ message: 'Failed to write credential.', cause: error }),
     });
 
     if (json) {
@@ -63,7 +60,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
       yield* Console.log('Credential added successfully.');
     }
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.gen(function* () {
         if (json) {
           yield* Console.log(
@@ -79,7 +76,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
         } else {
           yield* Console.log('Invalid credential.');
         }
-        yield* Effect.fail(error);
+        return yield* Effect.fail(error);
       }),
     ),
   );
@@ -88,10 +85,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 export const add = Command.make(
   'add',
   {
-    credential: Args.text({ name: 'credential' }).pipe(
-      Args.withDescription('Credential as hex string.'),
-      Args.optional,
-    ),
+    credential: Args.String('credential').pipe(Args.withDescription('Credential as hex string.'), Args.optional),
   },
   handler,
 ).pipe(Command.withDescription('Import credential into HALO.'));

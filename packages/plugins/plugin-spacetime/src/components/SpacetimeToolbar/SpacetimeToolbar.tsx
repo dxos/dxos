@@ -2,21 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  ActionToolbar,
+  type ActionToolbarProps,
+  MenuBuilder,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
-import { type EditorState, getSelectedObjectIds } from '../../tools';
-import { type EditorActions, createEditorActions, createTemplateSelector } from './actions';
-import { type SelectionMode, createSelectionModeActions } from './selection';
-import { createToolActions } from './tools';
-import { createViewActions } from './view';
+import { type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
+import { type EditorActions, createEditorActions, createTemplateSelector } from './actions.ts';
+import { type SelectionMode, createSelectionModeActions } from './selection.ts';
+import { createToolActions } from './tools.tsx';
+import { createViewActions } from './view.ts';
 
-export type SpacetimeToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> & {
+export type SpacetimeToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> & {
   editorStateAtom: Atom.Writable<EditorState>;
   editorActions: EditorActions;
 };
@@ -42,12 +50,16 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
 
     return (
       <ElevationProvider elevation='base'>
-        <Menu.Root attendableId={attendableId} alwaysActive={alwaysActive} {...menuActions}>
-          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-            {/* TODO(burdon): Extend builder to support custom components. */}
-            <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
-          </Menu.Toolbar>
-        </Menu.Root>
+        <ActionToolbar
+          attendableId={attendableId}
+          alwaysActive={alwaysActive}
+          {...menuActions}
+          {...composableProps(props)}
+          ref={forwardedRef}
+        >
+          {/* TODO(burdon): Extend builder to support custom components. */}
+          <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
+        </ActionToolbar>
       </ElevationProvider>
     );
   },

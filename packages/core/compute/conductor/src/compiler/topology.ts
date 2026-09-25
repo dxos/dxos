@@ -3,14 +3,13 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types';
-import { pickProperty } from '../util';
+import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types/index.ts';
+import { pickProperty } from '../util/index.ts';
 
 /**
  * Structure derived from the compute graph.
@@ -40,7 +39,7 @@ export enum InputKind {
 
 export type TopologyNodeInput = {
   name: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
 
   /**
    * Defines the kind of input.
@@ -64,7 +63,7 @@ export type TopologyNodeConnector = {
 
 type TopologyNodeOutput = {
   name: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
   /**
    * Nodes that this output is bound to.
    */

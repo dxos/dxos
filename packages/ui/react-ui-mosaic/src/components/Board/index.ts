@@ -2,4 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Board';
+export { type BoardColumnContextValue, useBoardColumn } from './BoardColumnContext.ts';
+export { type BoardModel, useBoard } from './BoardContext.ts';
+
+export * from './Board.tsx';

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
+
 import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge.ts';
 
-// TODO(burdon): Reconcile with @dxos/errors.
 /**
  * Error thrown when a call to the Edge service fails.
  * There 3 possible sources of failure:
@@ -13,7 +14,7 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } 
  *                               -> Unhandled exception on EDGE side, EDGE would provide serialized error in the response body.
  * 3. Processing failure -> Unhandled exception on client side while processing the response.
  */
-export class EdgeCallFailedError extends Error {
+export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError', 'EDGE call failed.') {
   public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
     const error = new EdgeCallFailedError({
       message: body.message,
@@ -54,8 +55,7 @@ export class EdgeCallFailedError extends Error {
     retryAfterMs?: number;
     cause?: Error;
   }) {
-    super(args.message, { cause: args.cause });
-    this.message = args.message;
+    super({ message: args.message, cause: args.cause });
     this.data = args.data;
     this.retryAfterMs = args.retryAfterMs;
     this.isRetryable = Boolean(args.isRetryable);

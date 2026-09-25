@@ -8,13 +8,23 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
+// Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
-  'edge-dev': 'Dev',
-  'edge-main': 'Main',
-  'edge-labs': 'Labs',
-  'edge-production': 'Production',
+  'dev.dxos.network': 'Dev',
+  'preview.dxos.network': 'Preview',
+  'dxos.network': 'Production',
+
+  'edge.dxos.workers.dev': 'Dev',
+  'edge-preview.dxos.workers.dev': 'Preview',
+  'edge-main.dxos.workers.dev': 'Main (retired)',
+  'edge-labs.dxos.workers.dev': 'Labs (retired)',
+  'edge-staging.dxos.workers.dev': 'Staging',
+  'edge-production.dxos.workers.dev': 'Production',
+  'main.dxos.network': 'Preview',
+  'labs.dxos.network': 'Labs (retired)',
+  'staging.dxos.network': 'Staging',
 };
 
 const REPO = 'https://github.com/dxos/dxos';
@@ -28,8 +38,6 @@ const parseUrl = (url: string): URL | undefined => {
   }
 };
 
-export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
-
 export const AboutDialog = () => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
@@ -37,7 +45,7 @@ export const AboutDialog = () => {
 
   // Show edge environment when not in production, so internal builds advertise which cluster they're on.
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host.split('.')[0] : undefined;
+  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host : undefined;
   const edgeEnv = envKey ? ENV_LABELS[envKey] : undefined;
   const showEnv = !!edgeEnv && edgeEnv !== 'Production';
 

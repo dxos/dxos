@@ -5,7 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import { describe, it } from 'vitest';
 
-import { createPieceMap } from './chess';
+import { createPieceMap } from './chess.ts';
 
 describe('ChessModel', () => {
   it('should update pieces', ({ expect }) => {

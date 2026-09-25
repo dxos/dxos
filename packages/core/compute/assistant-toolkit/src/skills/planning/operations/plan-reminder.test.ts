@@ -9,16 +9,19 @@ import * as Exit from 'effect/Exit';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
-import { PlanReminder } from './definitions';
-import { PlanningHandlers } from './index';
+import { PlanReminder } from './definitions.ts';
+import { PlanningHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -28,7 +31,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isFailure(exit)).toBe(true);
@@ -43,7 +45,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isSuccess(exit)).toBe(true);
@@ -58,7 +59,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([true]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         // The script is empty, so reaching the model at all would fail as exhausted.
@@ -76,20 +76,17 @@ describe('PlanReminder', () => {
   );
 });
 
-/** Creates a chat bound to its feed, carrying an outline checklist with the given item states. */
+/** Creates a chat bound to its feed, carrying a checklist with the given item states. */
 const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boolean[]) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  const { text } = yield* Chat.ensureOutlineText(chat);
-  Obj.update(text, (text) => {
-    text.content = Outline.upsertChecklistItems(
-      text.content,
-      states.map((done, index) => ({ title: `Task ${index}`, done })),
-    );
+  const { db } = yield* Database.Service;
+  states.forEach((done, index) => {
+    Chat.addTask(db, chat, `Task ${index}`, { status: done ? 'done' : 'todo' });
   });
   yield* Database.flush();
 
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
 
@@ -99,9 +96,9 @@ const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boo
 const types = [
   Agent.Agent,
   Outline.Outline,
+  Task.Task,
   Text.Text,
   Chat.Chat,
-  Chat.CompanionTo,
   Skill.Skill,
   Feed.Feed,
   Message.Message,

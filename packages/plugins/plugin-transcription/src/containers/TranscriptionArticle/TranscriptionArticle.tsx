@@ -6,24 +6,24 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
 
-import { renderByline } from '../../util';
+import { renderByline } from '../../util/index.ts';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
 export const TranscriptionArticle = ({ role, subject: transcript, attendableId }: TranscriptionArticleProps) => {
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId);
-  const feed = transcript.feed.target;
+  const feed = useResolveRef(transcript.feed);
   const messages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
@@ -51,11 +51,10 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
         <Transcription model={model} transcript={transcript} />
       </Panel.Content>

@@ -15,22 +15,10 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo"
+      "path": "../react-primitives/react-focus"
     },
     {
       "path": "../react-primitives/react-hooks"
@@ -40,6 +28,9 @@
     },
     {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

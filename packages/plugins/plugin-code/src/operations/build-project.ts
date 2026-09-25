@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { type LoadedFile, compileEntry } from '../compiler';
-import { CodeOperation } from '../types';
+import { CodeOperation } from '#types';
+
+import { type LoadedFile, compileEntry } from '../compiler/index.ts';
 
 /**
  * F-12a: single-file TypeScript transpile via the @typescript/vfs language

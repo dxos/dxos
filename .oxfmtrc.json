@@ -20,7 +20,8 @@
   "ignorePatterns": [
     "*.tpl",
     "**/*.mdx",
-    "**/*.conversations.json",
+    ".agents/reviews/**",
+    ".store/**",
     "**/README.md",
     "**/__swc_snapshots__/**",
     "**/gen/**",
@@ -28,6 +29,7 @@
     "**/tsconfig.json",
     "**/vendor/**",
     ".moon/cache",
+    ".pnpm-store/**",
     "coverage",
     "dist",
     "docs/design/refs/example.yml",

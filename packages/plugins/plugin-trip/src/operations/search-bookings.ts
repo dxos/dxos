@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 
-import { BookingOperation, TripCapabilities } from '../types';
+import { BookingOperation, BookingSearch, TripCapabilities } from '#types';
+
+import { BookingSearchError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = BookingOperation.SearchBookings.pipe(
   Operation.withHandler(
@@ -19,11 +21,9 @@ const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = B
       if (!service) {
         return { offers: [] };
       }
-      // `tryPromise` routes a `search` rejection (e.g. MissingApiKeyError) to the operation's
-      // failure channel; the `catch` preserves the original Error so callers can match by name.
       const offers = yield* Effect.tryPromise({
         try: async () => [...(await service.search(query))],
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: (error) => (BookingSearch.isFailure(error) ? error : BookingSearchError.wrap()(error)),
       });
       return { offers };
     }),

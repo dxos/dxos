@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Note, Score, Sequence, Track } from '#types';
 
-import { type MutableScore, applyLeadSheetToScore } from '../../util';
-import { parseLeadSheet } from '../../util/lead-sheet';
-import { ScoreArticle } from './ScoreArticle';
+import { type MutableScore, applyLeadSheetToScore } from '../../util/index.ts';
+import { parseLeadSheet } from '../../util/lead-sheet.ts';
+import { ScoreArticle } from './ScoreArticle.tsx';
 import CHILDREN from './testing/children.txt?raw';
 import ODE_TO_JOY from './testing/ode_to_joy.txt?raw';
 type Pattern = {
@@ -35,28 +35,24 @@ const SAMPLE_PATTERN: Pattern = {
       trackId: 't1',
       name: 'Lead — verse',
       length: 16,
-      notes: [60, 62, 64, 65, 67, 69, 71, 72].map(
-        (pitch, index): Note.Note => ({
-          pitch,
-          startTime: index * 0.5,
-          duration: 0.25,
-          velocity: 0.7,
-        }),
-      ),
+      notes: [60, 62, 64, 65, 67, 69, 71, 72].map((pitch, index): Note.Note => ({
+        pitch,
+        startTime: index * 0.5,
+        duration: 0.25,
+        velocity: 0.7,
+      })),
     },
     {
       id: 's2',
       trackId: 't2',
       name: 'Bass — verse',
       length: 16,
-      notes: [36, 36, 43, 43, 41, 41, 38, 38].map(
-        (pitch, index): Note.Note => ({
-          pitch,
-          startTime: index,
-          duration: 0.75,
-          velocity: 0.8,
-        }),
-      ),
+      notes: [36, 36, 43, 43, 41, 41, 38, 38].map((pitch, index): Note.Note => ({
+        pitch,
+        startTime: index,
+        duration: 0.75,
+        velocity: 0.8,
+      })),
     },
     {
       id: 's3',

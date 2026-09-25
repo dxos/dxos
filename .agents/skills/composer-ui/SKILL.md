@@ -3,9 +3,10 @@ name: composer-ui
 description: Use when building or styling plugin UI with Composer's design system — the
   `@dxos/react-ui*` packages. Covers theme tokens, primitives (Panel/Card/List/Input/Button/Icon),
   the standard container layout (Panel + ScrollArea), lists/pickers/stacks, schema-driven forms,
-  toolbar/menu wiring, reactivity (useObject), attention/density, translations, and storybook setup.
-  The UI adjunct to the composer-plugins skill; consult it whenever you write a container/component,
-  reach for a Tailwind color class, build a toolbar, render a form or list, or add a story.
+  toolbar/menu wiring, reactivity (useObject), attention/density, translations, storybook setup, and
+  before/after screenshots. The UI adjunct to the composer-plugins skill; consult it whenever you write
+  a container/component, reach for a Tailwind color class, build a toolbar, render a form or list, add a
+  story, or open a PR that changes what the app renders.
 ---
 
 # Composer UI
@@ -67,8 +68,9 @@ is being phased out — prefer the kebab forms):
   `border-active-separator`, `border-focus-ring`.
 
 Themed primitives accept overrides via a `classNames` prop (string or array) — never `className`.
-Pass functional layout hints (`p-4`, `space-y-4`, `flex`, `@container` queries) freely; pass color/size
-through tokens. If you're writing more than a layout hint by hand, you're probably missing a primitive.
+Pass functional layout hints (`p-4`, `space-y-4`, `@container` queries) freely; pass color/size
+through tokens. Hand-written `flex`/`grid` class soup is the exception, not the hint — `Flex`/`Grid` cover
+it (see below). If you're writing more than a layout hint by hand, you're probably missing a primitive.
 
 ## Sizing vs logical utilities (post-Tailwind-3)
 
@@ -81,6 +83,34 @@ Prefer `w-full` / `h-[20rem]`.
 keep using them: `ps-*` / `pe-*` (padding), `ms-*` / `me-*` (margin), `start-*` / `end-*` (inset),
 `border-s` / `border-e` (border side), `text-start` / `text-end` (alignment). Do **not** rewrite these to
 physical (`pl-`, `ml-`, `left-`, `text-left`).
+
+**The `tailwindcss-logical` dialect is gone.** Dropped in the Tailwind v4 migration (#10611), so every
+class it provided now compiles to **nothing** — silently. These are the ones that keep coming back, with
+what to write instead:
+
+| Dead class              | Write                 |
+| ----------------------- | --------------------- |
+| `pis-*` / `pie-*`       | `ps-*` / `pe-*`       |
+| `pbs-*` / `pbe-*`       | `pt-*` / `pb-*`       |
+| `pli-*` / `plb-*`       | `px-*` / `py-*`       |
+| `mis-*` / `mie-*`       | `ms-*` / `me-*`       |
+| `mbs-*` / `mbe-*`       | `mt-*` / `mb-*`       |
+| `mli-*` / `mlb-*`       | `mx-*` / `my-*`       |
+| `is-*` / `bs-*`         | `w-*` / `h-*`         |
+| `min-is-*` / `min-bs-*` | `min-w-*` / `min-h-*` |
+| `max-is-*` / `max-bs-*` | `max-w-*` / `max-h-*` |
+
+This is the highest-frequency regression in this codebase, and the most expensive kind: nothing errors,
+nothing lints, the layout is merely wrong — and when the dead class was load-bearing (a `min-bs-*` floor
+reserving height, a `min-is-0` letting a grid child shrink) the failure surfaces far from its cause.
+**Grep your diff before committing:**
+
+```bash
+git diff | grep -nE '\b(p|m)(is|ie|bs|be|li|lb)-|\b(min-|max-)?(is|bs)-'
+```
+
+Note the near-misses that ARE real: `ps-*`/`pe-*` and `ms-*`/`me-*` (Tailwind's own logical spacing) and
+`inset-*`/`start-*`/`end-*`. Only the `-is-`/`-bs-`/`-li-`/`-lb-` infixes above are dead.
 
 Rule of thumb: **width/height → physical; margin/padding/inset/border-side/text-align → logical.**
 
@@ -96,6 +126,10 @@ import { Icon } from '@dxos/react-ui';
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
 See [`packages/ui/react-ui/src/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/components/Icon/Icon.tsx).
+
+Nothing needs registering to use a new Phosphor icon — name it and it resolves. `dx--*` brand glyphs are
+`regular`-only. How resolution works (and why an icon might not appear) →
+[`packages/ui/react-ui/docs/icons.md`](../../../packages/ui/react-ui/docs/icons.md).
 
 ## Containers: Panel + ScrollArea
 
@@ -140,6 +174,58 @@ relies on (a wrapper around an input once silently disabled scrolling). If a con
 rather than wrapping — and if there's genuinely no path without a wrapper, discuss it first.
 
 See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/`.
+
+## Layout primitives: Flex, Grid, Column, Container
+
+When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, anywhere the shell doesn't
+already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
+the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
+`Flex`/`Grid`/`Container` live in
+[`packages/ui/react-ui/src/layout/`](../../../packages/ui/react-ui/src/layout) (not
+`components/`); `Column` is in `components/Column`.
+
+- **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
+  `flex-1 overflow-hidden` (the height-chain link); `center` centers on both axes.
+- **`Grid`** — `cols`, `rows`, `gap`, `align`, `center`, `grow`, `contents`. Tracks take a count for
+  equal columns (`cols={3}`) or a list for anything asymmetric
+  (`cols={['min-content', '1fr']}`, `cols={[2, 1]}` for `2fr 1fr`) — the list form replaces
+  `grid-cols-[min-content_1fr]`, which is the least readable class in the corpus. `cols='subgrid'`
+  adopts the parent's tracks and spans them. `overflow-hidden` comes only with `grow`, so a
+  `grow={false}` grid clips no more than the `<div>` it replaced.
+- **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
+  `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
+  every surface, so use it instead of hand-padding a content column.
+- **`Container`** — a bare `dx-expand` box, for when the only job is to fill the parent. Add
+  `overflow-hidden` yourself if a clip is also wanted; it is no longer implied.
+
+```tsx
+<Flex column gap='sm'>…</Flex>
+<Flex gap='sm' justify='end'>…</Flex>
+<Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+<Flex asChild gap='sm'><header>…</header></Flex>
+```
+
+**`Column` parts.** `Column.Root` (`gutter: sm|md|lg`, `subgrid`, `gap`) defines the tracks and exposes
+`--dx-col`; `Column.Center` puts plain content in the centre track and is the default choice;
+`Column.Row` is a 3-track subgrid row for content flanked by gutter items; `Column.Block` is a gutter
+slot sized to `--dx-rail-item` (`end` for the trailing gutter) so a passive `<Icon>` and an interactive
+`IconButton` align to the pixel. For slotted children that can't take a part, the `withColumn` helpers
+apply placement: `center()`, `placeContent()`, `propagate()`. Reach for `propagate()` — not `center()` —
+when a descendant must address the gutters, e.g. a `ScrollArea` that should span full width and keep its
+scrollbar out in the gutter; `Dialog.Body` depends on exactly that, and `center()` there confines the
+body and pulls the scrollbar inboard. Nest with `subgrid` when a `Column` (or `Card`) sits inside another
+3-track grid and must inherit its rules rather than invent new ones.
+
+**`gap` takes ramp steps, not Tailwind numbers.** `xs | sm | md | lg | xl | 2xl | form | form-section`
+([`layout/layout.ts`](../../../packages/ui/react-ui/src/layout/layout.ts)) — a `gap-2` literal is
+precisely the drift the prop exists to prevent. `Flex` grows **no** padding or colour props on purpose
+(components own their spacing); everything else goes through `classNames`. There is no implicit `align`:
+row-centering is common, but defaulting it would silently restyle consumers relying on CSS `stretch`.
+
+**This is a live migration, so match it rather than adding to the backlog.**
+[`packages/ui/react-ui/AUDIT.md`](../../../packages/ui/react-ui/AUDIT.md) is the wrapper-div census that
+produced `Flex` and drove the `Grid` extension: of 191 flex/grid wrappers in plugin containers, 145 are
+converted. A new hand-rolled flex or grid div is new debt in a count someone is actively driving down.
 
 ## Lists, pickers, and stacks
 
@@ -216,31 +302,17 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 ## Reactivity
 
-When an ECHO object is passed into a component as a prop and the component must re-render on changes to it,
-wrap it with **`useObject`** and read from the returned snapshot. A surface receiving an ECHO subject (e.g.
-via `AppSurface.ObjectArticleProps<T>`) MUST do this — without it, mutations to nested arrays/structs (e.g.
-`Obj.update(obj, (m) => (m.images = [...]))`) don't trigger a re-render until you navigate away and back:
-the prop reference stays stable, and the subscription lives inside `useObject`.
-
-```tsx
-const [gallery] = useObject(subject);
-// reads (gallery.images) re-render reactively;
-// writes still go through the original subject:
-const handleDelete = (index: number) =>
-  Obj.update(subject, (obj) => {
-    const mutable = obj as Obj.Mutable<Gallery.Gallery>;
-    mutable.images = (mutable.images ?? []).filter((_, idx) => idx !== index);
-  });
-```
-
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` to
-read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
-rather than holding a plain array. (Pure presentational components that just receive scalar props don't
-need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
+State lives in one of three stores — React state (ephemeral, local), atoms (shared/derived), ECHO
+objects (persistent, collaborative) — and reading an ECHO object during render does **not**
+subscribe: subscribe where you read (`useObject` / `useQuery`), as narrowly as you read, and write
+through the live object, never the snapshot. The house rules and anti-pattern catalog (bare reads,
+`.target` in render, list-level ref resolution, hook pileups, effect-syncing between stores) live
+in the [reactivity](../reactivity/SKILL.md) skill — load it for any component that holds or reads
+state.
 
 ## State management
 
-Two state stores — don't conflate them (full detail:
+Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
@@ -276,26 +348,35 @@ Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — the
 `Form` from `@dxos/react-ui-form`, which renders themed inputs from the Effect Schema (strings, numbers,
 booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.Array`, `Schema.Record`).
 
-**`Form` is composed — `Form.Root` renders nothing on its own.** The fields come from `Form.FieldSet` (or
-`Form.Layout`), nested inside the standard Radix wrapper pair: `Form.Viewport` (outer) → `Form.Content`
-(inner), which own scroll and padding (so, like List/Stack, don't pad them yourself):
+**`Form` is composed — `Form.Root` renders nothing on its own.** Three parts map one for one onto
+`react-ui`'s `Field` and `Fieldset`: `Form.Field` is a field (one row), `Form.FieldSet` is a
+`<fieldset>` (a titled group, chrome by depth), and `Form.Fields` walks the schema and renders no
+element. They nest inside the standard wrapper pair `Form.Viewport` (outer) → `Form.Content` (inner),
+which own scroll and padding (so, like List/Stack, don't pad them yourself):
 
 ```tsx
 <Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={handleSave}>
   <Form.Viewport>
     <Form.Content>
-      <Form.Section label='…' description='…' /> {/* optional grouping */}
-      <Form.FieldSet /> {/* fields, generated from the schema */}
+      <Form.FieldSet label='…' description='…'>
+        <Form.Fields /> {/* one Form.Field per schema property */}
+      </Form.FieldSet>
       <Form.Actions /> {/* Save/Cancel — omit when autoSave */}
     </Form.Content>
   </Form.Viewport>
 </Form.Root>
 ```
 
-- **`Form.FieldSet`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
-  visibility. Hide a field with `FormInputAnnotation.set(false)`; there's no manual field markup.
-- **`Form.Layout template={…}`** is the alternative to `FieldSet`: a custom layout DSL for arranging
-  fields (grouping, columns, ordering) when the default schema order isn't enough.
+- **`Form.Fields`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
+  visibility; `path`, `include`, `exclude`, `sort` narrow it. Hide a field with
+  `FormInputAnnotation.set(false)`. The simplest form is `<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`.
+- **`Form.Field`** is the leaf and always a real field. `<Form.Field path='hue' />` is bound: label,
+  description, value and error come from the schema, and the dispatcher picks the control; put a
+  child in it for a custom control (read the binding with `useFormField()`). A hand-written row is
+  `<Form.Field label description><Field.Switch … /></Form.Field>`: the row's label names the control.
+  A row holding a button or a readout says `standalone`.
+- **`Form.Layout template={…}`** is the alternative to `Form.Fields`: a custom layout DSL for
+  arranging fields (columns, ordering) when the default schema order isn't enough.
 
 **Save model — the form never mutates `values`; the parent applies the change.** Pick a mode:
 
@@ -372,7 +453,7 @@ export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, curr
 ));
 ```
 
-For authoring brand-new composite primitives (Radix-style `Foo.Root`/`Foo.Content` with `slottable()` /
+For authoring brand-new composite primitives (`Foo.Root`/`Foo.Content` with `slottable()` /
 `composableProps`), see [[composite-components]].
 
 ## Attention & density
@@ -450,9 +531,64 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 504 "Outdated Optimize Dep", that's Vite dep-optimizer churn (dual React), not your code — kill storybook,
 `rm -rf node_modules/.cache/storybook`, restart. Clean up the port and cache when done.
 
+## Before/after screenshots
+
+**A PR that changes rendered output ships before/after screenshots in its description.** A prop diff is
+not reviewable as UI — nothing in `centered padding thin` tells a reviewer whether the active-tab
+indicator now sits under the avatar. The pair is also the cheapest check on your own fix: measure the
+element in both states and the numbers either move the way you predicted or they don't.
+
+**Capture both states from one build.** Screenshot the fix, then restore the old value _in the live
+page_ — set the property back on the element, toggle the class — and screenshot again. Rebuilding `main`
+for the "before" swaps fonts, data, and window size along with it; reverting in the page leaves exactly
+one variable.
+
+**Measure, don't just look.** `getBoundingClientRect()` on the element and its neighbours plus the
+`getComputedStyle` property you changed, in both states, printed in the PR beside the images.
+`indicator 8.0..14.0, overlap=2px` is what makes the screenshot legible — and what catches a fix that
+moved the wrong box.
+
+Drive the surface from a story ("Verifying a story in a worktree" above), the local app, or the PR's own
+`pr-<n>-composer-dev.dxos.workers.dev` preview once CI has deployed it:
+
+```ts
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
+const clip = { x: 0, y: 0, width: 100, height: 260 };
+const measure = () =>
+  page.evaluate(() => {
+    const el = document.querySelector('[data-testid="…"]');
+    return { box: el.getBoundingClientRect(), pad: getComputedStyle(el).paddingInline };
+  });
+
+console.log('after ', await measure());
+await page.screenshot({ path: 'after.png', clip });
+// Re-apply the pre-fix value on the running page.
+await page.evaluate(() => {
+  document.querySelector('[data-testid="…"]').style.paddingInline = 'var(--scroll-strip)';
+});
+console.log('before', await measure());
+await page.screenshot({ path: 'before.png', clip });
+```
+
+`deviceScaleFactor: 2` and a tight `clip` are load-bearing — a full-page 1x shot of a 6px indicator shows
+nothing. In the cloud sandbox add the chromium proxy args from [[cloud-sandbox]]; the default launch
+cannot reach the preview host.
+
+**Hosting.** Nothing uploads to GitHub's CDN over the API, so commit the PNGs to the branch, take
+`https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, then delete them in the
+next commit — the URL is pinned to the SHA, so the images keep rendering while the PR's final diff carries
+no binaries. Confirm with `curl -o /dev/null -w '%{http_code}'` once the deleting commit lands.
+
+What holds the blob after the delete is `refs/pull/<n>/head`, which GitHub retains, so it also survives the
+branch being deleted at merge. The URL is exactly that durable and no more: keep it to PR descriptions,
+and use a committed path under `assets/` for anything that must outlive the PR (a README, docs). Never
+link `.../<branch>/<path>` — that 404s the moment the file goes.
+
 ## Checklist
 
-- Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
+- Layout from `Panel.*` + `ScrollArea.*`; boxes inside them from `Flex`/`Grid`/`Column`/`Container`, never a
+  hand-rolled `<div className='flex …'>`; `gap` from the ramp (`sm`/`md`/…), not `gap-2`; no wrapper
+  `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
 - Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
@@ -461,4 +597,5 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 - ECHO object passed into a component → wrap with `useObject` at the container boundary.
 - Icons as `ph--<icon>--<weight>`.
 - Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; add a `play` function for complex data behaviour.
+- Rendered output changed → before/after screenshots in the PR description, both from one build, with the measurements beside them.
 - Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring/surfaces → [[composer-plugins]].

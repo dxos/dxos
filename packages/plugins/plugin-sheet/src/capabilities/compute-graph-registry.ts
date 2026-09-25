@@ -4,8 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type SpaceId } from '@dxos/keys';
 
 import { SheetCapabilities } from '#types';
@@ -18,7 +20,7 @@ import { SheetCapabilities } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
 
     // Async import removes direct dependency on hyperformula.
     const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(
@@ -37,6 +39,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
+    return Capability.contribute(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
   }),
 );

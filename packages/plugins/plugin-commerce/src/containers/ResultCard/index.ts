@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ResultCard';
+export * from './ResultCard.tsx';

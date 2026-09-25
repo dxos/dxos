@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
 
-import { IdentityPanel, type IdentityPanelProps } from '../../panels';
+import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
 
 export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {
@@ -21,15 +21,13 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
             <Dialog.Body>
-              <Clipboard.Provider>
-                <IdentityPanel
-                  {...{
-                    ...props,
-                    titleId,
-                    doneActionParent: <Dialog.Close asChild />,
-                  }}
-                />
-              </Clipboard.Provider>
+              <IdentityPanel
+                {...{
+                  ...props,
+                  titleId,
+                  doneActionParent: <Dialog.Close asChild />,
+                }}
+              />
             </Dialog.Body>
           </Dialog.Content>
         </Dialog.Overlay>

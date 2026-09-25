@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { PersistentLifecycle } from './persistent-lifecycle';
-import { sleep } from './timeout';
-import { Trigger } from './trigger';
+import { PersistentLifecycle } from './persistent-lifecycle.ts';
+import { sleep } from './timeout.ts';
+import { Trigger } from './trigger.ts';
 
 describe('ConnectionState', () => {
   test('first reconnect fires immediately', async () => {
@@ -95,18 +95,21 @@ describe('ConnectionState', () => {
 
   test('finish `restart` before close', async () => {
     let restarted = false;
+    const restartStarted = new Trigger();
     const persistentLifecycle = new PersistentLifecycle({
       start: async () => await sleep(100),
       stop: async () => {},
       onRestart: async () => {
         restarted = true;
+        restartStarted.wake();
       },
     });
 
     await persistentLifecycle.open();
 
     void persistentLifecycle.scheduleRestart();
-    await sleep(10);
+    // Synchronize on the restart actually beginning rather than guessing a delay.
+    await restartStarted.wait();
     await persistentLifecycle.close();
     expect(restarted).to.be.true;
   });

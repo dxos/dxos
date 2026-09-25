@@ -2,6 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const RegistryOperationHandlerSet = OperationHandlerSet.lazy(() => import('./open-plugin-registry'));
+import { DisablePlugins, EnablePlugins, QueryDisabledPlugins, QueryPlugins } from './definitions.ts';
+
+export * as RegistryOperation from './definitions.ts';
+
+export const RegistryOperationHandlerSet = OperationHandlerSet.lazy([
+  SettingsOperation.OpenPluginRegistry.pipe(Operation.lazyHandler(() => import('./open-plugin-registry.ts'))),
+  QueryPlugins.pipe(Operation.lazyHandler(() => import('./query-plugins.ts'))),
+  QueryDisabledPlugins.pipe(Operation.lazyHandler(() => import('./query-disabled-plugins.ts'))),
+  EnablePlugins.pipe(Operation.lazyHandler(() => import('./enable-plugins.ts'))),
+  DisablePlugins.pipe(Operation.lazyHandler(() => import('./disable-plugins.ts'))),
+]);

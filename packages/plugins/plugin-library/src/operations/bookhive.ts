@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { htmlToMarkdown } from './html-markdown';
-import { getJson } from './http';
+import { htmlToMarkdown } from './html-markdown.ts';
+import { getJson } from './http.ts';
 
 const BOOKHIVE_XRPC = 'https://bookhive.buzz/xrpc';
 

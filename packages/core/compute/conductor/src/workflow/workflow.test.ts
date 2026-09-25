@@ -8,8 +8,9 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
@@ -17,23 +18,23 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
 import {
   AnyInput,
   AnyOutput,
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
   type ComputeResult,
   type Executable,
   ValueBag,
+  layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
-} from '../types';
-import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
+} from '../types/index.ts';
+import { WorkflowLoader, type WorkflowLoaderProps } from './loader.ts';
 
 const TestLayer = Layer.mergeAll(
-  ComputeNodeContext.layerNoop,
+  computeNodeContextLayerNoop,
   Layer.succeed(Operation.Service, {
     invoke: () => Effect.die('Operation.Service not available in test.'),
     schedule: () => Effect.die('Operation.Service not available in test.'),
@@ -47,14 +48,14 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('workflow', () => {
-  it.scoped(
+  it.effect(
     'run',
     Effect.fnUntraced(
       function* ({ expect }) {
         const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+        const result = yield* executeEffect(workflow.run(ValueBag.make({ input: { num1: 2, num2: 3 } })));
         expect(result).toEqual(5);
       },
       Effect.provide(TestLayer),
@@ -62,7 +63,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -73,7 +74,7 @@ describe('workflow', () => {
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const input = makeInput({ num1: 2, num2: 3 });
+        const input = ValueBag.make({ input: { num1: 2, num2: 3 } });
         expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toEqual(5);
         expect(yield* executeEffect(workflow.runFrom('product', input))).toBeUndefined();
@@ -84,7 +85,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow without outputs is allowed',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -96,7 +97,7 @@ describe('workflow', () => {
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const input = makeInput({ num1: 2, num2: 3 });
+        const input = ValueBag.make({ input: { num1: 2, num2: 3 } });
         expect(() => workflow.run(input)).throws();
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toBeUndefined();
         expect(sumSideEffect).toEqual(5);
@@ -108,7 +109,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow as executable',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -116,7 +117,7 @@ describe('workflow', () => {
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const executable = yield* Effect.promise(() => workflow.asExecutable());
-        const result = yield* executeEffect(executable.exec!(makeInput({ num1: 2, num2: 3 })));
+        const result = yield* executeEffect(executable.exec!(ValueBag.make({ input: { num1: 2, num2: 3 } })));
         expect(result).toEqual(5);
       },
       Effect.provide(TestLayer),
@@ -125,7 +126,7 @@ describe('workflow', () => {
   );
 
   describe('subgraph', () => {
-    it.scoped(
+    it.effect(
       'subgraph compute',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -133,7 +134,7 @@ describe('workflow', () => {
           const graph = createSubgraphTransform(subgraph.graphUri);
           const workflowLoader = new WorkflowLoader(createResolver(graph, subgraph));
           const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-          const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+          const result = yield* executeEffect(workflow.run(ValueBag.make({ input: { num1: 2, num2: 3 } })));
           expect(result).toEqual(5);
         },
         Effect.provide(TestLayer),
@@ -141,7 +142,7 @@ describe('workflow', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'failed subgraph resolution fails loading',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -157,7 +158,7 @@ describe('workflow', () => {
   });
 
   describe('function', () => {
-    it.scoped(
+    it.effect(
       'function node without function reference fails to load',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -178,8 +179,6 @@ describe('workflow', () => {
       Effect.map((r) => r.result),
     );
   };
-
-  const makeInput = (input: any) => ValueBag.make({ input });
 
   const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph => {
     return createGraphFromTransformMap('I', { I: transform });
@@ -225,14 +224,12 @@ describe('workflow', () => {
     transformNode: ComputeNode,
     { inputId, withOutput }: { inputId: string; withOutput: boolean } = { inputId: 'I', withOutput: true },
   ) => {
-    model.builder
-      .createNode({ id: inputId, type: NODE_INPUT })
-      .createNode(transformNode)
-      .createEdge({ node: inputId, property: 'input' }, { node: transformNode.id, property: 'input' });
+    model.createNode({ id: inputId, type: NODE_INPUT });
+    model.createNode(transformNode);
+    model.createEdge({ node: inputId, property: 'input' }, { node: transformNode.id, property: 'input' });
     if (withOutput) {
-      model.builder
-        .createNode({ id: 'O', type: NODE_OUTPUT })
-        .createEdge({ node: transformNode.id, property: 'result' }, { node: 'O', property: 'result' });
+      model.createNode({ id: 'O', type: NODE_OUTPUT });
+      model.createEdge({ node: transformNode.id, property: 'result' }, { node: 'O', property: 'result' });
     }
   };
 

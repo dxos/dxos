@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,7 +29,10 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@hazae41/symbol-dispose-polyfill": "catalog:"
+    "@hazae41/symbol-dispose-polyfill": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-fs": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

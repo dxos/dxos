@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
 import { createNotebook } from '#testing';
 
-import { ComputeGraph } from './compute-graph';
+import { ComputeGraph } from './compute-graph.ts';
 
 describe('notebook', () => {
   test('parse dependency graph', async () => {

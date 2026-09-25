@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import { render } from '@solidjs/testing-library';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { defaultRegistry } from '../registry';
-import { useAtomInitialValues } from './useAtomInitialValues';
-import { useAtomValue } from './useAtomValue';
+import { defaultRegistry } from '../registry.ts';
+import { useAtomInitialValues } from './useAtomInitialValues.ts';
+import { useAtomValue } from './useAtomValue.ts';
 
 describe('useAtomInitialValues', () => {
   beforeEach(() => {

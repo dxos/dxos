@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Journal';
-export * from './Outline';
+export * from './Journal/index.ts';
+export * from './Outline/index.ts';

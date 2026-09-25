@@ -9,8 +9,8 @@
 
 /** Anthropic model DXNs available to product pipelines. */
 export const MODEL_HAIKU = 'com.anthropic.model.claude-haiku-4-5.default';
-export const MODEL_SONNET = 'com.anthropic.model.claude-sonnet-4-6.default';
-export const MODEL_OPUS = 'com.anthropic.model.claude-opus-4-8.default';
+export const MODEL_SONNET = 'com.anthropic.model.claude-sonnet-5.default';
+export const MODEL_OPUS = 'com.anthropic.model.claude-opus-5.default';
 
 /** The LLM-bearing email pipeline stages. Deterministic stages (threading, dedup, stats) never appear. */
 export type StageId =

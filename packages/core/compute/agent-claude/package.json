@@ -1,0 +1,59 @@
+{
+  "name": "@dxos/agent-claude",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Claude Agent SDK host: runs the SDK loop in a local Node process and projects its output into ECHO.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./client": {
+      "source": "./src/client/index.ts",
+      "types": "./dist/types/src/client/index.d.ts",
+      "import": "./dist/lib/client.mjs"
+    },
+    "./producer": {
+      "source": "./src/producer/index.ts",
+      "types": "./dist/types/src/producer/index.d.ts",
+      "import": "./dist/lib/producer.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "catalog:",
+    "@anthropic-ai/sdk": "catalog:",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "beast": {}
+}

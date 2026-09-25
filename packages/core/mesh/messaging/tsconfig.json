@@ -9,9 +9,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
     },
     {
@@ -27,9 +24,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/test-utils"
-    },
-    {
       "path": "../../../common/tracing"
     },
     {
@@ -39,16 +33,10 @@
       "path": "../../halo/credentials"
     },
     {
-      "path": "../../halo/keyring"
-    },
-    {
       "path": "../../protocols"
     },
     {
       "path": "../edge-client"
-    },
-    {
-      "path": "../rpc"
     }
   ]
 }

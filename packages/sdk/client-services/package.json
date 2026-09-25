@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,34 +12,12 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
-  "imports": {
-    "#locks-platform": {
-      "source": {
-        "browser": "./src/packlets/locks/browser.ts",
-        "default": "./src/packlets/locks/node.ts"
-      },
-      "types": "./dist/types/src/packlets/locks/node.d.ts",
-      "browser": "./dist/lib/packlets/locks/browser.mjs",
-      "default": "./dist/lib/packlets/locks/node.mjs"
-    },
-    "#diagnostics-broadcast": {
-      "source": {
-        "browser": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
-        "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
-      },
-      "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
-      "browser": "./dist/lib/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
-      "default": "./dist/lib/packlets/diagnostics/diagnostics-broadcast.mjs"
-    }
-  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     }
@@ -52,9 +30,11 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -62,18 +42,18 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/feed": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
-    "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
@@ -84,15 +64,10 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
-    "@dxos/teleport-extension-object-sync": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*",
-    "@effect/experimental": "catalog:",
-    "@effect/rpc": "catalog:",
-    "@effect/sql": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "crc-32": "catalog:",
@@ -102,11 +77,10 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@effect/platform-browser": "catalog:",
-    "@effect/vitest": "catalog:",
     "@types/platform": "catalog:",
-    "@types/readable-stream": "catalog:",
     "fast-check": "catalog:",
-    "get-port-please": "catalog:"
+    "get-port-please": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

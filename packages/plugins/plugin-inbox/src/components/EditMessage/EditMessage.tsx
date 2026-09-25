@@ -9,9 +9,9 @@ import { type Database, Obj } from '@dxos/echo';
 import {
   Button,
   Column,
+  Field,
   Icon,
   IconButton,
-  Input,
   ScrollArea,
   composable,
   composableProps,
@@ -24,7 +24,7 @@ import { type Extension, keymap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-import { Editor } from '../Editor';
+import { Editor } from '../Editor/index.ts';
 
 type MessageField = 'to' | 'cc' | 'bcc' | 'subject';
 
@@ -72,6 +72,7 @@ const RecipientEditor = ({
   db,
   value,
   placeholder,
+  classNames,
   onChange,
 }: {
   editorRef?: Ref<EditorController>;
@@ -79,6 +80,7 @@ const RecipientEditor = ({
   db?: Database.Database;
   value?: string;
   placeholder?: string;
+  classNames?: string;
   onChange: (value: string) => void;
 }) => (
   <RefEditor
@@ -92,7 +94,7 @@ const RecipientEditor = ({
     getLabel={getPersonLabel}
     getValues={getPersonValues}
     activateOnTyping
-    classNames='flex flex-1 min-w-0 h-[2rem] items-center'
+    classNames={['flex min-w-0 h-[2rem] items-center', classNames]}
     placeholder={placeholder}
     value={value}
     onChange={onChange}
@@ -207,7 +209,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
-      <ScrollArea.Root className='dx-container'>
+      <ScrollArea.Root>
         <ScrollArea.Viewport>
           <Column.Root
             {...composableProps(props, {
@@ -222,7 +224,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             ref={forwardedRef}
           >
             {showHeader && (
-              <Column.Center classNames='flex items-center justify-between pbs-form-gap'>
+              <Column.Center classNames='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
                   <IconButton
@@ -236,65 +238,70 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               </Column.Center>
             )}
 
-            <Column.Center classNames='flex flex-col' data-testid='edit-email-form'>
-              <div className='flex items-center'>
-                <span className={labelStyles}>{t('draft-to.label')}</span>
-                <RecipientEditor
-                  editorRef={toRef}
-                  extensions={toNav}
-                  db={db}
-                  value={message.properties?.to}
-                  placeholder={t('draft-to.placeholder')}
-                  onChange={(value) => updateField('to', value)}
-                />
-
-                {(!showCc || !showBcc) && (
-                  <span className='shrink-0 flex items-center gap-2 pe-2 text-sm text-description'>
-                    {!showCc && (
-                      <button type='button' className='dx-link-hover' onClick={revealCc}>
-                        {t('draft-cc.label')}
-                      </button>
-                    )}
-                    {!showBcc && (
-                      <button type='button' className='dx-link-hover' onClick={revealBcc}>
-                        {t('draft-bcc.label')}
-                      </button>
-                    )}
-                  </span>
-                )}
-              </div>
+            {/* Label / editor / reveal-links tracks; every row shares the grid so the labels and
+                fields align as columns, with a small row gap separating the fields vertically. */}
+            <Column.Center
+              classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
+              data-testid='edit-email-form'
+            >
+              <span className={labelStyles}>{t('draft-to.label')}</span>
+              <RecipientEditor
+                editorRef={toRef}
+                extensions={toNav}
+                db={db}
+                value={message.properties?.to}
+                placeholder={t('draft-to.placeholder')}
+                classNames={showCc && showBcc ? 'col-span-2' : undefined}
+                onChange={(value) => updateField('to', value)}
+              />
+              {(!showCc || !showBcc) && (
+                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-description'>
+                  {!showCc && (
+                    <button type='button' className='dx-link-hover' onClick={revealCc}>
+                      {t('draft-cc.label')}
+                    </button>
+                  )}
+                  {!showBcc && (
+                    <button type='button' className='dx-link-hover' onClick={revealBcc}>
+                      {t('draft-bcc.label')}
+                    </button>
+                  )}
+                </span>
+              )}
 
               {showCc && (
-                <div className='flex items-center'>
-                  <div className={labelStyles}>{t('draft-cc.label')}</div>
+                <>
+                  <span className={labelStyles}>{t('draft-cc.label')}</span>
                   <RecipientEditor
                     editorRef={ccRef}
                     extensions={ccNav}
                     db={db}
                     value={message.properties?.cc}
+                    classNames='col-span-2'
                     onChange={(value) => updateField('cc', value)}
                   />
-                </div>
+                </>
               )}
 
               {showBcc && (
-                <div className='flex items-center'>
+                <>
                   <span className={labelStyles}>{t('draft-bcc.label')}</span>
                   <RecipientEditor
                     editorRef={bccRef}
                     extensions={bccNav}
                     db={db}
                     value={message.properties?.bcc}
+                    classNames='col-span-2'
                     onChange={(value) => updateField('bcc', value)}
                   />
-                </div>
+                </>
               )}
 
-              <Input.Root>
-                <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
-                <Input.TextInput
+              <Field.Root>
+                <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
+                <Field.Input
                   ref={subjectRef}
-                  variant='subdued'
+                  classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
                   defaultValue={message.properties?.subject}
                   onChange={(event) => updateField('subject', event.target.value)}
@@ -306,13 +313,13 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     }
                   }}
                 />
-              </Input.Root>
+              </Field.Root>
             </Column.Center>
 
-            <Column.Center classNames='flex flex-col py-3 min-h-0'>
+            <Column.Center classNames='flex flex-col dx-grow py-3'>
               <Editor
                 compact
-                classNames='dx-input dx-expander'
+                classNames='dx-input dx-expand'
                 placeholder={t('message-body.placeholder')}
                 extensions={extensions}
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}

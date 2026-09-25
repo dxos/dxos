@@ -28,24 +28,35 @@ export const asyncTaskTaggingLayer = () => {
         (span as any)[runInTask] = (f: any) => trace.run(f);
         return span;
       },
-      context: (f, fiber) => {
-        const maybeParentSpan = Context.getOption(Tracer.ParentSpan)(fiber.currentContext);
+      // `context` is optional in v4. Only wrap it when the underlying tracer implements it --
+      // supplying our own would otherwise change how effects are evaluated, not just traced.
+      ...(oldTracer.context
+        ? {
+            context: (f, fiber) => {
+              const delegate = () => oldTracer.context!(f, fiber);
 
-        if (maybeParentSpan._tag === 'None') {
-          return oldTracer.context(f, fiber);
-        }
-        const parentSpan = maybeParentSpan.value;
-        if (parentSpan._tag === 'ExternalSpan') {
-          return oldTracer.context(f, fiber);
-        }
-        const span = parentSpan;
-        if (runInTask in span && typeof span[runInTask] === 'function') {
-          return span[runInTask](() => oldTracer.context(f, fiber));
-        }
+              const maybeParentSpan = Context.getOption(Tracer.ParentSpan)(fiber.context);
+              if (maybeParentSpan._tag === 'None') {
+                return delegate();
+              }
+              const parentSpan = maybeParentSpan.value;
+              if (parentSpan._tag === 'ExternalSpan') {
+                return delegate();
+              }
+              const span = parentSpan;
+              if (runInTask in span && typeof span[runInTask] === 'function') {
+                return span[runInTask](delegate);
+              }
 
-        return oldTracer.context(f, fiber);
-      },
+              return delegate();
+            },
+          }
+        : {}),
     });
   });
-  return pipe(makeTracer, Effect.map(Layer.setTracer), Layer.unwrapEffect);
+  return pipe(
+    makeTracer,
+    Effect.map((tracer) => Layer.succeed(Tracer.Tracer, tracer)),
+    Layer.unwrap,
+  );
 };

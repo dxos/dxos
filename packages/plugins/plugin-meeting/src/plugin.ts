@@ -1,11 +1,33 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import {
+  AppGraphBuilder,
+  CallExtension,
+  MeetingSettings,
+  MeetingState,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  Schema,
+  Translations,
+} from '#capabilities';
+import { meta } from '#meta';
 
-export const MeetingPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const MeetingPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CallExtension),
+  Plugin.addModule(MeetingSettings),
+  Plugin.addModule(MeetingState),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
 
-export { MeetingOperationHandlerSet } from './operations';
+export default MeetingPlugin;

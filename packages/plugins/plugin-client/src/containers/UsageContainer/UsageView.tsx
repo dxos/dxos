@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { Message, Status, useTranslation } from '@dxos/react-ui';
+import { Banner, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -66,8 +66,6 @@ const formatLimitLabel = (limit: MeteringLimit, t: TFunction): string => {
   return `${subtype ? `${limit.eventType}/${subtype}` : limit.eventType} · ${metric}`;
 };
 
-const formatAmount = (amount: number): string => amount.toLocaleString();
-
 const SECONDS_PER_HOUR = 60 * 60;
 
 /** Render `windowHours` as a localized "N months / days / hours" string. */
@@ -105,7 +103,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
         return {
           key,
           label,
-          caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
+          caption: t('usage-unlimited.description', { used: used.toLocaleString(), window }),
           windowHours,
         };
       }
@@ -113,7 +111,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
       return {
         key,
         label,
-        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window })}`,
+        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: used.toLocaleString(), limit: limit.limit.toLocaleString(), window })}`,
         percent,
         windowHours,
       };
@@ -126,7 +124,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
  * markers; `Schema.Number` keeps the field context-free (`R = never`) so the struct stays assignable to `Form`.
  */
 const usageField = (title: string, description: string) =>
-  Schema.optional(Schema.Number.annotations({ title, description }));
+  Schema.optional(Schema.Number.annotate({ title, description }));
 
 /**
  * Build the Effect schema (one annotated field per limit) and matching values. Unlimited limits have no
@@ -196,13 +194,13 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     ({ fieldProps: { label, description, getValue } }) => {
       const percent = getValue();
       return (
-        <Form.Row label={label} description={description}>
+        <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Status progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
-        </Form.Row>
+        </Form.Field>
       );
     },
     [t],
@@ -212,20 +210,22 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     <Form.Root variant='settings' layout='static' schema={schema} values={values}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
+          <Form.FieldSet label={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
-              <Message.Root valence={message.valence}>
-                <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
-                <Message.Content>{t(message.description)}</Message.Content>
-              </Message.Root>
+              <Banner.Root valence={message.valence}>
+                <Banner.Content>
+                  <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                  <Banner.Body>{t(message.description)}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : (
-              <Form.FieldSet fieldProvider={meterFieldProvider} />
+              <Form.Fields fieldProvider={meterFieldProvider} />
             )}
-          </Form.Section>
+          </Form.FieldSet>
 
           {/* {state === 'ready' && data && (
-            <Form.Section>
-              <Form.Row
+            <Form.FieldSet>
+              <Form.Field standalone
                 label={
                   lastUpdated !== undefined
                     ? t('usage-last-updated.label', { time: new Date(lastUpdated).toLocaleTimeString() })
@@ -241,13 +241,13 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                     onClick={onRefresh}
                   />
                 )}
-              </Form.Row>
-            </Form.Section>
+              </Form.Field>
+            </Form.FieldSet>
           )} */}
 
           {/* {state === 'ready' && data && (
-            <Form.Section>
-              <Form.Row label={t('usage-raw-json.label')}>
+            <Form.FieldSet>
+              <Form.Field standalone label={t('usage-raw-json.label')}>
                 <ToggleIconButton
                   iconOnly
                   variant='ghost'
@@ -256,9 +256,9 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                   label={t('usage-raw-json.label')}
                   onClick={() => setRawExpanded((value) => !value)}
                 />
-              </Form.Row>
+              </Form.Field>
               {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
-            </Form.Section>
+            </Form.FieldSet>
           )} */}
         </Form.Content>
       </Form.Viewport>

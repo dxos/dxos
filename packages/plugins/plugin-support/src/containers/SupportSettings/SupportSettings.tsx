@@ -4,38 +4,33 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useSettingsState } from '@dxos/app-framework/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type SupportSettingsProps = AppSurface.SettingsProps<Settings.Settings> & {
-  onShowWelcome?: () => void;
-};
+export type SupportSettingsProps = AppSurface.SettingsData;
 
-export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: SupportSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const SupportSettings = ({ subject }: SupportSettingsProps) => {
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
   return (
     <Form.Root
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            {onShowWelcome && (
-              <Form.Row label={t('show-welcome.label')}>
-                <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-              </Form.Row>
-            )}
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

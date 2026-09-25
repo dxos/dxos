@@ -17,8 +17,8 @@ import { log } from '@dxos/log';
 import { useAsyncEffect, useControlledState } from '@dxos/react-hooks';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
-import { printBanner } from '../banner';
-import { ClientContext, type ClientContextProps } from './context';
+import { printBanner } from '../banner.ts';
+import { ClientContext, type ClientContextProps } from './context.ts';
 
 /**
  * Properties for the ClientProvider.
@@ -55,6 +55,15 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
+     * Provide the context immediately instead of rendering `fallback` until the client is
+     * initialized and active. Client-dependent hooks then suspend at their own Suspense
+     * boundaries, so the surrounding shell renders while initialization runs. Only valid with
+     * a caller-supplied `client` whose initialization the caller owns (e.g. a forked
+     * `initialize()`); the config/services paths keep the blocking behavior.
+     */
+    suspend?: boolean;
+
+    /**
      * Skip the DXOS banner.
      */
     noBanner?: boolean;
@@ -78,6 +87,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       services: servicesProp,
       status: statusProp,
       fallback: Fallback = () => null,
+      suspend,
       noBanner,
       onInitialized,
       ...options
@@ -89,9 +99,10 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     // This allows the error to be thrown in the render method.
     // The assumption is that a client initialization error is fatal to the app.
     // This error will be caught by the nearest error boundary.
-    const [error, setError] = useState();
-    if (error) {
-      throw error;
+    // Boxed so that any rejection value, including `undefined`, is thrown.
+    const [failure, setFailure] = useState<{ error: unknown }>();
+    if (failure) {
+      throw failure.error;
     }
 
     const [client, setClient] = useState(clientProp instanceof Client ? clientProp : undefined);
@@ -106,69 +117,87 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         return;
       }
 
-      const subscription = client.status.subscribe((status) => setStatus(status));
-      return () => subscription.unsubscribe();
+      const statusSubscription = client.status.subscribe((status) => setStatus(status));
+      // Losing services after initialization is as fatal as failing to initialize.
+      const fatalErrorSubscription = client.fatalError.subscribe((error) => {
+        if (error) {
+          setFailure({ error });
+        }
+      });
+      return () => {
+        statusSubscription.unsubscribe();
+        fatalErrorSubscription.unsubscribe();
+      };
     }, [client]);
 
     // Create and/or initialize client.
-    useAsyncEffect(async () => {
-      let disposed = false;
-      const initialize = async (client: Client) => {
-        if (!client.initialized) {
-          await client.initialize().catch((err) => {
-            if (!disposed) {
-              setError(err);
-            }
-          });
-          log('client ready');
-          await onInitialized?.(client);
-          log('initialization complete');
-        }
+    useAsyncEffect(
+      async (controller) => {
+        const initialize = async (client: Client) => {
+          // In suspend mode the caller owns initialization (typically a forked `initialize()` whose
+          // failure raises the app's fatal error). A competing call here can succeed after that
+          // failure and wake suspended consumers into an app whose initialization events never
+          // fired — onboarding, app-graph, and migrations all gate on those.
+          if (!client.initialized && !(suspend && clientProp)) {
+            await client.initialize();
+            log('client ready');
+            await onInitialized?.(client);
+            log('initialization complete');
+          }
 
-        setClient(client);
-        if (!noBanner) {
-          printBanner(client);
-        }
-      };
+          setClient(client);
+          if (!noBanner) {
+            printBanner(client);
+          }
+        };
 
-      let client: Client;
-      try {
-        if (clientProp) {
-          // Asynchronously request client.
-          client = await getAsyncProviderValue(clientProp);
-          await initialize(client);
-        } else {
-          // Asynchronously construct client (config may be undefined).
-          const config = await getAsyncProviderValue(configProp);
-          log('resolved config', { config });
-          const services = await getAsyncProviderValue(servicesProp, config);
-          log('created services', { services });
-          client = new Client({ config, services, ...options });
-          log('created client');
-          await initialize(client);
-        }
-      } catch (err) {
-        if (!disposed) {
+        let client: Client;
+        try {
+          if (clientProp) {
+            // Asynchronously request client.
+            client = await getAsyncProviderValue(clientProp);
+            await initialize(client);
+          } else {
+            // Asynchronously construct client (config may be undefined).
+            const config = await getAsyncProviderValue(configProp);
+            log('resolved config', { config });
+            const services = await getAsyncProviderValue(servicesProp, config);
+            log('created services', { services });
+            client = new Client({ config, services, ...options });
+            log('created client');
+            await initialize(client);
+          }
+        } catch (err) {
+          // Any initialization failure, including onInitialized, is fatal and renders the nearest error boundary.
           log.catch(err);
+          if (!controller.signal.aborted) {
+            setFailure({ error: err });
+          }
         }
-      }
 
-      return () => {
-        log('clean up');
-        disposed = true;
-        // Only destroy if the client is not provided by the parent.
-        if (!clientProp) {
-          void client
-            ?.destroy()
-            .then(() => {
-              log('destroyed');
-            })
-            .catch((err) => log.catch(err));
-        }
-      };
-    }, [configProp, clientProp, servicesProp, noBanner]);
+        return () => {
+          log('clean up');
+          // Only destroy if the client is not provided by the parent.
+          if (!clientProp) {
+            void client
+              ?.destroy()
+              .then(() => {
+                log('destroyed');
+              })
+              .catch((err) => log.catch(err));
+          }
+        };
+      },
+      [configProp, clientProp, servicesProp, noBanner, suspend],
+    );
 
-    if (!client?.initialized || status !== SystemStatus.ACTIVE) {
+    // In suspend mode the (possibly uninitialized) client is provided immediately and hooks
+    // suspend individually; the status gate is skipped because status only becomes ACTIVE
+    // after the caller's forked initialization completes.
+    if (!suspend && (!client?.initialized || status !== SystemStatus.ACTIVE)) {
+      return <Fallback client={client} status={status} />;
+    }
+    if (!client) {
       return <Fallback client={client} status={status} />;
     }
 

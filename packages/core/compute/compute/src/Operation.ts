@@ -12,19 +12,22 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { type NoHandlerError, RunAgainError } from './errors';
-import type { Operation } from './index';
+import { type NoHandlerError, RunAgainError } from './errors.ts';
+import type { Operation } from './index.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type Schema<T> = Schema$.Schema<T, any, never>;
+type Schema<T> = Schema$.Codec<T, any, never, never>;
 
 export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
@@ -88,7 +91,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<S, unknown>[];
 }
 
 /**
@@ -137,6 +140,50 @@ export type WithHandler<T extends Definition.Any> = T & {
   handler: Definition.HandlerType<T>;
 };
 
+export const LazyHandlerTypeId = '~@dxos/operation/LazyHandler' as const;
+export type LazyHandlerTypeId = typeof LazyHandlerTypeId;
+
+/**
+ * A definition paired with the module that implements it. The pairing is TYPED — the loaded
+ * module's default must be `WithHandler<Def>` for the same `Def` — so a definition can no longer be
+ * wired to another operation's handler and fail only at dispatch.
+ */
+export interface LazyHandler<Def extends Definition.Any = Definition.Any> {
+  readonly [LazyHandlerTypeId]: LazyHandlerTypeId;
+  readonly definition: Def;
+  readonly load: () => Promise<{ default: WithHandler<Def> }>;
+}
+
+/** Whether a value is a {@link LazyHandler}. */
+export const isLazyHandler = (value: unknown): value is LazyHandler =>
+  typeof value === 'object' && value !== null && LazyHandlerTypeId in value;
+
+/**
+ * Pairs a definition with a lazily-imported handler module, keeping the handler body out of the
+ * static graph while checking that it implements THIS definition.
+ *
+ * @example
+ * ```ts
+ * GetBlueskyTargets.pipe(Operation.lazyHandler(() => import('./get-bluesky-targets')))
+ * ```
+ */
+export const lazyHandler: {
+  <Def extends Definition<any, any>>(load: () => Promise<{ default: WithHandler<Def> }>): (op: Def) => LazyHandler<Def>;
+  <Def extends Definition<any, any>>(op: Def, load: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def>;
+} = (<Def extends Definition<any, any>>(
+  opOrLoad: Def | (() => Promise<{ default: WithHandler<Def> }>),
+  load?: () => Promise<{ default: WithHandler<Def> }>,
+) => {
+  const make = (op: Def, loader: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def> => ({
+    [LazyHandlerTypeId]: LazyHandlerTypeId,
+    definition: op,
+    load: loader,
+  });
+  return load === undefined
+    ? (op: Def) => make(op, opOrLoad as () => Promise<{ default: WithHandler<Def> }>)
+    : make(opOrLoad as Def, load);
+}) as any;
+
 /**
  * Checks if a value is an operation definition.
  */
@@ -171,7 +218,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
-  Context.Tag.Identifier<NonNullable<P['services']>[number]>
+  Context.Service.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     [DefinitionTypeId]: {},
@@ -279,6 +326,79 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
 ): Operation.WithHandler<Operation.Definition.Any> => handler;
 
 //
+// Tool projection
+//
+
+/**
+ * Constant namespace prefix elided from tool names; keys outside it (examples, third-party) keep every segment.
+ */
+const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
+
+/**
+ * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
+ * which is display copy and must stay freely editable without renaming the tool the model calls.
+ * The key's namespace segment prefixes the name, which is what removes the cross-skill collisions
+ * that a bare verb produced (three skills each claimed `create`).
+ *
+ * The mapping is not injective: kebab-casing makes a camelCase segment and an already-hyphenated one
+ * converge, so `webSearch` and `web-search` both yield `web-search`, and hyphenated segments are in
+ * live keys (`plugin-crm`, `web-search`). Registry-key uniqueness therefore does not by itself
+ * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
+ * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
+ *
+ * @example `org.dxos.operation.markdown.create` → `markdown-create`
+ * @example `org.dxos.operation.assistantToolkit.addArtifact` → `assistant-toolkit-add-artifact`
+ */
+export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
+
+/**
+ * {@link toolName} for a raw registry key (a DXN or bare NSID), e.g. a persisted record's meta key.
+ */
+export const toolNameFromKey = (key: string): string => {
+  const name = deriveToolName(key);
+  invariant(TOOL_NAME_REGEXP.test(name), `Invalid tool name: ${name}`);
+  return name;
+};
+
+/** Shape every derived tool name must have — the model-facing identifier contract. */
+const TOOL_NAME_REGEXP = /^[a-z][a-z0-9-_]*$/;
+
+const deriveToolName = (key: string): string => {
+  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
+  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
+  return stripped.split('.').map(kebabCase).join('-');
+};
+
+const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+/**
+ * {@link toolNameFromKey} for a key that is not known to be well-formed — a record off the wire, whose
+ * `@meta.key` is untrusted JSON. Returns undefined instead of failing, so one malformed entry costs its
+ * own tool rather than every tool in the projection.
+ */
+export const tryToolNameFromKey = (key: string): string | undefined => {
+  const name = deriveToolName(key);
+  return TOOL_NAME_REGEXP.test(name) ? name : undefined;
+};
+
+/**
+ * Groups a set of operations by derived tool name, returning only the names claimed more than once.
+ *
+ * {@link toolName} is not injective (see its note), so a set of registry-unique keys can still
+ * collide. Call this wherever a complete operation set is assembled — the resolver sees keys one at a
+ * time and can only catch a collision once a colliding name is actually requested.
+ */
+export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
+  // Keyed by key, not by occurrence: one operation bound by two skills is the same tool, not a clash.
+  const byName = new Map<string, Set<DXN.DXN>>();
+  for (const op of operations) {
+    const name = toolName(op);
+    byName.set(name, (byName.get(name) ?? new Set()).add(op.meta.key));
+  }
+  return new Map([...byName].filter(([, keys]) => keys.size > 1).map(([name, keys]) => [name, [...keys]]));
+};
+
+//
 // Invocation Interfaces
 //
 
@@ -340,7 +460,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
@@ -379,6 +498,24 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 };
 
 /**
+ * Serializes each definition, dropping any whose schema cannot render as JSON Schema, so one
+ * unserializable operation (e.g. `space.importSpace`) does not fail registry population for every
+ * other.
+ */
+export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
+  operations.flatMap((operation) => {
+    try {
+      return [serialize(operation)];
+    } catch (error) {
+      log.verbose('operation is not serializable; excluded from the registry', {
+        key: String(operation.meta.key),
+        error: String(error),
+      });
+      return [];
+    }
+  });
+
+/**
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
@@ -388,7 +525,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
-    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    services: record.services?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {
@@ -433,23 +570,21 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export const Label = Schema.Union(
+export const Label = Schema.Union([
   Schema.String,
   // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
   // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
-    Schema.Tuple(
+    Schema.Tuple([
       Schema.String,
-      Schema.mutable(
-        Schema.Struct({
-          ns: Schema.String,
-          count: Schema.optional(Schema.Number),
-          defaultValue: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
+      Schema.Struct({
+        ns: Schema.String,
+        count: Schema.optional(Schema.Number),
+        defaultValue: Schema.optional(Schema.String),
+      }).mapFields(Struct.map(Schema.mutableKey)),
+    ]),
   ),
-);
+]);
 export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
@@ -570,13 +705,35 @@ export const annotate =
  * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
  * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
  *
- * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
- * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ * Same polarity as the schema-level `Annotation.UserType`: operations are hidden by default, since most
+ * are internal plugin machinery and only a minority are user-facing.
  */
 export const VisibleAnnotation = Annotation.make({
   id: 'org.dxos.operation.visible',
   schema: Schema$.Boolean,
 });
+
+/**
+ * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
+ */
+export const MutationAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mutation',
+  schema: Schema$.Literals(['none', 'write', 'destructive']),
+});
+
+export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
+
+/**
+ * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
+ */
+export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
+
+/** The operation's mutation class, or undefined when unclassified. Reads from the persisted record. */
+export const getMutation = (op: PersistentOperation): Mutation | undefined =>
+  Option.getOrUndefined(Annotation.get(op, MutationAnnotation));
 
 /**
  * Pipeable combinator that marks an operation visible. Apply at the definition site:
@@ -647,7 +804,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Service<Service, OperationService>()('@dxos/operation/Service') {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.
@@ -752,7 +909,7 @@ const _migration = Migration.define({
     name: from.name,
     description: from.description,
     updated: from.updated,
-    source: from.source as any,
+    source: from.source,
     inputSchema: from.inputSchema,
     outputSchema: from.outputSchema,
     services: from.services,

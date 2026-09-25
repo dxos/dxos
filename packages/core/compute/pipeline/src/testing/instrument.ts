@@ -6,8 +6,8 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import * as Stage from '../Stage';
-import { Metrics, useMetrics } from './metrics';
+import * as Stage from '../Stage.ts';
+import { Metrics, useMetrics } from './metrics.ts';
 
 /**
  * Wrap a {@link Stage.Stage} to auto-record per-stage metrics — `${name}.in`, `${name}.out`,
@@ -35,7 +35,7 @@ export const instrument =
           Clock.currentTimeMillis.pipe(
             Effect.flatMap((now) =>
               useMetrics((metrics) => metrics.inc(`${name}.in`)).pipe(
-                Effect.zipRight(Effect.sync(() => void (lastIn = now))),
+                Effect.andThen(Effect.sync(() => void (lastIn = now))),
               ),
             ),
           ),
@@ -47,7 +47,7 @@ export const instrument =
           Effect.flatMap((now) => {
             const elapsed = lastIn === undefined ? 0 : now - lastIn;
             return useMetrics((metrics) => metrics.inc(`${name}.out`)).pipe(
-              Effect.zipRight(useMetrics((metrics) => metrics.inc(`${name}.ms`, elapsed))),
+              Effect.andThen(useMetrics((metrics) => metrics.inc(`${name}.ms`, elapsed))),
             );
           }),
         ),

@@ -4,12 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Sequence } from './Sequence';
-import { Track } from './Track';
+import { Sequence } from './Sequence.ts';
+import { Track } from './Track.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.sequencer';
 
@@ -20,9 +19,9 @@ export const SKILL_KEY = 'org.dxos.skill.sequencer';
 export class Score extends Type.makeObject<Score>(DXN.make('org.dxos.type.score', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    tempo: Schema.Number.annotations({ title: 'Tempo', description: 'Beats per minute.' }),
+    tempo: Schema.Number.annotate({ title: 'Tempo', description: 'Beats per minute.' }),
     timeSignature: Schema.optional(
-      Schema.String.annotations({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
+      Schema.String.annotate({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
     ),
     tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
     sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
@@ -33,9 +32,10 @@ export class Score extends Type.makeObject<Score>(DXN.make('org.dxos.type.score'
     loopStart: Schema.optional(Schema.Number),
     loopEnd: Schema.optional(Schema.Number),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--music-notes--regular', hue: 'fuchsia' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

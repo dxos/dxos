@@ -21,7 +21,6 @@ export const BYOK_HEADER = 'X-BYOK';
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
-  AUTOMERGE_REPLICATOR = 'automerge-replicator',
   SUBDUCTION_REPLICATOR = 'subduction-replicator',
   /**
    * Control feed replicator (hypercore append only logs) for the space.
@@ -36,6 +35,10 @@ export enum EdgeService {
   SWARM = 'swarm',
   SIGNAL = 'signal',
   STATUS = 'status',
+  /**
+   * User-to-user notices held for an identity until acknowledged (e.g., space invitation notices).
+   */
+  INBOX = 'inbox',
 }
 
 export type EdgeSuccess<T> = {
@@ -46,12 +49,12 @@ export type EdgeSuccess<T> = {
 const _SerializedError = Schema.Struct({
   name: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
-  context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  context: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   stack: Schema.optional(Schema.String),
   cause: Schema.optional(Schema.suspend(() => SerializedError)),
 });
 export interface SerializedError extends Schema.Schema.Type<typeof _SerializedError> {}
-export const SerializedError: Schema.Schema<SerializedError, SerializedError, never> = _SerializedError;
+export const SerializedError: Schema.Codec<SerializedError, SerializedError, never> = _SerializedError;
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
@@ -197,7 +200,7 @@ export type JoinSpaceRequest = {
   identityKey: string;
   /**
    * Base64 encoded signed challenge.
-   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY`
+   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY`.
    */
   signature?: string;
 };
@@ -235,6 +238,12 @@ export type RecoverIdentityResponseBody = {
   haloSpaceKey: string;
   genesisFeedKey: string;
   deviceAuthCredential: string;
+  /**
+   * Automerge URL of the halo space root, when EDGE knows one. A recovering device has only
+   * `haloSpaceKey` to rebuild the space from, so without this it cannot find the document the
+   * credential chain lives in. Optional while EDGE has not been taught to record it.
+   */
+  haloSpaceRootUrl?: string;
 };
 
 export type CreateAgentRequestBody = {
@@ -274,7 +283,7 @@ export type UploadFunctionRequest = {
 /**
  * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
  */
-export const FunctionRuntimeKind = Schema.Enums({
+export const FunctionRuntimeKind = Schema.Enum({
   // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
   WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
@@ -300,22 +309,6 @@ export type UploadFunctionResponseBody = {
   };
 };
 
-export type CreateSpaceRequest = {
-  /**
-   * HEX encoded public key of the agent.
-   */
-  agentKey: string;
-};
-
-export type CreateSpaceResponseBody = {
-  /**
-   * HEX encoded public key of the space.
-   */
-  spaceKey: string;
-  spaceId: SpaceId;
-  automergeRoot: string;
-};
-
 export enum EdgeAgentStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
@@ -330,8 +323,7 @@ export type EdgeAuthChallenge = {
 export enum OAuthProvider {
   ATLASSIAN = 'atlassian',
   ATPROTO = 'atproto',
-  /** @deprecated Use ATPROTO instead. */
-  BLUESKY = 'bluesky',
+  CLOUDFLARE = 'cloudflare',
   DISCORD = 'discord',
   GITHUB = 'github',
   GOOGLE = 'google',
@@ -344,9 +336,18 @@ export enum OAuthProvider {
 /** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
 export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
+/**
+ * `AccessToken.source` for the Atmosphere connection — the atproto account bound to a DXOS identity.
+ * atproto accounts are portable (both PDS and handle can change), so this is not a hostname. Every
+ * subsystem that looks up the account's credential matches on it, hence its home beside
+ * {@link OAuthProvider}. The connector that operates the connection is identified separately, by
+ * {@link OAuthProvider.ATPROTO} as its `Connector.id`.
+ */
+export const ATMOSPHERE_SOURCE = 'atproto.local';
+
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
-  provider: Schema.Enums(OAuthProvider),
-  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
+  provider: Schema.Enum(OAuthProvider),
+  spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
@@ -361,7 +362,7 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
   registerRecovery: Schema.optional(Schema.Boolean),
   identityKey: Schema.optional(Schema.String),
-  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
+  purpose: Schema.optional(Schema.Literals(['register', 'recovery'])),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
@@ -398,7 +399,7 @@ export type GetAccessTokenResponseBody = {
 
 /**
  * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
- * into the personal space and writes the recovery binding.
+ * into the default space and writes the recovery binding.
  */
 export type CompleteOAuthRegistrationRequest = {
   registrationToken: string;
@@ -453,52 +454,6 @@ export type EdgeStatus = {
     fetchError?: string;
   };
 };
-
-//
-// Space import/export.
-//
-
-export type ImportBundleRequest = {
-  bundle: {
-    /**
-     * DocumentId.
-     */
-    documentId: string;
-    /**
-     * Encoded mutation.
-     */
-    mutation: string;
-    /**
-     * Heads of the document.
-     */
-    heads: string[];
-  }[];
-};
-
-export type ExportBundleRequest = {
-  /**
-   * DocumentId -> Heads (decoded heads since which we want to export).
-   */
-  docHeads: Record<string, string[]>;
-};
-
-export type ExportBundleResponse = {
-  bundle: {
-    /**
-     * DocumentId.
-     */
-    documentId: string;
-    /**
-     * Encoded mutation.
-     */
-    mutation: string;
-  }[];
-};
-
-export const DocumentCodec = Object.freeze({
-  encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
-  decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
-});
 
 const MAX_ERROR_DEPTH = 3;
 
@@ -574,6 +529,101 @@ export const EdgeHttpErrorCodec = Object.freeze({
     return ErrorCodec.decode(body.error);
   },
 });
+
+/** Authentication scheme naming a DXOS verifiable presentation. */
+export const VERIFIABLE_PRESENTATION_SCHEME = 'VerifiablePresentation';
+
+/** Marks the credential payload as a base64-encoded protobuf. */
+const VERIFIABLE_PRESENTATION_TOKEN_PREFIX = 'pb;base64,';
+
+/**
+ * Subprotocol prefix carrying credentials on the WebSocket upgrade, where there is no
+ * `Authorization` header to put them in.
+ */
+export const WS_AUTH_PROTOCOL_PREFIX = 'base64url.bearer.authorization.dxos.org';
+
+/**
+ * Codec for the credentials header — the single definition of how an encoded verifiable
+ * presentation is framed on the wire, in both places it travels:
+ *
+ * - `Authorization: VerifiablePresentation pb;base64,<base64>` for HTTP.
+ * - `base64url.bearer.authorization.dxos.org.<token>` as a WebSocket subprotocol, which admits a
+ *   narrower alphabet: `=` padding is stripped and `/` is substituted with `|`, neither being
+ *   legal in a subprotocol token.
+ *
+ * This lives in protocols because both ends own half of it — the client encodes, the Edge worker
+ * decodes — and the two had drifted into separate copies of the same string literals.
+ *
+ * Decoding is deliberately lenient where the RFCs are: the auth-scheme is matched
+ * case-insensitively (RFC 9110 §11.1) and anything unrecognised yields `undefined` rather than
+ * throwing, so a caller can fall through to another auth method instead of failing the request.
+ */
+export const EdgeCredentialsHeaderCodec = Object.freeze({
+  /** Encode a presentation as an `Authorization` header value. */
+  encode: (presentation: Uint8Array): string =>
+    `${VERIFIABLE_PRESENTATION_SCHEME} ${VERIFIABLE_PRESENTATION_TOKEN_PREFIX}${uint8ArrayToBase64(presentation)}`,
+
+  /** Decode an `Authorization` header value, or `undefined` if it carries no presentation. */
+  decode: (header: string | null | undefined): Uint8Array | undefined => {
+    if (!header) {
+      return undefined;
+    }
+    const separator = header.indexOf(' ');
+    if (separator === -1) {
+      return undefined;
+    }
+    if (header.slice(0, separator).toLowerCase() !== VERIFIABLE_PRESENTATION_SCHEME.toLowerCase()) {
+      return undefined;
+    }
+    const token = header.slice(separator + 1);
+    if (!token.startsWith(VERIFIABLE_PRESENTATION_TOKEN_PREFIX)) {
+      return undefined;
+    }
+    return base64ToUint8Array(token.slice(VERIFIABLE_PRESENTATION_TOKEN_PREFIX.length));
+  },
+
+  /** Encode a presentation as a WebSocket subprotocol token. */
+  encodeWebSocketProtocol: (presentation: Uint8Array): string => {
+    const token = uint8ArrayToBase64(presentation).replace(/=*$/, '').replaceAll('/', '|');
+    return `${WS_AUTH_PROTOCOL_PREFIX}.${token}`;
+  },
+
+  /** Decode a WebSocket subprotocol token, or `undefined` if it is not a credentials token. */
+  decodeWebSocketProtocol: (protocol: string | null | undefined): Uint8Array | undefined => {
+    if (!protocol?.startsWith(`${WS_AUTH_PROTOCOL_PREFIX}.`)) {
+      return undefined;
+    }
+    const token = protocol.slice(WS_AUTH_PROTOCOL_PREFIX.length + 1).replaceAll('|', '/');
+    return base64ToUint8Array(token);
+  },
+});
+
+// `Buffer` is unavailable in the browser bundle, so go through the platform base64 primitives.
+const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+const base64ToUint8Array = (value: string): Uint8Array | undefined => {
+  // `atob` rejects the stripped padding the WebSocket framing produces; restore it first.
+  const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), '=');
+  // `atob` throws on characters outside the base64 alphabet, which would break the `undefined`
+  // contract both decoders document for anything unrecognised.
+  let binary: string;
+  try {
+    binary = atob(padded);
+  } catch {
+    return undefined;
+  }
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+};
 
 //
 // Data management.
@@ -691,8 +741,29 @@ export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
 /** Crockford base32 alphabet (no I, L, O, U). Case-insensitive on the wire. */
 export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
+/**
+ * A vanity code is an admin-chosen prefix, a dash, and random characters from
+ * {@link INVITATION_CODE_ALPHABET}: `SF-MEETUP-7K2Q`. Hub-service matches codes ignoring case and
+ * dashes, so `sfmeetup7k2q` redeems it too.
+ */
+export const VANITY_PREFIX_MIN_LENGTH = 4;
+export const VANITY_PREFIX_MAX_LENGTH = 20;
+export const VANITY_SUFFIX_LENGTH = 4;
+export const VANITY_CODE_MAX_LENGTH = VANITY_PREFIX_MAX_LENGTH + 1 + VANITY_SUFFIX_LENGTH;
+/** 4-20 characters, at least 4 of them letters or digits, with single dashes between them. */
+export const VANITY_PREFIX_PATTERN = new RegExp(
+  `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)(?=(?:-?[A-Za-z0-9]){${VANITY_PREFIX_MIN_LENGTH}})[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
+);
+
+export const MAX_CODES_PER_REQUEST = 1000;
+export const MAX_REDEMPTIONS_PER_CODE = 100;
+
+/**
+ * A code as a user types it: generated or vanity, any case, optionally hyphenated. Hub-service
+ * normalizes before lookup. Every issued code has at least {@link INVITATION_CODE_LENGTH} characters.
+ */
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.pattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`)),
+  Schema.check(Schema.isPattern(new RegExp(`^[A-Za-z0-9-]{${INVITATION_CODE_LENGTH},${2 * VANITY_CODE_MAX_LENGTH}}$`))),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({
@@ -708,23 +779,30 @@ export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateIn
 export type ValidateInvitationCodeResponse = { valid: boolean };
 
 /**
- * Body of `POST /account/login`. Existing-account email recovery only --
- * unlike `/account/signup`, this never creates new identities or waitlist rows.
+ * Body of `POST /account/login`. Existing-account email recovery only -- account creation redeems
+ * an invitation code via `/account/invitation-code/redeem` instead, so this never creates
+ * identities or waitlist rows.
  */
 export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
   identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
+  /**
+   * Where the emailed link hands the token back, defaulting to the hub's configured app URL. The
+   * hub honors only origins it owns, so a CLI can name its local callback server here.
+   */
+  redirectUrl: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 
 /**
  * Response from `POST /account/login`. The shape is identical regardless of
  * whether the email is registered, so the endpoint is safe against enumeration.
- * Regular emails are delivered out-of-band and the response is `{}`.
+ * Regular emails are delivered out-of-band and the response is `{}`; a recovery
+ * token is never returned inline. Test emails in dev-like environments
+ * short-circuit with `needsIdentity` / `admitted` before any token exists.
  */
 export const LoginResponseSchema = Schema.Struct({
-  token: Schema.optional(Schema.String),
   needsIdentity: Schema.optional(Schema.Boolean),
   admitted: Schema.optional(Schema.Boolean),
 });
@@ -863,9 +941,31 @@ export const AdminGrantInvitationsRequestSchema = Schema.Struct({
 export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
 
 export const AdminCreateInvitationCodesRequestSchema = Schema.Struct({
-  count: Schema.Number,
+  count: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_CODES_PER_REQUEST })),
   note: Schema.optional(Schema.String),
-});
+  /** Plan the redeemer inherits, overriding the default user plan. Single-use codes only. */
+  planName: Schema.optional(Schema.String),
+  /** How many accounts may sign up with each code (default 1), e.g. for an event code. */
+  maxRedemptions: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_REDEMPTIONS_PER_CODE })),
+  ),
+  /**
+   * Vanity prefix (requires `count: 1`). The code is the uppercased prefix, a dash, and
+   * {@link VANITY_SUFFIX_LENGTH} random characters, so `sf-meetup` yields e.g. `SF-MEETUP-7K2Q`.
+   */
+  prefix: Schema.optional(Schema.String.check(Schema.isPattern(VANITY_PREFIX_PATTERN))),
+}).check(
+  Schema.makeFilter((request) => {
+    const issues: Schema.FilterIssue[] = [];
+    if (request.prefix !== undefined && request.count !== 1) {
+      issues.push({ path: ['count'], issue: 'A vanity code is created one at a time; count must be 1.' });
+    }
+    if (request.planName && (request.maxRedemptions ?? 1) > 1) {
+      issues.push({ path: ['planName'], issue: 'A code that carries a plan must be single-use.' });
+    }
+    return issues;
+  }),
+);
 export type AdminCreateInvitationCodesRequest = Schema.Schema.Type<typeof AdminCreateInvitationCodesRequestSchema>;
 export type AdminCreateInvitationCodesResponse = { codes: string[] };
 
@@ -876,11 +976,16 @@ export type AdminListInvitationCodesResponse = {
     createdAt: string;
     note?: string;
     issuedByIdentityDid?: string;
+    /** Set for single-use codes only; see `redemptionCount` for the rest. */
     redeemedByIdentityDid?: string;
-    /** ISO timestamp. */
+    /** ISO timestamp of the most recent redemption. */
     redeemedAt?: string;
     /** ISO timestamp. Set when revoked. */
     revokedAt?: string;
+    /** Absent from hubs that predate code capacity; treat as 1. */
+    maxRedemptions?: number;
+    /** Absent from hubs that predate code capacity. */
+    redemptionCount?: number;
   }>;
 };
 
@@ -893,13 +998,15 @@ export type AdminRevokeInvitationCodeRequest = Schema.Schema.Type<typeof AdminRe
  * Account/invitation-related variants placed in `EdgeFailure.data.type`.
  * EdgeErrorData is open-ended; these are documentation for known values.
  */
-export type AccountErrorType =
-  | 'invitation_code_invalid'
-  | 'invitation_code_already_redeemed'
-  | 'invitation_code_revoked'
-  | 'email_already_registered'
-  | 'identity_already_associated'
-  | 'no_invitations_remaining'
-  | 'identity_not_associated_with_account'
-  | 'no_account'
-  | 'rate_limited';
+export const ACCOUNT_ERROR_TYPES = [
+  'invitation_code_invalid',
+  'invitation_code_already_redeemed',
+  'invitation_code_revoked',
+  'email_already_registered',
+  'identity_already_associated',
+  'no_invitations_remaining',
+  'identity_not_associated_with_account',
+  'no_account',
+  'rate_limited',
+] as const;
+export type AccountErrorType = (typeof ACCOUNT_ERROR_TYPES)[number];

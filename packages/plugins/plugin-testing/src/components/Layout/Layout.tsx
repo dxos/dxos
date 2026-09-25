@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AlertDialog,
@@ -16,6 +17,7 @@ import {
   Popover,
   type PopoverContentInteractOutsideEvent,
   Toast,
+  Tooltip,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -126,87 +128,103 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <Toast.Provider>
-      <div className='fixed inset-0 flex overflow-hidden'>
-        <Dnd.Root>
-          <Popover.Root open={open}>
-            <Main.Root
-              navigationSidebarState={layout.sidebarState}
-              complementarySidebarState={layout.complementarySidebarState}
-              onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
-              onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
-            >
-              {children}
-            </Main.Root>
+      {/* The plugin `ReactContext` capabilities — the theme plugin's `Tooltip.Provider` among them —
+          wrap `children` only, so the dialog and popover portals rendered as its siblings below sit
+          outside them. Any `IconButton` there renders a `Tooltip.Trigger`, which throws rather than
+          degrades when it finds no provider, taking the whole surface down with it. */}
+      <Tooltip.Provider>
+        <div className='fixed inset-0 flex overflow-hidden'>
+          <Dnd.Root>
+            <Popover.Root open={open}>
+              <Main.Root
+                navigationSidebarState={layout.sidebarState}
+                complementarySidebarState={layout.complementarySidebarState}
+                onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
+                onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
+              >
+                {children}
+              </Main.Root>
 
-            <DialogRoot
-              modal={layout.dialogBlockAlign !== 'end'}
-              open={layout.dialogOpen}
-              onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
-            >
-              {layout.dialogBlockAlign === 'end' ? (
-                <Surface.Surface
-                  type={AppSurface.Dialog}
-                  data={layout.dialogContent}
-                  limit={1}
-                  fallback={ErrorFallback}
-                  placeholder={<div />}
-                />
-              ) : (
-                <DialogOverlay
-                  blockAlign={layout.dialogBlockAlign}
-                  classNames={layout.dialogOverlayClasses}
-                  style={layout.dialogOverlayStyle}
-                >
+              <DialogRoot
+                modal={layout.dialogBlockAlign !== 'end'}
+                open={layout.dialogOpen}
+                onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
+              >
+                {layout.dialogBlockAlign === 'end' ? (
                   <Surface.Surface
                     type={AppSurface.Dialog}
                     data={layout.dialogContent}
                     limit={1}
                     fallback={ErrorFallback}
+                    placeholder={<div />}
                   />
-                </DialogOverlay>
-              )}
-            </DialogRoot>
+                ) : (
+                  <DialogOverlay
+                    blockAlign={layout.dialogBlockAlign}
+                    classNames={layout.dialogOverlayClasses}
+                    style={layout.dialogOverlayStyle}
+                  >
+                    <Surface.Surface
+                      type={AppSurface.Dialog}
+                      data={layout.dialogContent}
+                      limit={1}
+                      fallback={ErrorFallback}
+                    />
+                  </DialogOverlay>
+                )}
+              </DialogRoot>
 
-            <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
-            <Popover.Portal>
-              <Popover.Content
-                side={layout.popoverSide}
-                onOpenAutoFocus={(event) => event.preventDefault()}
-                onInteractOutside={handleInteractOutside}
-                onEscapeKeyDown={handleInteractOutside}
-                sticky='always'
-                hideWhenDetached
-              >
-                <Popover.Viewport>
-                  {layout.popoverKind === 'card' && (
-                    <Card.Root>
-                      <Card.Header>
-                        {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
-                        <Card.DragHandle />
-                        {layout.popoverTitle ? (
-                          <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+              <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
+              <Popover.Portal>
+                <Popover.Content
+                  side={layout.popoverSide}
+                  onOpenAutoFocus={(event) => event.preventDefault()}
+                  onInteractOutside={handleInteractOutside}
+                  onEscapeKeyDown={handleInteractOutside}
+                  hideWhenDetached
+                >
+                  <Popover.Viewport>
+                    {/* `border={false}`: the popover content already draws the surface and its border,
+                        so a bordered card inside it reads as a second frame. Matches the deck's popover. */}
+                    {layout.popoverKind === 'card' && (
+                      <Card.Root border={false} classNames='dx-card-popover rounded-md'>
+                        <Card.Header>
+                          {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                          <Card.DragHandle />
+                          {layout.popoverTitle ? (
+                            <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                          ) : (
+                            <span />
+                          )}
+                          <Card.ActionIconButton action='close' onClick={handleClose} />
+                        </Card.Header>
+                        {layout.popoverContent ? (
+                          <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                         ) : (
-                          <span />
+                          // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
+                          <Card.Body classNames='min-h-8'>
+                            <Card.Row>
+                              <Card.Text variant='description'>No preview available.</Card.Text>
+                            </Card.Row>
+                          </Card.Body>
                         )}
-                        <Card.ActionIconButton action='close' onClick={handleClose} />
-                      </Card.Header>
-                      <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
-                    </Card.Root>
-                  )}
-                  {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
-                    <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
-                  )}
-                </Popover.Viewport>
-                <Popover.Arrow />
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
-        </Dnd.Root>
-        {layout.toasts.map((toast) => (
-          <StoryToast key={toast.id} toast={toast} onDismiss={handleDismissToast} />
-        ))}
-        <Toast.Viewport />
-      </div>
+                      </Card.Root>
+                    )}
+                    {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
+                      <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
+                    )}
+                  </Popover.Viewport>
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          </Dnd.Root>
+          {layout.toasts.map((toast) => (
+            <StoryToast key={toast.id} toast={toast} onDismiss={handleDismissToast} />
+          ))}
+          <Toast.Viewport />
+        </div>
+      </Tooltip.Provider>
     </Toast.Provider>
   );
 };

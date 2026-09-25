@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { Field, IconButton, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
@@ -71,25 +71,25 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
           <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
             {property === 'id' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
-              </Input.Root>
+              </Field.Root>
             )}
             {type === 'boolean' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
-                <Input.Checkbox
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
+                <Field.Checkbox
                   checked={(object as any)[property]}
                   onCheckedChange={(state) => setValue(object, property, !!state)}
                 />
-              </Input.Root>
+              </Field.Root>
             )}
             {property !== 'id' && type === 'string' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <Editor object={object} prop={property} />
-              </Input.Root>
+              </Field.Root>
             )}
           </div>
         ))}

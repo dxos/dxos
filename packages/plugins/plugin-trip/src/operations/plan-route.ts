@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
+import { Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
+
+import { RoutePlanError } from './errors.ts';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -45,11 +47,9 @@ export default RoutingOperation.PlanRoute.pipe(
           continue;
         }
 
-        // `tryPromise` routes a rejection (GeocodeError / RouteError / MissingApiKeyError)
-        // to the operation's failure channel, preserving the original Error for the UI.
         const result = yield* Effect.tryPromise({
           try: () => service.route({ waypoints, profile: 'driving' }),
-          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+          catch: (error) => (Routing.isFailure(error) ? error : RoutePlanError.wrap()(error)),
         });
 
         const route = result.routes[0];

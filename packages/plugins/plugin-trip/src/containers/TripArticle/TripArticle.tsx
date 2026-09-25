@@ -6,17 +6,18 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MapInline } from '@dxos/plugin-map';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
@@ -257,7 +258,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
-    <div role={role} className='@container dx-container overflow-hidden'>
+    <div role={role} className='@container dx-expand'>
       <div
         className={mx(
           'grid h-full',
@@ -265,9 +266,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
-            <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
+            <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
               </Panel.Toolbar>
@@ -282,10 +283,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar>
-              <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar />
-              </Menu.Root>
+            <Panel.Toolbar asChild>
+              <ActionToolbar {...menuActions} attendableId={attendableId} />
             </Panel.Toolbar>
             <Panel.Content asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
@@ -298,7 +297,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

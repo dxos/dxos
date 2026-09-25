@@ -5,32 +5,49 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
+import { DEFAULT_INDENTATION } from './helpers.ts';
+
 // Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
 // renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via
 // `bg-accent-bg`). See `react-ui-list/AUDIT.md` D4.
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
 type InstructionType = Exclude<Instruction, { type: 'instruction-blocked' }>['type'];
+
+/** What a drop does: `move` relocates the item, `link` adds a reference and leaves it where it is, `reject` blocks it. */
+export type DropKind = 'move' | 'link' | 'reject';
 type Orientation = 'sibling' | 'child';
 
 const edgeToOrientationMap: Record<InstructionType, Orientation> = {
   'reorder-above': 'sibling',
   'reorder-below': 'sibling',
   'make-child': 'child',
-  'reparent': 'child',
+  // A line, not a box: `reparent` inserts the item *after* the target's ancestor, so it reads as a
+  // position between rows — drawn at the shallower indent, which is what distinguishes it from the
+  // `reorder-below` line sitting on the same edge.
+  'reparent': 'sibling',
 };
 
-const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
-  sibling:
-    'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
-  child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+const orientationStyles: Record<
+  Orientation,
+  Record<Exclude<DropKind, 'reject'>, HTMLAttributes<HTMLElement>['className']>
+> = {
+  sibling: {
+    move: 'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
+    link: 'h-0 border-t-[length:var(--line-thickness)] border-dashed border-accent-bg left-(--horizontal-indent) right-0 before:left-(--negative-terminal-size)',
+  },
+  child: {
+    move: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+    link: 'inset-0 border-[length:var(--line-thickness)] border-dashed before:invisible',
+  },
 };
 
+// The line sits in the gap between rows, so below one row and above the next draw on the same pixels.
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
   'reorder-above': 'top-(--line-offset) before:top-(--offset-terminal)',
   'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-bg',
-  'reparent': '',
+  'reparent': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
 };
 
 const strokeSize = 2;
@@ -40,15 +57,18 @@ const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 /** Props for {@link TreeDropIndicator}. */
 export type TreeDropIndicatorProps = {
   instruction: Instruction;
+  kind?: Exclude<DropKind, 'reject'>;
   gap?: number;
 };
 
 /** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
-export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorProps) => {
+export const TreeDropIndicator = ({ instruction, kind = 'move', gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
   const orientation = edgeToOrientationMap[desiredInstruction.type];
+  const indentLevel =
+    desiredInstruction.type === 'reparent' ? desiredInstruction.desiredLevel : desiredInstruction.currentLevel;
   if (isBlocked) {
     return null;
   }
@@ -63,10 +83,13 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorPro
           '--terminal-radius': `${terminalSize / 2}px`,
           '--negative-terminal-size': `-${terminalSize}px`,
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
-          '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
+          // The tree's own indent, not the instruction's: the hitbox reasons in a wider one so the
+          // reparent bands are reachable, and using that here would push the line off the row.
+          // `reparent` draws at the level it would land at, which is the whole point of the zone.
+          '--horizontal-indent': `${indentLevel * DEFAULT_INDENTATION + 4}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
+      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation][kind]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };

@@ -2,35 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon, type IconProps } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-
-export const RandomShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('rng'),
-    min: Schema.optional(Schema.Number),
-    max: Schema.optional(Schema.Number),
-  }),
-);
-
-export type RandomShape = Schema.Schema.Type<typeof RandomShape>;
-
-export type CreateRandomProps = CreateShapeProps<RandomShape>;
-
-export const createRandom = (props: CreateRandomProps) =>
-  createShape<RandomShape>({
-    type: 'rng',
-    size: { width: 64, height: 64 },
-    ...props,
-  });
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type RandomShape } from './rng-def.ts';
 
 const icons = [
   'ph--dice-one--regular',
@@ -64,6 +43,10 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
     };
   }, [spin]);
 
+  // The node frame takes a pointer press as select-and-drag, capturing the pointer so the click never
+  // reaches this control; the gesture has to stop here for the operation to fire.
+  const stopGesture: IconProps['onPointerDown'] = (ev) => ev.stopPropagation();
+
   const handleClick: IconProps['onClick'] = (ev) => {
     ev.stopPropagation();
     runtime.setOutput(DEFAULT_OUTPUT, Math.random());
@@ -72,16 +55,13 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
 
   return (
     <div className='flex grow items-center justify-center'>
-      <Icon icon={icon} classNames={spin && 'animate-[spin_1s]'} size={10} onClick={handleClick} />
+      <Icon
+        icon={icon}
+        classNames={spin && 'animate-[spin_1s]'}
+        size={10}
+        onPointerDown={stopGesture}
+        onClick={handleClick}
+      />
     </div>
   );
-};
-
-export const randomShape: ShapeDef<RandomShape> = {
-  type: 'rng',
-  name: 'Random',
-  icon: 'ph--dice-six--regular',
-  component: RandomComponent,
-  createShape: createRandom,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

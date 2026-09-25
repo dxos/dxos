@@ -2,25 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Graph, type Node } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  DeckCapabilities,
-  PLANK_COMPANION_TYPE,
-  type StoredDeckState,
-  companionAspect,
-} from '@dxos/plugin-deck';
-import { Attention } from '@dxos/react-ui-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as CompanionViewState from '@dxos/plugin-deck/CompanionViewState';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
@@ -32,19 +32,45 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
-    const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
-    const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
+
+    // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
+    // provision for.
+    const deckStateOption = yield* Capability.getOption(DeckCapabilities.State);
+    if (Option.isNone(deckStateOption)) {
+      return [];
+    }
+    const deckStateAtom = deckStateOption.value;
+    // What is open is derived from the URL and lives in the deck's ephemeral state, not its stored one.
+    const deckEphemeralOption = yield* Capability.getOption(DeckCapabilities.EphemeralState);
+    if (Option.isNone(deckEphemeralOption)) {
+      return [];
+    }
+    const deckEphemeralAtom = deckEphemeralOption.value;
+    // An untouched companion flag means different things flat and stacked, so it cannot be read without
+    // the layout setting.
+    const deckSettingsAtom = Option.getOrUndefined(yield* Capability.getOption(DeckCapabilities.Settings));
+    // The mobile drawer and the desktop companion plank record "which companion is on screen" in
+    // different fields, so the host has to be known before that state can be read.
+    const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+      Effect.catch(() => Effect.succeed('desktop' as const)),
+    );
+
+    const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
+    const stateAtom = yield* AssistantCapabilities.State;
     // The selected companion variant moved off deck state into a global view-state aspect; read and
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
     // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
+    const viewState = yield* AttentionCapabilities.ViewState;
+    const variantAtom = Atom.make(
+      (get) => get(viewState.atom(CompanionViewState.aspect, CompanionViewState.CONTEXT)).variant,
+    );
 
     const plankSubs = new Map<string, () => void>();
+    /** Companion URIs with a chat being provisioned, so a second trigger does not create another. */
+    const pending = new Set<string>();
 
     /** Unsubscribe a single plank and remove it from the map. */
     const unsubPlank = (plankId: string) => {
@@ -66,7 +92,7 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
-      const node: Node.Node | null = Graph.getNode(graph, plankId).pipe(Option.getOrNull);
+      const node: AppGraphNode.Node | null = AppGraph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;
       }
@@ -81,6 +107,9 @@ export default Capability.makeModule(
       if (cache[companionUri]) {
         return true;
       }
+      if (pending.has(companionUri)) {
+        return false;
+      }
 
       const db = Obj.getDatabase(object);
       if (!db) {
@@ -88,23 +117,31 @@ export default Capability.makeModule(
         return false;
       }
 
+      pending.add(companionUri);
       void operationInvoker
-        .invokePromise(AssistantOperation.EnsureCompanionChat, { db, companionTo: object })
-        .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
+        .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
+        .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }))
+        .finally(() => pending.delete(companionUri));
 
       return false;
     };
 
     const provision = () => {
-      const deckState: StoredDeckState = registry.get(deckStateAtom);
+      const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionPlanks.length) {
+      const active: string[] = registry.get(deckEphemeralAtom).open[deckState.activeDeck]?.active ?? [];
+      const { open, variant: companionVariant } = DeckSchema.getCompanionSelection(
+        platform,
+        deckState,
+        registry.get(variantAtom),
+        deckSettingsAtom && registry.get(deckSettingsAtom).flatten,
+      );
+      if (!deck || !open) {
         unsubAllPlanks();
         return;
       }
 
-      const companionVariant = registry.get(variantAtom);
-      const plankIds = new Set(deck.active);
+      const plankIds = new Set(active);
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {
@@ -120,18 +157,24 @@ export default Capability.makeModule(
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
-          // Not yet resolved — subscribe to child connections so we re-try
-          // when graph builder extensions add companion nodes (after expand). This subscription
-          // outlives the current `provision()` run, so re-read the latest variant at callback time
-          // rather than closing over the one captured here.
-          plankSubs.set(
-            plankId,
-            registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, registry.get(variantAtom))) {
+          AppGraph.expandSync(graph, plankId, AppNode.companion);
+          let provisioned = false;
+          const unsubscribe = registry.subscribe(
+            graph.connections(plankId, AppNode.companion),
+            () => {
+              if (!provisioned && provisionForPlank(plankId, registry.get(variantAtom))) {
+                provisioned = true;
                 unsubPlank(plankId);
               }
-            }),
+            },
+            { immediate: true },
           );
+          // The immediate call can provision before the subscription is tracked.
+          if (provisioned) {
+            unsubscribe();
+          } else {
+            plankSubs.set(plankId, unsubscribe);
+          }
         }
       }
     };
@@ -139,17 +182,22 @@ export default Capability.makeModule(
     provision();
 
     const unsub1 = registry.subscribe(deckStateAtom, provision);
+    const unsubOpen = registry.subscribe(deckEphemeralAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
+    const unsubSettings = deckSettingsAtom ? registry.subscribe(deckSettingsAtom, provision) : () => {};
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
+        unsubOpen();
         unsub2();
         unsub3();
+        unsubSettings();
         unsubAllPlanks();
       }),
     );
+    return [];
   }),
 );
 
@@ -158,24 +206,14 @@ export default Capability.makeModule(
  * Returns the variant that would actually be rendered for a given plank.
  */
 const resolveEffectiveVariant = (
-  graph: Graph.BaseGraph,
+  graph: AppGraph.BaseGraph,
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = Graph.getConnections(graph, plankId, 'child')
-    .filter((node) => node.type === PLANK_COMPANION_TYPE)
+  const companions = AppGraph.getConnections(graph, plankId, AppNode.companion)
+    .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
-  if (companions.length === 0) {
-    return undefined;
-  }
-
-  if (preferredVariant) {
-    const preferred = companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant);
-    if (preferred) {
-      return Attention.getLinkedVariant(preferred.id);
-    }
-  }
-
-  return Attention.getLinkedVariant(companions[0].id);
+  const selected = DeckSchema.selectCompanion(companions, preferredVariant);
+  return selected && Attention.getLinkedVariant(selected.id);
 };

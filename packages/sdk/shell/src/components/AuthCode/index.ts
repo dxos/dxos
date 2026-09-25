@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-export * from './AuthCode';
+export * from './AuthCode.tsx';

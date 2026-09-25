@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type ListSpacesResponse, type SpaceActivityEntry } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { AdminApiError, adminRequest, formatAdminError } from '../util.ts';
 
 const formatSpaceRow = (space: SpaceActivityEntry): string => {
   const status = space.metadata?.status ?? 'unknown';
@@ -21,12 +21,12 @@ const formatSpaceRow = (space: SpaceActivityEntry): string => {
 export const list = Command.make(
   'list',
   {
-    limit: Options.integer('limit').pipe(
+    limit: Options.Int('limit').pipe(
       Options.withDescription('Max results per page (capped at 200).'),
       Options.withDefault(50),
     ),
-    cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
-    order: Options.choice('order', ['asc', 'desc']).pipe(
+    cursor: Options.String('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    order: Options.Literals('order', ['asc', 'desc']).pipe(
       Options.withDescription('Sort order by last activity.'),
       Options.withDefault('desc' as const),
     ),
@@ -38,7 +38,7 @@ export const list = Command.make(
     }
 
     const result = yield* adminRequest<ListSpacesResponse>('GET', '/admin/spaces', { query }).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

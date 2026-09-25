@@ -4,18 +4,19 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
 
 const schema = Schema.Struct({
-  active: Schema.Boolean.annotations({ title: 'Active' }),
-}).pipe(Schema.mutable);
+  active: Schema.Boolean.annotate({ title: 'Active' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 
@@ -30,7 +31,7 @@ const DefaultStory = () => {
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

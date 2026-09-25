@@ -3,51 +3,75 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
-import { Keyboard } from '@dxos/keyboard';
-import { Graph, Node, runAction } from '@dxos/plugin-graph';
-import { getHostPlatform } from '@dxos/util';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import { runAction } from '@dxos/plugin-graph';
+import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
+import { resolveKeyBinding } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const invoker = yield* Capabilities.OperationInvoker;
     const pluginContext = yield* Capability.Service;
 
-    // TODO(wittjosiah): Factor out.
-    // TODO(wittjosiah): Handle removal of actions.
-    const visitor = (node: Node.Node, path: string[]) => {
-      let shortcut: string | undefined;
-      if (typeof node.properties.keyBinding === 'object') {
-        const availablePlatforms = Object.keys(node.properties.keyBinding);
-        const platform = getHostPlatform();
-        shortcut = availablePlatforms.includes(platform)
-          ? node.properties.keyBinding[platform]
-          : platform === 'ios'
-            ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-            : platform === 'linux' || platform === 'unknown'
-              ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-              : undefined;
-      } else {
-        shortcut = node.properties.keyBinding;
-      }
+    // Ids registered by the last sync, so a re-sync can retire the ones the graph no longer has.
+    let registered = new Set<string>();
 
-      if (shortcut && Node.isAction(node)) {
-        Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
-          shortcut,
-          handler: () => void runAction(invoker, pluginContext, node, { parent: node, caller: KEY_BINDING }),
-          data: node.properties.label,
+    // TODO(wittjosiah): Factor out.
+    const visitor = (seen: Set<string>) => (node: AppGraphNode.Node, path: string[]) => {
+      const shortcut = resolveKeyBinding(node.properties.keyBinding);
+
+      if (shortcut && AppGraphNode.isAction(node)) {
+        // The parent's id is already the full scope path.
+        const parentId = path.at(-2) ?? GraphNode.RootId;
+        const id = `${parentId}:${node.id}`;
+        seen.add(id);
+        // This re-runs on every graph change, and each store mutation notifies every subscriber.
+        const existing = hotkeyStore.getState().commands.get(id);
+        if (existing?.hotkey === shortcut && JSON.stringify(existing.label) === JSON.stringify(node.properties.label)) {
+          return;
+        }
+
+        hotkeyStore.unregister(id);
+        hotkeyStore.register({
+          id,
+          hotkey: shortcut,
+          scopes: [parentId],
+          label: node.properties.label,
+          // Resolved when fired, since an unchanged binding keeps the closure it was registered with.
+          action: () => {
+            const current = Option.getOrUndefined(AppGraph.getNode(graph, node.id));
+            if (current && AppGraphNode.isAction(current)) {
+              void runAction(invoker, pluginContext, current, { parent: current, caller: KEY_BINDING });
+            }
+          },
+          // Bindings came from graph actions, which fired everywhere; Ark excludes text fields
+          // unless a command opts in.
+          options: { enableOnFormTags: true, enableOnContentEditable: true },
         });
       }
     };
 
     const syncBindings = () => {
-      Graph.traverse(graph, { relation: ['child', 'action'], visitor });
+      const seen = new Set<string>();
+      AppGraph.traverse(graph, { relation: ['child', 'action'], visitor: visitor(seen) });
+      // Actions the graph has dropped since the last pass.
+      for (const id of registered) {
+        if (!seen.has(id)) {
+          hotkeyStore.unregister(id);
+        }
+      }
+      registered = seen;
     };
 
     const eventHandler = debounce(syncBindings, 500);
@@ -56,14 +80,20 @@ export default Capability.makeModule(
     syncBindings();
 
     // TODO(burdon): Create context and plugin.
-    Keyboard.singleton.initialize();
-    Keyboard.singleton.setCurrentContext(Node.RootId);
+    initHotkeys();
+    setHotkeyScope(GraphNode.RootId);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe();
-        Keyboard.singleton.destroy();
+        // Only the bindings this capability registered: the store is shared with every component
+        // that calls `useHotkeys`, so destroying it here would silently unbind all of them.
+        for (const id of registered) {
+          hotkeyStore.unregister(id);
+        }
+        registered = new Set();
       }),
     );
+    return [];
   }),
 );

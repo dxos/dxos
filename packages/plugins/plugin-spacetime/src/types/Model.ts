@@ -7,14 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /** Supported primitive geometry types. */
-export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'cone', 'pyramid');
+export const PrimitiveType = Schema.Literals(['cube', 'sphere', 'cylinder', 'cone', 'pyramid']);
 export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
 
 /** Bundled preset model names. */
-export const PresetType = Schema.Literal('firetruck', 'race', 'taxi');
+export const PresetType = Schema.Literals(['firetruck', 'race', 'taxi']);
 export type PresetType = Schema.Schema.Type<typeof PresetType>;
 
 /** Union of all object template types (primitives + presets). */
@@ -53,12 +52,12 @@ export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.spac
   Schema.Struct({
     label: Schema.optional(Schema.String),
     primitive: Schema.optional(PrimitiveType),
-    mesh: Schema.optional(Mesh.pipe(FormInputAnnotation.set(false))),
-    position: Vec3.pipe(FormInputAnnotation.set(false)),
-    scale: Vec3.pipe(FormInputAnnotation.set(false)),
-    rotation: Vec3.pipe(FormInputAnnotation.set(false)),
+    mesh: Schema.optional(Mesh.pipe(Annotation.FormInputAnnotation.set(false))),
+    position: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
+    scale: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
+    rotation: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
     color: Schema.optional(Schema.String),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }), Annotation.UserType.set()),
 ) {}
 
 /** Create a model object with sensible defaults. */

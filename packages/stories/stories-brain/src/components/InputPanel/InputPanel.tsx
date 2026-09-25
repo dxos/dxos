@@ -6,8 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
 import {
+  Banner,
   Button,
-  Input,
+  Field,
   Panel,
   ScrollArea,
   Select,
@@ -16,7 +17,6 @@ import {
   useThemeContext,
 } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Empty } from '@dxos/react-ui-list';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -147,12 +147,12 @@ export const InputPanel = ({
           </Button>
           <div className='grow' />
           {mode === 'document' && parse && (
-            <Input.Root>
+            <Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Input.Label classNames='text-sm text-description'>POS</Input.Label>
+                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
-            </Input.Root>
+            </Field.Root>
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
@@ -178,22 +178,21 @@ export const InputPanel = ({
                           </Select.Option>
                         ))}
                       </Select.Viewport>
-                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>
                 {onLoadDataset && (
                   <>
                     <Toolbar.Separator />
-                    <Input.Root>
-                      <Input.TextInput
+                    <Field.Root>
+                      <Field.Input
                         type='number'
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
                         classNames='w-20'
                       />
-                    </Input.Root>
+                    </Field.Root>
                     <Button disabled={busy} onClick={() => onLoadDataset(count)}>
                       Load
                     </Button>
@@ -205,12 +204,12 @@ export const InputPanel = ({
               <ScrollArea.Root padding>
                 <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
-                    <Empty label='No messages.' />
+                    <Banner.Empty label='No messages.' />
                   ) : (
                     dataset.messages.map((message) => (
                       <div
                         key={message.id}
-                        className='flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+                        className='flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
                       >
                         <div className='font-medium truncate'>{message.subject}</div>
                         <div className='text-sm text-description truncate'>{message.from}</div>

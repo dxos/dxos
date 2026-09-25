@@ -17,7 +17,7 @@ dx-trace-imports (--from <entry.ts> | --export <subpath>) --to <package-or-patte
   - A relative or absolute file path (e.g. `./src/foo.ts`).
   - A glob pattern matched against package names, paths, and external specifiers (e.g. `*.pcss`, `@dxos/react-ui*`).
 - `--max-chains <n>`: Stop after this many chains (default: `10`).
-- `--conditions <list>`: Comma-separated package.json export conditions (default: `workerd,worker,node`). Pass `""` to clear. Include `source` to trace TypeScript sources instead of compiled output.
+- `--conditions <list>`: Comma-separated package.json export conditions (default: `workerd,worker,node`). Include `source` to trace TypeScript sources instead of compiled output. Repeatable — each occurrence is an **independent** set traced separately, so one run can assert the same property under several runtimes (e.g. `--conditions workerd,worker --conditions node`). A subpath that resolves to a different module per runtime is only checked under the runtimes you pass.
 - `--packages-only`: Strip filenames, render package-to-package chains, and dedupe.
 - `--fail-on <present|missing>`: Exit non-zero when chains are present (`present`) or absent (`missing`). Useful for CI verification.
 
@@ -29,6 +29,15 @@ dx-trace-imports \
   --export ./plugin \
   --to "@dxos/react-ui" \
   --conditions source,workerd,worker,node \
+  --fail-on present
+
+# Verify it under workerd AND node separately — the export resolves to a different
+# barrel per runtime, so a single combined set would leave one of them unchecked.
+dx-trace-imports \
+  --export ./plugin \
+  --to "@dxos/react-ui" \
+  --conditions workerd,worker \
+  --conditions node \
   --fail-on present
 
 # Find import paths from a file to a package.

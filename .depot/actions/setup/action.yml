@@ -1,0 +1,199 @@
+name: Setup
+description: Setup the environment for the other workflows
+
+inputs:
+  cache-scope:
+    description: >
+      Prefix for the pnpm store cache key. Use a distinct value per trust boundary
+      (e.g. "publish") to prevent a PR-poisoned cache from being restored in release
+      workflows. Defaults to "ci" so all non-publish workflows share one pool.
+    default: 'ci'
+  verify-integrity:
+    description: >
+      Enable pnpm store integrity verification. Must be "true" for any workflow that
+      holds publish credentials (id-token: write) to guard against cache poisoning.
+    default: 'false'
+  remote-cache:
+    description: >
+      Set "false" to build without the remote cache. Deployment and publish workflows do this so a
+      released artifact is built from source rather than trusted from a cache any CI job can write
+      to. Certificates come from the MOON_CACHE_* environment variables, which every workflow that
+      wants the cache sets once at workflow level — a composite action cannot read `secrets`.
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
+    #   It's not clear why, the Docker image is setup for the user to own the workspace.
+    #   The checkout action also already runs this internally as a step as well.
+    - name: Mark workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      shell: bash
+
+    # `.moon/workspace.yml` points the remote cache at a self-hosted bazel-remote behind mTLS.
+    # moon degrades to local-cache-only when it cannot authenticate — silently, and green — so a
+    # missing secret would cost every job its cache with no red build to notice it. Fail here
+    # instead, except on fork PRs, which cannot be given secrets at all.
+    #
+    # MOON_CACHE_* are read straight from the environment: a composite action cannot access the
+    # `secrets` context, so each workflow binds them once in a workflow-level `env:` block rather
+    # than every call site repeating three `with:` lines.
+    - name: Install remote cache certificates
+      env:
+        IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        REMOTE_CACHE: ${{ inputs.remote-cache }}
+      run: |
+        if [ "$REMOTE_CACHE" != "true" ]; then
+          # Empty is moon's own "no remote": it makes no connection attempt and logs nothing.
+          # Set explicitly rather than relying on absent credentials, so this does not depend
+          # on a workflow having forgotten to bind the secrets.
+          echo "MOON_REMOTE_HOST=" >> "$GITHUB_ENV"
+          echo "Remote cache disabled for this job."
+          exit 0
+        fi
+        if [ -z "$MOON_CACHE_CA_PEM" ] || [ -z "$MOON_CACHE_CLIENT_PEM" ] || [ -z "$MOON_CACHE_CLIENT_KEY" ]; then
+          if [ "$IS_FORK" = "true" ]; then
+            echo "::warning::Fork PR — no remote cache credentials, moon will use the local cache only."
+            exit 0
+          fi
+          echo "::error::Remote cache certificates are missing. Bind MOON_CACHE_CA_PEM / MOON_CACHE_CLIENT_PEM / MOON_CACHE_CLIENT_KEY in the workflow's env block, or pass remote-cache: 'false'."
+          exit 1
+        fi
+        mkdir -p .moon/certs
+        printf '%s\n' "$MOON_CACHE_CA_PEM" > .moon/certs/ca.pem
+        printf '%s\n' "$MOON_CACHE_CLIENT_PEM" > .moon/certs/client.pem
+        printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
+        chmod 600 .moon/certs/client.key
+        openssl x509 -in .moon/certs/client.pem -noout -enddate
+
+        # Prove the cache is actually usable before any task runs. Checking connectivity rather
+        # than counting cache hits is deliberate: a legitimately cold branch has zero hits, so a
+        # hit count cannot separate "nothing to restore" from "cache is broken", whereas an
+        # unreachable host or a rejected certificate is unambiguous.
+        # `grpcs*` rather than `grpcs\?`: BSD sed treats \? literally, and a silently empty host
+        # would fail every job with a confusing error.
+        host=$(grep -v '^[[:space:]]*#' .moon/workspace.yml | sed -n "s|.*host: 'grpcs*://\([^':]*\).*|\1|p" | head -1)
+        if [ -z "$host" ]; then
+          echo "::error::Could not read remote.host from .moon/workspace.yml."
+          exit 1
+        fi
+
+        # curl exit codes already distinguish a timeout (28) from a cert/TLS failure (35/60) from
+        # an HTTP error (22), so surfacing the raw code beats guessing at a cause in prose.
+        curl_exit_meaning() {
+          case "$1" in
+            22) echo "HTTP error response" ;;
+            28) echo "timed out waiting for a response" ;;
+            35|60) echo "TLS/certificate handshake failed" ;;
+            *) echo "curl exit $1" ;;
+          esac
+        }
+        # The droplet has been observed going I/O-bound during a CI fan-out and answering the
+        # probe late rather than refusing it, which reddened jobs over a transient blip rather
+        # than a real cache fault. Retry before treating it as down, and degrade to a warning
+        # instead of failing the job: a cache miss costs a slower build, not a red one.
+        degrade() {
+          echo "::warning::$1"
+          echo "MOON_REMOTE_HOST=" >> "$GITHUB_ENV"
+          exit 0
+        }
+
+        # 9093 is the HTTP listener of the same process that serves gRPC on 9092.
+        # `|| preflight_exit=$?` rather than a bare call: the shell here runs with `set -e`, and an
+        # unguarded failing command would abort the script before the degrade logic below ever runs.
+        preflight_exit=0
+        curl -sf --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 --retry-max-time 60 \
+             -o /dev/null -w 'time_connect=%{time_connect} time_appconnect=%{time_appconnect} time_total=%{time_total}\n' \
+             --cacert .moon/certs/ca.pem "https://$host:9093/status" || preflight_exit=$?
+        if [ "$preflight_exit" -ne 0 ]; then
+          degrade "Remote cache $host preflight failed after retries: $(curl_exit_meaning "$preflight_exit") (curl exit $preflight_exit). Falling back to the local cache for this job."
+        fi
+
+        # /status is unauthenticated; a CAS path is not. 404 means authorised and absent, which is
+        # what an all-zero digest should be. 401 means the client certificate was rejected.
+        cas_exit=0
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 --retry-max-time 60 \
+          --cacert .moon/certs/ca.pem --cert .moon/certs/client.pem --key .moon/certs/client.key \
+          "https://$host:9093/cas/0000000000000000000000000000000000000000000000000000000000000000") || cas_exit=$?
+        if [ "$cas_exit" -ne 0 ]; then
+          degrade "Remote cache $host CAS probe failed after retries: $(curl_exit_meaning "$cas_exit") (curl exit $cas_exit). Falling back to the local cache for this job."
+        fi
+        case "$code" in
+          404) ;;
+          401|403)
+            degrade "Remote cache $host rejected the client certificate (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+          5??)
+            degrade "Remote cache $host CAS probe returned a server error (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+          *)
+            degrade "Remote cache $host CAS probe returned an unexpected status (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+        esac
+        echo "Remote cache $host reachable and authenticated."
+      shell: bash
+
+    # TODO(wittjosiah): Install moon in docker image?
+    - uses: moonrepo/setup-toolchain@v0
+      with:
+        # IMPORTANT: Keep in-sync with .prototools
+        moon-version: '2.5.2'
+        proto-version: '0.60.2'
+
+    # Installs the toolchains `.moon/toolchains.yml` declares, which the first moon task would do anyway.
+    # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, and rust is a
+    # 1.2 GB rustup toolchain that nothing in CI uses.
+    - name: Install moon toolchains
+      run: moon setup
+      shell: bash
+
+    # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from
+    # `.prototools`, so the two can drift and only a cold toolchain cache would reveal it — print what PATH
+    # resolves next to the pin and flag a divergence. Logged rather than failed: the image's copies are used
+    # only until moon's cache exists. bun is absent from the image on purpose, and `moon setup` populates
+    # moon's toolchain without creating a proto shim, so a bare `bun` exits 127 and only the pin can be read.
+    - name: Log out debug info
+      run: |
+        for tool in node pnpm; do
+          resolved=$( ("$tool" --version 2>/dev/null || true) | tail -1)
+          pinned=$( (proto run "$tool" -- --version 2>/dev/null || true) | tail -1)
+          if [ -z "$resolved" ] || [ -z "$pinned" ]; then
+            status=UNKNOWN
+          elif [ "$resolved" = "$pinned" ]; then
+            status=ok
+          else
+            status=MISMATCH
+          fi
+          printf '%-5s PATH=%-12s pinned=%-12s %s\n' "$tool" "${resolved:-<absent>}" "${pinned:-<none>}" "$status"
+        done
+        printf '%-5s pinned=%s\n' bun "$( (proto run bun -- --version 2>/dev/null || true) | tail -1)"
+      shell: bash
+
+    - name: PNPM Store Path
+      id: pnpm-store
+      run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Get Node version
+      id: node-version
+      run: echo "version=$(node --version)" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-store.outputs.pnpm-store }}
+        key: ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ inputs.verify-integrity }}" = "true" ]; then
+          pnpm set verify-store-integrity true
+        else
+          pnpm set verify-store-integrity false
+        fi
+        pnpm install --prefer-offline
+      shell: bash

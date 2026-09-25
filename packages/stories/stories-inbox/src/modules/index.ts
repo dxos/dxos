@@ -2,21 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { ArchiveModule } from './ArchiveModule';
-import { ConnectorModule } from './ConnectorModule';
-import { ControlsModule } from './ControlsModule';
-import { FactsModule } from './FactsModule';
-import { MailboxModule } from './MailboxModule';
-import { MessageModule } from './MessageModule';
-import { StatsModule } from './StatsModule';
-import { SwarmTraceModule } from './SwarmTraceModule';
-import { SyncStateModule } from './SyncStateModule';
-import { TopicsModule } from './TopicsModule';
-import { TraceModule } from './TraceModule';
-import { TriggersModule } from './TriggersModule';
+import { ArchiveModule } from './ArchiveModule.tsx';
+import { ConnectorModule } from './ConnectorModule.tsx';
+import { FactsModule } from './FactsModule.tsx';
+import { MailboxModule } from './MailboxModule.tsx';
+import { MessageModule } from './MessageModule.tsx';
+import { StatsModule } from './StatsModule.tsx';
+import { SwarmTraceModule } from './SwarmTraceModule.tsx';
+import { SyncStateModule } from './SyncStateModule.tsx';
+import { TopicsModule } from './TopicsModule.tsx';
+import { TraceModule } from './TraceModule.tsx';
+import { TriggersModule } from './TriggersModule.tsx';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated surface
@@ -24,26 +23,35 @@ import { TriggersModule } from './TriggersModule';
  * and each surface resolves the active space via `useActiveSpace()`.
  */
 export const StoryRole = {
-  Controls: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.controls'),
+  Archive: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.archive'),
+  Connector: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.connector'),
+  Facts: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.facts'),
   Mailbox: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailbox'),
   Message: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.message'),
-  Facts: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.facts'),
-  Topics: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.topics'),
-  Connector: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.connector'),
-  Archive: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.archive'),
   Stats: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.stats'),
-  SyncState: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.syncState'),
-  Trace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.trace'),
   SwarmTrace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.swarmTrace'),
+  SyncState: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.syncState'),
+  Topics: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.topics'),
+  Trace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.trace'),
   Triggers: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.triggers'),
 };
 
 /** React surfaces for the MailboxSync story columns, one per `StoryRole` token. */
 export const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
-    id: 'inbox.controls',
-    filter: Surface.makeFilter(StoryRole.Controls),
-    component: ControlsModule,
+    id: 'inbox.archive',
+    filter: Surface.makeFilter(StoryRole.Archive),
+    component: ArchiveModule,
+  }),
+  Surface.create({
+    id: 'inbox.connector',
+    filter: Surface.makeFilter(StoryRole.Connector),
+    component: ConnectorModule,
+  }),
+  Surface.create({
+    id: 'inbox.facts',
+    filter: Surface.makeFilter(StoryRole.Facts),
+    component: FactsModule,
   }),
   Surface.create({
     id: 'inbox.mailbox',
@@ -56,29 +64,14 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: MessageModule,
   }),
   Surface.create({
-    id: 'inbox.facts',
-    filter: Surface.makeFilter(StoryRole.Facts),
-    component: FactsModule,
-  }),
-  Surface.create({
-    id: 'inbox.topics',
-    filter: Surface.makeFilter(StoryRole.Topics),
-    component: TopicsModule,
-  }),
-  Surface.create({
-    id: 'inbox.connector',
-    filter: Surface.makeFilter(StoryRole.Connector),
-    component: ConnectorModule,
-  }),
-  Surface.create({
-    id: 'inbox.archive',
-    filter: Surface.makeFilter(StoryRole.Archive),
-    component: ArchiveModule,
-  }),
-  Surface.create({
     id: 'inbox.stats',
     filter: Surface.makeFilter(StoryRole.Stats),
     component: StatsModule,
+  }),
+  Surface.create({
+    id: 'inbox.swarmTrace',
+    filter: Surface.makeFilter(StoryRole.SwarmTrace),
+    component: SwarmTraceModule,
   }),
   Surface.create({
     id: 'inbox.syncState',
@@ -86,14 +79,14 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: SyncStateModule,
   }),
   Surface.create({
+    id: 'inbox.topics',
+    filter: Surface.makeFilter(StoryRole.Topics),
+    component: TopicsModule,
+  }),
+  Surface.create({
     id: 'inbox.trace',
     filter: Surface.makeFilter(StoryRole.Trace),
     component: TraceModule,
-  }),
-  Surface.create({
-    id: 'inbox.swarmTrace',
-    filter: Surface.makeFilter(StoryRole.SwarmTrace),
-    component: SwarmTraceModule,
   }),
   Surface.create({
     id: 'inbox.triggers',

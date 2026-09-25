@@ -4,13 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { ReviewCapabilities } from '../types';
+import { ReviewCapabilities } from '#types';
+
 import {
   type BindingDescriptor,
   type LifecycleInputs,
   applyViewModeSelection,
   deriveBinding,
-} from './review-lifecycle';
+} from './review-lifecycle.ts';
 
 const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
 const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');

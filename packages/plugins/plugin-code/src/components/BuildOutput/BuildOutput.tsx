@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type CodeCapabilities } from '#types';
+import { CodeCapabilities } from '#types';
 
 export type BuildOutputProps = {
   state: CodeCapabilities.ProjectBuildState | undefined;
@@ -29,16 +29,16 @@ export const BuildOutput = ({ state }: BuildOutputProps) => {
 
   if (!build && !run) {
     return (
-      <div className='dx-container grid p-2 overflow-auto text-xs text-description'>
+      <div className='dx-expand grid p-2 overflow-auto text-xs text-description'>
         {t('diagnostics.empty.placeholder')}
       </div>
     );
   }
 
   return (
-    <div className='dx-container grid grid-rows-[auto_1fr] overflow-hidden text-xs'>
+    <div className='dx-expand grid grid-rows-[auto_1fr] text-xs'>
       <BuildStatus build={build} run={run} />
-      <div className='dx-container grid grid-cols-2 divide-x divide-separator overflow-hidden'>
+      <div className='dx-expand grid grid-cols-2 divide-x divide-separator'>
         <DiagnosticsList diagnostics={build?.diagnostics ?? []} />
         <ConsoleView stdout={run?.stdout ?? []} stderr={run?.stderr ?? []} />
       </div>
@@ -61,8 +61,8 @@ const BuildStatus = ({ build, run }: BuildStatusProps) => {
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
     <div className='flex gap-2 px-2 py-1 border-b border-separator items-center'>
-      <span className={mx(build.ok ? 'text-success' : 'text-error')}>● {buildLabel}</span>
-      {runLabel && <span className='text-error'>● {runLabel}</span>}
+      <span className={mx(build.ok ? 'text-success-text' : 'text-error-text')}>● {buildLabel}</span>
+      {runLabel && <span className='text-error-text'>● {runLabel}</span>}
     </div>
   );
 };
@@ -74,7 +74,7 @@ type DiagnosticsListProps = {
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <div className='dx-container flex flex-col overflow-auto'>
+    <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
       {diagnostics.length === 0 ? (
         <div className='p-2 text-description'>—</div>
@@ -85,7 +85,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
               key={index}
               className={mx(
                 'px-2 py-1 border-b border-separator font-mono',
-                diagnostic.severity === 'error' ? 'text-error' : 'text-warning',
+                diagnostic.severity === 'error' ? 'text-error-text' : 'text-warning-text',
               )}
             >
               {diagnostic.path && (
@@ -114,7 +114,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
   const { t } = useTranslation(meta.profile.key);
   const total = stdout.length + stderr.length;
   return (
-    <div className='dx-container flex flex-col overflow-auto'>
+    <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('console.section.label')} count={total} />
       {total === 0 ? (
         <div className='p-2 text-description'>{t('console.empty.placeholder')}</div>
@@ -124,7 +124,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
             <span key={`out-${index}`}>{line}</span>
           ))}
           {stderr.map((line, index) => (
-            <span key={`err-${index}`} className='text-error'>
+            <span key={`err-${index}`} className='text-error-text'>
               {line}
             </span>
           ))}
@@ -135,7 +135,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
 };
 
 const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-  <div className='px-2 py-1 text-description border-b border-separator flex items-center gap-2 bg-toolbar-surface'>
+  <div className='px-2 py-1 text-description border-b border-separator flex items-center gap-2 dx-toolbar-surface'>
     <span>{label}</span>
     <span className='text-description'>({count})</span>
   </div>

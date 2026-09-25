@@ -4,11 +4,14 @@
 
 import { type Resource } from '@dxos/react-ui';
 import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
   ...introspectTranslations,
+  // The panels' tables (credentials, feeds, …) read their column menus from react-ui-table.
+  ...tableTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
@@ -18,13 +21,14 @@ export const translations = [
         'devtools-overview.label': 'Stats',
         'debug-app-graph.label': 'App Graph',
         'debug-tools-explorer.label': 'SDK Explorer',
+        'cli.label': 'CLI',
 
         'reset-data.label': 'Reset data (ERASES ALL DATA)',
         'client.label': 'Client',
         'config.label': 'Config',
         'storage.label': 'Storage',
         'sqlite.label': 'SQLite',
-        'logging.label': 'Logging',
+        'logging.label': 'Logs',
         'diagnostics.label': 'Diagnostics',
         'tracing.label': 'Tracing',
         'halo.label': 'HALO',

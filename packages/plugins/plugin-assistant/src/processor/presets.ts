@@ -29,6 +29,41 @@ export const presetsForProvider = (provider: DXN.DXN): AiServicePreset[] =>
   }));
 
 /**
+ * The preset a chat settles on: the configured default when the list still offers it, else the
+ * first available one.
+ */
+export const pickPreset = (presets: readonly AiServicePreset[], defaultModel?: string): AiServicePreset | undefined =>
+  (defaultModel ? presets.find((preset) => preset.model === defaultModel) : undefined) ?? presets[0];
+
+/**
+ * The preset a chat with no model of its own falls back to, derived from settings alone — what
+ * `usePresets` shows for such a chat.
+ *
+ * Exported for callers outside React that start a turn on a chat's behalf (delegation, a routine):
+ * the agent process is bound to the model on the chat, so a caller stamping anything but this onto
+ * an unselected chat would change what its own UI then shows. Availability filtering (installed
+ * sidecar models, a reachable LM Studio) is the UI's; this answers from the catalog, which is exact
+ * for `edge` and the configured default everywhere else.
+ */
+export const defaultPreset = (
+  settings: { modelProvider?: string; modelDefaults?: Record<string, string | undefined> },
+  options?: { hasBuiltIn?: boolean },
+): AiServicePreset | undefined => {
+  const provider = resolveProvider(settings.modelProvider, options?.hasBuiltIn ?? false);
+  return pickPreset(presetsForProvider(provider), settings.modelDefaults?.[defaultsKeyForProvider(provider)]);
+};
+
+/**
+ * The provider to resolve `model` through, given the one settings currently select. Model ids are
+ * provider-scoped, so a chat that kept a selection across a provider change (it picked Claude, then
+ * the user went offline) would otherwise be handed a provider that does not serve it and fail to
+ * resolve. The active provider wins whenever it serves the model — several providers serve the same
+ * local model ids, and the catalog's first entry is not necessarily the live one.
+ */
+export const providerForModel = (model: DXN.DXN, active: DXN.DXN | undefined): DXN.DXN | undefined =>
+  active && Model.get(active, model) ? active : (Model.byId(model)[0]?.provider ?? active);
+
+/**
  * Reconcile a stored provider DXN with the runtime: map the bundled sidecar (`built-in`) and an
  * external server (`ollama`) onto whichever is actually available — they are environment-exclusive
  * (the sidecar exists only on desktop). Defaults to `edge` when unset or unparseable.

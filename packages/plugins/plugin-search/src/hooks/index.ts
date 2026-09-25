@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './search-query';
-export * from './sync';
+export * from './search-query.ts';
+export * from './sync.ts';
 
-export * from './useGlobalSearch';
-export * from './useSearchResults';
-export * from './useWebSearch';
+export { GlobalFilterProvider, useGlobalFilteredObjects } from '@dxos/react-ui-search';
+export { useGlobalSearch, useGlobalSearchResults } from './SearchContext.ts';
+export * from './useGlobalSearch.tsx';
+export * from './useSearchResults.ts';
+export * from './useSearchableTypes.ts';
+export * from './useWebSearch.ts';

@@ -7,8 +7,10 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Routine, Trace, Trigger } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -19,8 +21,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { makeRoutine } from '../../util';
-import { RoutineTraceCompanion } from './RoutineTraceCompanion';
+import { makeRoutine } from '../../util/index.ts';
+import { RoutineTraceCompanion } from './RoutineTraceCompanion.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Feed.Feed, Trace.Message];
 
@@ -91,7 +93,7 @@ const withCompanion = () =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

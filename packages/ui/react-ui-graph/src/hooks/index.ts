@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './useGrid';
-export * from './useStateRef';
-export * from './useSvgContext';
-export * from './useZoom';
+export * from './useGrid.ts';
+export * from './useStateRef.ts';
+export * from './useSvgContext.ts';
+export * from './useZoom.ts';

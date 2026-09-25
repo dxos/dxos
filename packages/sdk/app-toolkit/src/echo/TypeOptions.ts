@@ -7,15 +7,12 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Filter, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { Annotation, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
-  location: Schema.Array(Schema.Literal('database', 'runtime')),
-  kind: Schema.Array(Schema.Literal('hidden', 'user')),
+  location: Schema.Array(Schema.Literals(['database', 'runtime'])),
+  kind: Schema.Array(Schema.Literals(['hidden', 'user'])),
 });
 
 export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
@@ -23,8 +20,12 @@ export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
 /**
  * Used in forms to identify the field representing an object's type and determine which types are shown as options.
  */
-export const TypeInputOptionsAnnotationId = Symbol.for('@dxos/schema/annotation/TypeInputOptions');
-export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
+export const TypeInputOptionsAnnotationId = '@dxos/schema/annotation/TypeInputOptions';
+export const TypeInputOptionsAnnotation = Annotation.make({
+  id: TypeInputOptionsAnnotationId,
+  schema: TypeInputOptions,
+  legacyId: true,
+});
 
 /**
  * Discovers all types — persisted in the space (database) and code-shipped in the registry (runtime).
@@ -32,6 +33,38 @@ export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOption
  * surface user-defined types.
  */
 export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
+
+/**
+ * Whether a type is user-facing: an object type (not a relation or meta-schema) that is persisted in a
+ * space or carries {@link Annotation.UserType}, unless `includeHidden`. Shared by every surface that
+ * lists types or objects so they agree.
+ */
+export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boolean }): boolean => {
+  if (Type.isRelation(type) || Type.isTypeKind(type)) {
+    return false;
+  }
+  return (
+    options?.includeHidden === true ||
+    Type.getDatabase(type) != null ||
+    Option.isSome(Annotation.UserType.get(Type.getSchema(type)))
+  );
+};
+
+/**
+ * Whether the object's type is user-facing. An object whose type is not registered reads as user-facing:
+ * a persisted type can still be loading, and refusing its objects would fail a drop mid-drag.
+ */
+export const isUserObject = (object: Obj.Unknown): boolean => {
+  const type = Obj.getType(object);
+  return type === undefined || isUserType(type);
+};
+
+/**
+ * Whether the type's {@link Annotation.UserType} carries the tag. Only annotations carry tags, so a type
+ * persisted in a space without one has none even though it is user-facing.
+ */
+export const hasUserTypeTag = (type: Type.AnyEntity, tag: string): boolean =>
+  Annotation.UserType.get(Type.getSchema(type)).pipe(Option.exists(({ tags }) => tags?.includes(tag) === true));
 
 export type TypeOption = {
   /** Full type URI (DXN or EID), suitable for use with Filter.type. */
@@ -65,10 +98,7 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
       continue;
     }
 
-    const effectSchema = Type.getSchema(type);
-    const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
-    const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
-    if (relation || hidden) {
+    if (!isUserType(type)) {
       if (!includeHiddenType) {
         continue;
       }

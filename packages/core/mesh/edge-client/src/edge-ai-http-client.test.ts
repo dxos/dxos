@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { patchAnthropicMessagesRequestBody } from './edge-ai-http-client';
+import { patchAnthropicMessagesRequestBody } from './edge-ai-http-client.ts';
 
 describe('patchAnthropicMessagesRequestBody', () => {
   test('adds eager_input_streaming to user-defined tools', ({ expect }) => {

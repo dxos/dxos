@@ -4,23 +4,23 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { type Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Provider } from '../../types';
+import { meta } from '#meta';
+import { Provider } from '#types';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 
@@ -66,20 +66,18 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-3'>
         <span className='text-sm text-description'>{t('search-fields.label')}</span>
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <div key={field.key} className='flex items-baseline justify-between gap-2'>
+              <Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
                 {field.type && <dd className='text-xs text-description'>{field.type}</dd>}
-              </div>
+              </Flex>
             ))}
           </dl>
         ) : (
@@ -115,9 +113,9 @@ const useMenuActions = (
   const onAction: ActionExecutor = useCallback(
     (action) => {
       // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
-      // runner needs the nominal `Node.Action`. The objects are the same graph actions the builder
+      // runner needs the nominal `AppGraphNode.Action`. The objects are the same graph actions the builder
       // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
-      void runAction(action as Node.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

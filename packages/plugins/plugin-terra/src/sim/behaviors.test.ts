@@ -4,12 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
-import { Terra, TerraObject } from '../types';
-import { CRUISE_ALTITUDE, behaviorFor } from './behaviors';
-import { angleBetween, slerp, toUnit } from './geo';
-import { buildNavGrid } from './nav-grid';
-import { walkRoute } from './path';
+import { Terra, TerraObject } from '#types';
+
+import { type Vec3, makeSampler, radiusAt, seaRadius } from '../engine/index.ts';
+import { CRUISE_ALTITUDE, behaviorFor } from './behaviors.ts';
+import { angleBetween, slerp, toUnit } from './geo.ts';
+import { buildNavGrid } from './nav-grid.ts';
+import { walkRoute } from './path.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'behaviors-1' } }));
 const sea = seaRadius(config);

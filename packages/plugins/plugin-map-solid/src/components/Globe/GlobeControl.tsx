@@ -16,7 +16,7 @@ import {
 } from '@dxos/solid-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
-import { type GeoControlProps } from '../types';
+import { type GeoControlProps } from '../types.ts';
 
 // Globe styles matching react-ui-geo.
 const getGlobeStyles = (themeMode: 'dark' | 'light'): StyleSet =>

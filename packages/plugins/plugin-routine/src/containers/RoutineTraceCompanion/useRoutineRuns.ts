@@ -4,13 +4,14 @@
 
 import { useMemo } from 'react';
 
-import { type Routine, Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import type * as Routine from '@dxos/compute/Routine';
+import * as Trace from '@dxos/compute/Trace';
 import { type Database, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 
-import { type RoutineRun, groupIntoRuns } from './runs';
+import { type RoutineRun, groupIntoRuns } from './runs.ts';
 
 /**
  * Returns the execution runs for a routine.

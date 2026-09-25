@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Duplex, pipeline } from 'node:stream';
-
 import { waitForCondition } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Teleport } from '../teleport';
+import { type DuplexStream, connectDuplexStreams } from '../muxing/index.ts';
+import { Teleport } from '../teleport.ts';
 
 type CreatePeerOpts<T extends TestPeer> = {
   factory: () => T;
@@ -101,17 +100,9 @@ export class TestPeer {
   }
 }
 
-const pipeStreams = (stream1: Duplex, stream2: Duplex) => {
-  pipeline(stream1, stream2, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
-    }
-  });
-  pipeline(stream2, stream1, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
-    }
-  });
+const pipeStreams = (stream1: DuplexStream, stream2: DuplexStream) => {
+  // An aborted pipe is how a closed connection surfaces here, so it is logged rather than raised.
+  connectDuplexStreams(stream1, stream2, (err) => log('test connection pipe ended', { err }));
 };
 
 export class TestConnection {

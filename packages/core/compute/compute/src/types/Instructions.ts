@@ -9,13 +9,13 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Skill from './Skill';
+import * as Skill from './Skill.ts';
 
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({
-  sentinel: Schema.String.annotations({ description: 'Token that invokes the command (e.g. "$track").' }),
+  sentinel: Schema.String.annotate({ description: 'Token that invokes the command (e.g. "$track").' }),
   description: Schema.optional(Schema.String),
-  prompt: Schema.String.annotations({ description: 'What the model should do when the sentinel appears.' }),
+  prompt: Schema.String.annotate({ description: 'What the model should do when the sentinel appears.' }),
 });
 export type Command = Schema.Schema.Type<typeof Command>;
 
@@ -28,15 +28,17 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Input schema',
     }),
-    output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Output schema',
     }),
+    /** Owned body: `SetParent` cascades it and deep-clones it with the instructions. */
     text: Ref.Ref(Text.Text).pipe(
+      Annotation.SetParent.set(),
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-      Schema.annotations({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
+      Schema.annotate({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
     ),
     skills: Schema.Array(Ref.Ref(Skill.Skill)),
     /**
@@ -44,21 +46,21 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
      * Generic `Ref.Ref(Obj.Unknown)` so any space object qualifies. Honored on every run path that
      * executes a routine through the agent prompt, not only triggered automations.
      */
-    objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotations({ title: 'Objects' }), Schema.optional),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotate({ title: 'Objects' }), Schema.optional),
     /** Sentinel commands available to chat sessions running with these instructions. */
-    commands: Schema.Array(Command).pipe(Schema.annotations({ title: 'Commands' }), Schema.optional),
+    commands: Schema.Array(Command).pipe(Schema.annotate({ title: 'Commands' }), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
 export type MakeProps = {
+  [Obj.Parent]?: Obj.Unknown;
   name?: string;
   description?: string;
-  input?: Schema.Schema.AnyNoContext;
-  output?: Schema.Schema.AnyNoContext;
+  input?: Schema.Codec<any, any>;
+  output?: Schema.Codec<any, any>;
   text?: string;
   skills?: Ref.Ref<Skill.Skill>[];
   objects?: Ref.Ref<Obj.Unknown>[];
@@ -67,6 +69,7 @@ export type MakeProps = {
 
 /** Creates an Instructions object with an owned Markdown `text` body (parented so it cascades and deep-clones). */
 export const make = ({
+  [Obj.Parent]: parent,
   name,
   description,
   input,
@@ -77,7 +80,8 @@ export const make = ({
   commands,
 }: MakeProps): Instructions => {
   const body = Text.make({ content: text ?? '' });
-  const instructions = Obj.make(Instructions, {
+  return Obj.make(Instructions, {
+    [Obj.Parent]: parent,
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
@@ -87,8 +91,4 @@ export const make = ({
     objects,
     commands,
   });
-  // The body is owned by the instructions: it cascade-deletes with it and is cloned alongside it under
-  // `Obj.clone(..., { deep: 'parent' })`.
-  Obj.setParent(body, instructions);
-  return instructions;
 };

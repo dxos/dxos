@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
+import { SpaceSchema } from '#types';
 
 //
 // Extension Factory
@@ -24,14 +27,14 @@ import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
  * plugin (general, members) and by other plugins (automation, functions).
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
-  const sectionExtension = yield* GraphBuilder.createExtension({
+  const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
     match: AppNodeMatcher.whenSpace,
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({
-          id: SETTINGS_SECTION_ID,
-          type: SETTINGS_SECTION_TYPE,
+          id: SpaceSchema.SETTINGS_SECTION_ID,
+          type: SpaceSchema.SETTINGS_SECTION_TYPE,
           label: ['settings-section.label', { ns: meta.profile.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'emerald',
@@ -44,13 +47,13 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
 
   // General and Members are separate extensions rather than one so each can be an id-less key (a single
   // id-less key can address only one fixed node — its terminal segment IS the key).
-  const generalExtension = yield* GraphBuilder.createExtension({
+  const generalExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsGeneral',
-    url: { key: 'settings', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+    url: { key: 'settings', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
       Effect.succeed([
-        Node.make({
+        AppGraphNode.make({
           id: 'settings',
           type: `${meta.profile.key}.general`,
           data: `${meta.profile.key}.general`,
@@ -66,16 +69,17 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       ]),
   });
 
-  const membersExtension = yield* GraphBuilder.createExtension({
+  const membersExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsMembers',
-    url: { key: 'members', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+    url: { key: 'members', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
+    // A private space is locked at genesis and can never admit members, so it has nothing to manage.
     connector: (space) =>
       Effect.succeed(
-        AppSpace.isPersonalSpace(space)
+        space.membershipPolicy === MembershipPolicy.LOCKED
           ? []
           : [
-              Node.make({
+              AppGraphNode.make({
                 id: 'members',
                 type: `${meta.profile.key}.members`,
                 data: `${meta.profile.key}.members`,

@@ -7,8 +7,8 @@ import { checkoutVersion } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import { merge3 } from '../diff';
-import * as Versioning from './types';
+import { merge3 } from '../diff.ts';
+import * as Versioning from './types.ts';
 
 /** Any ECHO object that carries a versioning history (e.g. a markdown document). */
 export type VersionedObject = Obj.Unknown & { history?: Versioning.History | undefined };
@@ -72,8 +72,8 @@ export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointPr
     ...(props.creator !== undefined && { creator: props.creator }),
   });
   const history = ensureHistory(doc);
-  Obj.update(doc, () => {
-    history.versions.push(version);
+  Obj.update(doc, (doc) => {
+    ensureHistory(doc).versions.push(version);
   });
 
   // Return the stored record (the pushed plain object is detached from the database).
@@ -133,8 +133,8 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
   await db.createBranch(parent.id, branch.key, { fromHeads: anchor });
 
   const history = ensureHistory(doc);
-  Obj.update(doc, () => {
-    history.branches.push(branch);
+  Obj.update(doc, (doc) => {
+    ensureHistory(doc).branches.push(branch);
   });
   // The anchor must stay addressable by name in the timeline.
   if (!history.versions.some((version) => sameHeads(version.heads, anchor))) {
@@ -143,8 +143,8 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
       target: Ref.make(parent),
       heads: anchor,
     });
-    Obj.update(doc, () => {
-      history.versions.push(version);
+    Obj.update(doc, (doc) => {
+      ensureHistory(doc).versions.push(version);
     });
   }
 
@@ -166,7 +166,7 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
 export const restore = (doc: VersionedObject, version: Versioning.Version, text = version.target.target): void => {
   invariant(text, 'checkpoint target not loaded');
   const historical = contentAt(text, version.heads);
-  Obj.update(text, () => {
+  Obj.update(text, (text) => {
     EchoText.update(text, 'content', historical);
   });
 };
@@ -215,14 +215,15 @@ export const mergeBranch = async (doc: VersionedObject, branch: Versioning.Branc
     const base = contentAt(parent, stored.anchor);
     const merged = merge3({ base, ours: parent.content, theirs: branchText.content });
     conflicts = merged.conflicts;
-    Obj.update(parent, () => {
+    Obj.update(parent, (parent) => {
       EchoText.update(parent, 'content', merged.text);
     });
   }
 
-  Obj.update(doc, () => {
-    stored.status = 'merged';
-    stored.mergedAt = new Date().toISOString();
+  Obj.update(doc, (doc) => {
+    const mutable = resolveBranch(doc, branch);
+    mutable.status = 'merged';
+    mutable.mergedAt = new Date().toISOString();
   });
 
   createCheckpoint(doc, { name: `merge: ${branchLabel(stored)}`, target: parent });
@@ -234,9 +235,8 @@ export const mergeBranch = async (doc: VersionedObject, branch: Versioning.Branc
  * document, which stays in the registry until stage-4 cleanup).
  */
 export const discardBranch = (doc: VersionedObject, branch: Versioning.Branch): void => {
-  const stored = resolveBranch(doc, branch);
-  Obj.update(doc, () => {
-    stored.status = 'archived';
+  Obj.update(doc, (doc) => {
+    resolveBranch(doc, branch).status = 'archived';
   });
 };
 
@@ -286,8 +286,9 @@ const findOrCreateSuggestionBranch = async (
       const db = Obj.getDatabase(doc);
       invariant(db, 'document not in a database');
       await db.syncBranch(parent.id, existing.key);
-      Obj.update(doc, () => {
-        existing.anchor = heads;
+      Obj.update(doc, (doc) => {
+        const mutable = resolveBranch(doc, existing);
+        mutable.anchor = heads;
       });
     }
     return existing;

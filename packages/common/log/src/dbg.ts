@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CallMetadata } from './meta';
+import { type CallMetadata } from './meta.ts';
 /**
  * Debug-log value to console.
  * Log's the expression being evaluated.

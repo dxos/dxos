@@ -4,20 +4,23 @@
 
 import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon, type IconProps } from '../Icon';
-import { Tooltip, type TooltipSide } from '../Tooltip';
-import { Button, type ButtonProps } from './Button';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
+import { Button, type ButtonProps } from './Button.tsx';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {
     label: string;
     noTooltip?: boolean;
     iconOnly?: boolean;
-    square?: boolean; // TODO(burdon): Should be automatic in style?
     iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
+    /** @deprecated Remove (should be automatic in style.) */
+    square?: boolean;
+    /** Removes inline padding while keeping the control's height. */
+    compact?: boolean;
     tooltipSide?: TooltipSide;
   };
 
@@ -45,12 +48,17 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { size, icon, iconOnly, square, iconEnd, iconClassNames, label, noTooltip: _, classNames, ...props },
+    { size, icon, iconOnly, square, compact, iconEnd, iconClassNames, label, noTooltip: _, classNames, ...props },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
     return (
-      <Button {...props} classNames={tx('iconButton.root', { iconOnly, square }, classNames)} ref={forwardedRef}>
+      // `caretDown` stays in `props` so `Button` still renders the caret; the theme only reads it.
+      <Button
+        {...props}
+        classNames={tx('iconButton.root', { iconOnly, square, compact, caretDown: props.caretDown }, classNames)}
+        ref={forwardedRef}
+      >
         {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
         {icon && iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}

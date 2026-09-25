@@ -8,3 +8,10 @@ tasks:
   bundle:
     deps:
       - shell:bundle
+  # The bundle Playwright serves; see composer-app's `bundle-e2e` for why this is a target of its own.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'

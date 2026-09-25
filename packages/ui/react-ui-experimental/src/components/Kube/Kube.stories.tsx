@@ -8,7 +8,8 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Kube, defaultConfig } from './Kube';
+import { defaultConfig } from './kube-config.ts';
+import { Kube } from './Kube.tsx';
 
 const StoryKube = () => {
   const {

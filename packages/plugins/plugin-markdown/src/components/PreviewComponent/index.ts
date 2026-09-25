@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './PreviewComponent';
+export * from './parse-embed-label.ts';
+export * from './PreviewComponent.tsx';

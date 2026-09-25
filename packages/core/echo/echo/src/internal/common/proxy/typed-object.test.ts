@@ -3,17 +3,18 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import * as Type from '../../../Type';
-import { EchoObjectSchema } from '../../Entity';
-import { getSchema } from '../types';
-import { makeObject } from './make-object';
-import { change } from './reactive';
+import * as Obj from '../../../Obj.ts';
+import * as Type from '../../../Type.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
+import { getSchema } from '../types/index.ts';
+import { makeObject } from './make-object.ts';
+import { change } from './reactive.ts';
 
 const Organization = Schema.Struct({
   name: Schema.String,
@@ -21,15 +22,9 @@ const Organization = Schema.Struct({
 
 type Organization = Type.InstanceType<typeof Organization>;
 
-const Contact = Schema.Struct(
-  {
-    name: Schema.String,
-  },
-  {
-    key: Schema.String,
-    value: Schema.Any,
-  },
-).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
+const Contact = Schema.StructWithRest(Schema.Struct({ name: Schema.String }).mapFields(Struct.map(Schema.optional)), [
+  Schema.Record(Schema.String, Schema.Any),
+]).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
 type Contact = Type.InstanceType<typeof Contact>;
 
@@ -90,7 +85,7 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       const Test2 = Schema.Struct({
-        meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+        meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
       }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
       const object = Obj.make(Test2, {});

@@ -11,8 +11,10 @@
       @apply animate-fade-in;
     }
 
+    /* A scrim that is on its way out must not swallow clicks aimed at the page behind it: the
+       presence machine unmounts on `animationend`, which does not always arrive. */
     &[data-state='closed'] {
-      @apply animate-fade-out;
+      @apply animate-fade-out pointer-events-none;
     }
 
     &[data-block-align='start'] {

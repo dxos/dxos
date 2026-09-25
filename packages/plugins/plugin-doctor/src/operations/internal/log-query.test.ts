@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type LogRecord, formatPrettyLine, runQuery } from './log-query';
+import { type LogRecord, formatPrettyLine, runQuery } from './log-query.ts';
 
 const makeRecord = (overrides: Partial<LogRecord> = {}): LogRecord => ({
   t: '2026-01-01T00:00:00.000Z',

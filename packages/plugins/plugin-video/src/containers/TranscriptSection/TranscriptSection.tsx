@@ -5,14 +5,17 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
+import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+import { VideoOperation } from '#types';
+
+import { extractVideoId } from '../../util/index.ts';
 
 // TODO(burdon): Use AppSurface.Section.
 export type TranscriptSectionProps = {
@@ -47,8 +50,10 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
   const runningRef = useRef(false);
   const [transcribeError, setTranscribeError] = useState<string | undefined>(undefined);
   const [retryCount, setRetryCount] = useState(0);
+  // The transcription service resolves YouTube video ids only, so any other URL would fail with an error toast.
+  const transcribable = video.url !== undefined && extractVideoId(video.url) !== undefined;
   useEffect(() => {
-    if (!video.url || video.transcript || runningRef.current || !invokePromise) {
+    if (!transcribable || video.transcript || runningRef.current || !invokePromise) {
       return;
     }
     runningRef.current = true;
@@ -68,20 +73,27 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
       .finally(() => {
         runningRef.current = false;
       });
-  }, [video.url, video.transcript, invokePromise, subject, retryCount]);
+  }, [transcribable, video.url, video.transcript, invokePromise, subject, retryCount]);
 
   if (!video.transcript) {
     if (!video.url) {
       return <Pending label={t('no-url.pending.label')} />;
     }
+    if (!transcribable) {
+      return (
+        <Flex column center classNames='w-full p-4 text-description'>
+          {t('unsupported-url.message')}
+        </Flex>
+      );
+    }
     if (transcribeError !== undefined) {
       return (
-        <div className='grid place-items-center w-full p-4 text-description gap-2'>
+        <Flex column center gap='sm' classNames='w-full p-4 text-description'>
           <span>{transcribeError}</span>
           <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
           </Button>
-        </div>
+        </Flex>
       );
     }
 

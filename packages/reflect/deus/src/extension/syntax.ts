@@ -4,7 +4,8 @@
 
 import { LRLanguage } from '@codemirror/language';
 
-import { parser } from './gen/mdl';
+import * as terms from './gen/mdl.terms.ts';
+import { parser } from './gen/mdl.ts';
 
 /**
  * Language definition for the interior of Spec fenced blocks.
@@ -19,3 +20,6 @@ export const mdlBlockLanguage = LRLanguage.define({
     commentTokens: { line: '#' },
   },
 });
+
+/** Node type ids of the generated parser, for callers that walk a parse tree (see `QueryDSL.Node`). */
+export const mdlTerms = terms;

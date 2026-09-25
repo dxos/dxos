@@ -34,11 +34,11 @@ import {
   type SubductionProtocolMessageEnveloped,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 
@@ -50,7 +50,7 @@ import {
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
-} from '../automerge';
+} from '../automerge/index.ts';
 
 /**
  * Delay before restarting the connection after the edge requests it.
@@ -58,6 +58,12 @@ import {
 const INITIAL_RESTART_DELAY = 500;
 const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
+
+/**
+ * Consecutive error signals answered by an in-place re-handshake before the connection is restarted
+ * instead (DX-1275). Bounded so an edge that keeps refusing the rebound session cannot loop here.
+ */
+export const MAX_IN_PLACE_REHANDSHAKES = 3;
 
 /**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
@@ -90,9 +96,8 @@ export type EchoEdgeSubductionReplicatorProps = {
  * {@link AutomergeReplicatorConnection}. Outbound repo messages are wrapped in a router
  * frame and sent to the edge.
  *
- * No classical automerge-repo sync, collection-query/state, bundle sync, or rate-limiting
- * runs through this class — Subduction's sedimentree protocol replaces those
- * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
+ * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class —
+ * Subduction's sedimentree protocol replaces those responsibilities.
  */
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
@@ -262,7 +267,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // (`remove_connection` detaches the peer's muxes with no notification to the requester),
     // costing a full sync-round timeout. The space is already registered in `_connectedSpaces`,
     // so `_handleReconnect` opens this connection once the socket is actually ready.
-    if (this._edgeConnection.status.state !== EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._edgeConnection.status.state !== EdgeStatus_ConnectionState.CONNECTED) {
       log('deferring subduction connection until edge ws is ready', { spaceId });
       return;
     }
@@ -362,6 +367,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   #firstFrameSent = false;
   #inFlightFlush?: Promise<void>;
 
+  /** Error signals answered in place since the last inbound frame; see {@link MAX_IN_PLACE_REHANDSHAKES}. */
+  #inPlaceRehandshakes = 0;
+
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
   public readable: ReadableStream<SubductionProtocolMessage>;
@@ -441,12 +449,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     return this._remotePeerId;
   }
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
+      log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });
       return true;
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
@@ -463,7 +468,17 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
-    return spaceId === this._spaceId;
+    // `reason` separates the expected cross-space denial — which fans out across every
+    // space-scoped peer each sync round — from a same-space document being wrongly refused.
+    const allow = spaceId === this._spaceId;
+    log.verbose('share policy probe', {
+      documentId: params.documentId,
+      allow,
+      reason: allow ? 'same-space' : 'cross-space',
+      documentSpaceId: spaceId,
+      connectionSpaceId: this._spaceId,
+    });
+    return allow;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
@@ -512,7 +527,21 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           });
           return;
         }
-        log.info('received subduction error; restarting', { message: payload.message });
+        // The edge lost the session, not the link: re-running the handshake here keeps the peer id
+        // and every piece of sync state keyed by it.
+        if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
+          this.#discardPendingFrames();
+          this.#inPlaceRehandshakes++;
+          log.info('received subduction error; re-handshaking in place', {
+            message: payload.message,
+            attempt: this.#inPlaceRehandshakes,
+          });
+          return;
+        }
+        log.info('received subduction error; restarting', {
+          message: payload.message,
+          inPlaceRehandshakes: this.#inPlaceRehandshakes,
+        });
         this._onRestartRequested();
         return;
       }
@@ -533,7 +562,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           return;
         }
         log.verbose('received subduction frame', { remoteId: this._remotePeerId });
-        this.lastInboundAt = Date.now();
+        this.#onInboundFrame();
         // Fix the peer id so subduction routing inside the Repo accepts the frame.
         inner.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(inner);
@@ -553,14 +582,19 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           log.warn('dropping subduction-batch with missing frames', { payload });
           return;
         }
-        this.lastInboundAt = Date.now();
         log.verbose('received subduction batch', { frames: payload.frames.length, remoteId: this._remotePeerId });
+        let enqueued = 0;
         for (const inner of payload.frames) {
           if (inner === null || typeof inner !== 'object') {
             continue;
           }
           inner.senderId = this._remotePeerId as PeerId;
           this._readableStreamController.enqueue(inner);
+          enqueued++;
+        }
+        // Counted, not assumed: an empty or malformed batch must not refill the budget.
+        if (enqueued > 0) {
+          this.#onInboundFrame();
         }
         return;
       }
@@ -647,6 +681,26 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
     }
+  }
+
+  /** A frame arrived, so the session behind this connection works: clear the re-handshake budget. */
+  #onInboundFrame(): void {
+    this.lastInboundAt = Date.now();
+    this.#inPlaceRehandshakes = 0;
+  }
+
+  /**
+   * Drop what is buffered for a session that no longer exists, and let the next frame ship alone:
+   * flushing stale `SUM` bytes after a rebind would reach the fresh transport mid-handshake.
+   */
+  #discardPendingFrames(): void {
+    if (this.#flushTimer !== undefined) {
+      clearTimeout(this.#flushTimer);
+      this.#flushTimer = undefined;
+    }
+    this.#pendingFrames = [];
+    this.#pendingBytes = 0;
+    this.#firstFrameSent = false;
   }
 
   /** Buffer an inner frame for the next batch flush, arming the delay timer / tripping bounds. */

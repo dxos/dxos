@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { printDevice } from '../util';
+import { printDevice } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
@@ -30,7 +31,7 @@ export const handler = Effect.fn(function* () {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: device.deviceKey.toHex(),
+          deviceKey: requirePublicKey(device.deviceKey).toHex(),
           profile: {
             ...device.profile,
             type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',

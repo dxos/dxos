@@ -13,18 +13,16 @@ import { createRoot } from 'react-dom/client';
 import { Blob, Database, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
-import { type Space } from '@dxos/react-client/echo';
-import { Status, ThemeProvider } from '@dxos/react-ui';
+import { Progress, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
 export type ImageOptions = {
-  space: Space;
+  db: Database.Database;
 };
 
 /**
@@ -81,7 +79,7 @@ const buildDecorations = ({
   to,
   blobUrlCache,
   preload,
-  options: { space },
+  options: { db },
 }: {
   state: EditorState;
   from: number;
@@ -123,7 +121,7 @@ const buildDecorations = ({
       }
 
       // Skip references to objects in other spaces.
-      if (echoSpaceId && echoSpaceId !== space.id) {
+      if (echoSpaceId && echoSpaceId !== db.spaceId) {
         return;
       }
 
@@ -135,7 +133,7 @@ const buildDecorations = ({
       const blobUrlPromise =
         cached ??
         (async () => {
-          const matched = await space.db.query(Filter.id(echoUri!)).first();
+          const matched = await db.query(Filter.id(echoUri!)).first();
           if (!matched || !Obj.instanceOf(File.File, matched)) {
             return undefined;
           }
@@ -153,8 +151,8 @@ const buildDecorations = ({
               // types and the TS standard lib, not fixable by typing `bytes` differently.
               return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
             }).pipe(
-              Effect.provide(Database.layer(space.db)),
-              Effect.catchAll(() => Effect.succeed(undefined)),
+              Effect.provide(Database.layer(db)),
+              Effect.catch(() => Effect.succeed(undefined)),
             ),
           );
           if (!url) {
@@ -224,7 +222,7 @@ class DxnImageWidget extends WidgetType {
       const root = createRoot(loader);
       root.render(
         <ThemeProvider tx={defaultTx}>
-          <Status indeterminate />
+          <Progress indeterminate />
         </ThemeProvider>,
       );
       widget.appendChild(loader);

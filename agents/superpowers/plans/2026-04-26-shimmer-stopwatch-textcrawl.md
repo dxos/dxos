@@ -885,7 +885,6 @@ const Line = ({
 }: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
   return (
     <div
-      role='none'
       style={{ transitionDuration: reducedMotion ? '0ms' : `${transition / 3}ms` }}
       className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >

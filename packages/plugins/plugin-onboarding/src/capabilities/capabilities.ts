@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '../meta';
-import { type OnboardingManager } from '../onboarding-manager';
+import { meta } from '../meta.ts';
+import { type OnboardingManager } from '../onboarding-manager.ts';
 
 export type OnboardingOptions = {
-  generateExemplarSpace: boolean;
+  generateDemoSpace: boolean;
 };
 
 export namespace OnboardingCapabilities {
-  export const Onboarding = Capability.make<OnboardingManager>(`${meta.profile.key}.capability.onboarding`);
+  export const Onboarding = Capability.makeSingleton<OnboardingManager>()(`${meta.profile.key}.capability.onboarding`);
 }

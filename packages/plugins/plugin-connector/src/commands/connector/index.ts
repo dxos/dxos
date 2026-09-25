@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
+import * as Command from 'effect/unstable/cli/Command';
 
-import { add } from './add';
-import { list } from './list';
-import { remove } from './remove';
+import { add } from './add.ts';
+import { list } from './list.ts';
+import { remove } from './remove.ts';
 
 export const connector = Command.make('connector').pipe(
   Command.withDescription('Manage connections (OAuth / API credentials).'),

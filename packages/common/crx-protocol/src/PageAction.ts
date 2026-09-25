@@ -66,7 +66,7 @@ export const ExtractorRef = Schema.Struct({
 });
 export type ExtractorRef = Schema.Schema.Type<typeof ExtractorRef>;
 
-export const Context = Schema.Literal('popup', 'page', 'selection', 'link', 'picker');
+export const Context = Schema.Literals(['popup', 'page', 'selection', 'link', 'picker']);
 export type Context = Schema.Schema.Type<typeof Context>;
 
 /** Serializable descriptor synced to the extension's registry cache. */
@@ -109,7 +109,7 @@ export const ListRequest = Schema.Struct({
 });
 export type ListRequest = Schema.Schema.Type<typeof ListRequest>;
 
-export const ListAck = Schema.Union(
+export const ListAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -117,7 +117,7 @@ export const ListAck = Schema.Union(
     actions: Schema.Array(Descriptor),
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export type ListAck = Schema.Schema.Type<typeof ListAck>;
 
 export const InvokeRequest = Schema.Struct({
@@ -126,11 +126,11 @@ export const InvokeRequest = Schema.Struct({
   actionId: Schema.String,
   page: PageInfo,
   inputs: Schema.Unknown,
-  invokedFrom: Schema.Literal('popup', 'contextMenu', 'picker'),
+  invokedFrom: Schema.Literals(['popup', 'contextMenu', 'picker']),
 });
 export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
 
-export const InvokeAck = Schema.Union(
+export const InvokeAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -138,5 +138,5 @@ export const InvokeAck = Schema.Union(
     objectId: Schema.optional(Schema.String),
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export type InvokeAck = Schema.Schema.Type<typeof InvokeAck>;

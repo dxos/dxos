@@ -5,10 +5,10 @@
 import { createEffect } from 'solid-js';
 import { render } from 'solid-js/web';
 
-import { createBridge } from './bridge';
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
-import { type BootLoaderConfig } from './types';
+import { createBridge } from './bridge.ts';
+import { Loader } from './Loader.tsx';
+import { DEFAULT_SPRITE_PATH, createLoaderStore } from './store.ts';
+import { type BootLoaderConfig } from './types.ts';
 
 /** Fallback teardown if the outro's `transitionend` never fires (e.g. no opacity transition). */
 const OUTRO_FALLBACK_MS = 800;
@@ -24,6 +24,8 @@ const OUTRO_FALLBACK_MS = 800;
  */
 export const mountLoader = (el: HTMLElement, config: BootLoaderConfig = {}): (() => void) => {
   const store = createLoaderStore(config.status);
+  // Before render, so the request leaves with the loader's first paint. Failure leaves the slots empty.
+  void store.loadSprite(config.spritePath ?? DEFAULT_SPRITE_PATH);
 
   let removed = false;
   // Forward-declared so `remove` can dispose the Solid render created below.
@@ -60,7 +62,7 @@ export const mountLoader = (el: HTMLElement, config: BootLoaderConfig = {}): (()
         setTimeout(remove, OUTRO_FALLBACK_MS);
       }
     });
-    return <Loader store={store} markSvg={config.markSvg} />;
+    return <Loader store={store} markSvg={config.markSvg} markFilter={config.markFilter} />;
   }, el);
 
   const api = createBridge(store, remove);

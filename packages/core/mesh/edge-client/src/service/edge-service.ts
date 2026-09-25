@@ -22,12 +22,12 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
 const ERROR_BODY_LIMIT = 512;
 
 export type EdgeServiceClientOptions = {
-  /** Base URL the service is hosted at; request paths resolve against it. */
+  /** Base URL the service is hosted at. */
   baseUrl: string;
   /** Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header for metering. */
   clientTag?: string;
   /** Per-request timeout. */
-  timeout?: Duration.DurationInput;
+  timeout?: Duration.Input;
   /** Injectable for deterministic tests; defaults to `globalThis.fetch`. */
   fetch?: typeof globalThis.fetch;
   /** Auth seam invoked per request; unused by the image service today. */
@@ -49,9 +49,10 @@ export class EdgeServiceClient {
   readonly #authHeaders: (() => Effect.Effect<Record<string, string>>) | undefined;
 
   constructor(options: EdgeServiceClientOptions) {
-    this.#baseUrl = options.baseUrl;
+    // Slash-terminated: `new URL('thumbnail', '…/image')` would otherwise drop the `/image` prefix.
+    this.#baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
     this.#clientTag = options.clientTag;
-    this.#timeout = Duration.decode(options.timeout ?? DEFAULT_TIMEOUT);
+    this.#timeout = Duration.fromInputUnsafe(options.timeout ?? DEFAULT_TIMEOUT);
     // Bind so `fetch` keeps its expected `this` when injected as a method reference.
     const fetchImpl = options.fetch ?? globalThis.fetch;
     this.#fetch = fetchImpl.bind(globalThis);
@@ -63,14 +64,14 @@ export class EdgeServiceClient {
   }
 
   /** POST a `FormData` (multipart) body and decode the JSON response. */
-  postForm<A>(path: string, form: FormData, schema: Schema.Schema<A>): Effect.Effect<A, EdgeServiceError> {
+  postForm<A>(path: string, form: FormData, schema: Schema.Codec<A, any>): Effect.Effect<A, EdgeServiceError> {
     // The runtime sets `Content-Type: multipart/form-data` with the boundary;
     // setting it manually here would omit the boundary and break parsing.
     return this.#request(path, schema, { method: 'POST', body: form });
   }
 
   /** POST a JSON body and decode the JSON response. */
-  postJson<A>(path: string, body: unknown, schema: Schema.Schema<A>): Effect.Effect<A, EdgeServiceError> {
+  postJson<A>(path: string, body: unknown, schema: Schema.Codec<A, any>): Effect.Effect<A, EdgeServiceError> {
     // Serialize inside the Effect so a circular/non-serializable body surfaces as
     // EdgeServiceError rather than throwing synchronously from the call site.
     return Effect.try({
@@ -87,8 +88,8 @@ export class EdgeServiceClient {
     );
   }
 
-  #request<A>(path: string, schema: Schema.Schema<A>, init: RequestInit): Effect.Effect<A, EdgeServiceError> {
-    return Effect.gen(this, function* () {
+  #request<A>(path: string, schema: Schema.Codec<A, any>, init: RequestInit): Effect.Effect<A, EdgeServiceError> {
+    return Effect.gen({ self: this }, function* () {
       const url = new URL(path, this.#baseUrl);
       const headers = new Headers(init.headers ?? undefined);
       if (this.#clientTag) {
@@ -123,16 +124,16 @@ export class EdgeServiceClient {
           new EdgeServiceError({ message: 'Failed to parse JSON response', status: response.status, cause }),
       });
 
-      return yield* Schema.decodeUnknown(schema)(json).pipe(
+      return yield* Schema.decodeUnknownEffect(schema)(json).pipe(
         Effect.mapError(
           (cause) =>
             new EdgeServiceError({ message: 'Response did not match expected schema', status: response.status, cause }),
         ),
       );
     }).pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: this.#timeout,
-        onTimeout: () => new EdgeServiceError({ message: `Request to ${path} timed out` }),
+        orElse: () => Effect.fail(new EdgeServiceError({ message: `Request to ${path} timed out` })),
       }),
     );
   }

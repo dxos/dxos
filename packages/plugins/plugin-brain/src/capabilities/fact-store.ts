@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayerSpec } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { invariant } from '@dxos/invariant';
-import { FactStore, type FactStoreApi } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { BrainCapabilities } from '#types';
 
@@ -52,7 +53,7 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
   const forSpace = (spaceId: string): FactStoreApi => {
     let store = stores.get(spaceId);
     if (!store) {
-      store = withNotify(FactStore.makeMemory(), spaceId);
+      store = withNotify(FactStoreLive.makeMemory(), spaceId);
       stores.set(spaceId, store);
     }
 
@@ -95,8 +96,8 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.contributes(BrainCapabilities.FactStoreRegistry, registry),
-      Capability.contributes(Capabilities.LayerSpec, factStoreSpec),
+      Capability.contribute(BrainCapabilities.FactStoreRegistry, registry),
+      Capability.contribute(Capabilities.LayerSpec, factStoreSpec),
     ];
   }),
 );

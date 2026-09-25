@@ -20,14 +20,20 @@ import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { createStoryDecorators } from '../testing';
-import { renderByline } from '../util';
+import { createStoryDecorators } from '#testing';
+
+import { renderByline } from '../util/index.ts';
+
+// The story names its transcription endpoint explicitly; the app derives it from
+// `runtime.services.edge.url`, which a story has no client to read.
+const TRANSCRIPTION_ENDPOINT = 'https://dxos.network/calls';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
 const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> = {
   transcribeAfterChunksAmount: 25,
   prefixBufferChunksAmount: 10,
+  endpoint: TRANSCRIPTION_ENDPOINT,
 };
 
 // In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
@@ -168,6 +174,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
+    audioUrl: 'https://media.dxos.network/audio-london.m4a',
   },
 };

@@ -16,9 +16,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -31,9 +28,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/graph"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -44,9 +38,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/timeframe"
@@ -71,9 +62,6 @@
     },
     {
       "path": "../../core/compute/conductor"
-    },
-    {
-      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -103,19 +91,19 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -125,9 +113,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-debug"
@@ -145,7 +130,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-theme"

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type FrameProps, ReadonlyTextBox, TextBox } from '../components';
-import { type Polygon } from '../types';
+import { type FrameProps, ReadonlyTextBox, TextBox } from '../components/index.ts';
+import { type Polygon } from '../types/index.ts';
 
 export const DefaultFrameComponent = ({ debug, shape, editing, onClose, onCancel }: FrameProps) => {
   if (editing) {

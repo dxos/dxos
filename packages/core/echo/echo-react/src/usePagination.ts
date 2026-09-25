@@ -26,25 +26,21 @@ export type PaginationResult<T> = {
    * while loading or already at the head.
    */
   getPrevious: () => void;
+  /** Resets to the newest page and resumes live updates. */
+  jumpToHead: () => void;
   /** Whether older items remain beyond what is currently loaded. Inferred from the last page's size. */
   hasMore: boolean;
   /** True until the current range delivers its first result, even an empty one. */
   isLoading: boolean;
   /** False once eviction has detached the window from the live head (i.e. skip > 0). */
   atHead: boolean;
-  /** Resets to the newest page and resumes live updates. */
-  jumpToHead: () => void;
 };
 
 /** Reactive snapshot handed to React by `useSyncExternalStore`; a fresh object only on real change. */
 type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean };
 
-/**
- * The element type a paginated query yields: the flat record for an aggregate query (branded with
- * {@link Query.AggregateResult}), otherwise the query's entity type. Mirrors `useQuery`'s overloads.
- */
 type PaginationElement<Q extends Query.Any> =
-  Query.Type<Q> extends Query.AggregateResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
+  Query.Type<Q> extends Query.RecordResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
 
 /**
  * Builds the external store backing `usePagination` for one query identity (filter/order/page

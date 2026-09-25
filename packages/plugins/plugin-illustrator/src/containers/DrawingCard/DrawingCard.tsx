@@ -8,7 +8,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 
-import { type Drawing, IllustratorCapabilities } from '#types';
+import { Drawing, IllustratorCapabilities } from '#types';
 import { findVariant } from '#util';
 
 export type DrawingCardProps = AppSurface.ObjectCardProps<Drawing.Drawing>;

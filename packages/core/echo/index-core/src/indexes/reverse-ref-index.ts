@@ -2,34 +2,48 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EID } from '@dxos/keys';
+import { ATTR_META } from '@dxos/echo/internal';
+import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 
-import { EscapedPropPath } from '../utils';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
+import { type EntityPropPath, EscapedPropPath, chunkArray, normalizePropPath } from '../utils.ts';
+import type { Index, IndexerObject } from './interface.ts';
+
+/**
+ * Normalizes a reference URI so every spelling of the same target shares one index key: an echo
+ * reference by its local (space-less) form, a named-entity `dxn:` by its unversioned NSID. Lookups
+ * normalize identically (see `query`).
+ */
+export const referenceIndexKey = (uri: URI.URI): URI.URI | undefined => {
+  const parsedEchoUri = EID.tryParse(uri);
+  if (parsedEchoUri) {
+    return EID.getEntityId(parsedEchoUri) ? EID.toLocal(parsedEchoUri) : undefined;
+  }
+  if (DXN.isDXN(uri)) {
+    return DXN.tryMake(uri) ? DXN.make<string>(DXN.getName(uri)) : undefined;
+  }
+  return uri;
+};
 
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: EID.EID }[] => {
-  const refs: { path: string[]; targetDXN: EID.EID }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: URI.URI }[] => {
+  const refs: { path: string[]; targetDXN: URI.URI }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const uri = EncodedReference.toURI(value);
-      const parsedEchoUri = EID.tryParse(uri);
-      const echoUri = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-      if (!echoUri || !parsedEchoUri) {
-        return; // Skip non-echo references.
+      const targetDXN = referenceIndexKey(EncodedReference.toURI(value));
+      if (targetDXN === undefined) {
+        return;
       }
-      // Key by the local (space-less) form so a space-qualified ref and a bare ref to the same entity index
-      // under the same key. The index is scoped to one space (entity ids are unique within it), and lookups
-      // normalize the same way (see `query`).
-      refs.push({ path, targetDXN: EID.toLocal(parsedEchoUri) });
+      refs.push({ path, targetDXN });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -46,7 +60,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDXN: EID.Schema,
+  targetDXN: URI.Schema,
   /**
    * Escaped property path within an object.
    *
@@ -61,74 +75,145 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDXN: EID.EID;
+  targetDXN: URI.URI;
   // TODO: Add prop filter
 }
+
+/**
+ * One object holding references to a target, joined to the object metadata for its document.
+ * `propPaths` are the unescaped property paths within the referrer's data that the index
+ * recorded as pointing at the target.
+ */
+export type Referrer = {
+  objectId: EntityId;
+  documentId: string;
+  propPaths: EntityPropPath[];
+};
 
 /**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
  */
 export class ReverseRefIndex implements Index {
-  migrate = Effect.fn('ReverseRefIndex.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
+  readonly #sql: SqlClient.SqlClient;
 
-    yield* sql`CREATE TABLE IF NOT EXISTS reverseRef (
-      recordId INTEGER NOT NULL,
-      targetDXN TEXT NOT NULL,
-      propPath TEXT NOT NULL,
-      PRIMARY KEY (recordId, targetDXN, propPath)
-    )`;
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
 
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDXN)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   */
+  migrate = Effect.fn('ReverseRefIndex.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
+    ),
+  );
 
   /**
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        // Normalize to the local form to match how references are keyed on write (space-qualified and bare
-        // EIDs for the same entity collapse to one key).
-        const normalized = EID.toLocal(targetDXN);
+    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const normalized = referenceIndexKey(targetDXN);
+        if (normalized === undefined) {
+          return [];
+        }
         // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
       }),
   );
 
-  update = Effect.fn('ReverseRefIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
-              }
-
-              // Delete existing references for this record.
-              yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
-
-              // Extract references from data.
-              const refs = extractReferences(data as unknown as Record<string, unknown>);
-
-              // Insert new references.
-              yield* Effect.forEach(
-                refs,
-                (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
-                { discard: true },
-              );
-            }),
-          { discard: true },
-        );
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document — the point lookup behind merge reference rewriting. Queue entities carry no
+   * document to rewrite and rows from other spaces are not this space's to repoint, so both
+   * are excluded in SQL.
+   */
+  queryReferrers = Effect.fn('ReverseRefIndex.queryReferrers')(
+    ({
+      spaceId,
+      targetDXN,
+    }: {
+      spaceId: SpaceId;
+      targetDXN: URI.URI;
+    }): Effect.Effect<readonly Referrer[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const normalized = referenceIndexKey(targetDXN);
+        if (normalized === undefined) {
+          return [];
+        }
+        const rows = yield* sql<{ objectId: EntityId; documentId: string; propPath: string }>`
+          SELECT om.objectId, om.documentId, rr.propPath
+          FROM reverseRef rr JOIN objectMeta om ON om.recordId = rr.recordId
+          WHERE rr.targetDXN = ${normalized} AND om.spaceId = ${spaceId} AND om.documentId != ''`;
+        const byReferrer = new Map<string, Referrer>();
+        for (const row of rows) {
+          // Object ids are unique within a space, but the row's document is the one the index saw.
+          const key = `${row.documentId}/${row.objectId}`;
+          const referrer = byReferrer.get(key) ?? { objectId: row.objectId, documentId: row.documentId, propPaths: [] };
+          referrer.propPaths.push(EscapedPropPath.unescape(row.propPath));
+          byReferrer.set(key, referrer);
+        }
+        return [...byReferrer.values()];
       }),
+  );
+
+  /** Delete reverse-reference rows by record id. Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
+        }
+      }),
+  );
+
+  update = Effect.fn('ReverseRefIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+
+      yield* Effect.forEach(
+        objects,
+        (object) =>
+          Effect.gen({ self: this }, function* () {
+            const { recordId, data } = object;
+            if (recordId === null) {
+              return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
+            }
+
+            // Delete existing references for this record.
+            yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
+
+            // Document objects carry `@meta` only so the entity-meta index can extract the
+            // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+            // return everything merely tagged with it. Queue blocks always carried meta, so
+            // their extraction is unchanged.
+            const extractable = object.documentId
+              ? Object.fromEntries(
+                  Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+                )
+              : (data as unknown as Record<string, unknown>);
+            const refs = extractReferences(extractable);
+
+            // Insert new references.
+            yield* Effect.forEach(
+              refs,
+              (ref) =>
+                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)}, ${EscapedPropPath.escape(normalizePropPath(ref.path))})`,
+              { discard: true },
+            );
+          }),
+        { discard: true },
+      );
+    }),
   );
 }

@@ -5,25 +5,41 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
-export const Appearance = Schema.Union(
-  Schema.Literal('light').annotations({ title: 'Light' }),
-  Schema.Literal('dark').annotations({ title: 'Dark' }),
-  Schema.Literal('system').annotations({ title: 'System' }),
-);
+import { ACCENT_HUES } from '@dxos/ui-theme';
+import { HueAnnotationId } from '@dxos/ui-types';
+
+export const Appearance = Schema.Union([
+  Schema.Literal('light').annotate({ title: 'Light' }),
+  Schema.Literal('dark').annotate({ title: 'Dark' }),
+  Schema.Literal('system').annotate({ title: 'System' }),
+]);
 export type Appearance = Schema.Schema.Type<typeof Appearance>;
+
+/** The hue the accent role tokens derive from; the stylesheet's own default when unset. */
+export const Accent = Schema.Union(
+  ACCENT_HUES.map((hue) => Schema.Literal(hue).annotate({ title: hue.charAt(0).toUpperCase() + hue.slice(1) })),
+);
+export type Accent = Schema.Schema.Type<typeof Accent>;
 
 /**
  * Theme plugin settings.
  */
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    appearance: Schema.optional(
-      Appearance.annotations({
-        title: 'Appearance',
-        description: 'Force light or dark mode, or follow the system setting.',
-      }),
-    ),
-  }),
-);
+export const Settings = Schema.Struct({
+  appearance: Schema.optional(
+    Appearance.annotate({
+      title: 'Appearance',
+      description: 'Force light or dark mode, or follow the system setting.',
+    }),
+  ),
+  accent: Schema.optional(
+    Accent.annotate({
+      title: 'Accent color',
+      description: 'The hue of buttons, links and selection.',
+      // Rendered with the hue picker, as a space's colour is.
+      [HueAnnotationId]: true,
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

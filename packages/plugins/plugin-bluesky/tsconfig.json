@@ -25,13 +25,7 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -44,9 +38,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -89,9 +80,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-thread"

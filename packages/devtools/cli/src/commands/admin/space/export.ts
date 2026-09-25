@@ -2,29 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import { writeFileSync } from 'node:fs';
 
 import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
-import { adminDownload, adminRequest, formatAdminError } from '../util';
+import { AdminApiError, adminDownload, adminRequest, formatAdminError } from '../util.ts';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
 export const exportSpace = Command.make(
   'export',
   {
-    spaceId: Args.text({ name: 'spaceId' }),
-    download: Options.boolean('download').pipe(
+    spaceId: Args.String('spaceId'),
+    download: Options.Boolean('download').pipe(
       Options.withDescription('Download the export after triggering it.'),
       Options.withDefault(false),
     ),
-    output: Options.text('output').pipe(
+    output: Options.String('output').pipe(
       Options.withDescription('Output file path for download.'),
       Options.withAlias('o'),
       Options.optional,
@@ -32,14 +32,14 @@ export const exportSpace = Command.make(
   },
   Effect.fn(function* ({ spaceId, download, output }) {
     const result = yield* adminRequest<ExportTriggerResponse>('POST', `/admin/spaces/${spaceId}/export`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
 
       const response = yield* adminDownload(result.downloadPath).pipe(
-        Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+        Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
       );
 
       const body = yield* response.text;

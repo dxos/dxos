@@ -1,0 +1,75 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    '_/config': 'src/_/config.js',
+    assert: 'src/assert.js',
+    buffer: 'src/buffer.js',
+    crypto: 'src/crypto.js',
+    events: 'src/events.js',
+    fs: 'src/fs.js',
+    'fs/promises': 'src/fs/promises.js',
+    globals: 'src/globals.js',
+    'inject-globals': 'src/inject-globals.js',
+    path: 'src/path.js',
+    process: 'src/process.js',
+    stream: 'src/stream.js',
+    util: 'src/util.js',
+  },
+  // This package IS the browser polyfill for the node stdlib, so `DxNodeStdPlugin`'s
+  // `node:*` -> `@dxos/node-std/*` remap would point every module at itself.
+  nodeTarget: true,
+  // The polyfill implementations themselves. A consumer's bundler cannot resolve them —
+  // that is the whole point of shipping this package pre-bundled.
+  bundle: [
+    'assert',
+    'available-typed-arrays',
+    'base64-js',
+    'buffer',
+    'call-bind',
+    'call-bind-apply-helpers',
+    'call-bound',
+    'define-data-property',
+    'define-properties',
+    'dunder-proto',
+    'es-abstract',
+    'es-define-property',
+    'es-errors',
+    'es-object-atoms',
+    'es6-object-assign',
+    'events',
+    'for-each',
+    'function-bind',
+    'get-intrinsic',
+    'get-proto',
+    'gopd',
+    'has',
+    'has-property-descriptors',
+    'has-proto',
+    'has-symbols',
+    'has-tostringtag',
+    'hasown',
+    'ieee754',
+    'inherits',
+    'is-arguments',
+    'is-callable',
+    'is-generator-function',
+    'is-nan',
+    'is-typed-array',
+    'math-intrinsics',
+    'object-is',
+    'object-keys',
+    'object.assign',
+    'path-browserify',
+    'possible-typed-array-names',
+    'set-function-length',
+    'string_decoder',
+    'util',
+    'util-deprecate',
+    'which-typed-array',
+  ],
+});

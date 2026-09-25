@@ -28,7 +28,7 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -38,15 +38,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
@@ -76,13 +67,13 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/halo/halo"
-    },
-    {
       "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -95,9 +86,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -115,25 +103,10 @@
       "path": "../../ui/react-ui-audio"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-graph"
-    },
-    {
       "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-transcription"
@@ -148,9 +121,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-markdown"
     },
     {
@@ -161,9 +131,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

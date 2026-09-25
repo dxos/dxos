@@ -7,21 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import {
-  Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+import { Connection } from '@dxos/link';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
  * Discovery only — list Discord text channels across every guild the
@@ -33,51 +23,49 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetDiscordChannels = Operation.make({
   meta: {
-    key: makeKey('getDiscordChannels'),
+    key: DXN.make('org.dxos.operation.discord.getChannels'),
     name: 'Get Discord Channels',
     description: 'List Discord text channels reachable from a connection without materializing local Channels.',
     icon: 'ph--hash--regular',
   },
   services: [Capability.Service],
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 /**
  * Find-or-create the empty local feed-backed `Channel` for a selected Discord
- * channel so a {@link Cursor.Cursor} can reference it as its sync target.
+ * channel so a `Cursor.Cursor` can reference it as its sync target.
  * Keyed by the Discord channel id foreign key, so it is idempotent across
  * re-selection.
  */
 export const MaterializeDiscordTarget = Operation.make({
   meta: {
-    key: makeKey('materializeDiscordTarget'),
+    key: DXN.make('org.dxos.operation.discord.materializeTarget'),
     name: 'Materialize Discord Target',
     description: 'Create the empty local Channel bound to a selected Discord channel.',
     icon: 'ph--hash--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
- * Pull-only sync of the single Discord channel bound by a {@link Cursor.Cursor}.
+ * Pull-only sync of every Discord channel bound to a connection.
  *
- * Loads the binding, asks Discord for messages newer than `binding.max`,
- * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `max`/`lastTick`/`lastError`.
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`):
+ * for each binding, asks Discord for messages newer than `binding.max`, maps each into
+ * a `@dxos/types` `Message`, and appends them to the bound Channel's feed. Updates each
+ * binding's `max`/`lastTick`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
-    key: makeKey('syncDiscordChannel'),
+    key: DXN.make('org.dxos.operation.discord.syncChannel'),
     name: 'Sync Discord Channel',
-    description: 'Reconcile messages for the Discord channel bound by a Cursor.',
+    description: 'Reconcile messages for every Discord channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,
@@ -93,7 +81,7 @@ export const SyncDiscordChannel = Operation.make({
  */
 export const CrawlDiscordChannels = Operation.make({
   meta: {
-    key: makeKey('crawlDiscordChannels'),
+    key: DXN.make('org.dxos.operation.discord.crawlChannels'),
     name: 'Crawl Discord Channels',
     description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
     icon: 'ph--bulldozer--regular',

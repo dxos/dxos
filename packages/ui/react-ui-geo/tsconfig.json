@@ -10,9 +10,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -22,10 +19,7 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/util"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"

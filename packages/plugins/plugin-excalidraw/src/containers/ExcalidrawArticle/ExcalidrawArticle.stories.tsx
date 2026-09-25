@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Excalidraw } from '#types';
 
-import { ExcalidrawArticle } from './ExcalidrawArticle';
+import { ExcalidrawArticle } from './ExcalidrawArticle.tsx';
 
 const DefaultStory = () => {
   const [{ drawing, canvas }] = useState(() => {

@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Text } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Branch } from '@dxos/versioning';
 
-import { Markdown, MarkdownOperation } from '../types';
+import { Markdown, MarkdownOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(
   Operation.withHandler(
@@ -31,10 +31,10 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         const binding = yield* Effect.promise(() => Branch.bind(markdownDoc, branch));
         try {
           let newContent = '';
-          Obj.update(binding.object, () => {
-            newContent = Text.apply(binding.object, 'content', edits);
+          Obj.update(binding.object, (object) => {
+            newContent = Text.apply(object, 'content', edits);
           });
-          return { newContent };
+          return { applied: edits.length, length: newContent.length };
         } finally {
           binding.dispose();
         }
@@ -42,10 +42,11 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
 
       // `Text.apply` treats a missing/empty `oldString` as append-to-end, matching the Update schema.
       let newContent = '';
-      Obj.update(content, () => {
+      Obj.update(content, (content) => {
         newContent = Text.apply(content, 'content', edits);
       });
-      return { newContent };
+
+      return { applied: edits.length, length: newContent.length };
     }),
   ),
 );

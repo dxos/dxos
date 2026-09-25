@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -13,12 +13,16 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { FileCapabilities, Settings } from '#types';
 
-export type FileSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type FileSettingsProps = AppSurface.SettingsData;
 
-export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
+export const FileSettings = ({ subject }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
-  const backends = useCapabilities(FileCapabilities.Backend);
+  const contributed = useCapabilities(FileCapabilities.Backend);
+  // Sorted by name: contribution order is module activation order, which is neither stable nor
+  // meaningful to the reader, so the list would otherwise reshuffle as plugins are toggled.
+  const backends = useMemo(() => [...contributed].sort((a, b) => a.name.localeCompare(b.name)), [contributed]);
   // No explicit choice defers to the Blob registry's own configured default (edge when
   // configured, inline otherwise), so the Select reflects what an upload will actually use.
   const requested = settings.backend ? backends.find((b) => b.storage === settings.backend) : undefined;
@@ -27,8 +31,8 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
   const activeStorage = active?.storage ?? Settings.DEFAULT_BACKEND_STORAGE;
 
   const handleChange = useCallback(
-    (value: string) => onSettingsChange?.((current) => ({ ...current, backend: value })),
-    [onSettingsChange],
+    (value: string) => updateSettings((current) => ({ ...current, backend: value })),
+    [updateSettings],
   );
 
   return (
@@ -36,17 +40,19 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Field
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Select.Root value={activeStorage} onValueChange={handleChange} disabled={!onSettingsChange}>
+              <Select.Root value={activeStorage} onValueChange={handleChange}>
                 <Select.TriggerButton placeholder={t('settings.backend.placeholder')} />
                 <Select.Portal>
                   <Select.Content>
@@ -57,12 +63,11 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
                         </Select.Option>
                       ))}
                     </Select.Viewport>
-                    <Select.Arrow />
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

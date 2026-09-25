@@ -9,10 +9,11 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
+use tauri::{AppHandle, Emitter};
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 
-use super::OAuthResult;
+use super::{OAuthRecoveryResult, OAuthResult, OAUTH_CALLBACK_EVENT};
 
 /// Generates the HTML for the OAuth relay page.
 fn get_relay_page_html(auth_url: &str) -> String {
@@ -44,12 +45,16 @@ fn get_error_html() -> &'static str {
 /// Shared state for the OAuth server.
 pub struct OAuthServerState {
     pub results: Arc<Mutex<HashMap<String, OAuthResult>>>,
+    /// The recovery callback, if one has arrived. A single slot rather than a map: the flow runs
+    /// from the gate before any identity exists, so only one can ever be in flight.
+    pub recovery: Arc<Mutex<Option<OAuthRecoveryResult>>>,
 }
 
 impl OAuthServerState {
     pub fn new() -> Self {
         Self {
             results: Arc::new(Mutex::new(HashMap::new())),
+            recovery: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -78,8 +83,8 @@ impl OAuthServer {
         self.port
     }
 
-    /// Starts the HTTP server on a random available port.
-    pub async fn start(&mut self) -> Result<u16, String> {
+    /// Starts the HTTP server on a random available port, relaying callbacks to `app`.
+    pub async fn start(&mut self, app: AppHandle) -> Result<u16, String> {
         // Bind to port 0 to get a random available port.
         let listener = TcpListener::bind("127.0.0.1:0")
             .await
@@ -94,6 +99,7 @@ impl OAuthServer {
         self.shutdown_tx = Some(shutdown_tx);
 
         let state = Arc::clone(&self.state);
+        let port = self.port;
 
         // Spawn the server task.
         let handle = tokio::spawn(async move {
@@ -103,12 +109,14 @@ impl OAuthServer {
                         match result {
                             Ok((stream, _)) => {
                                 let state = Arc::clone(&state);
+                                let app = app.clone();
                                 let io = TokioIo::new(stream);
 
                                 tokio::spawn(async move {
                                     let service = service_fn(|req| {
                                         let state = Arc::clone(&state);
-                                        async move { handle_request(req, state).await }
+                                        let app = app.clone();
+                                        async move { handle_request(req, state, app, port).await }
                                     });
 
                                     if let Err(err) = http1::Builder::new()
@@ -154,21 +162,41 @@ impl OAuthServer {
         let results = self.state.results.lock().await;
         results.get(access_token_id).cloned()
     }
+
+    /// Gets the OAuth-recovery callback params if one has arrived.
+    pub async fn get_recovery_result(&self) -> Option<OAuthRecoveryResult> {
+        let recovery = self.state.recovery.lock().await;
+        recovery.clone()
+    }
 }
 
 /// Handles incoming HTTP requests.
 async fn handle_request(
     req: Request<hyper::body::Incoming>,
     state: Arc<OAuthServerState>,
+    app: AppHandle,
+    port: u16,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let path = req.uri().path();
     let query = req.uri().query().unwrap_or("");
 
     match path {
         "/oauth-relay" => handle_oauth_relay(query).await,
-        "/redirect/oauth" => handle_oauth_redirect(query, state).await,
+        "/redirect/oauth" => handle_oauth_redirect(query, state, app, port).await,
+        "/redirect/oauth-recovery" => handle_oauth_recovery_redirect(query, state, app, port).await,
         _ => Ok(not_found_response()),
     }
+}
+
+/// Hands the app a callback exactly as it arrived, on the origin that received it — the browser tab
+/// is a dead end, and a consumer checking where the callback came from needs the port to match.
+fn emit_callback(app: &AppHandle, port: u16, path: &str, query: &str) {
+    let url = if query.is_empty() {
+        format!("http://localhost:{}{}", port, path)
+    } else {
+        format!("http://localhost:{}{}?{}", port, path, query)
+    };
+    let _ = app.emit(OAUTH_CALLBACK_EVENT, url);
 }
 
 /// Handles the OAuth relay endpoint.
@@ -193,6 +221,8 @@ async fn handle_oauth_relay(query: &str) -> Result<Response<Full<Bytes>>, hyper:
 async fn handle_oauth_redirect(
     query: &str,
     state: Arc<OAuthServerState>,
+    app: AppHandle,
+    port: u16,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
         .into_owned()
@@ -214,6 +244,8 @@ async fn handle_oauth_redirect(
             let mut results = state.results.lock().await;
             results.insert(id.clone(), result);
 
+            emit_callback(&app, port, "/redirect/oauth", query);
+
             Ok(html_response(
                 get_success_html().to_string(),
                 StatusCode::OK,
@@ -224,6 +256,46 @@ async fn handle_oauth_redirect(
             StatusCode::BAD_REQUEST,
         )),
     }
+}
+
+/// Handles the OAuth-recovery redirect callback (register / recovery purposes).
+///
+/// Unlike the integration callback there is no token pair to check for: `recovery` carries only a
+/// `recoveryProof`, `register` a `registrationToken`, and either may instead carry an `error` that
+/// the client turns into a message. Anything else is a callback the client cannot act on.
+async fn handle_oauth_recovery_redirect(
+    query: &str,
+    state: Arc<OAuthServerState>,
+    app: AppHandle,
+    port: u16,
+) -> Result<Response<Full<Bytes>>, hyper::Error> {
+    let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
+        .into_owned()
+        .collect();
+
+    let result = OAuthRecoveryResult {
+        access_token_id: params.get("accessTokenId").cloned(),
+        registration_token: params.get("registrationToken").cloned(),
+        recovery_proof: params.get("recoveryProof").cloned(),
+        error: params.get("error").cloned(),
+    };
+
+    if result.registration_token.is_none() && result.recovery_proof.is_none() && result.error.is_none() {
+        return Ok(html_response(
+            get_error_html().to_string(),
+            StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    let mut recovery = state.recovery.lock().await;
+    *recovery = Some(result);
+
+    emit_callback(&app, port, "/redirect/oauth-recovery", query);
+
+    Ok(html_response(
+        get_success_html().to_string(),
+        StatusCode::OK,
+    ))
 }
 
 /// Creates an HTML response.

@@ -12,11 +12,22 @@ import { type Client } from '@dxos/client';
 import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
-import { SpaceArchive, type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceMember as HaloSpaceMember, MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpacesService } from '@dxos/protocols/rpc';
 
-import { fromAccess, isOnline, makeFlow, streamFromObservable, toAccess, toShareOptions } from './util';
+import {
+  fromAccess,
+  isOnline,
+  makeFlow,
+  streamFromClientObservable,
+  streamFromObservable,
+  toAccess,
+  toShareOptions,
+} from './util.ts';
 
 const toState = (state: SpaceState): HaloSpace.State => {
   switch (state) {
@@ -45,7 +56,7 @@ const toMembers = (members: readonly SpaceMember[]): HaloSpace.Member[] =>
     return [
       {
         did: member.identity?.did !== undefined ? IdentityDid.make(member.identity.did) : undefined,
-        identityKey: member.identity?.identityKey?.toHex(),
+        identityKey: toPublicKey(member.identity?.identityKey)?.toHex(),
         displayName: member.identity?.profile?.displayName,
         data: member.identity?.profile?.data,
         role,
@@ -74,24 +85,32 @@ const setMemberRole = async (
   client: Client,
   id: SpaceId,
   subject: IdentityDid,
-  newRole: HaloSpaceMember.Role,
+  newRole: SpaceMember_Role,
 ): Promise<void> => {
   const space = resolveSpace(client, id);
   const member = space.members.get().find((entry) => entry.identity?.did === subject);
-  if (!member) {
+  const memberKey = member?.identity?.identityKey;
+  if (!memberKey) {
     throw new Error(`Member not found: ${subject}`);
   }
-  await space.updateMemberRole({ memberKey: member.identity.identityKey, newRole });
+  await space.updateMemberRole({ memberKey: requirePublicKey(memberKey), newRole });
 };
 
 /**
  * Builds the {@link HaloSpace.Service} implementation over a client's `spaces` proxy.
  */
-export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.Service> => ({
-  spaces: streamFromObservable(client.spaces).pipe(Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo))),
+export const makeSpaceService = (client: Client): Context.Service.Shape<typeof HaloSpace.Service> => ({
+  spaces: streamFromClientObservable(client, () => client.spaces).pipe(
+    Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo)),
+  ),
 
   get: (id) =>
     Effect.sync(() => {
+      // Pre-initialization none means "unknown", not "no such space" — reactive consumers get
+      // the true reading from the `spaces` stream once initialization completes.
+      if (!client.initialized) {
+        return Option.none();
+      }
       const space = client.spaces.get(id);
       return space ? Option.some(toSpaceInfo(space)) : Option.none();
     }),
@@ -129,10 +148,15 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  members: (id) => {
-    const space = client.spaces.get(id);
-    return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
-  },
+  members: (id) =>
+    Stream.unwrap(
+      Effect.promise(() => client.waitUntilInitialized()).pipe(
+        Effect.map(() => {
+          const space = client.spaces.get(id);
+          return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
+        }),
+      ),
+    ),
 
   updateMemberRole: (id, subject, role) =>
     Effect.tryPromise({
@@ -148,7 +172,7 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
 
   removeMember: (id, subject) =>
     Effect.tryPromise({
-      try: () => setMemberRole(client, id, subject, HaloSpaceMember.Role.REMOVED),
+      try: () => setMemberRole(client, id, subject, SpaceMember_Role.REMOVED),
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
@@ -164,14 +188,19 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  invitations: (id) => {
-    const space = client.spaces.get(id);
-    return space
-      ? streamFromObservable(space.invitations).pipe(
-          Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'space'))),
-        )
-      : Stream.empty;
-  },
+  invitations: (id) =>
+    Stream.unwrap(
+      Effect.promise(() => client.waitUntilInitialized()).pipe(
+        Effect.map(() => {
+          const space = client.spaces.get(id);
+          return space
+            ? streamFromObservable(space.invitations).pipe(
+                Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'space'))),
+              )
+            : Stream.empty;
+        }),
+      ),
+    ),
 
   export: (id) =>
     Effect.tryPromise({
@@ -185,7 +214,9 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
   import: (archive, options) =>
     Effect.tryPromise({
       try: async () => {
-        const format = archive.filename.endsWith('.json') ? SpaceArchive.Format.JSON : SpaceArchive.Format.BINARY;
+        const format = archive.filename.endsWith('.json')
+          ? SpacesService.SpaceArchiveFormat.enums.JSON
+          : SpacesService.SpaceArchiveFormat.enums.BINARY;
         const space = await client.spaces.import(
           { filename: archive.filename, contents: archive.contents, format },
           options?.tags !== undefined ? { tags: [...options.tags] } : undefined,

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
@@ -20,6 +20,6 @@ export default Capability.makeModule(() =>
       }),
     });
 
-    return Capability.contributes(MapCapabilities.State, stateAtom);
+    return Capability.contribute(MapCapabilities.State, stateAtom);
   }),
 );

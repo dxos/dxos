@@ -14,7 +14,7 @@ import {
   toGeo,
   toUnit,
   turnToward,
-} from './geo';
+} from './geo.ts';
 
 describe('geo', () => {
   test('toUnit places the poles and the prime meridian', () => {

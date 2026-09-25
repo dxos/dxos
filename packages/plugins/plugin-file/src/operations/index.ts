@@ -2,9 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const FileOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./read'),
-);
+import { FileOperation } from '#types';
+
+export const FileOperationHandlerSet = OperationHandlerSet.lazy([
+  FileOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
+  FileOperation.CreateFromSource.pipe(Operation.lazyHandler(() => import('./create-from-source.ts'))),
+  FileOperation.CreateFromUpload.pipe(Operation.lazyHandler(() => import('./create-from-upload.ts'))),
+  FileOperation.Read.pipe(Operation.lazyHandler(() => import('./read.ts'))),
+]);

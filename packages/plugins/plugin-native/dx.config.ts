@@ -21,7 +21,7 @@ export default Config2.make({
       checking for new releases in the background, streaming download progress, and surfacing
       a toast notification with a one-click Relaunch action when an update is ready.
 
-      Spawns an Ollama sidecar process on localhost for local AI model inference, registering
+      Spawns the bundled Ollama process on localhost for local AI model inference, registering
       it as an AiModelResolver so Assistant features can resolve model requests without any
       external server dependency.
     `,

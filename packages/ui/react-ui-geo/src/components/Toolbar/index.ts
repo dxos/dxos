@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Controls';
+export * from './control-positions.ts';
+
+export * from './Controls.tsx';

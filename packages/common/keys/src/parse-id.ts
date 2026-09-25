@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EntityId } from './entity-id';
-import { type SpaceId } from './space-id';
+import { type EntityId } from './entity-id.ts';
+import { type SpaceId } from './space-id.ts';
 
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;

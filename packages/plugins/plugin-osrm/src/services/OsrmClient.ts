@@ -3,9 +3,9 @@
 //
 
 import { log } from '@dxos/log';
-import { Routing } from '@dxos/plugin-trip/types';
+import * as Routing from '@dxos/plugin-trip/Routing';
 
-import { type OsrmResponse } from './osrm-mapping';
+import { type OsrmResponse } from './osrm-mapping.ts';
 
 const DEFAULT_BASE_URL = 'https://router.project-osrm.org';
 

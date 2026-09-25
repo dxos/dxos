@@ -17,6 +17,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
+  DATA_NAMESPACE,
   type DatabaseDirectory,
   EncodedReference,
   type EntityStructure,
@@ -29,10 +30,10 @@ import { EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
-import { type DocHandleProxy } from '../automerge';
-import * as Doc from '../automerge/Doc';
-import { docChangeSemaphore } from './doc-semaphore';
-import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
+import * as Doc from '../automerge/Doc.ts';
+import { type DocHandleProxy } from '../automerge/index.ts';
+import { docChangeSemaphore } from './doc-semaphore.ts';
+import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
 /**
  * Minimal interface that ObjectCore requires from the containing database.
@@ -52,11 +53,24 @@ const STRING_CRDT_LIMIT = 300_000;
 export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
+/**
+ * Per-document `getUpdatedAt` cache, keyed by heads: inline objects that share a document
+ * (e.g. everything nested under the space root) would otherwise repeat the same backend
+ * lookup for every object on every call.
+ */
+const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updatedAt: number | undefined }>();
+
 export type ObjectCoreOptions = {
   type?: EncodedReference;
   meta?: EntityMeta;
   immutable?: boolean;
 };
+
+/**
+ * The single key a write is touching, so the proxy targets are refreshed for that key alone.
+ * @internal
+ */
+export type TargetRefreshScope = { target: object; key: string };
 
 /**
  *
@@ -106,6 +120,67 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
+  /**
+   * Re-fills every proxy target of this core from the document. Installed by the proxy handler once a
+   * root proxy exists; called ahead of every update notification, and directly after a write to a
+   * bound document, so a target never serves a value the document no longer holds even when the DB
+   * does not route the change event back to this core.
+   */
+  public refreshTargets: ((scope?: TargetRefreshScope) => void) | undefined;
+
+  /** Narrows the refresh while a {@link changeTargetKey} scope is open. */
+  #refreshScope: TargetRefreshScope | undefined;
+
+  /**
+   * Runs `fn` — a write of exactly `key` on `target` — with the refresh narrowed to that one key. The
+   * unnarrowed refresh re-reads every key of the record, which would make a single-property write cost
+   * the width of the object. Narrowed rather than deferred because the write notifies subscribers
+   * synchronously, and they must already see the new value.
+   */
+  changeTargetKey<T>(target: object, key: string, fn: () => T): T {
+    const previous = this.#refreshScope;
+    this.#refreshScope = { target, key };
+    try {
+      return fn();
+    } finally {
+      this.#refreshScope = previous;
+    }
+  }
+
+  /**
+   * Set by {@link #refresh} while a bound write is in flight, so the write can tell whether the DB
+   * already routed the change event back to this core and refreshed from it.
+   */
+  #refreshedDuringWrite = false;
+
+  #refresh(): void {
+    this.#refreshedDuringWrite = true;
+    this.refreshTargets?.(this.#refreshScope);
+  }
+
+  /**
+   * Run a write against the bound document, refreshing afterwards only if the DB did not route the
+   * change event back to this core and refresh from it (it does for a routed core, synchronously,
+   * inside `write`). A core bound to a branch, or dropped from the DB's `_objects`, stays bound but
+   * unrouted and would otherwise never refresh — so this cannot simply be dropped.
+   *
+   * The second pass was not merely redundant: for a container write `_writeThrough` sees the proxy
+   * the first pass installed, returns false, and falls through to a refresh of the object's full
+   * width with the narrowing scope already closed.
+   */
+  #writeAndRefresh<T>(write: () => T): T {
+    this.#refreshedDuringWrite = false;
+    try {
+      return write();
+    } finally {
+      const refreshed = this.#refreshedDuringWrite;
+      this.#refreshedDuringWrite = false;
+      if (!refreshed) {
+        this.#refresh();
+      }
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
   // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
@@ -144,7 +219,7 @@ export class ObjectCore {
    * Memoized rebuilt Effect Schema for persisted `Type.Type` entities.
    * Lazily populated; invalidated when the entity's `jsonSchema` changes.
    */
-  public cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
+  public cachedStaticSlot?: Schema.Codec<any, any> = undefined;
 
   /**
    * The single root proxy for this core. Replaces the `DatabaseImpl._rootProxies`
@@ -217,8 +292,27 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
-  getObjectStructure(): EntityStructure {
-    return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
+  /**
+   * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
+   */
+  get hasDoc(): boolean {
+    return this.doc != null || this.docHandle != null;
+  }
+
+  /**
+   * Whether the bound document carries this object's body. A linked document settles ready while
+   * still empty when the peer holding it has replicated the space directory ahead of the payload,
+   * and the core exists from that moment on so the object's identity survives the body arriving.
+   *
+   * Derived from the document instead of stored, so it cannot disagree with what a read would find.
+   */
+  get isBodyAvailable(): boolean {
+    return this.hasDoc && getDeep(this.getDoc(), this.mountPath) != null;
+  }
+
+  /** Undefined until the body arrives — see {@link isBodyAvailable}. */
+  getObjectStructure(): EntityStructure | undefined {
+    return getDeep<EntityStructure>(this.getDoc(), this.mountPath);
   }
 
   /**
@@ -238,9 +332,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      this.docHandle.change(changeFn, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
     }
   }
 
@@ -266,9 +361,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      result = this.docHandle.changeAt(heads, callback, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      result = this.#writeAndRefresh(() => docHandle.changeAt(heads, callback, options));
     }
 
     return result;
@@ -313,8 +409,15 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
+    // Refresh before the emit, so a subscriber reading the object inside its callback sees fresh values;
+    // guarded separately from it, so a refresh that fails still lets subscribers hear about the change.
+    this.#reportingErrors(() => this.#refresh());
+    this.#reportingErrors(() => this.updates.emit());
+  };
+
+  #reportingErrors(fn: () => void): void {
     try {
-      this.updates.emit();
+      fn();
     } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
@@ -326,7 +429,7 @@ export class ObjectCore {
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
       throwUnhandledError(err);
     }
-  };
+  }
 
   /**
    * Encode a value to be stored in the Automerge document.
@@ -411,7 +514,11 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
+  /**
+   * The stored value at `path` as the document holds it, undecoded. The document is immutable, so the
+   * result can be held for as long as the generation it was read at.
+   */
+  getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -432,8 +539,31 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
-    const decoded = this.decode(this._getRaw(path));
+    const decoded = this.decode(this.getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
+  }
+
+  /**
+   * Names of the data fields that changed between `heads` and the current frontier.
+   *
+   * Asks automerge which fields moved rather than comparing values, so it stays exact for nested
+   * structures without needing a deep-equality rule of its own.
+   */
+  getChangedDataFieldsSince(heads: Heads): string[] {
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
+    if (!doc) {
+      return [];
+    }
+
+    const prefix = [...this.mountPath, DATA_NAMESPACE];
+    const changed = new Set<string>();
+    for (const patch of A.diff(doc, heads, A.getHeads(doc))) {
+      if (patch.path.length > prefix.length && prefix.every((key, index) => patch.path[index] === key)) {
+        changed.add(String(patch.path[prefix.length]));
+      }
+    }
+
+    return [...changed];
   }
 
   // TODO(dmaretskyi): Rename to `set`.
@@ -454,7 +584,7 @@ export class ObjectCore {
   }
 
   getKind(): EntityKind {
-    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+    return (this.getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
@@ -463,7 +593,7 @@ export class ObjectCore {
   }
 
   getSource(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -476,7 +606,7 @@ export class ObjectCore {
   }
 
   getTarget(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -489,7 +619,7 @@ export class ObjectCore {
   }
 
   getParent(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -504,8 +634,101 @@ export class ObjectCore {
     }
   }
 
+  /**
+   * The entity this one was merged into, set on the loser of a convergence-key merge.
+   * A bare id rather than an encoded reference, so reference-rewriting traversals do not mistake
+   * the redirect for a data ref.
+   */
+  getMergedInto(): EntityId | undefined {
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'mergedInto']);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  /**
+   * Redirect the entity at `id` and record the heads it carried at that moment, so a later pass
+   * can fold in edits made by a peer that was offline during the merge.
+   */
+  setMergedInto(id: EntityId, heads: readonly string[]): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedInto'], id);
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedAtHeads'], [...heads]);
+  }
+
+  /**
+   * The fold watermark: the stored `mergedAtHeads` unioned with every conflicting value of the
+   * register. Peers merging concurrently each record their own watermark and automerge keeps one
+   * plus conflicts; a fold diffing from the union never re-presents an edit any peer already
+   * folded — a re-fold from a stale surviving watermark would overwrite newer winner edits.
+   */
+  getMergedAtHeads(): string[] | undefined {
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'mergedAtHeads']);
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    const hashes = new Set<string>();
+    const collect = (candidate: unknown): void => {
+      if (Array.isArray(candidate)) {
+        for (const hash of candidate) {
+          if (typeof hash === 'string') {
+            hashes.add(hash);
+          }
+        }
+      }
+    };
+    collect(value);
+    const doc = this.doc ?? this.docHandle?.doc();
+    const system = doc
+      ? getDeep<AutomergeDoc<{ mergedAtHeads?: string[] }>>(doc, [...this.mountPath, SYSTEM_NAMESPACE])
+      : undefined;
+    if (system !== undefined && typeof system === 'object') {
+      for (const conflicting of Object.values(A.getConflicts(system, 'mergedAtHeads') ?? {})) {
+        collect(conflicting);
+      }
+    }
+    return [...hashes];
+  }
+
+  /**
+   * Ids of the entities merged into this one, deduplicated and sorted.
+   *
+   * Peers merging concurrently on different views both append here, and automerge keeps both
+   * insertions, so the stored list can hold repeats; normalizing on read makes it a set.
+   */
+  getMergedFrom(): EntityId[] {
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'mergedFrom']);
+    return Array.isArray(value) ? [...new Set(value)].sort() : [];
+  }
+
+  /**
+   * Record entities as having merged into this one. Idempotent: re-recording an id already
+   * present rewrites nothing, so a repeated merge pass is a no-op.
+   *
+   * Appends to the existing list rather than assigning a new one: concurrent assignments are
+   * whole-list conflicts and last-write-wins would drop one peer's ids, while concurrent inserts
+   * both survive — {@link getMergedFrom} deduplicates.
+   */
+  addMergedFrom(ids: readonly EntityId[]): void {
+    const existing = new Set(this.getMergedFrom());
+    const missing = [...new Set(ids)].filter((id) => !existing.has(id)).sort();
+    if (missing.length === 0) {
+      return;
+    }
+    if (existing.size === 0 && this.getRaw([SYSTEM_NAMESPACE, 'mergedFrom']) === undefined) {
+      this._setRaw([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
+    } else {
+      this.arrayPush([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
+    }
+  }
+
+  /**
+   * The document's current heads, recorded when the entity is merged away.
+   */
+  getHeads(): Heads {
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
+    return doc ? A.getHeads(doc) : [];
+  }
+
   getType(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -533,7 +756,7 @@ export class ObjectCore {
    * created before this field was introduced.
    */
   getCreatedAt(): number | undefined {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'createdAt']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'createdAt']);
     return typeof value === 'number' ? value : undefined;
   }
 
@@ -541,23 +764,33 @@ export class ObjectCore {
    * Returns the Unix ms timestamp of the last automerge change on this document,
    * or undefined when no change history is available.
    * Note: second-level precision (automerge change timestamps are Unix seconds).
-   * Only inspects the current head changes (O(heads)), not all history.
+   * Reads change metadata for the current heads (one backend lookup per head), not the
+   * decoded change contents.
    */
   getUpdatedAt(): number | undefined {
-    const doc = this.doc ?? this.docHandle?.doc();
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     if (!doc) {
       return undefined;
     }
+
+    const heads = A.getHeads(doc);
+    const headsKey = heads.join(',');
+    const cached = updatedAtCache.get(doc);
+    if (cached && cached.heads === headsKey) {
+      return cached.updatedAt;
+    }
+
+    const backend = A.getBackend(doc);
     let maxTime = 0;
-    // Inspect only the current frontier (heads) — O(number of heads) ≈ O(1).
-    // `doc` union type doesn't affect getHeads/inspectChange; cast at the boundary.
-    for (const hash of A.getHeads(doc as any)) {
-      const decoded = A.inspectChange(doc as any, hash);
-      if (decoded && decoded.time > maxTime) {
-        maxTime = decoded.time;
+    for (const hash of heads) {
+      const meta = backend.getChangeMetaByHash(hash);
+      if (meta && meta.time > maxTime) {
+        maxTime = meta.time;
       }
     }
-    return maxTime > 0 ? maxTime * 1000 : undefined;
+    const updatedAt = maxTime > 0 ? maxTime * 1000 : undefined;
+    updatedAtCache.set(doc, { heads: headsKey, updatedAt });
+    return updatedAt;
   }
 
   getMeta(): EntityMeta {
@@ -571,7 +804,7 @@ export class ObjectCore {
   }
 
   isDeleted(remainingDepth: number = 10): boolean {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;
@@ -601,6 +834,10 @@ export class ObjectCore {
    * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
    * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
    * `loadObjectCoreById` is avoided because it may be async.
+   *
+   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
+   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
+   * loser stay visible while the survivor lives.
    */
   private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
     if (!ref || !this.entityManager) {
@@ -612,8 +849,26 @@ export class ObjectCore {
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
       return false;
     }
-    const core = this.entityManager.getObjectCoreById(entityId);
+    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId));
     return core != null && core.isDeleted(remainingDepth - 1);
+  }
+
+  /**
+   * Follow `mergedInto` redirects to the live end of the chain. Edges must strictly decrease the
+   * id — a non-decreasing edge is corrupt data and terminates the walk at the current entity,
+   * matching `resolveMergeRedirect` in `@dxos/echo/internal`. A hop whose core is not loaded returns `undefined`: the
+   * survivor cannot be judged synchronously, and an unresolvable dependency is treated as live.
+   */
+  private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
+    let current = core;
+    while (current) {
+      const next = current.getMergedInto();
+      if (next === undefined || next >= current.id) {
+        return current;
+      }
+      current = this.entityManager?.getObjectCoreById(next);
+    }
+    return undefined;
   }
 
   setDeleted(value: boolean): void {
@@ -667,18 +922,38 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
  * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
  * untouched.
  */
+const dedupeForeignKeys = (keys: readonly unknown[]): unknown[] => {
+  const seen = new Set<string>();
+  return keys.filter((key) => {
+    const { source, id } = (key ?? {}) as { source?: string; id?: string };
+    // JSON-composite rather than concatenation, so a delimiter inside one part cannot collide.
+    const composite = JSON.stringify([source, id]);
+    if (seen.has(composite)) {
+      return false;
+    }
+    seen.add(composite);
+    return true;
+  });
+};
+
 const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
     return value;
   }
-  // Whole `meta` object: backfill required fields and upgrade tag ids.
+  // Whole `meta` object: backfill required fields, upgrade tag ids, deduplicate keys.
   if (path.length === 1 && value != null && typeof value === 'object') {
     const meta = value as Record<string, unknown>;
     return {
       ...meta,
+      keys: Array.isArray(meta.keys) ? dedupeForeignKeys(meta.keys) : meta.keys,
       tags: Array.isArray(meta.tags) ? meta.tags.map(upgradeTagRef) : [],
       annotations: meta.annotations ?? {},
     };
+  }
+  // `meta.keys`: peers merging concurrently both append the same missing key, and automerge keeps
+  // both insertions — normalizing on read makes the list a set.
+  if (path.length === 2 && path[1] === 'keys') {
+    return Array.isArray(value) ? dedupeForeignKeys(value) : value;
   }
   // `meta.tags`: default to an empty array when absent; upgrade string entries.
   if (path.length === 2 && path[1] === 'tags') {

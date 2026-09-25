@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import CONTENT from '../../../testing/deck.md?raw';
-import { RevealPlayer } from './RevealPlayer';
+import { RevealPlayer } from './RevealPlayer.tsx';
 
 // https://revealjs.com/markdown
 // https://developer.mozilla.org/en-US/docs/Web/CSS/background-position

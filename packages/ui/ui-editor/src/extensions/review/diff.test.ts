@@ -15,7 +15,7 @@ import {
   rebaseHunks,
   rebaseHunksWith,
   revertHunk,
-} from './diff';
+} from './diff.ts';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');

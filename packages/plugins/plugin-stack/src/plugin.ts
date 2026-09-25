@@ -2,8 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { PluginAsset, ReactSurface, Schema, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const StackPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const StackPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
+
+export default StackPlugin;

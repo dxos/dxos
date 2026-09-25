@@ -4,13 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { SourceFile } from '#types';
-
-import { CodeOperation } from '../types';
+import { CodeOperation, SourceFile } from '#types';
 
 type ScaffoldFile = { path: string; content: string };
 
@@ -95,8 +93,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.ScaffoldProject> = Cod
 
       if (additions.length > 0) {
         Obj.update(code, (code) => {
-          const next = [...(code.files ?? []), ...additions.map((entry) => entry.ref)];
-          (code as Obj.Mutable<typeof code>).files = next;
+          code.files ??= [];
+          code.files.push(...additions.map((entry) => entry.ref));
         });
       }
 

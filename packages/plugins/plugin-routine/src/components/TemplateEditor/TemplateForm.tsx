@@ -5,14 +5,14 @@
 import type * as Schema from 'effect/Schema';
 import React, { Fragment, useCallback, useEffect } from 'react';
 
-import { type Template } from '@dxos/compute';
+import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Field, Grid, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { TemplateEditor } from './TemplateEditor';
+import { TemplateEditor } from './TemplateEditor.tsx';
 
 /**
  * Callback type for mutating template within a parent object's Obj.update context.
@@ -22,7 +22,7 @@ export type TemplateChangeCallback = (mutate: (template: Obj.Mutable<Template.Te
 export type TemplateFormProps = {
   id: string;
   template: Template.Template;
-  schema?: Schema.Schema<any, any, any>;
+  schema?: Schema.Codec<any, any, any>;
   /**
    * Callback to mutate the template. Should wrap mutations in parent's Obj.update.
    * If not provided, the component is read-only.
@@ -60,15 +60,15 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
 
   return (
     <div className='flex flex-col w-full overflow-hidden gap-4'>
-      <TemplateEditor id={id} source={template.source} classNames='bg-base-surface min-h-[120px]' />
+      <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
+        <Grid cols={['10rem', '10rem', '1fr']} grow={false} align='center' classNames='gap-1'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
 
-              <Input.Root>
+              <Field.Root>
                 <Select.Root
                   value={input.kind}
                   onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
@@ -83,27 +83,26 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
                           </Select.Option>
                         ))}
                       </Select.Viewport>
-                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>
-              </Input.Root>
+              </Field.Root>
 
               <div>
                 {input.kind === 'value' && (
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Field.Input
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}
                       onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 )}
               </div>
             </Fragment>
           ))}
-        </div>
+        </Grid>
       )}
     </div>
   );

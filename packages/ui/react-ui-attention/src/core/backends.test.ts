@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, describe, test } from 'vitest';
 
-import { ViewState } from '../types';
-import { LocalBackend } from './backends';
+import { ViewState } from '../types/index.ts';
+import { LocalBackend } from './backends.ts';
 
 const Editor = ViewState.define({
   key: 'editor',
   backend: 'local',
-  schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).pipe(Schema.mutable),
+  schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).mapFields(Struct.map(Schema.mutableKey)),
   defaultValue: () => ({}),
 });
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ReviewCapabilities } from './ReviewCapabilities';
+import * as ReviewCapabilities from './ReviewCapabilities.ts';
 
 describe('defaultReviewRenderPolicy', () => {
   test('default review render policy matches GDocs parity', ({ expect }) => {

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { log } from './log';
-import { logInfo } from './scope';
+import { log } from './log.ts';
+import { logInfo } from './scope.ts';
 
 describe('Scope capture', function () {
   test('field instance', function () {

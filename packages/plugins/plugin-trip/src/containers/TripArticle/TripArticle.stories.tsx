@@ -5,39 +5,41 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { MapInline } from '@dxos/plugin-map';
-import { MapPlugin } from '@dxos/plugin-map/plugin';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { initHotkeys } from '@dxos/react-focus';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
-import { Booking, type Place, Routing, Segment, Trip, TripCapabilities } from '#types';
+import { Booking, Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
-import { TripPlugin } from '../../testing';
-import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
-import { TripArticle } from './TripArticle';
+import { TripPlugin } from '../../testing.ts';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle.tsx';
+import { TripArticle } from './TripArticle.tsx';
 
 /** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
 const RoutingStoryPlugin = (service: Routing.RoutingService) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.trip.story.routing'), name: 'Story Routing' })).pipe(
     Plugin.addModule({
       id: 'story-routing',
-      activatesOn: ActivationEvents.Startup,
-      activate: () => Effect.succeed(Capability.contributes(TripCapabilities.RoutingService, service)),
+      provides: [TripCapabilities.RoutingService],
+      activate: () => Effect.succeed([Capability.contribute(TripCapabilities.RoutingService, service)]),
     }),
     Plugin.make,
   )();
@@ -141,8 +143,8 @@ const ATTENDABLE_ID = 'story';
 // article's 'j'/'k' bindings dispatch in isolation.
 const withKeyboard: Decorator = (Story) => {
   useEffect(() => {
-    Keyboard.singleton.initialize();
-    return () => Keyboard.singleton.destroy();
+    // No teardown: the store is shared, and destroying it would unbind every other story.
+    initHotkeys();
   }, []);
 
   return <Story />;
@@ -165,9 +167,9 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
   // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-expand grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
-      <div className='min-h-0 overflow-hidden border-is border-separator'>
+      <div className='overflow-hidden border-is border-separator'>
         {selected && (
           <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
         )}
@@ -183,23 +185,22 @@ const baseDecorators = (
   withKeyboard,
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
-            seedFn(personalSpace);
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            seedFn(defaultSpace);
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       TripPlugin(),
-      MapPlugin(),
+      MapPlugin.make(),
       RoutingStoryPlugin(routingService),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
     ],
   })),
 ];
@@ -216,7 +217,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Surface type={MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };
@@ -314,6 +315,13 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
+  // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
+  // was ever added and the article sat on its loading state. Asserting a segment renders is what
+  // catches that; the render-only smoke test did not, because the throw was swallowed by the
+  // client-initialization Effect.
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.textContent).toContain('AF 023'), { timeout: 20_000 });
+  },
 };
 
 // A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake

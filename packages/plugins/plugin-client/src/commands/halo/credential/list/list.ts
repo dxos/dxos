@@ -2,34 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Latch from 'effect/Latch';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, FormBuilder, getSpace, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import type { Credential } from '@dxos/client/halo';
 import { type Key } from '@dxos/echo';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 const mapCredentials = (credentials: Credential[]) => {
   return credentials.map((credential) => ({
-    id: credential.id?.toHex() ?? '<unknown>',
-    issuer: credential.issuer?.toHex() ?? '<unknown>',
-    subject: credential.subject?.id?.toHex() ?? '<unknown>',
-    type: credential.subject.assertion['@type'],
-    assertion: credential.subject.assertion,
+    id: toPublicKey(credential.id)?.toHex() ?? '<unknown>',
+    issuer: toPublicKey(credential.issuer)?.toHex() ?? '<unknown>',
+    subject: toPublicKey(credential.subject?.id)?.toHex() ?? '<unknown>',
+    type: credential.subject?.assertion?.typeUrl,
+    assertion: credential.subject?.assertion,
   }));
 };
 
 const printCredential = (credential: Credential) => {
-  const type = credential.subject.assertion['@type'] ?? '<unknown>';
+  const type = credential.subject?.assertion?.typeUrl ?? '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
-    FormBuilder.option('id', Option.fromNullable(credential.id?.truncate())),
-    FormBuilder.option('issuer', Option.fromNullable(credential.issuer?.truncate())),
-    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id?.truncate())),
+    FormBuilder.option('id', Option.fromNullishOr(toPublicKey(credential.id)?.truncate())),
+    FormBuilder.option('issuer', Option.fromNullishOr(toPublicKey(credential.issuer)?.truncate())),
+    FormBuilder.option('subject', Option.fromNullishOr(toPublicKey(credential.subject?.id)?.truncate())),
     FormBuilder.build,
   );
 };
@@ -66,7 +68,7 @@ export const handler = Effect.fn(function* ({
     }
 
     // Wait for at least one credential
-    const latch = yield* Effect.makeLatch();
+    const latch = yield* Latch.make();
     const subscription = client.halo.credentials.subscribe((creds) => {
       if (creds.length > 0) {
         Effect.runSync(latch.open);
@@ -75,7 +77,7 @@ export const handler = Effect.fn(function* ({
 
     yield* latch.await.pipe(
       Effect.timeout(Duration.millis(timeout)),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
       Effect.ensuring(
         Effect.sync(() => {
           subscription.unsubscribe();
@@ -100,13 +102,13 @@ export const handler = Effect.fn(function* ({
 export const list = Command.make(
   'list',
   {
-    type: Options.text('type').pipe(Options.withDescription('Filter by credential type.'), Options.optional),
+    type: Options.String('type').pipe(Options.withDescription('Filter by credential type.'), Options.optional),
     spaceId: Common.spaceId.pipe(Options.withDescription('Space ID to show credentials from.'), Options.optional),
-    timeout: Options.integer('timeout').pipe(
+    timeout: Options.Int('timeout').pipe(
       Options.withDescription('Time in milliseconds to wait for at least one credential before listing.'),
       Options.withDefault(500),
     ),
-    delay: Options.integer('delay').pipe(
+    delay: Options.Int('delay').pipe(
       Options.withDescription('Delay in milliseconds before listing.'),
       Options.withDefault(250),
     ),

@@ -7,15 +7,16 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Operation, Trigger } from '@dxos/compute';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { bundleFunction } from '@dxos/edge-compute/native';
 import type { BundleResult } from '@dxos/edge-compute/native';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 export const writeBundle = (path: string, bundle: BundleResult) => {
   fs.mkdirSync(path, { recursive: true });

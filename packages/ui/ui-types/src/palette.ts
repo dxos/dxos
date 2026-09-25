@@ -48,3 +48,9 @@ export const hues: ChromaticPalette[] = [
   'pink',
   'rose',
 ] as const;
+
+/**
+ * Marks a schema field whose value is one of {@link hues}, so a form renders it with the hue picker
+ * rather than a select.
+ */
+export const HueAnnotationId = '@dxos/ui-types/annotation/Hue';

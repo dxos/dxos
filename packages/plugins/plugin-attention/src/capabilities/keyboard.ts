@@ -4,21 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
+import * as Capability from '@dxos/app-framework/Capability';
+import { nestHotkeyScope, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const attention = yield* Capability.get(AttentionCapabilities.Attention);
+    const attention = yield* AttentionCapabilities.Attention;
 
     const unsubscribe = attention.subscribeCurrent((current) => {
       const id = current[0];
-      // Nested under graph root so plank context inherits root-level bindings (e.g. global search).
-      Keyboard.singleton.setCurrentContext(nestKeyboardContext(id));
+      // Nested under the graph root so a plank's scope also activates root-level bindings
+      // (e.g. global search).
+      setHotkeyScope(nestHotkeyScope(id));
     });
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => unsubscribe()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return [];
   }),
 );

@@ -30,57 +30,14 @@
 //   - `packages/ui/react-ui-list/AUDIT.md` for why this layering exists.
 //   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import { ark } from '@ark-ui/react/factory';
+import React, { forwardRef } from 'react';
 
-const LIST_NAME = 'List';
+import { LIST_NAME, type ListProps, ListProvider } from './ListContext.ts';
 
-type ListScopedProps<P> = P & { __listScope?: Scope };
-
-type ListVariant = 'ordered' | 'unordered';
-
-type ListItemSizes = 'one' | 'many';
-
-type ListProps = ComponentPropsWithRef<typeof Primitive.ol> & {
-  /**
-   * If true, render as `role="listbox"` and let `ListItem` children become
-   * `role="option"` + `aria-selected`. If false (default) the list is a
-   * plain `<ol>` / `<ul>` with no selection semantics — pick this for
-   * static lists.
-   */
-  selectable?: boolean;
-  /**
-   * If true, the listbox advertises multi-select via
-   * `aria-multiselectable="true"`. Defaults to false (single-select).
-   * Has no effect unless `selectable` is also true.
-   */
-  multiSelectable?: boolean;
-  variant?: ListVariant;
-  itemSizes?: ListItemSizes;
-};
-
-const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
-
-type ListContextValue = {
-  selectable: Exclude<ListProps['selectable'], undefined>;
-  variant: Exclude<ListProps['variant'], undefined>;
-  itemSizes?: ListItemSizes;
-};
-
-const [ListProvider, useListContext] = createListContext<ListContextValue>(LIST_NAME);
-
-const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
-  const {
-    __listScope,
-    variant = 'ordered',
-    selectable = false,
-    multiSelectable = false,
-    itemSizes,
-    children,
-    ...rootProps
-  } = props;
-  const ListRoot = variant === 'ordered' ? Primitive.ol : Primitive.ul;
+const List = forwardRef<HTMLOListElement, ListProps>((props: ListProps, forwardedRef) => {
+  const { variant = 'ordered', selectable = false, multiSelectable = false, itemSizes, children, ...rootProps } = props;
+  const ListRoot = variant === 'ordered' ? ark.ol : ark.ul;
   return (
     <ListRoot
       // `aria-multiselectable` is only meaningful on `role="listbox"`,
@@ -95,7 +52,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
     >
       <ListProvider
         {...{
-          scope: __listScope,
           variant,
           selectable,
           itemSizes,
@@ -109,6 +65,4 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
 
 List.displayName = LIST_NAME;
 
-export { List, LIST_NAME, createListScope, useListContext };
-
-export type { ListProps, ListScopedProps, ListVariant };
+export { List };

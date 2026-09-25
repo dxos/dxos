@@ -2,17 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, {
-  type ComponentPropsWithoutRef,
-  type PropsWithChildren,
-  type SyntheticEvent,
-  forwardRef,
-  useCallback,
-  useRef,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback, useRef } from 'react';
 
-import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from './Tooltip';
+import { useComposedRefs } from '@dxos/react-hooks';
+
+import { Tooltip, type TooltipTriggerProps } from './Tooltip.tsx';
 
 export type TextTooltipProps = PropsWithChildren<
   {
@@ -24,26 +18,20 @@ export type TextTooltipProps = PropsWithChildren<
     ComponentPropsWithoutRef<'button'>
 >;
 
-export const TextTooltip = forwardRef<HTMLButtonElement, TooltipScopedProps<TextTooltipProps>>(
-  (
-    { __scopeTooltip, text, children, onlyWhenTruncating, asChild = true, side, truncateQuery, ...props },
-    forwardedRef,
-  ) => {
+export const TextTooltip = forwardRef<HTMLButtonElement, TextTooltipProps>(
+  ({ text, children, onlyWhenTruncating, asChild = true, side, truncateQuery, ...props }, forwardedRef) => {
     const content = useRef<HTMLButtonElement | null>(null);
     const ref = useComposedRefs(content, forwardedRef);
-    const handleInteract = useCallback(
-      (event: SyntheticEvent) => {
-        if (onlyWhenTruncating && content.current) {
-          const element: HTMLElement | null = truncateQuery
-            ? content.current.querySelector(truncateQuery)
-            : content.current;
-          if (!element || element.scrollWidth <= element.offsetWidth) {
-            event.preventDefault();
-          }
+    const handleInteract = useCallback(() => {
+      if (onlyWhenTruncating && content.current) {
+        const element: HTMLElement | null = truncateQuery
+          ? content.current.querySelector(truncateQuery)
+          : content.current;
+        if (!element || element.scrollWidth <= element.offsetWidth) {
+          return false;
         }
-      },
-      [onlyWhenTruncating, truncateQuery],
-    );
+      }
+    }, [onlyWhenTruncating, truncateQuery]);
 
     return (
       <Tooltip.Trigger asChild={asChild} {...props} content={text} side={side} onInteract={handleInteract} ref={ref}>

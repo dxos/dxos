@@ -9,11 +9,13 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
-  # Named `prebuild` so storybook's `#storybook:prebuild` reaches it; `src/gen` does not exist until it runs.
+      - ~:#prebuild
+  # Tagged `prebuild` so storybook's `#storybook:#prebuild` reaches it; `src/gen` does not exist until it runs.
   prebuild:
     command: pnpm run --silent gen:pieces
     inputs:
       - assets/*.*
     outputs:
       - src/gen
+    tags:
+      - prebuild

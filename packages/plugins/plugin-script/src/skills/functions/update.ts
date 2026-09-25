@@ -4,18 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, type Script } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Script from '@dxos/compute/Script';
 import { Database, Obj } from '@dxos/echo';
 import { Doc, applyEdits } from '@dxos/echo-doc';
 
-import { Update } from './definitions';
+import { Update } from './definitions.ts';
+import { FunctionError } from './errors.ts';
 
 export default Update.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ function: fn, name, description, edits }) {
       const loaded = yield* Database.load(fn);
       if (!loaded.source) {
-        return yield* Effect.fail(new Error('Function has no source script.'));
+        return yield* Effect.fail(new FunctionError({ message: 'Function has no source script.' }));
       }
 
       const script = (yield* Database.load(loaded.source)) as Script.Script;

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { SearchArticle as default } from './SearchArticle';
+export { SearchArticle as default } from './SearchArticle.tsx';

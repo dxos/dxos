@@ -5,10 +5,11 @@
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { parseOBJ, presetObjData } from '../../engine';
-import { Model } from '../../types';
-import { type ActionHandler } from '../action';
-import { type ToolContext } from '../tool-context';
+import { Model } from '#types';
+
+import { parseOBJ, presetObjData } from '../../engine/index.ts';
+import { type ActionHandler } from '../action.ts';
+import { type ToolContext } from '../tool-context.ts';
 
 /** Creates a new primitive or preset object in the scene. */
 export class AddObjectAction implements ActionHandler {
@@ -50,7 +51,6 @@ export class AddObjectAction implements ActionHandler {
     Obj.update(scene, (scene) => {
       scene.objects.push(Ref.make(object));
     });
-    Obj.setParent(object, scene);
 
     const objId = (object as any).id as string | undefined;
     if (objId) {

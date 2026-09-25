@@ -2,40 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+// @import-as-namespace
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { meta as pluginMeta } from '#meta';
+import { StorybookPlugin } from '#plugin';
 
-import { OperationHandler, State } from '#capabilities';
-import { Layout } from '#components';
-import { meta } from '#meta';
-import { StorybookCapabilities } from '#types';
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export type StorybookPluginOptions = {
-  initialState?: Partial<StorybookCapabilities.LayoutStateProps>;
-};
+/**
+ * Constructs the plugin. Eager by design: storybook runs under vite-dev, where webkit
+ * cannot reliably settle the lazy stub's dynamic import (see `./core.ts`).
+ */
+export const make = StorybookPlugin;
 
-export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addReactContextModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactContext, {
-          id: 'storybook-layout',
-          context: Layout,
-        }),
-      ),
-  }),
-  Plugin.addModule(({ initialState }) => ({
-    id: Capability.getModuleTag(State),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [AppActivationEvents.LayoutReady],
-    activate: () => State({ initialState }),
-  })),
-  Plugin.make,
-);
-
-export default StorybookPlugin;
+export type { StorybookPluginOptions } from '#plugin';

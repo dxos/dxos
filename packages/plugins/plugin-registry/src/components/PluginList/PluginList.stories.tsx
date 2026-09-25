@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
+import * as PluginNS from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
@@ -15,7 +16,7 @@ import { getHashHue } from '@dxos/ui-theme';
 import { translations } from '#translations';
 import { RegistryTagType } from '#types';
 
-import { PluginList } from './PluginList';
+import { PluginList } from './PluginList.tsx';
 
 random.seed(1);
 
@@ -75,7 +76,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'bg-deck-surface' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'dx-deck-surface' })],
   parameters: {
     layout: 'fullscreen',
   },

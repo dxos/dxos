@@ -9,8 +9,8 @@ import { expect, waitFor } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { Html, type HtmlSrcResolver } from './Html';
-import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing';
+import { Html, type HtmlSrcResolver } from './Html.tsx';
+import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing.tsx';
 
 //
 // The sandbox on its own — no dialect. Everything here is behaviour `Html` guarantees to any caller:
@@ -20,14 +20,14 @@ import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing
 
 type SampleId = keyof typeof SANDBOX_SAMPLES;
 
-type StoryProps = {
+type StoryArgs = {
   sample: SampleId;
   loadRemoteImages?: boolean;
   /** Renders light and dark side by side — the only way to see a body that reads in one and not the other. */
   compare?: boolean;
 };
 
-const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryProps) => {
+const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryArgs) => {
   const { html, note } = SANDBOX_SAMPLES[sample];
   const body = () => <Html html={html} loadRemoteImages={loadRemoteImages} />;
   return <SampleFrame note={note}>{compare ? <Compare render={body} /> : body()}</SampleFrame>;

@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { deployFunction, observeInvocations, setup, sync } from './testing';
+import { deployFunction, observeInvocations, setup, sync } from './testing/index.ts';
 
 const FIB_FUNCTION_PATH = new URL('./functions/fib.ts', import.meta.url).pathname;
 

@@ -25,6 +25,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -37,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -47,9 +47,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"

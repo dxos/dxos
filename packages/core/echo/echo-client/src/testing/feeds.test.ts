@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { EchoTestBuilder } from './echo-test-builder';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 describe('feeds', () => {
   let builder: EchoTestBuilder;
@@ -116,10 +116,10 @@ describe('feeds', () => {
     }
   });
 
-  // Expected to fail: a relation in a feed whose source lives in the automerge database hangs
-  // during query because the strong-dep resolver cannot yet bridge feed→database direction.
-  // Unskip once feed→db strong-dep resolution is implemented.
-  test.fails('relation between feed object and a database object', async () => {
+  // Holds for the writer only: its query returns the relation it appended without decoding it again,
+  // since the feed handle already reflects that block. A reader that has to decode it still hangs,
+  // because the strong-dep resolver cannot yet bridge feed→database (see strong-deps-resolution.test.ts).
+  test('relation between feed object and a database object', async () => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });
@@ -451,7 +451,7 @@ describe('feeds', () => {
       sub();
     });
 
-    test('synchronous space query still fires an empty initial event immediately', async ({ expect }) => {
+    test('an empty space query fires its initial event once the index has answered', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
 
@@ -459,9 +459,9 @@ describe('feeds', () => {
       const observed: number[] = [];
       const sub = query.subscribe(() => observed.push(query.results.length), { fire: true });
 
-      // The working set serves space queries synchronously, so the initial event fires immediately
-      // even when there are no results.
-      expect(observed).toEqual([0]);
+      // Nothing is loaded and the index has not answered, so an empty snapshot would be a guess.
+      expect(observed).toEqual([]);
+      await expect.poll(() => observed).toEqual([0]);
       sub();
     });
   });

@@ -10,7 +10,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './info';
+import { handler } from './info.ts';
 
 describe('space info', () => {
   it('should show space info', () =>

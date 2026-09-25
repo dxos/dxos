@@ -7,7 +7,7 @@ tags:
 tasks:
   build:
     deps:
-      - deus:prebuild-lezer
+      - ~:#prebuild
   prebuild-lezer:
     command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
     inputs:
@@ -15,3 +15,5 @@ tasks:
     outputs:
       - src/extension/gen/mdl.terms.ts
       - src/extension/gen/mdl.ts
+    tags:
+      - prebuild

@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space } from '@dxos/client/echo';
-import type { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
-import { ComputeGraph } from './compute-graph';
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
+import { ComputeGraph } from './compute-graph.ts';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions/index.ts';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;

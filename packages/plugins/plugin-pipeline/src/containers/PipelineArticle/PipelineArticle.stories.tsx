@@ -9,11 +9,12 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -23,8 +24,8 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import PipelineProperties from '../PipelineProperties';
-import { PipelineArticle } from './PipelineArticle';
+import PipelineProperties from '../PipelineProperties/index.ts';
+import { PipelineArticle } from './PipelineArticle.tsx';
 
 random.seed(0);
 
@@ -38,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <PipelineArticle role='article' subject={pipeline} attendableId='test' />
       <div className='overflow-y-auto border-is border-separator'>
         <PipelineProperties subject={pipeline} />
@@ -55,8 +56,8 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Tag.Tag,
             Feed.Feed,
@@ -69,7 +70,7 @@ const meta = {
             Message.Message,
           ],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
@@ -120,7 +121,7 @@ const meta = {
               const feedTasks = Array.from({ length: 10 }).map(() =>
                 Obj.make(Task.Task, {
                   title: random.lorem.sentence(),
-                  status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                  status: random.helpers.arrayElement(['todo', 'started', 'done']) as any,
                   priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                 }),
               );
@@ -181,14 +182,14 @@ const meta = {
                       tags: random.datatype.boolean() ? [tagUri] : [],
                     },
                     title: random.lorem.sentence(),
-                    status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    status: random.helpers.arrayElement(['todo', 'started', 'done']) as any,
                     priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                   }),
                 );
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(personalSpace.db, random as any);
+              const factory = createObjectFactory(defaultSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
@@ -200,11 +201,11 @@ const meta = {
                   }),
                 );
               }
-            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
+            }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
-        InboxPlugin(),
-        PreviewPlugin(),
+        InboxPlugin.make(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

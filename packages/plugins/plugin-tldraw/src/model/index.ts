@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './builder';
-export * from './read';
-export * from './render';
-export * from './RecordBuilder';
+export * from './builder.ts';
+export * from './read.ts';
+export * from './render.ts';
+export * from './RecordBuilder.ts';

@@ -20,9 +20,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -138,6 +139,7 @@ Pure operations — no side-effects.
 
 ```mdl
 op openTranscript
+  key: org.dxos.operation.transcription.open
   desc: Loads a Transcript from ECHO, reads all Messages from its Feed, and returns the full text content rendered with speaker bylines.
   input:
     transcript: Ref<Transcript>
@@ -152,6 +154,7 @@ Effectful operations — produce output via AI or mutate persistent state.
 
 ```mdl
 op createTranscript
+  key: org.dxos.operation.transcription.create
   desc: Creates a new Feed and a Transcript object linked to it, then writes both into the current ECHO space.
   input:
     name?: string
@@ -162,6 +165,7 @@ op createTranscript
 
 ```mdl
 op summarizeTranscript
+  key: org.dxos.operation.transcription.summarize
   desc: Sends a transcript string and optional participant notes to an LLM and returns a Markdown summary with key points, verbatim quotes, and actionable tasks extracted from the conversation.
   input:
     transcript: string
@@ -177,6 +181,7 @@ op summarizeTranscript
 
 ```mdl
 op enrichMessage
+  key: org.dxos.operation.transcription.enrichMessage
   desc: Extracts proper nouns from each transcript block of a Message using a small LLM, full-text-searches the space for matching objects, and rewrites the text with inline `[noun](dxn)` reference links.
   input:
     message: Message
@@ -191,6 +196,7 @@ op enrichMessage
 
 ```mdl
 op normalizeSentences
+  key: org.dxos.operation.transcription.normalizeSentence
   desc: Post-processes an array of raw transcript messages, merging word-level tokens into grammatically complete sentences.
   input:
     messages: Message[]
@@ -284,7 +290,7 @@ feat F-6: Skill Integration
 ## Acceptance
 
 ```mdl
-test T-1: Create transcript
+scenario T-1: Create transcript
   given: a DXOS space is available
   when: op:createTranscript is invoked
   then:
@@ -294,7 +300,7 @@ test T-1: Create transcript
 ```
 
 ```mdl
-test T-2: Record and persist segment
+scenario T-2: Record and persist segment
   given: a Transcript with a Feed, microphone capture active
   when: the user speaks and silence is detected
   then:
@@ -304,7 +310,7 @@ test T-2: Record and persist segment
 ```
 
 ```mdl
-test T-3: Deduplicate segments across chunk boundaries
+scenario T-3: Deduplicate segments across chunk boundaries
   given: two consecutive transcription tasks with overlapping Whisper output
   when: the second task produces segments whose end timestamps fall before lastTimestamp
   then:
@@ -313,7 +319,7 @@ test T-3: Deduplicate segments across chunk boundaries
 ```
 
 ```mdl
-test T-4: Open transcript
+scenario T-4: Open transcript
   given: a Transcript with three Messages in its Feed
   when: op:openTranscript is invoked
   then:
@@ -322,7 +328,7 @@ test T-4: Open transcript
 ```
 
 ```mdl
-test T-5: Summarize transcript
+scenario T-5: Summarize transcript
   given: a transcript string and optional notes string
   when: op:summarizeTranscript is invoked
   then:
@@ -332,7 +338,7 @@ test T-5: Summarize transcript
 ```
 
 ```mdl
-test T-6: Sentence normalization is pure
+scenario T-6: Sentence normalization is pure
   given: an array of raw word-level Messages
   when: op:normalizeSentences is called
   then:
@@ -342,7 +348,7 @@ test T-6: Sentence normalization is pure
 ```
 
 ```mdl
-test T-7: Toggle recording in UI
+scenario T-7: Toggle recording in UI
   given: TranscriptionArticle is mounted with a Transcript
   when: user clicks the Start Recording toolbar button
   then:
@@ -352,6 +358,96 @@ test T-7: Toggle recording in UI
 ```
 
 ---
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+Transcription is enabled by default in every environment (`plugin-defs.tsx` `getDefaults`).
+
+```mdl
+test QA-1: Create a transcript and read it back
+  desc: |
+    The ECHO round-trip that does not require a live microphone or Whisper endpoint — create a
+    Transcript, and read its (empty) content back via op:openTranscript.
+  actors: agent
+  covers: [F-3.1, F-6.1, F-6.2, T-1, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Transcript named "QA Transcript" exists — ABORT rather than deleting one this test did not create
+  steps:
+    - name: Create the transcript
+      do: In the navtree, click + on the space and choose Transcript. Name it "QA Transcript".
+      invoke: [op:createTranscript] { name: "QA Transcript", space: $given.space }
+      capture: created
+      expect: a Transcript named "QA Transcript" now exists, linked to a new Feed
+      assert: return !!$created.object && !!$created.object.feed
+    - name: Place it in the space
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.space }
+      expect: "QA Transcript" appears as a row in the navtree
+    - name: Open it
+      do: Click "QA Transcript" in the navtree.
+      invoke: [op:openTranscript] { transcript: $created.object }
+      expect: the Transcription editor renders (empty, since no messages have been recorded yet)
+      assert: return typeof $result.content === 'string'
+  after:
+    - name: Delete the transcript
+      do: Right-click "QA Transcript" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+test QA-2: Record, transcribe, and summarize a meeting
+  desc: The full audio round-trip — start recording, speak, stop, and summarize what was said.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.2, F-5.1, T-2, T-5, T-7]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - transcript: a Transcript open in TranscriptionArticle within that space
+    - microphone permission is granted in the browser
+    - the Whisper speech-recognition endpoint is reachable
+    - recordedContent: a canned transcript string to summarize when the recording steps below are
+      not run (they are `blocked` on hardware), so `summarizeTranscript` can still be exercised
+      standalone
+  steps:
+    - name: Start recording
+      do: Click the microphone toggle in the toolbar.
+      expect: the toolbar button label changes to "Stop Recording" and recording state becomes true
+      note: NO `invoke` — microphone capture is a hardware/permission-gated browser action, not an operation.
+    - name: Speak a sentence
+      do: Say a short sentence aloud, then pause for a couple of seconds.
+      expect: a Message with at least one TranscriptSegment of non-empty text is appended to the Feed
+      blocked: |
+        Cannot run from the debug port: it requires a live microphone, real speech, and a real
+        Whisper HTTP call — none of which an automated snippet can produce or fake without
+        reimplementing the recording pipeline. Human-only, and unverifiable by an agent even after
+        the fact (Rule 9: no invoke, no capability substitute).
+    - name: Stop recording
+      do: Click the toolbar toggle again.
+      expect: capture stops, buffered chunks flush, and the final segment appears in the transcript
+      note: NO `invoke` — same as the start-recording step.
+    - name: Summarize the transcript
+      do: Invoke "Summarize" from the transcript's action menu (or via the assistant skill).
+      invoke: [op:summarizeTranscript] { transcript: $given.recordedContent }
+      expect: a non-empty Markdown summary is returned with bolded speaker names
+      assert: return typeof $result.summary === 'string' && $result.summary.length > 0
+      note: |
+        `$given.recordedContent` depends on the (blocked) recording steps above having produced
+        real text — this step can only run standalone against a canned transcript string, which is
+        a legitimate way to exercise op:summarizeTranscript in isolation but does not close the loop
+        on the recording pipeline.
+  after:
+    - name: Delete the transcript
+      do: Right-click the Transcript in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.transcript], target: $given.space }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
 
 ## Appendix: Extension Definitions
 
@@ -380,8 +476,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

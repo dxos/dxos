@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type Shell, type ShellDisplay } from '@dxos/client';
 
-import { useClient } from './useClient';
+import { useClient } from './useClient.ts';
 
 /**
  * Helper hook to access the shell.

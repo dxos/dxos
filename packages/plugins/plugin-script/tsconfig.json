@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -33,12 +36,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -83,16 +80,7 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/halo/halo"
-    },
-    {
       "path": "../../core/halo/halo-react"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"
@@ -102,6 +90,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -123,6 +114,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -174,9 +168,6 @@
     },
     {
       "path": "../plugin-game"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

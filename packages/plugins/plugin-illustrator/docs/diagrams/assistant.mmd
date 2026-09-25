@@ -1,0 +1,54 @@
+%% Assistant data flow — a prompt becomes queued feed messages, agent turns, model calls, tool calls, and ECHO writes.
+flowchart TB
+  subgraph UI [Composer plugin-assistant]
+    ChatUi[Chat UI]
+    Processor[AiChatProcessor]
+    AgentSvc[AgentService]
+  end
+  subgraph Runtime [Agent runtime]
+    AgentProc[AgentProcess turns]
+    Session[AiSession]
+    Binder[AiContext skills]
+    Request[AiRequest streamText]
+    ToolExec[ToolExecution]
+    Ops[Operation invoke]
+    Mcp[McpToolkit clients]
+  end
+  subgraph Models [Model providers]
+    AiSvc[AiService resolver]
+    Edge[EDGE Anthropic]
+    Local[Ollama / LM Studio]
+  end
+  Feed[ECHO feed and DB]
+  ChatUi -->|submit prompt| Processor
+  Processor -->|getSession| AgentSvc
+  AgentSvc -->|spawn / attach| AgentProc
+  AgentProc -->|queue / dequeue| Feed
+  AgentProc -->|runTurn| Session
+  Session -->|bind skills| Binder
+  Binder -->|tool ids| ToolExec
+  Session -->|history, system| Request
+  Request -->|model call| AiSvc
+  AiSvc --> Edge
+  AiSvc --> Local
+  Request -->|tool calls| ToolExec
+  ToolExec -->|handlers| Ops
+  ToolExec -->|remote tools| Mcp
+  Ops -->|read / write| Feed
+  Request -->|append messages| Feed
+  Request -->|trace blocks| Processor
+  Feed -->|reactive query| ChatUi
+  %% ref ChatUi packages/plugins/plugin-assistant/src/components/Chat
+  %% ref Processor packages/plugins/plugin-assistant/src/processor
+  %% ref AgentSvc packages/core/compute/agent-runtime/src/agent-service/AgentService.ts
+  %% ref AgentProc packages/core/compute/agent-runtime/src/agent-service/agent-process.ts
+  %% ref Session packages/core/compute/assistant/src/session/AiSession.ts
+  %% ref Binder packages/core/compute/assistant/src/session/AiContext.ts
+  %% ref Request packages/core/compute/assistant/src/request/AiRequest.ts
+  %% ref ToolExec packages/core/compute/assistant/src/tool-runtime/services.ts
+  %% ref Ops packages/core/compute/compute/src/Operation.ts
+  %% ref Mcp packages/core/compute/mcp-client
+  %% ref AiSvc packages/core/compute/ai/src/AiService.ts
+  %% ref Edge packages/plugins/plugin-assistant/src/capabilities/edge-model-resolver.ts
+  %% ref Local packages/plugins/plugin-assistant/src/capabilities/local-model-resolver.ts
+  %% ref Feed packages/core/compute/assistant/src/session/SessionStore.ts

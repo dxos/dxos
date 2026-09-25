@@ -5,20 +5,21 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation, OperationHandlerSet, Skill, Template } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { VectorStore } from '../internal/vector';
+import { VectorStore } from '../internal/vector.ts';
 
 export const RAG_SKILL_KEY = 'org.dxos.stories-brain.skill.rag';
-
-const makeKey = (name: string) => DXN.make(`org.dxos.stories-brain.operation.${name}`);
 
 /** Retrieves message snippets by semantic (vector) similarity to a natural-language query. */
 export const RetrieveSnippets = Operation.make({
   meta: {
-    key: makeKey('retrieveSnippets'),
+    key: DXN.make('com.example.operation.storiesBrain.retrieveSnippets'),
     name: 'Retrieve Snippets',
     description:
       'Retrieves the most semantically similar email snippets to a query from a vector index over the mailbox.',
@@ -26,11 +27,11 @@ export const RetrieveSnippets = Operation.make({
   },
   services: [VectorStore],
   input: Schema.Struct({
-    query: Schema.String.annotations({
+    query: Schema.String.annotate({
       description: 'Natural-language query, e.g. "messages from Nicole Gudmand about invoices".',
     }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum snippets to return (default 8).',
       }),
     ),

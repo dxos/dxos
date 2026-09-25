@@ -2,34 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
-import { Connection } from '../../types';
-import { performOAuthFlow } from './oauth';
-import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';
+import { ConnectorCommandError } from '../errors.ts';
+import { performOAuthFlow } from './oauth.ts';
+import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util.ts';
 
 export const add = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    preset: Options.text('preset').pipe(Options.withDescription('OAuth preset name (e.g., google)'), Options.optional),
-    source: Options.text('source').pipe(Options.withDescription('Token source'), Options.optional),
-    account: Options.text('account').pipe(
+    preset: Options.String('preset').pipe(
+      Options.withDescription('OAuth preset name (e.g., google)'),
+      Options.optional,
+    ),
+    source: Options.String('source').pipe(Options.withDescription('Token source'), Options.optional),
+    account: Options.String('account').pipe(
       Options.withDescription('Account associated with the token'),
       Options.optional,
     ),
-    token: Options.text('token').pipe(Options.withDescription('Token value'), Options.optional),
+    token: Options.String('token').pipe(Options.withDescription('Token value'), Options.optional),
   },
   ({ preset, source, account, token }) =>
     Effect.gen(function* () {
@@ -40,7 +43,7 @@ export const add = Command.make(
 
       if (!hasPreset && !hasSource) {
         // Interactive mode
-        const mode = yield* Prompt.select({
+        const mode = yield* Prompt.Select({
           message: 'Choose connection type:',
           choices: [
             { title: 'Preset (OAuth)', value: 'preset' },
@@ -62,11 +65,11 @@ export const add = Command.make(
       } else {
         // Custom token mode from command line
         const sourceValue = yield* Option.match(source, {
-          onNone: () => Effect.fail(new Error('Source is required')),
+          onNone: () => Effect.fail(new ConnectorCommandError({ message: 'Source is required' })),
           onSome: (value) => Effect.succeed(value),
         });
         const tokenValue = yield* Option.match(token, {
-          onNone: () => Effect.fail(new Error('Token is required when specifying source')),
+          onNone: () => Effect.fail(new ConnectorCommandError({ message: 'Token is required when specifying source' })),
           onSome: (value) => Effect.succeed(value),
         });
         const customTokenData = {
@@ -91,28 +94,28 @@ export const add = Command.make(
 
 const selectPresetInteractively = Effect.fn(function* () {
   const presetChoices = OAUTH_PRESETS.map(({ label }) => ({ title: label, value: label }));
-  const selectedLabel = yield* Prompt.select({
+  const selectedLabel = yield* Prompt.Select({
     message: 'Select OAuth preset:',
     choices: presetChoices,
   }).pipe(Prompt.run);
 
   const preset = OAUTH_PRESETS.find((p) => p.label === selectedLabel);
   if (!preset) {
-    return yield* Effect.fail(new Error(`Preset not found: ${selectedLabel}`));
+    return yield* Effect.fail(new ConnectorCommandError({ message: `Preset not found: ${selectedLabel}` }));
   }
   return preset;
 });
 
 const promptForCustomToken = Effect.fn(function* () {
-  const source = yield* Prompt.text({
+  const source = yield* Prompt.String({
     message: 'Source:',
   }).pipe(Prompt.run);
 
-  const account = yield* Prompt.text({
+  const account = yield* Prompt.String({
     message: 'Account (optional):',
   }).pipe(Prompt.run);
 
-  const token = yield* Prompt.text({
+  const token = yield* Prompt.String({
     message: 'Token:',
   }).pipe(Prompt.run);
 
@@ -123,7 +126,9 @@ const resolvePresetFromCommandLine = (presetValue: string): Effect.Effect<OAuthP
   const preset = OAUTH_PRESETS.find((p) => p.label.toLowerCase() === presetValue.toLowerCase());
   if (!preset) {
     return Effect.fail(
-      new Error(`Preset not found: ${presetValue}. Available presets: ${OAUTH_PRESETS.map((p) => p.label).join(', ')}`),
+      new ConnectorCommandError({
+        message: `Preset not found: ${presetValue}. Available presets: ${OAUTH_PRESETS.map((p) => p.label).join(', ')}`,
+      }),
     );
   }
   return Effect.succeed(preset);
@@ -148,7 +153,9 @@ const addCustomToken = Effect.fn(function* (
   json: boolean,
 ) {
   if (!data.source || !data.token) {
-    return yield* Effect.fail(new Error('Source and token are required for custom tokens'));
+    return yield* Effect.fail(
+      new ConnectorCommandError({ message: 'Source and token are required for custom tokens' }),
+    );
   }
 
   const accessToken = Obj.make(AccessToken.AccessToken, {

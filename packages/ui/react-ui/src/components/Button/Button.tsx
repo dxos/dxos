@@ -2,34 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
-import { type Density, type Elevation } from '@dxos/ui-types';
+import {
+  type ChromaticPalette,
+  type Density,
+  type Elevation,
+  type MessageValence,
+  type NeutralPalette,
+} from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
 
-type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
-  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence';
+type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {
+  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence' | 'tag';
+  /** The `tag` variant's palette, as on `Tag`; ignored by the other variants. */
+  hue?: ChromaticPalette | NeutralPalette | MessageValence;
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
   /** Render a trailing caret indicating the button opens a menu. */
   caretDown?: boolean;
 };
-
-type ButtonGroupContextValue = { inGroup?: boolean };
-
-const BUTTON_GROUP_NAME = 'ButtonGroup';
-const BUTTON_NAME = 'Button';
-
-const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
-  inGroup: false,
-});
 
 const Button = memo(
   forwardRef<HTMLButtonElement, ButtonProps>(
@@ -40,6 +38,7 @@ const Button = memo(
         density: densityProp,
         elevation: elevationProp,
         variant = 'default',
+        hue,
         asChild,
         caretDown,
         ...props
@@ -50,12 +49,13 @@ const Button = memo(
       const { tx } = useThemeContext();
       const elevation = useElevationContext(elevationProp);
       const density = useDensityContext(densityProp);
-      const Comp = asChild ? Slot : Primitive.button;
       return (
-        <Comp
+        <ark.button
+          asChild={asChild}
           ref={ref}
           {...props}
           data-variant={variant}
+          data-hue={variant === 'tag' ? (hue ?? 'neutral') : undefined}
           data-density={density}
           data-props={inGroup ? 'grouped' : ''}
           className={tx(
@@ -71,17 +71,17 @@ const Button = memo(
           )}
           {...(props.disabled && { disabled: true })}
         >
-          {/* `asChild` forwards a single child via Slot (React.Children.only); only add the caret in
-              the non-`asChild` case so Slot still receives exactly one child. */}
+          {/* `asChild` clones its single child; only add the caret in the non-`asChild` case so the
+              child stays exactly one element. */}
           {caretDown && !asChild ? (
             <>
               {children}
-              <Icon size={3} icon='ph--caret-down--bold' />
+              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           ) : (
             children
           )}
-        </Comp>
+        </ark.button>
       );
     },
   ),
@@ -89,7 +89,7 @@ const Button = memo(
 
 Button.displayName = BUTTON_NAME;
 
-type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   elevation?: Elevation;
   asChild?: boolean;
 };
@@ -98,17 +98,21 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
   ({ children, elevation: propsElevation, classNames, asChild, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const elevation = useElevationContext(propsElevation);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...props}
+        className={tx('button.group', { elevation }, classNames)}
+        ref={forwardedRef}
+      >
         <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-      </Comp>
+      </ark.div>
     );
   },
 );
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
-export { Button, BUTTON_GROUP_NAME, ButtonGroup, useButtonGroupContext };
+export { Button, ButtonGroup };
 
 export type { ButtonGroupProps, ButtonProps };

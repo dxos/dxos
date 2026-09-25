@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Resource } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -14,15 +14,15 @@ import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
-import type { SpaceComputeRuntime } from './compute-graph-registry';
-import { ComputeNode } from './compute-node';
+import type { SpaceComputeRuntime } from './compute-graph-registry.ts';
+import { ComputeNode } from './compute-node.ts';
 import {
   EDGE_FUNCTION_NAME,
   FunctionContext,
   type FunctionContextOptions,
   type FunctionDefinition,
   defaultFunctions,
-} from './functions';
+} from './functions/index.ts';
 
 // TODO(burdon): Factor out compute-graph.
 

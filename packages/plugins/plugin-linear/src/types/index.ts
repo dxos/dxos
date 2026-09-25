@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as LinearOperation from './LinearOperation';
+export * as LinearEvents from './LinearEvents.ts';
+export * as LinearOperation from './LinearOperation.ts';

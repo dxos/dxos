@@ -12,8 +12,8 @@ import {
   shouldLog,
 } from '@dxos/log';
 
-import { type JsonlFileLogStore } from './jsonl-file-log-store';
-import { resolveTestLogFilter } from './paths';
+import { type JsonlFileLogStore } from './jsonl-file-log-store.ts';
+import { resolveTestLogFilter } from './paths.ts';
 
 /**
  * Install a {@link LogProcessor} that writes filtered `@dxos/log` entries to a {@link JsonlFileLogStore}.

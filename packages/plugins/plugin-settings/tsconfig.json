@@ -10,7 +10,7 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/util"
@@ -26,6 +26,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-form"

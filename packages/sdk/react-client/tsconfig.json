@@ -12,9 +12,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -36,12 +33,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -52,6 +43,9 @@
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -70,6 +64,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../schema"
     }
   ]
 }

@@ -69,3 +69,34 @@ export const isAllOf = (events: Events): events is { type: 'all-of'; events: Act
  * Helper to get the events from an activation event.
  */
 export const getEvents = (events: Events) => ('type' in events ? events.events : [events]);
+
+/**
+ * Fired when the app is started.
+ * Defined in core (rather than the `common` well-known events, which re-export it) because
+ * the plugin manager's `start()` delegates `activate(Startup)` and publishes the
+ * startup-complete message on this key.
+ * @deprecated As an `activatesOn` target — declare `provides`/`requires` instead; the
+ *   dependency pass replaces startup-event wiring. External callers keep using
+ *   `PluginManager.activate(Startup)` (it delegates to `start()`).
+ */
+export const Startup = make('org.dxos.app-framework.event.startup');
+
+/**
+ * Fired once by the host at main-thread idle after the app is interactive; see the `common`
+ * well-known events for the authoring-facing documentation.
+ *
+ * Defined here rather than only in `common` because omitting `activatesOn` normalizes to this
+ * event, and `Plugin.normalizeActivation` lives in core — which cannot import `common` without
+ * closing the `common -> core` cycle.
+ */
+export const Idle = make('org.dxos.app-framework.event.idle');
+
+/**
+ * A plugin's feature-start event, by convention `<pluginKey>.event.start`. A plugin's
+ * off-critical-path modules declare `activatesOn` on its own start event (conventionally
+ * exported as `<Name>Events.Start` from the plugin's types); cross-plugin contributions (a
+ * skill, a markdown extension) declare the CONSUMING plugin's start event. Deriving the id
+ * from the key alone lets fire sites (enable, idle, demand signals) activate a feature
+ * without importing its package.
+ */
+export const pluginStart = (pluginKey: string | DXN.DXN) => make(`${pluginKey}.event.start`);

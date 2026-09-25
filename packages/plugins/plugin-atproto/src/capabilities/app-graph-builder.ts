@@ -5,17 +5,22 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Filter, Obj } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
-import { GraphBuilder, Node, type NodeMatcher } from '@dxos/plugin-graph';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
 
-import { getRecordAnnotation } from '../annotation';
-import { isAtprotoConnection } from '../connection';
-import { PDS_NODE_TYPE, PDS_URL_KEY } from '../pds';
+import { getRecordAnnotation } from '../annotation.ts';
+import { isAtprotoConnection } from '../connection.ts';
+import { PDS_NODE_TYPE, PDS_URL_KEY } from '../pds.ts';
 
 /** The companion segment/variant for the publishing companion — shared with its surface binding. */
 export const ATPROTO_COMPANION_VARIANT = 'atproto';
@@ -25,7 +30,7 @@ export const ATPROTO_COMPANION_VARIANT = 'atproto';
  * and (b) its space holds an atproto connection. Reactive via `get(...atom)`, so the companion
  * appears/disappears as connections are added or removed.
  */
-const whenPublishable: NodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
+const whenPublishable: GraphNodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
   if (!Obj.isObject(node.data)) {
     return Option.none();
   }
@@ -44,8 +49,9 @@ const whenPublishable: NodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'atprotoCompanion',
+        relation: AppNode.companion,
         match: whenPublishable,
         connector: (object) =>
           Effect.succeed([
@@ -60,7 +66,7 @@ export default Capability.makeModule(
 
       // Virtual "PDS" node in the system section — only when the space holds an atproto connection.
       // Positioned between Database (0) and Devtools (Infinity).
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'pdsSection',
         url: { key: PDS_URL_KEY, kind: 'singleton', path: [GraphPath.GroupSegments.system] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
@@ -72,7 +78,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           return Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               // Segment id (no '/'); the graph qualifies it under the space's system group. Must equal
               // the registered singleton URL key — see {@link PDS_URL_KEY}.
               id: PDS_URL_KEY,
@@ -93,6 +99,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

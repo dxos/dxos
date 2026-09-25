@@ -4,12 +4,13 @@
 
 import { useMemo } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type InboxCapabilities, type Mailbox } from '../types';
-import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
+import { InboxCapabilities, Mailbox } from '#types';
+
+import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions.tsx';
 
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the

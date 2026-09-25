@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FieldBinding, type RequestMapping } from '../types/Provider';
+import { type FieldBinding, type RequestMapping } from '../types/Provider.ts';
 
 export type HttpRequest = {
   method: 'GET' | 'POST';

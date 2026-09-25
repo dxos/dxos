@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { runShell } from '@dxos/shell/react';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { getConfig } from './config';
+import { getConfig } from './config.ts';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('shell');

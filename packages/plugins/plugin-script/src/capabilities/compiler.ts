@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
+import * as ts from '@typescript/typescript6';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
-import * as ts from 'typescript';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { initializeBundler } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { ScriptCapabilities } from '#types';
 
-import { Compiler } from '../compiler';
+import { Compiler } from '../compiler/index.ts';
+import { CompilerError } from './errors.ts';
 
 // TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';
@@ -28,7 +29,7 @@ export default Capability.makeModule(() =>
   Effect.gen(function* () {
     yield* Effect.tryPromise({
       try: () => initializeBundler({ wasmUrl }),
-      catch: (error) => new Error(`Failed to initialize bundler: ${error}`),
+      catch: (error) => new CompilerError({ message: 'Failed to initialize bundler.', cause: error }),
     });
 
     const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
@@ -51,7 +52,7 @@ export default Capability.makeModule(() =>
         declare module 'https://*';
         ${NO_TYPES ? '' : 'declare module "*";'}
       `),
-      catch: (error) => new Error(`Failed to initialize compiler: ${error}`),
+      catch: (error) => new CompilerError({ message: 'Failed to initialize compiler.', cause: error }),
     });
     if (!NO_TYPES) {
       for (const mod of runtimeModules) {
@@ -59,7 +60,7 @@ export default Capability.makeModule(() =>
       }
     }
 
-    return Capability.contributes(ScriptCapabilities.Compiler, compiler);
+    return Capability.contribute(ScriptCapabilities.Compiler, compiler);
   }),
 );
 
@@ -68,7 +69,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(
     Effect.flatMap((_) => _.json),
     Effect.flatMap(
-      Schema.decodeUnknown(
+      Schema.decodeUnknownEffect(
         Schema.Struct({
           files: Schema.Array(
             Schema.Struct({
@@ -89,7 +90,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
     Effect.fnUntraced(
       function* (filename) {
         const response = yield* HttpClient.get(new URL(filename, SCRIPT_PACKAGES_BUCKET)).pipe(
-          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
         );
         const content = yield* response.text;
         const moduleName = filename.replace(/\.d\.(ts|mts)$/, '');
@@ -101,7 +102,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
           content,
         };
       },
-      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
     ),
     { concurrency: 20 },
   );

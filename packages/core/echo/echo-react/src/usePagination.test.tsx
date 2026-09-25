@@ -9,7 +9,7 @@ import { Aggregate, Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { usePagination } from './usePagination';
+import { usePagination } from './usePagination.ts';
 
 describe('usePagination', () => {
   let builder: EchoTestBuilder;

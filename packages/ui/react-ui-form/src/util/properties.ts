@@ -3,23 +3,49 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
-  if (!prop.isOptional || !SchemaAST.isUnion(prop.type)) {
+  if (!SchemaAST.isOptional(prop.type) || !SchemaAST.isUnion(prop.type)) {
     return prop.type;
   }
   // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
-  const defined = prop.type.types.filter((type) => type._tag !== 'UndefinedKeyword');
+  const defined = prop.type.types.filter((type) => type._tag !== 'Undefined');
   if (defined.length === 0) {
     return prop.type;
   }
-  return defined.length === 1 ? defined[0] : SchemaAST.Union.make(defined, prop.type.annotations);
+  return defined.length === 1
+    ? defined[0]
+    : new SchemaAST.Union(defined, prop.type.options, prop.type.annotations, prop.type.checks);
+};
+
+/**
+ * Discriminator values that open a root discriminated union on its first member.
+ *
+ * A union root with no discriminator value renders as a lone select and nothing else — no member's
+ * fields, and no way to submit — so the form seeds the first member rather than presenting a dead
+ * form. Member order is therefore the declaration order of `Schema.Union`: put the common case first.
+ */
+export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record<string, unknown> => {
+  if (!ast || !SchemaEx.isDiscriminatedUnion(ast) || !SchemaAST.isUnion(ast)) {
+    return {};
+  }
+
+  const discriminators = new Set(SchemaEx.getDiscriminatingProps(ast) ?? []);
+  const [first] = ast.types;
+  if (!first || discriminators.size === 0) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    SchemaAST.getPropertySignatures(first)
+      .filter((prop) => discriminators.has(prop.name.toString()) && SchemaAST.isLiteral(prop.type))
+      .map((prop) => [prop.name.toString(), (prop.type as SchemaAST.Literal).literal]),
+  );
 };
 
 /**
@@ -29,7 +55,7 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
  * discriminator value, with the discriminator field keeping the union-wide set of literals so it stays
  * switchable. (`SchemaAST.getPropertySignatures` on a union returns only the common discriminator, so a
  * union root would otherwise render just that one field.) Non-union roots are unchanged. Nested unions are
- * unaffected — those are expanded per-field by `FormField`, which passes a single-member type literal here.
+ * unaffected — those are expanded per-field by `FormFieldDispatch`, which passes a single-member type literal here.
  */
 export const getRootFormProperties = (
   ast: SchemaAST.AST,
@@ -97,4 +123,40 @@ export const getFormProperties = (ast: SchemaAST.AST): SchemaEx.SchemaProperty[]
       const raw = rawByName.get(prop.name);
       return raw && (SchemaEx.isNestedType(raw) || SchemaEx.isArrayType(raw)) ? { ...prop, type: raw } : prop;
     });
+};
+
+/**
+ * The object type at a path of the schema, for walking a nested object's properties: each segment
+ * is a property name (an array index selects the element type), and a discriminated union is
+ * resolved by the value at that path. `undefined` when the path leads to no object.
+ */
+export const getSchemaAtPath = (
+  ast: SchemaAST.AST,
+  path: (string | number)[],
+  values: AnyProperties | undefined,
+): SchemaAST.AST | undefined => {
+  let node: SchemaAST.AST = ast;
+  for (const segment of path) {
+    if (typeof segment === 'number') {
+      const element = SchemaEx.getArrayElementType(node);
+      if (!element) {
+        return undefined;
+      }
+      node = element;
+      continue;
+    }
+    const literal = SchemaEx.findNode(node, SchemaAST.isObjects);
+    if (!literal) {
+      return undefined;
+    }
+    const prop = SchemaAST.getPropertySignatures(literal).find((candidate) => String(candidate.name) === segment);
+    if (!prop) {
+      return undefined;
+    }
+    node = unwrapOptional(prop);
+  }
+  const union = SchemaEx.findNode(node, SchemaEx.isDiscriminatedUnion);
+  return union
+    ? SchemaEx.getDiscriminatedType(union, SchemaEx.getValue(values ?? {}, SchemaEx.createJsonPath(path)) ?? {})
+    : SchemaEx.findNode(node, SchemaAST.isObjects);
 };

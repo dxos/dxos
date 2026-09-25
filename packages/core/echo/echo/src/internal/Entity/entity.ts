@@ -3,17 +3,18 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
-import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
-import { makeObject } from '../common/proxy/make-object';
-import { getProxyTarget } from '../common/proxy/proxy-utils';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
+import { defineHiddenProperty } from '../common/proxy/define-hidden-property.ts';
+import { makeObject } from '../common/proxy/make-object.ts';
+import { getProxyTarget } from '../common/proxy/proxy-utils.ts';
+import { type AnyProperties } from '../common/types/base.ts';
 import {
   type AnyEntity,
   EntityKind,
@@ -21,9 +22,9 @@ import {
   KindId,
   SchemaKindId,
   StaticTypeSchemaSlot,
-} from '../common/types';
-import { type EntityMeta } from '../common/types/meta';
-import { JsonSchemaType } from '../JsonSchema/json-schema-type';
+} from '../common/types/index.ts';
+import { type EntityMeta } from '../common/types/meta.ts';
+import { JsonSchemaType } from '../JsonSchema/json-schema-type.ts';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -57,7 +58,7 @@ export type EchoTypeOptions = {
  */
 // TODO(burdon): Rename EchoEntitySchema.
 export interface EchoTypeSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   ExtraFields = {},
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -76,13 +77,13 @@ export interface EchoTypeSchema<
   /**
    * Entity id. Always present — stamped at construction — but NOT the type's
    * identity while in-memory: an unattached type resolves its URI to the typename
-   * DXN, switching to `echo:/<id>` only once attached to a database (see
+   * DXN, switching to `echo:///<id>` only once attached to a database (see
    * `getTypeURIFromSpecifier`, which discriminates by database attachment).
    */
   readonly id: EntityId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
-  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   // NOTE: `typename` / `version` are intentionally NOT fields. They live in
   // `EntityMeta` (`key` / `version`); read via `Type.getTypename(self)` /
@@ -113,41 +114,10 @@ export interface EchoTypeSchema<
   } & (K extends EntityKind.Type
       ? {
           readonly [SchemaKindId]: EntityKind.Type;
-          readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+          readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
         }
       : {});
 }
-
-// type MakeProps =
-//   | boolean
-//   | {
-//       readonly disableValidation?: boolean;
-//     };
-
-// NOTE: Utils copied from Effect `Schema.ts`.
-// const _ownKeys = (o: object): Array<PropertyKey> =>
-//   (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
-
-// const _lazilyMergeDefaults = (
-//   fields: Schema.Struct.Fields,
-//   out: Record<PropertyKey, unknown>,
-// ): { [x: string | symbol]: unknown } => {
-//   const ownKeys = _ownKeys(fields);
-//   for (const key of ownKeys) {
-//     const field = fields[key];
-//     if (out[key] === undefined && Schema.isPropertySignature(field)) {
-//       const ast = field.ast;
-//       const defaultValue = ast._tag === 'PropertySignatureDeclaration' ? ast.defaultValue : ast.to.defaultValue;
-//       if (defaultValue !== undefined) {
-//         out[key] = defaultValue();
-//       }
-//     }
-//   }
-//   return out;
-// };
-
-// const _getDisableValidationMakeOption = (options: MakeProps | undefined): boolean =>
-//   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
  * Identity (typename + version) of the type meta-schema — the `Type.Type` that
@@ -174,7 +144,7 @@ export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
  */
 // TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
 //   Both describe the same `org.dxos.type.schema` shape.
-const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
+const persistentEntitySchema: Schema.Codec<AnyProperties, any> = (() => {
   const typename = DXN.getName(TypeMetaSchemaDXN);
   const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
@@ -182,11 +152,11 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
     id: EntityId,
   });
-  const ast = SchemaAST.annotations(struct.ast, {
+  const ast = SchemaAST.annotate(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-    [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
+    ...makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
-  return Schema.make(ast);
+  return Schema.make<Schema.Codec<AnyProperties, any>>(ast);
 })();
 
 /**
@@ -205,7 +175,7 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
  * `jsonSchema` is mutated (see `typed-handler.ts`).
  */
 export const makeEchoTypeSchema = <
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   K extends EntityKind = EntityKind,
   // TODO(wittjosiah): Can this be inferred from the schema?
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -219,11 +189,17 @@ export const makeEchoTypeSchema = <
   explicitId?: EntityId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
-  const sourceSchema = Schema.make<
-    EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
-    EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
-    Schema.Schema.Context<Self>
-  >(ast);
+  // v4's `Schema.make` takes the whole schema type as one parameter, and a schema exposes its
+  // channels as properties rather than through `Schema.Schema.*` helpers.
+  const sourceSchema =
+    Schema.make<
+      Schema.Codec<
+        EchoTypeSchemaProps<Self['Type']>,
+        EchoTypeSchemaProps<Self['Encoded']>,
+        Self['DecodingServices'],
+        Self['EncodingServices']
+      >
+    >(ast);
 
   // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for
@@ -274,4 +250,4 @@ export const makeEchoTypeSchema = <
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
 
-export { isEntity } from './guard';
+export { isEntity } from './guard.ts';

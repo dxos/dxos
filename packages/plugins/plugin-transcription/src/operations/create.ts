@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Ref } from '@dxos/echo';
 import { Transcript } from '@dxos/types';
 
-import { TranscriptOperation } from '../types';
+import { TranscriptOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Create> = TranscriptOperation.Create.pipe(
   Operation.withHandler(

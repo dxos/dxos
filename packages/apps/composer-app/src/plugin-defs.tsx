@@ -2,102 +2,128 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
-import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
-import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
-import { BoardPlugin } from '@dxos/plugin-board/plugin';
-import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
-import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
-import { ChessPlugin } from '@dxos/plugin-chess/plugin';
-import { CodePlugin } from '@dxos/plugin-code/plugin';
-import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
-import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
-import { CrmPlugin } from '@dxos/plugin-crm/plugin';
-import { CrxPlugin } from '@dxos/plugin-crx/plugin';
-import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
-import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
-import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
-import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
-import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw/plugin';
-import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
-import { FilePlugin } from '@dxos/plugin-file/plugin';
-import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
-import { GamePlugin } from '@dxos/plugin-game/plugin';
-import { GitHubPlugin } from '@dxos/plugin-github/plugin';
-import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
-import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
-import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
-import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
-import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
-import { LibraryPlugin } from '@dxos/plugin-library/plugin';
-import { LinearPlugin } from '@dxos/plugin-linear/plugin';
-import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
-import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
-import { MapPlugin } from '@dxos/plugin-map/plugin';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
-import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
-import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
-import { NativePlugin } from '@dxos/plugin-native/plugin';
-import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
-import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
-import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
-import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
-import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
-import { ReviewPlugin } from '@dxos/plugin-review/plugin';
-import { SamplePlugin } from '@dxos/plugin-sample/plugin';
-import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
-import { ScriptPlugin } from '@dxos/plugin-script/plugin';
-import { SearchPlugin } from '@dxos/plugin-search/plugin';
-import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
-import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
-import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
-import { SlackPlugin } from '@dxos/plugin-slack/plugin';
-import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
-import { StackPlugin } from '@dxos/plugin-stack/plugin';
-import { StudioPlugin } from '@dxos/plugin-studio/plugin';
-import { SupportPlugin } from '@dxos/plugin-support/plugin';
-import { TablePlugin } from '@dxos/plugin-table/plugin';
-import { TasksPlugin } from '@dxos/plugin-tasks/plugin';
-import { TerraPlugin } from '@dxos/plugin-terra/plugin';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
-import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
-import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
-import { TripPlugin } from '@dxos/plugin-trip/plugin';
-import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
-import { VideoPlugin } from '@dxos/plugin-video/plugin';
-import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
-import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
-import { ZenPlugin } from '@dxos/plugin-zen/plugin';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import { type AiService } from '@dxos/ai';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
+import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
+import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
+import * as BookmarksPlugin from '@dxos/plugin-bookmarks/BookmarksPlugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
+import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
+import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
+import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
+import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
+import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
+import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
+import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
+import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
+import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DeepSeekPlugin from '@dxos/plugin-deepseek/DeepSeekPlugin';
+import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
+import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
+import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
+import * as DuffelPlugin from '@dxos/plugin-duffel/DuffelPlugin';
+import * as ExcalidrawPlugin from '@dxos/plugin-excalidraw/ExcalidrawPlugin';
+import * as ExplorerPlugin from '@dxos/plugin-explorer/ExplorerPlugin';
+import * as FileSystemPlugin from '@dxos/plugin-file-system/FileSystemPlugin';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
+import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
+import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
+import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
+import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
+import * as IdeogramPlugin from '@dxos/plugin-ideogram/IdeogramPlugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
+import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
+import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
+import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
+import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
+import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
+import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
+import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
+import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
+import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
+import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
+import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
+import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
+import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as QaPlugin from '@dxos/plugin-qa/QaPlugin';
+import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
+import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
+import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
+import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
+import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
+import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
+import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
+import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
+import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
+import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
+import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
+import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import * as TerraPlugin from '@dxos/plugin-terra/TerraPlugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
+import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
+import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
+import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
+import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
+import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
+import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
+import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
+import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
-import { steps } from './util';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
- * Plugin keys enabled by default for new users, per environment (dev/local/labs).
+ * Plugin keys enabled by default for new users, per environment (dev/local).
+ *
+ * New keys go in the `isDev` block, and only for plugins that hit no permission-gated API on
+ * activation: a `fetch` or `WebSocket` to localhost raises Chrome's local network prompt at boot.
+ *
+ * NOTE: Keep alphabetically sorted.
  */
-export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.profile.key,
     ReviewPlugin.meta.profile.key,
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
+    // Mail providers for the Inbox: a mailbox is inert without one, so they default on with it.
+    GooglePlugin.meta.profile.key,
+    JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
+    ProjectsPlugin.meta.profile.key,
+    TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
@@ -105,36 +131,48 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
-    // Dev
-    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
-
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Labs
-    (isDev || isLabs) && [
+    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own —
+    // it reads the plugin's capabilities optionally, so enabling it changes no other surface. Still
+    // listed under labs below; the dedupe at the end collapses the two entries.
+    TranscriptionPlugin.meta.profile.key,
+
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
+    // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
+    isDev && [
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
-      MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
-      DuffelPlugin.meta.profile.key,
-      LibraryPlugin.meta.profile.key,
-      MagazinePlugin.meta.profile.key,
-      GamePlugin.meta.profile.key,
-      IdeogramPlugin.meta.profile.key,
-      HeyGenPlugin.meta.profile.key,
-      StudioPlugin.meta.profile.key,
-      IrohBeaconPlugin.meta.profile.key,
-      OsrmPlugin.meta.profile.key,
-      TasksPlugin.meta.profile.key,
-      PaymentsPlugin.meta.profile.key,
-      PipelinePlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
-      SequencerPlugin.meta.profile.key,
+      DebugPlugin.meta.profile.key,
+      DeepSeekPlugin.meta.profile.key,
+      DevtoolsPlugin.meta.profile.key,
+      DuffelPlugin.meta.profile.key,
+      GamePlugin.meta.profile.key,
+      HeyGenPlugin.meta.profile.key,
+      HiggsfieldPlugin.meta.profile.key,
+      IdeogramPlugin.meta.profile.key,
+      IrohBeaconPlugin.meta.profile.key,
+      LabelerPlugin.meta.profile.key,
+      LaMetricPlugin.meta.profile.key,
+      TypeSafePlugin.meta.profile.key,
+      LibraryPlugin.meta.profile.key,
+      LingoPlugin.meta.profile.key,
+      MagazinePlugin.meta.profile.key,
+      MeetingPlugin.meta.profile.key,
+      OsrmPlugin.meta.profile.key,
+      PaymentsPlugin.meta.profile.key,
+      PipelinePlugin.meta.profile.key,
+      QaPlugin.meta.profile.key,
+      S3Plugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
+      SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
+      StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -142,94 +180,177 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ],
   ]
     .filter(isTruthy)
-    .flat();
+    .flat()
+    // Deduped: a mobile labs build lists transcription in both sets.
+    .filter((key, index, keys) => keys.indexOf(key) === index);
+
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in.
+// The model's code runs in a Web Worker on its own ECHO client, never in the page: a chunk that fails
+// to load or a missing client degrades to the standard producer, not to in-page evaluation.
+const codeModeTurnProducer =
+  (capabilities: CapabilityManager.CapabilityManager): MakeTurnProducer =>
+  (options) => {
+    const standard = (reason: unknown) =>
+      Effect.logWarning('code mode unavailable; using the standard turn producer', reason).pipe(
+        // Already loaded by the agent service that calls this, so the import resolves from cache.
+        Effect.andThen(Effect.promise(() => import('@dxos/agent-runtime'))),
+        Effect.flatMap(({ makeAiSessionTurnProducer }) => makeAiSessionTurnProducer(options)),
+      );
+    return Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
+      Effect.matchEffect({
+        onFailure: standard,
+        onSuccess: ({ EffectDialect, WorkerSandbox, WorkerSandboxBrowser, makeCodeModeTurnProducer }) => {
+          const [client] = capabilities.getAll(ClientCapabilities.Client);
+          if (client === undefined) {
+            return standard('no client to connect the sandbox worker to');
+          }
+          const sandbox = WorkerSandbox.make({
+            // Read per evaluation: the client's rpc surface is replaced on reconnect.
+            echo: () => echoServices(client.services.rpc),
+            spawn: WorkerSandboxBrowser.spawn(
+              () => new Worker(new URL('./workers/code-mode-worker.ts', import.meta.url), { type: 'module' }),
+            ),
+          });
+          return makeCodeModeTurnProducer({ dialect: EffectDialect, sandbox })(options);
+        },
+      }),
+    );
+  };
+
+// Loaded on first model resolution: the script and the operation definitions it names stay out of the
+// boot graph, which `check-boot-budget` gates.
+const scriptedAiServiceMiddleware = (upstream: AiService.Service): AiService.Service => ({
+  ...upstream,
+  languageModel: () =>
+    Layer.unwrap(
+      Effect.promise(() => import('./util/scripted-model.ts')).pipe(
+        Effect.flatMap(({ makeScriptedModel }) => makeScriptedModel()),
+      ),
+    ),
+});
+
+/** The two services the sandbox worker's ECHO client connects to, served from this tab's client. */
+const echoServices = (rpc: ClientServicesRpc) => {
+  const { DataService, QueryService } = makeHandlersFromRpc(rpc);
+  if (DataService === undefined || QueryService === undefined) {
+    throw new Error('The client does not serve the data and query services.');
+  }
+  return { DataService, QueryService };
+};
 
 /**
- * Full Composer plugin registry: shared core infrastructure plus every content plugin.
+ * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
+ * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
+ *
+ * NOTE: Keep alphabetically sorted.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
+  const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin(),
-    AtprotoPlugin(),
-    BoardPlugin(),
-    BookmarksPlugin(),
-    BrainPlugin(),
-    CallsPlugin(),
-    ChessPlugin(),
-    ChessComPlugin(),
-    ReviewPlugin(),
-    ConductorPlugin(),
-    !isTauri && CrxPlugin(),
-    DebugPlugin({ logStore }),
-    DevtoolsPlugin(),
-    DiscordPlugin(),
-    DoctorPlugin(),
-    DuffelPlugin(),
-    IbkrPlugin(),
-    IdeogramPlugin(),
-    HeyGenPlugin(),
-    StudioPlugin(),
-    ExplorerPlugin(),
-    MagazinePlugin(),
-    GamePlugin(),
-    InboxPlugin(),
-    KanbanPlugin(),
-    LibraryPlugin(),
-    MapPlugin(),
-    isLocal && MapPluginSolid(),
-    MarkdownPlugin(),
-    MeetingPlugin(),
-    MermaidPlugin(),
-    isTauri && !isMobile && !isPopover && NativePlugin(),
-    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
-    OsrmPlugin(),
-    TasksPlugin(),
-    PaymentsPlugin(),
-    PipelinePlugin(),
-    PresenterPlugin(),
-    PreviewPlugin(),
-    ProjectsPlugin(),
-    CommercePlugin(),
-    CrmPlugin(),
-    !isTauri && isPwa && PwaPlugin(),
-    isLocal && SamplePlugin(),
-    SandboxPlugin(),
-    ScriptPlugin(),
-    SearchPlugin(),
-    (isDev || isLabs) && SidekickPlugin(),
-    SheetPlugin(),
-    IllustratorPlugin(),
-    TldrawPlugin(),
-    ExcalidrawPlugin(),
-    CodePlugin(),
-    StackPlugin(),
-    SupportPlugin({ helpSteps: steps }),
-    TablePlugin(),
-    TerraPlugin(),
-    ThreadPlugin(),
-    TranscriptionPlugin(),
-
-    // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
-    BloggerPlugin(),
-    BlueskyPlugin(),
-    FreeqPlugin(),
-    GitHubPlugin(),
-    IrohBeaconPlugin(),
-    LinearPlugin(),
-    SequencerPlugin(),
-    SlackPlugin(),
-    SpacetimePlugin(),
-    TrelloPlugin(),
-    TripPlugin(),
-    TypefullyPlugin(),
-    VideoPlugin(),
-    VoxelPlugin(),
-    FilePlugin(),
-    WnfsPlugin(),
-    ZenPlugin(),
+    AssistantPlugin.make(
+      // Code mode offers the model only its `eval` tool, which the script does not call.
+      config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : { codeModeTurnProducer },
+    ),
+    BoardPlugin.make(),
+    BookmarksPlugin.make(),
+    CallsPlugin.make(),
+    CanvasPlugin.make(),
+    ChessPlugin.make(),
+    ChessComPlugin.make(),
+    ClaudePlugin.make(),
+    CloudflarePlugin.make(),
+    CodePlugin.make(),
+    CommercePlugin.make(),
+    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
+    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
+    isDev && ComputerPlugin.make(),
+    ConductorPlugin.make(),
+    CrmPlugin.make(),
+    !isTauri && CrxPlugin.make(),
+    DebugPlugin.make({ logStore }),
+    DeepSeekPlugin.make(),
+    DevtoolsPlugin.make(),
+    DiscordPlugin.make(),
+    DoctorPlugin.make(),
+    ExcalidrawPlugin.make(),
+    ExplorerPlugin.make(),
+    GamePlugin.make(),
+    GooglePlugin.make(),
+    IllustratorPlugin.make(),
+    InboxPlugin.make(),
+    JmapPlugin.make(),
+    KanbanPlugin.make(),
+    LabelerPlugin.make(),
+    LibraryPlugin.make(),
+    MagazinePlugin.make(),
+    MapPlugin.make(),
+    isLocal && MapPluginSolid.make(),
+    MarkdownPlugin.make(),
+    MeetingPlugin.make(),
+    MermaidPlugin.make(),
+    // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
+    // plugin-native's host integration.
+    isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
+    PaymentsPlugin.make(),
+    PipelinePlugin.make(),
+    PresenterPlugin.make(),
+    QaPlugin.make(),
+    ProjectsPlugin.make(),
+    ReviewPlugin.make(),
+    isLocal && SamplePlugin.make(),
+    SandboxPlugin.make(),
+    ScriptPlugin.make(),
+    isDev && SidekickPlugin.make(),
+    SheetPlugin.make(),
+    StackPlugin.make(),
+    TablePlugin.make(),
+    TypeSafePlugin.make(),
+    TasksPlugin.make(),
+    ThreadPlugin.make(),
+    TldrawPlugin.make(),
+    TranscriptionPlugin.make(),
+    ...experimental,
   ]
     .filter(isTruthy)
     .flat();
 };
+
+/**
+ * Experimental plugins.
+ *
+ * NOTE: Keep alphabetically sorted.
+ */
+// TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
+const experimental: Plugin.Plugin[] = [
+  BloggerPlugin.make(),
+  BlueskyPlugin.make(),
+  BrainPlugin.make(),
+  DuffelPlugin.make(),
+  FilePlugin.make(),
+  FreeqPlugin.make(),
+  GitHubPlugin.make(),
+  HeyGenPlugin.make(),
+  HiggsfieldPlugin.make(),
+  IbkrPlugin.make(),
+  IdeogramPlugin.make(),
+  IrohBeaconPlugin.make(),
+  LaMetricPlugin.make(),
+  LinearPlugin.make(),
+  LingoPlugin.make(),
+  OsrmPlugin.make(),
+  S3Plugin.make(),
+  SequencerPlugin.make(),
+  SlackPlugin.make(),
+  SpacetimePlugin.make(),
+  StreamDeckPlugin.make(),
+  StudioPlugin.make(),
+  TerraPlugin.make(),
+  TrelloPlugin.make(),
+  TripPlugin.make(),
+  TypefullyPlugin.make(),
+  VideoPlugin.make(),
+  VoxelPlugin.make(),
+  WnfsPlugin.make(),
+  ZenPlugin.make(),
+];

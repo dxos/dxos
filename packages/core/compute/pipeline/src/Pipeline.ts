@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { log } from '@dxos/log';
 
-import * as Stage from './Stage';
+import * as Stage from './Stage.ts';
 
 /**
  * Terminal commit for a pipeline: applies a stage's output value. Keeps stages pure — they emit
@@ -72,7 +72,7 @@ export const abortWith =
   (effect) =>
     effect.pipe(
       Effect.raceFirst(
-        Effect.async<never>((resume) => {
+        Effect.callback<never>((resume) => {
           if (signal.aborted) {
             resume(Effect.interrupt);
             return;
@@ -84,7 +84,7 @@ export const abortWith =
                 log.info('aborting pipeline', {
                   span: yield* Effect.currentSpan.pipe(
                     Effect.map((span) => span.name),
-                    Effect.catchAll((_) => Effect.succeed(undefined)),
+                    Effect.catch((_) => Effect.succeed(undefined)),
                   ),
                 });
                 return yield* Effect.interrupt;

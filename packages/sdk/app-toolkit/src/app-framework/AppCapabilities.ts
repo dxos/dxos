@@ -4,18 +4,25 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import * as Schema$ from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
-import { Capability as Capability$ } from '@dxos/app-framework';
-import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
-import type { Credential, Operation, Skill } from '@dxos/compute';
-import type { Database, Type } from '@dxos/echo';
+import * as Capability$ from '@dxos/app-framework/Capability';
+import { BuilderExtensions } from '@dxos/app-graph';
+import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
+import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
+import type { Client } from '@dxos/client';
+import type { Space } from '@dxos/client/echo';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import type { Database, Obj, Type } from '@dxos/echo';
+import type * as Retention$ from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
@@ -23,7 +30,11 @@ import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations$ from '../app/Translations';
+import type * as Translations$ from '../app/Translations.ts';
+import type * as AppSettings from '../types/AppSettings.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as ObservabilityMapping$ from './ObservabilityMapping.ts';
+import type * as TourModule from './Tour.ts';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 
@@ -71,12 +82,12 @@ export type Layout = Readonly<{
  * Layout capability - provides reactive access to the current layout state.
  * @category Capability
  */
-export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
+export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
 
 /**
  * @category Capability
  */
-export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>(
+export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>()(
   'org.dxos.app-framework.capability.translations',
 );
 
@@ -85,16 +96,15 @@ export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>
  * (operations, services, Effect programs) can translate strings dynamically.
  * @category Capability
  */
-export const Translator = Capability$.make<Translator$>('org.dxos.app-framework.capability.translator');
+export const Translator = Capability$.makeSingleton<Translator$>()('org.dxos.app-framework.capability.translator');
 
 /**
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
  * once {@link translatorLayer} is provided.
  */
-export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
-  TranslatorService,
-  Translator$
->() {}
+export class TranslatorService extends Context.Service<TranslatorService, Translator$>()(
+  '@dxos/app-toolkit/TranslatorService',
+) {}
 
 /**
  * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.
@@ -133,30 +143,42 @@ export type StatsPanelStore = Readonly<{
 /**
  * @category Capability
  */
-export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
+export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos.app-toolkit.capability.statsPanel');
 
 /**
  * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
  * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
  * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
  */
-export type AppGraph = GraphBuilder.GraphBuilder;
+export type AppGraph = AppGraphBuilder$.GraphBuilder;
 
 /**
  * @category Capability
  */
-export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.appGraph');
+export const AppGraph = Capability$.makeSingleton<AppGraph>()('org.dxos.app-framework.capability.appGraph');
 
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
+export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
+  'org.dxos.app-framework.capability.appGraphBuilder',
+);
+
+/** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
+export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
+
+/**
+ * @category Capability
+ */
+export const AppGraphRetention = Capability$.make<AppGraphRetention>()(
+  'org.dxos.app-framework.capability.appGraphRetention',
+);
 
 export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
   // (`R = never`); this lets a schema-driven form decode/validate it directly.
-  schema: Schema$.Schema.AnyNoContext;
+  schema: Schema$.Codec<any, any, never, never>;
   atom: Atom.Writable<any>;
 };
 
@@ -175,35 +197,68 @@ export const isSettings = (value: unknown): value is Settings =>
 /**
  * @category Capability
  */
-export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
+export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.capability.settings');
+
+/**
+ * Control surface over the device-synced settings store, which projects every {@link Settings}
+ * contribution (plus the plugin set) into the settings space so they follow the identity across
+ * devices, with per-key device overrides.
+ *
+ * Contributed once the settings space is open, so consumers must tolerate its absence.
+ */
+export type SettingsSync = {
+  /** Settings prefixes this device writes locally rather than sharing. */
+  readonly unsynced: Atom.Atom<readonly string[]>;
+  /** Take a prefix off the account for this device. Lossless, and no other device is touched. */
+  takeLocal(prefix: string): void;
+  /**
+   * Hand a prefix back to the account, keeping the side named by `adopt` wherever
+   * {@link conflicts} reports a disagreement. The only direction that discards anything.
+   */
+  rejoinAccount(prefix: string, options?: { adopt?: AppSettings.Adopt }): void;
+  /** Keys that rejoining the account would change. Read on demand rather than reactively. */
+  conflicts(prefix: string): readonly string[];
+  /** Which settings this device keeps to itself, by prefix. */
+  readonly pinned: Atom.Atom<AppSettings.DeviceSettings>;
+  /** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
+  pinKey(prefix: string, key: string): void;
+  /** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
+  unpinKey(prefix: string, key: string): void;
+};
+
+/**
+ * @category Capability
+ */
+export const SettingsSync = Capability$.makeSingleton<SettingsSync>()('org.dxos.app-framework.capability.settingsSync');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 
 /**
  * @category Capability
  */
-export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
+export const Schema = Capability$.make<Schema>()('org.dxos.app-framework.capability.schema');
 
 export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
 /**
  * @category Capability
  */
-export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
+export const Toolkit = Capability$.make<Toolkit>()('org.dxos.app-framework.capability.aiToolkit');
 
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
+export const SkillDefinition = Capability$.make<Skill.Definition>()(
+  'org.dxos.app-framework.capability.skillDefinition',
+);
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
  * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability on
- * {@link AppActivationEvents.SetupPluginAssets}. Consumers read all
- * contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * and contribute it via this capability from a dependency-mode module. Consumers
+ * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
@@ -219,7 +274,34 @@ export type PluginAsset = Readonly<{
 /**
  * @category Capability
  */
-export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
+export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
+
+/**
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
+ *
+ * Build one with `SampleSpace.makeTemplate`.
+ */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
+  id: string;
+  /** Name for the picker, and the default space name when the template is chosen. */
+  label: string;
+  /** One line on what the template creates. */
+  description?: string;
+  /** An `iconValues` name, as space properties carry. */
+  icon?: string;
+  hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  hidden?: boolean;
+  /** Registers the content's types on the client, then writes it into the new space. */
+  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-framework.capability.spaceTemplate');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
@@ -228,14 +310,14 @@ export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework
  */
 export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
->('org.dxos.app-framework.capability.aiModelResolver');
+>()('org.dxos.app-framework.capability.aiModelResolver');
 
 export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
 /**
  * @category Capability
  */
-export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.fileUploader');
+export const FileUploader = Capability$.make<FileUploader>()('org.dxos.app-framework.capability.fileUploader');
 
 export type AnchorSort = {
   key: string;
@@ -245,7 +327,7 @@ export type AnchorSort = {
 /**
  * @category Capability
  */
-export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
+export const AnchorSort = Capability$.make<AnchorSort>()('org.dxos.app-framework.capability.anchorSort');
 
 /** Anchor→text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
 export type AnchorResolver = Readonly<{
@@ -257,7 +339,7 @@ export type AnchorResolver = Readonly<{
 /**
  * @category Capability
  */
-export const AnchorResolver = Capability$.make<AnchorResolver>('org.dxos.app-framework.capability.anchorResolver');
+export const AnchorResolver = Capability$.make<AnchorResolver>()('org.dxos.app-framework.capability.anchorResolver');
 
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
@@ -268,7 +350,7 @@ export type TextContent = Readonly<{
 /**
  * @category Capability
  */
-export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.textContent');
+export const TextContent = Capability$.make<TextContent>()('org.dxos.app-framework.capability.textContent');
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
@@ -281,7 +363,23 @@ export type CommentConfig = Readonly<{
 /**
  * @category Capability
  */
-export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
+export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
+ * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
+ * order and takes the first parent one returns.
+ * @category Capability
+ */
+export type DefaultParent = {
+  /** The `Annotation.UserType` tag this rule applies to. */
+  readonly tag: string;
+  /** The parent for the object; undefined passes to the next rule, as does a failure (which is logged). */
+  readonly resolve: (object: Obj.Unknown) => Effect$.Effect<Obj.Unknown | undefined, Error, Database.Service>;
+  readonly position?: Position.Position;
+};
+
+export const DefaultParent = Capability$.make<DefaultParent>()('org.dxos.app-framework.capability.defaultParent');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -318,25 +416,37 @@ export type NavigationTargetResolver = (
   query?: NavigationQuery,
 ) => Effect$.Effect<NavigationTarget[], never, Database.Service>;
 
-export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
 
 /**
- * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
- * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
- * plugins — this is the abstraction that keeps layout plugins from depending on the client for
- * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
- * materializes the plank's node), and resolves `true` if the object exists locally or, as a fallback,
- * remotely. A remote-only object resolves `true` but cannot render until it replicates locally.
+ * What a {@link NavigationTargetLoader} was able to determine about a target.
+ *
+ * Three-valued because the caller's responses to a missing node are opposites: it waits for one that
+ * is merely late and fails fast on one that is absent. `absent` is therefore reserved for a store
+ * that actually answered — an unreachable edge or an unparseable id is `unknown`.
+ * @category Capability
+ */
+export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
+
+/**
+ * Loads/verifies a navigation target so graph resolution can materialize its node. Contributed by the
+ * plugin that owns object storage (plugin-client), consumed by layout plugins — this is the
+ * abstraction that keeps layout plugins from depending on the client for loading. `load` loads the
+ * object into local ECHO when present locally (so a URL-driven restore materializes the plank's
+ * node), and resolves `exists` if the object is present locally or, as a fallback, remotely. A
+ * remote-only object resolves `exists` but cannot render until it replicates locally.
+ *
+ * Omitting `entityId` asks about the space itself.
  * @category Capability
  */
 export type NavigationTargetLoader = Readonly<{
   id: string;
-  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<boolean>;
+  load: (target: { spaceId: string; entityId?: string }) => Effect$.Effect<NavigationTargetVerdict>;
 }>;
 
-export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>(
+export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>()(
   'org.dxos.app-framework.capability.navigationTargetLoader',
 );
 
@@ -348,7 +458,7 @@ export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>(
  */
 export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
-export const NavigationHandler = Capability$.make<NavigationHandler>(
+export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
@@ -364,7 +474,7 @@ export type ProgressMonitor = Progress.TaskHandle;
  */
 export type ProgressRegistry = Readonly<{
   /** Aggregate snapshot of all active providers. */
-  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  snapshotAtom: Atom.Atom<Progress.Snapshot>;
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
@@ -375,10 +485,39 @@ export type ProgressRegistry = Readonly<{
   /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
   cancel: (name: string) => void;
   /** Non-reactive read of the current snapshot. */
-  snapshot: () => Progress.ProgressSnapshot;
+  snapshot: () => Progress.Snapshot;
 }>;
 
 /**
  * @category Capability
  */
-export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
+export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
+  'org.dxos.app-toolkit.capability.progressRegistry',
+);
+
+export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
+
+/**
+ * Observability event registration — contributed by the plugin that owns the operation, consumed by
+ * a listener over the invocation stream so the operation itself stays free of telemetry.
+ * @category Capability
+ */
+export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(
+  'org.dxos.app-toolkit.capability.observabilityMapping',
+);
+
+export type Tour = TourModule.Definition;
+
+/**
+ * A guided tour.
+ * @category Capability
+ */
+export const Tour = Capability$.make<Tour>()('org.dxos.app-toolkit.capability.tour');
+
+export type TourFragment = TourModule.Fragment;
+
+/**
+ * Steps contributed into whichever tour is running, by the plugin that owns the feature they explain.
+ * @category Capability
+ */
+export const TourFragment = Capability$.make<TourFragment>()('org.dxos.app-toolkit.capability.tourFragment');

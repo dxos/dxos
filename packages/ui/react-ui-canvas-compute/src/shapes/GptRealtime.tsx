@@ -2,30 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-export const GptRealtimeShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('gpt-realtime'),
-  }),
-);
-
-export type GptRealtimeShape = Schema.Schema.Type<typeof GptRealtimeShape>;
-
-export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
-
-export const createGptRealtime = (props: CreateGptRealtimeProps) =>
-  createShape<GptRealtimeShape>({ type: 'gpt-realtime', size: { width: 256, height: 256 }, ...props });
+import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
@@ -33,6 +17,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   const config = useConfig();
 
   const start = async () => {
+    const edgeUrl = config.values.runtime?.services?.edge?.url;
+    if (!edgeUrl) {
+      log.error('EDGE services are not configured (runtime.services.edge.url); realtime AI is unavailable.');
+      return;
+    }
     setIsLive(true);
 
     try {
@@ -60,12 +49,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
-      // Send offer to backend and get answer
-      const AiServiceUrl = new URL(
-        '/rtc-connect',
-        config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL,
-      );
-      const response = await fetch(AiServiceUrl, {
+      // Send offer to backend and get answer. AI is served through edge's /ai/* proxy;
+      // the configured edge URL uses a ws(s) scheme, so swap it for http(s).
+      const aiServiceUrl = new URL('/ai/rtc-connect', edgeUrl);
+      aiServiceUrl.protocol = aiServiceUrl.protocol.replace('ws', 'http');
+      const response = await fetch(aiServiceUrl, {
         method: 'POST',
         body: offer.sdp,
         headers: {
@@ -148,28 +136,9 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
         icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
         size={16}
         classNames={!isLive && 'cursor-pointer'}
+        onPointerDown={(ev) => ev.stopPropagation()}
         onClick={start}
       />
     </div>
   );
 };
-
-export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
-  type: 'gpt-realtime',
-  name: 'GPT Realtime',
-  icon: 'ph--pulse--regular',
-  component: GptRealtimeComponent,
-  createShape: createGptRealtime,
-  // TODO(dmaretskyi): Can we fetch the schema dynamically?
-  getAnchors: (shape) =>
-    createFunctionAnchors(
-      shape,
-      Schema.Struct({
-        audio: Schema.Any,
-      }),
-      Schema.Struct({}),
-    ),
-  resizable: true,
-};
-
-const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';

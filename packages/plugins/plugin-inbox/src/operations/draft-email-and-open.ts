@@ -4,15 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage } from '@dxos/types';
 
-import { getFeedObjectPath, getMailboxPath } from '../paths';
-import { InboxOperation, Mailbox, SystemTags } from '../types';
-import { createDraftMessage } from '../util';
+import { InboxOperation, Mailbox, SystemTags } from '#types';
+
+import { getFeedObjectPath, getMailboxPath } from '../paths.ts';
+import { createDraftMessage } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
@@ -25,10 +26,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
 
       const props = createDraftMessage({ mode, message, subject, body, mailbox });
       const draft = DraftMessage.make(props);
-      yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-      });
+      yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
 
       // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
       // `useSendEmail` removes the tag at send time.

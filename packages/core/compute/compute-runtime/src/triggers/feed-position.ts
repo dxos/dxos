@@ -2,53 +2,49 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Entity } from '@dxos/echo';
-import { FeedProtocol } from '@dxos/protocols';
+import { type Entity, Feed } from '@dxos/echo';
 
-/**
- * Read the position id stamped onto a feed item by the storage layer.
- * Returns `undefined` if the object has no position key (e.g. stale data, or a write that
- * bypassed the feed service).
- */
-export const getFeedPosition = (object: Entity.Unknown): string | undefined =>
-  Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
-
-const parseFeedPosition = (position: string): number | undefined => {
-  if (!/^\d+$/.test(position)) {
+const parsePosition = (cursor: Feed.Cursor): number | undefined => {
+  if (!/^\d+$/.test(cursor)) {
     return undefined;
   }
-  const parsed = Number(position);
+  const parsed = Number(cursor);
   return Number.isSafeInteger(parsed) ? parsed : undefined;
 };
 
 /**
- * Filter feed items to only those past the given cursor, pairing each with its position.
- * Objects without a position key are skipped defensively so that a single malformed entry
- * does not stall trigger dispatch. A malformed cursor rejects all items so a corrupted
- * checkpoint cannot cause unbounded re-dispatch.
+ * Filter feed items to only those past the given cursor, pairing each with its own cursor and
+ * ordering them by it — the dispatcher advances its cursor to the last item it invoked, so an
+ * unordered page would skip everything positioned before that item.
+ *
+ * Items with no cursor are skipped defensively so that a single malformed entry does not stall
+ * trigger dispatch. A malformed cursor rejects all items so a corrupted checkpoint cannot cause
+ * unbounded re-dispatch.
  */
 export const filterReadyFeedItems = <T extends Entity.Unknown>(
   objects: readonly T[],
-  cursor: string | undefined,
-): { item: T; position: string }[] => {
-  const cursorPos = cursor !== undefined ? parseFeedPosition(cursor) : undefined;
-  if (cursor !== undefined && cursorPos === undefined) {
+  cursor: Feed.Cursor | undefined,
+): { item: T; cursor: Feed.Cursor }[] => {
+  const cursorPos = cursor !== undefined && cursor !== Feed.START ? parsePosition(cursor) : undefined;
+  if (cursor !== undefined && cursor !== Feed.START && cursorPos === undefined) {
     return [];
   }
-  const ready: { item: T; position: string }[] = [];
+
+  const ready: { item: T; cursor: Feed.Cursor; position: number }[] = [];
   for (const item of objects) {
-    const position = getFeedPosition(item);
+    const itemCursor = Feed.getCursor(item);
+    if (itemCursor === undefined) {
+      continue;
+    }
+    const position = parsePosition(itemCursor);
     if (position === undefined) {
       continue;
     }
-    const itemPos = parseFeedPosition(position);
-    if (itemPos === undefined) {
+    if (cursorPos !== undefined && cursorPos >= position) {
       continue;
     }
-    if (cursorPos !== undefined && cursorPos >= itemPos) {
-      continue;
-    }
-    ready.push({ item, position });
+    ready.push({ item, cursor: itemCursor, position });
   }
-  return ready;
+
+  return ready.sort((a, b) => a.position - b.position).map(({ item, cursor }) => ({ item, cursor }));
 };

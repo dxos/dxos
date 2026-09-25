@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { useEffect } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import { type HubHttpClient } from '@dxos/edge-client';
-import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/halo-react';
 
 import { ClientCapabilities } from '#types';
 
@@ -18,15 +17,19 @@ import { ClientCapabilities } from '#types';
  * Returns `undefined` when the hub URL is unconfigured (no HubHttpClient capability).
  */
 export const useHubHttpClient = (): HubHttpClient | undefined => {
-  const client = useClient();
   const identity = useIdentity();
+  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
   const [hubHttpClient] = useCapabilities(ClientCapabilities.HubHttpClient);
 
   useEffect(() => {
-    if (hubHttpClient && identity) {
-      hubHttpClient.setIdentity(createEdgeIdentity(client));
+    if (!hubHttpClient || !identity || !identityService) {
+      return;
     }
-  }, [client, identity, hubHttpClient]);
+    const edgeIdentity = identityService.getEdgeIdentity();
+    if (Option.isSome(edgeIdentity)) {
+      hubHttpClient.setIdentity(edgeIdentity.value);
+    }
+  }, [identity, identityService, hubHttpClient]);
 
   return hubHttpClient ?? undefined;
 };

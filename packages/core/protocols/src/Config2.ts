@@ -15,15 +15,15 @@ export type Screenshot = Schema.Schema.Type<typeof Screenshot>;
 
 /** Icon reference: Phosphor icon key with an optional theme hue. */
 export const Icon = Schema.Struct({
-  key: Schema.String.pipe(Schema.nonEmptyString()),
+  key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   hue: Schema.optional(Schema.String),
 });
 export type Icon = Schema.Schema.Type<typeof Icon>;
 
 export const Plugin = Schema.Struct({
   /** Reverse-domain NSID — the plugin's globally-unique key (e.g. `org.dxos.plugin.excalidraw`). */
-  key: Schema.String.pipe(Schema.nonEmptyString()),
-  name: Schema.String.pipe(Schema.nonEmptyString()),
+  key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  name: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   description: Schema.optional(Schema.String),
   /**
    * Author or organization name. Only used for bundled plugins. For plugins published to the

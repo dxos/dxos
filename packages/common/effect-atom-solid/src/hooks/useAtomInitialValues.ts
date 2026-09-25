@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Hook to initialize atoms with values

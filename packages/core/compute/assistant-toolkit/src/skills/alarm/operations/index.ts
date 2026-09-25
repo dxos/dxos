@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as AlarmOperations from './definitions';
+import { GetCurrentDate, SetAlarm } from './definitions.ts';
 
-export const AlarmHandlers = OperationHandlerSet.lazy(
-  () => import('./set-alarm'),
-  () => import('./get-current-date'),
-);
+export * as AlarmOperations from './definitions.ts';
+
+export const AlarmHandlers = OperationHandlerSet.lazy([
+  SetAlarm.pipe(Operation.lazyHandler(() => import('./set-alarm.ts'))),
+  GetCurrentDate.pipe(Operation.lazyHandler(() => import('./get-current-date.ts'))),
+]);

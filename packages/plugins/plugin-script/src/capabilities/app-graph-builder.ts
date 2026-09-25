@@ -4,18 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Script } from '@dxos/compute';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Script from '@dxos/compute/Script';
 
 import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'execute',
+        relation: AppNode.companion,
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -27,8 +29,9 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'logs',
+        relation: AppNode.companion,
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -42,6 +45,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

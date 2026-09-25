@@ -34,7 +34,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
     icon: { key: 'ph--graph--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-explorer-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-explorer-dark.png' }],
     tags: ['alpha'],
   },
 });

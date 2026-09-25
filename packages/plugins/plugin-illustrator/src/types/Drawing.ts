@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
+import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { CardAnnotation } from '@dxos/schema';
 
 /**
  * Canvas content shared by every renderer: an opaque map of record id → record, managed by the
@@ -21,8 +21,8 @@ import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
 export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canvas', '0.1.0'))(
   Schema.Struct({
     schema: Schema.String.pipe(Schema.optional),
-    content: Schema.Record({ key: Schema.String, value: Schema.Any }),
-  }).pipe(HiddenAnnotation.set(true)),
+    content: Schema.Record(Schema.String, Schema.Any),
+  }),
 ) {}
 
 export type MakeCanvasOptions = Omit<Partial<Obj.MakeProps<typeof Canvas>>, 'schema'> & {
@@ -46,13 +46,13 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
   Schema.Struct({
     name: Schema.optional(Schema.String),
     canvas: Ref.Ref(Canvas)
-      .annotations({ description: 'Reference to the canvas holding the renderer-specific content.' })
+      .annotate({ description: 'Reference to the canvas holding the renderer-specific content.' })
       .pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

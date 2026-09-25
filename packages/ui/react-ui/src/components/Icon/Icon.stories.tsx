@@ -8,8 +8,8 @@ import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 're
 
 import { getSize, iconSize, mx } from '@dxos/ui-theme';
 
-import { withTheme } from '../../testing';
-import { Icon } from './Icon';
+import { withTheme } from '../../testing/index.ts';
+import { Icon } from './Icon.tsx';
 
 /**
  * Create icon from serializable data.
@@ -94,6 +94,25 @@ export const Brand: Story = {
       {(['dxos', 'echo', 'halo', 'mesh', 'dxns', 'kube'] as const).map((name) => (
         <Icon key={name} icon={`dx--${name}--regular`} classNames={getSize(12)} />
       ))}
+    </div>
+  ),
+};
+
+/**
+ * Extended icons (the `px--` set), sourced from `@dxos/ui-icons` — glyphs Phosphor does not provide.
+ * Referenced by literal name rather than through the package's `PxIcons` map, since `@dxos/ui-icons`
+ * is private and `@dxos/react-ui` is published.
+ */
+export const Extended: Story = {
+  args: {
+    icon: 'px--anthropic--regular',
+  },
+  render: () => (
+    <div className='flex items-end gap-8'>
+      <Icon icon='px--anthropic--regular' classNames={getSize(12)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(8)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(5)} />
+      <Icon icon='ph--circle--regular' classNames={getSize(5)} />
     </div>
   ),
 };

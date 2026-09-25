@@ -19,14 +19,56 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
     the primary checkout instead of the assigned worktree (a known harness
     mis-instantiation; say so once — it affects only Desktop UI pairing, never
     data safety). Never run `git worktree add` to "fix" it.
-  - `main` → STOP, write nothing, tell the user. Never create a worktree or
-    branch to escape — the harness owns those.
-- First reply: confirm these instructions, state the branch + toplevel path, and
-  list the guidance files in play (this file, `.claude/CLAUDE.md`, relevant
-  `.agents/skills/*`).
-- When asking a question, make it yes/no or give numbered options — never an
-  unnumbered a-or-b.
+  - `main` → write nothing here. Research (reads, greps, subagents) is fine and
+    is the normal reason a session starts on `main`. The moment the work turns
+    to editing, **call the harness's `EnterWorktree` tool yourself and carry on**
+    — do NOT stop to ask, and do NOT offer "start a new session" or "you make a
+    worktree" as options. That tool is the sanctioned promotion path and is not
+    the `git worktree add` / `git checkout -b` banned under Non-negotiables:
+    those are raw git commands that desync the harness's own record. Ask only if
+    `EnterWorktree` itself fails.
+- **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
+  cloud sandbox. `.claude/settings.json` hooks fire there as they do locally, so `/mode` and the
+  branch/worktree guards behave normally. What is missing is everything outside the clone:
+  `~/.claude` starts empty, so `/dxos:project` answers `Unknown command` until
+  `.claude/scripts/bootstrap-plugins.sh` installs the plugin, and `gh` is absent (use the
+  `mcp__github__*` tools). `moon`, `oxfmt`, and `node_modules` exist only where the environment
+  ran `.config/claude-code-setup.sh` — establish which case you are in before running a build.
+  The container is ephemeral, so push before you stop. Full details, including how to reach HTTPS
+  from Chromium → `cloud-sandbox` skill.
+- First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
+- **The only setup question worth asking is whether to register a project.** Not
+  every session earns a `TASKS.md`/`DESIGN.md` and a registry entry. When work
+  begins, ask that one question (numbered, alongside the plan) and decide
+  everything else — worktree, branch, commits — yourself.
+
+## Responding to the user
+
+These govern the **shape of every reply**, not the work. They are canonical
+here, and on the Claude harness `.claude/hooks/mode.sh` re-injects them on every
+prompt — a rule stated only in an always-loaded file is diluted to nothing once
+a large skill loads mid-session (see `.claude/README.md` §A).
+
+- **Open the session with the worktree and the files you read.** One line naming
+  the worktree directory you are in and the instruction/skill files in play.
+  **First reply only** — repeating it every turn is noise, and the `SessionStart`
+  hook already delivers the branch and toplevel deterministically.
+- **Number every question and every set of options.** Never an unnumbered
+  a-or-b, never a bare open question.
+- **Lead with the answer.** No preamble, no restatement of the request, no
+  narration of what you are about to do.
+- **Verbosity is a mode.** `terse` answers in 1–2 sentences, with follow-ups as a
+  short flat numbered list; `normal` (the default) sets no budget but keeps
+  length proportionate — length is earned by content, never by restating. Set it
+  with `/mode terse` / `/mode normal`.
+- **`/mode focus [task]` pins the work as well as the length.** It is `terse`
+  plus one pinned task — with no task on the line, the previous instruction is
+  the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
+  polling, and an off-task request gets one line naming the conflict plus a
+  numbered choice. `/mode terse` or `/mode normal` clears the pin.
+- These govern form only. They never override correctness, required safety
+  steps, showing test/command output, or reporting a failure honestly.
 
 ## Working with the user
 
@@ -48,14 +90,19 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 ## Non-negotiables
 
 - **Never create, rename, or switch worktrees or branches.** The harness assigns
-  this session's worktree and branch at startup; the Desktop UI pairs them by the
-  convention `branch == claude/<worktree-dir-name>`. Breaking that convention
+  this session's worktree and branch at startup and owns the pairing between
+  them; the branch is named after the originating prompt, not the worktree
+  directory, so the two names routinely differ and that is NOT a fault to
+  "correct". Creating or renaming either breaks the harness's own record and
   makes your work invisible in the UI. Therefore:
   - Do NOT run `git worktree add`, `git checkout -b`/`-B`, `git switch -c`/`-C`,
     or `git branch -m`/`-M` (the `guard-branch.sh` hook denies these).
   - Do NOT create a new branch or a side worktree, even if a skill or tool
-    suggests it. This overrides `superpowers:using-git-worktrees` and the
-    `EnterWorktree`/`ExitWorktree` tools — the workspace already exists.
+    suggests it. This overrides `superpowers:using-git-worktrees` — when the
+    harness already assigned a workspace, it exists and you use it.
+  - **The one exception is `EnterWorktree` on a session sitting on `main`.**
+    There the harness assigned nothing, so the tool is how you get a workspace,
+    not how you escape one. Call it without asking (see Start of session).
   - Work only in the assigned directory; if you need a different branch, ask the
     user rather than switching.
 - **Test after every step.** Never claim work is done without running the
@@ -70,6 +117,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   teardown race hides real failures). Tolerate a specific known signature only
   via a narrowly-scoped `onUnhandledError`, never a blanket ignore. Full rule →
   `code-style` skill.
+- **Never change or remove a copyright notice.** A contributor's copyright line
+  stays exactly as written. The only permitted edit — when the lint header rule
+  demands it — is ADDING a `Copyright <year> DXOS.org` line alongside the
+  author's, never replacing it. Anything beyond that requires explicit
+  direction from the user.
 - **New packages are private.** Every new package MUST set `"private": true` in
   `package.json`; it is removed manually only after a trusted publisher exists.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
@@ -106,15 +158,96 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
-- Storybook: `moon run storybook-react:serve` (port 9009)
+- Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
+- Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
+  the user — see "Sharing long-running servers" below.** It periodically wedges;
+  `serve` arms a watcher that captures the cause. If it wedges under a server you
+  started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
+  a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
 
-Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
+A remote-cache warning from moon is harmless — builds work, they just don't share the team's
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
+
+## Sharing long-running servers
+
+Applies to every long-running server the user might be looking at — storybook on 9009,
+the Composer app on 5199, any `*:serve` task. Ports and specifics below are storybook's;
+the rules are the same for the others.
+
+**Each server serves ONE worktree, and that is invisible from the outside.** A server
+answering on its usual port may be serving a different worktree entirely — the app boots,
+the page renders, and none of your changes are in it. Before using one to verify, confirm
+whose tree it serves: fetch a file that exists only in yours
+(`/@fs/<abs path to a file you just wrote>` returns 200), or check the process's cwd with
+`lsof -a -p <pid> -d cwd -Fn`. If it is serving another worktree, restart it from yours
+rather than starting a second — and say so, since it moves a window someone may be using.
+
+**There is ONE storybook server, on port 9009, and the user is looking at it.** Never
+start a second one "on a free port" to avoid disturbing them — two servers on one machine
+starve each other (each holds a monorepo-wide watcher and 1-2GB), and each one's file
+writes wedge the other, which is how a debugging session ends up chasing its own noise.
+
+- **Reuse before starting.**
+  `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://localhost:9009/`
+  — bounded, so a wedged server cannot hang the probe. Reuse it only on a `200`, and only after
+  the worktree check below: a `000` is not a free port, and any other code is not a storybook.
+- **The server serves ONE worktree.** If 9009 is serving a different worktree than the one
+  you are editing, restart it against yours (`moon run storybook-react:serve` from your
+  worktree) rather than adding a second server. Say so in your reply — you are moving a
+  window the user may be looking at.
+- **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
+  file under `packages/` is written (a chokidar fsevents pathology — see
+  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
+  concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
+  restarting; a restart destroys the only evidence.
+- **Never `pkill -f storybook`.** Kill by the PID you own, established via
+  `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
+- **Do not run `moon run <pkg>:build` while a server is up** unless you need it — a build
+  rewrites dist under the live watcher and reliably stalls the server. A package
+  typecheck (`npx tsc --noEmit -p tsconfig.json`) verifies as much without the churn.
+- **The one exception:** a session whose actual subject is the storybook server (profiling
+  a wedge, testing a watcher fix) may run its own instrumented server on its own port —
+  but it MUST do so from its own worktree. An instrumented server in someone else's
+  worktree perturbs their server and contaminates its own measurements.
+
+## Working across dxos and edge
+
+The EDGE worker repo (`dxos/edge`) consumes `@dxos/*` as pinned `pkg.pr.new` builds, so a change here
+is invisible there until something publishes it.
+
+- **When both repos are checked out, link locally — never publish to see your own change.** From the
+  edge checkout: `pnpm link-packages` (`scripts/link-packages.mjs ../dxos --all --install`) packs this
+  workspace and installs it over `pnpm.overrides` `file:` entries. It is faster than a publish round
+  trip, depends on no external service, and picks up an export or subpath that does not exist in any
+  published build yet — which is exactly the inner loop for a feature spanning both repos.
+- Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
+  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+- The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
+  `CLAUDE.md` covers the undo.
+
+## Long-running tasks
+
+**Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
+a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the
+background (`run_in_background: true` on the Claude harness), and you keep working while it runs.
+A long task held in the foreground freezes the session: the user cannot redirect you, and killing
+the run is their only way to regain control — which also abandons whatever the task was verifying.
+To wait on a condition, background an `until <check>; do sleep 2; done`; never a foreground `sleep`.
+The foreground is for short commands whose result decides your next step.
 
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
+  dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
+  `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
+  tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
+- Relative imports carry the real source extension: `from './module.ts'`, `from './dir/index.ts'`
+  (never extensionless, never a `.js` projection) — `tsc` rewrites them on emit via
+  `rewriteRelativeImportExtensions`. Enforced by `import/extensions` in `.oxlintrc.json`.
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
@@ -141,6 +274,9 @@ Deeper conventions:
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
 - Do not use deprecated functions if an alternative is available.
+- Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
+  comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for
+  one pass.
 
 ## Git & PR workflow
 
@@ -151,15 +287,63 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
+- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
+  GitHub API returns empty output for every `Check / …` check run and its `details_url`
+  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
+  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
+  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
+  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
-- Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
-  see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+- Consumer-relevant changes need a `.changeset/*.md`: written when opening the
+  PR and rewritten before landing, as a summary of the whole PR — see
+  [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
+
+## Handing an agent a credential
+
+**Prefer the 1Password CLI whenever it is available.** If `op whoami` succeeds (the cloud sandbox
+authenticates it through `OP_SERVICE_ACCOUNT_TOKEN`), read the credential with `op run` / `op read`
+before asking the user for anything, since the value then never passes through the conversation →
+`1password` skill. The `.secrets/` flow below is the fallback when `op` cannot reach the item.
+
+Otherwise, put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
+prompt writes it to the transcript permanently; a file can be deleted.
+
+- `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
+  would still stage a file, so treat "nothing under `.secrets/` is tracked" as an invariant to uphold
+  rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
+  expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
+  credentials.
+- **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
+  names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
+- **The agent deletes it** when the task that needed it is done, and revokes the grant if
+  the credential was minted for that task alone.
+- Prefer a credential that can be renewed over one that expires mid-task: an OAuth access
+  token lasts an hour, so a long task needs the refresh token **plus** the `client_id` and
+  `client_secret` it was minted under — a refresh token alone cannot be exchanged.
+- Never echo a credential's value back into chat, a log, a commit message, or an error
+  report. Read it, use it, delete it.
+
+Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
+
+Create the file in an editor, not a shell command — an interactive shell records a heredoc's
+contents in its history, and a file written before `chmod` is briefly world-readable under the
+default umask:
+
+```bash
+umask 077
+mkdir -p .secrets
+${EDITOR:-vi} .secrets/gmail.env   # add client_id / client_secret / refresh_token here
+```
+
+Do not paste real credential values into any shell command, and do not paste them into chat.
 
 ## Where things live
 
+- **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
+  HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
   (skills, the project registry); `agents/` (no dot) holds **user-visible
   artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
@@ -171,10 +355,25 @@ Deeper conventions:
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
+  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
+  (`.agents/skills/depot-ci/SKILL.md`).
+- **Credentials (API keys, tokens, passwords)** — the `op` CLI first, `.secrets/` as the fallback →
+  `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **SQLite schema changes** — adding a migration, creating a new SQLite-backed
+  store, or anything under `src/migrations/` →
+  [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
+  Read it before reaching for Prisma: there is no driver adapter for the
+  browser client, which is why the schema is hand-written SQL.
+- **Working a task with no questions asked** — `/autonomous [task]` pins a task the
+  session must finish against a written definition of done, resolving scope from a
+  verbatim log of what the user already said → `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); Claude-harness specifics in
+  `.claude/CLAUDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

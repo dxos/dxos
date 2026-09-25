@@ -7,12 +7,13 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { type Vec3 } from '../engine';
-import { Terra, TerraObject } from '../types';
-import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
-import { angleBetween, toGeo, toUnit } from './geo';
-import { buildNavGrid, isPassable } from './nav-grid';
-import { pickReachableTarget } from './reachable';
+import { Terra, TerraObject } from '#types';
+
+import { type Vec3 } from '../engine/index.ts';
+import { MAX_CATCHUP_LEGS, SimEngine } from './engine.ts';
+import { angleBetween, toGeo, toUnit } from './geo.ts';
+import { buildNavGrid, isPassable } from './nav-grid.ts';
+import { pickReachableTarget } from './reachable.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'engine-1' } }));
 const grid = buildNavGrid(config, 16);
@@ -184,6 +185,9 @@ describe('SimEngine — determinism (the property that must survive)', () => {
 // routes can detour around terrain — this fixture's leg boundaries can be computed exactly instead
 // of guessed at, which is what the precision-sensitive tests below need.
 const fastPlane = TerraObject.make({
+  // Pinned, because `engine.ts` seeds re-targeting with `(config.seed, definition.id, leg)`: a minted
+  // id draws a different destination sequence per process, and with it different leg durations.
+  id: '01000000000000000000000001',
   kind: 'plane',
   speed: 1,
   source: { lat: 0, lng: 0, height: 0 },
@@ -213,12 +217,10 @@ const planeLegBoundaries = (definition: TerraObject.TerraObject, legs: number): 
 };
 
 /**
- * An instant `fraction` of the way through leg `leg`. Every assertion below picks its sample times
- * this way rather than as a fixed offset from a boundary, because leg durations are NOT fixed across
- * runs: `TerraObject.make` mints a random id, and the re-targeting seed is
- * `(config.seed, definition.id, leg)`, so each process draws a different destination sequence and
- * therefore different route lengths. A constant offset (`boundaries[2] + 500`) sits inside leg 3 only
- * when that run happened to draw a leg longer than 500ms — otherwise the engine is already on leg 4.
+ * An instant `fraction` of the way through leg `leg`. Sample times are picked proportionally rather
+ * than as a fixed offset from a boundary because leg durations vary between legs: a constant offset
+ * (`boundaries[2] + 500`) sits inside leg 3 only when that leg is longer than 500ms. `fastPlane`'s
+ * pinned id makes the durations themselves identical across processes.
  */
 const withinLeg = (boundaries: readonly number[], leg: number, fraction: number): number => {
   const start = leg === 0 ? 0 : boundaries[leg - 1];
@@ -226,6 +228,36 @@ const withinLeg = (boundaries: readonly number[], leg: number, fraction: number)
 };
 
 const positionsDiffer = (a: Vec3, b: Vec3): boolean => a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2];
+
+describe('fastPlane fixture determinism', () => {
+  // `engine.ts:55` seeds `pickReachableTarget` with `(config.seed, definition.id, leg)`. With a
+  // minted id each process drew a different destination sequence, so leg durations differed run to
+  // run and a sample time computed from them could land past the boundary it was meant to sit
+  // inside — which failed `state.leg` assertions in CI while passing locally (DX-1295).
+  test('the fixture pins its id, so the re-targeting seed is the same in every process', ({ expect }) => {
+    expect(fastPlane.id).toBe('01000000000000000000000001');
+  });
+
+  test('make honours a supplied id rather than minting one', ({ expect }) => {
+    const pinned = TerraObject.make({ id: '01000000000000000000000002', kind: 'plane', speed: 1, spawnedAt: 0 });
+    expect(pinned.id).toBe('01000000000000000000000002');
+    expect(TerraObject.make({ kind: 'plane', speed: 1, spawnedAt: 0 }).id).not.toBe(pinned.id);
+  });
+
+  // The boundaries are what every precision-sensitive assertion below is computed from, so pinning
+  // the id is only worth anything if they are actually reproducible from it.
+  test('leg boundaries are reproducible from the pinned id', ({ expect }) => {
+    const twin = TerraObject.make({
+      id: fastPlane.id,
+      kind: 'plane',
+      speed: 1,
+      source: { lat: 0, lng: 0, height: 0 },
+      target: { lat: 0, lng: 30, height: 0 },
+      spawnedAt: 0,
+    });
+    expect(planeLegBoundaries(twin, 4)).toEqual(planeLegBoundaries(fastPlane, 4));
+  });
+});
 
 describe('SimEngine — arrival-driven legs (no stall at arrival)', () => {
   test("a routed object's leg advances exactly when its own route finishes, not on a fixed clock", () => {

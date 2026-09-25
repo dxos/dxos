@@ -8,10 +8,11 @@ import * as Option from 'effect/Option';
 import { getSpace } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Key } from '@dxos/echo';
 
-import { getNextVersion, loadFunctionObject } from './echo';
+import { CliError } from '../../../util/errors.ts';
+import { getNextVersion, loadFunctionObject } from './echo.ts';
 
 export const parseOptions = Effect.fn(function* (options: {
   name: Option.Option<string>;
@@ -22,7 +23,7 @@ export const parseOptions = Effect.fn(function* (options: {
   const client = yield* ClientService;
   const identity = client.halo.identity.get();
   if (!identity) {
-    return yield* Effect.fail(new Error('Identity not available'));
+    return yield* Effect.fail(new CliError({ message: 'Identity not available' }));
   }
 
   const space = yield* Option.match(options.spaceId, {

@@ -3,15 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
-// TODO(wittjosiah): Formalize with a stricter schema if we evolve this protocol.
+// The payload is the operation's input, decoded against its schema on arrival.
 type SpotlightInvokePayload = {
   operation: string;
-  payload?: Record<string, any>;
+  payload?: unknown;
 };
 
 /**
@@ -19,7 +21,7 @@ type SpotlightInvokePayload = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
 
     const unlisten = yield* Effect.promise(async () => {
       const { listen } = await import('@tauri-apps/api/event');
@@ -31,10 +33,13 @@ export default Capability.makeModule(
         try {
           switch (operation) {
             case 'open':
-              await invokePromise(LayoutOperation.Open, payload as any);
+              await invokePromise(LayoutOperation.Open, Schema.decodeUnknownSync(LayoutOperation.Open.input)(payload));
               break;
             case 'switch-workspace':
-              await invokePromise(LayoutOperation.SwitchWorkspace, payload as any);
+              await invokePromise(
+                LayoutOperation.SwitchWorkspace,
+                Schema.decodeUnknownSync(LayoutOperation.SwitchWorkspace.input)(payload),
+              );
               break;
             default:
               log.warn('Unknown spotlight operation', { operation });
@@ -49,10 +54,11 @@ export default Capability.makeModule(
       });
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unlisten();
       }),
     );
+    return [];
   }),
 );

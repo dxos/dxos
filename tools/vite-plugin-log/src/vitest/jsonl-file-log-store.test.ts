@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { JsonlFileLogStore } from './jsonl-file-log-store';
+import { JsonlFileLogStore } from './jsonl-file-log-store.ts';
 
 const makeTempPath = () => join(tmpdir(), `dxos-jsonl-log-store-${randomUUID()}.jsonl`);
 

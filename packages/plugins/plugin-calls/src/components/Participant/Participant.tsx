@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { memo, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
 import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type UserState } from '../../calls';
-import { VideoObject } from '../Media';
-import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
+import { type EncodedTrackName, type UserState } from '../../calls/index.ts';
+import { VideoObject } from '../Media/index.ts';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid/index.ts';
 
 export const SCREENSHARE_SUFFIX = '_screenshare';
 

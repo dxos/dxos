@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as MemoryOperations from './definitions';
+import { DeleteMemory, QueryMemories, SaveMemory } from './definitions.ts';
 
-export const MemoryHandlers = OperationHandlerSet.lazy(
-  () => import('./save'),
-  () => import('./query'),
-  () => import('./delete'),
-);
+export * as MemoryOperations from './definitions.ts';
+
+export const MemoryHandlers = OperationHandlerSet.lazy([
+  SaveMemory.pipe(Operation.lazyHandler(() => import('./save.ts'))),
+  QueryMemories.pipe(Operation.lazyHandler(() => import('./query.ts'))),
+  DeleteMemory.pipe(Operation.lazyHandler(() => import('./delete.ts'))),
+]);

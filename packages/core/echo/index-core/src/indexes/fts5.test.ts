@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { describe, expect, it } from 'vitest';
 
 describe('FTS5', () => {

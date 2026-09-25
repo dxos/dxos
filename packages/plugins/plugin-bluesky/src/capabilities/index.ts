@@ -2,16 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
-import { type ThreadCapabilities } from '@dxos/plugin-thread';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
-export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendProvider>(
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
-  () => import('./channel-backend'),
+  { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
+  () => import('./channel-backend.ts'),
 );
-export const Connector = Capability.lazy('BlueskyConnector', () => import('./connector'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const Connector = Capability.lazyModule(
+  'BlueskyConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+  () => import('./connector.ts'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Translations = AppCapability.translations(translations);

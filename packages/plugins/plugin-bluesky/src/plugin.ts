@@ -2,8 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { ChannelBackend, Connector, OperationHandler, PluginAsset, Schema, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const BlueskyPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const BlueskyPlugin = Plugin.define(meta).pipe(
+  // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
+  Plugin.addModule(ChannelBackend),
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
+
+export default BlueskyPlugin;

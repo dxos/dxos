@@ -15,7 +15,7 @@ import { raise } from '@dxos/debug';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes';
+import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes/index.ts';
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
   const impl = registry[node.type as NodeType];

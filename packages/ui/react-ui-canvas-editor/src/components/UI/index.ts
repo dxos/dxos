@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './UI';
+export * from './UI.tsx';

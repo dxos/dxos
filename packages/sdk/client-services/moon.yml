@@ -1,6 +1,17 @@
 layer: library
 language: typescript
 tags:
+  - dist-runtime
   - ts-vite-build
   - ts-test
   - pack
+tasks:
+  # Asserts the intra-package import graph stays acyclic, which docs/DEPENDENCY-GRAPH.md is the
+  # rationale for; run without `--check` to print the graph.
+  graph:
+    command: node scripts/dependency-graph.mjs --check
+    inputs:
+      - src/**/*.ts
+      - scripts/dependency-graph.mjs
+    options:
+      cache: false

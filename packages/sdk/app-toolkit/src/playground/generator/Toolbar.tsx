@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
-import { PlaygroundRoles } from '../roles';
-import { Number, createAlertOperation, createPluginId } from './generator';
+import { PlaygroundRoles } from '../roles.ts';
+import { Number, createAlertOperation, createPluginId } from './generator.ts';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
@@ -51,7 +53,7 @@ export const Toolbar = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.toolbar',

@@ -13,12 +13,14 @@ import {
   shouldLog,
 } from '@dxos/log';
 
-import { byteLengthUtf8, trimJsonlToSize } from './trim';
+import { byteLengthUtf8, trimJsonlToSize } from './trim.ts';
 
 const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_LOG_FILTER = 'debug';
 const DEFAULT_FLUSH_INTERVAL = 250;
 const DEFAULT_FLUSH_BATCH_SIZE = 500;
+// Bounds memory (and loss) when IDB writes stall; newest lines are kept as they matter most in a crash.
+const DEFAULT_MAX_QUEUE_LINES = 10_000;
 // Sized for ~50 MB on disk at the observed Composer average of ~350 bytes per JSONL line.
 const DEFAULT_MAX_RECORDS = 150_000;
 const DEFAULT_MAX_BYTES = 50 * 1024 * 1024;
@@ -27,17 +29,17 @@ export const MANUAL_LOG_EXPORT_MAX_BYTES = 200 * 1024 * 1024;
 const DEFAULT_EVICTION_INTERVAL = 30_000;
 const EVICTION_LOCK_NAME = '@dxos/log-store-idb:evictor';
 // v2 introduced chunked rows with out-of-line array keys (v1 stored one row per line
-// under an autoincrement keyPath).
-const DB_VERSION = 2;
+// under an autoincrement keyPath); v3 added `byteLength` to the key.
+const DB_VERSION = 3;
 
 /**
- * Chunk key: `[epochMs, writerId, writerSeq, lineCount]`.
+ * Chunk key: `[epochMs, writerId, writerSeq, lineCount, byteLength]`.
  *
  * Keys order chunks by flush time; `writerId`/`writerSeq` keep keys from concurrent
- * writers unique. `lineCount` rides in the key so eviction can compute the retention
- * budget from `getAllKeys()` alone, without deserializing chunk values.
+ * writers unique. `lineCount` and `byteLength` ride in the key so eviction computes the
+ * retention budget from `getAllKeys()` alone, without reading a single chunk payload.
  */
-type ChunkKey = [epochMs: number, writerId: string, writerSeq: number, lineCount: number];
+type ChunkKey = [epochMs: number, writerId: string, writerSeq: number, lineCount: number, byteLength: number];
 
 /**
  * Stored row: one flush batch of pre-encoded JSONL lines joined with `\n` (no trailing
@@ -67,8 +69,17 @@ export type IdbLogStoreOptions = {
    * first; the newest chunk is always retained. Default `50 MiB`.
    */
   maxBytes?: number;
-  /** Eviction sweep interval in milliseconds. Default `30_000`. */
+  /**
+   * Interval in milliseconds between automatic eviction sweeps. `0` disables them; an
+   * explicit {@link IdbLogStore.evictNow} or export still sweeps. Default `30_000`.
+   */
   evictionInterval?: number;
+  /**
+   * Hard cap on in-memory queued lines awaiting flush. When writes stall (e.g. IDB is
+   * unavailable or slow), the oldest queued lines are dropped past this point — the
+   * newest lines are the ones that matter in a crash. Default `10_000`.
+   */
+  maxQueueLines?: number;
   /**
    * Identifier embedded in every record's `i` field.
    * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` — see {@link inferEnvironmentName}.
@@ -94,6 +105,10 @@ export type IdbLogStoreOptions = {
  *   is available, so flushes don't compete with input handling and rendering),
  * - the queue exceeding `flushBatchSize`,
  * - `visibilitychange` to `hidden` and `pagehide` events.
+ *
+ * Eviction runs on the `evictionInterval` timer, and on an explicit `evictNow()` or
+ * export. Writes never trigger it: the caps are soft, and sweeping per flush would sweep
+ * several times a second.
  */
 export class IdbLogStore {
   readonly #dbName: string;
@@ -103,6 +118,7 @@ export class IdbLogStore {
   readonly #maxRecords: number;
   readonly #maxBytes: number;
   readonly #evictionInterval: number;
+  readonly #maxQueueLines: number;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
   /** Distinguishes chunk keys written by concurrent contexts against the same database. */
@@ -112,7 +128,9 @@ export class IdbLogStore {
   #writerSeq = 0;
   #flushTask: ScheduledTask | undefined;
   #evictionTimer: ReturnType<typeof setInterval> | undefined;
-  #pendingFlush: Promise<void> | undefined;
+  /** Resolves when the drain loop has committed everything queued; settles, never rejects. */
+  #lastWrite: Promise<void> = Promise.resolve();
+  #writing = false;
   #db: IDBDatabase | undefined;
   #dbPromise: Promise<IDBDatabase> | undefined;
   #closed = false;
@@ -127,6 +145,9 @@ export class IdbLogStore {
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
     this.#maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
+    // Guard against NaN/non-positive values, which would disable or degenerate the cap.
+    const maxQueueLines = options.maxQueueLines ?? DEFAULT_MAX_QUEUE_LINES;
+    this.#maxQueueLines = Number.isFinite(maxQueueLines) && maxQueueLines > 0 ? maxQueueLines : DEFAULT_MAX_QUEUE_LINES;
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
@@ -148,6 +169,19 @@ export class IdbLogStore {
     if (line === undefined) {
       return;
     }
+    this.append(line);
+  };
+
+  /**
+   * Enqueue one pre-serialized JSONL line, bypassing filtering and serialization.
+   */
+  append(line: string): void {
+    if (this.#closed) {
+      return;
+    }
+    if (this.#queue.length >= this.#maxQueueLines) {
+      this.#queue.splice(0, this.#queue.length - this.#maxQueueLines + 1);
+    }
     this.#queue.push(line);
 
     if (this.#queue.length >= this.#flushBatchSize) {
@@ -158,31 +192,38 @@ export class IdbLogStore {
         void this.flush();
       }, this.#flushInterval);
     }
-  };
+  }
 
   /**
-   * Force a flush now and resolve once the IDB transaction commits.
-   * Concurrent calls share a single in-flight flush.
+   * Force a flush now and resolve once every line queued so far is committed.
+   * A single drain loop swaps out the queue one batch at a time, so a stalled write can
+   * never wedge later flush triggers: new lines keep accumulating in the (capped) queue
+   * and are picked up by the next loop iteration. Memory is bounded by
+   * `maxQueueLines` + one in-flight batch.
    */
-  async flush(): Promise<void> {
+  flush(): Promise<void> {
     if (this.#flushTask !== undefined) {
       this.#flushTask.cancel();
       this.#flushTask = undefined;
     }
-    if (this.#pendingFlush) {
-      return this.#pendingFlush;
-    }
-    if (this.#queue.length === 0) {
-      return;
+    if (this.#queue.length === 0 || this.#writing) {
+      return this.#lastWrite;
     }
 
-    const batch = this.#queue;
-    this.#queue = [];
-
-    this.#pendingFlush = this.#writeBatch(batch).finally(() => {
-      this.#pendingFlush = undefined;
-    });
-    return this.#pendingFlush;
+    this.#writing = true;
+    this.#lastWrite = (async () => {
+      try {
+        while (this.#queue.length > 0) {
+          const batch = this.#queue;
+          this.#queue = [];
+          // Never rejects — write errors drop the batch (logs must never throw).
+          await this.#writeBatch(batch);
+        }
+      } finally {
+        this.#writing = false;
+      }
+    })();
+    return this.#lastWrite;
   }
 
   /**
@@ -227,6 +268,8 @@ export class IdbLogStore {
       this.#flushTask.cancel();
       this.#flushTask = undefined;
     }
+    // Let in-flight writes commit first so a pending batch cannot land after the clear.
+    await this.#lastWrite;
     const db = await this.#open();
     await runTransaction(db, this.#storeName, 'readwrite', (store) => {
       store.clear();
@@ -285,11 +328,12 @@ export class IdbLogStore {
 
     try {
       const chunk: LogChunk = { lines: batch.join('\n') };
-      const key: ChunkKey = [Date.now(), this.#writerId, this.#writerSeq++, batch.length];
+      // Measured here, once, so eviction never reads the payload back to size it.
+      const byteLength = byteLengthUtf8(chunk.lines);
+      const key: ChunkKey = [Date.now(), this.#writerId, this.#writerSeq++, batch.length, byteLength];
       await runTransaction(db, this.#storeName, 'readwrite', (store) => {
         store.add(chunk, key);
       });
-      void this.#maybeEvict();
     } catch {
       // Ignore write errors.
     }
@@ -309,7 +353,13 @@ export class IdbLogStore {
           }
         };
         db.onversionchange = () => {
+          // Unblocks deleteDatabase/upgrades from other contexts (e.g. storage reset); drop the
+          // cached connection so later writes reopen instead of hitting a closed handle.
           db.close();
+          if (this.#db === db) {
+            this.#db = undefined;
+            this.#dbPromise = undefined;
+          }
         };
         return db;
       });
@@ -355,22 +405,22 @@ export class IdbLogStore {
       return;
     }
 
-    await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
-      const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
-      if (keys.length === 0) {
-        return;
-      }
-      const rows = (await promisifyRequest(store.getAll())) as LogChunk[];
-      const chunks = keys.map((key, index) => ({
-        key,
-        lineCount: key[3],
-        byteLength: byteLengthUtf8(rows[index]!.lines),
-      }));
-      const cutoff = findEvictionCutoff(chunks, this.#maxRecords, this.#maxBytes);
-      if (cutoff !== undefined) {
-        store.delete(IDBKeyRange.upperBound(cutoff));
-      }
-    });
+    try {
+      await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
+        const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
+        if (keys.length === 0) {
+          return;
+        }
+        const chunks = keys.map((key) => ({ key, lineCount: key[3], byteLength: key[4] }));
+        const cutoff = findEvictionCutoff(chunks, this.#maxRecords, this.#maxBytes);
+        if (cutoff !== undefined) {
+          store.delete(IDBKeyRange.upperBound(cutoff));
+        }
+      });
+    } catch {
+      // The timer fires eviction un-awaited, so a failed sweep must not surface as an
+      // unhandled rejection — the next sweep retries.
+    }
   }
 
   #installLifecycleHandlers(): void {
@@ -409,9 +459,9 @@ const openDatabase = (name: string, storeName: string): Promise<IDBDatabase> => 
     const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      // The v1 schema stored one row per line under an autoincrement keyPath; chunked
-      // storage requires out-of-line keys, so the store is recreated and v1 data is
-      // discarded (logs are expendable diagnostics).
+      // Every upgrade recreates the store and discards what was there: v1 rows predate
+      // out-of-line keys, and v2 keys carry no byte length, so retained rows would force
+      // eviction to read payloads back. Logs are expendable diagnostics.
       if (db.objectStoreNames.contains(storeName)) {
         db.deleteObjectStore(storeName);
       }

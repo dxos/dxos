@@ -5,10 +5,10 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type Result } from '../../types';
+import { meta } from '#meta';
+import { Result } from '#types';
 
 export type ResultDetailProps = {
   result?: Result.Result;
@@ -23,26 +23,21 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   const { t } = useTranslation(meta.profile.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
-
   if (!result) {
-    return (
-      <div className='flex items-center justify-center h-full text-subdued text-sm'>
-        {t('no-result-selected.message')}
-      </div>
-    );
+    return <Banner.Empty label={t('no-result-selected.message')} />;
   }
 
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
-      <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] gap-2 items-start'>
+    <Flex column gap='md' classNames='p-3 overflow-y-auto'>
+      <Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (
           <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
-      </div>
+      </Grid>
 
       {result.price != null && (
         // Match ResultCard: currency-first, locale-grouped.
@@ -82,7 +77,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
           ))}
         </dl>
       )}
-    </div>
+    </Flex>
   );
 };
 

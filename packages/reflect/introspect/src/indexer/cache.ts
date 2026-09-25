@@ -21,7 +21,7 @@ import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { pid } from 'node:process';
 
-import type { PackageSymbols } from './symbols';
+import type { PackageSymbols } from './symbols.ts';
 
 // All warnings go to stderr — stdout is reserved for the MCP JSON-RPC stream
 // when this module runs inside the MCP server process.

@@ -6,9 +6,7 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-
-export const NATIVE_REDIRECT_DIALOG = `${meta.profile.key}.component.native-redirect-dialog`;
+import { meta } from '../../meta.ts';
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.

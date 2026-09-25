@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
-import { Message, Organization, Person, Pipeline } from '../types';
+import { Message, Organization, Person, Pipeline } from '../types/index.ts';
 
 // Local relation type (Person → Person) with only optional props, so the generated relation's
 // properties come entirely from annotations / endpoints.
@@ -31,7 +31,7 @@ const Knows = Type.makeRelation(DXN.make('org.dxos.relation.knows', '0.1.0'))({
   Schema.Struct({
     id: Obj.ID,
     since: Schema.optional(Schema.Number),
-  }).annotations({ description: 'A person knows another person.' }),
+  }).annotate({ description: 'A person knows another person.' }),
 );
 
 random.seed(1);

@@ -2,21 +2,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
-import { SpaceOperationConfig } from './helpers';
+import { SpaceOperation } from '#types';
+
+import { SpaceOperationConfig } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
+      const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
+        () => import('@dxos/client/invitations'),
+      );
 
       const invitation = yield* Operation.invoke(SpaceOperation.Share, {
         space: input.space,
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: true,
         target: input.target,
       });
@@ -25,7 +28,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = Space
         () =>
           new Promise<string>((resolve) => {
             invitation.subscribe((inv) => {
-              if (inv.state === Invitation.State.CONNECTING) {
+              if (inv.state === Invitation_State.CONNECTING) {
                 resolve(InvitationEncoder.encode(inv));
               }
             });

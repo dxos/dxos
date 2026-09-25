@@ -2,5 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './CellEditor';
-export * from './GridCellEditor';
+export * from './editor-keys.ts';
+
+export * from './CellEditor.tsx';
+export * from './GridCellEditor.tsx';

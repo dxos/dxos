@@ -7,19 +7,22 @@
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import * as internal from './internal';
-import type * as Obj from './Obj';
-import * as Ref from './Ref';
+import type * as Annotation from './Annotation.ts';
+import type * as Change from './Change.ts';
+import type * as Entity from './Entity.ts';
+import type * as Feed from './Feed.ts';
+import * as internal from './internal/index.ts';
+import type * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
+import type * as Type$ from './Type.ts';
 
 export const FilterTypeId = '~@dxos/echo/Filter' as const;
 export type FilterTypeId = typeof FilterTypeId;
@@ -106,6 +109,42 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by the id of an entity already in hand, keeping its type for the rest of the chain.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.entity(task)).reference('watchers'));
+ * ```
+ */
+export const entity: {
+  <T extends Entity.Unknown>(entity: T): Filter<T>;
+  <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Filter<T>;
+} = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
+
+/**
+ * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
+ * Input is case-insensitive.
+ *
+ * @example
+ * ```ts
+ * const [task] = await db.query(Filter.mnemonic('7qk2zb')).run();
+ * ```
+ */
+export const mnemonic = (mnemonic: string): Any => {
+  const normalized = EntityId.normalizeMnemonic(mnemonic);
+  assertArgument(
+    EntityId.isValidMnemonic(normalized),
+    'mnemonic',
+    `mnemonic must be ${EntityId.mnemonicLength} base32 characters`,
+  );
+
+  return new FilterClass({
+    type: 'mnemonic',
+    mnemonic: normalized,
+  });
+};
+
+/**
  * Filter by type.
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
@@ -122,7 +161,7 @@ export const type: {
     schema: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
@@ -131,7 +170,7 @@ export const type: {
   // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
   // typed overloads above still win for monomorphic inputs.
   (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
-} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
+} = (input: Type$.AnyEntity | Schema.Codec<any, any> | URI.URI, props?: Props<unknown>): any => {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
@@ -163,6 +202,22 @@ export const tag = (tag: string): Any => {
 };
 
 /**
+ * Filter by an annotation set on the entity with `Annotation.set`.
+ */
+export const annotation: {
+  /** Matches entities that carry the annotation, whatever its value. */
+  <T>(annotation: Annotation.Annotation<T>): Any;
+  /** Matches entities whose value equals `value`; only scalar values can be compared. */
+  <T extends string | number | boolean>(annotation: Annotation.Annotation<T>, value: T): Any;
+} = (annotation: Annotation.Annotation<unknown>, value?: string | number | boolean): Any => {
+  return new FilterClass({
+    type: 'annotation',
+    key: annotation.key,
+    ...(value !== undefined ? { value } : {}),
+  });
+};
+
+/**
  * Options for {@link key} filter.
  */
 export type KeyFilterOptions = {
@@ -179,8 +234,8 @@ export type KeyFilterOptions = {
  *
  * @example
  * ```ts
- * Filter.key('org.example.type.foo');
- * Filter.key('org.example.type.foo', { version: '^1.2.3' });
+ * Filter.key('com.example.type.foo');
+ * Filter.key('com.example.type.foo', { version: '^1.2.3' });
  * ```
  */
 export const key = (key: string, options?: KeyFilterOptions): Any => {
@@ -388,6 +443,45 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
+/**
+ * Range of feed cursors, as read off items with `Feed.getCursor`.
+ * Both bounds name an item and exclude it: `begin` is the last item already consumed, `end` the
+ * first item not wanted.
+ */
+export type FeedCursorRange = {
+  /** Read after this cursor. Defaults to the start of the feed ({@link Feed.START}). */
+  begin?: Feed.Cursor;
+  /** Read up to but not including this cursor. Defaults to the end of the feed. */
+  end?: Feed.Cursor;
+};
+
+/**
+ * Filter feed items to a cursor range — see `Feed.getCursor` for reading a cursor off an item, and
+ * `Feed.START` for the sentinel that bounds nothing.
+ *
+ * The range is pushed into the index scan, so a reader that keeps a cursor pays for what is new
+ * rather than for the whole feed. Combine with `limit()` for a bounded page. Results come back in
+ * append order and cover positioned items only — an item a peer wrote but the position authority
+ * has not yet acknowledged has no place in that order, and `Feed.START` selects the same set from
+ * the beginning rather than everything. Only meaningful against a feed scope — an automerge object
+ * carries no position, so a query that also selects a space's documents is rejected.
+ *
+ * @example
+ * ```ts
+ * // The next 10 items after the last one this reader consumed.
+ * db.query(Query.select(Filter.feedCursor({ begin: cursor })).limit(10).from(feed));
+ *
+ * // Everything between two known items, excluding both.
+ * db.query(Query.select(Filter.feedCursor({ begin: first, end: last })).from(feed));
+ * ```
+ */
+export const feedCursor = (range: FeedCursorRange = {}): Any =>
+  new FilterClass({
+    type: 'feed-cursor',
+    ...(range.begin !== undefined ? { begin: range.begin } : {}),
+    ...(range.end !== undefined ? { end: range.end } : {}),
+  });
+
 export type ChildOfOptions = {
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive?: boolean;
@@ -416,6 +510,45 @@ export const childOf = (
     transitive: options?.transitive ?? true,
   });
 };
+
+/**
+ * Select Automerge changes instead of objects: one {@link Change.Change} per change to the documents
+ * holding `targets`, or to every document in the space when called with no argument.
+ *
+ * Changes belong to documents, not entities. Entities that share a document share its changes, and
+ * content held by another entity (a document's `Text`) needs its own target. Only the host answers
+ * these queries; a space-wide query must aggregate, and the index answers it only at hour
+ * granularity (see `Aggregate.time`).
+ *
+ * @example
+ * ```ts
+ * Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), changes: Aggregate.count() });
+ * Query.select(Filter.changes([doc, doc.content])).orderBy(Order.property('time', 'desc')).limit(50);
+ * ```
+ */
+export const changes = (
+  targets?: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+): Filter<Change.Change> => {
+  if (targets === undefined) {
+    return new FilterClass({ type: 'changes' });
+  }
+  const items = Array.isArray(targets) ? targets : [targets];
+  return new FilterClass({
+    type: 'changes',
+    targets: items.map((item) => (Ref.isRef(item) ? EID.parse(item.uri) : EID.parse(internal.getUri(item)))),
+  });
+};
+
+/**
+ * Filter objects by whether they have a parent, regardless of which object it is.
+ * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
+ * Unlike {@link childOf} this reads the object's own parent slot, so it costs no traversal.
+ */
+export const hasParent = (value = true): Any =>
+  new FilterClass({
+    type: 'has-parent',
+    value,
+  });
 
 /**
  * Negate the filter.
@@ -458,7 +591,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
+    Schema.decodeSync(Schema.toType(Schema.Array(EntityId)))(idFilter);
   }
 
   return {

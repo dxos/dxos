@@ -25,6 +25,12 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -35,9 +41,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -67,6 +70,9 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -74,9 +80,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/halo/halo"
     },
     {
       "path": "../../core/halo/halo-react"
@@ -100,6 +103,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -109,13 +115,16 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-primitives/react-list"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-assistant"
     },
     {
       "path": "../../ui/react-ui-attention"
@@ -130,19 +139,13 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-feed"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-graph"
-    },
-    {
       "path": "../../ui/react-ui-list"
-    },
-    {
-      "path": "../../ui/react-ui-markdown"
-    },
-    {
-      "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -157,10 +160,10 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-table"
+      "path": "../../ui/react-ui-task"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/react-ui-transcription"
@@ -173,6 +176,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"
@@ -202,6 +208,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-registry"
+    },
+    {
       "path": "../plugin-routine"
     },
     {
@@ -212,6 +221,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

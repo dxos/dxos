@@ -9,7 +9,10 @@ use tauri::{
 
 /// Initialize the menu bar icon and menu.
 pub fn init_menubar(app: &AppHandle, spotlight_config: SpotlightConfig) -> Result<(), String> {
-    let open_composer = MenuItemBuilder::new("Open Composer")
+    // `package_info().name` is the built `productName` (CI suffixes it per channel, e.g. "Composer Preview").
+    let app_name = &app.package_info().name;
+
+    let open_composer = MenuItemBuilder::new(format!("Open {app_name}"))
         .id("open")
         .build(app)
         .map_err(|e| e.to_string())?;
@@ -19,7 +22,7 @@ pub fn init_menubar(app: &AppHandle, spotlight_config: SpotlightConfig) -> Resul
         .build(app)
         .map_err(|e| e.to_string())?;
 
-    let quit = MenuItemBuilder::new("Quit Composer")
+    let quit = MenuItemBuilder::new(format!("Quit {app_name}"))
         .id("quit")
         .build(app)
         .map_err(|e| e.to_string())?;
@@ -32,13 +35,15 @@ pub fn init_menubar(app: &AppHandle, spotlight_config: SpotlightConfig) -> Resul
         .build()
         .map_err(|e| e.to_string())?;
 
-    let icon = app
-        .default_window_icon()
-        .cloned()
-        .ok_or("No default icon configured")?;
+    // A monochrome template image, not the colored dock icon: macOS recolors template images to match
+    // the menu bar's light/dark appearance, the same way the built-in status icons behave.
+    // `include_image!` decodes the PNG at build time (path relative to the crate manifest), so the
+    // binary needs no runtime decoder — `Image::from_bytes` would require tauri's `image-png` feature.
+    let icon = tauri::include_image!("./icons/menubarTemplate.png");
 
     TrayIconBuilder::new()
         .icon(icon)
+        .icon_as_template(true)
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(move |app, event| match event.id().as_ref() {

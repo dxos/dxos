@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -16,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -28,9 +30,9 @@ EntityId.dangerouslyDisableRandomness();
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
-    parameters: {
-      value: Schema.String.annotations({ description: 'The value to echo.' }),
-    },
+    parameters: Schema.Struct({
+      value: Schema.String.annotate({ description: 'The value to echo.' }),
+    }),
     success: Schema.Struct({ value: Schema.String }),
     failure: Schema.Never,
   }),
@@ -106,7 +108,101 @@ describe('AiRequest loop (scripted model)', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  // A skill can name a tool in its instructions whose handler this host never contributed: the name
+  // reaches the model through the system prompt and never reaches the toolkit. The provider then
+  // fails while decoding its own response, which used to kill the request and leave the reader with
+  // no reply at all.
+  it.effect(
+    'reports an unresolvable tool call to the model and keeps going',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const messages = yield* request.run({ toolkit, prompt: 'Query the database.', history: [] });
+
+        // The turn is reported, not fatal: the model gets another turn and the reader gets an answer.
+        expect(textOf(messages)).toContain('Understood, I will use Echo.');
+        const notice = messages
+          .flatMap((message) => message.blocks)
+          .filter(ContentBlock.is('text'))
+          .find((block) => block.text.includes('space-query-objects'));
+        expect(notice?.disposition).toEqual('synthetic');
+        expect(notice?.text).toContain('Echo');
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('Understood, I will use Echo.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // The report is bounded: a model that keeps calling the same absent tool must not spend the whole
+  // budget being told it does not exist.
+  it.effect(
+    'fails once a request has spent its allowance of unresolvable tool calls',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const exit = yield* Effect.exit(request.run({ toolkit, prompt: 'Query the database.', history: [] }));
+
+        expect(Exit.isFailure(exit)).toBe(true);
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // The allowance is per run: a reused Request must not inherit a spent budget from an earlier run.
+  it.effect(
+    'resets the unresolvable-tool allowance between runs of the same request',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+
+        const first = yield* request.run({ toolkit, prompt: 'Query the database.', history: [] });
+        expect(textOf(first)).toContain('First run recovered.');
+
+        // The first run spent the whole allowance; without the reset this report would exceed it.
+        const second = yield* request.run({ toolkit, prompt: 'Query it again.', history: [] });
+        expect(textOf(second)).toContain('Second run recovered.');
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('First run recovered.')] },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('Second run recovered.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
+
+/**
+ * The failure the Anthropic adapter raises while decoding a response that calls a tool the toolkit
+ * does not contain — the shape reproduced here, since the provider raises it before any tool call
+ * reaches the loop and no scripted tool call can stand in for it.
+ */
+const toolNotFound = (toolName: string, availableTools: string[]): AiError.AiError =>
+  new AiError.AiError({
+    module: 'AnthropicLanguageModel',
+    method: 'makeResponse',
+    reason: new AiError.ToolNotFoundError({ toolName, availableTools }),
+  });
 
 const textOf = (messages: readonly Message.Message[]): string =>
   messages

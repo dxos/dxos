@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 interface _Live {}
 type Live<T> = _Live & T;
 
-const live = <S extends Schema.Schema.AnyNoContext>(
+const live = <S extends Schema.Codec<any, any>>(
   schema: S,
   value: Schema.Schema.Type<S>,
 ): Live<Schema.Schema.Type<S>> => {
@@ -33,14 +33,14 @@ const live = <S extends Schema.Schema.AnyNoContext>(
 const Cell = Symbol('system/Cell');
 
 class MemoryCell implements Cell {
-  #schema!: Schema.Schema.AnyNoContext;
+  #schema!: Schema.Codec<any, any>;
   #value!: unknown;
 
   get #initialized() {
     return this.#schema != null;
   }
 
-  init(schema: Schema.Schema.AnyNoContext, value: unknown): void {
+  init(schema: Schema.Codec<any, any>, value: unknown): void {
     this.#schema = schema;
     this.#value = value;
   }
@@ -57,7 +57,7 @@ class MemoryCell implements Cell {
 }
 
 interface Cell {
-  init(schema: Schema.Schema.AnyNoContext, data: unknown): void;
+  init(schema: Schema.Codec<any, any>, data: unknown): void;
   get(key: keyof any): unknown;
   set(key: keyof any, value: unknown): void;
 }
@@ -74,7 +74,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
   }
 
   switch (ast._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       const properties: PropertyDescriptorMap = Object.fromEntries(
         ast.propertySignatures.map((prop) => {
           return [
@@ -85,7 +85,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
               get(this: LiveProto) {
                 return this[Cell].get(prop.name);
               },
-              set: prop.isReadonly
+              set: !SchemaAST.isMutable(prop.type)
                 ? undefined
                 : function set(this: LiveProto, value: any) {
                     this[Cell].set(prop.name, value);
@@ -105,7 +105,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
       livePrototypeCache.set(ast, proto);
       return proto;
     }
-    case 'TupleType': {
+    case 'Arrays': {
       throw new Error('Not implemented');
     }
     default:

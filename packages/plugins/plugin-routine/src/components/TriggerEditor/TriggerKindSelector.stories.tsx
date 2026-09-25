@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector.tsx';
 
 const DefaultStory = () => {
   const [kind, setKind] = useState<TriggerKind | undefined>();

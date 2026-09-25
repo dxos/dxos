@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './skills';
+export * as BrainPlugin from './BrainPlugin.ts';
+export * from '#meta';
+export * from '#types';

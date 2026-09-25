@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
-import { FreeqAuthError } from '../errors';
-import { makeAppPasswordCredentialProvider } from './CredentialProvider';
+import { FreeqAuthError } from '../errors.ts';
+import { makeAppPasswordCredentialProvider } from './CredentialProvider.ts';
 
 describe('AppPasswordCredentialProvider', () => {
   test('resolves DID + PDS, creates a session, and builds a base64url SASL response', async ({ expect }) => {

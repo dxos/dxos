@@ -40,5 +40,5 @@ export const MarkdownEditor = ({ text }: { text: Text.Text }) => {
     [text, themeMode],
   );
 
-  return <div ref={parentRef} className='min-h-0 overflow-auto' data-testid='markdown-editor' />;
+  return <div ref={parentRef} className='overflow-auto' data-testid='markdown-editor' />;
 };

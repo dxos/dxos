@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
@@ -9,7 +10,9 @@ import { Client } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema, ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Halo', () => {
   test('creates a identity', async () => {
@@ -19,7 +22,7 @@ describe('Halo', () => {
     onTestFinished(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client.halo.identity).exist;
 
     expect(await client.halo.devices.get()).to.have.lengthOf(1);
@@ -33,7 +36,10 @@ describe('Halo', () => {
     onTestFinished(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createIdentity({ displayName: 'test-user' }, { label: 'custom-device-profile' });
+    await client.halo.createIdentity(
+      create(ProfileDocumentSchema, { displayName: 'test-user' }),
+      create(DeviceProfileDocumentSchema, { label: 'custom-device-profile' }),
+    );
     expect(client.halo.identity).exist;
 
     expect(await client.halo.devices.get()).to.have.lengthOf(1);
@@ -48,10 +54,10 @@ describe('Halo', () => {
     onTestFinished(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client.halo.identity.get()!.profile?.displayName).to.equal('test-user');
 
-    await client.halo.updateProfile({ displayName: 'test-user-updated' });
+    await client.halo.updateProfile(create(ProfileDocumentSchema, { displayName: 'test-user-updated' }));
     expect(client.halo.identity.get()!.profile?.displayName).to.equal('test-user-updated');
   });
 
@@ -63,7 +69,10 @@ describe('Halo', () => {
     await client1.initialize();
 
     // Set a custom device profile for the host to ensure we're matching the default on the guest.
-    await client1.halo.createIdentity({ displayName: 'test-user' }, { label: 'host-device-profile' });
+    await client1.halo.createIdentity(
+      create(ProfileDocumentSchema, { displayName: 'test-user' }),
+      create(DeviceProfileDocumentSchema, { label: 'host-device-profile' }),
+    );
     expect(client1.halo.identity).exist;
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
@@ -87,7 +96,7 @@ describe('Halo', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        guestDeviceProfile: { label: 'guest-device-label' },
+        guestDeviceProfile: create(DeviceProfileDocumentSchema, { label: 'guest-device-label' }),
       }),
     );
 
@@ -107,7 +116,7 @@ describe('Halo', () => {
     onTestFinished(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client1.halo.identity).exist;
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
@@ -131,7 +140,7 @@ describe('Halo', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        guestDeviceProfile: { label: 'guest-device-profile' },
+        guestDeviceProfile: create(DeviceProfileDocumentSchema, { label: 'guest-device-profile' }),
       }),
     );
 
@@ -151,7 +160,7 @@ describe('Halo', () => {
     onTestFinished(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client1.halo.identity).exist;
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
@@ -171,7 +180,7 @@ describe('Halo', () => {
       }
     });
 
-    await client1.halo.updateProfile({ displayName: 'test-user-updated' });
+    await client1.halo.updateProfile(create(ProfileDocumentSchema, { displayName: 'test-user-updated' }));
     await asyncTimeout(trigger.wait(), 500);
 
     expect(client2.halo.identity.get()!.profile?.displayName).to.equal('test-user-updated');
@@ -184,7 +193,7 @@ describe('Halo', () => {
     onTestFinished(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client1.halo.identity).exist;
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
@@ -199,9 +208,9 @@ describe('Halo', () => {
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);
 
     invariant(client1.services.services?.DevicesService, 'DevicesService is not available');
-    await client1?.services?.services?.DevicesService?.updateDevice({
-      label: 'updated-device-profile',
-    });
+    await client1?.services?.services?.DevicesService?.updateDevice(
+      buf.create(DeviceProfileDocumentSchema, { label: 'updated-device-profile' }),
+    );
 
     const trigger = new Trigger();
     client2.halo.devices.subscribe((devices) => {

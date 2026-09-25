@@ -12,8 +12,37 @@ Browser e2e drives the real Composer app in a browser — the only tier that ver
 behavior: interactivity during async work, no false empty states, and full click→render flows.
 Distinct from `agent-eval-tests` (the LLM agent harness) and storybook interaction tests.
 
-Location: `packages/apps/composer-app/src/playwright/` — `*.spec.ts` specs, root page-objects
+Location: `packages/e2e/composer-e2e/src/playwright/` — `*.spec.ts` specs, root page-objects
 (`app-manager.ts`), and per-plugin helpers under `plugins/` (re-exported from `plugins/index.ts`).
+The MEASUREMENT harnesses (`startup`, `perf-*`, `dev-*`, `welcome-focus`) stay in
+`packages/apps/composer-app/src/playwright/`, beside the budget tasks that gate on them.
+
+**The full authoring guide is `packages/e2e/composer-e2e/BEST-PRACTICES.md`** — this skill is the
+short form; that file is the one to read before writing a spec.
+
+## Every test binds to an `.mdl` QA flow
+
+A `test QA-n` block is the specification of a journey; a spec is one unattended execution of it.
+Declare the binding on BOTH sides — a Playwright tag on the test and an `automated:` entry on the
+flow — and `scripts/check-qa-coverage.mjs` (a `check` job step) fails when they disagree:
+
+```ts
+test('create document', { tag: ['@QA-1'] }, async () => { … });
+```
+
+```mdl
+test QA-1: Spaces and documents
+  automated:
+    - composer-e2e:basic.spec.ts#Basic tests › create document
+```
+
+Write the flow first if none exists — `APP.mdl` for a journey crossing plugins, the plugin's
+`PLUGIN.mdl` otherwise. A prefixed tag (`@review:QA-1`) binds to that plugin's spec; register the
+prefix in `SPEC_FILES` in the checker.
+
+A **skipped** test still carries its tag but stays out of `automated:` — skipping is inherited from
+`test.describe.skip`, and a flow listing a test that never runs reads as automated while nothing
+exercises it.
 
 ## Golden rule: target by `data-testid`, never by label, text, or role-name
 
@@ -88,11 +117,18 @@ Every interaction lives behind a page-object so specs read as intent, not select
 
 ## Running
 
-- `DX_PWA=false moon run composer-app:e2e` — config `src/playwright/playwright.config.ts`
+- `DX_PWA=false moon run composer-e2e:e2e` — config `src/playwright/playwright.config.ts`
   (`e2ePreset`, `vite preview` on port 4173, pre-built bundle).
 - `PLAYWRIGHT_BROWSER=chromium|firefox|webkit|all` selects projects; many tests are chromium-only
   via `test.skip(browserName !== 'chromium')`.
-- CI: the `Check` `e2e` job runs only on main/release or `workflow_dispatch e2e=true`.
+- CI: the `Check` `e2e` job runs on every trigger, scoped to affected projects except on main, the
+  schedule and a dispatch. A dispatch forces every suite to run rather than replay; `only=e2e` skips
+  the other jobs. From `main` the job also publishes every test's outcome to PostHog as
+  `ci.e2e-test` (`DASHBOARD.md`).
+- `DX_HARNESS_THROTTLED=1` enables the startup harness's throttled cold start (chromium-only, CDP).
+  Its profile defaults to Fast 3G + 2x CPU and each field is overridable via `DX_HARNESS_LATENCY_MS`,
+  `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`, `DX_HARNESS_CPU` (`throttleProfile` in
+  `harness-helpers.ts`). Override when the default cannot reach ready inside `waitForReady`.
 
 ## Waiting & stability
 

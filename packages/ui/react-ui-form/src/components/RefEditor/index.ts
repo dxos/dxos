@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './RefEditor';
-export * from './ref-editor-extension';
+export * from './RefEditor.tsx';
+export * from './ref-editor-extension.ts';

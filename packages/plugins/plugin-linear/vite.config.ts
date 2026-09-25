@@ -13,6 +13,8 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    LinearEvents: 'src/types/LinearEvents.ts',
+    LinearOperation: 'src/types/LinearOperation.ts',
     types: 'src/types/index.ts',
   },
   test: { node: true },

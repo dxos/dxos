@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,18 +25,22 @@
       "browser": "./dist/src/rpc.js",
       "import": "./dist/src/rpc.js"
     },
-    "./proto": {
-      "browser": "./dist/src/proto/index.js",
-      "import": "./dist/src/proto/index.js"
-    },
     "./proto/dxos/*.proto": "./src/proto/dxos/*.proto",
-    "./proto/*": {
-      "browser": "./dist/src/proto/gen/*.js",
-      "import": "./dist/src/proto/gen/*.js"
-    },
     "./buf": {
       "browser": "./dist/src/buf/index.js",
       "import": "./dist/src/buf/index.js"
+    },
+    "./buf-service": {
+      "browser": "./dist/src/buf/service.js",
+      "import": "./dist/src/buf/service.js"
+    },
+    "./buf-registry": {
+      "browser": "./dist/src/buf/registry.js",
+      "import": "./dist/src/buf/registry.js"
+    },
+    "./service-contract": {
+      "browser": "./dist/src/service-contract.js",
+      "import": "./dist/src/service-contract.js"
     },
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
@@ -51,18 +55,18 @@
   ],
   "dependencies": {
     "@bufbuild/protobuf": "catalog:",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@effect/rpc": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",
     "@bufbuild/protoc-gen-es": "catalog:",
-    "@dxos/protobuf-compiler": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

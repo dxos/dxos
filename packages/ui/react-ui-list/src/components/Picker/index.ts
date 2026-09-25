@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { Picker, usePickerInputContext, usePickerItemContext } from './Picker';
-export type { PickerInputProps, PickerItemProps, PickerRootProps } from './Picker';
+export { usePickerInputContext, usePickerItemContext } from './context.ts';
+export { Picker } from './Picker.tsx';
+export type { EscapeBehavior, PickerInputProps, PickerItemProps, PickerRootProps } from './Picker.tsx';

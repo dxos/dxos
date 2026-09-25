@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Cell from './Cell';
+import * as Cell from './Cell.ts';
 
 describe('Cell', () => {
   const object = { id: 'obj-1' } as any;

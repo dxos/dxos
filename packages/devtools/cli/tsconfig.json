@@ -20,9 +20,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -38,13 +35,13 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/lock-file"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"
@@ -68,7 +65,7 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/operation"
+      "path": "../../core/compute/mcp-server"
     },
     {
       "path": "../../core/echo/echo"
@@ -95,10 +92,19 @@
       "path": "../../plugins/plugin-connector"
     },
     {
+      "path": "../../plugins/plugin-file"
+    },
+    {
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-jmap"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -111,6 +117,9 @@
     },
     {
       "path": "../../plugins/plugin-observability"
+    },
+    {
+      "path": "../../plugins/plugin-projects"
     },
     {
       "path": "../../plugins/plugin-registry"
@@ -134,6 +143,9 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
       "path": "../../plugins/plugin-transcription"
     },
     {
@@ -143,16 +155,16 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"
     },
     {
-      "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/schema"

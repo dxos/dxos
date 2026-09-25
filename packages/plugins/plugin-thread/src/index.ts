@@ -4,7 +4,9 @@
 
 // TODO(wittjosiah): Hooks should not be exported from the plugin package at all.
 //   Either refactor callers to not need them or factor them out to a shared package.
-export * from './hooks';
-export * from './meta';
-export * from './paths';
-export * from './types';
+
+export * as ThreadPlugin from './ThreadPlugin.ts';
+export * from '#hooks';
+export * from '#meta';
+export * from './paths.ts';
+export * from '#types';

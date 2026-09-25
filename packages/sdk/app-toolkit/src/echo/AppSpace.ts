@@ -4,100 +4,262 @@
 
 // @import-as-namespace
 
-import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { GraphPath } from '../app';
-import { AppCapabilities } from '../app-framework';
-import * as AppAnnotation from './AppAnnotation';
+import { AppCapabilities } from '../app-framework/index.ts';
+import { GraphPath } from '../app/index.ts';
+import * as AppAnnotation from './AppAnnotation.ts';
 
 //
-// Personal and exemplar space tags.
+// Space tags.
 //
 
-/** Space tag for the personal space. */
-export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
+/**
+ * Space tag for the settings space: a hidden, membership-locked space holding app configuration
+ * that must replicate across the user's devices but never be shared with anyone else.
+ */
+export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/** Space tag for the bundled exemplar/sample space. */
-export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
+/**
+ * Tag the onboarding space carried before it was created from a space template.
+ *
+ * It rides the space's admission credential, so it cannot be removed from profiles that carry it.
+ */
+const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
 
-// TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
-const DEFAULT_SPACE_KEY = '__DEFAULT__';
+/** Name given to the first space created for a profile. The user is free to rename it. */
+export const DEFAULT_SPACE_NAME = 'My Space';
 
-// Intentional escape hatch: reads a pre-schema marker that lives outside the typed SpaceProperties
-// struct, written by old clients before immutable space tags existed.
-const hasLegacyDefaultSpaceMarker = (properties: Record<string, unknown>): boolean =>
-  properties[DEFAULT_SPACE_KEY] === true;
+/** Resolves spaces by id or in bulk; structural so callers can pass a `Client` or a stub. */
+type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefined } };
 
 /** Check if a space has a specific tag. */
-export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => space.tags.includes(tag);
+export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
-/** Check if a space is the exemplar/sample space. */
-export const isExemplarSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
+/** Check if a space is the settings space. */
+export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
-/** Check if a space is the personal space. */
-export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): boolean => {
+/**
+ * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since
+ * duplicate healing deletes every space but the first and the order must be identical on every device.
+ */
+export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space[] =>
+  client.spaces
+    .get()
+    .filter((space) => isSettingsSpace(space))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+/**
+ * Find the settings space to read app configuration from.
+ *
+ * On a profile carrying duplicates this is a device-local read heuristic while healing converges;
+ * deletion decisions must instead use the {@link getSettingsSpaces} order, which is a pure function
+ * of replicated state.
+ */
+export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
+  const tagged = getSettingsSpaces(client);
+  if (tagged.length <= 1) {
+    return tagged[0];
+  }
+
+  // Properties are unreadable until a space is ready, so among the readable duplicates the
+  // designation-holder wins — and any readable one beats waiting on an unopened one.
+  const ready = tagged.filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? tagged[0];
+};
+
+/**
+ * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
+ *
+ * The settings space is the only one the app keeps for itself; every other tag is the user's.
+ */
+export const isVisibleSpace = (space: Space): boolean => !isSettingsSpace(space);
+
+//
+// Space templates.
+//
+
+/** Id of the space template a space was created from, if any. The space must be ready. */
+export const getSpaceTemplateId = (space: Space): string | undefined =>
+  Annotation.get(space.properties, AppAnnotation.SpaceTemplateAnnotation).pipe(Option.getOrUndefined);
+
+/** Record which template produced `space`. Pairs with {@link getSpaceTemplateId}. */
+export const setSpaceTemplateId = (space: Space, templateId: string): void => {
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, templateId);
+  });
+};
+
+/**
+ * The first space created from `templateId`, skipping any whose properties are not yet readable.
+ *
+ * A space still opening reads as absent, so treat a miss as "not found yet" rather than proof.
+ */
+export const findSpaceFromTemplate = (client: { spaces: { get(): Space[] } }, templateId: string): Space | undefined =>
+  client.spaces
+    .get()
+    .find((space) => space.state.get() === SpaceState.SPACE_READY && getSpaceTemplateId(space) === templateId);
+
+/**
+ * Stamps {@link AppAnnotation.SpaceTemplateAnnotation} on the space a profile onboarded with before
+ * templates recorded their own provenance. Returns the ids it stamped.
+ *
+ * Idempotent, and skips a space whose properties are not yet readable; such a space is stamped on a
+ * later launch.
+ */
+export const migrateLegacyOnboardingSpaces = (client: { spaces: { get(): Space[] } }, templateId: string): string[] =>
+  client.spaces
+    .get()
+    .filter(
+      (space) =>
+        space.state.get() === SpaceState.SPACE_READY &&
+        hasTag(space, LEGACY_ONBOARDING_SPACE_TAG) &&
+        getSpaceTemplateId(space) === undefined,
+    )
+    .map((space) => {
+      setSpaceTemplateId(space, templateId);
+      return space.id;
+    });
+
+//
+// Default space designation.
+//
+
+/**
+ * Get the designated default space id from the settings space.
+ * The settings space must be open; callers resolve it via {@link getSettingsSpace} after
+ * `SpacesAvailable`, at which point its properties are readable.
+ */
+export const getDefaultSpaceId = (settingsSpace: Space): string | undefined =>
+  Annotation.get(settingsSpace.properties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined);
+
+/** Designate `spaceId` as the default space. Pairs with {@link getDefaultSpaceId}. */
+export const setDefaultSpaceId = (settingsSpace: Space, spaceId: string): void => {
+  Obj.update(settingsSpace.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.DefaultSpaceAnnotation, spaceId);
+  });
+};
+
+/**
+ * The space the user has designated as their default — the target for content that is not scoped
+ * to the active space (quick entry, chat, preview and entity lookup).
+ *
+ * Resolves the designation on the settings space, falling back to the legacy personal space for
+ * profiles that have not been migrated yet.
+ */
+export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
+  // Resolvable from render paths that run before the space opens, and `getDefaultSpaceId` reads
+  // properties unguarded, so readiness is checked here rather than swallowed there.
+  const settingsSpace = getSettingsSpace(client);
+  const configuredId =
+    settingsSpace?.state.get() === SpaceState.SPACE_READY ? getDefaultSpaceId(settingsSpace) : undefined;
+  const configured = configuredId ? client.spaces.get(configuredId) : undefined;
+  // The settings space is internal; designating it would hand app configuration out as the default
+  // content target, so a stale or hand-edited designation falls through to the legacy space.
+  if (configured && !isSettingsSpace(configured)) {
+    return configured;
+  }
+
+  return client.spaces.get().find((space) => isLegacyDefaultSpace(space));
+};
+
+//
+// Identity bootstrap.
+//
+
+/**
+ * Create the two spaces every profile starts with, and designate the second as the default.
+ *
+ * Shared by the app's identity-created module and the story/test harnesses so the shape of a new
+ * profile is defined once. It lives here rather than in plugin-space because plugin-client (CLI,
+ * test harness) cannot depend on plugin-space.
+ *
+ * Both are locked at genesis: the settings space holds configuration that must never be shared,
+ * and the first space is private until the user decides otherwise. Both replicate through EDGE so
+ * they follow the identity across devices.
+ *
+ * The content space is created first so it, not the internal settings space, is the first entry
+ * returned by `client.spaces.get()`.
+ */
+export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) {
+  const defaultSpace = yield* Effect.promise(() =>
+    client.spaces.create({ name: DEFAULT_SPACE_NAME }, { membershipPolicy: MembershipPolicy.LOCKED }),
+  );
+  yield* Effect.promise(() => defaultSpace.waitUntilReady());
+  yield* Effect.promise(() => defaultSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+
+  const settingsSpace = yield* Effect.promise(() =>
+    client.spaces.create({}, { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+  );
+  yield* Effect.promise(() => settingsSpace.waitUntilReady());
+  yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+
+  setDefaultSpaceId(settingsSpace, defaultSpace.id);
+
+  return { settingsSpace, defaultSpace };
+});
+
+//
+// Legacy resolution — profiles created before the settings space existed.
+//
+
+/**
+ * Space tag for the personal space.
+ * @deprecated The default space is now an ordinary space designated by the
+ * {@link AppAnnotation.DefaultSpaceAnnotation} setting on the settings space. This tag survives
+ * only to resolve profiles created before the settings space existed.
+ */
+export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
+
+// TODO(wittjosiah): Remove once all profiles have migrated to the settings space.
+const DEFAULT_SPACE_KEY = '__DEFAULT__';
+
+/**
+ * Check if a space is the default space of a profile created before the settings space existed.
+ * Reads the immutable tag, or the `__DEFAULT__` property older clients wrote before tags existed.
+ * @deprecated Compare against {@link getDefaultSpace} instead; this only reads legacy markers.
+ */
+export const isLegacyDefaultSpace = (space: Space): boolean => {
   if (hasTag(space, PERSONAL_SPACE_TAG)) {
     return true;
   }
 
-  // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
+  // Closed spaces throw on property access, and this runs across the whole space list.
   try {
-    return hasLegacyDefaultSpaceMarker(space.properties as unknown as Record<string, unknown>);
+    const properties: object = space.properties;
+    return DEFAULT_SPACE_KEY in properties && properties[DEFAULT_SPACE_KEY] === true;
   } catch {
     return false;
   }
 };
 
 /**
- * Mark a space as the personal space via legacy property.
- * @deprecated Use `tags: [PERSONAL_SPACE_TAG]` when creating the space instead.
- * TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
+ * Find the legacy default space, falling back to the `DefaultSpace` HALO credential for profiles
+ * that predate immutable space tags. Migration input only — read {@link getDefaultSpace} at runtime.
+ * @deprecated
  */
-export const setPersonalSpace = (space: Space): void => {
-  Obj.update(space.properties, (properties) => {
-    (properties as any)[DEFAULT_SPACE_KEY] = true;
-  });
-};
-
-/** Find the personal space. */
-export const getPersonalSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
-  client.spaces.get().find((space) => isPersonalSpace(space));
-
-/**
- * Find the personal space, falling back to the legacy `DefaultSpace` HALO credential for profiles
- * that predate immutable space tags.
- *
- * Returns `{ space, fromCredential }` where `fromCredential: true` means the space was found via
- * the old credential and `setPersonalSpace` should be called once the space is ready to persist
- * the `__DEFAULT__` marker for future loads.
- *
- * TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
- */
-export const resolvePersonalSpace = (client: {
-  spaces: { get(): Space[]; get(id: any): Space | undefined };
-  halo: { queryCredentials(options: { type: string }): any[] };
-}): { space: Space; fromCredential: boolean } | undefined => {
-  const found = getPersonalSpace(client);
+export const resolveLegacyDefaultSpace = (
+  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): Credential[] } },
+): Space | undefined => {
+  const found = client.spaces.get().find((space) => isLegacyDefaultSpace(space));
   if (found) {
-    return { space: found, fromCredential: false };
+    return found;
   }
 
-  const defaultSpaceCredential = client.halo.queryCredentials({
-    type: 'dxos.halo.credentials.DefaultSpace',
-  })[0];
-  if (!defaultSpaceCredential) {
-    return undefined;
-  }
-
-  const defaultSpaceId = defaultSpaceCredential?.subject?.assertion?.spaceId;
-  if (typeof defaultSpaceId !== 'string') {
-    return undefined;
-  }
-  const space = client.spaces.get(defaultSpaceId);
-  return space ? { space, fromCredential: true } : undefined;
+  const credential = client.halo.queryCredentials({ type: 'dxos.halo.credentials.DefaultSpace' })[0];
+  const assertion = credential?.subject?.assertion;
+  const spaceId = assertion && anyUnpack(assertion, DefaultSpaceSchema)?.spaceId;
+  return spaceId ? client.spaces.get(spaceId) : undefined;
 };
 
 //

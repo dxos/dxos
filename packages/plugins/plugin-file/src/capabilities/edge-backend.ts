@@ -4,22 +4,26 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { FileCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
+    // `config` is initialized-only, and this event wave can land before the forked client
+    // initialization completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
     const edgeUrl = client.config.values.runtime?.services?.edge?.url;
     if (!edgeUrl) {
-      return Capability.contributes(Capabilities.Null, null);
+      // No edge service configured — skip the declared provide (runtime warns, not fails).
+      return [];
     }
 
-    return Capability.contributes(FileCapabilities.Backend, {
-      name: 'Edge',
+    return Capability.contribute(FileCapabilities.Backend, {
+      name: 'Blob Service',
       description: 'Store files on the DXOS edge network. Scales beyond the inline size cap.',
       storage: Blob.Storage.edge,
     });

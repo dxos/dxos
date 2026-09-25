@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -29,9 +32,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -52,16 +52,10 @@
       "path": "../../core/echo/echo-doc"
     },
     {
-      "path": "../../core/echo/echo-react"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"
@@ -74,9 +68,6 @@
     },
     {
       "path": "../plugin-illustrator"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

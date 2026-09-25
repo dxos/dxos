@@ -28,6 +28,7 @@ export const translations = [
         'settings.updates.ready.message': 'Update ready. Restart Composer to apply.',
         'settings.updates.failed.message': 'Update failed: {{error}}',
         'settings.updates.unsupported.message': 'Updates are not available on this platform.',
+        'settings.updates.dev.message': 'Updates are not enabled in dev mode.',
       },
     },
   },

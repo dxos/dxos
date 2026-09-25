@@ -3,33 +3,51 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type DocumentId, type DocumentQuery } from '@automerge/automerge-repo';
+import { type DocumentId } from '@automerge/automerge-repo';
 
-import { UpdateScheduler } from '@dxos/async';
+import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
-import { retry } from '@dxos/util';
+import { type DataService } from '@dxos/protocols/rpc';
 
-import type { AutomergeHost } from '../automerge';
+import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
+/**
+ * Ceilings on one batch. A first sync can make thousands of documents pending inside one tick, and
+ * the client decodes and integrates a batch as one message, so the remainder waits for the next tick.
+ * The byte ceiling is soft: a batch closes after the document that crosses it.
+ */
+const MAX_BATCH_BYTES = 1024 * 1024;
+const MAX_BATCH_DOCUMENTS = 500;
+
+/**
+ * Bound on loading a document to read or write it. A document a client subscribes to is on disk or
+ * was just created, so a load that takes longer than this is a document that is gone.
+ */
+const RELOAD_TIMEOUT = 10_000;
+
 export type DocumentsSynchronizerProps = {
   automergeHost: AutomergeHost;
-  sendUpdates: (updates: BatchedDocumentUpdates) => void;
+  sendUpdates: (updates: DataService.BatchedDocumentUpdates) => void;
+  /** Override of {@link MAX_BATCH_BYTES}. */
+  maxBatchBytes?: number;
+  /** Override of {@link MAX_BATCH_DOCUMENTS}. */
+  maxBatchDocuments?: number;
 };
 
 interface DocSyncState {
-  docQuery: DocumentQuery<DatabaseDirectory>;
+  /** Heads the client holds as of the last send; unset until the initial send. */
   lastSentHead?: Heads;
-  clearSubscriptions?: () => void;
+  /**
+   * Held only until the document is loaded for its initial send. Nothing pins the document after
+   * that: the host's residency policy decides, and each send re-leases it for the duration of a read.
+   */
+  initialLease?: DocumentLease<DatabaseDirectory>;
 }
-
-const WRAP_AROUND_RETRY_LIMIT = 3;
-const WRAP_AROUND_RETRY_INITIAL_DELAY = 100; // [ms]
 
 /**
  * Manages a connection and replication between worker's Automerge Repo and the client's Repo.
@@ -84,35 +102,43 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   async addDocuments(documentIds: DocumentId[]): Promise<void> {
-    await Promise.all(
-      documentIds.map(async (documentId) => {
-        try {
-          await retry(
-            { count: WRAP_AROUND_RETRY_LIMIT, delayMs: WRAP_AROUND_RETRY_INITIAL_DELAY, exponent: 2 },
-            async () => {
-              try {
-                log('loading document', { documentId });
-                const docQuery = this._params.automergeHost.findWithProgress<DatabaseDirectory>(
-                  documentId as DocumentId,
-                );
-                this._startSync(docQuery);
-                this._pendingUpdates.add(docQuery.documentId);
-                this._sendUpdatesJob!.trigger();
-                // Background disk probe so the client can distinguish
-                // "not on disk, waiting for network" from "still loading".
-                // Fire-and-forget; the result feeds `_pendingRequesting`.
-                this._scheduleDiskProbe(docQuery.documentId);
-              } catch (err) {
-                log.warn('failed to load document', { err });
-                throw err;
-              }
-            },
-          );
-        } catch (err) {
-          log.catch(err);
-        }
-      }),
-    );
+    for (const documentId of documentIds) {
+      if (this._syncStates.has(documentId) || this._lifecycleState === LifecycleState.CLOSED) {
+        continue;
+      }
+      log('loading document', { documentId });
+      const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
+      const syncState: DocSyncState = { initialLease: lease };
+      this._syncStates.set(documentId, syncState);
+      // Background disk probe so the client can distinguish
+      // "not on disk, waiting for network" from "still loading".
+      // Fire-and-forget; the result feeds `_pendingRequesting`.
+      this._scheduleDiskProbe(documentId);
+      void this._sendWhenLoaded(documentId, syncState);
+    }
+  }
+
+  /** Queues the initial send once the document is loaded, then lets go of it. */
+  private async _sendWhenLoaded(documentId: DocumentId, syncState: DocSyncState): Promise<void> {
+    const lease = syncState.initialLease;
+    invariant(lease);
+    try {
+      if (!lease.loaded) {
+        await lease.waitUntilReady();
+      }
+    } catch (err) {
+      log.warn('failed to load document', { documentId, err });
+    } finally {
+      // Unsubscribed while loading: the state is gone and `removeDocuments` released the lease.
+      if (this._syncStates.get(documentId) === syncState && syncState.initialLease === lease) {
+        syncState.initialLease = undefined;
+        lease[Symbol.dispose]();
+        // Queued whether or not the load succeeded: a failed one is retried by the send loop, which
+        // gives up on a document this host does not store rather than retrying it forever.
+        this._pendingUpdates.add(documentId);
+        this._sendUpdatesJob?.trigger();
+      }
+    }
   }
 
   /**
@@ -128,14 +154,13 @@ export class DocumentsSynchronizer extends Resource {
       try {
         const onDisk = await this._params.automergeHost.hasDocOnDisk(documentId);
         if (onDisk) {
-          // Doc is on disk; the existing `heads-changed` flow will deliver
-          // a normal mutation update once the load completes.
+          // Doc is on disk; the initial send follows once the load completes.
           return;
         }
         // Skip the transition signal if the doc has since become `ready`
         // via the network/peer race.
         const syncState = this._syncStates.get(documentId);
-        if (!syncState || syncState.docQuery.peek().state === 'ready') {
+        if (!syncState || !syncState.initialLease || syncState.initialLease.loaded) {
           return;
         }
         this._pendingRequesting.add(documentId);
@@ -146,9 +171,11 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
+  /** Drops the documents the client no longer subscribes to. */
   removeDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {
-      this._syncStates.get(documentId)?.clearSubscriptions?.();
+      const syncState = this._syncStates.get(documentId);
+      syncState?.initialLease?.[Symbol.dispose]();
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
       this._pendingRequesting.delete(documentId);
@@ -159,14 +186,26 @@ export class DocumentsSynchronizer extends Resource {
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
+    // Every save the host makes, whatever wrote it: this client's own mutation, another client's,
+    // or a peer's replicated change.
+    this._params.automergeHost.documentHeadsChanged.on(this._ctx, ({ documentId }) => {
+      if (!this._syncStates.has(documentId)) {
+        return;
+      }
+      this._pendingUpdates.add(documentId);
+      this._sendUpdatesJob?.trigger();
+    });
   }
 
   protected override async _close(): Promise<void> {
     await this._sendUpdatesJob!.join();
+    for (const syncState of this._syncStates.values()) {
+      syncState.initialLease?.[Symbol.dispose]();
+    }
     this._syncStates.clear();
   }
 
-  async update(ctx: Context, updates: DocumentUpdate[]): Promise<void> {
+  async update(ctx: Context, updates: DataService.DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation } of updates) {
       // Inbound (client -> worker) updates are always mutation-bearing; the
       // `mutation`-less variant is only used for worker -> client transition
@@ -175,7 +214,7 @@ export class DocumentsSynchronizer extends Resource {
       if (!mutation) {
         continue;
       }
-      await this._writeMutation(documentId as DocumentId, mutation);
+      await this._writeMutation(ctx, documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
     await this._params.automergeHost.flush(ctx, {
@@ -183,44 +222,32 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
-  private _startSync(docQuery: DocumentQuery<DatabaseDirectory>) {
-    if (this._syncStates.has(docQuery.documentId)) {
-      log('Document already being synced', { documentId: docQuery.documentId });
-      return;
-    }
-
-    const syncState: DocSyncState = { docQuery };
-    this._subscribeForChanges(syncState);
-    this._syncStates.set(docQuery.documentId, syncState);
-    return syncState;
-  }
-
-  _subscribeForChanges(syncState: DocSyncState): void {
-    const handler = () => {
-      this._pendingUpdates.add(syncState.docQuery.documentId);
-      this._sendUpdatesJob!.trigger();
-    };
-    syncState.docQuery.handle.on('heads-changed', handler);
-    syncState.clearSubscriptions = () => syncState.docQuery.handle.off('heads-changed', handler);
-  }
-
   private async _checkAndSendUpdates(): Promise<void> {
     if (this.#sendUpdatesPaused) {
       return;
     }
-    const updates: DocumentUpdate[] = [];
+    const updates: DataService.DocumentUpdate[] = [];
+    const maxBytes = this._params.maxBatchBytes ?? MAX_BATCH_BYTES;
+    const maxDocuments = this._params.maxBatchDocuments ?? MAX_BATCH_DOCUMENTS;
+    let bytes = 0;
 
-    const docsWithPendingUpdates = Array.from(this._pendingUpdates);
-    this._pendingUpdates.clear();
-
-    for (const documentId of docsWithPendingUpdates) {
-      const update = this._getPendingChanges(documentId);
+    // Consumed one at a time so whatever does not fit stays pending for the next tick.
+    for (const documentId of this._pendingUpdates) {
+      if (updates.length >= maxDocuments || bytes >= maxBytes) {
+        break;
+      }
+      this._pendingUpdates.delete(documentId);
+      const update = await this._getPendingChanges(documentId);
       if (update) {
         updates.push({
           documentId,
           mutation: update,
         });
+        bytes += update.byteLength;
       }
+    }
+    if (this._pendingUpdates.size > 0) {
+      this._sendUpdatesJob!.trigger();
     }
 
     // Mutation-less transition updates: tell the client `requesting: true`
@@ -245,17 +272,33 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
+  private async _getPendingChanges(documentId: DocumentId): Promise<Uint8Array | undefined> {
     const syncState = this._syncStates.get(documentId);
-    invariant(syncState, 'Sync state for document not found');
-    const handle = syncState.docQuery.handle;
-    if (!handle || syncState.docQuery.peek().state !== 'ready') {
+    // Still loading for its initial send, which queues the document again once it is ready.
+    if (!syncState || syncState.initialLease) {
       return;
     }
-    const doc = handle.doc();
-    if (!doc) {
+    using lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
+    if (!lease.loaded) {
+      // Gone from this host (e.g. wiped by garbage collection); its next save, if any, queues it again.
+      const [storedHeads] = await this._params.automergeHost.getHeads([documentId]);
+      if (storedHeads === undefined) {
+        return;
+      }
+      try {
+        await asyncTimeout(lease.waitUntilReady(), RELOAD_TIMEOUT);
+      } catch (err) {
+        log.warn('document could not be reloaded for an update, retrying', { documentId, err });
+        this._pendingUpdates.add(documentId);
+        this._sendUpdatesJob?.trigger();
+        return;
+      }
+    }
+    // Unsubscribed or closed while reloading.
+    if (this._syncStates.get(documentId) !== syncState) {
       return;
     }
+    const doc = lease.doc();
     const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
     if (mutation.length === 0) {
       return;
@@ -264,7 +307,7 @@ export class DocumentsSynchronizer extends Resource {
     return mutation;
   }
 
-  private async _writeMutation(documentId: DocumentId, mutation: Uint8Array): Promise<void> {
+  private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return;
     }
@@ -272,13 +315,19 @@ export class DocumentsSynchronizer extends Resource {
 
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const headsBefore = A.getHeads(syncState.docQuery.handle.doc());
-    // This will update corresponding handle in the repo.
-    await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
+    // Resident before the import, so the mutation merges into the document's stored history rather
+    // than into an empty document that would leave it parked as a change without its dependencies.
+    // A load that fails rejects the whole update, and the client re-sends the batch.
+    using lease = await this._params.automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, {
+      timeout: RELOAD_TIMEOUT,
+    });
+    invariant(lease, 'Document not found');
+    const headsBefore = A.getHeads(lease.doc());
+    using _imported = await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.
-      syncState.lastSentHead = A.getHeads(syncState.docQuery.handle.doc());
+      syncState.lastSentHead = A.getHeads(lease.doc());
     }
   }
 }

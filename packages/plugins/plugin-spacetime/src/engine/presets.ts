@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Model } from '#types';
+import { Model } from '#types';
 
 import firetruckObj from '../../assets/models/firetruck.obj?raw';
 import raceObj from '../../assets/models/race.obj?raw';

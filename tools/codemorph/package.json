@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codemorph",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
@@ -13,9 +13,5 @@
   "author": "info@dxos.org",
   "scripts": {
     "codemorph": "vite-node ./src/main.ts"
-  },
-  "dependencies": {
-    "ts-morph": "catalog:"
-  },
-  "devDependencies": {}
+  }
 }

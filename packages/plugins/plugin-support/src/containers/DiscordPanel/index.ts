@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { DiscordPanel as default } from './DiscordPanel';
+export { DiscordPanel as default } from './DiscordPanel.tsx';

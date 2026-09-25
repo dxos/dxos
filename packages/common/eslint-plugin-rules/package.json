@@ -1,6 +1,6 @@
 {
   "name": "@dxos/eslint-plugin-rules",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -13,6 +13,10 @@
   "type": "module",
   "exports": {
     ".": "./index.js"
+  },
+  "devDependencies": {
+    "@dxos/plugin-chess": "workspace:*",
+    "@typescript-eslint/parser": "catalog:"
   },
   "publishConfig": {
     "access": "public"

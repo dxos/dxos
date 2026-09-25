@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Feed, Obj } from '@dxos/echo';
 
-import * as Channel from './Channel';
+import * as Channel from './Channel.ts';
 
 describe('Channel', () => {
   test('make() defaults to the feed backend with a Feed config', ({ expect }) => {

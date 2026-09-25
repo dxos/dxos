@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
@@ -67,7 +67,7 @@ export class FeedDataSource implements IndexDataSource {
 
     // We also add new cursors from all previously unindexed spaces.
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 
@@ -130,9 +130,9 @@ export class FeedDataSource implements IndexDataSource {
           // Process blocks
           for (const block of result.blocks) {
             try {
-              // Inject the block's queue position so indexed feed items carry a KEY_QUEUE_POSITION
-              // foreign key (mirrors the local feed-service read path); the index snapshot persists it.
-              const data = EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON;
+              // Stamp the block's id and position (mirrors the local feed-service read path); the index
+              // snapshot persists them, which is how a reader recognises a block it already applied.
+              const data = EchoFeedCodec.decodeBlock(block) as ObjectJSON;
 
               objects.push({
                 spaceId: cursor.spaceId,
@@ -140,6 +140,7 @@ export class FeedDataSource implements IndexDataSource {
                 queueNamespace: cursor.resourceId,
                 documentId: null,
                 recordId: null,
+                queuePosition: block.position ?? null,
                 data,
                 createdAt: null,
                 updatedAt: block.timestamp,

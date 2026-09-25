@@ -28,12 +28,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -70,9 +64,6 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -89,9 +80,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

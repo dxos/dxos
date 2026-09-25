@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './skills';
-export * from './meta';
-export * from './types';
+export * as ChessPlugin from './ChessPlugin.ts';
+export * from '#meta';
+export * from '#types';

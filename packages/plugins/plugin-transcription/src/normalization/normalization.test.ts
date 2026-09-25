@@ -2,19 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
 
-import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { type MessageWithRangeId, sentenceNormalization } from './normalization.ts';
 
 const sender: Actor.Actor = {
   identityDid: 'did:key:123',

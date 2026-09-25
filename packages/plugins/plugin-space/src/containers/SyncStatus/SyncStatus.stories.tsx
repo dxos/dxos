@@ -6,7 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { SpaceId } from '@dxos/keys';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import {
+  type EdgeStatus,
+  EdgeStatus_ConnectionState,
+  EdgeStatusSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -14,18 +19,19 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { STALLED_TIMEOUT } from '#hooks';
 import { translations } from '#translations';
 
-import { SyncStatusIndicator } from './SyncStatus';
+import { SyncStatusIndicator } from './SyncStatus.tsx';
 
-const createEdgeStatus = (props: Partial<EdgeStatus> = {}): EdgeStatus => ({
-  state: EdgeStatus.ConnectionState.CONNECTED,
-  rtt: 32,
-  uptime: 60_000,
-  rateBytesUp: 0,
-  rateBytesDown: 0,
-  messagesSent: 128,
-  messagesReceived: 256,
-  ...props,
-});
+const createEdgeStatus = (props: Partial<EdgeStatus> = {}): EdgeStatus =>
+  buf.create(EdgeStatusSchema, {
+    state: EdgeStatus_ConnectionState.CONNECTED,
+    rtt: 32,
+    uptime: 60_000,
+    rateBytesUp: 0,
+    rateBytesDown: 0,
+    messagesSent: 128,
+    messagesReceived: 256,
+    ...props,
+  });
 
 const createSyncState = (props: Partial<PeerSyncState> = {}): SpaceSyncStateMap => ({
   [SpaceId.random()]: {
@@ -74,7 +80,7 @@ export const Offline: Story = {
   args: {
     state: {},
     saved: true,
-    edgeStatus: createEdgeStatus({ state: EdgeStatus.ConnectionState.NOT_CONNECTED }),
+    edgeStatus: createEdgeStatus({ state: EdgeStatus_ConnectionState.NOT_CONNECTED }),
   },
 };
 
@@ -87,7 +93,7 @@ export const Downloading: Story = {
 };
 
 /**
- * Outstanding documents with no bytes moving: pulses amber after the stall timeout.
+ * Outstanding documents with no bytes moving: switches to the warning icon after the stall timeout.
  */
 export const Stalled: Story = {
   args: {
@@ -108,12 +114,12 @@ export const Stalled: Story = {
 };
 
 /**
- * Outstanding documents with no connection: latches red.
+ * Outstanding documents with no connection.
  */
 export const Disconnected: Story = {
   args: {
     state: createSyncState({ missingOnRemote: 20, unsyncedDocumentCount: 20 }),
     saved: true,
-    edgeStatus: createEdgeStatus({ state: EdgeStatus.ConnectionState.NOT_CONNECTED }),
+    edgeStatus: createEdgeStatus({ state: EdgeStatus_ConnectionState.NOT_CONNECTED }),
   },
 };

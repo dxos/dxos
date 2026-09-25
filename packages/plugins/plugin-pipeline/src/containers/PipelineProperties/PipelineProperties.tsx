@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
@@ -20,7 +21,9 @@ import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
-const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
+const ColumnFormSchema = Pipeline.Column.mapFields((fields) => Struct.pick(fields, ['name'])).mapFields(
+  Struct.map(Schema.mutableKey),
+);
 
 export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.Pipeline>;
 
@@ -149,7 +152,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   }, [db, updateColumns]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
@@ -183,7 +186,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                       onValuesChanged={handleColumnValuesChanged(column)}
                     >
                       <Form.Content>
-                        <Form.FieldSet />
+                        <Form.Fields />
                       </Form.Content>
                     </Form.Root>
                     <ViewEditor
@@ -205,7 +208,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

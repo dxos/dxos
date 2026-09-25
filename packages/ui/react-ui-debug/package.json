@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-debug",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "In-app @dxos/log viewer (LogPanel).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,13 +12,22 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./log-buffer": {
+      "source": "./src/components/Logger/log-buffer.ts",
+      "types": "./dist/types/src/components/Logger/log-buffer.d.ts",
+      "import": "./dist/lib/log-buffer.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -38,14 +47,11 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:"
+    "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

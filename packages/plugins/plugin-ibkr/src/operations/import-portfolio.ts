@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Obj } from '@dxos/echo';
 
-import { IbkrImportError } from '../errors';
-import { parseCash, parsePositions, parseTrades } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
-import { getOrCreatePortfolioFeed } from './feed';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { IbkrImportError } from '../errors.ts';
+import { parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport> =
   IbkrOperation.ImportPortfolioReport.pipe(

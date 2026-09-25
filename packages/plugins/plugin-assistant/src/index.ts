@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './skills';
-export * from './meta';
-export * from './paths';
-export * from './types';
+export * as AssistantPlugin from './AssistantPlugin.ts';
+export * from '#meta';
+export * from './paths.ts';
+export * from '#types';

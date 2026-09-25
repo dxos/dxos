@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import { useCallback } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import type * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import { use, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { invariant } from '@dxos/invariant';
+import { NoHandlerError } from '@dxos/compute/errors';
+import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { Capabilities } from '../../common';
-import { type Capability } from '../../core';
-import { useOptionalPluginManager, usePluginManager } from '../components';
-
-/** Stable empty result for capability lookups made outside a plugin manager. */
-const emptyCapabilities = Atom.make(() => [] as const);
+import { Capabilities } from '../../common/index.ts';
+import { type Capability } from '../../core/index.ts';
+import { usePluginManager } from '../components/index.ts';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);
@@ -29,30 +29,37 @@ export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>) => 
 
 /**
  * Hook to request a capability from the plugin context.
+ *
+ * Suspends (throws the contribution promise) while nothing has contributed the interface yet, so a
+ * reader that renders before its provider activates parks at its nearest Suspense boundary. An
+ * invariant here cannot tell "not yet" from "never": most providers are idle-gated or wait on a
+ * runtime event, so the reader legitimately renders first, and hard-failing on that blanks the
+ * subtree. Declaring the dependency as the module's `requires` is NOT the alternative — that
+ * demotes the reader's module into the provider's (later) wave.
+ *
  * @returns The capability.
- * @throws If no capability is found.
  */
-// TODO(burdon): Option not to throw?
 export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
+  const manager = usePluginManager();
   const capabilities = useCapabilities(interfaceDef);
-  invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+  if (capabilities.length === 0) {
+    throw manager.capabilities.waitForPromise(interfaceDef);
+  }
   return capabilities[0];
 };
 
 /**
- * Hook to request capabilities without requiring a plugin manager.
- * @returns An array of capabilities, or an empty array when rendered outside a {@link PluginManagerProvider}.
+ * Hook to request capabilities that a plugin may or may not contribute.
+ * @returns An array of capabilities, empty when none is registered.
  */
 export const useOptionalCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): readonly T[] => {
-  const manager = useOptionalPluginManager();
-  return useAtomValue(
-    manager ? manager.capabilities.atom(interfaceDef) : (emptyCapabilities as Atom.Atom<readonly T[]>),
-  );
+  const manager = usePluginManager();
+  return useAtomValue(manager.capabilities.atom(interfaceDef));
 };
 
 /**
- * Hook to request a single capability without requiring a plugin manager.
- * @returns The first matching capability, or `undefined` when none is registered (or there is no plugin manager).
+ * Hook to request a single capability that a plugin may or may not contribute.
+ * @returns The first matching capability, or `undefined` when none is registered.
  */
 export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T>): T | undefined =>
   useOptionalCapabilities(interfaceDef)[0];
@@ -65,6 +72,17 @@ export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T
 export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T => {
   const atom = useCapability(atomCapability);
   return useAtomValue(atom);
+};
+
+/**
+ * Tolerant variant of {@link useAtomCapability}: returns `undefined` while the atom capability is
+ * not registered, rather than throwing. Use it wherever a reader can render before its provider —
+ * a provider gated on a genuine runtime event (a status indicator whose state arrives with the
+ * client) cannot be pulled onto the startup pass with `requires`.
+ */
+export const useOptionalAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T | undefined => {
+  const atom = useOptionalCapability(atomCapability);
+  return useAtomValue(atom ?? emptyAtomValue) as T | undefined;
 };
 
 /**
@@ -113,3 +131,66 @@ export const useOptionalAtomCapabilityState = <T>(
  * Hook to get the operation invoker capability.
  */
 export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapability(Capabilities.OperationInvoker);
+
+/**
+ * Suspensefully resolves an operation's handler as an effect fn: `(input) => Effect<Output>`.
+ * With `map`, binds the component's callback arguments to the operation input instead:
+ * `(...args) => Effect<Output>`.
+ *
+ * Resolves against the merged {@link Capabilities.OperationHandlers} set. Handler sets are all
+ * registered by startup (only handler BODIES load lazily), so the component suspends only while
+ * the matched handler's module loads. Throws {@link NoHandlerError} when no contributed set
+ * knows the operation.
+ *
+ * The returned effect still requires the operation's declared services; run it via
+ * {@link useSpaceCallback} or the {@link Capabilities.ProcessManagerRuntime}.
+ *
+ * @example const moveTask = useOperationHandler(TaskOperation.MoveTask);
+ * @example const move = useOperationHandler(TaskOperation.MoveTask, (task: Task) => ({ task: Ref.make(task) }));
+ */
+export const useOperationHandler: {
+  <const Def extends Operation.Definition.Any>(operation: Def): Operation.Definition.HandlerType<Def>;
+  <const Def extends Operation.Definition.Any, TArgs extends readonly unknown[]>(
+    operation: Def,
+    map: (...args: TArgs) => Operation.Definition.Input<Def>,
+  ): (...args: TArgs) => Effect.Effect<Operation.Definition.Output<Def>, any, Operation.Definition.Services<Def>>;
+} = <const Def extends Operation.Definition.Any, TArgs extends readonly unknown[]>(
+  operation: Def,
+  map?: (...args: TArgs) => Operation.Definition.Input<Def>,
+): any => {
+  const handlers = useCapability(Capabilities.OperationHandlers);
+  const withHandler = use(OperationHandlerSet.findHandler(handlers, operation));
+  if (!withHandler) {
+    throw new NoHandlerError(operation.meta.key);
+  }
+  const handler = withHandler.handler;
+  // The ref is updated in a layout effect so a discarded concurrent render's mapper (closing
+  // over that render's props) never leaks into the committed callback.
+  const mapRef = useRef(map);
+  useLayoutEffect(() => {
+    mapRef.current = map;
+  }, [map]);
+  const mapped = useCallback((...args: TArgs) => handler(mapRef.current!(...args)), [handler]);
+  return map ? mapped : handler;
+};
+
+/**
+ * Binds an operation to a UI callback in one step: `map` turns the component's callback
+ * arguments into the operation's input. The handler identity is stable across renders (the
+ * mapper and options read through refs), so it replaces per-handler `useCallback` boilerplate.
+ */
+export const useOperation = <TArgs extends readonly unknown[], TInput>(
+  operation: Operation.Definition<TInput, unknown>,
+  map: (...args: TArgs) => TInput,
+  options?: Operation.InvokeOptions,
+): ((...args: TArgs) => void) => {
+  const { invokePromise } = useOperationInvoker();
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  return useCallback(
+    (...args: TArgs) => void invokePromise(operation, mapRef.current(...args), optionsRef.current),
+    [invokePromise, operation],
+  );
+};

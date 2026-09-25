@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Chaos';
-export * from './Flock';
-export * from './Morph';
-export * from './Pulse';
+export * from './Chaos/index.ts';
+export * from './Flock/index.ts';
+export * from './Morph/index.ts';
+export * from './Pulse/index.ts';

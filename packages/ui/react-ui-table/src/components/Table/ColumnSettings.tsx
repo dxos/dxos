@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Registry, type View } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model/index.ts';
 
 type ColumnSettingsProps = {
   registry?: Registry.Registry;

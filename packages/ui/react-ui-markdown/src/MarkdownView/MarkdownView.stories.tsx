@@ -8,7 +8,7 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { MarkdownView } from './MarkdownView';
+import { MarkdownView } from './MarkdownView.tsx';
 
 random.seed(0);
 
@@ -69,7 +69,7 @@ const content = trim`
 
 export const Default: Story = {
   args: {
-    classNames: 'p-4 border border-border rounded-md overflow-y-auto bg-base-surface',
+    classNames: 'p-4 border border-separator rounded-md overflow-y-auto dx-base-surface',
     content,
   },
 };

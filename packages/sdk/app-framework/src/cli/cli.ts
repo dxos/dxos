@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { Capability, Plugin, PluginManager } from '../core';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Capability, Plugin, PluginManager } from '../core/index.ts';
 
 const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
@@ -20,15 +20,16 @@ const defaultPluginLoader =
       return { plugin };
     });
 
-type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
+type SubCommands = [Command.Command<any, any, any, any, any>, ...Array<Command.Command<any, any, any, any, any>>];
 
 export type CreateCliAppOptions = {
-  rootCommand: Command.Command<any, any, any, any>;
+  rootCommand: Command.Command<any, any, any, any, any>;
   subCommands?: SubCommands;
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   plugins?: Plugin.Plugin[];
   enabled?: string[];
+  core?: string[];
   safeMode?: boolean;
 };
 
@@ -43,8 +44,9 @@ export type CreateCliAppOptions = {
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
- * @param options.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core.
+ * @param options.plugins All plugins available to the application.
  * @param options.enabled Enabled plugins.
+ * @param options.core Plugins the CLI pins on (always enabled, never disableable). Defaults to those whose `meta.profile.tags` includes `'system'`.
  * @param options.safeMode Whether to enable safe mode, which disables optional plugins.
  */
 export const createCliApp = Effect.fn(function* ({
@@ -54,6 +56,7 @@ export const createCliApp = Effect.fn(function* ({
   pluginLoader: pluginLoaderProp,
   plugins: pluginsProp = [],
   enabled: enabledProp = [],
+  core,
   safeMode = false,
 }: CreateCliAppOptions) {
   const plugins = pluginsProp;
@@ -65,6 +68,7 @@ export const createCliApp = Effect.fn(function* ({
       pluginLoader,
       plugins,
       enabled,
+      core,
     });
 
   manager.capabilities.contribute({
@@ -79,18 +83,18 @@ export const createCliApp = Effect.fn(function* ({
     module: 'org.dxos.app-framework.atom-registry',
   });
 
-  // Activate startup event to load CLI commands and Effect layers.
+  // Activate startup event to load Effect layers.
   yield* manager.activate(ActivationEvents.Startup);
+
+  // Awaited, not forked: the command tree below is built from one read of the capability, so a
+  // command still activating when that read happens would be missing from the binary's help.
+  yield* manager.activate(ActivationEvents.CommandsRequested);
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.capabilities.getAll(Capabilities.Layer);
   const capabilityServiceLayer = Layer.succeed(Capability.Service, manager.capabilities);
   const pluginServiceLayer = Layer.succeed(Plugin.Service, manager);
-  const layer = (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(
-    capabilityServiceLayer,
-    pluginServiceLayer,
-    ...layers,
-  );
+  const layer = Layer.mergeAll(capabilityServiceLayer, pluginServiceLayer, ...layers);
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.capabilities.getAll(Capabilities.Command);

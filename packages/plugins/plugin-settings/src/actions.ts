@@ -5,9 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { meta } from '#meta';
-import { SETTINGS_ID, SETTINGS_KEY } from '#types';
-
-export { SETTINGS_ID, SETTINGS_KEY };
 
 export namespace SettingsAction {
   export class Open extends Schema.TaggedClass<Open>()(`${meta.profile.key}.open`, {

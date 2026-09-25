@@ -2,30 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { formatElapsed } from './format';
+import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext.ts';
+import { formatElapsed } from './format.ts';
 
 const TICK_MS = 1_000;
-
-//
-// Context
-//
-
-type ChatStatusContextValue = {
-  /** Whole seconds elapsed since ChatStatus.Root mounted. Only advances while `running` is true. */
-  elapsed: number;
-  /** Whether the ChatStatus.Root tick is currently active. Toggled via the ChatStatusController. */
-  running: boolean;
-};
-
-const [ChatStatusProvider, useChatStatusContext] = createContext<ChatStatusContextValue>('ChatStatus');
-
-export { useChatStatusContext };
 
 //
 // Controller
@@ -113,10 +98,11 @@ const Icon = ({ classNames, children }: IconProps) => {
   if (children !== undefined) {
     return <>{children}</>;
   }
+
   return (
     <span
       aria-hidden='true'
-      className={mx('inline-block size-2 rounded-full bg-current animate-halo-pulse', classNames)}
+      className={mx('inline-block size-2 rounded-full bg-current text-info-text animate-pulse', classNames)}
     />
   );
 };

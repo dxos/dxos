@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-menu",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Components for facilitating reactive and consistent menus.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,7 +13,11 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -35,24 +39,20 @@
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
-    "@testing-library/jest-dom": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -64,8 +64,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

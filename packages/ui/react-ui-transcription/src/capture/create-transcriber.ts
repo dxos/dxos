@@ -5,7 +5,7 @@
 import { type TranscribeConfig, type TranscribeFn, Transcriber } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from './media-stream-recorder';
+import { MediaStreamRecorder } from './media-stream-recorder.ts';
 
 // Recorder chunk interval (ms).
 const RECORD_INTERVAL = 200;
@@ -17,6 +17,10 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export type CreateTranscriberOptions = {
   audioStreamTrack: MediaStreamTrack;
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
+  /**
+   * Transcriber configuration. Must carry `endpoint` unless `transcribe` is provided; a
+   * transcriber with neither rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
+   */
   transcriberConfig?: Partial<TranscribeConfig>;
   recorderConfig?: { interval?: number };
   transcribe?: TranscribeFn;

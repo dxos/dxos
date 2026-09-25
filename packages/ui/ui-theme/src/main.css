@@ -23,7 +23,7 @@
  */
 @import 'tailwindcss' source(none);
 
-/* @theme extensions; also exported as `@dxos/ui-theme/tokens.css` for stylesheets built outside this repo. */
+/* Theme extensions; also exported as tokens.css for stylesheets built outside this repo. */
 @import './tokens.css';
 
 /* @layer dx-base, dx-tokens */
@@ -35,16 +35,19 @@
 @import './css/components/card.css';
 @import './css/components/checkbox.css';
 @import './css/components/dialog.css';
+@import './css/components/drawer.css';
 @import './css/components/focus.css';
 @import './css/components/icon.css';
 @import './css/components/input.css';
-@import './css/components/panel.css';
+@import './css/components/callout.css';
 @import './css/components/link.css';
 @import './css/components/scrollbar.css';
 @import './css/components/state.css';
 @import './css/components/surface.css';
 @import './css/components/tag.css';
 @import './css/components/text.css';
+@import './css/components/toast.css';
+@import './css/components/tour.css';
 
 /* @layer dx-components (layout) */
 @import './css/layout/main.css';
@@ -123,19 +126,21 @@
  */
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
-@plugin 'tailwindcss-radix';
 
 /**
  * Class-based dark mode.
  * The `.dark` class on an ancestor toggles `dark:` utilities.
  */
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /** Mobile */
 @custom-variant pointer-coarse (@media (pointer: coarse));
+
 /** Web */
 @custom-variant pointer-fine (@media (pointer: fine));
+
 /** Supports mouse/trackpad (Web) */
 @custom-variant hover-hover (@media (hover: hover));
+
 /** Active navigation */
 @custom-variant is-current (&[aria-current]:not([aria-current='false']));

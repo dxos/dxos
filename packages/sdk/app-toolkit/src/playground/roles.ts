@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 
 type PlaygroundRole = Role.Role<Record<string, any>>;
 

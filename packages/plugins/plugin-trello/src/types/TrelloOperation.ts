@@ -6,21 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
-import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+import * as Operation from '@dxos/compute/Operation';
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
  * Discovery only — list Trello boards reachable from a connection's token.
@@ -31,13 +23,13 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetTrelloBoards = Operation.make({
   meta: {
-    key: makeKey('getTrelloBoards'),
+    key: DXN.make('org.dxos.operation.trello.getBoards'),
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from a connection without materializing local Kanbans.',
     icon: 'ph--kanban--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
   // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
   //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
   //   forces DynamicRuntime validation to fail before the handler runs because
@@ -47,38 +39,36 @@ export const GetTrelloBoards = Operation.make({
 
 /**
  * Find-or-create the empty local Kanban for a selected Trello board so an
- * external-sync {@link Cursor.Cursor} can be created eagerly. Keyed by the
+ * external-sync cursor can be created eagerly. Keyed by the
  * board's foreign key, so it is idempotent across re-selection.
  */
 export const MaterializeTrelloTarget = Operation.make({
   meta: {
-    key: makeKey('materializeTrelloTarget'),
+    key: DXN.make('org.dxos.operation.trello.materializeTarget'),
     name: 'Materialize Trello Target',
     description: 'Create the empty local Kanban bound to a selected Trello board.',
     icon: 'ph--kanban--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
- * Bidirectional reconcile of a single Trello board bound by an external-sync
- * {@link Cursor.Cursor}.
+ * Bidirectional reconcile of every Trello board bound to a connection (one
+ * external-sync cursor per board).
  *
  * Does **not** discover boards. Pulls cards from Trello into local Expando cards
  * (keyed by foreign id), pushes locally-created and locally-edited cards back to
- * Trello, and updates the binding's `lastTick`/`lastError`.
+ * Trello, and updates each binding's `lastTick`/`lastError`.
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
-    key: makeKey('syncTrelloBoard'),
+    key: DXN.make('org.dxos.operation.trello.syncBoard'),
     name: 'Sync Trello Board',
-    description: 'Reconcile cards for the Trello board bound by a sync cursor.',
+    description: 'Reconcile cards for every Trello board bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,

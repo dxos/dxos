@@ -2,23 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-toast'),
-  () => import('./adjust'),
-  () => import('./close'),
-  () => import('./open'),
-  () => import('./revert-workspace'),
-  () => import('./scroll-into-view'),
-  () => import('./set'),
-  () => import('./switch-workspace'),
-  () => import('./toggle-expose'),
-  () => import('./update-companion'),
-  () => import('./update-complementary'),
-  () => import('./update-dialog'),
-  () => import('./update-plank-size'),
-  () => import('./update-plank-sizes'),
-  () => import('./update-popover'),
-  () => import('./update-sidebar'),
-);
+import { DeckOperation } from '#types';
+
+export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
+  LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('./add-toast.ts'))),
+  DeckOperation.Adjust.pipe(Operation.lazyHandler(() => import('./adjust.ts'))),
+  DeckOperation.HandleExternalUrl.pipe(Operation.lazyHandler(() => import('./handle-external-url.ts'))),
+  LayoutOperation.Close.pipe(Operation.lazyHandler(() => import('./close.ts'))),
+  LayoutOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),
+  LayoutOperation.RevertWorkspace.pipe(Operation.lazyHandler(() => import('./revert-workspace.ts'))),
+  LayoutOperation.ScrollIntoView.pipe(Operation.lazyHandler(() => import('./scroll-into-view.ts'))),
+  LayoutOperation.Set.pipe(Operation.lazyHandler(() => import('./set.ts'))),
+  LayoutOperation.SwitchWorkspace.pipe(Operation.lazyHandler(() => import('./switch-workspace.ts'))),
+  DeckOperation.SetExpose.pipe(Operation.lazyHandler(() => import('./set-expose.ts'))),
+  LayoutOperation.UpdateCompanion.pipe(Operation.lazyHandler(() => import('./update-companion.ts'))),
+  LayoutOperation.UpdateComplementary.pipe(Operation.lazyHandler(() => import('./update-complementary.ts'))),
+  LayoutOperation.UpdateDialog.pipe(Operation.lazyHandler(() => import('./update-dialog.ts'))),
+  LayoutOperation.UpdateDrawer.pipe(Operation.lazyHandler(() => import('./update-drawer.ts'))),
+  DeckOperation.UpdatePlankSize.pipe(Operation.lazyHandler(() => import('./update-plank-size.ts'))),
+  DeckOperation.UpdatePlankSizes.pipe(Operation.lazyHandler(() => import('./update-plank-sizes.ts'))),
+  LayoutOperation.UpdatePopover.pipe(Operation.lazyHandler(() => import('./update-popover.ts'))),
+  LayoutOperation.UpdateSidebar.pipe(Operation.lazyHandler(() => import('./update-sidebar.ts'))),
+]);

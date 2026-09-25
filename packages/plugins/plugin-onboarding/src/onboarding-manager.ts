@@ -2,24 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Capabilities } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Effect from 'effect/Effect';
+
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as HubAccount from '@dxos/app-toolkit/Account';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
+import { type Client } from '@dxos/client';
+import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientOperation } from '@dxos/plugin-client';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { HelpOperation } from '@dxos/plugin-support';
-import { type Client } from '@dxos/react-client';
-import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
+import * as Account from '@dxos/plugin-client/Account';
+import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { WELCOME_SCREEN } from './components';
-import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
-import { meta } from './meta';
-import { queryAllCredentials, removeQueryParamByValue } from './util';
+import hero from '../assets/hero.webp?url';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
+import { meta } from './meta.ts';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -120,8 +125,8 @@ export class OnboardingManager {
     // is checked separately on the profile page (where users without an account see
     // a "no edge access" warning + request-access form).
     if (this._identity) {
-      // A device invitation targets a different identity, so accepting it requires a storage
-      // reset; confirm via the reset dialog rather than dropping the invitation silently. Stop
+      // A device invitation targets a different identity, so accepting it requires deleting this
+      // one; confirm via the reset dialog rather than dropping the invitation silently. Stop
       // here — no recovery/agent provisioning for an identity the user may be about to abandon.
       if (this._deviceInvitationCode !== undefined) {
         await this._confirmJoinNewIdentity();
@@ -152,9 +157,17 @@ export class OnboardingManager {
       // Ensure that agent is present.
       await this._createAgent();
       return;
-    } else if (!this._skipAuth) {
-      // No identity yet: show welcome screen.
-      await this._showWelcome();
+    } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
+      // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
+      // updates then race through the operation layer and a welcome landing second hides the join.
+      // A `?token=...` param means a magic-link redemption is about to run: show the "authorizing"
+      // dialog instead of the login form, so the multi-second server + HALO-replication wait doesn't
+      // look like a stuck login gate.
+      if (this._token) {
+        await this._showAuthorizingDevice();
+      } else {
+        await this._showWelcome();
+      }
       if (aborted()) {
         return;
       }
@@ -170,32 +183,26 @@ export class OnboardingManager {
       // URL-driven signup: `?accountInvitationCode=...&email=...`. The user
       // landed here from the invitation email; redeem the code with the
       // emailed address.
-      await this._redeemAccountInvitation();
-      await this._setupRecovery();
-      await this._startHelp();
-      await this._createAgent();
+      if (await this._redeemAccountInvitation()) {
+        await this._setupRecovery();
+        await this._startHelp();
+        await this._createAgent();
+      }
     } else if (!this._identity && this._skipAuth) {
-      // Auth disabled (e.g. integration tests): just bring up a fresh identity.
-      await this._createIdentity();
-      if (aborted()) {
-        return;
-      }
-      await this._setupRecovery();
-      if (aborted()) {
-        return;
-      }
-      await this._startHelp();
-      if (aborted()) {
-        return;
-      }
-      await this._createAgent();
+      await this._startFreshIdentity();
     } else if (!this._identity && this._token) {
       // Login flow: redeem the recovery token from `/account/login` to restore
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
       // any pre-existing IdentityRecovery credentials before `_setupRecovery`
       // checks them, so we don't prompt a user who already has a passkey.
-      await this._login();
-      await this._setupRecovery();
+      const result = await this._login();
+      if (result === 'ok') {
+        await this._setupRecovery();
+      } else {
+        // Fall back to the login form rather than leaving the user on the "authorizing" dialog forever.
+        await this._showLoginFailedToast(result);
+        await this._showWelcome();
+      }
     }
     if (aborted()) {
       return;
@@ -207,6 +214,22 @@ export class OnboardingManager {
     }
   }
 
+  /**
+   * Picks up after the local identity was deleted in place. A plain logout (no `target`) lands where a
+   * first run does — the welcome screen, or a fresh identity where auth is disabled; a `target` means
+   * the caller already opened the join or recovery flow that brings the next identity in.
+   */
+  async onIdentityDeleted({ target }: { target?: string } = {}): Promise<void> {
+    if (this._destroyed || target !== undefined) {
+      return;
+    }
+    if (this._skipAuth) {
+      await this._startFreshIdentity();
+    } else {
+      await this._showWelcome();
+    }
+  }
+
   async destroy(): Promise<void> {
     this._destroyed = true;
     await this._ctx.dispose();
@@ -214,8 +237,8 @@ export class OnboardingManager {
 
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
-    return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    return credentials.filter((credential) =>
+      credential.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.IdentityRecovery'),
     );
   }
 
@@ -243,11 +266,18 @@ export class OnboardingManager {
     });
   }
 
-  private async _login(): Promise<void> {
+  /** `invokePromise` resolves with `{ error }` rather than rejecting, so the result must be
+   * inspected or a failed redemption is silently swallowed. */
+  private async _login(): Promise<'ok' | 'invalid-token' | 'failed'> {
     invariant(this._token);
-    await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
-    this._token && removeQueryParamByValue(this._token);
+    const { error } = await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
+    removeQueryParamByValue(this._token);
     removeQueryParamByValue('login');
+    if (error) {
+      log.warn('token redemption failed', { error });
+      return isInvalidRecoveryToken(error) ? 'invalid-token' : 'failed';
+    }
+    return 'ok';
   }
 
   /**
@@ -255,26 +285,55 @@ export class OnboardingManager {
    * fresh local identity and bind it. Account restoration is intentionally not
    * supported on this path -- magic-link login (`/account/login`) handles
    * recovery for real emails, and test emails are always fresh (no restore).
+   *
+   * Resolves false when the signup did not complete — the email already has an
+   * account (the welcome dialog stays open so the user can log in instead), the
+   * probe was inconclusive, or identity creation / redemption failed; in the latter
+   * cases the URL params are left intact so a reload retries the signup.
    */
-  private async _redeemAccountInvitation(): Promise<void> {
+  private async _redeemAccountInvitation(): Promise<boolean> {
     invariant(this._email);
     invariant(this._hubUrl, 'hubUrl required for redemption');
 
-    await this._createIdentity();
-    invariant(this._identity, 'identity should exist after create');
-
-    const result = await this._postRedeem({
-      email: this._email,
-      identityDid: await createDidFromIdentityKey(this._identity.identityKey),
-      identityKey: this._identity.identityKey.toHex(),
-      code: this._accountInvitationCode,
+    const { _email: email, _accountInvitationCode: code } = this;
+    const ensureIdentity = Effect.gen({ self: this }, function* () {
+      yield* Effect.tryPromise(() => this._createIdentity());
+      invariant(this._identity, 'identity should exist after create');
+      return this._identity;
     });
-    if ('accountId' in result) {
-      log.info('account redeemed', { accountId: result.accountId });
+
+    // Errors are mapped inside the Effect — `runPromise` rejects with a FiberFailure, so the
+    // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
+    // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
+    const outcome = await EffectEx.runPromise(
+      HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
+        Effect.map(() => 'redeemed' as const),
+        Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
+        Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
+        Effect.catch((error) =>
+          Effect.sync(() => {
+            log.warn('signup failed; leaving signup params for retry', {
+              error: HubAccount.accountErrorType(error) ?? String(error),
+            });
+            return 'failed' as const;
+          }),
+        ),
+      ),
+    );
+    if (outcome === 'probe-unavailable' || outcome === 'failed') {
+      log.warn('could not complete signup; leaving signup params for retry');
+      return false;
+    }
+    if (outcome === 'email-registered') {
+      log.info('signup email already registered; awaiting login');
+      code && removeQueryParamByValue(code);
+      removeQueryParamByValue(email);
+      return false;
     }
 
-    this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
-    removeQueryParamByValue(this._email);
+    code && removeQueryParamByValue(code);
+    removeQueryParamByValue(email);
+    return true;
   }
 
   /**
@@ -287,55 +346,23 @@ export class OnboardingManager {
     invariant(this._identity);
     invariant(this._hubUrl);
 
-    try {
-      const result = await this._postRedeem({
+    await EffectEx.runPromise(
+      HubAccount.redeemAccessCode({
+        hub: HubAccount.createHubClient(this._hubUrl),
+        identity: this._identity,
         email: this._email,
-        identityDid: await createDidFromIdentityKey(this._identity.identityKey),
-        identityKey: this._identity.identityKey.toHex(),
         code: this._accountInvitationCode,
-      });
-      if ('accountId' in result) {
-        log.info('account bound to existing identity', { accountId: result.accountId });
-      }
-    } catch (err: any) {
-      log.info('skipped binding existing identity', { error: err?.data?.type ?? err?.message });
-    }
+      }).pipe(
+        Effect.catch((err) =>
+          Effect.sync(() => {
+            log.info('skipped binding existing identity', {
+              error: HubAccount.accountErrorType(err) ?? err.message,
+            });
+          }),
+        ),
+      ),
+    );
     removeQueryParamByValue(this._email);
-  }
-
-  private async _postRedeem(body: {
-    email: string;
-    code?: string;
-    identityDid?: string;
-    identityKey?: string;
-  }): Promise<{ accountId: string; emailVerificationSent: boolean } | { needsIdentity: true }> {
-    invariant(this._hubUrl);
-    const url = new URL('/account/invitation-code/redeem', this._hubUrl);
-    log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityDid });
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    let envelope: { success: boolean; message?: string; data?: any };
-    try {
-      envelope = (await response.json()) as { success: boolean; message?: string; data?: any };
-    } catch (parseErr) {
-      log.error('redeem response was not JSON', { status: response.status, statusText: response.statusText });
-      throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
-    }
-    if (!envelope.success) {
-      log.error('account redemption failed', {
-        status: response.status,
-        message: envelope.message,
-        data: envelope.data,
-      });
-      const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
-      error.data = envelope.data;
-      throw error;
-    }
-    log.info('account redemption ok', { data: envelope.data });
-    return envelope.data;
   }
 
   private async _showWelcome(): Promise<void> {
@@ -343,8 +370,11 @@ export class OnboardingManager {
     await this._invokePromise(LayoutOperation.UpdateDialog, {
       subject: WELCOME_SCREEN,
       type: 'alert',
-      overlayClasses: OVERLAY_CLASSES,
-      overlayStyle: OVERLAY_STYLE,
+      // Styled here rather than in the welcome screen: this manager runs in every tab to decide
+      // whether onboarding is needed, and importing the screen for its styling would put the whole
+      // onboarding UI in the resident set.
+      overlayClasses: 'dark bg-neutral-950! bg-no-repeat bg-center',
+      overlayStyle: { backgroundImage: `url(${hero})` },
     });
   }
 
@@ -352,8 +382,52 @@ export class OnboardingManager {
     await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }
 
+  /** Shown in place of the login form while a `?token=...` magic-link redemption is in flight. */
+  private async _showAuthorizingDevice(): Promise<void> {
+    await this._invokePromise(LayoutOperation.UpdateDialog, {
+      subject: AUTHORIZING_DEVICE_DIALOG,
+      type: 'alert',
+      overlayClasses: 'dark bg-neutral-950! bg-no-repeat bg-center',
+      overlayStyle: { backgroundImage: `url(${hero})` },
+    });
+  }
+
+  private async _showLoginFailedToast(reason: 'invalid-token' | 'failed'): Promise<void> {
+    const id = reason === 'invalid-token' ? 'login-link-expired-toast' : 'login-failed-toast';
+    await this._invokePromise(LayoutOperation.AddToast, {
+      id,
+      title: [`${id}.title`, { ns: meta.profile.key }],
+      description: [`${id}.description`, { ns: meta.profile.key }],
+      icon: 'ph--warning--regular',
+      closeLabel: ['close.label', { ns: osTranslations }],
+    });
+  }
+
+  /** Auth disabled (e.g. integration tests): just bring up a fresh identity. */
+  private async _startFreshIdentity(): Promise<void> {
+    const aborted = () => this._destroyed;
+    await this._createIdentity();
+    if (aborted()) {
+      return;
+    }
+    await this._setupRecovery();
+    if (aborted()) {
+      return;
+    }
+    await this._startHelp();
+    if (aborted()) {
+      return;
+    }
+    await this._createAgent();
+  }
+
   private async _createIdentity(): Promise<void> {
-    await this._invokePromise(ClientOperation.CreateIdentity, {});
+    // `invokePromise` resolves with `{ error }` rather than rejecting, so rethrow it — otherwise a
+    // failed creation only surfaces later as an invariant defect.
+    const { error } = await this._invokePromise(ClientOperation.CreateIdentity, {});
+    if (error) {
+      throw error;
+    }
   }
 
   private async _createAgent(): Promise<void> {
@@ -368,9 +442,13 @@ export class OnboardingManager {
     await this._invokePromise(ClientOperation.CreateAgent);
   }
 
-  /** The invitation code stays in the URL so it survives the reset reload. */
+  /** The reset dialog carries the code into the join flow it opens once the identity is deleted. */
   private async _confirmJoinNewIdentity(): Promise<void> {
-    await this._invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' });
+    invariant(this._deviceInvitationCode !== undefined);
+    await this._invokePromise(ClientOperation.ResetStorage, {
+      mode: 'join-new-identity',
+      invitationCode: this._deviceInvitationCode,
+    });
   }
 
   private async _openJoinIdentity(): Promise<void> {

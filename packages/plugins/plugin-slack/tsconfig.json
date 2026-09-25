@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/effect"
-    },
-    {
       "path": "../../common/errors"
     },
     {
@@ -44,9 +41,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"

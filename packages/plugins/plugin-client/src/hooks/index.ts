@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useHubClient';
+export * from './useAccountUrl.ts';
+export * from './useHubClient.ts';

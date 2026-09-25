@@ -7,9 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Blob, Database, DXN, type Err, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { CollectionItemAnnotation } from '@dxos/schema';
+import { Annotation, Blob, Collection, Database, DXN, type Error, Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * Canonical file type. Storage is backend-agnostic — `data` references a {@link Blob.Blob} object
@@ -18,11 +16,12 @@ import { CollectionItemAnnotation } from '@dxos/schema';
 export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    data: Ref.Ref(Blob.Blob).pipe(FormInputAnnotation.set(false)),
-    timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    /** Owned bytes: `SetParent` cascades the blob with the file. */
+    data: Ref.Ref(Blob.Blob).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    timestamp: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'indigo' }),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 
@@ -48,11 +47,10 @@ export const make = (props: Obj.MakeProps<typeof File>): File => Obj.make(File, 
 export const fromBytes = (
   bytes: Uint8Array,
   options: { name?: string; type: string; storage?: Blob.Storage | (string & {}) },
-): Effect.Effect<File, Err.BlobTooLargeError | Err.BlobWriteError, Database.Service> =>
+): Effect.Effect<File, Error.BlobTooLargeError | Error.BlobWriteError, Database.Service> =>
   Effect.gen(function* () {
     const blob = yield* Blob.fromBytes(bytes, { type: options.type, storage: options.storage });
     const file = make({ name: options.name, data: Ref.make(blob) });
-    Obj.setParent(blob, file);
     yield* Database.add(blob);
     return file;
   });

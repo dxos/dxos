@@ -30,13 +30,7 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-syntax-highlighter"

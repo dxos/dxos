@@ -8,7 +8,7 @@ import { describe, test, vi } from 'vitest';
 // browser extension. `matchesPattern` is pure, so a minimal stub suffices.
 vi.mock('webextension-polyfill', () => ({ default: { storage: { sync: {} } } }));
 
-const { matchesPattern } = await import('./urls');
+const { matchesPattern } = await import('./urls.ts');
 
 describe('matchesPattern', () => {
   test('matches an exact host with a trailing path glob', ({ expect }) => {

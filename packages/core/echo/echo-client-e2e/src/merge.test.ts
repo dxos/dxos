@@ -1,0 +1,392 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import { waitForCondition } from '@dxos/async';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { getObjectCore } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
+
+describe('convergence-key merging', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  // The field is assigned through meta inside an update — there is deliberately no dedicated setter.
+  const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
+    Obj.update(object, (object) => {
+      Obj.getMeta(object).convergenceKey = convergenceKey;
+    });
+
+  // The merge runs in the worker, so its records are read at the storage layer rather than
+  // through a client API — deliberately: the client keeps no merge surface.
+  const getMergedFrom = (object: Obj.Unknown) => getObjectCore(object).getMergedFrom();
+
+  // Merging is triggered by the worker's indexing stream, so convergence is awaited rather than
+  // synchronous with any one query.
+  const waitForLiveCount = async (db: any, count: number, type: Parameters<typeof Filter.type>[0] = TestSchema.Task) =>
+    waitForCondition({
+      condition: async () => (await db.query(Filter.type(type)).run()).length === count,
+      timeout: 10_000,
+    });
+
+  // The convergence key rides in `@meta`, so it has to survive create -> add -> flush -> query.
+  test('a convergence key round-trips through the database', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const task = Obj.make(TestSchema.Task, { title: 'seeded' });
+      setConvergenceKey(task, 'org.example.seed');
+      const added = yield* Database.add(task);
+      expect(Obj.getMeta(added).convergenceKey).toBe('org.example.seed');
+
+      yield* Database.flush();
+
+      const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(Obj.getMeta(queried).convergenceKey).toBe('org.example.seed');
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('the convergence key survives a reload from storage', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const task = Obj.make(TestSchema.Task, { title: 'seeded' });
+      setConvergenceKey(task, 'org.example.seed');
+      yield* Database.add(task);
+      yield* Database.flush();
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+
+    await peer.close();
+    await peer.open();
+    const reopened = await peer.openLastDatabase();
+
+    await Effect.gen(function* () {
+      const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(Obj.getMeta(queried).convergenceKey).toBe('org.example.seed');
+    }).pipe(Effect.provide(Database.layer(reopened)), EffectEx.runAndForwardErrors);
+  });
+
+  // The duplication this exists to fix: two uncoordinated writers each create "the same" object.
+  test('the worker collapses duplicates to one live object and folds the loser-only fields', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'from the first writer' }));
+    setConvergenceKey(first, 'org.example.seed');
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' }));
+    setConvergenceKey(second, 'org.example.seed');
+    await db.flush();
+
+    // No merge call anywhere — the worker notices the collision while indexing the writes.
+    await waitForLiveCount(db, 1);
+
+    const after = await db.query(Filter.type(TestSchema.Task)).run();
+    expect(after[0].id).toBe(first.id);
+    // The winner absorbed the field only the loser defined.
+    expect(after[0].title).toBe('from the first writer');
+    expect(after[0].description).toBe('only here');
+  });
+
+  test('a relation anchored at a merge loser stays visible and is judged at the survivor', async ({ expect }) => {
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
+    });
+    const db = await peer.createDatabase();
+
+    // Ids are ULIDs minted in creation order, so the first-created duplicate wins the merge.
+    const winner = db.add(Obj.make(TestSchema.Person, { name: 'Alice (first writer)' }));
+    setConvergenceKey(winner, 'org.example.alice');
+    const loser = db.add(Obj.make(TestSchema.Person, { name: 'Alice (second writer)' }));
+    setConvergenceKey(loser, 'org.example.alice');
+
+    const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+    const relation = db.add(
+      Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: loser,
+        [Relation.Target]: org,
+        role: 'CEO',
+      }),
+    );
+    await db.flush();
+    await waitForLiveCount(db, 1, TestSchema.Person);
+
+    // A merged-away endpoint is renamed, not removed: transitive deletion follows the redirect
+    // and judges the survivor, so the relation stays in queries.
+    expect(Relation.isDeleted(relation)).toBe(false);
+    const relations = await db.query(Filter.type(TestSchema.EmployedBy)).run();
+    expect(relations).toHaveLength(1);
+
+    // Deletion semantics still apply — at the live end of the chain: removing the survivor
+    // transitively deletes the relation.
+    db.remove(winner);
+    expect(Relation.isDeleted(relation)).toBe(true);
+    const afterDelete = await db.query(Filter.type(TestSchema.EmployedBy)).run();
+    expect(afterDelete).toHaveLength(0);
+  });
+
+  test('a child whose parent merged away stays visible', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const winner = db.add(Obj.make(TestSchema.Person, { name: 'Alice (first writer)' }));
+    setConvergenceKey(winner, 'org.example.alice');
+    const loser = db.add(Obj.make(TestSchema.Person, { name: 'Alice (second writer)' }));
+    setConvergenceKey(loser, 'org.example.alice');
+
+    const child = db.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
+    Obj.setParent(child, loser);
+    await db.flush();
+    await waitForLiveCount(db, 1, TestSchema.Person);
+
+    expect(Obj.isDeleted(child)).toBe(false);
+    const tasks = await db.query(Filter.type(TestSchema.Task)).run();
+    expect(tasks.map(({ id }) => id)).toContain(child.id);
+  });
+
+  test('a merged-away object redirects to the winner instead of vanishing', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+    for (const task of [first, second]) {
+      setConvergenceKey(task, 'org.example.seed');
+    }
+    await db.flush();
+    await waitForLiveCount(db, 1);
+
+    // The loser is tombstoned but still resolvable, which is what makes a stale reference to it
+    // reach the winner rather than dangle.
+    expect(getObjectCore(second).getMergedInto()).toBe(first.id);
+    expect(getObjectCore(first).getMergedInto()).toBeUndefined();
+  });
+
+  test('the worker repoints references to a merged-away object at the winner', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+    for (const task of [first, second]) {
+      setConvergenceKey(task, 'org.example.seed');
+    }
+    // Declares no convergence key, so it is a referrer rather than a merge candidate, and it points
+    // at the object that is about to lose the merge.
+    const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
+    await db.flush();
+
+    // No rewrite call anywhere: the worker finds the referrer through the reverse-reference index
+    // right after tombstoning the loser.
+    await waitForCondition({
+      condition: () => referrer.previous?.uri.includes(first.id) === true,
+      timeout: 10_000,
+    });
+    expect(referrer.previous!.uri).toContain(first.id);
+  });
+
+  test('a reference the rewrite has not reached resolves through the redirect', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+    for (const task of [first, second]) {
+      setConvergenceKey(task, 'org.example.seed');
+    }
+    await db.flush();
+    await waitForLiveCount(db, 1);
+
+    // The §4.11 freshness residual: a referrer written after the merge is not re-presented by the
+    // loser's key, so its ref stays un-rewritten until the loser next re-indexes — and resolution
+    // follows `system.mergedInto` to the survivor regardless, which is what makes rewriting an
+    // optimization rather than a correctness requirement.
+    const referrer = db.add(Obj.make(TestSchema.Task, { title: 'late referrer', previous: Ref.make(second) }));
+    expect(referrer.previous!.uri).toContain(second.id);
+    expect(referrer.previous!.target?.id).toBe(first.id);
+    const loaded = await referrer.previous!.load();
+    expect(loaded.id).toBe(first.id);
+  });
+
+  test('references inside arrays are rewritten too', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+    for (const task of [first, second]) {
+      setConvergenceKey(task, 'org.example.seed');
+    }
+
+    // A collection-shaped referrer: the refs sit inside an array, where a top-level-only
+    // traversal would never look — precisely how a root collection points at its members.
+    const untouched = db.add(Obj.make(TestSchema.Task, { title: 'untouched' }));
+    const referrer = db.add(
+      Obj.make(TestSchema.Task, {
+        title: 'referrer',
+        subTasks: [Ref.make(second), Ref.make(untouched)],
+      }),
+    );
+    await db.flush();
+
+    await waitForCondition({
+      condition: () => referrer.subTasks?.[0]?.uri.includes(first.id) === true,
+      timeout: 10_000,
+    });
+    // The sibling entry the merge never touched keeps its target.
+    expect(referrer.subTasks![1].uri).toContain(untouched.id);
+  });
+
+  test('the winner records what merged into it', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const tasks = ['first', 'second', 'third'].map((title) => {
+      const task = db.add(Obj.make(TestSchema.Task, { title }));
+      setConvergenceKey(task, 'org.example.seed');
+      return task;
+    });
+    const [winner, ...losers] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
+    expect(getMergedFrom(winner)).toEqual([]);
+    await db.flush();
+    await waitForLiveCount(db, 1);
+
+    expect(getMergedFrom(winner)).toEqual(losers.map(({ id }) => id).sort());
+
+    // Each loser still resolves, so the recorded ids are usable rather than dangling.
+    const all = await db.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run();
+    for (const id of getMergedFrom(winner)) {
+      expect(all.some((task) => task.id === id)).toBe(true);
+    }
+  });
+
+  test('a collapsing chain carries the absorbed ids forward', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const tasks = ['a', 'b', 'c'].map((title) => {
+      const task = db.add(Obj.make(TestSchema.Task, { title }));
+      setConvergenceKey(task, 'org.example.seed');
+      return task;
+    });
+    const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
+
+    // A peer with a partial view already merged the two larger ones — staged through the cores
+    // exactly as that peer's worker would have written it, in the same tick as the adds.
+    const largestCore = getObjectCore(largest);
+    largestCore.setMergedInto(middle.id, largestCore.getHeads());
+    largestCore.setDeleted(true);
+    getObjectCore(middle).addMergedFrom([largest.id]);
+    expect(getMergedFrom(middle)).toEqual([largest.id]);
+    await db.flush();
+
+    // The worker collapses the remaining pair; the chain must not lose the id `middle` had
+    // already absorbed.
+    await waitForCondition({
+      condition: () => getMergedFrom(smallest).length === 2,
+      timeout: 10_000,
+    });
+    expect(getMergedFrom(smallest)).toEqual([middle.id, largest.id].sort());
+  });
+
+  // The §2 failure shape: callers that read `results.length` or assert a singleton break on a
+  // duplicate they did not create. The query must never hand them two.
+  describe('worker-driven merging', () => {
+    test('duplicates converge without anyone calling the merge', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const tasks = ['first', 'second'].map((title) => {
+        const task = db.add(Obj.make(TestSchema.Task, { title, description: title }));
+        setConvergenceKey(task, 'org.example.seed');
+        return task;
+      });
+      await db.flush();
+      const winner = tasks[0].id < tasks[1].id ? tasks[0] : tasks[1];
+
+      // No merge call anywhere — the worker notices the collision while indexing the writes.
+      await waitForLiveCount(db, 1);
+      const results = await db.query(Filter.type(TestSchema.Task)).run();
+      expect(results[0].id).toBe(winner.id);
+      expect(getMergedFrom(winner)).toHaveLength(1);
+    });
+
+    test('the merge is durable, not filtered out of one result', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const title of ['first', 'second', 'third']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title }));
+        setConvergenceKey(task, 'org.example.seed');
+      }
+      await db.flush();
+      await waitForLiveCount(db, 1);
+
+      // A fresh query sees one because the losers are tombstoned, not because it re-filtered.
+      const live = await db.query(Filter.type(TestSchema.Task)).run();
+      expect(live).toHaveLength(1);
+      const all = await db.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run();
+      expect(all).toHaveLength(3);
+    });
+
+    test('repeated queries settle rather than looping', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const title of ['first', 'second']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title }));
+        setConvergenceKey(task, 'org.example.seed');
+      }
+      await db.flush();
+      await waitForLiveCount(db, 1);
+
+      // The merge writes re-enter the indexing stream; idempotence is what stops that recurring.
+      const winner = (await db.query(Filter.type(TestSchema.Task)).run())[0];
+      const absorbed = getMergedFrom(winner);
+      expect(absorbed).toHaveLength(1);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const results = await db.query(Filter.type(TestSchema.Task)).run();
+        expect(results).toHaveLength(1);
+        expect(results[0].id).toBe(winner.id);
+        expect(getMergedFrom(winner)).toEqual(absorbed);
+      }
+    });
+
+    test('a query over entities with no convergence key is untouched', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+    });
+
+    test('entities with distinct convergence keys are both returned', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const convergenceKey of ['org.example.seed', 'org.example.seed@2']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title: convergenceKey }));
+        setConvergenceKey(task, convergenceKey);
+      }
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+    });
+  });
+});

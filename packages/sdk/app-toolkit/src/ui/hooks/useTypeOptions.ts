@@ -9,7 +9,7 @@ import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { TypeOptions } from '../../echo';
+import { TypeOptions } from '../../echo/index.ts';
 
 export const useTypeOptions = ({
   db,

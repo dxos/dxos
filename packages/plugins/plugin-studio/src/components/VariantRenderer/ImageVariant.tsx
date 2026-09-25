@@ -8,7 +8,7 @@ import { MediaPlayer } from '@dxos/react-ui';
 
 import { type VariantContent } from '#surfaces';
 
-import { useVariantSource } from '../../hooks';
+import { useVariantSource } from '../../hooks/index.ts';
 
 export type ImageVariantProps = {
   variant: VariantContent;
@@ -22,7 +22,7 @@ export const ImageVariant = ({ variant }: ImageVariantProps) => {
     return null;
   }
 
-  return <MediaPlayer classNames='dx-container' src={src} fit='contain' alt={variant.generation?.prompt} />;
+  return <MediaPlayer classNames='dx-expand' src={src} fit='contain' alt={variant.generation?.prompt} />;
 };
 
 ImageVariant.displayName = 'ImageVariant';

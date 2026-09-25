@@ -7,11 +7,11 @@ import { describe, expect, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector/types';
+import { AccessToken, Connection } from '@dxos/link';
 
-import { Blog, Publisher } from '../types';
-import { runSyncPosts } from './sync-posts';
+import { Blog, Publisher } from '#types';
+
+import { runSyncPosts } from './sync-posts.ts';
 
 const SOURCE = 'stub.test';
 
@@ -99,7 +99,8 @@ const makePublicationWithPost = ({
     }
   });
   Obj.update(publication, (publication) => {
-    publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+    publication.posts ??= [];
+    publication.posts.push(Ref.make(post));
   });
   return { publication, post };
 };

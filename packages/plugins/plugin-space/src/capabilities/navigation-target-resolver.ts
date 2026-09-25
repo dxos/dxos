@@ -4,17 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, type AppCapabilities as AppCaps, GraphPath } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCaps from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { resolveCollectionObjectPath } from '../collection-path';
-import { resolveTypeSectionPath } from '../type-section-path';
+import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -24,7 +25,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
               label: 'Spaces settings',
               type: 'settings',
             },
@@ -38,13 +39,14 @@ export default Capability.makeModule(
 
         const { db } = yield* Database.Service;
         const ref = db.makeRef(eid);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
         if (!object) {
           return [];
         }
 
         const typename = Entity.getTypename(object);
-        if (!typename) {
+        const typeUri = Entity.getTypeURI(object);
+        if (!typename || !typeUri) {
           return [];
         }
 
@@ -64,7 +66,8 @@ export default Capability.makeModule(
           ...(collectionPath ? [{ path: collectionPath, label, type: typename }] : []),
           ...(sectionPath ? [{ path: sectionPath, label, type: typename }] : []),
           {
-            path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
+            // Type nodes are keyed by slug, which for a stored schema is its entity id, not its typename.
+            path: GraphPath.getObjectPath(db.spaceId, GraphPath.getTypeSlugFromUri(typeUri), object.id),
             label,
             type: typename,
             position: Position.last,
@@ -72,6 +75,6 @@ export default Capability.makeModule(
         ];
       });
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
   }),
 );

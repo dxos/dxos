@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { FeedOperation, Subscription } from '../types';
-import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
+import { FeedOperation, Subscription } from '#types';
+
+import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources/index.ts';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
@@ -29,6 +32,25 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
   Operation.withHandler(
     Effect.fnUntraced(function* ({ feed }) {
       const subscriptionFeed = yield* Database.load(feed);
+
+      // Live status for the article's statusbar. The fetch itself is one opaque request — nothing to
+      // count until the reply is parsed — so the run starts indeterminate and gains a total once the
+      // posts are in hand.
+      const traceWriter = yield* Trace.TraceService;
+      const progressKey = FeedOperation.createSyncProgressKey(subscriptionFeed);
+      const syncLabel = `Syncing ${subscriptionFeed.name ?? 'feed'}`;
+      let current = 0;
+      let total: number | undefined;
+      const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
+        current = patch.current ?? current;
+        total = patch.total ?? total;
+        traceWriter.write(Trace.StatusUpdate, {
+          message: patch.message ?? syncLabel,
+          progress: { key: progressKey, current, total },
+        });
+      };
+      reportStatus({ current: 0 });
+
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');
       const echoFeed = yield* Database.load(subscriptionFeed.feed);
@@ -36,7 +58,12 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(Feed.getFeedUri(echoFeed), 'Feed not stored in a space.');
 
       const fetcher = getFetcher(subscriptionFeed.type);
-      const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() });
+      const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() }).pipe(
+        // The meter must not outlive the run: a fetch that fails leaves the monitor with no terminal
+        // status, and it holds the statusbar forever with a control that cancels nothing.
+        Effect.tapError(() => Effect.sync(() => reportStatus({ message: PROGRESS_STATUS_FAILED }))),
+      );
+      reportStatus({ total: posts.length });
 
       // Dedup against existing posts already in the backing queue. The
       // `cursor` field on the subscription was previously used as a single-guid
@@ -95,6 +122,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       // the `Magazine.keep` bound (enforced in
       // `MagazineArticle.handleCurate`) prevents the visible list from
       // growing unboundedly.
+      reportStatus({ current: posts.length - newPosts.length });
       if (newPosts.length > 0) {
         const feedRef = Ref.make(subscriptionFeed);
         const postObjects = newPosts.map((post) =>
@@ -133,6 +161,8 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
           });
         }
       }
+
+      reportStatus({ current: posts.length, message: PROGRESS_STATUS_COMPLETE });
     }),
   ),
 );

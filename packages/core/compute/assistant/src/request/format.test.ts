@@ -6,14 +6,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Instructions, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import { Database, Obj, Ref, URI } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { Text } from '@dxos/schema';
 
-import { formatSystemPrompt } from './format';
+import { formatSystemPrompt } from './format.ts';
 
 const testLayer = () =>
   Layer.mergeAll(

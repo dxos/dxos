@@ -5,20 +5,20 @@
 import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
-import * as Doc from './Doc';
+import * as Doc from './Doc.ts';
 
 /**
  * A single find/replace edit applied to a text document. This is the structured form of the diff
  * protocol described in document skills' instructions.
  */
 export const Edit = Schema.Struct({
-  oldString: Schema.String.annotations({
+  oldString: Schema.String.annotate({
     description: 'The exact text to find and replace.',
   }),
-  newString: Schema.String.annotations({
+  newString: Schema.String.annotate({
     description: 'The text to replace it with.',
   }),
-  replaceAll: Schema.optional(Schema.Boolean).annotations({
+  replaceAll: Schema.optional(Schema.Boolean).annotate({
     description: 'Replace all occurrences of oldString (default: replace the first occurrence).',
   }),
 });

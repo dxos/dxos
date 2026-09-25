@@ -4,21 +4,27 @@
 
 import { describe, test } from 'vitest';
 
-import { Chat, DatabaseSkill, RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
-import { Instructions, Operation, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { type InvokeResult } from '@dxos/edge-compute';
 import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ErrorCodec } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { sync } from './testing';
+import { sync } from './testing/index.ts';
 
 /**
  * Cron trigger on EDGE runs {@link RunInstructions} for a {@link Routine} that uses the Database
@@ -92,11 +98,17 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     log('trigger created and synced');
     log.break();
 
-    const runResult: any = await client.edge.http.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+    // The HTTP client's response type is untyped JSON; the EDGE dispatcher's wire contract for a
+    // triggered invocation is `InvokeResult`.
+    const runResult = (await client.edge.http.forceRunCronTrigger(
+      Context.default(),
+      space.id,
+      trigger.id,
+    )) as InvokeResult;
     if (runResult._kind === 'error') {
       throw ErrorCodec.decode(runResult.error);
     }
     log('trigger ran', { runResult });
-    expect(runResult.result.count).toBe(3);
+    expect((runResult.result as { count: number }).count).toBe(3);
   });
 });

@@ -4,73 +4,58 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import {
-  AgentHandlers,
   AgentSkill,
-  AgentSkillHandlers,
-  AgentWizardHandlers,
-  AgentWizardSkill,
-  AlarmHandlers,
   AlarmSkill,
   AutomationSkill,
   BrowserSkill,
-  ConnectorsSkill,
-  DatabaseHandlers,
-  DatabaseSkill,
-  DelegationHandlers,
+  ChatContextSkill,
   DelegationSkill,
-  DiscordSkill,
-  LinearSkill,
   MemorySkill,
-  PlanningHandlers,
   PlanningSkill,
-  ProjectHandlers,
-  ProjectSkill,
-  SkillManagerHandlers,
   SkillManagerSkill,
-  WebSearchHandlers,
   WebSearchSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
-import { AssistantSkill } from '#skills';
+import { AssistantSkill, PluginManagerSkill } from '#skills';
 
-const skillDefinition = () =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.SkillDefinition, AssistantSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, BrowserSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, ConnectorsSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DatabaseSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, WebSearchSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DiscordSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, LinearSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AgentSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, PlanningSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, MemorySkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AutomationSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, SkillManagerSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AgentWizardSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AlarmSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, ProjectSkill),
+const skillDefinition = Effect.fnUntraced(function* () {
+  const manager = yield* Plugin.Service;
+  // The plugin-manager tools resolve to handlers the registry plugin contributes, and only an
+  // extensible host has one: the curated production and mobile sets ship a fixed plugin list, where
+  // the skill would advertise verbs that cannot run.
+  const registryPresent = manager
+    .getPlugins()
+    .some((plugin) => plugin.meta.profile.key === RegistryPlugin.meta.profile.key);
 
-    Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AgentSkillHandlers),
-    Capability.contributes(Capabilities.OperationHandler, SkillManagerHandlers),
-    Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
-    Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
-    Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
-    Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AlarmHandlers),
-    Capability.contributes(Capabilities.OperationHandler, ProjectHandlers),
+  return [
+    Capability.contributeAll(AppCapabilities.SkillDefinition, [
+      AssistantSkill,
+      ...(registryPresent ? [PluginManagerSkill] : []),
+      BrowserSkill,
+      DatabaseSkill,
+      ChatContextSkill,
+      WebSearchSkill,
+      AgentSkill,
+      PlanningSkill,
+      MemorySkill,
+      AutomationSkill,
+      SkillManagerSkill,
+      DelegationSkill,
+      AlarmSkill,
+    ]),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
-    Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-  ]);
+    Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+  ];
+});
 
 export default skillDefinition;

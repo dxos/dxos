@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { Fibonacci } from './definitions';
+import { Fibonacci } from './definitions.ts';
 
 export default Fibonacci.pipe(
   Operation.withHandler(

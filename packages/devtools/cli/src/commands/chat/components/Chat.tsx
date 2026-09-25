@@ -7,27 +7,27 @@ import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
+import * as ChatSchema from '@dxos/assistant/Chat';
+import * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
 
-import { AppContext } from '../../../components';
-import { theme } from '../../../theme';
-import { skillRegistry } from '../../../util';
-import { DXOS_VERSION } from '../../../version';
-import { useChatMessages } from '../hooks';
-import { type ChatProcessor } from '../processor';
-import { createAssistantMessage, createUserMessage } from '../types';
-import { Banner } from './Banner';
-import { ChatInput } from './ChatInput';
-import { ChatMessages } from './ChatMessages';
-import { createJsonBlock } from './Markdown';
-import { Picker, type PickerProps } from './Picker';
-import { StatusBar } from './StatusBar';
+import { AppContext } from '../../../components/index.ts';
+import { theme } from '../../../theme.ts';
+import { skillRegistry } from '../../../util/index.ts';
+import { DXOS_VERSION } from '../../../version.ts';
+import { useChatMessages } from '../hooks/index.ts';
+import { type ChatProcessor } from '../processor.ts';
+import { createAssistantMessage, createUserMessage } from '../types.ts';
+import { Banner } from './Banner.tsx';
+import { ChatInput } from './ChatInput.tsx';
+import { ChatMessages } from './ChatMessages.tsx';
+import { createJsonBlock } from './Markdown.tsx';
+import { Picker, type PickerProps } from './Picker.tsx';
+import { StatusBar } from './StatusBar.tsx';
 
 export type ChatProps = {
   db: Database.Database;
@@ -35,7 +35,7 @@ export type ChatProps = {
   conversation: AiSession.Session;
   model: DXN.DXN;
   verbose?: boolean;
-  onChatSelect?: (chat: Assistant.Chat) => void;
+  onChatSelect?: (chat: ChatSchema.Chat) => void;
   onChatCreate?: ({ skills }: { skills: string[] }) => void;
 };
 
@@ -275,12 +275,12 @@ const SkillPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'
 };
 
 const ChatPicker = (
-  props: { db: Database.Database; onSave?: (chat: Assistant.Chat) => void } & Pick<PickerProps, 'onCancel'>,
+  props: { db: Database.Database; onSave?: (chat: ChatSchema.Chat) => void } & Pick<PickerProps, 'onCancel'>,
 ) => {
-  const [chats, setChats] = createSignal<Assistant.Chat[]>([]);
+  const [chats, setChats] = createSignal<ChatSchema.Chat[]>([]);
 
   createEffect(async () => {
-    const chats = await props.db.query(Filter.type(Assistant.Chat)).run();
+    const chats = await props.db.query(Filter.type(ChatSchema.Chat)).run();
     setChats(chats);
   });
 

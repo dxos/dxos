@@ -9,22 +9,24 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
   AnchorWidget,
   Cursor,
+  EditorState,
   type EditorStateStore,
   EditorView,
   type Extension,
   InputModeExtensions,
-  type XmlWidgetProps,
-  type XmlWidgetState,
+  type ObjectLinkProps,
+  type WidgetHostOptions,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -32,41 +34,41 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
-  replacer,
+  objectLinks,
   selectionState,
   snippets,
-  xmlTags,
+  substitutions,
+  widgetHost,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import {
-  PreviewComponent,
-  type PreviewComponentProps,
-  parseEmbedLabel,
-} from '../components/PreviewComponent/PreviewComponent';
-import { setFallbackName } from '../util';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent.tsx';
+import { setFallbackName } from '../util.tsx';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
 export type ExtensionsOptions = {
   id: string;
+  /** The editor's attendable id; embeds nest under it so the document stays an attention ancestor. */
+  attendableId?: string;
   object?: DocumentType;
   settings?: Markdown.Settings;
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
+  platform?: 'mobile' | 'desktop';
   viewState?: ViewState.Manager;
   editorStateStore?: EditorStateStore;
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
-  platform?: 'mobile' | 'desktop';
   /**
    * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
    * with no client (awareness only activates when both a space and an identity are present).
    */
   identity?: Identity.Info | null;
+  setWidgets?: WidgetHostOptions['setWidgets'];
   /**
    * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
    * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
@@ -75,17 +77,22 @@ export type ExtensionsOptions = {
   onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
+/**
+ * The CodeMirror extensions for a document: data binding to its content, the markdown decorations,
+ * object-link widgets (embeds nest under `attendableId`), and the settings-driven extras.
+ */
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
   id,
+  attendableId,
   object,
   settings,
   compact,
   viewMode,
   viewState,
   editorStateStore,
-  setWidgets,
   identity,
+  setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
@@ -93,10 +100,8 @@ export const useExtensions = ({
 
   // Get the content reference from Document objects.
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
-  useObject(contentRef);
-  // Get the actual live object target via .target (needed for Doc.createAccessor).
-  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const loadedContent = useResolveRef(contentRef);
+  const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -107,33 +112,38 @@ export const useExtensions = ({
     () =>
       createBaseExtensions({
         id,
+        attendableId,
         object,
         space,
         settings,
         compact,
         viewMode,
         viewState,
-        setWidgets,
         platform,
+        setWidgets,
         onSelectLink,
       }),
     [
       id,
+      attendableId,
       object,
       space,
       compact,
       viewMode,
       viewState,
+      platform,
       setWidgets,
       settings,
       settings?.debug,
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      platform,
       onSelectLink,
     ],
   );
+
+  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
+  const contentPending = !!contentRef && !target;
 
   return useMemo<Extension[]>(
     () =>
@@ -148,6 +158,12 @@ export const useExtensions = ({
             identity,
           }),
 
+        // Never editable before the binding: input typed into an unbound editor lives only in
+        // CodeMirror state, which the automerge extension's attach-reconcile then replaces wholesale
+        // with the loaded value. `editable(false)` as well as the advisory `readOnly`, so the DOM is
+        // not contenteditable and a caller's editability wait holds.
+        contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
           listener({
@@ -159,7 +175,7 @@ export const useExtensions = ({
         baseExtensions,
         selectionState(editorStateStore),
       ].filter(isTruthy),
-    [identity, space, id, object, target, baseExtensions],
+    [identity, space, id, object, target, contentPending, baseExtensions],
   );
 };
 
@@ -168,6 +184,7 @@ export const useExtensions = ({
  */
 const createBaseExtensions = ({
   id,
+  attendableId,
   object,
   space,
   onSelectLink,
@@ -196,31 +213,33 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
-          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
-          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
         linkTooltip({ render: renderLinkTooltip }),
-        xmlTags({
-          registry: {
-            'dxn-preview': {
-              block: true,
-              urlSchemes: ['dxn:', 'echo:'],
-              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
-              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
-              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
-                label ? parseEmbedLabel(label).height : undefined,
-              Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
-            },
-            'link-preview': {
-              block: false,
-              urlSchemes: ['dxn:', 'echo:'],
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
+        widgetHost({ setWidgets }),
+        objectLinks({
+          link: {
+            factory: ({ label, eid }: ObjectLinkProps) => {
+              // TODO(burdon): Why support both "#" or "@"?
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+              // db's arrival as a change and rebuilds the chip.
+              const resolver =
+                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, eid) : undefined;
+
+              return new AnchorWidget(label, eid, undefined, resolver);
             },
           },
-          setWidgets,
+          image: {
+            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
+            // An embed that released its reserved height (a card) must still keep its element across
+            // rebuilds, or a click that reconfigures the editor remounts it out from under the user.
+            keepAlive: true,
+            Component: (props) => <PreviewComponent {...props} db={space?.db} attendableId={attendableId} />,
+          },
         }),
-        replacer(),
+        substitutions(),
       ],
     );
   }
@@ -263,6 +282,20 @@ const selectionChange = (viewState: ViewState.Manager) => {
   });
 };
 
+/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
+const createAnchorLabelResolver = (db: Space['db'], eid: string) => async () => {
+  const parsed = EID.tryParse(eid);
+  if (!parsed) {
+    return undefined;
+  }
+  try {
+    const object = await db.makeRef(parsed).load();
+    return Obj.getLabel(object as Obj.Unknown) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const createRenderLink =
   (onSelectLink: (pathname: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
@@ -300,7 +333,9 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      .classNames('dx-link flex items-center gap-2')
+      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
+      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );

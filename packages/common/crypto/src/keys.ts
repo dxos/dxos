@@ -8,12 +8,6 @@ import crypto from '@dxos/vendor-hypercore/hypercore-crypto';
 
 export const SIGNATURE_LENGTH = 64;
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const createId = (): string => PublicKey.stringify(randomBytes(32));
-
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {
     invariant(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.');
@@ -31,13 +25,6 @@ export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) =>
 // TODO(dmaretskyi): Slicing because webcrypto keys are too long.
 export const discoveryKey = (key: PublicKeyLike): Buffer =>
   crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
-
-/**
- * Return random bytes of length.
- * @param [length=32]
- * @return {Buffer}
- */
-export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
 
 /**
  * Sign the contents of message with secret_key

@@ -4,13 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { buildThreads } from '../internal/threads';
-import { Thread } from '../types';
-import { clusterThreads, materializeTopics, summarizeTopics } from './topics';
+import { buildThreads } from '../internal/threads.ts';
+import { Thread } from '../types/index.ts';
+import { clusterThreads, materializeTopics, summarizeTopics } from './topics.ts';
 
 const OWNER = 'me@enron.com';
 const NOW = '2001-05-02T00:00:00.000Z';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 
 import { AttendableContainer, RootAttentionProvider } from '@dxos/react-ui-attention';

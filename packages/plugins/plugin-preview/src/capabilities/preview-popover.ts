@@ -4,47 +4,57 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
+import { PreviewCapabilities } from '#types';
+
 const customEventOptions = { capture: true, passive: false };
 
-// TODO(burdon): Factor out?
-const handlePreviewLookup = async (space: Space, { dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
-  const eid = EID.tryParse(dxn);
-  if (!eid) {
-    // dxn: type URIs and other non-EID refs cannot be resolved to an object.
-    return null;
-  }
-  try {
-    const object = await space.db.makeRef(eid).load();
-    const resolvedLabel = Obj.getLabel(object as any, { fallback: 'typename' });
-    return { label: resolvedLabel ?? label, object };
-  } catch {
-    return null;
-  }
-};
+/** The first resolver's answer, asked in contribution order; a resolver declines by answering undefined. */
+const resolveLink = (
+  resolvers: PreviewCapabilities.PreviewLinkResolver[],
+  ref: PreviewLinkRef,
+  context: PreviewCapabilities.PreviewLinkContext,
+): Effect.Effect<PreviewLinkTarget | undefined> =>
+  Effect.gen(function* () {
+    for (const { match, resolve } of resolvers) {
+      if (!match(ref.eid)) {
+        continue;
+      }
+      const target = yield* resolve(ref, context);
+      if (target) {
+        return target;
+      }
+    }
+    return undefined;
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
     // Monotonic activation token: each invocation captures its own sequence; only the
     // most recent activation is allowed to commit popover state. Prevents a slow
     // open (async lookup) from clobbering a later close that fires while it's in flight.
     let activationSequence = 0;
+    // The anchor whose card is showing: a close arrives after the anchor's grace period, by which
+    // time the pointer may have opened another anchor, and only the shown anchor may close it.
+    let activeTrigger: HTMLElement | undefined;
     const handleAnchorActivate = async ({
-      dxn,
+      eid,
       label,
       trigger,
       kind = 'card',
@@ -53,13 +63,18 @@ export default Capability.makeModule(
       props,
       state,
     }: DxAnchorActivate) => {
-      const sequence = ++activationSequence;
       const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
       // Explicit close: callers pass `state: false` on pointer-leave to dismiss
       // the popover. Operation schema requires anchor + kind, so use placeholders;
       // they're overwritten in ephemeral state but only `state` is read by the UI.
+      // A close from another anchor is dropped before it can invalidate this one's lookup.
       if (state === false) {
+        if (trigger !== activeTrigger) {
+          return;
+        }
+        activeTrigger = undefined;
+        activationSequence++;
         await invokePromise(LayoutOperation.UpdatePopover, {
           variant: 'virtual',
           anchor: trigger,
@@ -69,41 +84,66 @@ export default Capability.makeModule(
         return;
       }
 
+      // Tracked before the lookup, so leaving the anchor while it is in flight is an accepted close
+      // that invalidates the pending result rather than a stranger's close that is dropped.
+      const sequence = ++activationSequence;
+      activeTrigger = trigger;
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Capabilities.AtomRegistry);
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
       // `AppCapabilities.Layout`, and `getAll` returns an empty array. Reading `registry.get(undefined)`
       // would crash inside Atom's identity check (`'~atom/Serializable' in undefined`). When layout
-      // isn't available, fall through to the personal-space default.
+      // isn't available, fall through to the default space.
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getPersonalSpace(client);
-      if (!space) {
-        return;
-      }
-      const result = await handlePreviewLookup(space, { dxn, label });
-      if (!result) {
-        return;
-      }
+      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
+      const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
+      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { space }));
       // A newer activation (open or close) arrived while the lookup was in flight; bail
       // out so we don't clobber the latest state.
       if (sequence !== activationSequence) {
         return;
       }
 
-      const title = titleProp ?? Obj.getLabel(result.object, { fallback: 'typename' });
+      if (!result) {
+        // A link a resolver claims but cannot answer (a private repository, an object that is gone) is
+        // still a chip the reader hovered, so it opens a card that says so rather than nothing at all.
+        if (kind === 'card' && PreviewCapabilities.isPreviewLink(resolvers, eid)) {
+          await invokePromise(LayoutOperation.UpdatePopover, {
+            subjectRef: eid,
+            state: true,
+            variant: 'virtual',
+            anchor: trigger,
+            kind,
+            title: titleProp ?? PreviewCapabilities.linkLabel(resolvers, eid) ?? (label || eid),
+            ...(side && { side }),
+          });
+        }
+        return;
+      }
 
-      await invokePromise(LayoutOperation.UpdatePopover, {
-        subjectRef: dxn,
+      // Same fallback chain as the graph node label (AppNode.getObjectGraphNodePartials), so an
+      // unnamed object shows its per-type placeholder (e.g. "New game") rather than the raw typename.
+      const fallbackTitle: [string, { ns: string; defaultValue?: string }] = [
+        'object-name.placeholder',
+        { ns: Obj.getTypename(result.object) ?? '', defaultValue: 'New item' },
+      ];
+      const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
+
+      const input = {
+        subjectRef: eid,
         subject: result.object,
         state: true,
         variant: 'virtual',
         anchor: trigger,
-        ...(kind && { kind }),
-        ...(title && { title }),
         ...(side && { side }),
         ...(props && { props }),
-      });
+      } as const;
+      // The union discriminates on `kind`: only the card member carries a title.
+      await invokePromise(
+        LayoutOperation.UpdatePopover,
+        kind === 'card' ? { ...input, kind, title } : { ...input, kind },
+      );
     };
 
     let cleanup: () => void;
@@ -118,6 +158,7 @@ export default Capability.makeModule(
       log.warn('no default view found');
     }
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cleanup?.()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cleanup?.()));
+    return [];
   }),
 );

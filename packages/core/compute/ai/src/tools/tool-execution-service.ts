@@ -2,30 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
+import type * as Tool from 'effect/unstable/ai/Tool';
+import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiToolNotFoundError } from '../errors';
+import { AiToolNotFoundError } from '../errors.ts';
 
 /**
  * Provides handlers for tools.
  */
-export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
+export class ToolExecutionService extends Context.Service<
   ToolExecutionService,
   {
     readonly handlersFor: <Tools extends Record<string, Tool.Any>>(
       toolkit: Toolkit.Toolkit<Tools>,
-    ) => Toolkit.WithHandler<Tools>;
+    ) => Toolkit.HandlersFrom<Tools>;
   }
->() {
-  static layerEmpty = Layer.succeed(ToolExecutionService, {
-    handlersFor: (toolkit) =>
-      toolkit.of(Record.map(toolkit.tools, (tool, name) => Effect.fail(new AiToolNotFoundError(name))) as any) as any,
+>()('@dxos/ai/ToolExecutionService') {}
+
+export namespace ToolExecutionService {
+  export const layerEmpty = Layer.succeed(ToolExecutionService, {
+    // `toolkit.tools` covers every tool, while `HandlersFrom<Tools>` only requires entries for
+    // tools that need a handler — a filtered mapped type `toolkit.of`'s generic `Tools` can't
+    // verify against a runtime-built record, so the shape is asserted once at its source.
+    handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+      toolkit.of(
+        Record.map(toolkit.tools, (tool, name) =>
+          Effect.fail(new AiToolNotFoundError(name)),
+        ) as unknown as Toolkit.HandlersFrom<Tools>,
+      ),
   });
 
-  static handlersFor = Effect.serviceFunction(ToolExecutionService, (_) => _.handlersFor);
+  export const handlersFor = <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+    ToolExecutionService.use((service) => Effect.succeed(service.handlersFor(toolkit)));
 }

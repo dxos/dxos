@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import { ClientCapabilities } from '../types';
-import { CreateAgent } from './definitions';
+import { ClientCapabilities } from '#types';
+
+import { CreateAgent } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof CreateAgent> = CreateAgent.pipe(
   Operation.withHandler(

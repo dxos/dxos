@@ -4,12 +4,12 @@
 
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
-import { type Node } from '@dxos/app-graph';
-import { keySymbols } from '@dxos/keyboard';
-import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { keySymbols } from '@dxos/react-focus';
+import { Button, type ButtonProps, Icon, Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 export type KeyBinding = {
   windows?: string;
@@ -19,7 +19,7 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type AttentionSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
+export type AttentionSigilAction = Pick<AppGraphNode.ActionLike, 'id' | 'properties' | 'data'>;
 
 export type AttentionSigilButtonSize = 'md' | 'lg';
 
@@ -99,7 +99,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
 
     const button = (
       <AttentionSigilButton
-        // With no actions there is no DropdownMenu.Trigger, so forward the ref to the button directly.
+        // With no actions there is no Menu.Trigger, so forward the ref to the button directly.
         ref={!hasActions ? forwardedRef : undefined}
         attendableId={attendableId}
         related={related}
@@ -119,26 +119,23 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     }
 
     return (
-      <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
-        <DropdownMenu.Trigger asChild ref={forwardedRef}>
+      <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+        <Menu.Trigger asChild ref={forwardedRef}>
           {button}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content classNames='z-[31]'>
-            <DropdownMenu.Viewport>
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Content classNames='z-[31]'>
+            <Menu.Viewport>
               {actionGroups?.map((actions, index) => {
-                const separator = index > 0 ? <DropdownMenu.Separator /> : null;
+                const separator = index > 0 ? <Menu.Separator /> : null;
                 return (
                   <Fragment key={index}>
                     {separator}
                     {actions.map((action) => {
-                      const shortcut =
-                        typeof action.properties.keyBinding === 'string'
-                          ? action.properties.keyBinding
-                          : action.properties.keyBinding?.[getHostPlatform()];
+                      const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
                       const menuItemType = action.properties.menuItemType;
-                      const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+                      const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;
 
                       return (
                         <Root
@@ -160,9 +157,9 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                           <Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size={4} />
                           <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
                           {menuItemType === 'toggle' && (
-                            <DropdownMenu.ItemIndicator asChild>
+                            <Menu.ItemIndicator asChild>
                               <Icon icon='ph--check--regular' size={4} />
-                            </DropdownMenu.ItemIndicator>
+                            </Menu.ItemIndicator>
                           )}
                           {shortcut && (
                             <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
@@ -174,11 +171,11 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                 );
               })}
               {children}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+            </Menu.Viewport>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Portal>
+      </Menu.Root>
     );
   },
 );

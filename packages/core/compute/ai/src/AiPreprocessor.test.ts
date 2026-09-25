@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import * as AiPreprocessor from './AiPreprocessor';
-import { PromptPreprocessingError } from './errors';
-import { TestData } from './testing';
+import * as AiPreprocessor from './AiPreprocessor.ts';
+import { PromptPreprocessingError } from './errors.ts';
+import { TestData } from './testing/index.ts';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
@@ -128,8 +128,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: 'Let me think about this step by step...',
           options: {
             anthropic: {
-              type: 'thinking',
-              signature: 'reasoning_sig_1',
+              info: {
+                type: 'thinking',
+                signature: 'reasoning_sig_1',
+              },
             },
           },
         }),
@@ -154,8 +156,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: '',
           options: {
             anthropic: {
-              type: 'redacted_thinking',
-              redactedData: '[Reasoning redacted]',
+              info: {
+                type: 'redacted_thinking',
+                redactedData: '[Reasoning redacted]',
+              },
             },
           },
         }),
@@ -339,10 +343,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -435,10 +439,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
     Effect.fn(function* ({ expect }) {
       const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -576,26 +580,70 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         ]),
       ];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
 
   it.effect(
-    'fails gracefully when an assistant tool-call has malformed JSON in the input field',
+    'passes the raw string through when an assistant tool-call has malformed JSON in the input field',
     Effect.fn(function* ({ expect }) {
+      // The model authors this field, so it can be malformed; the block is durable, so failing the
+      // request would make every later request over the same conversation fail too.
+      const malformed = '{"objects": echo://BPB}';
       const message = makeMessage('assistant', [
-        { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{not valid', providerExecuted: false },
+        { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: malformed, providerExecuted: false },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
-      }
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
+      const assistantMessage = input.content[0] as Prompt.AssistantMessage;
+      expect(assistantMessage.content[0]).toEqual(
+        Prompt.makePart('tool-call', {
+          id: 'call_1',
+          name: 'calculator',
+          params: { raw: malformed },
+          providerExecuted: false,
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'keeps a conversation usable after a tool-call with malformed input',
+    Effect.fn(function* ({ expect }) {
+      // The shape `callTool` produces for unparseable input: the call never ran, and the paired
+      // error result is what tells the model to retry.
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{not valid', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            error: "Invalid JSON arguments for tool 'calculator'. Retry the call with valid JSON.",
+            providerExecuted: false,
+          },
+        ]),
+        makeMessage('user', [{ _tag: 'text', text: 'try again' }]),
+      ];
+
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      expect(input.content).toHaveLength(3);
+      const toolMessage = input.content[1] as Prompt.ToolMessage;
+      expect(toolMessage.content[0]).toEqual(
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'calculator',
+          result: "Invalid JSON arguments for tool 'calculator'. Retry the call with valid JSON.",
+          isFailure: true,
+          providerExecuted: false,
+        }),
+      );
     }),
   );
 
