@@ -10,34 +10,25 @@
 // previous build owned 404s, and a tab open across the deploy still imports them. `_worker.ts` falls back
 // to the `ASSET_ARCHIVE` bucket on a miss; this is what puts anything there.
 //
-// Runs BEFORE the deploy (see deploy-env.mjs) so a failure stops the deploy rather than leaving a live
-// version whose predecessors are unreachable.
+// Runs BEFORE the deploy (see deploy-env.mjs) so an upload failure stops the deploy rather than leaving a
+// live version whose predecessors are unreachable.
 //
-// Uses R2's S3-compatible API. The two obvious alternatives are both dead ends at this scale: `wrangler r2
-// object put` is one CLI process per file, and Cloudflare's REST API rate-limits at roughly 4 requests a
-// second (measured: it 429s partway through a build), which would make a single deploy step take over half
-// an hour. The S3 endpoint carries no such limit.
-//
-// Needs R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY (an R2 API token, distinct from CLOUDFLARE_API_TOKEN) plus
-// CLOUDFLARE_ACCOUNT_ID.
+// Talks to R2's S3 endpoint, as `packages/core/compute/edge-compute/scripts/upload-modules.mjs` does.
+// Cloudflare's REST API rate-limits at roughly 4 requests a second (it 429s partway through a build), and
+// `wrangler r2 object put` is one process per file. Needs CLOUDFLARE_ACCOUNT_ID plus an R2 API token
+// (R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY), which is not the Workers token.
 //
 // Usage: upload-assets.mjs <environment> [app|all]
 
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { execSync } from 'node:child_process';
-import { createHash, createHmac } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { join } from 'node:path';
 
 import { assetArchiveBucket, resolveApps } from './apps.mjs';
 
-/** Parallel uploads. Bounded because an unbounded fan-out over 7,600 files exhausts local sockets long
- *  before it saturates the network. */
+/** Parallel uploads. Bounded because an unbounded fan-out over thousands of files exhausts sockets. */
 const CONCURRENCY = 32;
-
-const REGION = 'auto';
-
-/** Per-object attempts. A deploy is too expensive to fail on one transient 5xx. */
-const ATTEMPTS = 3;
 
 const CONTENT_TYPES = {
   css: 'text/css',
@@ -57,123 +48,38 @@ const CONTENT_TYPES = {
   woff2: 'font/woff2',
 };
 
-const contentType = (path) => CONTENT_TYPES[path.split('.').pop()?.toLowerCase()] ?? 'application/octet-stream';
-
-const walk = async (dir) => {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map((entry) => {
-      const path = join(dir, entry.name);
-      return entry.isDirectory() ? walk(path) : [path];
-    }),
-  );
-  return files.flat();
-};
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const sha256 = (data) => createHash('sha256').update(data).digest('hex');
-const hmac = (key, data) => createHmac('sha256', key).update(data).digest();
+const contentType = (name) => CONTENT_TYPES[name.split('.').pop()?.toLowerCase()] ?? 'application/octet-stream';
 
 /**
- * Minimal SigV4 for one S3 PUT. Adapted from `.agents/skills/hosting-artifacts/scripts/upload-artifact.mjs`,
- * which signs the same way against a different bucket — kept local rather than shared because that script
- * is a standalone agent tool, not a deploy dependency.
- */
-const sign = ({ host, bucket, key, payloadHash, contentType, accessKeyId, secretAccessKey }) => {
-  const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
-  const dateStamp = amzDate.slice(0, 8);
-  const allHeaders = {
-    'content-type': contentType,
-    host,
-    'x-amz-content-sha256': payloadHash,
-    'x-amz-date': amzDate,
-  };
-  const signedHeaders = Object.keys(allHeaders)
-    .map((name) => name.toLowerCase())
-    .sort();
-  const canonicalHeaders = signedHeaders.map((name) => `${name}:${String(allHeaders[name]).trim()}\n`).join('');
-  // Each path segment is encoded individually; the slashes between them must stay literal.
-  const canonicalUri = `/${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
-  const canonicalRequest = ['PUT', canonicalUri, '', canonicalHeaders, signedHeaders.join(';'), payloadHash].join('\n');
-
-  const scope = `${dateStamp}/${REGION}/s3/aws4_request`;
-  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, scope, sha256(canonicalRequest)].join('\n');
-  const signingKey = hmac(hmac(hmac(hmac(`AWS4${secretAccessKey}`, dateStamp), REGION), 's3'), 'aws4_request');
-  const signature = createHmac('sha256', signingKey).update(stringToSign).digest('hex');
-
-  return {
-    url: `https://${host}${canonicalUri}`,
-    headers: {
-      ...allHeaders,
-      Authorization:
-        `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, ` +
-        `SignedHeaders=${signedHeaders.join(';')}, Signature=${signature}`,
-    },
-  };
-};
-
-const upload = async ({ credentials, bucket, key, body, type }) => {
-  const signed = sign({
-    host: credentials.host,
-    bucket,
-    key,
-    payloadHash: sha256(body),
-    contentType: type,
-    accessKeyId: credentials.accessKeyId,
-    secretAccessKey: credentials.secretAccessKey,
-  });
-
-  let lastError;
-  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    try {
-      const response = await fetch(signed.url, { method: 'PUT', headers: signed.headers, body });
-      if (response.ok) {
-        return;
-      }
-      lastError = new Error(`${response.status} ${response.statusText}: ${(await response.text()).slice(0, 200)}`);
-      // A signature or permission problem will not improve on a retry.
-      if (response.status < 500 && response.status !== 429) {
-        break;
-      }
-    } catch (error) {
-      lastError = error;
-    }
-    if (attempt < ATTEMPTS) {
-      await sleep(2 ** attempt * 250);
-    }
-  }
-  throw new Error(`failed to upload ${key}: ${lastError?.message ?? 'unknown error'}`);
-};
-
-/**
- * Upload every file under `<outDir>/assets` to `bucket`, keyed by its path relative to `outDir` — the
- * same shape the Worker looks up (`/assets/foo-hash.js` → `assets/foo-hash.js`).
+ * Upload the flat files of `<outDir>/assets` to `bucket`, keyed as the Worker looks them up
+ * (`/assets/foo-hash.js` → `assets/foo-hash.js`). Only the flat level is vite's content-hashed output;
+ * subdirectories hold stable-named copies that must not be served as immutable, so they stay out.
  *
  * Unconditional: every file, every deploy, even one already present. R2 lifecycle rules expire by object
- * age, so a conditional upload would drop a chunk that has been in the build longer than the retention
- * window WHILE IT IS STILL LIVE, breaking the current build rather than an old one. Re-uploading refreshes
- * the age of everything still shipping, so a chunk expires exactly one window after the last build that
- * contained it.
+ * age, so a conditional upload would expire a chunk that has shipped for longer than the window WHILE IT
+ * IS STILL LIVE. Re-uploading keeps a chunk until one window after the last build that contained it.
  */
-const uploadAssets = async ({ credentials, bucket, outDir }) => {
-  const assetsDir = join(outDir, 'assets');
-  const files = await walk(assetsDir);
-  let done = 0;
+const uploadAssets = async ({ client, bucket, outDir }) => {
+  const entries = await readdir(join(outDir, 'assets'), { withFileTypes: true });
+  const names = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+  let next = 0;
   let failed;
 
+  // The SDK retries throttling and 5xx itself, so one failure here is final.
   const worker = async () => {
-    for (;;) {
-      const path = files[done++];
-      if (path === undefined || failed) {
-        return;
-      }
-      const key = relative(outDir, path).split(sep).join('/');
+    while (!failed && next < names.length) {
+      const name = names[next++];
       try {
-        await upload({ credentials, bucket, key, body: await readFile(path), type: contentType(path) });
+        await client.send(
+          new PutObjectCommand({
+            Bucket: bucket,
+            Key: `assets/${name}`,
+            Body: await readFile(join(outDir, 'assets', name)),
+            ContentType: contentType(name),
+          }),
+        );
       } catch (error) {
-        failed ??= error;
-        return;
+        failed ??= new Error(`failed to upload assets/${name}: ${error?.message ?? error}`);
       }
     }
   };
@@ -182,7 +88,7 @@ const uploadAssets = async ({ credentials, bucket, outDir }) => {
   if (failed) {
     throw failed;
   }
-  return files.length;
+  return names.length;
 };
 
 /**
@@ -195,17 +101,23 @@ export const retainAssets = async (root, app, environment) => {
     return;
   }
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  if (!accountId || !accessKeyId || !secretAccessKey) {
-    throw new Error('CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are required');
+  const { CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY } = process.env;
+  if (!CLOUDFLARE_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    // Missing credentials are setup, not a transient failure: fail the deploy for them and every deploy
+    // breaks until someone adds the secrets. Skip loudly instead; the Worker 404s as it did before.
+    console.log(`::warning::Skipping asset retention for ${app.name} -> ${bucket}: R2 credentials are not set.`);
+    return;
   }
-  const credentials = { host: `${accountId}.r2.cloudflarestorage.com`, accessKeyId, secretAccessKey };
+
+  const client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
+  });
 
   console.log(`::group::Retain ${app.name} assets -> ${bucket}`);
   const started = Date.now();
-  const count = await uploadAssets({ credentials, bucket, outDir: join(root, app.outDir) });
+  const count = await uploadAssets({ client, bucket, outDir: join(root, app.outDir) });
   console.log(`Uploaded ${count} files in ${Math.round((Date.now() - started) / 1000)}s`);
   console.log('::endgroup::');
 };

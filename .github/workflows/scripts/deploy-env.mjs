@@ -42,9 +42,9 @@ if (apps.length === 0) {
 for (const app of apps) {
   const { name, outDir, wranglerConfig } = app;
 
-  // Retain this build's assets BEFORE the deploy that makes its predecessor's unreachable. Ordered so a
-  // failure here stops the deploy: shipping a version whose retention is incomplete is the bug this
-  // exists to prevent, and it only shows up one deploy later.
+  // Retain this build's assets BEFORE the deploy that makes its predecessor's unreachable. Ordered so an
+  // upload failure stops the deploy: incomplete retention only shows up one deploy later. Missing R2
+  // credentials skip retention with a warning instead (see `retainAssets`).
   await retainAssets(root, app, environment);
 
   console.log(`::group::Deploy ${name} -> ${environment}`);
