@@ -172,44 +172,70 @@ for.
 
 ## What the implementation settled
 
-Steps 1 to 4 landed; the notes below are the places where building it moved the design.
+All five steps landed; the notes below are the places where building it moved the design.
 
 - **`Column.Section` rather than a free-standing `Section`.** It belongs to the vocabulary that
   places it, and a name as generic as `Section` in `@dxos/react-ui` would collide with the surface
   role of the same name. It spans the three tracks and re-exposes them, which is what lets a row
   inside still reach a gutter.
-- **A row carries a marker class.** `Column.Section` places its plain children in the content track,
-  and a `Column.Row` already spans all three — `col-start-2` on top of `col-span-3` walked the row
-  one track right and pushed its content into the trailing gutter. `dx-column-row` is what the
-  section's rule excludes.
+- **Anything that spans a Column's tracks must not also be placed by its parent.** `col-start-2` on
+  top of `col-span-full` starts the span one track right, so the element re-exposes the content track
+  and the trailing gutter — and its children land in a 16px column. This cost two bugs (a
+  `Column.Row` inside a section, then a question inside one) before the rule was named: a row and
+  `withColumn.propagate` now carry marker classes, and the section's child rule excludes them.
 - **The editor resets `--dx-col`.** Inside a host Column the variable means "the content track", and
   `Field.Root` hands it to the field it wraps. In the strip's own two-track grid that named the
-  controls' column, so the title rendered 50px wide against the right edge. The strip now resets it
-  to `auto`, the way `ScrollArea.Viewport` does after consuming the gutter.
+  controls' column, so the title rendered 50px wide against the right edge. The strip resets it to
+  `auto`, the way `ScrollArea.Viewport` does after consuming the gutter.
+- **The sections share a geometry, not a grid.** `TASK_GRID` is a fixed 24px glyph column and a
+  content column, applied by each section to itself: properties, questions and history do not nest,
+  so they could not subgrid onto a common parent without becoming one component — and a fixed column
+  is 24px in every section, where an `auto` one would size to each section's own widest glyph.
+- **A glyph in the content column, not the gutter.** The gutter is for what acts on the task (the
+  list's status control, its checkbox, its row menu). A history entry's glyph and a question's mark
+  name what the line is, so they read with the text.
+- **Properties are a list, not a form or a toolbar.** A list row has one line and many tasks, so a
+  glyph alone is all that fits; a pane has one task and the room to say what the glyph means — and
+  an unset field can invite a value ("Set estimate") where a dot read as a value of its own.
 - **Save and Cancel are create-time only.** They exist because the held-open description has no blur
-  to commit it, which is the add row's problem; a task being edited commits its own fields, so in
-  the article the pair is gone rather than floating over the title.
+  to commit it, which is the add row's problem; a task being edited commits its own fields.
 - **The card grid still spans the gutters.** `Masonry` renders its own `ScrollArea`, which is
   exempted from the content track by design so a scrollbar can sit in the gutter. Its cards line up
   with the content; the grid's own box is 16px wider on each side.
 
+## Step 5, as it actually happened
+
+The plan was a `Form.Layout` over the `Task` schema. What landed is `TaskEditor` — the title and the
+description, and nothing else — because the premise changed while steps 1 to 4 were built: the
+pane's status, priority and estimate became `TaskProperties`, menu rows with a glyph and a value,
+which a form would have rendered as three selects. That left the form covering exactly two fields,
+and those two are the least form-like in the pane: a held-open markdown editor with host-contributed
+extensions, and a title that commits on blur.
+
+So the article mounts `TaskEditor` and no longer wraps anything in `TaskList.Root`. The Form version
+is still the right answer the day a field needs what a schema gives — `RefField` for the assignee's
+picker rather than the hand-rolled one, validation, a layout template — and that is the trigger to
+revisit it, not the layout.
+
+**Still duplicated:** `TaskEditor` and `TaskList.Editor` each implement the field logic (draft state,
+commit-on-blur, the per-task reset). Folding the strip's edit path into `TaskEditor` costs more than
+it removes today: the strip's create path renders the same two cells with an uncontrolled editor, and
+its Save and Cancel drive the description's imperative handle. `TaskEditor` is split into
+`Root`/`Title`/`Description` so the fold is cheap when the strip is next touched — and the cleaner
+end state may be deletion rather than delegation, if selecting a row stops editing inline and always
+opens the pane.
+
 ## Migration
 
-Ordered so each step is shippable on its own, and so the pane is never worse than it is now.
+All five steps are done. What the last one left open is in "Step 5, as it actually happened" above.
 
-1. `Section` in `@dxos/react-ui`, with a story.
-2. `TaskHistory` and `TaskQuestion` render `Column.Row` internally; delete `subgrid` and `cells`.
-3. `TaskList.Edit` takes `Column.Root subgrid` in place of `grid`, and keeps only the header row's
-   explicit placement.
-4. `TaskArticle` swaps its `ScrollArea.Root` for `Form.Viewport scroll` under a `Form.Root`, moves
-   the status control, the trailing controls and the contributed task menu into `Panel.Toolbar`
-   (option 2), and drops the ad-hoc `p-2` / `dx-document` padding — the gutter is the viewport's.
-5. (Open.) The article's header and description become a `Form.Layout` template over `Task`, at which point
-   the article no longer mounts `TaskList.Edit` and the list keeps it to itself. This is the step
-   that decides whether commit-on-blur or the form's `autoSave` owns the write; until it lands,
-   step 4 can keep `TaskList.Edit` inside `Form.Content`.
+1. `Column.Section` in `@dxos/react-ui`, with a story. ✔
+2. `TaskHistory` and `TaskQuestion` place themselves; `subgrid` and `cells` deleted. ✔
+3. The strip renders the fields only — no questions, no history, and no props to say so. ✔
+4. `TaskArticle` lays itself out on a `Column`, with the contributed task menu in `Panel.Toolbar`
+   and the task's own fields as a properties list below the description. ✔
+5. `TaskEditor` replaces the strip in the article, which no longer needs `TaskList.Root`. ✔
 
-Each step is verifiable in `TaskArticle.stories.tsx` and `ProjectArticle` › Task Detail: one left
-edge for every content block, a glyph in the gutter for every row that has one, and no `cells` prop
-anywhere. The check that catches a regression is a measured one — read `getBoundingClientRect().left`
-for the label, the field and the card grid and assert they agree.
+The check that catches a regression is a measured one — read `getBoundingClientRect().left` for a
+section's heading, a property row's glyph and the history's, and assert they agree. That is what the
+task-detail story does, alongside asserting the description's contributed decorations resolve.
