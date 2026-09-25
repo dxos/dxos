@@ -38,6 +38,9 @@
       "path": "../../core/compute/nlp"
     },
     {
+      "path": "../../core/echo/automerge-proxy"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

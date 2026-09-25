@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
 import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
@@ -56,7 +56,6 @@ import {
   ObjectCore,
   type TargetRefreshScope,
 } from '../core-db/index.ts';
-import * as DocOps from '../mirror/doc-ops.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { EchoArray } from './echo-array.ts';
 import { isEchoObject, isRootDataObject } from './echo-object-utils.ts';
@@ -646,7 +645,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolInternals].change((doc: any) => {
       // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
       // `.slice()` materializes a mutable copy since Automerge mutates the path array.
-      DocOps.updateText(doc, fullPath, newText);
+      A.updateText(doc, fullPath.slice(), newText);
     });
   }
 
@@ -660,7 +659,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(typeof current === 'string', 'Text mutation target is not a string');
       const range = normalizeSpliceRange(current.length, start, deleteCount);
       removed = current.slice(range.start, range.start + range.deleteCount);
-      DocOps.splice(doc, fullPath, range.start, range.deleteCount, insert);
+      A.splice(doc, fullPath.slice(), range.start, range.deleteCount, insert);
     });
 
     return removed;

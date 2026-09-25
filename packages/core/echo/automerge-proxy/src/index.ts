@@ -4,6 +4,7 @@
 
 export * from './errors.ts';
 
+export * as Automerge from './Automerge.ts';
 export * as AutomergeOps from './AutomergeOps.ts';
 export * as Contract from './Contract.ts';
 export * as Cursors from './Cursors.ts';

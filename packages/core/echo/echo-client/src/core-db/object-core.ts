@@ -2,18 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  next as A,
-  type Doc as AutomergeDoc,
-  type ChangeFn,
-  type ChangeOptions,
-  type Heads,
-} from '@automerge/automerge';
+import { type Doc as AutomergeDoc, type ChangeFn, type ChangeOptions, type Heads } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { type CleanupFn, Event } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
@@ -32,7 +27,6 @@ import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/
 
 import * as Doc from '../automerge/Doc.ts';
 import { type ClientDocHandle } from '../automerge/index.ts';
-import * as DocOps from '../mirror/doc-ops.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -738,7 +732,7 @@ export class ObjectCore {
    */
   getHeads(): Heads {
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
-    return doc ? DocOps.getHeads(doc) : [];
+    return doc ? A.getHeads(doc) : [];
   }
 
   getType(): EncodedReference | undefined {
@@ -784,7 +778,7 @@ export class ObjectCore {
   getUpdatedAt(): number | undefined {
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     // A mirror has no change metadata; the worker would have to send the time with each entry.
-    if (!doc || DocOps.isMirrorDoc(doc)) {
+    if (!doc || A.isProxy(doc)) {
       return undefined;
     }
 

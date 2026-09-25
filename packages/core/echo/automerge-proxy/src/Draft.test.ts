@@ -5,6 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
+import * as Automerge from './Automerge.ts';
 import * as Draft from './Draft.ts';
 import * as Op from './Op.ts';
 import { type Random, createRandom, initialDocument, randomValue } from './testing/index.ts';
@@ -72,19 +73,6 @@ const viaRecorder = (initial: Record<string, unknown>, callback: Callback): Outc
   const { root } = Op.apply(base, recorder.ops, { strict: true });
   expect(Op.equals(root, recorder.current)).toBe(true);
   return { value: render(root), returned };
-};
-
-/** Text edits dispatched as `DocOps` does: a mirror draft records them, an Automerge draft makes them. */
-const splice = (draft: AnyDraft, path: (string | number)[], index: number, remove: number, insert: string) => {
-  if (!Draft.splice(draft, path, index, remove, insert)) {
-    A.splice(draft, path, index, remove, insert);
-  }
-};
-
-const updateText = (draft: AnyDraft, path: (string | number)[], text: string) => {
-  if (!Draft.updateText(draft, path, text)) {
-    A.updateText(draft, path, text);
-  }
 };
 
 class Point {
@@ -349,11 +337,11 @@ const AGREE: [string, Record<string, unknown>, Callback][] = [
     'splice and updateText, through the root and through a nested draft',
     { t: 'hello', m: { s: 'abc' }, l: ['abc'] },
     (draft) => {
-      splice(draft, ['t'], 5, 0, ' world');
-      updateText(draft.m, ['s'], 'aXc');
-      splice(draft, ['l', '0'], 1, 0, 'Y');
-      splice(draft, ['t'], 2, -1, '');
-      updateText(draft, ['t'], 'helo world');
+      Automerge.splice(draft, ['t'], 5, 0, ' world');
+      Automerge.updateText(draft.m, ['s'], 'aXc');
+      Automerge.splice(draft, ['l', '0'], 1, 0, 'Y');
+      Automerge.splice(draft, ['t'], 2, -1, '');
+      Automerge.updateText(draft, ['t'], 'helo world');
     },
   ],
   [
@@ -362,7 +350,7 @@ const AGREE: [string, Record<string, unknown>, Callback][] = [
     (draft) => {
       const map = draft.m;
       const before = map.t;
-      splice(draft, ['m', 't'], 0, 0, 'X');
+      Automerge.splice(draft, ['m', 't'], 0, 0, 'X');
       return [before, map.t, draft.m.t];
     },
   ],
@@ -372,7 +360,7 @@ const AGREE: [string, Record<string, unknown>, Callback][] = [
     (draft) => {
       const map = draft.m;
       draft.m = { t: 'new' };
-      splice(map, ['t'], 0, 0, 'X');
+      Automerge.splice(map, ['t'], 0, 0, 'X');
       return map.t;
     },
   ],
@@ -538,11 +526,11 @@ const REFUSED: [string, Record<string, unknown>, Callback][] = [
     },
   ],
   ['sort on a list draft', { list: [2, 1] }, (draft) => draft.list.sort()],
-  ['updateText on a RawString', { t: new A.RawString('abc') }, (draft) => updateText(draft, ['t'], 'aXc')],
-  ['splice on a RawString', { t: new A.RawString('abc') }, (draft) => splice(draft, ['t'], 0, 0, 'X')],
-  ['updateText on a missing path', { a: 1 }, (draft) => updateText(draft, ['t'], 'x')],
-  ['updateText on a map', { t: {} }, (draft) => updateText(draft, ['t'], 'x')],
-  ['splice past the end of the text', { t: 'abc' }, (draft) => splice(draft, ['t'], 5, 0, 'X')],
+  ['updateText on a RawString', { t: new A.RawString('abc') }, (draft) => Automerge.updateText(draft, ['t'], 'aXc')],
+  ['splice on a RawString', { t: new A.RawString('abc') }, (draft) => Automerge.splice(draft, ['t'], 0, 0, 'X')],
+  ['updateText on a missing path', { a: 1 }, (draft) => Automerge.updateText(draft, ['t'], 'x')],
+  ['updateText on a map', { t: {} }, (draft) => Automerge.updateText(draft, ['t'], 'x')],
+  ['splice past the end of the text', { t: 'abc' }, (draft) => Automerge.splice(draft, ['t'], 5, 0, 'X')],
 ];
 
 const KEYS = ['a', 'b', 'title', 'items'];
@@ -585,7 +573,7 @@ const randomListEdit = (random: Random, list: AnyDraft, held: AnyDraft[], value:
         const index = random.pick(texts);
         const text: string = list[index];
         const at = random.int(text.length + 1);
-        splice(list, [index], at, random.int(text.length - at + 1), String(length));
+        Automerge.splice(list, [index], at, random.int(text.length - at + 1), String(length));
       }
       return undefined;
     }
@@ -601,7 +589,7 @@ const randomMapEdit = (random: Random, map: AnyDraft, value: () => unknown): voi
     const key = random.pick(texts);
     const text: string = map[key];
     const at = random.int(text.length + 1);
-    updateText(map, [key], `${text.slice(0, at)}<${keys.length}>${text.slice(at + 1)}`);
+    Automerge.updateText(map, [key], `${text.slice(0, at)}<${keys.length}>${text.slice(at + 1)}`);
   } else if (keys.length > 0 && random.chance(0.3)) {
     delete map[random.pick(keys)];
   } else {
@@ -656,7 +644,7 @@ describe('Draft.Recorder', () => {
   });
 
   test('refuses a text splice on a list, which Automerge turns into RawString elements', () => {
-    const callback: Callback = (draft) => splice(draft, ['list'], 1, 0, 'XY');
+    const callback: Callback = (draft) => Automerge.splice(draft, ['list'], 1, 0, 'XY');
     expect(viaAutomerge({ list: ['a'] }, callback)).toEqual({
       value: { list: ['a', { raw: 'X' }, { raw: 'Y' }] },
       returned: { undefined: true },

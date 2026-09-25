@@ -4,11 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { DocOps } from '@dxos/echo-client';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Doc } from '@dxos/echo-doc';
 
 import { Cursor } from '../../../util/index.ts';
@@ -23,7 +22,7 @@ import { Syncer } from './sync.ts';
  * the mirror binding, which writes to the mirror and takes cursors from a replica.
  */
 export const automerge = (accessor: Doc.Accessor): Extension =>
-  DocOps.isMirrorDoc(accessor.handle.doc()) ? mirrorSync(accessor) : automergeBinding(accessor);
+  A.isProxy(accessor.handle.doc()) ? mirrorSync(accessor) : automergeBinding(accessor);
 
 const automergeBinding = (accessor: Doc.Accessor): Extension => {
   const syncState = StateField.define<State>({

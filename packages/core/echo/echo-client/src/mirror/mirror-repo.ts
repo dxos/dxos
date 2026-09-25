@@ -18,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
+import { trace } from '@dxos/tracing';
 
 import {
   type ClientDocHandle,
@@ -203,6 +204,10 @@ export class MirrorRepo extends Resource implements ClientRepo {
   }
 
   protected override async _open(ctx: ResourceContext): Promise<void> {
+    // Counted in the tab: the worker never sees the later edits a refusal takes back with it.
+    this.#repo.editsRejected.on(ctx, ({ changes }) =>
+      trace.metrics.increment('dxos.echo.edits.rejected', changes.length, { unit: '{change}' }),
+    );
     await this.#repo.open(ctx);
   }
 

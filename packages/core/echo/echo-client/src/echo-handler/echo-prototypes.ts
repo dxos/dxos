@@ -53,6 +53,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
@@ -114,7 +115,6 @@ import { deepMapValues, defaultMap } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc.ts';
 import { type ObjectCore } from '../core-db/index.ts';
-import * as DocOps from '../mirror/doc-ops.ts';
 import { MirrorDocHandle } from '../mirror/mirror-doc-handle.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { getBody, getHeader } from './devtools-formatter.ts';
@@ -347,12 +347,12 @@ const getVersion = (target: ProxyTarget): Obj.Version => {
   const core = target[symbolInternals];
   const doc = core.getDocAccessor().handle.doc();
   invariant(doc);
-  const heads = DocOps.getHeads(doc);
+  const heads = A.getHeads(doc);
   // A mirror's heads are the last confirmed ones, so they do not describe an object with unconfirmed edits.
   const versioned =
     core.docHandle instanceof MirrorDocHandle
       ? heads.length > 0 && !core.docHandle.hasPendingAt(core.mountPath)
-      : !DocOps.isMirrorDoc(doc) || heads.length > 0;
+      : !A.isProxy(doc) || heads.length > 0;
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
     versioned,

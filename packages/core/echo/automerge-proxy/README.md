@@ -20,10 +20,13 @@ the ones a side needs, such as `import * as Repo from '@dxos/automerge-proxy/Rep
 | `Wire`         | Tags the values JSON cannot carry (RawString, bytes, dates, NaN and the like) and restores them |
 | `Host`         | `DocumentHost`, which implements `Repo.Host` over a `Host.Store` of Automerge documents      |
 | `Sequencing`   | `DocumentSequencer`, which orders every write to one Automerge document into entries         |
+| `Automerge`    | Automerge's API, with `splice`, `updateText`, `getHeads` and `hasHeads` working on proxies too |
 | `AutomergeOps` | Ops to and from Automerge: applying them in a change, diffing heads into ops                |
 
 The first nine need nothing at runtime, so a client that imports only them loads no Automerge. `Host`,
-`Sequencing` and `AutomergeOps` are the host's side and import Automerge.
+`Sequencing` and `AutomergeOps` are the host's side and import Automerge. `Automerge` re-exports
+Automerge itself, so code that imports it as `A` in place of `@automerge/automerge` keeps its calls
+and works on proxy documents as well as Automerge ones.
 
 `@dxos/automerge-proxy/testing` has what the package's property tests use: a seeded random generator,
 random ops, a `MemoryStore` of Automerge documents, and a `Transport` that carries calls through JSON

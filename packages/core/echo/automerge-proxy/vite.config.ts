@@ -7,6 +7,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    Automerge: 'src/Automerge.ts',
     AutomergeOps: 'src/AutomergeOps.ts',
     Contract: 'src/Contract.ts',
     Cursors: 'src/Cursors.ts',

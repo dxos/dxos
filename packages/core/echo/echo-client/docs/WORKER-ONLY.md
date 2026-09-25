@@ -180,15 +180,16 @@ EDGE keeps the first and tabs switch to the second.
   runs `fn` against a recording draft that behaves as an Automerge change callback's draft does: the
   same mutations and refusals, and drafts that keep their container through list edits. It refuses
   a few values Automerge stores lossily (nested `Map`, `Set`, functions, typed arrays) and
-  Automerge's counter types, which the op model lacks. Text edits go through `DocOps.splice` or
-  `updateText`. Change events carry Automerge-shaped patches.
+  Automerge's counter types, which the op model lacks. Text edits go through `A.splice` or
+  `A.updateText`. Change events carry Automerge-shaped patches.
   `changeAt` works only at the current confirmed heads with nothing pending; `update` is not
   supported.
 - **Heads.** `heads` are the last confirmed ones; unconfirmed edits do not move them. `pendingOps`,
   `hasPendingAt(path)` and the `confirmed` event expose what is still in flight.
-- **`DocOps`.** The direct Automerge calls the database layer makes (`getHeads`, `hasHeads`, `splice`,
-  `updateText`, local documents for objects not yet added) dispatch on the document kind. Branching,
-  history, cursors and conflicts still call Automerge.
+- **`@dxos/automerge-proxy/Automerge`.** Automerge's own API, which code imports as `A` in place of
+  `@automerge/automerge`. `getHeads`, `hasHeads`, `splice` and `updateText` answer a proxy document
+  as well as an Automerge one, and `isProxy` tells the two apart; every other function is Automerge's.
+  Branching, history, cursors and conflicts still need an Automerge document.
 - **`MirrorCursors`.** `track(cursors)` asks the worker once, against the tab's confirmed heads and
   the text's confirmed path. `position(cursor)` is then synchronous: the tab moves positions through
   its own unconfirmed edits and every later change, and follows the text through list edits above it.
@@ -610,9 +611,10 @@ made before it joins a database keeps an Automerge document in every mode, since
 known yet, and joining a proxy database copies its value.
 
 Composer's debug settings offer the three choices (replicas, proxies, proxies read from the index)
-and write the two fields to stored config, like the storage adaptor beside them. Every refused edit
-counts in `dxos.echo.edits.rejected` and is captured as an error, without the refused ops, which are
-user content.
+and write the two fields to stored config, like the storage adaptor beside them. `MirrorRepo` counts
+every refused edit in `dxos.echo.edits.rejected` through `trace.metrics`, and the worker logs each
+refusal as an error with the Automerge error attached, so observability collects both without
+knowing about ECHO. Neither carries the refused ops, which are user content.
 
 ### Order of work
 
@@ -661,19 +663,19 @@ Before the default flips, each of these has to hold:
 
 Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week.
 
-| Blocker                                                                                                    | What it takes                                                                                                                                                         | Size |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Route through `DocOps` so both backends work. Text writes in echo-doc and plugin-markdown now do; branch reads (`getObjectOnBranch`) still call Automerge             | L    |
-| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                    | They resolve through the replica an open editor holds, so with no editor open they have no cursors; lease a replica where they run, or answer through `MirrorCursors` | M    |
-| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                                   | L    |
-| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                         | M    |
-| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                      | M    |
-| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                       | M    |
-| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                          | S    |
-| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database                  | M    |
-| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save         | S    |
-| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                         | S    |
-| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                               | S    |
+| Blocker                                                                                                    | What it takes                                                                                                                                                                           | Size |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Import Automerge as `@dxos/automerge-proxy/Automerge`, which works on both. Text writes in echo-doc and plugin-markdown now do; branch reads (`getObjectOnBranch`) still need Automerge | L    |
+| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                    | They resolve through the replica an open editor holds, so with no editor open they have no cursors; lease a replica where they run, or answer through `MirrorCursors`                   | M    |
+| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                                                     | L    |
+| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                                           | M    |
+| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                                        | M    |
+| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                                         | M    |
+| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                                            | S    |
+| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database                                    | M    |
+| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save                           | S    |
+| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                                           | S    |
+| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                 | S    |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The spike adds about
@@ -706,7 +708,7 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 
 ## Migration
 
-1. Land the interfaces: `ClientRepo`, `ClientDocHandle` and `DocOps`. Behavior-neutral: the replica
+1. Land the interfaces: `ClientRepo`, `ClientDocHandle` and the `Automerge` namespace. Behavior-neutral: the replica
    suite passes unchanged.
 2. Land the shared protocol and the worker's proxy RPCs behind a flag, with the fuzz and regression
    tests. Done: `DataService`'s proxy RPCs behind `runtime.client.document_mode`.

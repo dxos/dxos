@@ -54,6 +54,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",

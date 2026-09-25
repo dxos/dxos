@@ -5756,6 +5756,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.5.0
         version: 3.5.0
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../automerge-proxy
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
@@ -12929,6 +12932,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge-proxy
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -23910,6 +23916,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge-proxy
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client

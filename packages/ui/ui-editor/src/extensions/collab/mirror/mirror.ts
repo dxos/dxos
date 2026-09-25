@@ -5,7 +5,8 @@
 import { ChangeSet, type Extension, Transaction } from '@codemirror/state';
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { type AccessorReplica, DocOps, heldReplica, leaseReplica } from '@dxos/echo-client';
+import * as A from '@dxos/automerge-proxy/Automerge';
+import { type AccessorReplica, heldReplica, leaseReplica } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 
 import { Cursor, type CursorConverter } from '../../../util/index.ts';
@@ -59,7 +60,7 @@ export const mirrorSync = (accessor: Doc.Accessor): Extension => {
               accessor.handle.change((doc) => {
                 // Later edits first, so earlier positions in the same transaction stay valid.
                 for (const { from, remove, insert } of edits.reverse()) {
-                  DocOps.splice(doc, accessor.path, from, remove, insert);
+                  A.splice(doc, accessor.path, from, remove, insert);
                 }
               });
             } finally {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { type Heads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -19,6 +19,7 @@ import {
   asyncTimeout,
   runInContextAsync,
 } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, type Entity, Ref } from '@dxos/echo';
@@ -51,7 +52,6 @@ import {
 } from '../automerge/index.ts';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
-import * as DocOps from '../mirror/doc-ops.ts';
 import { MirrorRepo } from '../mirror/mirror-repo.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -928,7 +928,7 @@ export class EntityManager implements IDatabaseBinding {
       heads[state.documentId] = state.heads ?? [];
     }
 
-    heads[root.documentId] = DocOps.getHeads(doc);
+    heads[root.documentId] = A.getHeads(doc);
 
     return { heads };
   }
@@ -977,7 +977,7 @@ export class EntityManager implements IDatabaseBinding {
     await asyncTimeout(
       Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
         const doc = rootHandle.doc();
-        return doc != null && DocOps.hasHeads(doc, rootHeads);
+        return doc != null && A.hasHeads(doc, rootHeads);
       }),
       RPC_TIMEOUT,
       'waiting for the space root document to replicate to the client',
@@ -1253,7 +1253,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const spaceRoot = this.getSpaceRootDocHandle();
-    const baseHeads = memberHeads[rootObjectId] ?? DocOps.getHeads(rootCore.getDoc());
+    const baseHeads = memberHeads[rootObjectId] ?? A.getHeads(rootCore.getDoc());
     const createdAt = Date.now();
     spaceRoot.change((doc: DatabaseDirectory) => {
       // Assign through re-read doc proxies (not a chained `??=` result, which returns the orphan

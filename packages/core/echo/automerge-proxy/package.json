@@ -19,6 +19,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Automerge": {
+      "source": "./src/Automerge.ts",
+      "types": "./dist/types/src/Automerge.d.ts",
+      "import": "./dist/lib/Automerge.mjs"
+    },
     "./AutomergeOps": {
       "source": "./src/AutomergeOps.ts",
       "types": "./dist/types/src/AutomergeOps.d.ts",

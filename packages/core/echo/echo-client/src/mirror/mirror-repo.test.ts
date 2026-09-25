@@ -21,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type EditsRejectedEvent } from '../automerge/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
@@ -36,6 +37,23 @@ class StreamDroppedError extends Error {
     super('stream dropped');
   }
 }
+
+/** Sums the counters code reports through `trace.metrics` until the test ends. */
+const recordCounters = (): ReadonlyMap<string, number> => {
+  const counters = new Map<string, number>();
+  const processor: Parameters<typeof TRACE_PROCESSOR.remoteMetrics.registerProcessor>[0] = {
+    increment: (name, value = 1) => {
+      counters.set(name, (counters.get(name) ?? 0) + value);
+    },
+    distribution: () => {},
+    set: () => {},
+    gauge: () => {},
+    observe: () => () => {},
+  };
+  TRACE_PROCESSOR.remoteMetrics.registerProcessor(processor);
+  onTestFinished(() => TRACE_PROCESSOR.remoteMetrics.unregisterProcessor(processor));
+  return counters;
+};
 
 class CreateRefusedError extends Error {
   readonly _tag = 'CreateRefusedError';
@@ -141,6 +159,7 @@ describe('mirror repo and worker', () => {
     await tab.flush();
     const rejected: EditsRejectedEvent[] = [];
     tab.editsRejected.on((event) => rejected.push(event));
+    const counters = recordCounters();
 
     // The change that writes `second` is corrupted in transit, so it no longer fits the document.
     let corrupted: { index: number; changes: number } | undefined;
@@ -176,6 +195,7 @@ describe('mirror repo and worker', () => {
     expect(corrupted).toEqual({ index: 1, changes: 3 });
     expect(rejected).toEqual([{ documentId: documentOf(obj), changes: [expect.any(Array)] }]);
     expect(JSON.stringify(rejected[0].changes)).toContain('"second"');
+    expect(counters.get('dxos.echo.edits.rejected')).toBe(1);
 
     // The change after the refused one is sent again and lands.
     await tab.flush();

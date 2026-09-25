@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { type DecodedAutomergePrimaryValue, DocOps, getObjectOnBranch, getRangeFromCursor } from '@dxos/echo-client';
+import { type DecodedAutomergePrimaryValue, getObjectOnBranch, getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { cherryPickHunk } from '@dxos/ui-editor/headless';
@@ -58,7 +59,7 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.AcceptChange>
         // Capture the base text before the splice so the accept can be undone (RestoreText).
         const replaced = content.content.slice(splice.from, splice.from + splice.del);
         accessor.handle.change((doc) => {
-          DocOps.splice(doc, accessor.path, splice.from, splice.del, splice.insert);
+          A.splice(doc, accessor.path.slice(), splice.from, splice.del, splice.insert);
         });
         return { undo: { from: splice.from, del: splice.insert.length, insert: replaced } };
       }),

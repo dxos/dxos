@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { type Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -11,7 +10,6 @@ import { getDeep } from '@dxos/util';
 
 import * as Doc from './automerge/Doc.ts';
 import { getObjectCore } from './echo-handler/index.ts';
-import * as DocOps from './mirror/doc-ops.ts';
 import { heldReplica } from './replica.ts';
 
 /** Where cursors for an accessor resolve, and how positions in its text map to and from there. */
@@ -27,7 +25,7 @@ type CursorTarget = {
  * between the two texts.
  */
 const cursorTarget = (accessor: Doc.Accessor): CursorTarget => {
-  if (!DocOps.isMirrorDoc(accessor.handle.doc())) {
+  if (!A.isProxy(accessor.handle.doc())) {
     return { accessor, toTarget: (position) => position, fromTarget: (position) => position };
   }
   const replica = heldReplica(accessor);
@@ -160,7 +158,7 @@ export const updateText = <T extends Obj.Unknown>(obj: T, path: Doc.KeyPath, new
   invariant(path === undefined || Doc.isKeyPath(path));
   const accessor = getObjectCore(obj).getDocAccessor(path);
   accessor.handle.change((doc) => {
-    DocOps.updateText(doc, accessor.path, newText);
+    A.updateText(doc, accessor.path.slice(), newText);
   });
   return obj;
 };
