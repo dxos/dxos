@@ -212,8 +212,9 @@ changes. `TestReplicationNetwork` disconnect now tears down only the local end.
 
 - The fold-forward trigger (DESIGN.md §10.7 q6) — DECIDED (2026-09-25): the worker's indexing
   stream, alongside #12412's merge. Runtime cost there is still unmeasured.
-- **Winner policy mechanism** (design 6): sentinel actor under a byte-identity contract, or own
-  actor with readers resolving from `A.getConflicts`. Needs a decision before `foldAt` ships.
+- ~~Winner policy mechanism~~ — DECIDED (2026-09-25): each peer folds under its own actor and
+  readers resolve the policy winner from `A.getConflicts` by change `message`; the shared sentinel
+  actor is dropped (safety must not rest on a caller contract).
 - **Engine adoption** (for the object-merging project): `creationHeads` + creation-heads replay in
   `ConvergenceKeyMerger`; mismatched-baseline text guard; `MergeDocumentRef.update`.
 - **Text merge across mismatched baselines**: only detect-and-skip is built; a three-way text diff
