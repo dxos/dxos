@@ -1,9 +1,11 @@
 # ECHO query execution in SQLite
 
-Status: **implemented and off by default**, 2026-09-21, on this branch. The compiled executor covers
-phases 1 to 3 of the plan below and is selected with `EchoHost({ queryExecutor: 'sql' })` or
-`DX_ECHO_QUERY_EXECUTOR=sql`; the in-memory executor stays the default until the compiled path has
-soaked. Phase 4 (EDGE) is a cross-repo change and phase 5 (property indexes, contentless FTS) is not
+Status: **implemented and on by default**, 2026-09-25. The compiled executor covers phases 1 to 3 of
+the plan below and is now the default path; the in-memory executor is still reachable with
+`EchoHost({ queryExecutor: 'memory' })` or `DX_ECHO_QUERY_EXECUTOR=memory`, which is how a suspected
+regression is bisected against the pre-compiler behaviour. The planner also falls back to it per
+query for the shapes `planDeclinedByCompiler` rejects, so both paths stay live regardless of the
+default. Phase 4 (EDGE) is a cross-repo change and phase 5 (property indexes, contentless FTS) is not
 started. Where the implementation departs from the proposal below, the "Implementation notes"
 section at the end records the departure and why.
 

@@ -62,6 +62,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

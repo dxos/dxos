@@ -92,6 +92,7 @@ rule comment-hygiene: Comments state settled reasoning, not noise
     - packages/**/src/**/*.tsx
   unit: file
   system-one: on
+  context: diff
   severity: warn
 ```
 
@@ -355,6 +356,7 @@ rule barrel-imports-not-internal-paths: Import from a directory's barrel, not a 
     - packages/**/src/**/*.tsx
   unit: file
   system-one: on
+  context: imports
   severity: warn
 ```
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useEffect, useState } from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useState } from 'react';
 
 import { type Label } from '@dxos/react-ui';
 
@@ -18,52 +18,40 @@ import { type TreeNodeEntry } from './TreeContext.ts';
 const NOMINAL_ROW_EXTENT = 40;
 
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
-export type RowUnit = { kind: 'header'; key: string; label: Label } | { kind: 'row'; key: string; node: TreeNodeEntry };
+export type RowUnit =
+  | { kind: 'header'; key: string; label: Label }
+  | { kind: 'row'; key: string; node: TreeNodeEntry }
+  | { kind: 'end'; key: string };
+
+/** The id the window measures a unit by, namespaced by kind so no item collides with a header or the end strip. */
+export const rowUnitId = (unit: RowUnit): string => `${unit.kind}:${unit.key}`;
 
 /**
- * The id the window measures a row against — the item's own, because that is what the row element
- * already carries as `data-object-id` and what the window reads back off the DOM.
+ * Flattens the visible entries into the units the window would mount, closed by the "append at
+ * the end" strip when `end` is set.
  */
-export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
-
-/**
- * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
- * cannot be windowed.
- *
- * A disclosable branch is one case it gives up on: its children live inside an `ark` `Branch` whose
- * open state the machine animates, so they are not a flat run of siblings the way a group's
- * children are, and lifting them out would take the disclosure with them.
- *
- * A repeated item id is the other. The window keys a row's measured extent by the id the row
- * carries, so the same id twice would have each row read back the other's height — a row measured,
- * found to disagree and measured again, every commit. A tree that addresses one item at two paths
- * therefore renders whole, as every consumer did before this existed.
- */
-export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
+export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined, { end = false } = {}): RowUnit[] => {
   const units: RowUnit[] = [];
-  const ids = new Set<string>();
-
-  const visit = (nodes: readonly TreeNodeEntry[] | undefined): boolean => {
+  const visit = (nodes: readonly TreeNodeEntry[] | undefined) => {
     for (const node of nodes ?? []) {
       if (node.group) {
-        units.push({ kind: 'header', key: `header:${node.value}`, label: node.props.label });
-        if (!visit(node.children)) {
-          return false;
+        units.push({ kind: 'header', key: node.value, label: node.props.label });
+        visit(node.children);
+      } else {
+        units.push({ kind: 'row', key: node.value, node });
+        if (node.branch && node.open) {
+          visit(node.children);
         }
-        continue;
       }
-      if (node.branch || ids.has(node.id)) {
-        return false;
-      }
-
-      ids.add(node.id);
-      units.push({ kind: 'row', key: node.value, node });
     }
-
-    return true;
   };
 
-  return visit(entries) ? units : undefined;
+  visit(entries);
+  if (end) {
+    units.push({ kind: 'end', key: '' });
+  }
+
+  return units;
 };
 
 /**
@@ -88,22 +76,30 @@ export const findScrollParent = (element: HTMLElement | null): HTMLElement | nul
  * Resolves the element to window against: the one the consumer named, or the nearest that scrolls.
  *
  * Held as state rather than read into a ref, because the answer is only knowable after the tree is
- * in the document and the virtualizer has to re-run once it is.
+ * in the document and the virtualizer has to re-run once it is. `undefined` until then, which the
+ * tree renders as no rows rather than all of them; a scroller the tree finds itself is resolved
+ * before paint, so that frame never shows.
  */
 export const useScroller = (
   treeRef: RefObject<HTMLElement | null>,
   scrollerRef: RefObject<HTMLElement | null> | undefined,
   enabled: boolean,
-): HTMLElement | null => {
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+): HTMLElement | null | undefined => {
+  const [scroller, setScroller] = useState<HTMLElement | null | undefined>(enabled ? undefined : null);
 
-  useEffect(() => {
+  // Before paint when the tree finds its own scroller; a consumer's ref is attached only after this
+  // tree's layout effects have run, so that one is read once the commit is done.
+  useLayoutEffect(() => {
     if (!enabled) {
       setScroller(null);
-      return;
+    } else if (!scrollerRef) {
+      setScroller(findScrollParent(treeRef.current));
     }
-
-    setScroller(scrollerRef?.current ?? findScrollParent(treeRef.current));
+  }, [enabled, scrollerRef, treeRef]);
+  useEffect(() => {
+    if (enabled && scrollerRef) {
+      setScroller(scrollerRef.current ?? findScrollParent(treeRef.current));
+    }
   }, [enabled, scrollerRef, treeRef]);
 
   return scroller;

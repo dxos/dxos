@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Aggregate, Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -169,10 +169,11 @@ describe('Parent Hierarchy', () => {
     }
   });
 
-  test('siblings follow their own parent’s deletion, looking each parent up once', { timeout: 30_000 }, async () => {
-    const [spaceKey] = PublicKey.randomSequence();
-    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
-
+  /**
+   * One removed parent and one kept parent, three children each, reloaded so nothing is served from
+   * the write-side cache. Returns `[removedId, keptId]`.
+   */
+  const seedTwoParentsAndReload = async (peer: EchoTestPeer, spaceKey: PublicKey): Promise<string[]> => {
     let parentIds: string[];
     {
       await using db = await peer.createDatabase(spaceKey);
@@ -186,25 +187,47 @@ describe('Parent Hierarchy', () => {
       db.remove(removed);
       await db.flush();
     }
-
     await peer.reload();
+    return parentIds;
+  };
 
-    {
-      await using db = await peer.openLastDatabase();
-      const names = (await db.query(Filter.type(TestSchema.Person)).run()).map((person) => person.name).sort();
-      expect(names).to.deep.eq(['kept', 'kept child 0', 'kept child 1', 'kept child 2']);
+  const SURVIVORS = ['kept', 'kept child 0', 'kept child 1', 'kept child 2'];
 
-      // A count reads index rows, so the host checks each child's parent against the index.
-      await db.updateIndexes();
-      const lookups = vi.spyOn(peer.host.indexEngine, 'queryObjectIds');
-      const rows = await db
-        .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
-        .run();
-      expect(rows.find((row) => String(row.type).includes(Type.getTypename(TestSchema.Person)))?.count).to.eq(4);
-      const lookupsOf = (id: string) =>
-        lookups.mock.calls.filter(([{ objectIds }]) => objectIds?.some((objectId) => objectId === id)).length;
-      expect(parentIds.map(lookupsOf)).to.deep.eq([1, 1]);
-    }
+  test('siblings follow their own parent’s deletion', { timeout: 30_000 }, async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await seedTwoParentsAndReload(peer, spaceKey);
+
+    await using db = await peer.openLastDatabase();
+    const names = (await db.query(Filter.type(TestSchema.Person)).run()).map((person) => person.name).sort();
+    expect(names).to.deep.eq(SURVIVORS);
+
+    await db.updateIndexes();
+    const rows = await db
+      .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
+      .run();
+    expect(rows.find((row) => String(row.type).includes(Type.getTypename(TestSchema.Person)))?.count).to.eq(4);
+  });
+
+  // Pinned to the memory executor because the assertion counts `indexEngine.queryObjectIds` calls:
+  // batching those is how that executor avoids one lookup per child. The compiled executor resolves
+  // the same deletion state inside a recursive CTE and issues no such lookup, so the count is
+  // vacuously zero there and would assert nothing.
+  test('the memory executor looks each parent up once', { timeout: 30_000 }, async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Person], queryExecutor: 'memory' });
+    const parentIds = await seedTwoParentsAndReload(peer, spaceKey);
+
+    await using db = await peer.openLastDatabase();
+    // A count reads index rows, so the host checks each child's parent against the index.
+    await db.updateIndexes();
+    const lookups = vi.spyOn(peer.host.indexEngine, 'queryObjectIds');
+    await db
+      .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
+      .run();
+    const lookupsOf = (id: string) =>
+      lookups.mock.calls.filter(([{ objectIds }]) => objectIds?.some((objectId) => objectId === id)).length;
+    expect(parentIds.map(lookupsOf)).to.deep.eq([1, 1]);
   });
 });
 

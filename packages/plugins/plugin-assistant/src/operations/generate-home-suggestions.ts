@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
@@ -11,10 +10,9 @@ import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import * as Annotation from '@dxos/echo/Annotation';
-import * as Entity from '@dxos/echo/Entity';
 import { log } from '@dxos/log';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -48,8 +46,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const types = schemas
           .flat()
           .filter(Type.isType)
-          .filter((type) => Annotation.getTypeAnnotation(Type.getSchema(type))?.kind !== Entity.Kind.Relation)
-          .filter((type) => !Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+          .filter((type) => TypeOptions.isUserType(type))
           .filter((type) => Type.getTypename(type) !== collectionTypename);
 
         let prompts: string[] = [];

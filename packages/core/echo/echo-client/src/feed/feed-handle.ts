@@ -3,11 +3,11 @@
 //
 
 import * as EffectContext from 'effect/Context';
-import * as Predicate from 'effect/Predicate';
 
-import { DeferredTask, Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
+import { Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import {
   ObjectDatabaseId,
   type ObjectJSON,
@@ -30,14 +30,12 @@ import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { FeedCoreRegistry } from './feed-core-registry.ts';
 import { FeedObjectCore } from './feed-object-core.ts';
 
-const TRACE_FEED_LOAD = false;
-
 // Appending large amount of objects at once is not supported by the server.
 // https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
 const FEED_APPEND_BATCH_SIZE = 15;
 
 /** One object captured for append: the core it came from, its payload, and its pending-append token. */
-type AppendCapture = { core: FeedObjectCore; json: Record<string, unknown>; token: string };
+type AppendCapture = { core: FeedObjectCore; json: Record<string, unknown>; token: number };
 
 const RECONNECT_INITIAL_DELAY = 1_000;
 
@@ -70,82 +68,6 @@ export class FeedHandle {
 
   public readonly updated = new Event();
 
-  private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
-    const thisRefreshId = ++this._refreshId;
-    try {
-      TRACE_FEED_LOAD &&
-        log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const result = await runServiceCall(
-        this._runtime,
-        this._service['FeedService.queryFeed']({
-          query: {
-            feedNamespace: this._namespace,
-            spaceId: this._spaceId,
-            feedIds: [this._feedId],
-          },
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
-      await this.#applyQueryResult(thisRefreshId, result);
-    } catch (err) {
-      // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
-      //                   We should find the root cause and fix it instead of muting the error.
-      if (!isSqliteNotOpenError(err)) {
-        log.catch(err);
-      }
-      this._error = err as Error;
-      this._isLoading = false;
-      this.updated.emit();
-    }
-  });
-
-  /**
-   * Applies a `queryFeed`/`subscribeFeed` snapshot to the working set, shared by the manual
-   * one-shot {@link _refreshTask} and {@link beginPolling}'s streaming subscription. `refreshId`
-   * guards against a superseded response (an overlapping manual {@link refresh} or a later stream
-   * push) clobbering fresher state that already landed.
-   */
-  async #applyQueryResult(refreshId: number, result: FeedService.FeedQueryResult): Promise<void> {
-    const { objects } = result;
-    TRACE_FEED_LOAD && log.info('items fetched', { refreshId, count: objects?.length ?? 0 });
-    if (refreshId !== this._refreshId || this._ctx.disposed) {
-      return;
-    }
-
-    const parsedObjects = (objects ?? []).flatMap((encoded) => {
-      try {
-        const obj = JSON.parse(encoded) as ObjectJSON;
-        if (!EntityId.isValid(obj.id)) {
-          log.verbose('feed object missing valid id; ignored', { obj });
-          return [];
-        }
-        return [obj];
-      } catch (err) {
-        log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
-        return [];
-      }
-    });
-
-    // Routes through the same core-tracking materialization as query hydration, so a refreshed
-    // re-read never clobbers a not-yet-echoed local `Obj.update` and preserves entity identity.
-    const decodedObjects = await Promise.all(parsedObjects.map((obj) => this.upsertFromJSON(obj))).then((objects) =>
-      objects.filter(Predicate.isNotUndefined),
-    );
-
-    if (refreshId !== this._refreshId) {
-      return;
-    }
-
-    const changed = objectSetChanged(this._objects, decodedObjects);
-    TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId });
-    this._objects = decodedObjects;
-    this.#objectIds = new Set(decodedObjects.map((obj) => obj.id));
-    this._isLoading = false;
-    if (changed) {
-      this.updated.emit();
-    }
-  }
-
   /**
    * Debounces `Obj.update` mutations on live feed objects into a single background append per
    * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
@@ -175,12 +97,17 @@ export class FeedHandle {
   /** Dedupes concurrent hydrations of the same id (reactive query + one-shot query racing). */
   readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
 
-  private _objects: Entity.Unknown[] = [];
-  /** Mirrors `_objects`'s ids, kept incremental so append/delete avoid rescanning the whole working set. */
-  #objectIds = new Set<string>();
+  /**
+   * The feed's objects while subscribed, by id: holds them strongly so the weak core registry keeps
+   * serving them, and tells {@link updated} listeners when the set changes.
+   */
+  #objects = new Map<string, Entity.Unknown>();
+  /** Object id of every block the subscription has sent, by block id; what its deltas refer to. */
+  #subscriptionBlocks = new Map<string, string>();
+  /** Subscription pushes applied in order: a delta only makes sense on top of the push before it. */
+  #pushChain: Promise<void> = Promise.resolve();
   private _isLoading = true;
   private _error: Error | null = null;
-  private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
   /** Cleanup for the active `FeedService.subscribeFeed` stream, set only while polling handlers > 0. */
@@ -196,10 +123,12 @@ export class FeedHandle {
   #subscriptionGeneration = 0;
 
   /**
-   * A retry is scheduled; only the scheduled task clears it, so at most one retry is outstanding.
-   * Not a handle: `scheduleTask` cancels itself when the context disposes.
+   * Settles once the scheduled retry has sent; only that task clears it, so at most one retry is
+   * outstanding and nothing else sends a dirty core ahead of the backoff.
    */
-  #appendRetryPending = false;
+  #appendRetry: Promise<void> | null = null;
+  /** Set by {@link dispose}, whose drain is the last chance to send and so ignores the backoff. */
+  #disposing = false;
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
   /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
   #endpointClosed: Error | null = null;
@@ -239,20 +168,20 @@ export class FeedHandle {
   toJSON() {
     return {
       uri: this._echoUri,
-      objects: this._objects.length,
+      objects: this.#objects.size,
     };
   }
 
-  /**
-   * Objects resident in this handle's core cache. A superset of the queried working set: a core is
-   * registered for every object the handle has hydrated, and is dropped only on `delete` or
-   * `dispose`, so this is the retention-relevant count rather than `_objects.length`.
-   */
   /** The last load, subscription, or append failure; an append failure is cleared once every write has been sent. */
   get error(): Error | null {
     return this._error;
   }
 
+  /**
+   * Objects resident in this handle's core cache. A superset of the queried working set: a core is
+   * registered for every object the handle has hydrated, and is dropped only on `delete` or
+   * `dispose`, so this is the retention-relevant count rather than the subscribed object count.
+   */
   get residentObjectCount(): number {
     return this.#cores.size;
   }
@@ -344,21 +273,18 @@ export class FeedHandle {
     });
   }
 
-  /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
+  /** Add newly-tracked core entities to the held objects and notify subscribers. */
   #addOptimistic(cores: FeedObjectCore[]): void {
-    const newEntities: Entity.Unknown[] = [];
+    let added = false;
     for (const core of cores) {
-      const entity = core.entity;
-      if (!this.#objectIds.has(entity.id)) {
-        this.#objectIds.add(entity.id);
-        newEntities.push(entity);
+      if (!this.#objects.has(core.entity.id)) {
+        this.#objects.set(core.entity.id, core.entity);
+        added = true;
       }
     }
-    if (newEntities.length === 0) {
-      return;
+    if (added) {
+      this.updated.emit();
     }
-    this._objects = [...this._objects, ...newEntities];
-    this.updated.emit();
   }
 
   /** Enqueue a core for the next background append and wake the scheduler. */
@@ -379,9 +305,8 @@ export class FeedHandle {
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
-      this.#objectIds.delete(id);
+      this.#objects.delete(id);
     }
-    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     this.updated.emit();
 
     try {
@@ -412,7 +337,7 @@ export class FeedHandle {
     for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
       const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
       try {
-        await runServiceCall(
+        const { blocks } = await runServiceCall(
           this._runtime,
           this._service['FeedService.insertIntoFeed']({
             subspaceTag: this._namespace,
@@ -422,6 +347,7 @@ export class FeedHandle {
           }),
           { timeout: RPC_TIMEOUT },
         );
+        chunk.forEach(({ core, token }, index) => core.confirmAppend(token, blocks?.[index]));
       } catch (err) {
         this.#onAppendFailed(err, batch.slice(i));
         // A closed endpoint never retries, so the write is lost and the caller must hear it.
@@ -462,17 +388,26 @@ export class FeedHandle {
       return;
     }
 
-    if (this.#appendRetryPending || this._ctx.disposed) {
+    if (this.#appendRetry || this._ctx.disposed) {
       return;
     }
     const delay = this.#appendRetryDelay;
     this.#appendRetryDelay = Math.min(this.#appendRetryDelay * 2, APPEND_RETRY_MAX_DELAY);
-    this.#appendRetryPending = true;
+    const retry = Promise.withResolvers<void>();
+    this.#appendRetry = retry.promise;
+    // Releases flushes waiting on a retry that disposal cancelled.
+    const clearDispose = this._ctx.onDispose(() => retry.resolve());
     scheduleTask(
       this._ctx,
-      () => {
-        this.#appendRetryPending = false;
-        this.#appendScheduler.trigger();
+      async () => {
+        clearDispose();
+        // Cleared first, so a failure of this send can schedule the next retry.
+        this.#appendRetry = null;
+        try {
+          await this.#appendScheduler.runBlocking();
+        } finally {
+          retry.resolve();
+        }
       },
       delay,
     );
@@ -484,7 +419,8 @@ export class FeedHandle {
    * {@link waitForPendingWrites}.
    */
   async #flushDirty(): Promise<void> {
-    if (this.#dirtyCores.size === 0) {
+    // The scheduled retry sends every dirty core, so sending sooner would defeat the backoff.
+    if (this.#dirtyCores.size === 0 || (this.#appendRetry && !this.#disposing)) {
       return;
     }
     if (this.#endpointClosed) {
@@ -520,11 +456,17 @@ export class FeedHandle {
    * through polling — the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
    *
+   * While an append is failing, a drain waits for the scheduled retry rather than sending ahead of
+   * the backoff, and throws if that retry fails too.
+   *
    * Throws if writes are still unsent after {@link FLUSH_ATTEMPTS} drains, or at once when the endpoint is closed.
    */
   async waitForPendingWrites(): Promise<void> {
     for (let attempt = 1; ; attempt++) {
-      if (this.#dirtyCores.size > 0) {
+      const retry = this.#disposing ? null : this.#appendRetry;
+      if (retry) {
+        await retry;
+      } else if (this.#dirtyCores.size > 0) {
         await this.#appendScheduler.runBlocking();
       }
       await Promise.allSettled([...this.#inFlight]);
@@ -534,10 +476,12 @@ export class FeedHandle {
       if (this.#endpointClosed) {
         throw this.#endpointClosed;
       }
-      if (attempt >= FLUSH_ATTEMPTS) {
+      if (retry || attempt >= FLUSH_ATTEMPTS) {
         throw this._error ?? new Error('Feed writes could not be sent.');
       }
-      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+      if (!this.#appendRetry) {
+        await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+      }
     }
   }
 
@@ -555,10 +499,6 @@ export class FeedHandle {
         shouldPull,
       }),
     );
-  }
-
-  async refresh(): Promise<void> {
-    await this._refreshTask.runBlocking();
   }
 
   async getSyncState(): Promise<Feed.SyncState> {
@@ -588,14 +528,7 @@ export class FeedHandle {
         },
       }),
     );
-    return (objects ?? []).flatMap((encoded) => {
-      try {
-        return [JSON.parse(encoded) as ObjectJSON];
-      } catch (err) {
-        log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
-        return [];
-      }
-    });
+    return parseObjects(objects);
   }
 
   /**
@@ -613,6 +546,10 @@ export class FeedHandle {
 
     const existingCore = this.#cores.get(id);
     if (existingCore) {
+      const ref = EchoFeedCodec.blockOf(json);
+      if (!existingCore.accepts(ref)) {
+        return existingCore.entity;
+      }
       try {
         const decoded = await Obj.fromJSON(json, {
           refResolver: this._refResolver,
@@ -620,7 +557,7 @@ export class FeedHandle {
           database: this._database,
           parent: this._parentEntity,
         });
-        existingCore.reconcile(decoded, json);
+        existingCore.reconcile(decoded, ref);
       } catch (err) {
         log.verbose('schema validation error; object ignored', { json, error: err });
       }
@@ -668,14 +605,6 @@ export class FeedHandle {
     return core;
   }
 
-  /**
-   * Internal use.
-   * Doesn't trigger update events.
-   */
-  getObjectsSync(): Entity.Unknown[] {
-    return this._objects;
-  }
-
   getCachedObjectById<T extends Entity.Unknown = Entity.Unknown>(id: EntityId): T | undefined {
     // Feed entries may be objects or relations; callers narrow via the generic, mirroring
     // DatabaseImpl.getObjectById.
@@ -712,12 +641,30 @@ export class FeedHandle {
   }
 
   private async _loadObjects(): Promise<Entity.Unknown[]> {
-    const objects = await this.fetchObjectsJSON();
-    const decodedObjects = await Promise.all(
-      objects.filter((obj) => EntityId.isValid(obj.id)).map((obj) => this.upsertFromJSON(obj)),
-    ).then((objects) => objects.filter(Predicate.isNotUndefined));
+    return [...(await this.#upsertAll(await this.fetchObjectsJSON())).values()];
+  }
 
-    return decodedObjects;
+  /**
+   * Upserts a batch of objects, in order for blocks of the same object: concurrent upserts of a new
+   * id share one hydration, which would apply only the first of its blocks.
+   */
+  async #upsertAll(objects: readonly ObjectJSON[]): Promise<Map<string, Entity.Unknown>> {
+    const byId = new Map<string, ObjectJSON[]>();
+    for (const json of objects) {
+      byId.set(json.id, [...(byId.get(json.id) ?? []), json]);
+    }
+    const entities = new Map<string, Entity.Unknown>();
+    await Promise.all(
+      [...byId].map(async ([id, blocks]) => {
+        for (const json of blocks) {
+          const entity = await this.upsertFromJSON(json);
+          if (entity !== undefined) {
+            entities.set(id, entity);
+          }
+        }
+      }),
+    );
+    return entities;
   }
 
   /**
@@ -757,8 +704,9 @@ export class FeedHandle {
       {
         onData: (result) => {
           this.#reconnectDelay = RECONNECT_INITIAL_DELAY;
-          const refreshId = ++this._refreshId;
-          void this.#applyQueryResult(refreshId, result);
+          this.#pushChain = this.#pushChain
+            .then(() => this.#applyPush(generation, result))
+            .catch((err) => log.catch(err));
         },
         onError: (error) => {
           if (!(error instanceof RpcClosedError)) {
@@ -781,6 +729,63 @@ export class FeedHandle {
     );
   }
 
+  /**
+   * Applies one `subscribeFeed` push: a full snapshot replaces the set of objects, a delta adds the
+   * blocks written since and adopts the positions and removals it reports. Only new blocks are
+   * decoded; a push from a superseded subscription is dropped.
+   */
+  async #applyPush(generation: number, result: FeedService.FeedQueryResult): Promise<void> {
+    if (generation !== this.#subscriptionGeneration || this._ctx.disposed) {
+      return;
+    }
+    const objects = parseObjects(result.objects);
+    const entities = await this.#upsertAll(objects);
+    if (generation !== this.#subscriptionGeneration || this._ctx.disposed) {
+      return;
+    }
+
+    const blocks = result.delta === true ? new Map(this.#subscriptionBlocks) : new Map<string, string>();
+    const next = result.delta === true ? new Map(this.#objects) : new Map<string, Entity.Unknown>();
+    for (const json of objects) {
+      const entity = entities.get(json.id);
+      if (entity !== undefined) {
+        blocks.set(blockKeyOf(json), json.id);
+        next.set(json.id, entity);
+      }
+    }
+    for (const { block, position } of result.positions ?? []) {
+      const id = blocks.get(block);
+      if (id !== undefined && EntityId.isValid(id)) {
+        this.#cores.get(id)?.reposition(block, position);
+      }
+    }
+    const removedIds = new Set<string>();
+    for (const block of result.removed ?? []) {
+      const id = blocks.get(block);
+      if (id !== undefined) {
+        removedIds.add(id);
+        blocks.delete(block);
+      }
+    }
+    if (removedIds.size > 0) {
+      // Only the ids that lost their last block: an optimistic append not yet echoed stays.
+      const held = new Set(blocks.values());
+      for (const id of removedIds) {
+        if (!held.has(id)) {
+          next.delete(id);
+        }
+      }
+    }
+
+    const changed = next.size !== this.#objects.size || [...next.keys()].some((id) => !this.#objects.has(id));
+    this.#subscriptionBlocks = blocks;
+    this.#objects = next;
+    this._isLoading = false;
+    if (changed) {
+      this.updated.emit();
+    }
+  }
+
   /** Tears down the active subscription and cancels any pending reconnect. */
   #teardownFeedSubscription(): void {
     this.#subscriptionGeneration++;
@@ -795,14 +800,15 @@ export class FeedHandle {
     // reference to every object the feed contained, so keeping it past the last subscriber would
     // pin the whole working set for the life of the handle — and it is stale from this point
     // anyway, since nothing is left to refresh it.
-    this._objects = [];
-    this.#objectIds.clear();
+    this.#objects = new Map();
+    this.#subscriptionBlocks = new Map();
   }
 
   /** Throws after teardown if writes could not be sent, since nothing carries them to a handle that replaces this one. */
   async dispose() {
     // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
     // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still live.
+    this.#disposing = true;
     const unsent = await this.waitForPendingWrites().then(
       () => undefined,
       (err: unknown) => err,
@@ -817,23 +823,12 @@ export class FeedHandle {
     this.#cores.clear();
     this.#dirtyCores.clear();
     await this._ctx.dispose();
-    await this._refreshTask.join();
+    await this.#pushChain;
     if (unsent !== undefined) {
       throw new Error(`Feed handle disposed with ${lost} unsent writes.`, { cause: unsent });
     }
   }
 }
-
-const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => {
-  if (before.length !== after.length) {
-    return true;
-  }
-
-  // TODO(dmaretskyi):  We might want to compare the objects data.
-  return before.some((item, index) => item.id !== after[index].id);
-};
-
-const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
 
 /** Whether `err` is, or is caused through a chain of errors by, a closed rpc endpoint. */
 const isEndpointClosedError = (err: unknown): err is Error => {
@@ -847,4 +842,28 @@ const isEndpointClosedError = (err: unknown): err is Error => {
     cause = cause.cause;
   }
   return false;
+};
+
+/** Parses a feed result's encoded objects, skipping any that are not valid object JSON. */
+const parseObjects = (encoded: readonly string[] | undefined): ObjectJSON[] =>
+  (encoded ?? []).flatMap((entry) => {
+    try {
+      const obj = JSON.parse(entry) as ObjectJSON;
+      if (!EntityId.isValid(obj.id)) {
+        log.verbose('feed object missing valid id; ignored', { obj });
+        return [];
+      }
+      return [obj];
+    } catch (err) {
+      log.verbose('feed object JSON parse failed; object ignored', { encoded: entry, error: err });
+      return [];
+    }
+  });
+
+/** A block's id, or the object's for a store that stamps none (it sends full snapshots only). */
+const blockKeyOf = (json: ObjectJSON): string => {
+  const { actorId, sequence } = EchoFeedCodec.blockOf(json);
+  return actorId !== undefined && sequence !== undefined
+    ? EchoFeedCodec.blockId(actorId, sequence)
+    : `object:${json.id}`;
 };

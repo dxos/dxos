@@ -29,7 +29,7 @@ export type MermaidGroup = {
 };
 
 /** Relationship kind, from the edge token; drawn with the UML end markers in `markers`. */
-export type RelationKind = 'reference' | 'inheritance' | 'hasMany' | 'contains';
+export type RelationKind = 'reference' | 'inheritance' | 'implements' | 'hasMany' | 'contains' | 'creates';
 
 export type MermaidEdge = {
   from: string;
@@ -39,23 +39,30 @@ export type MermaidEdge = {
 };
 
 /**
- * Edge tokens: mermaid's own arrows read as references; the classDiagram-style `--|>` (hollow
- * triangle) and ER-style `--{` (crow's foot) and `o-->` (circle at the source) extend the flowchart
- * grammar with the UML kinds, at the cost of mermaid.js rejecting those lines.
+ * Edge tokens: mermaid's own arrows read as references, except the dotted `-.->`, which reads as
+ * creation (UML's dashed «create» dependency). The classDiagram-style `--|>` (hollow triangle) and
+ * `..|>` (dashed hollow triangle) and ER-style `--{` (crow's foot) and `o-->` (circle at the owner)
+ * extend the flowchart grammar with the UML kinds, at the cost of mermaid.js rejecting those lines.
  */
 const EDGE_KINDS: Record<string, RelationKind> = {
   '-->': 'reference',
   '---': 'reference',
-  '-.->': 'reference',
   '==>': 'reference',
+  '-.->': 'creates',
   '--|>': 'inheritance',
+  '..|>': 'implements',
   '--{': 'hasMany',
   'o-->': 'contains',
 };
 
 /** Reference-render labels for the UML kinds, used when the edge carries none of its own. */
-const UML_LABELS: Record<string, string> = { '--|>': 'extends', '--{': 'has many', 'o-->': 'contains' };
-const UML_EDGE = /^(\s*\S+)\s*(o-->|--\|>|--\{)\s*(?:\|(.*?)\|\s*)?(\S+)\s*$/;
+const UML_LABELS: Record<string, string> = {
+  '--|>': 'extends',
+  '..|>': 'implements',
+  '--{': 'has many',
+  'o-->': 'contains',
+};
+const UML_EDGE = /^(\s*\S+)\s*(o-->|--\|>|\.\.\|>|--\{)\s*(?:\|(.*?)\|\s*)?(\S+)\s*$/;
 
 /**
  * Rewrite the UML edge tokens into mermaid-legal labelled arrows, for rendering the source with
@@ -72,15 +79,19 @@ export const toStandard = (source: string): string =>
     })
     .join('\n');
 
-/** Scene arrow markers for a relationship kind. */
-export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail'> => {
+/** Scene arrow markers and line style for a relationship kind; implementation and creation dash, as in UML. */
+export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail' | 'stroke'> => {
   switch (kind) {
     case 'inheritance':
       return { head: 'triangle' };
+    case 'implements':
+      return { head: 'triangle', stroke: 'dashed' };
     case 'hasMany':
       return { head: 'crowsfoot' };
     case 'contains':
       return { tail: 'circle' };
+    case 'creates':
+      return { stroke: 'dashed' };
     default:
       return {};
   }
@@ -97,8 +108,9 @@ const DIRECTIONS: Direction[] = ['TB', 'BT', 'LR', 'RL'];
 
 // `A[Label]`, `A(Label)`, `A{Label}` or a bare `A`.
 const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;
-// `A --> B`, `A-->|label|B`, `A --- B`, plus the UML kinds `B --|> A`, `X --{ Y`, `A o--> B`.
-const EDGE = /^(.+?)\s*(o-->|--\|>|--\{|-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
+// `A --> B`, `A-->|label|B`, `A --- B`, `A -.-> B`, plus the UML kinds `B --|> A`, `B ..|> A`, `X --{ Y`
+// and `A o--> B`.
+const EDGE = /^(.+?)\s*(o-->|--\|>|\.\.\|>|--\{|-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
 const SUBGRAPH = /^subgraph\s+([A-Za-z0-9_-]+)(?:\s*\[(.*?)\])?\s*$/;
 
 // `%% ref A packages/core/echo` — a comment to mermaid proper, so sources stay portable.
