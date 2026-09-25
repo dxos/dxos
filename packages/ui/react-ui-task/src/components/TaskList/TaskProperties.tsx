@@ -4,13 +4,14 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Button, Column, Icon, IconBlock, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 import {
   UNSET_ICON,
   estimateTextStyle,
@@ -130,16 +131,16 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       {/* Unset takes the label's own hue, not the value palette's neutral: they are different
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
-      <IconBlock classNames='size-6'>
+      <div className={TASK_GRID_ICON}>
         <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
-      </IconBlock>
+      </div>
       <span className={mx('min-w-0 pe-1.5 truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
   if (!actions) {
     return (
-      <div className='flex items-center gap-2 min-w-0 px-1' data-testid={testId}>
+      <div className={mx(TASK_GRID, 'min-w-0')} data-testid={testId}>
         {content}
       </div>
     );
@@ -149,7 +150,16 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
     // Deferred, as the row's controls are: the menu is built when it is opened, not when the pane
     // renders three of them.
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button variant='ghost' density='sm' classNames='w-fit justify-start px-0 gap-1' data-testid={testId}>
+      {/* The button IS the row, so its own box carries the section's grid: a flex button wrapping a
+          grid would size the glyph column to the glyph instead of to the shared 24px. `w-fit`, since
+          a property is as wide as its value and a full-width button would paint a bar across the
+          pane on hover. */}
+      <Button
+        variant='ghost'
+        density='sm'
+        classNames={mx(TASK_GRID, 'w-fit min-w-0 justify-start px-0')}
+        data-testid={testId}
+      >
         {content}
       </Button>
     </ActionMenu>

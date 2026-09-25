@@ -4,11 +4,13 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, IconBlock, type ThemedClassName, useTranslation, withColumn } from '@dxos/react-ui';
+import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
+
+import { TASK_GRID, TASK_GRID_CONTENT, TASK_GRID_ICON } from '../task-grid.ts';
 
 /**
  * Stops an event at the question: it sits inside a listbox row, whose click selects the task and
@@ -102,43 +104,48 @@ export const TaskQuestion = ({
   }
 
   return (
-    // The host Column's tracks, re-exposed onto an element of its own so the question can also stop
-    // the events below — it sits inside a listbox row, whose click selects the task and whose arrow
-    // keys move the selection, and typing an answer must do neither.
+    // An element of its own, so the question can stop the events below: it sits inside a listbox
+    // row, whose click selects the task and whose arrow keys move the selection, and typing an
+    // answer must do neither.
     <div
       role='group'
       aria-label={question.text}
-      className={mx('grid gap-y-2 items-start text-sm', withColumn.propagate(), classNames)}
+      // Its own two columns, not the host Column's tracks: the glyph is the question's own first
+      // cell now, so re-exposing the host's tracks (`withColumn.propagate`) would replace this
+      // template with a subgrid and drop the text into whatever the host's second track happens to
+      // be. The host places the question as a whole; the question places what is inside it.
+      className={mx(TASK_GRID, 'gap-y-2 text-sm', classNames)}
       data-testid='task-question'
       onClick={stop}
       onPointerDown={stop}
       onKeyDown={stop}
     >
-      {/* The glyph rides with the text in the content track, as the history's does: it names what
-          the line is rather than acting on it, and the gutter is where the pane's affordances live. */}
-      <div className='flex items-start gap-1 min-w-0'>
-        <IconBlock classNames='size-6 h-[1lh] shrink-0'>
-          <Icon icon='ph--question--regular' classNames='text-warning-text' />
-        </IconBlock>
-        <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
+      {/* The question's own row: its glyph in the shared column, its text beside it. Everything
+          below — the context, the options, the answer field — is that same second column, so the
+          question reads as one block hanging off one glyph rather than as four indented things. */}
+      <div className={TASK_GRID_ICON}>
+        <Icon icon='ph--question--regular' classNames='text-warning-text' />
       </div>
+      <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
       {question.context && !answer && (
-        <p className='text-description wrap-break-word line-clamp-3 min-w-0'>{question.context}</p>
+        <p className={mx(TASK_GRID_CONTENT, 'text-description wrap-break-word line-clamp-3 min-w-0')}>
+          {question.context}
+        </p>
       )}
 
       {answer ? (
-        <div className='flex items-start gap-1 min-w-0'>
-          <IconBlock classNames='size-6 h-[1lh] shrink-0'>
+        <>
+          <div className={TASK_GRID_ICON}>
             <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
-          </IconBlock>
+          </div>
           <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}
           </span>
-        </div>
+        </>
       ) : (
         onAnswer && (
-          <div className='flex flex-col gap-1 min-w-0'>
+          <div className={mx(TASK_GRID_CONTENT, 'flex flex-col gap-1 min-w-0')}>
             {question.options?.map((option, index) => (
               <Button
                 key={option.title}
@@ -193,7 +200,7 @@ export const TaskQuestion = ({
       )}
 
       {message && (
-        <p className='text-description min-w-0' data-testid='task-question.message'>
+        <p className={mx(TASK_GRID_CONTENT, 'text-description min-w-0')} data-testid='task-question.message'>
           {message}
         </p>
       )}
