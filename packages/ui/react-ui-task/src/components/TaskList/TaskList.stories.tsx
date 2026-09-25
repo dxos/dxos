@@ -645,6 +645,62 @@ const DefaultStory = ({
   );
 };
 
+/**
+ * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
+ * carry each question as one line, and the detail — its own root holding just the selected task, as
+ * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ */
+const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
+  const [tasks] = useState<Task.Task[]>(seed);
+  const [selected, setSelected] = useState<string | undefined>(() => tasks[0]?.id);
+  const task = tasks.find(({ id }) => id === selected);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+  }, []);
+
+  // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+  }, []);
+
+  return (
+    <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
+      <div className='flex flex-col min-w-0 min-h-0' data-testid='story.list'>
+        <TaskList.Root
+          tasks={tasks}
+          selected={selected}
+          selectable
+          showGroupLabels={false}
+          onTaskUpdate={handleUpdate}
+          onTaskSelect={(task) => setSelected(task?.id)}
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </TaskList.Root>
+      </div>
+      <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
+        {task ? (
+          <TaskList.Root
+            tasks={[task]}
+            selected={task.id}
+            showDescription
+            onTaskUpdate={handleUpdate}
+            onQuestionAnswer={handleQuestionAnswer}
+          >
+            <TaskList.Edit showDescription classNames='p-2' />
+          </TaskList.Root>
+        ) : (
+          <p className='p-4 text-subdued'>No task selected.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
 const titleCell = (row: Element): HTMLElement =>
   row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
@@ -714,7 +770,10 @@ export const WithQuestions: Story = {
   },
 };
 
-/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
+/**
+ * A row shows its questions one line each; selecting it opens the full question in the edit pane,
+ * where picking an option or typing records the answer, which then shows under the row's question.
+ */
 export const TestAnswerQuestion: Story = {
   args: {
     seed: seedQuestions,
@@ -723,7 +782,23 @@ export const TestAnswerQuestion: Story = {
   play: async ({ canvasElement }) => {
     const answers = () =>
       [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const selectRow = async (title: string) => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]')].find(
+        (element) => element.textContent === title,
+      );
+      if (!row) {
+        throw new Error(`no row titled ${title}`);
+      }
+      await userEvent.click(row);
+    };
 
+    // The rows carry no controls: answering belongs to the pane.
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="task-question"]').length).toBeGreaterThan(0);
+    });
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    await selectRow('Draft the refund reply');
     await waitFor(async () => {
       await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
     });
@@ -736,7 +811,11 @@ export const TestAnswerQuestion: Story = {
       await expect(answers()).toContain('30 days');
     });
 
-    // Typing in the free-form field must not reach the row: its keys would move the selection.
+    // Typing in the free-form field must not reach the list: its keys would move the selection.
+    await selectRow('Schedule the launch post');
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.input"]')).not.toBeNull();
+    });
     const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
     if (!input) {
       throw new Error('the open question has no answer field');
@@ -745,7 +824,40 @@ export const TestAnswerQuestion: Story = {
     await waitFor(async () => {
       await expect(answers()).toContain('Tuesday');
     });
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
+    await expect(canvasElement.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
+  },
+};
+
+export const ListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+};
+
+/** Answering in the detail lands under the row's one-line question, and the row itself has no controls. */
+export const TestListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+  play: async ({ canvasElement }) => {
+    const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
+    const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
+    await waitFor(async () => {
+      await expect(detail()?.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    await expect(list()?.querySelector('[data-testid="task-question.option"]')).toBeNull();
+
+    const option = detail()?.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(
+        [...(list()?.querySelectorAll('[data-testid="task-question.answer"]') ?? [])].map(
+          (answer) => answer.textContent,
+        ),
+      ).toContain('30 days');
+    });
+    await expect(detail()?.querySelector('[data-testid="taskList.edit.questions"]')).toBeNull();
   },
 };
 
