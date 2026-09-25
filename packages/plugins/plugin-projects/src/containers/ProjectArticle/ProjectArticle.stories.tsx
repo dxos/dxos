@@ -70,7 +70,14 @@ const MOVE_ACTION_LABEL = 'Move to…';
  */
 let generation = 0;
 let seeded:
-  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | {
+      generation: number;
+      space: Space;
+      project: Project.Project;
+      taskSet: TaskSet.TaskSet;
+      task: Task.Task;
+      destination: Project.Project;
+    }
   | undefined;
 
 /** Seeded at client init so every story starts populated, including the ones with no play function. */
@@ -120,7 +127,10 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  seeded = { generation: storyGeneration, space, project, taskSet, task };
+  // A second project, so a task row's `Move to…` has somewhere to go.
+  const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
+
+  seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
 };
 
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
@@ -264,7 +274,6 @@ const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -318,6 +327,9 @@ const meta = {
       // the first render.
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, as the app's theme is: the storybook layout portals its dialog outside the story,
+    // so a theme inside the plugin manager would leave the dialog without translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -486,9 +498,7 @@ export const MoveTaskToProject: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const { space, taskSet, task } = await seedContent();
-    const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
-    await space.db.flush({ indexes: true });
+    const { taskSet, task, destination } = await seedContent();
 
     await showTab(canvas, 'tasks');
     const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
@@ -501,6 +511,7 @@ export const MoveTaskToProject: Story = {
 
     // The picker lists the other project only: the task's own project is not a destination.
     const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await expect(within(dialog).findByText('Move task to project')).resolves.toBeTruthy();
     await expect(within(dialog).queryByText(PROJECT_NAME)).toBeNull();
     await userEvent.click(await within(dialog).findByText(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 }));
 
