@@ -5,6 +5,9 @@
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import { PerformanceObserver } from 'node:perf_hooks';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { afterAll, describe, test } from 'vitest';
 
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -37,6 +40,7 @@ const UPDATES = 50;
 const MOUNTED = 200;
 
 const results: { name: string; ms: number; unit: string }[] = [];
+const retained: { name: string; bytes: number; atoms: number }[] = [];
 
 /**
  * Best of `runs`, since the numbers are compared across checkouts and the minimum is the stablest.
@@ -86,6 +90,13 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
       ['', 'app-graph benchmark', '']
         .concat(
           results.map(({ name, ms, unit }) => `  ${name.padEnd(width)}  ${ms.toFixed(2).padStart(9)} ms  ${unit}`),
+        )
+        .concat(
+          ['', 'retained after expansion', ''],
+          retained.map(
+            ({ name, bytes, atoms }) =>
+              `  ${name.padEnd(width)}  ${(bytes / 1024 / 1024).toFixed(2).padStart(9)} MB  ${atoms} registry nodes`,
+          ),
         )
         .join('\n'),
     );
@@ -142,6 +153,92 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
     });
 
     cancels.forEach((cancel) => cancel());
+  });
+
+  test('burst: invalidations before a flush', async () => {
+    // A sync burst: the dependency changes BURST times in one task, as a batch of replicated ECHO
+    // changes would, before the builder gets to flush. The burst is timed on its own because it is the
+    // part that runs inside the change event.
+    const BURST = 50;
+    let recomputes = 0;
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    const { registry, builder, graph } = setup((node) =>
+      Atom.make((get) => {
+        recomputes++;
+        const offset = get(state);
+        return Option.match(get(node), {
+          onNone: () => [],
+          onSome: (source) =>
+            (source.id === ROOT ? nodeArgs(PARENTS, 'p') : nodeArgs(CHILDREN, 'c')).map((node) => ({
+              ...node,
+              data: node.data + offset,
+            })),
+        });
+      }),
+    );
+    Graph.expandSync(graph, ROOT, 'child');
+    await GraphBuilder.flush(builder);
+    for (const parent of nodeArgs(PARENTS, 'p')) {
+      Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
+    }
+    await GraphBuilder.flush(builder);
+
+    let burst = Infinity;
+    let perBurst = 0;
+    let collections = Infinity;
+    let collecting = Infinity;
+    await measure(
+      `burst of ${BURST} over ${PARENTS + 1} connectors, then flush`,
+      `${BURST} sets + 1 flush`,
+      async () => {
+        recomputes = 0;
+        const gc = observeGc();
+        const started = performance.now();
+        for (let index = 0; index < BURST; index++) {
+          registry.set(state, registry.get(state) + 1);
+        }
+        burst = Math.min(burst, performance.now() - started);
+        await GraphBuilder.flush(builder);
+        const { count, ms } = await gc();
+        collections = Math.min(collections, count);
+        collecting = Math.min(collecting, ms);
+        perBurst = recomputes;
+      },
+    );
+    results.push({ name: `  of which the ${BURST} sets`, ms: burst, unit: `${perBurst} connector recomputes` });
+    results.push({ name: '  of which garbage collection', ms: collecting, unit: `${collections} collections` });
+  });
+
+  test('update: one connector among many expanded relations', async () => {
+    // What a flush costs beyond its own connector: the builder's bookkeeping scales with every
+    // expanded relation, and Composer expands thousands.
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    const { registry, builder, graph } = setup((node) =>
+      Atom.make((get) =>
+        Option.match(get(node), {
+          onNone: () => [],
+          onSome: (source) =>
+            source.id === ROOT
+              ? nodeArgs(WIDE)
+              : source.id === `${ROOT}/n0`
+                ? [{ id: `leaf${get(state)}`, type: EXAMPLE_TYPE, data: 0 }]
+                : [],
+        }),
+      ),
+    );
+    Graph.expandSync(graph, ROOT, 'child');
+    await GraphBuilder.flush(builder);
+    for (const node of nodeArgs(WIDE)) {
+      Graph.expandSync(graph, `${ROOT}/${node.id}`, 'child');
+    }
+    await GraphBuilder.flush(builder);
+
+    await measure(`${UPDATES} updates of 1 connector @ ${WIDE} expanded`, `${UPDATES} flushes`, async () => {
+      for (let index = 0; index < UPDATES; index++) {
+        registry.set(state, registry.get(state) + 1);
+        await GraphBuilder.flush(builder);
+      }
+    });
   });
 
   test('expand: a two-level tree', async () => {
@@ -260,4 +357,70 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
       },
     );
   });
+  test('memory: retained by an expanded graph', async () => {
+    const gc = exposeGc();
+    const shapes: { name: string; build: () => Promise<ReturnType<typeof setup>> }[] = [
+      {
+        name: `${PARENTS}x${CHILDREN} tree, ${PARENTS + 1} expanded`,
+        build: async () => {
+          const { registry, builder, graph } = setup(treeConnector);
+          Graph.expandSync(graph, ROOT, 'child');
+          await GraphBuilder.flush(builder);
+          for (const parent of nodeArgs(PARENTS, 'p')) {
+            Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
+          }
+          await GraphBuilder.flush(builder);
+          return { registry, builder, graph };
+        },
+      },
+      {
+        name: `${WIDE} nodes, ${WIDE + 1} expanded`,
+        build: async () => {
+          const nodes = nodeArgs(WIDE);
+          const { registry, builder, graph } = setup((node) =>
+            Atom.make((get) => (Option.getOrUndefined(get(node))?.id === ROOT ? nodes : [])),
+          );
+          Graph.expandSync(graph, ROOT, 'child');
+          await GraphBuilder.flush(builder);
+          for (const node of nodes) {
+            Graph.expandSync(graph, `${ROOT}/${node.id}`, 'child');
+          }
+          await GraphBuilder.flush(builder);
+          return { registry, builder, graph };
+        },
+      },
+    ];
+
+    for (const { name, build } of shapes) {
+      let bytes = Infinity;
+      let atoms = 0;
+      for (let index = 0; index < 3; index++) {
+        gc();
+        const before = process.memoryUsage().heapUsed;
+        const held = await build();
+        gc();
+        bytes = Math.min(bytes, process.memoryUsage().heapUsed - before);
+        atoms = held.registry.getNodes().size;
+      }
+      retained.push({ name, bytes, atoms });
+    }
+  });
 });
+
+/** `global.gc` without `--expose-gc` on the command line. */
+const exposeGc = (): (() => void) => {
+  setFlagsFromString('--expose-gc');
+  return runInNewContext('gc');
+};
+
+/** Collections from now until the returned function resolves; entries arrive after a task. */
+const observeGc = (): (() => Promise<{ count: number; ms: number }>) => {
+  const entries: PerformanceEntry[] = [];
+  const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+  observer.observe({ entryTypes: ['gc'] });
+  return async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    observer.disconnect();
+    return { count: entries.length, ms: entries.reduce((total, { duration }) => total + duration, 0) };
+  };
+};
