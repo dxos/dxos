@@ -153,8 +153,7 @@ export class MirrorRepo extends Resource implements ClientRepo {
    * A genuine Automerge replica of one document, for code written against the Automerge API:
    * ecosystem libraries and tooling that need history, op-id cursors or rich text. It syncs
    * through the worker's byte protocol like any replica client, so the mirror of the same document
-   * converges with it one round trip later. A tab without such code loads no Automerge at all; in a
-   * browser the first call would load the wasm.
+   * converges with it one round trip later.
    */
   async replica<T>(documentId: DocumentId): Promise<DocHandleProxy<T>> {
     this.#replicasOpening ??= this.#openReplicas();

@@ -82,6 +82,9 @@ what stays loaded between calls. The Automerge host under `createProxyHost` evic
 after its last lease, as it does every other document. A document followed through its copy is not
 loaded at all.
 
+[OP-IDS.md](./OP-IDS.md) proposes giving proxy documents Automerge's op ids, so cursors and recent
+history resolve in the client and the client needs no Automerge.
+
 ## Tests at the boundary
 
 `Repo.test.ts` runs `Repo.ProxyRepo` clients against a real `Host.DocumentHost`. `/testing` supplies

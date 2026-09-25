@@ -120,14 +120,31 @@ Values are heap plus wasm in MB.
 - **The mirror side is complete.** With the real `Sync.ClientState` and a tab mid-typing, the mirror
   costs 0.56 to 0.69 MB.
 
-Not counted above: the compiled code of the Automerge and Subduction modules, which a page heap
-snapshot estimates at 7.4 MB (the leader tab may share it with the worker), and the Subduction module
-each tab instantiates and never uses (1.25 MB of linear memory). Part of the saving needs no mirror.
-Tabs could stop instantiating Subduction today, and compacting text history would bring the
-keystroke case close to the burst case, at the cost of the history that branches and versioning
-read. In a single run of a preview build in Chromium, with the same
+Not counted above: the compiled code of the Automerge module, which a page heap snapshot estimated
+at 7.4 MB together with Subduction's (the leader tab may share it with the worker). Tabs no longer
+instantiate Subduction unless ECHO runs in the tab (`DX_HOST`), since abbf4983. Part of the saving
+needs no mirror: compacting text history would bring the keystroke case close to the burst case, at
+the cost of the history that branches and versioning read. In a single run of a preview build in Chromium, with the same
 three documents open, one tab's Automerge linear memory matched the worker's (21.2 against 21.4 MB),
 which suggests a second copy per tab. The 2- and 3-tab runs have not been done.
+
+### Wasm in the tab
+
+Read from the source and a full-catalog build, not observed in a browser. With the default plugins and
+ECHO in the dedicated worker, the tab instantiates one wasm module at boot: Automerge's.
+
+| Module                                 | Size of the .wasm | When the tab instantiates it                                                                                                                                                         |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Automerge                              | 3.6 MB            | At boot, in every mode (`composer-app/src/main.tsx:268`)                                                                                                                             |
+| Subduction                             | 1.7 MB            | At boot, only with `DX_HOST`                                                                                                                                                         |
+| Five sodium modules (hypercore-crypto) | 19 KB             | On a fresh profile's first boot: the storage probe (`src/util/storage.ts:63`) imports the root of `@dxos/client-services`, whose key module instantiates them; always with `DX_HOST` |
+| pica (in Excalidraw)                   | 2.5 KB            | Inserting an image into a drawing                                                                                                                                                    |
+| manifold                               | 490 KB            | Opening a Spacetime scene (experimental plugin)                                                                                                                                      |
+| wnfs                                   | 1.0 MB            | The first `wnfs://` blob (experimental plugin)                                                                                                                                       |
+| panproto                               | 7.3 MB            | plugin-library's atproto lenses (development builds only)                                                                                                                            |
+
+SQLite runs in the worker. esbuild, Excalidraw's font subsetting and pdf.js run in their own workers,
+and pdf.js falls back to its JS decoders because Composer passes it no wasm URL.
 
 The worker's own cost is unmeasured. The sequencer keeps no copy of the document, so the worker
 evicts it 30 s after its last call on it. It keeps up to 1,000 recent entries and 1,000 applied batch
@@ -156,8 +173,9 @@ Automerge has. So the requirement is met by construction instead:
 - **Mirror by default, replica on demand.** `MirrorRepo.replica(documentId)` returns a genuine
   Automerge document handle for one document, synced through the byte protocol like any replica
   client. Any document-level function works on it, and the mirrors of that document, in the same tab
-  and in others, converge with it one round trip later (`src/mirror/replica.test.ts`). A tab that
-  never calls it loads no Automerge.
+  and in others, converge with it one round trip later (`src/mirror/replica.test.ts`). It adds no
+  Automerge document to a tab that never calls it, but Composer still loads Automerge's wasm in
+  every tab (see [Blockers](#blockers)).
 - **ECHO's own editor writes to the mirror and takes cursors from a replica.** The mirror binding
   (`ui-editor/.../collab/mirror/mirror.ts`) writes the editor's edits to the mirror and applies any
   other change as the smallest edit that makes the texts equal. Comments and presence need op-id
@@ -494,7 +512,9 @@ mirror, which hears of each edit a round trip later. A new thread took its name 
 right after typing and came out empty, and a reply read its draft before the text had arrived.
 
 A tab holds Automerge for each document open in an editor. The saving is for documents that are
-only listed, queried or shown.
+only listed, queried or shown. [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md) proposes how the
+editor could run on the proxy alone: the tab mints Automerge's op ids for its own edits and receives
+everyone else's, so cursors and recent history need no replica.
 
 ## E2E suites in mirror mode
 
@@ -663,19 +683,19 @@ Before the default flips, each of these has to hold:
 
 Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week.
 
-| Blocker                                                                                                    | What it takes                                                                                                                                                                           | Size |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Import Automerge as `@dxos/automerge-proxy/Automerge`, which works on both. Text writes in echo-doc and plugin-markdown now do; branch reads (`getObjectOnBranch`) still need Automerge | L    |
-| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                    | They resolve through the replica an open editor holds, so with no editor open they have no cursors; lease a replica where they run, or answer through `MirrorCursors`                   | M    |
-| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                                                     | L    |
-| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                                           | M    |
-| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                                        | M    |
-| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                                         | M    |
-| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                                            | S    |
-| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database                                    | M    |
-| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save                           | S    |
-| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                                           | S    |
-| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                 | S    |
+| Blocker                                                                                                    | What it takes                                                                                                                                                                                                      | Size |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE) | Import Automerge as `@dxos/automerge-proxy/Automerge`, which works on both. Text writes in echo-doc and plugin-markdown now do; branch reads (`getObjectOnBranch`) still need Automerge                            | L    |
+| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                    | They resolve through the replica an open editor holds, so with no editor open they have no cursors; with op ids in the proxy ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)) they would resolve in the tab     | M    |
+| Branches, merge, edit history, versioning, migrations                                                      | Worker RPCs that queue behind pending edits, return heads, and resolve after the tab has the result                                                                                                                | L    |
+| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                    | Port to change events, or give them a replica                                                                                                                                                                      | M    |
+| Heads read right after a write                                                                             | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                                                                   | M    |
+| Recovery after an abrupt worker restart                                                                    | Persist a small per-document op log, or accept the rebuild path                                                                                                                                                    | M    |
+| Automerge 3.5.0's cached view can drift after `A.merge`                                                    | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                                                                       | S    |
+| Remaining Automerge in the tab                                                                             | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database; phase 4 of [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md) | M    |
+| A real worker boundary and a browser run                                                                   | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save                                                      | S    |
+| `meta.updatedAt`                                                                                           | The worker sends change times                                                                                                                                                                                      | S    |
+| Edits pending when a tab closes                                                                            | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                                            | S    |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The spike adds about
