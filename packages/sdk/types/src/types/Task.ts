@@ -529,6 +529,44 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
   return entry;
 };
 
+/** A status transition read back out of a task's log. */
+export type StatusChange = {
+  /** Epoch ms of the entry. */
+  timestamp: number;
+  status: Status;
+  /** Absent when the task held no status before. */
+  previousStatus?: Status;
+  entry: ChangeEntry;
+};
+
+// Matches the status note {@link update} writes; an entry whose note a caller replaced carries no
+// transition, since the entry holds no structured status of its own.
+const STATUS_NOTE = /Status (?:changed from (\w+) to (\w+)|set to (\w+))\./;
+
+const isStatus = Schema.is(Status);
+
+/** The status transition an entry records, if it records one. */
+export const getStatusChange = (entry: HistoryEntry): StatusChange | undefined => {
+  if (!isChangeEntry(entry)) {
+    return undefined;
+  }
+  const match = entry.description?.match(STATUS_NOTE);
+  const timestamp = Date.parse(entry.date);
+  if (!match || Number.isNaN(timestamp)) {
+    return undefined;
+  }
+  const [, from, to, set] = match;
+  const status = to ?? set;
+  if (!isStatus(status)) {
+    return undefined;
+  }
+  return { timestamp, status, ...(isStatus(from) ? { previousStatus: from } : {}), entry };
+};
+
+/** The status transitions a task's log records, oldest first. */
+export const getStatusChanges = (history: readonly HistoryEntry[] | undefined): StatusChange[] =>
+  (history ?? []).map(getStatusChange).filter((change): change is StatusChange => change !== undefined);
+
 /** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
 export const setStatus = (task: Task, status: Status, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { status }, options);

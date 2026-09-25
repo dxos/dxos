@@ -627,6 +627,63 @@ describe('buildSessionTimeline', () => {
       expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
     }, Effect.provide(TestTraceService.layer)),
   );
+  test('bounds task lanes and threads their nodes from the task history alone', ({ expect }) => {
+    const first = Task.make({ title: 'First', status: 'todo' });
+    const second = Task.make({ title: 'Second', status: 'todo' });
+    Task.setStatus(first, 'started', { date: at(1_000) });
+    Task.ask(first, { text: 'Which schema?', date: at(1_500) });
+    Task.setStatus(first, 'done', { date: at(2_000) });
+    Task.setStatus(second, 'started', { date: at(3_000) });
+    const chat = makeChat('History', [first, second]);
+
+    const timeline = buildSessionTimeline({ traceMessages: [], sessions: [chat.session], tasks: [first, second] });
+
+    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+    expect(firstLane).toMatchObject({ status: 'done', start: 1_000, end: 2_000 });
+    expect(secondLane).toMatchObject({ status: 'running', start: 3_000, end: undefined });
+    expect(
+      timeline.markers
+        .filter((marker) => marker.laneId === firstLane?.id)
+        .map(({ label, timestamp, level }) => ({ label, timestamp, level })),
+    ).toEqual([
+      { label: 'Task started', timestamp: 1_000, level: undefined },
+      { label: 'Which schema?', timestamp: 1_500, level: 'warn' },
+      { label: 'Task done', timestamp: 2_000, level: undefined },
+    ]);
+    expect(timeline.range).toEqual({ start: 1_000, end: 3_000 });
+  });
+
+  it.effect(
+    'draws a status change once when both the trace and the task history record it',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'todo' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Both', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+        }),
+      );
+      Task.setStatus(first, 'started', { date: at(2) });
+      Task.update(first, { priority: 'high' }, { date: at(3) });
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+      });
+
+      const markers = timeline.markers
+        .filter((marker) => marker.laneId === `task:${first.id}`)
+        .toSorted((a, b) => a.timestamp - b.timestamp);
+      expect(markers.map((marker) => marker.label)).toEqual(['Task started', 'Priority set to high.']);
+      expect(markers[0]?.pid).toBe('agent');
+    }, Effect.provide(TestTraceService.layer)),
+  );
 });
 
 const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
@@ -666,6 +723,9 @@ const makeChat = (name: string, tasks: readonly Task.Task[]): TestChat => {
     },
   };
 };
+
+/** An ISO date `ms` after the epoch, for history entries set against the trace's clock. */
+const at = (ms: number): string => new Date(ms).toISOString();
 
 const toolCall = (name: string) =>
   Trace.write(Trace.CompleteBlock, {

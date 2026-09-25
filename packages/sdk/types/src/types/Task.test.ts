@@ -388,6 +388,26 @@ describe('history', () => {
       expect(task.history?.[0].actor).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
   );
+
+  test('reads back the status transitions the edits recorded', ({ expect }) => {
+    const task = Task.make({ title: 'Migrate schema' });
+    Task.setStatus(task, 'todo', { date: '2026-08-01T09:00:00.000Z' });
+    Task.update(task, { status: 'started', priority: 'high' }, { date: '2026-08-01T10:00:00.000Z' });
+    Task.setAssignee(task, { name: 'Scout' }, { date: '2026-08-01T10:30:00.000Z' });
+    Task.setStatus(task, 'done', { date: '2026-08-01T11:00:00.000Z', description: 'Shipped.' });
+
+    // The replaced note carries no transition: the entry holds no structured status of its own.
+    expect(
+      Task.getStatusChanges(task.history).map(({ timestamp, status, previousStatus }) => ({
+        timestamp,
+        status,
+        previousStatus,
+      })),
+    ).toEqual([
+      { timestamp: Date.parse('2026-08-01T09:00:00.000Z'), status: 'todo', previousStatus: undefined },
+      { timestamp: Date.parse('2026-08-01T10:00:00.000Z'), status: 'started', previousStatus: 'todo' },
+    ]);
+  });
 });
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] });
