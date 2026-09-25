@@ -17,9 +17,8 @@ const HASHED_ASSET_PATH = /^\/assets\/[^/]+$/;
 const FILE_PATH = /\.[a-zA-Z0-9]+$/;
 
 /**
- * Applied to content-hashed assets only. Cloudflare's documented default for static assets is
- * `max-age=0, must-revalidate`, which costs a conditional request per chunk on every load and on
- * every service worker install — and the install fetches ~4,400 entries through the HTTP cache.
+ * For archive hits, which the Worker builds itself. Live assets get the same value from
+ * `public/_headers`, since the Worker never sees them; keep the two in step.
  */
 export const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 

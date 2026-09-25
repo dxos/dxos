@@ -1,0 +1,11 @@
+# Applied by Workers Static Assets to assets it serves directly, which is every live asset: the Worker
+# only runs on a miss (`run_worker_first` covers /api and /.well-known alone). Rules here do not reach
+# responses the Worker builds, so the archive fallback in `src/functions/_worker.ts` sets its own.
+
+# Vite's output is content-hashed, so a URL names the same bytes forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Copied from `public/assets/plugin-tldraw/` with stable filenames: an update must reach existing clients.
+/assets/plugin-tldraw/*
+  ! Cache-Control

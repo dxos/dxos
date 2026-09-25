@@ -285,7 +285,7 @@ const handleWellKnown = (request: Request, document: object | undefined): Respon
  * current build references.
  */
 const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise<Response | undefined> => {
-  if (!env.ASSET_ARCHIVE || !url.pathname.startsWith('/assets/')) {
+  if (!env.ASSET_ARCHIVE || !isHashedAssetPath(url.pathname)) {
     return undefined;
   }
 
@@ -299,8 +299,7 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('ETag', object.httpEtag);
-  // Same reasoning as the live path: these are content-hashed, so they can never change under a
-  // client. Only the flat output is hashed, but the archive holds nothing else.
+  // `_headers` does not reach a Worker-built response. Only hashed paths get this far.
   headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
   // Distinguishes a retention hit from a live one in the logs, which is how we learn whether the
   // window is long enough without instrumenting the client.
@@ -310,7 +309,9 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
 };
 
 /**
- * Serve a static asset, correcting two things the asset server does not do for us.
+ * Serve an asset the asset server did not match. Live assets never reach the Worker (only `/api/*`
+ * and `/.well-known/*` run it first), so this sees misses alone; their cache headers live in
+ * `public/_headers`.
  *
  * `not_found_handling: "single-page-application"` answers EVERY unmatched path with `index.html` and a
  * 200, asset paths included. A chunk dropped by a later deploy therefore resolves to an HTML document
@@ -321,11 +322,6 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
  * The check is gated on `Sec-Fetch-Mode` rather than on the path alone: a navigation must keep the SPA
  * fallback whatever its URL looks like, so a client-side route containing a dot cannot be mistaken for
  * a missing file.
- *
- * Content-hashed assets are also permanently immutable, yet Cloudflare's documented default for static
- * assets is `max-age=0, must-revalidate` — a conditional request per chunk on every load and on every
- * service worker install, where the precache fetches ~4,200 entries through the HTTP cache. `_headers`
- * cannot override this while the Worker has a `main`, so the header is set here.
  */
 const serveAsset = async (request: Request, env: Env): Promise<Response> => {
   const url = new URL(request.url);
@@ -347,15 +343,6 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
         headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
       })
     );
-  }
-
-  if (isHashedAssetPath(url.pathname)) {
-    // Headers on a fetched Response are immutable, so the response is rebuilt rather than patched.
-    // `body` is passed through unread to keep it streaming, and the status is preserved so a 304 or a
-    // range response survives.
-    const headers = new Headers(response.headers);
-    headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
-    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
 
   return response;
