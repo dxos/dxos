@@ -8,3 +8,4 @@
 # Copied from `public/assets/plugin-tldraw/` with stable filenames: an update must reach existing clients.
 /assets/plugin-tldraw/*
   ! Cache-Control
+  Cache-Control: public, max-age=0, must-revalidate

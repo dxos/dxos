@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import {
   Aggregate,
+  Annotation,
   Collection,
   Dataset,
   type Entity,
@@ -4250,6 +4251,81 @@ describe('Query', () => {
       await db.flush({ updates: true });
       await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
       expect(query.results.map((obj) => obj.name)).toEqual(['Target']);
+    });
+  });
+
+  describe.each(['memory', 'sql'] as const)('Filter.annotation (%s executor)', (queryExecutor) => {
+    const StatusAnnotation = Annotation.make({ id: 'org.dxos.annotation.test-status', schema: Schema.String });
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+
+    const setup = async () => {
+      const db = await createDatabase();
+      const done = db.add(Obj.make(TestSchema.Expando, { name: 'Done' }));
+      Obj.update(done, (done) => Annotation.set(done, StatusAnnotation, 'done'));
+      const open = db.add(Obj.make(TestSchema.Expando, { name: 'Open' }));
+      Obj.update(open, (open) => Annotation.set(open, StatusAnnotation, 'open'));
+      const plain = db.add(Obj.make(TestSchema.Expando, { name: 'Plain' }));
+      await db.flush({ indexes: true });
+      return { db, plain };
+    };
+
+    const names = (objects: readonly { name?: unknown }[]) => objects.map((obj) => String(obj.name)).sort();
+
+    test('without a value matches entities carrying the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation))).run();
+      expect(names(objects)).toEqual(['Done', 'Open']);
+    });
+
+    test('with a value matches entities whose value is equal', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation, 'done'))).run();
+      expect(names(objects)).toEqual(['Done']);
+    });
+
+    test('negation keeps entities without the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db
+        .query(
+          Query.select(
+            Filter.and(Filter.type(TestSchema.Expando), Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+          ),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Open', 'Plain']);
+    });
+
+    test('filters the result of a traversal', async () => {
+      const { db } = await setup();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(Obj.make(TestSchema.Expando, { name: 'Child' }));
+      const archived = db.add(Obj.make(TestSchema.Expando, { name: 'Archived child' }));
+      Obj.setParent(child, parent);
+      Obj.setParent(archived, parent);
+      Obj.update(archived, (archived) => Annotation.set(archived, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(
+          Query.select(Filter.id(parent.id))
+            .children()
+            .select(Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Child']);
+    });
+
+    test('a live query follows annotation changes', async () => {
+      const { db, plain } = await setup();
+
+      const query = db.query(Query.select(Filter.annotation(StatusAnnotation, 'done')));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+
+      Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true, updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
     });
   });
 
