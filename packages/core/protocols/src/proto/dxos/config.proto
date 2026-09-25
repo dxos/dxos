@@ -226,7 +226,9 @@ message Runtime {
     /// soaked. Set via DX_AUTOMERGE_CREDENTIALS.
     optional bool automerge_credentials = 17;
 
-    /// Query evaluation path; defaults to MEMORY. `DX_ECHO_QUERY_EXECUTOR` overrides it when unset.
+    /// Query evaluation path; defaults to SQL. Set MEMORY to evaluate in JS instead, which is how a
+    /// suspected regression is bisected against the pre-compiler path. `DX_ECHO_QUERY_EXECUTOR`
+    /// overrides it when unset.
     optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
   }
 
