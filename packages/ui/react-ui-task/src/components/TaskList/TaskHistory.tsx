@@ -10,8 +10,8 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { formatRelative } from '../../util/index.ts';
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
+import { Time } from '../Time/index.ts';
 import { UNSET_ICON } from './status-icons.ts';
 
 /**
@@ -101,9 +101,9 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
           <div className='flex gap-2 min-w-0'>
             {/* Wraps: an entry is a sentence, and truncating it hides what actually happened. */}
             <span className='grow min-w-0'>{entryText(entry)}</span>
-            {/* Relative, because the log is read as "what has been happening" rather than as a
-                record to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-            <span className='shrink-0 whitespace-nowrap tabular-nums text-right'>{formatRelative(entry.date)}</span>
+            {/* Compact and live, because the log is read as "what has been happening" rather than as
+                a record to cite — and the record is a hover away, in the tooltip. */}
+            <Time date={entry.date} classNames='shrink-0 text-right' />
           </div>
         </div>
       ))}
