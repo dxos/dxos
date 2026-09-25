@@ -157,7 +157,11 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       <Button
         variant='ghost'
         density='sm'
-        classNames={mx(TASK_GRID, 'w-fit min-w-0 justify-start px-0')}
+        // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
+        // button's box is taller than it — top-aligned, its glyph and label sat against the top of
+        // the hover surface rather than in it. The wrapping rows (history, a question) keep
+        // `items-start`, where a glyph must stay on the first line.
+        classNames={mx(TASK_GRID, 'items-center w-fit min-w-0 justify-start px-0')}
         data-testid={testId}
       >
         {content}
