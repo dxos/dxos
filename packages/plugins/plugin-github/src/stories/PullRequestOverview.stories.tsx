@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -17,16 +16,9 @@ import { translations } from '#translations';
 import { PullRequestOverview, type PullRequestOverviewProps } from '../components/PullRequestOverview/index.ts';
 import { FixtureLinkSourcePlugin, PULL_REQUEST_13348_BODY, PULL_REQUEST_13348_RUNS } from '../testing/index.ts';
 
-const DefaultStory = (props: PullRequestOverviewProps) => (
-  <div className='dx-fill overflow-auto px-4'>
-    <PullRequestOverview {...props} />
-  </div>
-);
-
 const meta = {
   title: 'plugins/plugin-github/stories/PullRequestOverview',
   component: PullRequestOverview,
-  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -44,9 +36,12 @@ type Story = StoryObj<typeof meta>;
 
 const REAL_PULL_REQUEST: PullRequestOverviewProps = {
   body: PULL_REQUEST_13348_BODY,
-  url: 'https://github.com/dxos/dxos/pull/13348',
-  baseBranch: 'main',
-  headBranch: 'dm/wonderful-thompson-njcels',
+  details: {
+    reference: 'dxos/dxos#13348',
+    state: 'open',
+    checks: 'CI passing 22/22',
+    branches: 'dm/wonderful-thompson-njcels → main',
+  },
   runs: PULL_REQUEST_13348_RUNS,
 };
 
@@ -101,5 +96,5 @@ export const ArtifactPreview: Story = {
 
 /** No description, no footers, checks still loading. */
 export const Empty: Story = {
-  args: { url: 'https://github.com/dxos/dxos/pull/1' },
+  args: { details: { reference: 'dxos/dxos#1' } },
 };

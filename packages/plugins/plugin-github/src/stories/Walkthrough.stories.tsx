@@ -3,38 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import {
-  type DiffLayout,
-  type DiffLineTarget,
-  type ThemeExtensionsOptions,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  diffBlocks,
-  walkthroughSidebar,
-  walkthroughTheme,
-} from '@dxos/ui-editor';
+import { type DiffLayout, type DiffLineTarget } from '@dxos/ui-editor';
 
 import { translations } from '#translations';
 
 import { LineCommentPopover } from '../components/CommentComposer/index.ts';
+import { WalkthroughView } from '../components/WalkthroughView/index.ts';
 import { WALKTHROUGH } from './walkthrough-fixture.ts';
-
-/**
- * A definite content width, which the chunks cap themselves against: a block widget with no query
- * container above it would size the document to its own longest line.
- */
-const walkthroughSlots: ThemeExtensionsOptions['slots'] = {
-  content: {
-    className: 'dx-container-type-inline-size w-full mx-auto! max-w-[min(72rem,100%-3rem)] py-3!',
-  },
-};
 
 type StoryArgs = {
   text: string;
@@ -49,7 +27,6 @@ type StoryArgs = {
  * separate diff view the prose is wrapped around.
  */
 const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
   const [target, setTarget] = useState<DiffLineTarget>();
   const [comment, setComment] = useState('');
   const anchorRef = useRef<HTMLElement | null>(null);
@@ -64,23 +41,14 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
     anchorRef.current = null;
   }, []);
 
-  const extensions = useMemo(
-    () => [
-      createThemeExtensions({ themeMode, slots: walkthroughSlots }),
-      createBasicExtensions({ lineWrapping: true, readOnly: true }),
-      createMarkdownExtensions(),
-      decorateMarkdown(),
-      walkthroughTheme(),
-      diffBlocks({ layout, ...(comments ? { onLineComment: handleLineComment } : {}) }),
-      sidebar === 'none' ? [] : walkthroughSidebar({ variant: sidebar }),
-    ],
-    [themeMode, layout, sidebar, comments, handleLineComment],
-  );
-  const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
-
   return (
     <>
-      <div ref={parentRef} className='dx-fill overflow-auto' />
+      <WalkthroughView
+        value={text}
+        layout={layout}
+        sidebar={sidebar}
+        onLineComment={comments ? handleLineComment : undefined}
+      />
       <LineCommentPopover
         open={!!target}
         anchorRef={anchorRef}

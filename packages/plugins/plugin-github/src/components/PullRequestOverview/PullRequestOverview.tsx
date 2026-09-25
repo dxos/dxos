@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useMemo } from 'react';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
 import { meta } from '#meta';
@@ -16,53 +17,57 @@ import { type GitHubOperation } from '#types';
 import { parseArtifactLink, parsePullRequestBody } from '../../pull-request-body.ts';
 import { ArtifactPill } from './ArtifactPill.tsx';
 import { CheckRunList } from './CheckRunList.tsx';
-import { RelatedCards } from './RelatedCards.tsx';
+import { PullRequestDetails, type PullRequestDetailsValues } from './PullRequestDetails.tsx';
+import { RelatedCards, useRelatedItems } from './RelatedCards.tsx';
 
 export type PullRequestOverviewProps = {
   /** The pull request's description as written on GitHub, footers included. */
   body?: string;
-  url?: string;
-  baseBranch?: string;
-  headBranch?: string;
+  details: PullRequestDetailsValues;
   /** Undefined while the status is loading. */
   runs?: readonly GitHubOperation.CheckRun[];
 };
 
 /**
- * A pull request as its author presented it: the description, what it links to beyond the diff,
- * and every check on its head commit.
+ * A pull request as its author presented it: the description, the facts about it, what it links to
+ * beyond the diff, and every check on its head commit.
  */
-export const PullRequestOverview = ({ body, url, baseBranch, headBranch, runs }: PullRequestOverviewProps) => {
+export const PullRequestOverview = ({ body, details, runs }: PullRequestOverviewProps) => {
   const { t } = useTranslation(meta.profile.key);
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
-  const hasRelated =
-    parsed.artifacts.length > 0 || !!parsed.previewUrl || !!parsed.claudeCode || headBranch !== undefined;
+  const related = useRelatedItems(parsed);
 
   return (
-    <div className='flex flex-col gap-6 w-full max-w-[min(72rem,100%-3rem)] mx-auto py-4'>
-      {parsed.markdown ? (
-        <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
-      ) : (
-        <p className='text-description'>{t('no-description.message')}</p>
-      )}
-      {hasRelated && (
-        <Section title={t('related.label')}>
-          <RelatedCards {...parsed} url={url} baseBranch={baseBranch} headBranch={headBranch} />
-        </Section>
-      )}
-      <Section title={t('checks.label')}>
-        <CheckRunList runs={runs} />
-      </Section>
-    </div>
+    <ScrollArea.Root thin>
+      <ScrollArea.Viewport>
+        <Flex column gap='form-section' classNames='w-full max-w-[min(72rem,100%-3rem)] mx-auto py-4'>
+          {parsed.markdown ? (
+            <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
+          ) : (
+            <Empty label={t('no-description.message')} />
+          )}
+          <PullRequestDetails values={details} />
+          {related.length > 0 && (
+            <Section label={t('related.label')}>
+              <RelatedCards items={related} />
+            </Section>
+          )}
+          <CheckRunList runs={runs} />
+        </Flex>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
-const Section = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className='flex flex-col gap-2'>
-    <h2 className='text-sm font-medium uppercase text-description'>{title}</h2>
+/** A labelled group, labelled the way a form field is. */
+const Section = ({ label, children }: PropsWithChildren<{ label: string }>) => (
+  <Flex column gap='form'>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
+    </Field.Root>
     {children}
-  </section>
+  </Flex>
 );
 
 /**
@@ -73,10 +78,6 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
-      // The default renderer leaves a table unruled, which reads as run-on text in a before/after grid.
-      table: ({ children }) => <table className='my-2 border-collapse'>{children}</table>,
-      th: ({ children }) => <th className='px-2 py-1 border border-separator text-start'>{children}</th>,
-      td: ({ children }) => <td className='px-2 py-1 border border-separator'>{children}</td>,
       a: ({ children, href, node: _node, ...props }) => {
         const artifact = href ? parseArtifactLink(href) : undefined;
         if (artifact) {
