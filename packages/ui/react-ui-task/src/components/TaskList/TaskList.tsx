@@ -30,7 +30,7 @@ import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
 import { STATUS_ORDER } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
-import { TaskListEdit, type TaskListEditProps } from './TaskListEdit.tsx';
+import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
@@ -110,12 +110,6 @@ type TaskListRootProps = PropsWithChildren<{
   showDescription?: boolean;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /**
-   * Render the questions in each task's history under its title, one line each, and the open ones in
-   * full in `TaskList.Edit`. On by default: an open question is why a task is blocked, so the row
-   * should say so without opening anything.
-   */
-  showQuestions?: boolean;
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -154,11 +148,6 @@ type TaskListRootProps = PropsWithChildren<{
    * Enables collapsing/expanding a task's sub-tasks; called with the new set of collapsed ids.
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
-  /**
-   * Enables answering the selected task's open questions in `TaskList.Edit`; called with the question
-   * entry's id and the answer. Without it the questions render read-only.
-   */
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;
 
 const TaskListRoot = ({
@@ -171,7 +160,6 @@ const TaskListRoot = ({
   showDescription = false,
   descriptionComponents,
   showEstimates = false,
-  showQuestions = true,
   hierarchical = false,
   collapsed,
   selected: selectedProp,
@@ -184,7 +172,6 @@ const TaskListRoot = ({
   onTaskCheck,
   onTaskMove,
   onCollapsedChange,
-  onQuestionAnswer,
 }: TaskListRootProps) => {
   // Uncontrolled by default: a host that only wants the click callback still gets the selected
   // styling, and one that owns the selection passes `selected`.
@@ -251,7 +238,6 @@ const TaskListRoot = ({
       showDescription={showDescription}
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
-      showQuestions={showQuestions}
       hierarchical={hierarchical}
       debug={debug}
       showGutter={showGutter}
@@ -267,7 +253,6 @@ const TaskListRoot = ({
       onTaskSelect={selectable ? handleSelect : undefined}
       onTaskCheck={onTaskCheck}
       onTaskMove={onTaskMove}
-      onQuestionAnswer={onQuestionAnswer}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
       <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
@@ -375,7 +360,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     showOrdinals,
     showDescription,
     descriptionComponents,
-    showQuestions,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -423,7 +407,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       selected={selected}
       checked={checked}
       showDescription={showDescription}
-      showQuestions={showQuestions}
       renderTrailing={TaskTreeTrailing}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}
@@ -484,9 +467,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
           reach overflow on its end side, and `justify-end` spills the excess off the start. */}
       <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-        <TaskListItemArtifacts task={task} />
-        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+        <TaskTags task={task} />
       </div>
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
@@ -591,6 +572,30 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
 };
 
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
+
+/**
+ * Everything a task carries as a chip: its tags, what it produced, and who has it.
+ *
+ * Bare chips with no layout of their own, so a host decides how they run — the row scrolls them on
+ * one line inside its chip cell, a detail pane wraps them into a flow under the title. Rendering the
+ * same set in both is the point: a reader who learned the row's chips reads the pane's without
+ * learning anything new.
+ */
+export const TaskTags = ({ task }: { task: Task.Task }) => {
+  // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
+  // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  return (
+    <>
+      <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      <TaskListItemArtifacts task={task} />
+      {current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+    </>
+  );
+};
+
+TaskTags.displayName = 'TaskList.Tags';
 
 /**
  * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
@@ -776,14 +781,14 @@ export const TaskList = {
   Viewport: TaskListViewport,
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
-  Edit: TaskListEdit,
   Assignee: TaskListAssignee,
+  Editor: TaskListEditor,
 };
 
 export type {
   TaskListAssigneeProps,
   TaskListContentProps,
-  TaskListEditProps,
+  TaskListEditorProps,
   TaskListGroupLabelProps,
   TaskListRootProps,
   TaskListViewportProps,
