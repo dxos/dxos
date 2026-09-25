@@ -20,6 +20,8 @@ tasks:
   # Vite's `emptyOutDir`.
   bundle:
     script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
+    inputs:
+      - public/**/*
     options:
       # Same untracked `.env` as `serve`, so a local production bundle carries the same keys.
       envFile: .env
