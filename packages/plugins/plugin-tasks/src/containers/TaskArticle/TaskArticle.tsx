@@ -65,7 +65,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
       <Panel.Toolbar>
         <Toolbar.Root classNames='dx-document'>
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
-                text below, while the toolbar carries what can be done to it. */}
+              text below, while the toolbar carries what can be done to it. */}
           <Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
         </Toolbar.Root>
@@ -74,12 +74,12 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
         <ScrollArea.Root thin>
           <ScrollArea.Viewport classNames='dx-document'>
             {/* One column for the whole pane, so the gutter has a single owner: the fields, the
-                  section headings and the cards all start at the content track, and only a glyph
-                  hangs outside it. */}
+                section headings and the cards all start at the content track, and only a glyph
+                hangs outside it. */}
             <Column.Root gutter='md' gap='lg' classNames='py-2'>
               <Column.Center>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
-                      needs neither the create case nor the selection the strip reads. */}
+                    needs neither the create case nor the selection the strip reads. */}
                 <TaskEditor
                   task={task}
                   onUpdate={handleUpdate}
@@ -90,24 +90,24 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
               </Column.Center>
 
               {/* What the task carries, in a flow rather than the row's one scrolling line: the
-                    pane has the width to wrap them, and a chip that wraps is a chip the reader can
-                    see without dragging the row sideways. */}
+                  pane has the width to wrap them, and a chip that wraps is a chip the reader can
+                  see without dragging the row sideways. */}
               <Column.Center classNames='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
                 {/* First, and always present: the mnemonic is what the task is called when it is
-                      referred to elsewhere, so the chip that copies it leads the flow whether or not
-                      the task carries anything else. */}
+                    referred to elsewhere, so the chip that copies it leads the flow whether or not
+                    the task carries anything else. */}
                 <TaskMnemonic task={task} />
                 <TaskTags task={task} />
               </Column.Center>
 
               {/* The task's own fields, under what it says: they are properties of the task, so
-                    they read after the description rather than as chrome above it — and with the
-                    room a pane has, each says what its glyph means. */}
+                  they read after the description rather than as chrome above it — and with the
+                  room a pane has, each says what its glyph means. */}
               <TaskProperties task={task} onTaskUpdate={handleUpdate} />
 
               {/* Headed like the sections around it, and only when something is waiting: a
-                    standing "Questions" label over nothing says the pane expects them, when what a
-                    task with none has is nothing to answer. */}
+                  standing "Questions" label over nothing says the pane expects them, when what a
+                  task with none has is nothing to answer. */}
               {openQuestions.length > 0 && (
                 <Column.Section label={t('task-questions.label')}>
                   {openQuestions.map((thread) => (
@@ -123,7 +123,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
               {history && history.length > 0 && <TaskHistory entries={history} />}
 
               {/* What the task produced, as cards. `plugin-space` renders the grid; nothing shows
-                    for a task with no artifacts, so the section is absent rather than empty. */}
+                  for a task with no artifacts, so the section is absent rather than empty. */}
               {artifacts && artifacts.length > 0 && (
                 <Column.Section label={t('task-artifacts.label')} classNames='gap-y-0'>
                   <Surface.Surface

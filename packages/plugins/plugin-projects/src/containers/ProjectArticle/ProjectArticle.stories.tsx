@@ -406,11 +406,26 @@ export const TaskDetail: Story = {
     await expect(within(prompt()!).findAllByTestId('task-question.option')).resolves.toHaveLength(2);
     // The answered one stays a record: exactly one prompt, not two.
     await expect(canvasElement.querySelectorAll('[data-testid="task-question.input"]')).toHaveLength(1);
+
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(
       within(cards()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
     ).resolves.not.toHaveLength(0);
+
+    // The description is edited with the host's contributed extensions live in it, as the ledger's
+    // own strip is: a task opened in the pane decorates `#123` and a pull-request URL rather than
+    // showing the reader raw markdown the list would have rendered.
+    await userEvent.click(await canvas.findByText(LINK_TASK_TITLE, undefined, { timeout: 10_000 }));
+    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskEditor.description"]');
+    await waitFor(async () => await expect(editor()?.textContent).toContain('supersedes'), { timeout: 10_000 });
+    await waitFor(
+      async () =>
+        await expect(
+          [...(editor()?.querySelectorAll('a.cm-link') ?? [])].map((link) => link.getAttribute('href')),
+        ).toContain('https://github.com/dxos/dxos/issues/12431'),
+      { timeout: 10_000 },
+    );
   },
 };
 
