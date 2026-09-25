@@ -34,5 +34,8 @@
   "devDependencies": {
     "@dxos/typings": "workspace:*"
   },
-  "beast": {}
+  "beast": {},
+  "publishConfig": {
+    "access": "public"
+  }
 }
