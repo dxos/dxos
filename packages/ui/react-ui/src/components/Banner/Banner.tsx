@@ -256,7 +256,8 @@ const BannerEmpty = composable<HTMLDivElement, BannerEmptyProps>(({ label, icon,
       })}
       ref={forwardedRef}
     >
-      {icon && <Icon icon={icon} size={6} classNames='text-subdued' />}
+      {/* Decorative: the message carries the whole statement, so the glyph is not announced beside it. */}
+      {icon && <Icon icon={icon} size={6} classNames='text-subdued' aria-hidden='true' />}
       <span>{message}</span>
     </div>
   );

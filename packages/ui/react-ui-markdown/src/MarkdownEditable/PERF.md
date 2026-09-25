@@ -39,8 +39,11 @@ now lengthen the frame rather than arriving a frame late.
 To measure it, mount the editor with the document in question and read the longest task:
 
 ```js
+// `type` with `buffered`, not `entryTypes`: the mount task is over before a console can run, and
+// only a buffered observer is given entries recorded before it started.
 new PerformanceObserver((list) => console.log(list.getEntries().map((e) => e.duration))).observe({
-  entryTypes: ['longtask'],
+  type: 'longtask',
+  buffered: true,
 });
 ```
 
