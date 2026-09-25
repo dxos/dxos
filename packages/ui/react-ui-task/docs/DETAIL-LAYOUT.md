@@ -79,7 +79,7 @@ shape and wants its own step (below). If that step is deferred, the same gutter 
 without the form context by wrapping the viewport in `Column.Root gutter='md'` directly — the
 mechanism is the same, only the vocabulary is thinner.
 
-**Rows with a leading glyph are `Column.Row`.** A history entry and a question are the same shape: a
+**Rows with a leading glyph are `Column.Row` — where the glyph is a control.** A history entry and a question are the same shape: a
 glyph, then a body. Each renders its own row and places its own parts:
 
 ```tsx
@@ -93,7 +93,13 @@ glyph, then a body. Each renders its own row and places its own parts:
 
 `Column.Block` is the gutter slot, sized to `--dx-rail-item`, so a passive icon and an icon button
 align to the pixel. The child needs no knowledge of the host's tracks, which is what retires
-`subgrid` and `cells` — both already carry `TODO(burdon): Remove` on `TaskQuestion`.
+`subgrid` and `cells` — both already carried `TODO(burdon): Remove` on `TaskQuestion`.
+
+The gutter is for the pane's affordances, not for its prose. A history entry's glyph and a
+question's mark name what the line is; they read as part of the sentence, so they stay inside the
+content track with the text (`flex items-start gap-2`, one line box tall so a wrapped sentence
+leaves the glyph on its first line). What hangs in the gutter is what acts: the list's status
+control, its checkbox, its row menu.
 
 **Nested in the list, the same components adopt the list's tracks.** `TaskList.Edit` keeps its
 alignment with the rows above it through `Column.Root subgrid`, which spans the parent grid and
@@ -164,6 +170,29 @@ thirty tasks does need a per-row affordance. The article simply stops relying on
 same split as the header — one component, two hosts, each rendering the chrome its own shape calls
 for.
 
+## What the implementation settled
+
+Steps 1 to 4 landed; the notes below are the places where building it moved the design.
+
+- **`Column.Section` rather than a free-standing `Section`.** It belongs to the vocabulary that
+  places it, and a name as generic as `Section` in `@dxos/react-ui` would collide with the surface
+  role of the same name. It spans the three tracks and re-exposes them, which is what lets a row
+  inside still reach a gutter.
+- **A row carries a marker class.** `Column.Section` places its plain children in the content track,
+  and a `Column.Row` already spans all three — `col-start-2` on top of `col-span-3` walked the row
+  one track right and pushed its content into the trailing gutter. `dx-column-row` is what the
+  section's rule excludes.
+- **The editor resets `--dx-col`.** Inside a host Column the variable means "the content track", and
+  `Field.Root` hands it to the field it wraps. In the strip's own two-track grid that named the
+  controls' column, so the title rendered 50px wide against the right edge. The strip now resets it
+  to `auto`, the way `ScrollArea.Viewport` does after consuming the gutter.
+- **Save and Cancel are create-time only.** They exist because the held-open description has no blur
+  to commit it, which is the add row's problem; a task being edited commits its own fields, so in
+  the article the pair is gone rather than floating over the title.
+- **The card grid still spans the gutters.** `Masonry` renders its own `ScrollArea`, which is
+  exempted from the content track by design so a scrollbar can sit in the gutter. Its cards line up
+  with the content; the grid's own box is 16px wider on each side.
+
 ## Migration
 
 Ordered so each step is shippable on its own, and so the pane is never worse than it is now.
@@ -175,7 +204,7 @@ Ordered so each step is shippable on its own, and so the pane is never worse tha
 4. `TaskArticle` swaps its `ScrollArea.Root` for `Form.Viewport scroll` under a `Form.Root`, moves
    the status control, the trailing controls and the contributed task menu into `Panel.Toolbar`
    (option 2), and drops the ad-hoc `p-2` / `dx-document` padding — the gutter is the viewport's.
-5. The article's header and description become a `Form.Layout` template over `Task`, at which point
+5. (Open.) The article's header and description become a `Form.Layout` template over `Task`, at which point
    the article no longer mounts `TaskList.Edit` and the list keeps it to itself. This is the step
    that decides whether commit-on-blur or the form's `autoSave` owns the write; until it lands,
    step 4 can keep `TaskList.Edit` inside `Form.Content`.

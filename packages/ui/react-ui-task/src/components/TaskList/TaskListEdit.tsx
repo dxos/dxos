@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Column, Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -47,6 +47,20 @@ export type TaskListEditProps = ComposableProps<{
    * the only create affordance into an editor, leaving no way to type a new task.
    */
   createOnly?: boolean;
+  /**
+   * Render the task's own controls — the leading status glyph and the trailing estimate and
+   * priority. Off for a host that carries them in its own toolbar, where the pane IS the task
+   * rather than one row of a list; the pane then has no icon column, so its fields start where the
+   * rest of the host's content does.
+   */
+  showControls?: boolean;
+  /**
+   * Render the open questions and the history under the fields. Off for a host that lays out the
+   * task's sections itself — a detail article, where they are siblings of the artifacts rather than
+   * a tail on the editor, and where placing them here would indent them inside the host's own
+   * content track.
+   */
+  showSections?: boolean;
 }>;
 
 /**
@@ -64,6 +78,8 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       descriptionExtensions,
       grid,
       createOnly = false,
+      showControls = true,
+      showSections = true,
       ...props
     },
     forwardedRef,
@@ -206,32 +222,39 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
           // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
           // repeated on every cell that might start a row, and is missed by whichever one is added next.
           'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto_auto] gap-y-2',
-          !grid && 'grid-cols-[2rem_1fr_min-content]',
+          // No leading control means no icon track: the title then starts where the host's own
+          // content does, rather than 2rem inside it with nothing in the gap.
+          !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
           className,
         )}
         // On the list's own template the pane's cells name their tracks, so the icon sits under the
         // rows' status controls and the field under their titles whatever the list's options are;
         // the toggle and gutter tracks stay empty.
-        style={grid ? { gridTemplateColumns } : undefined}
+        //
+        // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the
+        // variable says "the content track", and `Field.Root` hands it to the field it wraps — which
+        // in THIS grid names a different column, and put the title in the controls' track.
+        style={{ ...(grid ? { gridTemplateColumns } : {}), '--dx-col': 'auto' } as CSSProperties}
         ref={forwardedRef}
       >
         {/* Placed explicitly: with a gutter the pane leaves that track empty, and implicit placement
             would drop the icon into it. Editing, the cell is the row's own status control — the
             same glyph, and the same menu, so status is set where the task is read rather than only
             from the row behind the pane. Creating, there is no task to carry a status yet. */}
-        {task && current ? (
-          <TaskStatusControl
-            task={task}
-            classNames={mx('self-start', grid ? 'col-[status]' : 'col-start-1')}
-            onTaskUpdate={onTaskUpdate}
-          />
-        ) : (
-          <span
-            className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
-          >
-            <Icon icon='ph--plus--regular' classNames='text-subdued' />
-          </span>
-        )}
+        {showControls &&
+          (task && current ? (
+            <TaskStatusControl
+              task={task}
+              classNames={mx('self-start', grid ? 'col-[status]' : 'col-start-1')}
+              onTaskUpdate={onTaskUpdate}
+            />
+          ) : (
+            <span
+              className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
+            >
+              <Icon icon='ph--plus--regular' classNames='text-subdued' />
+            </span>
+          ))}
 
         <Field.Root>
           <Field.Input
@@ -239,7 +262,10 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word
             // against the trailing controls with nothing to say it continues; the ellipsis says so.
             // (Shown while the field is not focused, which is how a pane holds it open.)
-            classNames={mx('px-0 text-ellipsis', grid && 'col-start-[title] -col-end-2')}
+            classNames={mx(
+              'px-0 text-ellipsis',
+              grid ? 'col-start-[title] -col-end-2' : showControls ? 'col-start-2' : 'col-start-1',
+            )}
             data-testid='taskList.edit.title'
             placeholder={current ? t('task-title.placeholder') : placeholder}
             value={draft}
@@ -256,7 +282,10 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide. It runs to the row's end: the toolbar sits on the
             // title line only.
-            className={mx('flex min-w-0 row-start-2 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            className={mx(
+              'flex min-w-0 row-start-2 -col-end-1',
+              grid ? 'col-start-[title]' : showControls ? 'col-start-2' : 'col-start-1',
+            )}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
@@ -291,58 +320,48 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
 
         {/* The full question — context, options and the answer field — lives here rather than in the
             row, which shows only its one-line summary: the pane has the room a prompt needs. */}
-        {openQuestions.length > 0 &&
+        {showSections &&
+          openQuestions.length > 0 &&
           task && (
-            // On the pane's own tracks, as the history is: a question's glyph sits under the pane's
-            // leading icon and its text under the title, rather than both indented into the title column.
-            <div
+            // A Column of its own, placed across the host's span: the questions and the history below
+            // them then share one set of tracks — a glyph gutter and a content track — whoever the
+            // host is, instead of each child being handed the host's column names.
+            <Column.Root
+              gutter='md'
+              gap='lg'
               data-testid='taskList.edit.questions'
-              className={mx(
-                'grid grid-cols-subgrid gap-y-3 min-w-0 row-start-3',
-                grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
-              )}
+              classNames={mx('min-w-0 row-start-3', grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full')}
             >
               {openQuestions.map((thread) => (
                 <TaskQuestion
                   key={thread.question.id}
                   thread={thread}
-                  subgrid
-                  classNames='col-span-full'
-                  cells={{
-                    icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
-                    body: grid ? 'col-start-[title] -col-end-1' : 'col-start-2 -col-end-1',
-                  }}
                   onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
                 />
               ))}
-            </div>
+            </Column.Root>
           )}
 
         {/* The log, on the row below the description: it reports what has happened to the task, so it
             reads under what the task says rather than beside it. Only when editing — a task being
             created has no history yet, and the add row must stay one line tall. */}
-        {current && current.history && current.history.length > 0 && (
-          <>
-            <Field.Label>History</Field.Label>
-            <TaskHistory
-              entries={current.history}
-              // On the pane's own tracks: an entry's glyph then sits in the same column as the pane's
-              // leading icon and its text under the title, rather than in a nested grid of its own
-              // that starts where the title does.
-              subgrid
-              cells={{
-                // Centred in its track, as the pane's own leading icon is, so the two sit on one axis.
-                icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
-                description: grid ? 'col-start-[title] -col-end-2' : 'col-start-2',
-                date: grid ? 'col-start-[-2] -col-end-1' : 'col-start-3',
-              }}
+        {showSections &&
+          current &&
+          current.history &&
+          current.history.length > 0 && (
+            // The same Column the questions get, for the same reason: the log places its own glyphs in
+            // the gutter and its own text in the content track, and the host only says where the
+            // Column sits.
+            <Column.Root
+              gutter='md'
               classNames={mx(
                 'min-w-0 pt-2 row-start-4',
                 grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
               )}
-            />
-          </>
-        )}
+            >
+              <TaskHistory entries={current.history} />
+            </Column.Root>
+          )}
 
         {/* The description is held open with no blur to commit it, so the pane needs to say
             explicitly what happens to the pending text. Both buttons keep focus where it is
@@ -352,12 +371,24 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             Hidden while the add row is untouched: with nothing typed there is nothing to save and
             nothing to cancel, and two dead controls on an empty row read as a form to fill in
             rather than a place to type. */}
-        {(current || draft.trim().length > 0) && (
-          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] justify-end p-0 bg-transparent'>
+        {/* Save and Cancel belong to creating: the held-open description has no blur to commit it, so
+            the add row needs both. Editing, the fields commit themselves — and a host carrying the
+            task's controls in its own toolbar (`showControls` off) has no use for a second bar of
+            chrome floating over the title. */}
+        {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
+          <Toolbar.Root
+            density='sm'
+            classNames={mx(
+              'row-start-1 justify-end p-0 bg-transparent',
+              // `-2` is the icon column once the pane has only two tracks, which would put the
+              // controls where the title goes and squeeze the field into the min-content track.
+              showControls ? 'col-start-[-2]' : 'col-start-2',
+            )}
+          >
             {/* Only when editing an existing task: the create row has nothing to set an estimate or
                 priority on until it is saved. */}
-            {task && showEstimates && <TaskEstimateControl task={task} />}
-            {task && <TaskPriorityIcon task={task} />}
+            {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
+            {showControls && task && <TaskPriorityIcon task={task} />}
             <Toolbar.IconButton
               variant='ghost'
               iconOnly

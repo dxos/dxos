@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, type ThemedClassName, useTranslation, withColumn } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,15 +28,6 @@ export type TaskQuestionProps = ThemedClassName<{
    */
   // TODO(burdon): Remove. This should be a different component.
   compact?: boolean;
-  /**
-   * Lay the question out on the host's own columns (`grid-cols-subgrid`) rather than its own two, so
-   * its glyph and text line up with the host's. The host must place this across the tracks it wants.
-   */
-  // TODO(burdon): Remove.
-  subgrid?: boolean;
-  /** Cell placement for the glyph and the text, when `subgrid` — the host names its own tracks. */
-  // TODO(burdon): Remove.
-  cells?: { icon?: string; body?: string };
   /** Enables answering; absent renders the question read-only. */
   onAnswer?: (answer: string) => void;
 }>;
@@ -57,8 +48,6 @@ export const TaskQuestion = ({
   busy,
   message,
   compact,
-  subgrid,
-  cells,
   onAnswer,
 }: TaskQuestionProps) => {
   const { t } = useTranslation(translationKey);
@@ -66,7 +55,7 @@ export const TaskQuestion = ({
 
   const handleSubmit = useCallback<NonNullable<TaskQuestionProps['onAnswer']>>(
     (value) => {
-      if (!busy && value.trim() !== '') {
+      if (!busy && value.trim().length > 0) {
         onAnswer?.(value);
       }
     },
@@ -112,46 +101,40 @@ export const TaskQuestion = ({
     );
   }
 
-  const iconCell = mx('flex h-[1lh] items-center', cells?.icon ?? 'col-start-1');
-  const bodyCell = mx('min-w-0', cells?.body ?? 'col-start-2');
-
   return (
-    // A grid of two tracks — glyph and text — so a host with the same tracks can lay the question on
-    // its own columns (`subgrid`), putting the glyph under its icons and the text under its titles.
+    // The host Column's tracks, re-exposed onto an element of its own so the question can also stop
+    // the events below — it sits inside a listbox row, whose click selects the task and whose arrow
+    // keys move the selection, and typing an answer must do neither.
     <div
       role='group'
       aria-label={question.text}
-      className={mx(
-        'grid items-start gap-y-1 text-sm',
-        subgrid ? 'grid-cols-subgrid' : 'grid-cols-[min-content_1fr] gap-x-2',
-        classNames,
-      )}
+      className={mx('grid gap-y-2 items-start text-sm', withColumn.propagate(), classNames)}
       data-testid='task-question'
       onClick={stop}
       onPointerDown={stop}
       onKeyDown={stop}
     >
-      <span className={iconCell}>
-        <Icon icon='ph--question--regular' classNames='text-amber-text' />
-      </span>
-      <span className={mx('font-medium wrap-break-word', bodyCell)}>{question.text}</span>
+      {/* The glyph rides with the text in the content track, as the history's does: it names what
+          the line is rather than acting on it, and the gutter is where the pane's affordances live. */}
+      <div className='flex items-start gap-2 min-w-0'>
+        <Icon icon='ph--question--regular' classNames='shrink-0 h-[1lh] text-amber-text' />
+        <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
+      </div>
 
       {question.context && !answer && (
-        <p className={mx('text-description wrap-break-word line-clamp-3', bodyCell)}>{question.context}</p>
+        <p className='text-description wrap-break-word line-clamp-3 min-w-0'>{question.context}</p>
       )}
 
       {answer ? (
-        <>
-          <span className={iconCell}>
-            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
-          </span>
-          <span className={mx('wrap-break-word', bodyCell)} data-testid='task-question.answer'>
+        <div className='flex items-start gap-2 min-w-0'>
+          <Icon icon='ph--check-circle--regular' classNames='shrink-0 h-[1lh] text-success-text' />
+          <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}
           </span>
-        </>
+        </div>
       ) : (
         onAnswer && (
-          <div className={mx('flex flex-col gap-1', bodyCell)}>
+          <div className='flex flex-col gap-1 min-w-0'>
             {question.options?.map((option) => (
               <Button
                 key={option.title}
@@ -202,7 +185,7 @@ export const TaskQuestion = ({
       )}
 
       {message && (
-        <p className={mx('text-description', bodyCell)} data-testid='task-question.message'>
+        <p className='text-description min-w-0' data-testid='task-question.message'>
           {message}
         </p>
       )}
