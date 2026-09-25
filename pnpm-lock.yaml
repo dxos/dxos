@@ -13322,9 +13322,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 'catalog:'
         version: 2.10.1
-      date-fns:
-        specifier: 'catalog:'
-        version: 3.6.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -14283,9 +14280,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117

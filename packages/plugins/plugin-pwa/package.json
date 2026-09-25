@@ -73,7 +73,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

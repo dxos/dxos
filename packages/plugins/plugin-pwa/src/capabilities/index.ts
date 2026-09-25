@@ -23,6 +23,8 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+import { makeUpdateManager, progressStatus } from './update-manager.ts';
+
 // Every 15 minutes rather than hourly. A check is one conditional request for the worker script, and
 // finding an update sooner costs nothing extra: the install happens once per deployed version either
 // way. An hour was long enough to leave a tab a full release behind.
@@ -52,22 +54,25 @@ export const RegisterPwa = Capability.inlineModule(
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const atomRegistry = yield* Capabilities.AtomRegistry;
 
-    // `serviceWorker` is absent on an insecure origin and in some embedded webviews. Everything else
-    // that leaves this build without an update channel — a dev server, a `DX_PWA=false` build whose
-    // worker self-destructs — is indistinguishable from here at startup, so it is reported from
-    // `check` instead, off whether a registration ever arrived. One truthful signal beats a build-time
-    // guess that a `selfDestroying` production build would get wrong.
+    // No service workers at all on an insecure origin and in some embedded webviews. Under the vite dev
+    // server the plugin still loads, but `virtual:pwa-register` is a stub that never registers.
     const supported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
-    const statusAtom = Atom.make<AppUpdate.Status>(supported ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
-      Atom.keepAlive,
-    );
+    const dev = import.meta.env.DEV;
+    const statusAtom = Atom.make<AppUpdate.Status>(
+      !supported ? { kind: 'unsupported' } : dev ? { kind: 'dev' } : { kind: 'idle' },
+    ).pipe(Atom.keepAlive);
     const setStatus = (status: AppUpdate.Status) => atomRegistry.set(statusAtom, status);
 
     let registration: ServiceWorkerRegistration | undefined;
+    let resolveRegistration!: (registration: ServiceWorkerRegistration | undefined) => void;
+    const whenRegistered = new Promise<ServiceWorkerRegistration | undefined>((resolve) => {
+      resolveRegistration = resolve;
+    });
 
     const updateSW = registerSW({
       onRegisteredSW: (_swUrl, swRegistration) => {
         registration = swRegistration;
+        resolveRegistration(swRegistration);
       },
       onNeedRefresh: () => {
         // The worker is installed and waiting, so the download is already done — this is `ready`, not
@@ -96,6 +101,7 @@ export const RegisterPwa = Capability.inlineModule(
       onRegisterError: (err) => {
         log.error(err);
         setStatus({ kind: 'failed', error: err instanceof Error ? err.message : String(err) });
+        resolveRegistration(undefined);
       },
     });
 
@@ -106,16 +112,24 @@ export const RegisterPwa = Capability.inlineModule(
       if (!isPrecacheProgress(event.data) || !event.data.isUpdate) {
         return;
       }
-      const { current, total, done } = event.data;
-      // `ready` is owned by `onNeedRefresh`, which fires once the worker is actually waiting.
-      if (!done) {
-        setStatus({ kind: 'downloading', progress: { completed: current, total, unit: 'entries' } });
-      }
+      // Not left to `onNeedRefresh`: workbox stops observing after the first update found by polling.
+      setStatus(progressStatus(event.data));
     };
     navigator.serviceWorker?.addEventListener('message', handleProgress);
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => navigator.serviceWorker?.removeEventListener('message', handleProgress)),
     );
+
+    const manager = makeUpdateManager({
+      status: statusAtom,
+      setStatus,
+      supported,
+      dev,
+      registration: whenRegistered,
+      container: navigator.serviceWorker,
+      skipWaiting: () => updateSW(true),
+      reload: () => window.location.reload(),
+    });
 
     // The browser only re-fetches the worker script on navigation, but Composer sessions stay open
     // for days, so without polling a deployed update is never noticed and the refresh toast only
@@ -133,52 +147,6 @@ export const RegisterPwa = Capability.inlineModule(
     const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDetach);
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
-
-    /**
-     * `check` is the whole download on the web: `update()` fetches the worker script and, if it
-     * differs, the browser installs it — precaching every entry — before anything is observable. So
-     * this resolves when the check is done, not when the update is; progress and completion arrive on
-     * the message and `onNeedRefresh` handlers above.
-     */
-    const manager: AppUpdate.Manager = {
-      status: statusAtom,
-      check: async () => {
-        // No registration means the worker never took: a dev server, or a build whose worker
-        // self-destructs. Indistinguishable from unsupported as far as updating goes.
-        if (!supported || !registration) {
-          setStatus({ kind: 'unsupported' });
-          return;
-        }
-        // A worker already waiting means an update is staged and `ready` still holds; re-checking
-        // would report `up-to-date` over it.
-        if (registration.waiting) {
-          setStatus({ kind: 'ready' });
-          return;
-        }
-        setStatus({ kind: 'checking' });
-        try {
-          await registration.update();
-        } catch (error) {
-          // `update()` rejects in its own right: InvalidStateError while one is already installing, a
-          // TypeError when the script fetch fails offline.
-          setStatus({ kind: 'failed', error: error instanceof Error ? error.message : String(error) });
-          return;
-        }
-        // `installing` means the browser took the bait and is precaching; the message handler owns the
-        // status from here. Otherwise the script was byte-identical and there is nothing to install.
-        if (!registration.installing && !registration.waiting) {
-          setStatus({ kind: 'up-to-date', checkedAt: Date.now() });
-        }
-      },
-      // No `install`: see above and AppUpdate.Manager.
-      apply: async () => {
-        if (!supported) {
-          return;
-        }
-        // Sends SKIP_WAITING and reloads every tab on `controllerchange`.
-        await updateSW(true);
-      },
-    };
 
     return Capability.contribute(AppCapabilities.UpdateManager, manager);
   }),
@@ -241,10 +209,8 @@ export const PwaSettings = AppCapability.settings(() => import('./settings.ts'),
   activatesOn: ActivationEvents.Idle,
 });
 
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface.ts'),
-);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: ['org.dxos.role.article'],
+});
 
 export const Translations = AppCapability.translations(translations);
