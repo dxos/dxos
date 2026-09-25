@@ -13,9 +13,8 @@ import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
 
+import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
-
-import { useArchiveMenuItem } from '../../hooks/index.ts';
 
 /** Callbacks are absent on a read-only tile (e.g. a staged merge result). */
 export type TileData = {

@@ -17,9 +17,8 @@ import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 
+import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
-
-import { useArchiveMenuItem } from '../../hooks/index.ts';
 
 /**
  * Article view for collections.
