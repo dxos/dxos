@@ -8,7 +8,10 @@ list); DESIGN.md §10.3 "Outcomes" summarizes it. Proving suite:
 off the worker indexing stream; epochs out of scope. Bycatch fixes: `waitUntilHeadsReplicated`
 hang on patchless merges (echo-host, changeset) and local-only test-replicator disconnect. OPEN:
 (1) DECIDED: winner policy = own actor + readers resolve from `A.getConflicts`; (2) engine adoption of creation-heads replay (object-merging project); (3) stale live proxy after
-remote reorder (ECHO investigation); (4) DESIGN §10.7 q1, q3-q5, q7 still to revisit. Previously:
+remote reorder (ECHO investigation); (4) DESIGN §10.7 all DECIDED 2026-09-25 (q1 promotion uncoordinated; q3 keep migrations indefinitely,
+retirement planned not default; q4 view = shortest lens path, migrate = explicit steps; q5 whole-set
+validation with the type switch; q7 overlay now, unified lens/branch/migration as long-term target).
+PENDING: strict-schema validation bench test (in progress); late-overlay-write-after-promotion test. Previously:
 PR #12420 MERGED (squash `f8637f1d`), lens PHASES 1-4 DONE; stories/gotchas for stories-lens in
 older resume history (git log of this file)._
 
