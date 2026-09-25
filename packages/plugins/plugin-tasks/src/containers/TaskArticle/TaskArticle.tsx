@@ -81,8 +81,8 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical' thin>
-            <ScrollArea.Viewport>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport classNames='dx-document'>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                   section headings and the cards all start at the content track, and only a glyph
                   hangs outside it. */}
