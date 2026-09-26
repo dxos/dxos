@@ -15,7 +15,7 @@ import * as Struct from 'effect/Struct';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
   AiContext,
   Alarm,
@@ -93,6 +93,31 @@ export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
  * from waking the agent forever.
  */
 const UNSEEN_WRITE_RETRY_MS = 250;
+
+/** How much of a sub-agent's result the trace keeps: enough to read, never the whole payload. */
+const RESULT_PREVIEW_LENGTH = 200;
+
+/**
+ * A short, safe rendering of a sub-agent's result for the trace.
+ *
+ * Guarded because this sits between removing the child from `delegations` and running the strategy's
+ * `onComplete`: a `BigInt` or a cycle would throw here, become a defect, and take the whole return
+ * path with it — the work item would never be updated and work waiting on it never reconciled.
+ * Losing the preview is survivable; losing the return is not.
+ */
+const resultPreview = (value: unknown): string | undefined => {
+  let text: string | undefined;
+  try {
+    text = typeof value === 'string' ? value : JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
+  if (text === undefined) {
+    return undefined;
+  }
+  return text.length > RESULT_PREVIEW_LENGTH ? `${text.slice(0, RESULT_PREVIEW_LENGTH)}…` : text;
+};
+
 const MAX_UNSEEN_WRITE_WAKES = 20;
 
 /**
@@ -222,12 +247,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
         const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
-        const requestModelLayer = AiService.languageModel(
-          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
-          {
-            provider: options.provider,
-          },
-        );
+        const requestModelLayer = AiService.languageModel(DXN.getName(model ?? Model.claudeSonnet5.id), {
+          provider: options.provider,
+        });
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 
@@ -557,6 +579,16 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
+                // Written beside `DelegationSpawned`, and for the same reason: the return is only
+                // observable here. The child's own trace ends with its operation and says nothing
+                // about reporting back, so this is what pairs an exit with the task it answers.
+                const result = Exit.isSuccess(exit) ? resultPreview(exit.value) : undefined;
+                yield* Trace.write(Trace.DelegationCompleted, {
+                  taskId: delegation.id,
+                  pid: String(event.pid),
+                  status: Exit.isSuccess(exit) ? 'success' : 'failure',
+                  ...(result === undefined ? {} : { result }),
+                });
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)

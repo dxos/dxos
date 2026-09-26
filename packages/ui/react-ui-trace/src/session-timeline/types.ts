@@ -67,6 +67,8 @@ export const Lane = Schema.Struct({
   /** Lane ids this lane waits on (task dependencies). */
   blockedOn: Schema.optional(Schema.Array(Schema.String)),
   delegatedFrom: Schema.optional(DelegationSource),
+  /** Node in the supervisor lane this lane's result was folded back into. */
+  returnedTo: Schema.optional(DelegationSource),
   tokens: Schema.optional(TokenUsage),
   toolCalls: Schema.optional(Schema.Number),
 });

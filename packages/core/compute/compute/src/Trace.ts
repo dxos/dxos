@@ -679,6 +679,24 @@ export const DelegationSpawned = EventType('assistant.delegationSpawned', {
 });
 
 /**
+ * Emitted by the supervisor when a delegated sub-agent's result has been folded back into the
+ * conversation — the counterpart of {@link DelegationSpawned}, and the only durable record that the
+ * return happened at all. A child's own trace ends with its operation; that it reported *to someone*
+ * is knowable only from the supervisor's side, so without this the delegation reads as a one-way
+ * spawn even though the runtime genuinely returns a value.
+ */
+export const DelegationCompleted = EventType('assistant.delegationCompleted', {
+  schema: Schema.Struct({
+    taskId: Schema.String,
+    pid: Schema.String,
+    status: Schema.Literals(['success', 'failure']),
+    /** The result, rendered for a reader; the payload itself lives on the task and in the feed. */
+    result: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted when an MCP server connection fails for a request turn.
  * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
  * but can still be surfaced to the user via the live ephemeral event stream.

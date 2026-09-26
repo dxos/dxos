@@ -14,6 +14,7 @@ import { getHashHue } from '@dxos/ui-theme';
 
 import { type Span, buildSpanTree, flattenSpanTree } from '../execution-graph/index.ts';
 import {
+  type DelegationSource,
   type Lane,
   type LaneStatus,
   type Marker,
@@ -600,7 +601,11 @@ export const buildSessionTimeline = ({
 
   // Markers and token totals, attributed to the lane owning the event's pid or its parent pid.
   const tokens = new Map<string, { usage: TokenUsage; toolCalls: number }>();
-  const spawnMarkerByPid = new Map<string, string>();
+  // The marker's own lane travels with its id: `markerLaneId` routes an event to whichever task
+  // segment was open at the time, so a delegation node does not always land on the session's lane —
+  // and a connector drawn to a row that does not hold the node points at nothing.
+  const spawnMarkerByPid = new Map<string, DelegationSource>();
+  const returnMarkerByPid = new Map<string, DelegationSource>();
   for (const event of events) {
     const laneId =
       (event.meta.pid && laneByPid.get(event.meta.pid)) ??
@@ -620,10 +625,16 @@ export const buildSessionTimeline = ({
       : toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
-      if (marker.kind === 'delegation') {
+      if (event.type === Trace.DelegationSpawned.key) {
         const data = decode(Trace.DelegationSpawned.schema, event.data);
         if (data) {
-          spawnMarkerByPid.set(data.pid, marker.id);
+          spawnMarkerByPid.set(data.pid, { laneId: marker.laneId, markerId: marker.id });
+        }
+      }
+      if (event.type === Trace.DelegationCompleted.key) {
+        const data = decode(Trace.DelegationCompleted.schema, event.data);
+        if (data) {
+          returnMarkerByPid.set(data.pid, { laneId: marker.laneId, markerId: marker.id });
         }
       }
     }
@@ -655,11 +666,21 @@ export const buildSessionTimeline = ({
 
   // The connector starts at the spawn marker, else at the supervisor's last node before the child began.
   for (const { lane, sessionLaneId } of childSessions) {
-    const markerId =
-      (lane.pid && spawnMarkerByPid.get(lane.pid)) ??
-      markers.filter((marker) => marker.laneId === sessionLaneId && marker.timestamp <= (lane.start ?? 0)).at(-1)?.id;
-    if (markerId !== undefined) {
-      lane.delegatedFrom = { laneId: sessionLaneId, markerId };
+    const fallbackId = markers
+      .filter((marker) => marker.laneId === sessionLaneId && marker.timestamp <= (lane.start ?? 0))
+      .at(-1)?.id;
+    const spawn =
+      (lane.pid === undefined ? undefined : spawnMarkerByPid.get(lane.pid)) ??
+      (fallbackId === undefined ? undefined : { laneId: sessionLaneId, markerId: fallbackId });
+    if (spawn) {
+      lane.delegatedFrom = spawn;
+    }
+    // The return connector has no such fallback: only the completion event says the child reported
+    // back, and guessing from the supervisor's next node would invent a causal edge that may not
+    // exist — a child can end without ever answering.
+    const returned = lane.pid === undefined ? undefined : returnMarkerByPid.get(lane.pid);
+    if (returned) {
+      lane.returnedTo = returned;
     }
   }
 
@@ -755,6 +776,16 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
     case Trace.DelegationSpawned.key: {
       const data = decode(Trace.DelegationSpawned.schema, event.data);
       return { ...base, kind: 'delegation', label: 'Delegated', detail: data };
+    }
+    case Trace.DelegationCompleted.key: {
+      const data = decode(Trace.DelegationCompleted.schema, event.data);
+      return {
+        ...base,
+        kind: 'delegation',
+        label: data?.status === 'failure' ? 'Sub-agent failed' : `Returned${data?.result ? `: ${data.result}` : ''}`,
+        level: data?.status === 'failure' ? 'error' : undefined,
+        detail: data,
+      };
     }
     case Trace.OperationStart.key: {
       const data = decode(Trace.OperationStart.schema, event.data);

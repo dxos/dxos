@@ -12,6 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
 import { Gantt } from '../components/index.ts';
+import { sessionTimelineToGantt } from './gantt-mapping.ts';
 import { type TaskStatusChange, buildSessionTimeline } from './session-timeline.ts';
 import { type Session } from './types.ts';
 
@@ -111,7 +112,7 @@ const Timeline = ({ title, history }: { title: string; history: boolean }) => {
   return (
     <div className='flex flex-col gap-1'>
       <h2 className='px-2 text-sm text-subdued'>{title}</h2>
-      <Gantt.Root lanes={timeline.lanes} markers={timeline.markers} range={timeline.range} classNames='p-2'>
+      <Gantt.Root {...sessionTimelineToGantt(timeline)} range={timeline.range} classNames='p-2'>
         <Gantt.Legend />
         <Gantt.Chart />
         <Gantt.Meta />
