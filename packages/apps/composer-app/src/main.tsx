@@ -42,10 +42,9 @@ import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { getHostPlatform, installWasmMemoryProbe, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
-import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
@@ -198,6 +197,22 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
   return PluginAssetCache.noop();
 };
 
+/**
+ * Initializes Automerge in the page when it holds Automerge documents: echo runs here in HOST mode,
+ * and the client keeps replicas unless it is in proxy mode. A proxy-mode page in worker mode loads
+ * no Automerge at all.
+ */
+const initPageAutomerge = async ({ echoHost, replicas }: { echoHost: boolean; replicas: boolean }): Promise<void> => {
+  if (echoHost) {
+    // Echo's Repo constructs Subduction here, which a worker-mode page never does.
+    const { initEchoHostWasm } = await import('./util/automerge-wasm.ts');
+    await initEchoHostWasm();
+  } else if (replicas) {
+    const { initAutomergeWasm } = await import('./util/automerge-wasm.ts');
+    await initAutomergeWasm();
+  }
+};
+
 const main = async () => {
   if (import.meta.env?.DEV) {
     log('composer main: main() running', { bootId: BOOT_ID });
@@ -256,17 +271,20 @@ const main = async () => {
 
   startupMark('dynamic-imports:start');
   bootStatus('Loading framework…');
+  // Counts every wasm instance the page creates, whether or not it loads Automerge.
+  installWasmMemoryProbe();
 
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
-  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
-  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
-  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
-    await Promise.all([
-      import('@dxos/config'),
-      import('@dxos/react-client'),
-      import('@dxos/app-toolkit/AppMigrations'),
-      initAutomergeWasm(),
-    ]);
+  // local-disk the parser can interleave parses.
+  const [
+    { Config, defs, SaveConfig, getEnvString },
+    { Client, createClientServices, documentModeFromConfig },
+    AppMigrations,
+  ] = await Promise.all([
+    import('@dxos/config'),
+    import('@dxos/react-client'),
+    import('@dxos/app-toolkit/AppMigrations'),
+  ]);
 
   startupMark('dynamic-imports:end');
   startupMeasure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -329,12 +347,21 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
+  // Host mode (in-thread services) is opt-in via DX_HOST; otherwise services run in a dedicated
+  // worker elected via a lock (leader/follower).
+  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
+
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
   // instrumentation (session recorder, dead-clicks autocapture) at init time —
   // opting out after init only stops event capture, not script loading.
   const [observabilityDisabled, observabilityGroup] = await Promise.all([
     Observability.isObservabilityDisabled(APP_KEY),
     Observability.getObservabilityGroup(APP_KEY),
+    // The bundle resolves Automerge to its slim entrypoints, which instantiate no wasm themselves.
+    initPageAutomerge({
+      echoHost: useLocalServices,
+      replicas: documentModeFromConfig(config) !== 'proxy',
+    }),
   ]);
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
@@ -488,16 +515,10 @@ const main = async () => {
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
-  // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
-  // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
-  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
+  // invokes the one required by the configured mode.
   const servicesMode = useLocalServices
     ? defs.Runtime_Client_ServicesMode.HOST
     : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
-  if (useLocalServices) {
-    // Echo runs in this page, and its Repo constructs Subduction; a worker-mode tab never does.
-    await initEchoHostWasm();
-  }
 
   config = new Config(
     {

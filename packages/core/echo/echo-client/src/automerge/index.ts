@@ -4,8 +4,6 @@
 
 export * as Doc from './Doc.ts';
 export * from './client-handle.ts';
-export * from './doc-handle-proxy.ts';
 export * from './document-mode.ts';
-export * from './repo-proxy.ts';
 export * from './tab-repo.ts';
 export * from './document-id.ts';

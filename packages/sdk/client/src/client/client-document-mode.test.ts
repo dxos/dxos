@@ -6,7 +6,8 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
-import { RepoProxy, TabClientRepo } from '@dxos/echo-client';
+import { TabClientRepo } from '@dxos/echo-client';
+import { RepoProxy } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { Runtime_Client_DocumentMode } from '@dxos/protocols/buf/dxos/config_pb';
 

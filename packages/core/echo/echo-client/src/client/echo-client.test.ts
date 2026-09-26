@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { RepoProxy, TabClientRepo } from '../automerge/index.ts';
+import { TabClientRepo } from '../automerge/index.ts';
+import { RepoProxy } from '../automerge/repo-proxy.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 
 describe('EchoClient document mode', () => {

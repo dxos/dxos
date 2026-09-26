@@ -25,6 +25,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
+import { automergeGates } from './src/vite/automerge-gates.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
@@ -439,6 +440,18 @@ export default defineConfig((env) => ({
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
+    automergeGates({
+      entry: path.resolve(dirname, 'src/main.tsx'),
+      // Each is imported dynamically, and only when the page holds Automerge documents itself.
+      gates: [
+        // Replica mode or HOST mode, from `initPageAutomerge`.
+        /composer-app\/src\/util\/automerge-wasm\.ts$/,
+        // Replica mode, from echo-client's `loadCreateRepo`.
+        /echo-client\/src\/automerge\/repo-proxy\.ts$/,
+        // HOST mode's services, and the first run's check for existing storage.
+        /packages\/sdk\/client-services\//,
+      ],
+    }),
     ShutdownPlugin(),
     ...sharedPlugins(env),
 

@@ -773,7 +773,7 @@ const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClose
  * `EchoClient` falls back to the process environment and then to replicas, so an unset mode stays
  * undefined here.
  */
-const documentModeFromConfig = (config: Config): DocumentMode | undefined => {
+export const documentModeFromConfig = (config: Config): DocumentMode | undefined => {
   switch (config.get('runtime.client.documentMode')) {
     case Runtime_Client_DocumentMode.REPLICA:
       return 'replica';

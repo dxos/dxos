@@ -257,7 +257,7 @@ time it sends, so it resolves the positions itself, and a copy needs nothing it 
 
 ## As built
 
-Phases 1 to 5 have landed, phase 5's removals together with phases 2 and 3. The code departs from
+Phases 1 to 6 have landed, phase 5's removals together with phases 2 and 3. The code departs from
 the plan above in these places:
 
 1. **Phases 2, 3 and 5 are one commit.** The new `Contract` replaced the mirror's events and
@@ -296,12 +296,43 @@ the plan above in these places:
 12. **The editor and store-adapter tests moved to ui-editor and echo-doc**, beside the code they
     test. They run over `TabHarness` from `@dxos/automerge-proxy/testing`, the package's real repo,
     host and handles, with a peer merging into the host's store, and no mocks.
+13. **The build check follows dynamic imports.** Composer loads `@dxos/react-client`, and with it all
+    of ECHO, through a dynamic import, so a walk of static imports alone misses what a tab loads.
+    `automergeGates` (`composer-app/src/vite/automerge-gates.ts`) walks both kinds from `main.tsx`
+    and stops only at gates, the modules a page imports only when it holds Automerge documents: the
+    wasm loader, echo-client's replica repo and client-services. Its first run found three routes:
+    `main.tsx` importing the wasm loader, echo-client's barrel exporting the replica repo, and
+    client-services reached through the first run's storage check.
+14. **echo-client loads the replica repo only in replica mode.** `EchoClient` resolves a repo factory
+    when it opens (`loadCreateRepo`) and hands it to each database. `RepoProxy` and `DocHandleProxy`
+    left the barrel; `@dxos/echo-client/testing` exports `RepoProxy` for tests that tell the repos
+    apart.
+15. **Composer initializes Automerge once it has read its config**, when it knows whether the page
+    hosts echo or keeps replicas. `documentModeFromConfig` from `@dxos/client` decides the mode as
+    the client does. Replica boots measured the same before and after the move: medians of 2,111
+    and 2,087 ms from a fresh profile, 3,452 and 3,490 ms on reload, three runs each.
 
-echo-client's suite passes in replica mode, 629 tests. In proxy mode 23 tests fail, and phase 7
+echo-client's suite passes in replica mode, 631 tests. In proxy mode 23 tests fail, and phase 7
 covers all of them: 20 branching and branch-binding tests, a branch-binding identity test, and two
-migration tests that call `repo.import`. Over the real adapter, `tab-repo.test.ts` covers writes
-across tabs, final heads, concurrent text, anchors, history and update time; restarts are covered at
-the package level in `Repo.test.ts`.
+migration tests that call `repo.import`. automerge-proxy passes 98 tests and `@dxos/client` 47 under
+CI's filter. Over the real adapter, `tab-repo.test.ts` covers writes across tabs, final heads,
+concurrent text, anchors, history and update time, and `Repo.test.ts` covers restarts at the package
+level.
+
+Composer in proxy mode fetches no Automerge module and instantiates no Automerge wasm, and edits
+persist across a reload in both modes. The page still instantiates one wasm module, sodium, which
+`hypercore-crypto` loads at startup, so phase 6's "no wasm" holds for Automerge only. Composer's e2e
+suite in proxy mode passes 28 tests and skips 15. Its one failure, "drag object into collection",
+fails in replica mode too.
+
+| Composer build | First boot, fresh profile | Reload   |
+| -------------- | ------------------------- | -------- |
+| Replica        | 2,087 ms                  | 3,490 ms |
+| Proxy          | 2,265 ms                  | 3,425 ms |
+
+These are medians of three runs of the app's own `composer.startup` total. Reloads are at parity.
+Proxy's first boot is about 150 ms slower and not yet explained; a fourth proxy run measured
+2,063 ms.
 
 ## Tests that move
 

@@ -55,7 +55,8 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { DocumentMode, EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
+import { type CreateRepo } from '../automerge/create-repo.ts';
+import type { EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
 import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
@@ -188,8 +189,8 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.Branch
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
-  /** How this database holds its documents. */
-  documentMode: DocumentMode;
+  /** Builds the repo this database holds its documents in, for its document mode. */
+  createRepo: CreateRepo;
   /** With `proxy` documents, show objects from the services' index until this database writes to them. */
   proxyIndexReads?: boolean;
   queryService: QueryService.Client;
@@ -335,7 +336,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
-      documentMode: params.documentMode,
+      createRepo: params.createRepo,
       proxyIndexReads: params.proxyIndexReads,
       queryService: params.queryService,
       runtime: params.runtime,

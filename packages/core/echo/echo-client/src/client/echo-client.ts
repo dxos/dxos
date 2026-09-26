@@ -12,6 +12,7 @@ import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type CreateRepo, loadCreateRepo } from '../automerge/create-repo.ts';
 import { type DocumentMode, parseDocumentMode } from '../automerge/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
@@ -86,6 +87,8 @@ export class EchoClient extends Resource {
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
   private _documentMode: DocumentMode = 'replica';
   private _proxyIndexReads = false;
+  /** Set on open, since a replica's repo loads Automerge only in replica mode. */
+  private _createRepo?: CreateRepo = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -143,6 +146,7 @@ export class EchoClient extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
+    this._createRepo = await loadCreateRepo(this._documentMode);
 
     this._indexQuerySourceProvider = this._createQuerySourceProvider(this._queryService);
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
@@ -172,11 +176,11 @@ export class EchoClient extends Resource {
     spaceKey,
     branchStore,
   }: ConstructDatabaseProps): DatabaseImpl {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    invariant(this._lifecycleState === LifecycleState.OPEN && this._createRepo);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new DatabaseImpl({
       dataService: this._dataService!,
-      documentMode: this._documentMode,
+      createRepo: this._createRepo,
       proxyIndexReads: this._proxyIndexReads,
       queryService: this._queryService!,
       feedService: this._feedService,

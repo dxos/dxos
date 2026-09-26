@@ -40,15 +40,13 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
+import { type CreateRepo } from '../automerge/create-repo.ts';
 import {
   type ChangeEvent,
   type ClientDocHandle,
   type ClientRepo,
-  type DocumentMode,
   type EditsRejectedEvent,
-  RepoProxy,
   type SaveStateChangedEvent,
-  TabClientRepo,
   toDocumentId,
 } from '../automerge/index.ts';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
@@ -100,7 +98,8 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  documentMode: DocumentMode;
+  /** Builds the repo this database holds its documents in, for its document mode. */
+  createRepo: CreateRepo;
   /** With `proxy` documents, show objects from the services' index until this database writes to them. */
   proxyIndexReads?: boolean;
   runtime: EffectContext.Context<never>;
@@ -251,10 +250,11 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
-    this._repoProxy =
-      options.documentMode === 'proxy'
-        ? new TabClientRepo({ dataService: this._dataService, runtime: this._runtime, spaceId: this._spaceId })
-        : new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    this._repoProxy = options.createRepo({
+      dataService: this._dataService,
+      runtime: this._runtime,
+      spaceId: this._spaceId,
+    });
     this.saveStateChanged = this._repoProxy.saveStateChanged;
     this.editsRejected = this._repoProxy.editsRejected;
   }
