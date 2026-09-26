@@ -3,7 +3,7 @@
 //
 
 // Synchronous SHA-256, so a tab can hash a change the moment it writes it (WebCrypto is async).
-// Production would take an audited implementation such as @noble/hashes.
+// Production takes `sha256` from @noble/hashes instead, per automerge-proxy/docs/INTEGRATION.md.
 
 const K = Uint32Array.from([
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98,

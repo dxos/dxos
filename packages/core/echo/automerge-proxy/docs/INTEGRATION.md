@@ -108,7 +108,8 @@ them.
 A lint rule enforces the import: in a package that runs in a tab, `@automerge/automerge` and
 `@automerge/automerge-repo` may be imported only as types. The automerge-repo root statically imports
 Automerge's slim entry, and echo-client takes three helpers from it (`interpretAsDocumentId`,
-`stringifyAutomergeUrl`, `isValidAutomergeUrl`), which are a few lines of base58check to keep locally.
+`stringifyAutomergeUrl`, `isValidAutomergeUrl`), which are a few lines to keep locally over `bs58check`,
+the package automerge-repo uses for them, so the ids come out identical.
 The devtools hook, which loads on every page, takes `cbor` from it and exposes Automerge itself to the
 console; it switches to the namespace too.
 
@@ -120,18 +121,18 @@ a module graph. The explicit import costs one line per file and says what it doe
 
 ## Where the spike's code lands
 
-| Spike file                                        | Destination                                                                                                                                 | Replaces                                            |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `model.ts`, `changes.ts`, `id-index.ts`, `ids.ts` | `@dxos/automerge-proxy`, internal modules                                                                                                   | `Transform`, `Sync`                                 |
-| `reader.ts`, `encode.ts`                          | `@dxos/automerge-proxy`, internal modules                                                                                                   | `Wire` for documents; `Wire` stays for index copies |
-| `sha256.ts`                                       | An audited synchronous SHA-256 such as `@noble/hashes`, a new catalog dependency; the spike's own passes the codec tests but is not audited |                                                     |
-| `tab.ts` (`TabDoc`)                               | `@dxos/automerge-proxy/Handle`                                                                                                              | The mirror `DocHandle`                              |
-| `sender.ts`, `network.ts`                         | `@dxos/automerge-proxy/Repo`, over the `Repo.Host` contract                                                                                 | `ProxyRepo`'s submit loop and subscriptions         |
-| `namespace.ts`, `immutable-string.ts`             | `@dxos/automerge-proxy/Automerge`                                                                                                           | Today's namespace, which re-exports Automerge       |
-| `check-index.ts`                                  | `@dxos/automerge-proxy/Check`, host side                                                                                                    | `Sequencing`, `AutomergeOps`                        |
-| `host.ts` (`SpikeHost`)                           | `@dxos/automerge-proxy/Host`, over the same `Store`                                                                                         | `Host.DocumentHost`                                 |
-| `client-handle.ts`                                | echo-client, a `ClientDocHandle` adapter                                                                                                    | `MirrorDocHandle`                                   |
-| `save.ts` (`saveNoCompress`)                      | echo-host, next to the Automerge host                                                                                                       |                                                     |
+| Spike file                                        | Destination                                                                                             | Replaces                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `model.ts`, `changes.ts`, `id-index.ts`, `ids.ts` | `@dxos/automerge-proxy`, internal modules                                                               | `Transform`, `Sync`                                 |
+| `reader.ts`, `encode.ts`                          | `@dxos/automerge-proxy`, internal modules                                                               | `Wire` for documents; `Wire` stays for index copies |
+| `sha256.ts`                                       | Deleted for `sha256` from `@noble/hashes`, which the tree already installs; see [Decisions](#decisions) |                                                     |
+| `tab.ts` (`TabDoc`)                               | `@dxos/automerge-proxy/Handle`                                                                          | The mirror `DocHandle`                              |
+| `sender.ts`, `network.ts`                         | `@dxos/automerge-proxy/Repo`, over the `Repo.Host` contract                                             | `ProxyRepo`'s submit loop and subscriptions         |
+| `namespace.ts`, `immutable-string.ts`             | `@dxos/automerge-proxy/Automerge`                                                                       | Today's namespace, which re-exports Automerge       |
+| `check-index.ts`                                  | `@dxos/automerge-proxy/Check`, host side                                                                | `Sequencing`, `AutomergeOps`                        |
+| `host.ts` (`SpikeHost`)                           | `@dxos/automerge-proxy/Host`, over the same `Store`                                                     | `Host.DocumentHost`                                 |
+| `client-handle.ts`                                | echo-client, a `ClientDocHandle` adapter                                                                | `MirrorDocHandle`                                   |
+| `save.ts` (`saveNoCompress`)                      | echo-host, next to the Automerge host                                                                   |                                                     |
 
 `Draft` and `Op` stay: the draft records every write, and `Op.apply` moves the cached value on a local
 write. `Cursors` goes. `@dxos/automerge-proxy` keeps its shape, a client side that needs nothing at
@@ -157,8 +158,8 @@ read carries no slack.
 ## The wire
 
 The three proxy RPC slots stay on `DataService`, with their payloads from `Contract` as today. The
-same six packages depend on `@dxos/automerge-proxy` before and after, so publishing it (a trusted
-publisher, then dropping `private`) stays a prerequisite for landing.
+same six packages depend on `@dxos/automerge-proxy` before and after. Publishing it (a trusted
+publisher, then dropping `private`) is deferred, and still has to happen before the branch lands.
 
 | RPC                               | Today's payload                                                                              | With tab documents                                                                |
 | --------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
@@ -267,6 +268,25 @@ time it sends, so it resolves the positions itself, and a copy needs nothing it 
 The spike's tests reach unmodified ECHO code by mocking both `@automerge/automerge` and the namespace.
 Once the namespace is the only runtime import in tab packages, the moved tests drop the mocks, which is
 the check that nothing still calls Automerge directly.
+
+## Decisions
+
+Settled on 2026-09-26.
+
+1. **Tab code imports the namespace by name.** No bundler alias, for the reasons under "Why not an
+   alias" in [the two seams](#the-two-seams).
+2. **Publishing `@dxos/automerge-proxy` waits.** The package stays private for now. The branch still
+   needs it published before it lands, since public packages depend on it.
+3. **SHA-256 comes from `@noble/hashes`.** No DXOS package has a synchronous SHA-256. The repo's own
+   hashing calls WebCrypto's `subtle.digest`, which is async and so cannot run inside `change()`, or
+   `node:crypto`, which browsers lack. Sodium's, under `@dxos/crypto`, runs as wasm in a browser.
+   `@noble/hashes` is already installed, pulled in by automerge-repo's `bs58check` to checksum
+   document urls, and Composer's page bundle carries it today. Cure53 audited it at 1.0.0. It matches
+   the spike's own hash on every input of 0 to 4,095 bytes and runs 4 to 5 times faster in Node 24:
+   2 µs against 10 µs for a 105-byte keystroke change, 24 µs against about 95 µs for 4 KB. The
+   catalog takes the 1.8.0 already in the lockfile. The range `bs58check` asks for, `^1.2.0`, accepts
+   it too, so a dedupe leaves the tab one copy.
+4. **No project registry entry.** This document tracks the phases.
 
 ## Risks and open questions
 
