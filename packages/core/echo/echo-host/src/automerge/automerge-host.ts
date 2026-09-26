@@ -1756,7 +1756,7 @@ export class AutomergeHost extends Resource {
 const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
-  // Check the current doc first, then subscribe to `change` to catch later
+  // Check the current doc first, then subscribe to `heads-changed` to catch later
   // updates. (We can't use the handle's readiness to gate the subscription —
   // see {@link getHandleState} for why `DocHandle.*` state is unusable in
   // this fork.)
@@ -1777,15 +1777,17 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
     return;
   }
 
+  // Not `change`: a merged change with no visible patches (a concurrent write that loses the
+  // register tie) moves heads without emitting it.
   await new Promise<void>((resolve) => {
-    const onChange = () => {
+    const onHeadsChanged = () => {
       checkPresentHeads();
       if (unavailableHeads.size === 0) {
-        lease.off('change', onChange);
+        lease.off('heads-changed', onHeadsChanged);
         resolve();
       }
     };
-    lease.on('change', onChange);
+    lease.on('heads-changed', onHeadsChanged);
   });
 };
 
