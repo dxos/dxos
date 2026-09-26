@@ -1,5 +1,15 @@
 # @dxos/av
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [ce194c0]
+- Updated dependencies [9d2466a]
+- Updated dependencies [56276cd]
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

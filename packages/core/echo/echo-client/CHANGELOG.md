@@ -1,5 +1,261 @@
 # @dxos/echo-client
 
+## 0.12.0
+
+### Minor Changes
+
+- 07565c8: Remove the duplicate clone and version APIs from `@dxos/echo-client`. The deprecated `clone` / `CloneOptions` are gone — use `Obj.clone(obj, { retainId, deep })`, whose `deep: 'all'` clones a referenced graph while preserving the references between the clones. `getVersion` and `ObjectVersion` are gone too — use `Obj.version(obj)`, which returns an `Obj.Version` carrying `automergeHeads`, and compare with `Obj.compareVersions` rather than by structural equality.
+
+  Filter evaluation over a live entity, a raw Automerge document, and the `ObjectJSON` form now shares one AST walk (`makeFilterMatcher` in `@dxos/echo/internal`), so the three matchers can no longer drift. A filter property whose key starts with `@` addresses an annotation rather than data and is now ignored uniformly, and object meta is read only when a filter actually constrains it.
+
+### Patch Changes
+
+- 066b35d: Move the devtools snapshot/feed/metadata responses and the invitation device profile to buf
+  messages, and correct `ClientServices` to declare the buf shapes those methods carry. `@dxos/echo-client`
+  no longer depends on `@dxos/codec-protobuf`. Gossip stays on protobuf.js: announcements cross the network
+  between peers, and the two codecs frame an `Any` payload differently.
+- dcf911b: ECHO internals cleanup, plus two serialization fixes.
+
+  `Database.TypeId` now uses the registry key `@dxos/echo/Database/TypeId`. It previously shared `@dxos/echo/Database` with the `[ObjectDatabaseId]` accessor that every ECHO object carries, which made the two the same symbol and `Database.TypeId in obj` true for every object in the graph. `Database.isDatabase` was unaffected (it compares the value, not just the key), but a brand check written as a bare `in` test would have misfired. Consumers that import `Database.TypeId` need no change; only code that hard-coded `Symbol.for('@dxos/echo/Database')` to brand a database is affected.
+
+  `Obj.toJSON` now emits `@deleted` for a tombstone. `Obj.fromJSON` already read the field, so a deleted object re-serialized through JSON (feed compaction, a snapshot hand-off) came back as a live object.
+
+  `Obj.toJSON`'s documentation no longer claims to match `JSON.stringify(obj)` unconditionally: that holds for an in-memory object, but a database-backed object carries its own serializer, which omits `@uri` and leaves `Uint8Array` values unencoded. Unifying the two is left as a follow-up, since it changes what `JSON.stringify` emits for every database object.
+
+  A write to a bound document now refreshes its proxy targets once rather than twice — the second pass re-read the object's full width with the narrowing scope already closed.
+
+  Removed unused internals: the `objectData` debug symbol (use `Obj.toJSON`), and the dead `getObjectDocument`, `coreInspectLabel`, `isBehaviourAccessor` and throttling-bypass constants.
+
+- 9817b6f: Release ECHO objects and their automerge documents once nothing holds them, so a space's client-side footprint tracks what is open rather than everything it has ever loaded.
+- f38f3ae: Cancel in-flight object loads when a database is torn down, instead of raising an unhandled `RepoProxy` invariant violation.
+- 99dcc7c: Fix writes that hung or were lost: `flush()` throws when a document creation or feed append cannot reach the host, a failed document creation is retried rather than dropping its object, failed feed appends back off instead of spinning or re-sending committed chunks, and objects created just before `Client.destroy()` reach the host.
+- 49271cd: An object core whose linked document settled without the body now reports `isBodyAvailable: false`, and the read paths — query selection, filtering, every traversal, entity lookup and load resolution — check it instead of assuming a core has a structure. Such a core previously answered queries with an undefined structure, crashing any relation traversal (which scans every loaded core) with `TypeError: Cannot read properties of undefined (reading 'system')`. The core keeps its identity across the body arriving, at which point it becomes available and queries surface it.
+- 0426925: Reopening a database no longer throws `invariant violation [!this._objects.has(id)]`. Closing the entity manager left object cores and the space root doc handle in place, so the next open re-created a core for every inline object over the surviving ones — blocking the space from opening.
+- c8b7158: Fix quadratic-time feed append: `FeedHandle` was rebuilding its entire working-set array and id set on every append call, so appending N items to a feed cost O(n²) instead of O(n).
+- 5cf307d: A change the host delivers to a document no longer counts as an unsaved local change, and `saveStateChanged` fires only when the set of unsaved documents changes. Before, every change on a handle was marked pending whatever its source, and every send reported the save state again, including sends that carried only subscription changes. Composer's sync status tracker flushes a space after that event settles, so under steady sync traffic it flushed every space twice a second.
+- 1160094: Object core pinning no longer installs a timer per registry touch — a single sweep timer expires pins by monotonic last-touch timestamp, removing the dominant timer churn of a bulk object load. The debug plugin's schema table now owns the generator promise it starts: the row shows the work in flight, refuses a concurrent click, and reports a failure instead of leaving it unhandled.
+- 2bb84d8: Stop charging index-query time to document hydration. A one-shot index query's 20s budget covered both the host round-trip and the hydration of every hit, so a single unavailable document failed the whole query as a `Timeout: index query` — naming the index, which had answered in microseconds. The budget now ends at the host's response, each hit is hydrated under its own bound, and a stall is reported as `index query result hydration`, naming the objects that did not load.
+- 092f3be: Writing to an object whose type is not registered in the current runtime no longer throws `Schema not found in schema registry`. Such an object — one written before its type's version bump, or replicated from a peer carrying a type this runtime lacks — was readable, but assigning a property or inserting into an array failed; those writes now skip validation instead, as they already did for untyped objects.
+- a53cabb: Registry-only queries are no longer forwarded to the remote query service. A query whose explicit `from` scopes contain no space or feed scope — e.g. `Query.select(...).from(Scope.registry())` — is answered entirely by the in-process registry source, so `IndexQuerySource` now resolves it locally instead of issuing a `QueryService.execQuery` round-trip.
+
+  Previously such a query still went remote. Hosts that reject space-less queries (EDGE) failed it, and because query sources are merged fail-fast, that rejection discarded the registry source's correct results and failed the whole query — breaking every operation that resolves a type through the registry (`SpaceOperation.AddObject`, and so anything filing an object into the graph). Browser hosts masked it by returning empty for registry scopes.
+
+  Mixed-scope queries (`Scope.space(), Scope.registry()`) are unchanged: they still query the index for the space part.
+
+- 5a00dcb: Removed the 2-second per-hit budget on hydrating an index hit. It dropped any object whose load outran it, with only a log line, so a one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no second pass — read the short result as the whole set. The load is now awaited to completion; hits the loader establishes are gone (deleted elsewhere, released, or behind a document url that no longer resolves) are still excluded, as before.
+- f81a4f0: Closing a `RepoProxy` now rejects `whenReady()` with `RepoClosedError` for a document that was still loading, instead of leaving it pending forever.
+- 6668dba: `RepoProxy.find`/`create` now throw a typed `RepoClosedError` instead of failing an invariant when the proxy is closing or closed, so work that outlives the client (query hydration, a graph rebuild on a timer) can recognise the teardown and abandon quietly.
+- 4f55909: Collapse the routine editor into a single composite form (general fields, action, and trigger in one schema-driven form) and reuse it in the create-object dialog: picking a routine template now opens the full routine form over an unpersisted draft, persisted on Save. Routine templates scaffold enabled routines, since the dialog is now the review step.
+
+  Connector sync becomes account-level: `ConnectorSpec.SyncInput` is now a shared schema (`{ connection, priority? }`) that every connector sync operation (Gmail, Google Calendar/Contacts, JMAP, Bluesky, Discord, GitHub, Linear, Slack, Trello) uses, fanning out over the connection's bindings via `Binding.syncAll`, with one routine per connection wrapping the connector's own operation. The fan-out isolates bindings: every binding runs to completion and its outcome is collected, so one broken target neither interrupts a concurrent sibling nor starves the queued rest, and a provider 401 is retagged for reauthentication whether it arrives as a typed failure or a defect (including one buried in a wrapper's `cause`). Deleting a connection now removes its sync routine, so no orphaned schedule keeps firing. The routine is offered through the create-routine form when connecting an account — single- and multi-target alike — instead of created silently; the sync runs when the routine is saved, a target's Sync button syncs its account with the pressed target first, and a deleted routine is re-offered through the form on the next sync press.
+
+  Reading an unpersisted object no longer throws when one of its refs names a registry entry by type DXN rather than an object by entity id (`Ref.fromURI`). Off-database refs resolve against the link cache, which is keyed by entity id, so such a ref is now left unresolved instead of failing an invariant — the routine draft the create dialog renders binds its runnable operation that way.
+
+- 63629c5: Fixed the sync progress indicator getting stuck showing "sync in progress" after replication had caught up, and collapsed a space's CRDT and feed backlogs into a single progress item.
+
+  - `subscribeToSyncState` now re-establishes the feed sync-state stream after a reconnect (leader change) and clears the feed backlog while it is down — previously the stream died silently and every later document update re-published the last (non-zero) feed counts forever.
+  - The space replication progress capability no longer stacks a subscription fiber per space on every spaces-subscription delivery (duplicate writers raced over one monitor key), drops the monitor for a space that leaves the list, and reconciles against a fresh `getSyncState` read every 10s so a missed update cannot outlive the backlog.
+  - Documents and feed blocks now share one monitor per space; the breakdown (`4 CRDTs · ↓6 ↑2`) is rendered as the meter's note, which `ProgressMeter` previously ignored.
+
+- Updated dependencies [a92ea18]
+- Updated dependencies [0c6c186]
+- Updated dependencies [af1c007]
+- Updated dependencies [4862c8e]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6186edc]
+- Updated dependencies [e3ceced]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [4ececc6]
+- Updated dependencies [c95def4]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [2079755]
+- Updated dependencies [b1dc20c]
+- Updated dependencies [ac71815]
+- Updated dependencies [7c87626]
+- Updated dependencies [6388838]
+- Updated dependencies [f82c78f]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [63fc847]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [6ef35a6]
+- Updated dependencies [ea11703]
+- Updated dependencies [b2caee6]
+- Updated dependencies [9baf25f]
+- Updated dependencies [dcf911b]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [6f4a887]
+- Updated dependencies [2d9ecf8]
+- Updated dependencies [d0beedc]
+- Updated dependencies [731b264]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [ed9aeba]
+- Updated dependencies [afe2e41]
+- Updated dependencies [6409948]
+- Updated dependencies [792c756]
+- Updated dependencies [1cf6347]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [9ab38fa]
+- Updated dependencies [b3673ee]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [915db6a]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [782a442]
+- Updated dependencies [b02fe16]
+- Updated dependencies [472ca95]
+- Updated dependencies [252ca39]
+- Updated dependencies [8fb29b3]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [5cfa37d]
+- Updated dependencies [2c442f9]
+- Updated dependencies [0264069]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [872f391]
+- Updated dependencies [51820a1]
+- Updated dependencies [9ae0e5f]
+- Updated dependencies [7d000b9]
+- Updated dependencies [e56276b]
+- Updated dependencies [66e9264]
+- Updated dependencies [84362af]
+- Updated dependencies [9b0d4b5]
+- Updated dependencies [76d6fca]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [eeff74c]
+- Updated dependencies [967b130]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [72f7584]
+- Updated dependencies [e94ed89]
+- Updated dependencies [882ac2a]
+- Updated dependencies [c993432]
+- Updated dependencies [0132aab]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [851791f]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [ce194c0]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [9426389]
+- Updated dependencies [2e5e188]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [9d2466a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [a283607]
+- Updated dependencies [24fcadc]
+- Updated dependencies [b00ee72]
+- Updated dependencies [4804da0]
+- Updated dependencies [eb2fd6d]
+- Updated dependencies [63e500b]
+- Updated dependencies [78e5596]
+- Updated dependencies [b1bb838]
+- Updated dependencies [19f19a2]
+- Updated dependencies [2a41efd]
+- Updated dependencies [142ba02]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [4689d66]
+- Updated dependencies [690dcaa]
+- Updated dependencies [e207c68]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [4663f24]
+- Updated dependencies [2513a52]
+- Updated dependencies [2896a58]
+- Updated dependencies [17ed864]
+- Updated dependencies [8967ed3]
+- Updated dependencies [b125655]
+- Updated dependencies [10defed]
+- Updated dependencies [9e91762]
+- Updated dependencies [f4c2702]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [7407d65]
+- Updated dependencies [318bbad]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [631ade3]
+- Updated dependencies [2b6eb8d]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [ea11703]
+- Updated dependencies [fa82aef]
+- Updated dependencies [56276cd]
+- Updated dependencies [18597fc]
+- Updated dependencies [9205bd3]
+- Updated dependencies [549e87c]
+- Updated dependencies [0b2f04a]
+- Updated dependencies [f3756d0]
+- Updated dependencies [fce2060]
+- Updated dependencies [4fc8f3a]
+- Updated dependencies [bda45ac]
+- Updated dependencies [ec0803d]
+- Updated dependencies [5885380]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [693d1b4]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [1a3de22]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [c209b42]
+- Updated dependencies [4da1052]
+- Updated dependencies [eda8b55]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+- Updated dependencies [6dadb41]
+  - @dxos/echo@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/echo-host@0.12.0
+  - @dxos/index-core@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/errors@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/blob@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

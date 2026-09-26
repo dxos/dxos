@@ -1,5 +1,15 @@
 # @dxos/keys
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [56276cd]
+- Updated dependencies [4da1052]
+  - @dxos/debug@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

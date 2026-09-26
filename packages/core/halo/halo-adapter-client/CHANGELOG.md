@@ -1,5 +1,76 @@
 # @dxos/halo-adapter-client
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [86d1482]
+- Updated dependencies [4ececc6]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [6388838]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [5df602e]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [73daef4]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [7d04444]
+- Updated dependencies [194b1d3]
+- Updated dependencies [881f900]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [472ca95]
+- Updated dependencies [e56276b]
+- Updated dependencies [967b130]
+- Updated dependencies [75d9c7c]
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [882ac2a]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [608a172]
+- Updated dependencies [ce194c0]
+- Updated dependencies [9d2466a]
+- Updated dependencies [df22dec]
+- Updated dependencies [b1bb838]
+- Updated dependencies [5959b41]
+- Updated dependencies [139a3b0]
+- Updated dependencies [a5dfa5e]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [c4188a6]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9996125]
+- Updated dependencies [9e91762]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [dd039d2]
+- Updated dependencies [adcad97]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [0280a6a]
+- Updated dependencies [e8088ea]
+- Updated dependencies [1a3de22]
+- Updated dependencies [85e6347]
+- Updated dependencies [6dadb41]
+  - @dxos/client@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/halo@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

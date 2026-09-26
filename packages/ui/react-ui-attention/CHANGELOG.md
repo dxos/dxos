@@ -1,5 +1,37 @@
 # @dxos/react-ui-attention
 
+## 0.12.0
+
+### Patch Changes
+
+- f4e481a: Navigation in the deck is smoother in three ways. A plank's heading no longer paints its sigil and title as unattended for a frame before flipping: a newly opened plank is attended from its first painted frame. Opening a plank crossfades the content region where the browser supports a view transition. A deck showing several planks at once no longer opens a companion pane beside every one of them before the reader has opened or closed a single one.
+- 08cddf6: Clicking a document in the navigation tree moves attention to the plank it opens, while focus stays on the tree row so the arrow keys keep working. Before this, attention stayed on the document you left. Opening a document within a workspace now crossfades in 50ms instead of 200ms.
+- Updated dependencies [6a457ac]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [6af89f4]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [8cb5553]
+- Updated dependencies [818a096]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [08cddf6]
+- Updated dependencies [07531e0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [928e0b2]
+- Updated dependencies [520c34f]
+- Updated dependencies [77d0026]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

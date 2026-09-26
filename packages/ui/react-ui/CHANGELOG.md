@@ -1,5 +1,251 @@
 # @dxos/react-ui
 
+## 0.12.0
+
+### Minor Changes
+
+- 96f94c2: `Carousel`, `Editable`, `Splitter` and `Stepper` are now built on `@ark-ui/react`'s zag state machines rather than hand-written interaction and a11y logic. The namespaced APIs (`Carousel.Root`, `Editable.Preview`, `Splitter.Panel`, …) and their props are unchanged apart from the two noted below, and every part still takes `classNames`.
+
+  Breaking: `Carousel.Root` no longer takes `transition` — the machine has one way to move between slides, so a carousel that previously hard-swapped now slides — and `useCarousel` is removed. `Editable`'s `useEditableContext` is now the machine's own context hook and takes no consumer name; `useEditable` keeps its options and return shape, with `onBlur` dropped (an interaction outside the field is the machine's to handle) and `activation` widened to also accept `'focus'` and `'none'`.
+
+  `Escape` on an `Editable` that was empty when it opened now discards the typed text rather than keeping it, and a field held open through `editing` commits at all — a controlled editing state made the machine treat a submit as a request to its host, so a pane editor driven that way wrote nothing.
+
+  `Stepper` no longer eases its progress line back to nothing when a run is reset or wound back; only the line leaving the stage in flight animates, and everything else lands at once. A run that fails now draws every stage it started in the error hue rather than only the stage it stopped on.
+
+  An article surface is told which graph node it renders (`nodeId`), separate from which node holds attention (`attendableId`). The two are the same for a primary plank and differ for a companion, which shares its host's attention — so a surface reading its own contributed actions from `attendableId` was rendering the host's toolbar. Actions can also say which surface they suit: `disposition` already accepted an array, and `'prompt'` joins `'toolbar'` for actions that belong beside a text input rather than on an object.
+
+  An editor's placeholder no longer shows behind streamed pending text, which is a decoration rather than document content.
+
+- 9714c75: `@dxos/brand/channels` names the prerelease channels (`dev`, `preview`, `staging`) and the colour each one paints the mark, and `channelMarkFilter` turns that colour into a CSS filter over the released artwork. The boot loader applies that filter to the mark, the ring and its head together, so a channel build no longer ships its own copy of the mark and the ring agrees with it; the composer app's icon variants are generated from the same definitions. The brand `Icons` story shows the channels in a row.
+
+  The boot loader's activation row is a flex row translated as one group: a plugin's icon is appended at the end and fades in, and the row slides half a slot to stay centred on an eased count driven by the same frame loop as the ring, so arrivals in quick succession keep the row moving rather than stopping it between each.
+
+  Breaking: `react-ui`'s `Stepper` is renamed `Steps`, after the Ark machine it sits on, as the rest of the family is named: `StepsProps`, `StepsStyleProps`, `stepsTheme` and the `steps.*` theme keys follow. The `Step`, `StepOptions`, `stepCount` and `stepAt` helpers keep their names.
+
+- bd6ba8e: `Carousel` no longer auto-advances for a reader who has set `prefers-reduced-motion`, or under the
+  new `VITE_DX_DISABLE_ANIMATIONS=true`, which turns off animation that runs without a user gesture.
+  An unattended carousel — the tour's welcome panel advances every 10s — had been making every frame
+  of an agent-driven recording differ from the last, defeating the still-frame culling those
+  recordings depend on. The `useReducedMotion` hook behind it is now exported from the package.
+- d194929: Add `Collapsible`, a section that folds under its own heading — it pairs the trigger to the section for assistive technology, animates the section's height, and can mount it only while open. A stack of them under one caller-owned expansion set is an accordion, which is how a mail conversation now renders its messages. Dialogs focus the control marked `data-dx-autofocus` on open, so one offering a Cancel action no longer commits on a reflexive Enter, and a dialog body scrolls with its header and actions pinned. Fixes a popover crash on any surface whose theme context carries no safe-area padding, a task list description running under the trailing controls, and an outliner menu button that stayed put when an ancestor scrolled.
+- 557e243: `Column.Root` (and `Card.Root`) gain a `gap` prop (`sm` | `md` | `lg`) controlling the vertical gap between all rows of the grid. The card's default spacing is unchanged (`sm` equals the previous `gap-1`).
+- d770fe7: Switching workspaces in the deck now runs as a view transition where the browser supports `document.startViewTransition`: the content area and the navigation sidebar crossfade to the new workspace, and a sidebar that expands with the switch morphs from its rail to its open box instead of sliding underneath the fade. Readers who prefer reduced motion see the switch as before.
+- ab56cfe: Devtools panels are article containers (`*Article`, exported from `containers/panels`) and the stats panel is a stack of `StatCard` cards, each contributed as a surface on `AppSurface.DevtoolsOverview`; the `Panel` accordion and `*Panel` exports are gone, and the duplicate `logs` deck companion is removed in favour of the debug panel's Logs page.
+
+  `Button` gains a `tag` variant with a `hue` (the `dx-tag` look on a button), `Field.Switch` takes a `density` and shrinks at `sm`, and `Card.Root`'s `density` now applies to its contents. `Surface.getMounted()` lists the surfaces currently mounted and `Surface.useProfilerSnapshot()` reads the profiler's cumulative per-surface stats without subscribing.
+
+  `JsonHighlighter` and `SyntaxHighlighter` scroll inside the family's themed `ScrollArea` (`scroll` picks the axes; `scroll={false}` gives the bare leaf that `Syntax.Code` uses), so the shorthand replaces a hand-built `Syntax.Root/Content/Viewport/Code` wherever no filter or depth control is needed.
+
+- 2e4c299: A markdown field held open no longer paints an empty box before its editor arrives: the CodeMirror view is built in a layout effect, so a pane that switches subjects — a task's description beside its history — renders in one frame instead of dropping everything below the field by the editor's height a frame later.
+
+  Five hand-rolled empty states (no task selected, no task set, no sessions, no message selected, no result selected) now use `Banner.Empty` from `@dxos/react-ui`, so an empty pane reads the same everywhere and announces itself as a status.
+
+  `Empty` moves from `@dxos/react-ui-list` to `@dxos/react-ui` as `Banner.Empty`: it is the same statement a banner makes — a message in place of content — for the one case that carries no valence and paints no surface, and most of its callers are panes rather than lists. Every call site moves with it, and a package that depended on `react-ui-list` only to say "nothing selected" no longer does.
+
+  A task's history records what happened to the work — status, priority, estimate, assignment — and no longer narrates edits to its text. A title or description is edited by typing and commits on every blur, so logging those filled the history with "Description updated." and buried the entries a reader opens it for. The text is still written; it is simply not narrated, and a caller with something to say about such an edit still says it through `options.description`.
+
+  `Column.Section` joins `Column` in `@dxos/react-ui`: a labelled run of content that spans the column's three tracks and re-exposes them, so a heading and plain content sit in the content track while a `Column.Row` inside still reaches the gutters. It is what a detail pane is made of — headings, prose, and rows with a leading control.
+
+  A task's detail pane is now one column rather than four blocks each choosing its own left edge, and the pieces it is made of are components a host can mount on its own. `TaskEditor` is a task's title and markdown description with nothing around them — no create case, no selection, and no list context — which is what `TaskArticle` now renders instead of the list's editing strip. `TaskProperties` renders status, assignee, priority and estimate as a labelled list, each a menu whose trigger shows the value beside its glyph; the assignee's picker offers the space's people. `TaskTags` is the row's chip set, wrapped into a flow beside `TaskMnemonic`, the chip that copies a task's `@mnemonic`. The three sections share one geometry — a fixed 24px glyph column — so a glyph sits on the same axis in each.
+
+  A GitHub link pasted into a description is now a chip in the editor as well as at rest: `linkWidgets` claims the bare `URL` node a GFM autolink produces, not only `[label](url)`, and `plugin-github` names the chip from the URL — `#123`, or `owner/repo`. The same description used to read two ways depending on which surface showed it.
+
+  **Breaking.** `TaskList.Edit` is `TaskList.Editor`, and it renders the fields only: a task's questions and its history belong to the surface with room to answer and to read, so `showQuestions` and `onQuestionAnswer` are gone from `TaskList.Root`, and rows no longer replay the log under their title. `TaskHistory` and `TaskQuestion` place themselves and no longer take `subgrid` or `cells` (a host previously threaded its own column names into each child). A host that answered questions through the list — plugin-assistant's chat — renders them itself now.
+
+- 813069c: Add `gap`, `align`, `justify`, `wrap`, and `center` props to the `Flex` primitive. `gap` accepts only named steps of the theme spacing ramp (`xs`–`2xl`, plus `form` and `form-section`), so the prop uses named spacing tokens instead of arbitrary Tailwind literals; `classNames` remains an unrestricted escape hatch. The `Gap`, `Align`, and `Justify` unions are exported for reuse.
+- 098a0bb: Inbox surface: virtual folders, archive, and sender enrichment.
+
+  **Inbox and Starred folders** join All Mail / Sent / Drafts / Subscriptions as mailbox child nodes, reusing the existing `properties.filter` + `systemTag` path — no new query machinery.
+
+  **Archive** is available from both the conversation menu and the mailbox tile menu, grouped with Delete since both take a message out of the reading flow. Archiving from a dedicated message view closes the plank; restoring does not.
+
+  Archive is modelled as the `inbox` system tag coming **off**, never a separate `archived` tag: Gmail models INBOX as a label and JMAP as a mailbox role, both already mapped by the providers, so one toggle serves both directions and no filter-complement operator is needed. Note that tag changes are not yet pushed back to the provider, so **a Gmail sync will restore an archived message** — pushing them is tracked separately.
+
+  **Conversation menu** gains "Create Project" (the `CreateProjectFromMessage` operation previously had no UI) and sender enrichment. The latter arrives through a new `InboxCapabilities.SenderAction` capability rather than a direct import, because plugin-crm already depends on plugin-inbox; `createInvocations` returns a list so a contributor can express a composite (research, then image) without fusing it into one operation.
+
+  **Pipeline actions are hidden until a connection is configured** — previously Enrich was offered on a mailbox with nothing to enrich.
+
+  **`RecordArticle` gains a toolbar** sourced from the subject's own app-graph node, so any plugin can contribute type-specific actions to it; plugin-crm contributes Enrich for `Person` and `Organization`. `Card.Action` gains a `leading` slot so a row standing for a person can show their avatar instead of a generic glyph.
+
+  **Removed:** `InboxOperation.ProcessMailbox` and its routine template. Its cursor helpers were shared with `ClassifyMailbox` and survive at `operations/cursor.ts` with a now-required consumer id; `ResetProcessCursor` becomes the generic `ResetFeedCursor`, also with a required `cursorId`. `CrmOperation.ProcessMailbox` is unrelated and unaffected.
+
+- 557e243: `Message.Root` is now headless — it renders no DOM element, only the shared message context (ids, valence, icon). The message's element moved to `Message.Content`, which is now required inside every `Message.Root`: a `Column` grid carrying the alert/paragraph role, the aria wiring, the valence CSS variables and the valence surface. Hosts that rendered `Message.Title`/`Message.Body` directly under `Message.Root` must wrap them in `Message.Content`, and any `classNames`/`data-*`/`ref` previously on `Message.Root` moves to `Message.Content`.
+- 29543ca: MOSAIC ui-template groundwork across the UI packages.
+
+  - `Grid` layout primitive: track lists (`cols={['min-content', '1fr']}`), `subgrid`, `gap` from the spacing ramp, `align`/`center`, `contents`, and `asChild`.
+  - `Show`/`Switch` conditional-rendering primitives: `<Show when fallback>` renders its children (or a render prop receiving the narrowed value) while `when` is present — anything except `undefined`/`null`/`false` — and `<Switch.Root on fallback>` renders the first `<Switch.Match when>` whose `when` strictly equals (or, as a predicate, matches) `on`. Both are DOM-free and mirror the ui-template `show`/`fallback`/`switch`/`match` grammar.
+  - `Combobox`: the popover aligns exactly with its trigger (trigger-width content, zero collision padding), the trigger reuses the `Select` trigger slot and the placeholder role, and single-select lists emit one selection per press.
+  - `Listbox`: visible row focus ring, `onDeselect` (Escape clears only a non-empty selection), and a `multiselectable` mode for externally-managed selection with option navigation.
+  - `TaskList.Root`'s `onTaskCreate` now receives a `TaskDraft` (`{ title, ...optional patch fields }`) instead of a bare title, so a description (or priority/assignee) can be supplied when available.
+
+- 0a3e9dd: Consolidate the progress components. `Progress` is the fill bar (renamed from `Status`, with its `status.*` theme keys now `progress.*`), `Stepper` draws a fixed plan as circles joined by flexing lines, and `TextCrawl` moves here from `@dxos/react-ui-components`, which gains `ProgressMeter` — the readout that assembles the three. **Breaking:** `Status` is gone; use `Progress`. `ProgressBar` and `ProgressMeter` move out of `@dxos/react-ui-components` and `@dxos/react-ui` respectively.
+- 306f50d: Mail and calendar providers now own their own operations. `GoogleMailSync`, `GmailSend`,
+  `MaterializeGmailTarget`, `GetGoogleCalendars`, `GoogleCalendarSync`, `MaterializeGoogleCalendarTarget`
+  (was `MaterializeCalendarTarget`), `CreateGoogleCalendarEvent`, `GetGoogleContactGroups` and
+  `GoogleContactsSync` move from `@dxos/plugin-inbox/InboxOperation` to
+  `@dxos/plugin-google/GoogleOperation`; `JmapSync`, `MaterializeJmapTarget` and `JmapSend` move to
+  `@dxos/plugin-jmap/JmapOperation`. Their operation DXNs change accordingly.
+
+  The Inbox, Inbox (Send) and Calendar skills no longer name a provider: their tools are resolved from
+  the connectors and send providers a deployment actually installs. A JMAP-only deployment previously
+  advertised Gmail tools it could not run and had no sync tool of its own.
+
+  A draft calendar event is now one carrying no foreign key from any provider, rather than none from
+  Google — events synced by any other calendar connector were reported as perpetual drafts.
+
+  `ScanMailbox` is now `AnalyzeMailbox`, and its progress meters name their phase as well as their
+  mailbox ("Syncing Inbox", "Analyzing Inbox") — two meters run over one mailbox, so the bare name left
+  the user unable to tell which was moving.
+
+  A card header's leading depiction is now contributable per type via the `AppSurface.CardIcon` role.
+  Hosts wrap their existing default in `CardIconSlot`, which renders a contributed surface when one
+  matches and the default otherwise — `Surface`'s own `fallback` is the error boundary, and unlike
+  `CardContent` a miss here cannot render nothing. Scoped to cards deliberately: a 6-unit card block
+  affords initials or a photograph where a 16px navtree row does not, so non-card surfaces keep
+  resolving `IconAnnotation` through `Obj.getIcon`. `ObjectAvatar` now derives its initials' hue from the
+  object's label rather than its type, since a type declaring a single hue put every instance on the same
+  disc; it is no longer a card's default depiction, only what a type opts into.
+
+  **`@dxos/react-ui` breaking:** `Message` is renamed to `Banner` — `Message.Root`/`Content`/`Title` are
+  now `Banner.*`, the `message.*` theme keys are `banner.*`, and the `Callout` alias is removed. A new
+  `Deferred` holds a fallback back until a pending state has lasted `delay`, then keeps it for at least
+  `minDuration`, so a momentary empty state is never rendered as the answer.
+
+- b7822a7: Move `@dxos/react-ui` and its sibling packages from Radix Primitives to Ark UI (phases 1–4 of `packages/ui/react-ui/docs/MIGRATION.md`). `@dxos/react-hooks` now exports `createContext`, `composeRefs`/`useComposedRefs`, `useControllableState` and `composeEventHandlers`; every part renders through Ark's `ark.<tag>` factory with the same `asChild` contract. `Toggle`, `ToggleGroup`, `Input.Checkbox`, `Slider`, `react-ui-tabs` and `react-list`'s collapsible item run on Ark machines behind their existing props; `Toolbar` runs on `@dxos/react-focus`; `Separator` is a plain `role="separator"`. `Tooltip`, `Popover`, `DropdownMenu` and `ContextMenu` are no longer forks of Radix's floating layer but Ark machines: `DropdownMenu` and `ContextMenu` share one implementation, `Tooltip.Provider` is one machine serving every trigger, and `Popover.VirtualTrigger` feeds the machine's anchor. `Dialog`, `AlertDialog`, `Main`'s sidebars and `Select` run on Ark's dialog and select machines: `Dialog`/`AlertDialog` share one implementation, `Select` keeps its children-driven API by building Ark's collection from the rendered options, and `Toast` keeps its declarative API over Ark's toaster store. `@dxos/react-ui` no longer depends on any `@radix-ui` package and `@dxos/ui-theme` drops the `tailwindcss-radix` plugin. Breaking: the scoped-context exports of `@dxos/react-list`, `@dxos/react-input`, `@dxos/react-ui-grid`, `@dxos/react-ui-menu` and `@dxos/react-ui-syntax-highlighter` (`create*Scope`, `*ScopedProps`, `__*Scope` props) are removed, as are `createTooltipScope`/`createPopoverScope`/`createDropdownMenuScope`; `ScrollArea.Root` no longer takes `asChild`; `Input.Checkbox` renders a native input behind a styled control (element props reach the control, the ref reaches the input); `Toolbar.Root` drops the `dir` prop; `Popover.Content` drops `sticky`; the `--radix-*` CSS variables become Zag's (`--available-width`/`--available-height`, `--reference-width`, `--transform-origin`, `--arrow-size`, `--arrow-background`), and `Tooltip.Arrow`/`Popover.Arrow`/`DropdownMenu.Arrow` render Ark's `Arrow` + `ArrowTip`; `DropdownMenu.Root modal` is accepted but has no effect; `Select.Arrow`, `Select.ScrollUpButton` and `Select.ScrollDownButton` are removed (the machine scrolls the highlighted option into view), `Select.Root` takes only `value`/`defaultValue`/`onValueChange`/`open`/`defaultOpen`/`onOpenChange`/`disabled`/`required`/`name`/`form`, and a closed `Select`'s options stay mounted hidden; `Dialog.Content`'s `forceMount` is gone; `Toast.Root` renders a `div` with `role="status"` inside the viewport (not an `li`), `Toast.Provider` takes only `duration` and `overlap` (open toasts pile up and expand under the pointer by default; `overlap={false}` lays them out as rows), `Toast.Root` takes `open`/`defaultOpen`/`onOpenChange`/`duration`, and `Toast.Action`'s `altText` has no effect.
+- c8b65f3: Adds `Drawer`, a panel that slides in from an edge of the viewport on Ark's drawer machine: swipe to dismiss, snap points for a bottom sheet, a grabber, modal and non-modal variants, a swipe area that opens it from the edge, and a `push` mode in which the panel is part of the page's layout and pushes its neighbours aside (`Drawer.Root transition` sets its open and close duration, `Drawer.Content size` its extent in rem, both matching `Splitter`'s so a drawer can sit in a split pane). Adds a Material-style `elevation` (0–5) to `Panel.Root`/`Toolbar`/`Content`/`Statusbar`, `Toolbar.Root`, `Card.Root`, `Dialog.Content` and `Popover.Content`: the part enters that level of the surface ladder (background, ink, derived hover/current/separator tones) and casts the level's shadow from `raised` up. `Panel.Root` takes the element to render as `as`. `Splitter.Panel` holds its anchored size as a fixed rem basis while split and caps its content at the pane's height.
+- 9feee5e: `@dxos/react-ui`'s `Input` is `Field`, forms group their fields in real fieldsets, and popovers stay put.
+
+  **`@dxos/react-ui` — Breaking:** `Input` is `Field`, named for what it is (Ark's `Field` plus the standard form of each control), with its parts named as Ark names them:
+
+  - `Input.Root` → `Field.Root`, `Input.Label` → `Field.Label`, `Input.Description` → `Field.HelperText`, `Input.Validation` → `Field.ErrorText`, `Input.TextInput` → `Field.Input`, `Input.TextArea` → `Field.Textarea`; `Checkbox`, `Switch`, `PinInput`, `Date`, `DateTime`, `Time`, `Block` and `TriggerIcon` keep their names under `Field`.
+  - `Input.DescriptionAndValidation` is gone: `Field.HelperText` is always the field's helper text and `Field.ErrorText` its error text, so a description and an error are two siblings rather than one paragraph that changed role with the valence.
+  - Types and hooks follow: `InputRootProps` → `FieldRootProps`, `TextInputProps` → `InputProps`, `TextAreaProps` → `TextareaProps`, `InputValence` → `FieldValence`, `useInputValence` → `useFieldValence`, `useInputTrigger` → `useFieldTrigger`. The theme key `input` is `field`.
+  - `Field.Checkbox` and `Field.Switch` accept label children: the control renders as a `<label>` around itself and the text, so a labelled control is one element at the call site instead of a hand-built row of `Field.Root`, `Flex`, the control and `Field.Label`.
+  - `Fieldset.Legend` is floated so it lays out as an ordinary child (a flex item in a flex fieldset) while still naming the group.
+  - **Breaking:** the `DropdownMenu` and `ContextMenu` namespaces are gone; both were `Menu`. `DropdownMenu.X` → `Menu.X`, `ContextMenu.Trigger` → `Menu.ContextTrigger`, `ContextMenu.X` → `Menu.X`; the `DropdownMenu*Props`/`ContextMenu*Props` type aliases → `Menu*Props`, `useDropdownMenuContext` → `useMenuContext`. Stories are `components/Menu` and `components/Menu/ContextTrigger`.
+  - A popover, menu, select or tooltip no longer flashes at the viewport's origin on the frame before it is measured, and content anchored to a virtual element (`Popover.VirtualTrigger`, the editor's `dx-anchor` menus) follows the anchor when its container scrolls.
+
+  **`@dxos/react-ui-form`:** groups in a form are real fieldsets, and the form's field components are named for what they are.
+
+  - `Form.Section` and every schema group (`Form.FieldSet`, nested objects, object-array items, inline refs) render a `<fieldset>` named by its `<legend>`, so assistive technology announces the group. A nested group's legend holds its disclosure. `Form.Section`'s legend was inside a header `div` and never named the section.
+  - **Breaking:** `Form.Row` is `Form.Field` (`FormRow` → `FormField`, `FormRowProps` → `FormFieldProps`): one label + control is a field. The former `FormField`, the schema-driven factory that picks a renderer per property, is `FormFieldDispatch`, with the decision extracted as the pure `resolveFieldRenderer`.
+
+- 0e44f24: `Main`'s sidebars run on Ark's drawer machine below `lg`. Both sidebars now close on a swipe toward their edge (`swipeToDismiss`, on by default), and a touch swipe inward from the screen edge opens a closed one (`swipeToOpen`, on by default; the edge strip is touch-only). Dismissing one sidebar no longer dismisses the other. The sidebar's label is on the element at every width. `useSwipeToDismiss` is removed. The public API, the three-state model and the layout at `lg` are unchanged.
+- bd06669: Adds `Toc` and `Tour` on Ark's machines, and moves the welcome tour off `react-joyride`. `Toc.Root` takes the headings as `{ value, depth }` items and an optional scroll container, watches which headings are in view and marks their links (`aria-current="location"`, `data-active`); `Indicator` is a bar beside the active items, `Item` indents by depth, and `Link` scrolls the heading into view within the container instead of jumping the page (headings must carry the ids the items name). `useTour` takes a walkthrough's steps (tooltip steps beside a target, dialog steps centred, with actions, arrow, backdrop and an effect that runs before a step shows) and `Tour.Root` provides it; `Backdrop` cuts the target out of the scrim, `Spotlight` frames it, and `Positioner`/`Content`/`Arrow`/`Title`/`Description`/`ProgressText`/`Close`/`Control`/`Actions`/`ActionTrigger` make up the card. The machine waits for a target to appear, scrolls it into view, marks it `data-tour-highlighted` (which shows hover-revealed controls), traps focus and walks steps on the arrow keys. `plugin-support`'s welcome tour runs on it: `Tour.Step` is now `{ target, title, description, placement, before }` (`content` is `description`; the joyride-only fields are no longer accepted), and `react-joyride` is gone. Below `lg`, dismissing a `Main` sidebar now returns it to `collapsed` rather than `closed`, and the edge swipe opens it from there.
+- 1d6f730: Replace `@fluentui/react-tabster` with `useFocusGroup` in `@dxos/react-ui`, which provides arrow-key navigation and `Tab` boundaries for composite widgets in a fraction of the size — 68 KB left the eager boot graph. `Focus.Group`, `Main`'s landmarks, `Carousel`, `Tabs`, `Masonry` and the `react-ui-list` components keep their keyboard behaviour; consumers calling tabster's hooks directly should move to `useFocusGroup` and `findFirstFocusable`.
+- fc83abd: ScrollArea now overlays the scrollbar thumb on the content instead of reserving layout width for a
+  native scrollbar. Native scrolling is retained, so scroll chaining and nested scrollers are
+  unchanged. Pass `native` to restore the classic native scrollbar, which consumes layout width.
+
+  The `padding` option reserves the strip the overlay thumb occupies, so content clears it.
+
+- a805212: Split the sizing utilities and remove `dx-container`.
+
+  `dx-expander` is renamed `dx-expand` and decomposes into `dx-fill` (`h-full w-full`) and `dx-grow` (`flex-1 min-h-0 min-w-0`), so a class names how the parent sizes the element rather than bundling five properties. `dx-container` is removed: its `overflow-hidden` duplicated the `min-*-0` it already carried — any non-visible overflow zeroes a flex/grid item's automatic minimum size — and clipped everything as a side effect. Call sites that genuinely clip now say `overflow-hidden` explicitly. `dx-fullscreen` loses its `overflow-hidden` for the same reason.
+
+  `withColumn.propagate()` selected on `.dx-container` to keep a ScrollArea's scrollbar in the gutter; that marker is now an explicit `dx-scroll-boundary` on `ScrollArea.Root`.
+
+  Adds a `prefer-sizing-utilities` lint rule for the hand-rolled equivalents.
+
+- 6fed038: Add people you already share a space with to another space: a contact picker on the space members
+  article admits them by identity key and returns a `?spaceKey=` join link that brings the guest into
+  the space, and the account profile gains a Contacts article. `space.admitContact(contact, role?)`
+  takes a role, defaults to Editor instead of Admin, and records the contact's profile; `Contact`
+  carries the contact's `did`. `Combobox.Item` forwards extra props, and `Listbox.ItemContent` sizes
+  its icon column to wider icons and accepts block content in `description`.
+
+  Breaking: `Clipboard` (`Clipboard.Button`, `Clipboard.IconButton`, `Clipboard.Provider`) and
+  `useClipboard` are removed from `@dxos/react-ui`; use `SystemIconButton.Clipboard` with `value` (or
+  `onCopy`), adding `iconOnly` for the icon-only form. It needs no provider.
+
+- 4c5b2c7: `Timestamp` shows an instant in the room a column has — `now`, minutes to two hours, hours to a day, then a calendar date — and carries the full instant in a tooltip, since everything it shows is lossy by design.
+
+  Minutes run past the hour because `90m` is a duration a reader feels where `1.5h` is one they compute. It counts live, scheduling each tick for the moment its value changes rather than on a fixed interval: a minute counter wakes once a minute, an hour counter once an hour, and a calendar date never wakes at all — a row that says `1m` ten minutes later is worse than no counter, because the reader believes it.
+
+  A task's activity log renders its entries with it, in place of the "about 2 hours ago" that a log column has no width for.
+
+- f9816c0: Toasts that close on a timer now draw a bar that empties as their time runs out, and hold it while
+  the pointer is over them. `Progress` gains the `countdown` and `paused` props behind it.
+- 525aee0: Navtree rows drag in Safari, and a branch held mid-drag opens with its children already loading.
+  Breaking: `Tooltip.Trigger`'s `onInteract` no longer receives the event and keeps the tooltip closed when it returns `false`.
+
+### Patch Changes
+
+- c020513: A `Banner` with no `Banner.Title` now pads the top of its body to match the bottom, so the text no
+  longer sits against the banner's top edge.
+- d4b4919: `dx-anchor` preview cards now open on hover by default (`trigger='click'` opts out) with a
+  shadcn-style fade+zoom animation; hosts close on `state: false`. Editor block widgets survive
+  replacement (root-keyed unmount) and suspending portals; `#`/`@` link chips resolve the linked
+  object's label.
+- e2b04f6: `Tabs.Tablist` sizes itself as a toolbar item when rendered inside a `Toolbar.Root` (content width, unpadded, never squeezed by a full-width sibling), so containers no longer pass `w-auto`/`p-0` to embed tabs in a toolbar. The Project article's Overview/Tasks tabs, which had collapsed to zero width beside the action toolbar, are visible again and are now part of the article's single action toolbar. The Projects plugin declares the Assistant plugin as a dependency, so hosts that run Projects (including the CLI) register Assistant beside it.
+- f2d8a92: The form ontology: three parts that map one for one onto `@dxos/react-ui`'s `Field` and `Fieldset`, with binding, semantics and layout kept apart.
+
+  - **Breaking:** `Form.Field` is one `Field.Root` row whether bound or not. With `path` it is bound: label, description, value and error come from the schema and the model, and with no children the dispatcher picks the control; a hand-written control inside reads the binding with `useFormField()`. Without `path` it takes `label`, `description` and `error` (a string; was `validation`, a node) as props and its children are the control, which the row's label now names. `standalone` says the row holds no single control (a button, a readout). The render-prop form of `children` is gone.
+  - **Breaking:** `Form.FieldSet` is the one grouping element: a `<fieldset>` with `label`, `description` and `collapsible`, chrome by depth (a top-level field set is a titled section, a nested one an indented group). It walks nothing. `Form.Section` (`title` → `label`) and `Form.Group` are removed.
+  - **New:** `Form.Fields` walks the schema at a `path` with `include`, `exclude`, `sort` and `filter`, rendering a `Form.Field` per property and a `Form.FieldSet` around a nested object. What `<Form.FieldSet />` used to do is now `<Form.FieldSet label><Form.Fields /></Form.FieldSet>`.
+  - **Breaking:** the built-in renderers (`TextField`, `SelectField`, …) are controls with no row of their own; a `fieldMap` or `fieldProvider` renderer owns its row and writes `<Form.Field path={jsonPath}>` around its control. `Form.Error` is `Form.ErrorText`. `FormFieldHeader` no longer takes `path`.
+  - `MarkdownView` spreads its remaining props and accepts `className`, so a parent can render it `asChild`.
+  - A row can lay its label beside the control (`labelPlacement='beside'`); a boolean does so by default, so a toggle reads with its text on one line in the default variant, while the settings card keeps its label column.
+
+  In `@dxos/react-ui`, alongside:
+
+  `Menu.Item`, `Menu.CheckboxItem` and `Menu.RadioItem` honour `closeOnSelect={false}`: a toggle keeps the menu open, as `onSelect` with `preventDefault()` already did. The Menu story renders every part (submenu, checkbox items, radio group, context trigger) and asserts them.
+
+  `Field.Switch` and `Field.Checkbox` pad themselves to the density's control height through their block margins, so a toggle takes a full row and sits centred in it, bare or beside its label; `Field.Block` sizes by the same token. Their focus ring is inset, so a focused toggle stays inside its row.
+
+- 178bc6d: The session timeline draws a task that no session's checklist holds as a lane of its own, spanned by its edit history, so tasks worked by an external harness (e.g. Claude Code) or by hand appear on the project pipeline chart. Task lanes (bar, nodes, thread and legend dot) and the task mnemonic chip share a hue hashed from the mnemonic, and the chip leads with the Task type's icon instead of a trailing clipboard glyph; `SystemIconButton.Clipboard` takes an optional `icon` for that idle glyph.
+- 8904184: Restore `role="toolbar"` on `Toolbar.Root`, which was erased when no role was passed, forward an explicit `role=''` instead of falling back to the default, and lay out simple-layout navigation tiles as a single row instead of stacking the icon, label, and caret.
+- 6fd2a5d: `Tooltip.Trigger` now opens on the requested `side`. Before, Ark's default `bottom` placement overrode it.
+- f112c37: New `@dxos/react-ui-trace`: the `Timeline` commit graph and `Gantt` (moved from `@dxos/react-ui-components`), the `ProcessTree`, a presentational `TracePanel`, and the pure builders behind them — `buildExecutionGraph` (span tree → commits) and `buildSessionTimeline` (sessions, tasks and sub-agents on a time axis, now over a `Session` input rather than a `Chat`). The agent trace events (`AgentRequestBegin/End`, `CompleteBlock`, `PartialBlock`, `DelegationSpawned`, `RequestPhase`, `McpServerError`) move from `@dxos/assistant` to `@dxos/compute` `Trace`, and `Process.isHarnessHost` identifies a conversation's agent process by its annotation, so the package depends on the compute layer only. `@dxos/react-ui-components` no longer depends on `@dxos/assistant`; the message-based `useExecutionGraph` hook is gone (its two consumers inline it). `@dxos/plugin-assistant` keeps the app-bound `TracePanel` container and `useSessionTimeline`, whose lanes now carry `sessionId` instead of `chatId`.
+
+  TracePanel: processes are multi-selectable (click selects one, meta-click toggles; selection kept in view state) and the trace narrows to the selected processes and their children; each trace line shows a `HH:mm:ss` timestamp. `Tree` gains a `multiple` selection mode where a plain click selects a row alone and a meta-click toggles it (`onSelect` reports `meta`), and `createStaticTreeModel` an `isCurrent` seed. `Accordion.Root` gains `rounded`.
+
+- 8048e42: Make the trace panel's cost depend on the viewport rather than the history: the timeline windows its rows through `useWindow` from `@dxos/react-ui-virtual`, the debug span tree renders in a read-only CodeMirror view instead of a whole-document syntax highlighter, and the execution graph builds in linear time with its inputs debounced. `SyntaxHighlighter` renders source above 20k characters unhighlighted, since tokenizing it costs tens of seconds in one synchronous render. A controlled `Editor.View` now syncs its `value` by dispatching only the changed ranges, so an update keeps the reader's folds, selection and scroll position. The trace panel opens at the top rather than pinned to its tail, behind a fade of one row: `ScrollContainer.Fade` takes `classNames` to size its gradient, and `Accordion.Root` takes `border` (on by default) so a host can drop the frame around its items.
+- Updated dependencies [6a457ac]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [6af89f4]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [472ca95]
+- Updated dependencies [8cb5553]
+- Updated dependencies [967b130]
+- Updated dependencies [882ac2a]
+- Updated dependencies [ce194c0]
+- Updated dependencies [818a096]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [9d2466a]
+- Updated dependencies [08cddf6]
+- Updated dependencies [07531e0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [5662dfc]
+- Updated dependencies [b1bb838]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [520c34f]
+- Updated dependencies [77d0026]
+- Updated dependencies [6dadb41]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/lit-ui@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/react-error-boundary@0.12.0
+  - @dxos/i18n@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
