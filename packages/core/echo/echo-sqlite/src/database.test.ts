@@ -643,6 +643,7 @@ describe('SqliteDatabase', () => {
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
       expect(() => db.query(Filter.key('com.example.key', { version: '^1.0.0' }))).toThrow(UnsupportedQueryError);
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
+      expect(() => db.query(Filter.text('alice', { type: 'vector' }))).toThrow(UnsupportedQueryError);
     }),
   );
 });

@@ -301,7 +301,7 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
 
       case 'text-search': {
         if (filter.searchKind === 'vector') {
-          return raw('0');
+          throw new UnsupportedQueryError('vector search');
         }
         const terms = filter.text
           .toLowerCase()
