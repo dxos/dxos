@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -353,9 +354,12 @@ export class SegmentedMessageLimitError extends Error {
  * Rejects a segmented send whose remaining segments were dropped because the socket began closing, or the muxer was
  * destroyed, before they could be handed to it.
  */
-export class WebSocketClosedError extends Error {
-  constructor(public readonly readyState: number) {
-    super(`WebSocket closed (readyState ${readyState}) before a segmented message was sent.`);
+export class WebSocketClosedError extends BaseError.extend(
+  'WebSocketClosedError',
+  'WebSocket closed before a segmented message was sent.',
+) {
+  constructor(readyState: number) {
+    super({ context: { readyState } });
   }
 }
 
