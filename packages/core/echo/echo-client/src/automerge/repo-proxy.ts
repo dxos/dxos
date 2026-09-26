@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
+import { registerAutomerge } from '@dxos/automerge-proxy/Automerge';
 import { LifecycleState, Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -155,6 +156,8 @@ export class RepoProxy extends Resource implements ClientRepo {
     private readonly _spaceId: SpaceId,
   ) {
     super();
+    // Replicas are Automerge documents, which the tab's code reaches through the namespace.
+    registerAutomerge(A);
   }
 
   /**

@@ -2,12 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type AnyDocumentId,
-  type AutomergeUrl,
-  type DocumentId,
-  stringifyAutomergeUrl,
-} from '@automerge/automerge-repo';
+import { type AnyDocumentId, type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
@@ -24,6 +19,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { DocumentUnavailableError, EditsRejectedError, RepoClosedError } from '../errors.ts';
+import { stringifyAutomergeUrl } from './automerge-url.ts';
 import {
   type ClientDocHandle,
   type ClientRepo,

@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
+import { type Doc as AutomergeDoc } from '@automerge/automerge';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';

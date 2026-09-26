@@ -9,79 +9,25 @@ import { waitForCondition } from '@dxos/async';
 
 import * as Automerge from './Automerge.ts';
 import type * as Contract from './Contract.ts';
-import * as Handle from './Handle.ts';
-import * as Host from './Host.ts';
 import { encodeChange } from './internal/encode.ts';
-import * as Repo from './Repo.ts';
-import { MemoryStore, Transport, canon, createRandom, seeded } from './testing/index.ts';
+import { TabHarness, canon, seeded } from './testing/index.ts';
 
 type Shape = { title: string; content: string; items: { name: string }[] };
 
 const initial = (): Shape => ({ title: 'doc', content: 'hello', items: [] });
 
-/** Every document in these tests has one shape, so the harness's repos hand out handles typed with it. */
-type ShapeRepo = Repo.TabRepo<string, Handle.DocHandle<Shape>>;
-
 /** JSON with object keys sorted: Automerge orders a map's keys, and a tab's own writes keep theirs. */
 const withoutMeta = (value: unknown): string => canon(value);
 
-/** A host over a memory store, and tabs that reach it through transports it can drop, as a restart does. */
-class Harness {
-  readonly store = new MemoryStore();
-  readonly transports: Transport[] = [];
-  readonly repos: ShapeRepo[] = [];
-  readonly pageEvents: EventTarget[] = [];
-  host: Host.DocumentHost;
-  readonly #random = createRandom(7);
-
-  constructor() {
-    this.host = new Host.DocumentHost({ store: this.store });
-  }
-
-  async open(): Promise<void> {
-    await this.host.open();
-  }
-
-  async tab(): Promise<ShapeRepo> {
-    const transport = new Transport({ host: () => this.host, random: () => this.#random.next(), maxDelay: 2 });
-    const pageEvents = new EventTarget();
-    const repo = new Repo.TabRepo({
-      host: transport,
-      createHandle: (options) => new Handle.DocHandle<Shape>(options),
-      pageEvents,
-      resubscribeDelay: 5,
-    });
-    await repo.open();
-    this.transports.push(transport);
-    this.repos.push(repo);
-    this.pageEvents.push(pageEvents);
-    return repo;
-  }
-
-  /** Replaces the host with a new one over what the store saved, and drops every stream. */
-  async restart(): Promise<void> {
-    await this.host.close();
-    this.store.restart();
-    this.host = new Host.DocumentHost({ store: this.store });
-    await this.host.open();
-    this.transports.forEach((transport) => transport.drop());
-  }
-
-  async close(): Promise<void> {
-    await Promise.all(this.repos.map((repo) => repo.close()));
-    await this.host.close();
-  }
-}
-
-let harness: Harness | undefined;
+let harness: TabHarness<Shape> | undefined;
 
 afterEach(async () => {
   await harness?.close();
   harness = undefined;
 });
 
-const setup = async (): Promise<Harness> => {
-  harness = new Harness();
+const setup = async (): Promise<TabHarness<Shape>> => {
+  harness = new TabHarness<Shape>();
   await harness.open();
   return harness;
 };

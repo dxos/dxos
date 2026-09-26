@@ -83,6 +83,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",

@@ -257,8 +257,8 @@ time it sends, so it resolves the positions itself, and a copy needs nothing it 
 
 ## As built
 
-Phases 1, 2 and 3 have landed, and phase 5's removals with them. The code departs from the plan
-above in these places:
+Phases 1 to 5 have landed, phase 5's removals together with phases 2 and 3. The code departs from
+the plan above in these places:
 
 1. **Phases 2, 3 and 5 are one commit.** The new `Contract` replaced the mirror's events and
    requests, and `Host` and `Repo` were rewritten over it, so the mirror's tab side had nothing left
@@ -277,16 +277,31 @@ above in these places:
    `decodeChange` use the registered Automerge whenever the realm registered one, and make tab
    documents otherwise; `EchoClient` sets nothing. A Node test that makes a document from nothing
    gets an Automerge document in either mode, and a proxy-mode tab in a browser gets a tab document.
-7. **`A.isProxy` is gone already**, a phase 4 item. Its last caller, `ObjectCore.getUpdatedAt`, reads
-   change times through the namespace's `getBackend`, which answers `getChangeMetaByHash` for a tab
-   document.
+7. **`A.isProxy` went with phase 3.** Its last caller, `ObjectCore.getUpdatedAt`, reads change times
+   through the namespace's `getBackend`, which answers `getChangeMetaByHash` for a tab document.
+8. **The class that holds Automerge documents registers Automerge.** `RepoProxy` and echo-host's
+   `AutomergeHost` call `registerAutomerge` in their constructors. A replica tab, the worker, HOST
+   mode and EDGE therefore register it with no code in the apps, and a proxy tab, which builds no
+   `RepoProxy`, registers nothing. Phases 2 and 3 registered only in Node, so in a browser or on EDGE
+   a replica's call through the namespace threw.
+9. **The replica repo keeps importing Automerge.** `RepoProxy` and `DocHandleProxy` are what load
+   Automerge in a replica tab, and the lint rule exempts them. Phase 6 makes them load only in
+   replica mode.
+10. **plugin-script's templates keep `@automerge/automerge`.** They are user scripts, loaded as raw
+    source and run in the functions runtime, which has Automerge. echo-generator switched too, since
+    it splices text with `A.splice`.
+11. **`cbor` comes from automerge-repo's `helpers/cbor.js`**, which imports only `cbor-x`. The three
+    url helpers live in echo-client's `automerge-url.ts` over `bs58check`. They match automerge-repo's
+    for every url ECHO writes; a sub-document path is accepted without checking its segments.
+12. **The editor and store-adapter tests moved to ui-editor and echo-doc**, beside the code they
+    test. They run over `TabHarness` from `@dxos/automerge-proxy/testing`, the package's real repo,
+    host and handles, with a peer merging into the host's store, and no mocks.
 
 echo-client's suite passes in replica mode, 629 tests. In proxy mode 23 tests fail, and phase 7
 covers all of them: 20 branching and branch-binding tests, a branch-binding identity test, and two
 migration tests that call `repo.import`. Over the real adapter, `tab-repo.test.ts` covers writes
 across tabs, final heads, concurrent text, anchors, history and update time; restarts are covered at
-the package level in `Repo.test.ts`. The spike's editor and store-adapter tests move with phase 4,
-when ui-editor and echo-doc switch to the namespace.
+the package level in `Repo.test.ts`.
 
 ## Tests that move
 

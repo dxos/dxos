@@ -25,6 +25,9 @@
       "path": "../../../sdk/client"
     },
     {
+      "path": "../automerge-proxy"
+    },
+    {
       "path": "../echo"
     },
     {

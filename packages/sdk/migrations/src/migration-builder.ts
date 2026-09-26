@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc, toJS } from '@automerge/automerge';
+import { type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { type Space } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
 import { type ClientDocHandle, type ClientRepo, ObjectCore, migrateDocument } from '@dxos/echo-client/internal';
@@ -134,7 +135,7 @@ export class MigrationBuilder {
       }
 
       await oldHandle.whenReady();
-      const materialized = toJS(oldHandle.doc()!) as DatabaseDirectory;
+      const materialized = A.toJS(oldHandle.doc());
       // Re-stamp access so documents that predate access.spaceId pick it up during compaction.
       materialized.access = this._makeAccess();
       const newHandle = this._repo.create<DatabaseDirectory>(materialized);

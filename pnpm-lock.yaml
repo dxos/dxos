@@ -4238,6 +4238,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../../echo/automerge-proxy
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -5671,6 +5674,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      bs58check:
+        specifier: 'catalog:'
+        version: 4.0.0
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -5789,6 +5795,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.5.0
         version: 3.5.0
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../automerge-proxy
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -18850,6 +18859,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge-proxy
       '@dxos/blob':
         specifier: workspace:*
         version: link:../../core/echo/blob
@@ -19356,6 +19368,9 @@ importers:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
         version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
+      '@dxos/automerge-proxy':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge-proxy
       '@dxos/client':
         specifier: workspace:*
         version: link:../client

@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-import { cbor } from '@automerge/automerge-repo';
+import * as cbor from '@automerge/automerge-repo/helpers/cbor.js';
 import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { ClientRpcServer, type Halo, type Space, makeHandlersFromRpc } from '@dxos/client-protocol';
 import { Spaces } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';

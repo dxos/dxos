@@ -55,6 +55,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "bs58check": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:"
   },

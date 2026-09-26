@@ -209,7 +209,34 @@
     "vitest/valid-describe-callback": "off",
     "vitest/valid-expect": "off",
     "vitest/valid-title": "off",
-    "vitest/warn-todo": "off"
+    "vitest/warn-todo": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@automerge/automerge",
+            "allowTypeImports": true,
+            "message": "Call Automerge through `@dxos/automerge-proxy/Automerge`, which also answers tab documents; import only types from here (see automerge-proxy/docs/INTEGRATION.md)."
+          },
+          {
+            "name": "@automerge/automerge/slim",
+            "allowTypeImports": true,
+            "message": "Call Automerge through `@dxos/automerge-proxy/Automerge`, which also answers tab documents; import only types from here (see automerge-proxy/docs/INTEGRATION.md)."
+          },
+          {
+            "name": "@automerge/automerge-repo",
+            "allowTypeImports": true,
+            "message": "Call Automerge through `@dxos/automerge-proxy/Automerge`, which also answers tab documents; import only types from here (see automerge-proxy/docs/INTEGRATION.md)."
+          },
+          {
+            "name": "@automerge/automerge-repo/slim",
+            "allowTypeImports": true,
+            "message": "Call Automerge through `@dxos/automerge-proxy/Automerge`, which also answers tab documents; import only types from here (see automerge-proxy/docs/INTEGRATION.md)."
+          }
+        ]
+      }
+    ]
   },
   "settings": {
     "jsdoc": {
@@ -236,5 +263,28 @@
     "vitest": {
       "typecheck": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/testing/**",
+        "packages/apps/composer-app/src/util/automerge-wasm.ts",
+        "packages/core/echo/automerge-proxy/src/Host.ts",
+        "packages/core/echo/automerge-proxy/src/internal/automerge.ts",
+        "packages/core/echo/automerge-proxy/src/internal/register-node.ts",
+        "packages/core/echo/echo-client/src/automerge/doc-handle-proxy.ts",
+        "packages/core/echo/echo-client/src/automerge/repo-proxy.ts",
+        "packages/core/echo/echo-host/**",
+        "packages/core/echo/worker-only-spike/**",
+        "packages/e2e/**",
+        "packages/plugins/plugin-script/src/templates/**",
+        "packages/sdk/client-services/**"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
 }

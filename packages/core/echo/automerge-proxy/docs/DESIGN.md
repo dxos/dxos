@@ -61,8 +61,9 @@ make a document from nothing (`from`, `init`, `load`, `decodeChange`) use the re
 when the realm registered one, and make tab documents otherwise.
 
 The namespace imports no Automerge itself. Its `#automerge-realm` import registers Automerge in
-Node and is empty under the `browser` and `workerd` conditions. A browser realm that holds Automerge
-documents, such as the worker, calls `registerAutomerge` once the wasm is ready.
+Node and is empty under the `browser` and `workerd` conditions. Elsewhere the code that holds
+Automerge documents registers it: in ECHO, a replica tab's `RepoProxy` and the worker's
+`AutomergeHost` call `registerAutomerge` when they are constructed.
 
 `RawString`, `ImmutableString` and `Counter` are the tab's own classes, marked with Automerge's
 registered symbols, and `instanceof` matches values from either side. A function a tab document
