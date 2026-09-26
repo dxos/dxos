@@ -20,6 +20,7 @@ export default defineConfig({
     OutlineOperation: 'src/types/OutlineOperation.ts',
     RemoteSessionOperation: 'src/types/RemoteSessionOperation.ts',
     TaskOperation: 'src/types/TaskOperation.ts',
+    TaskSetView: 'src/types/TaskSetView.ts',
     TasksCapabilities: 'src/types/TasksCapabilities.ts',
     TasksEvents: 'src/types/TasksEvents.ts',
     TasksUtil: 'src/types/TasksUtil.ts',

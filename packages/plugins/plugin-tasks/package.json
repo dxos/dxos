@@ -93,6 +93,11 @@
       "types": "./dist/types/src/types/TaskOperation.d.ts",
       "import": "./dist/lib/TaskOperation.mjs"
     },
+    "./TaskSetView": {
+      "source": "./src/types/TaskSetView.ts",
+      "types": "./dist/types/src/types/TaskSetView.d.ts",
+      "import": "./dist/lib/TaskSetView.mjs"
+    },
     "./TasksCapabilities": {
       "source": "./src/types/TasksCapabilities.ts",
       "types": "./dist/types/src/types/TasksCapabilities.d.ts",

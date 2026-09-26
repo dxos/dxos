@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -23,6 +23,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
@@ -131,6 +132,19 @@ const DefaultStory = () => {
   return (
     <div className='dx-expand'>
       <TaskSetArticle role='article' subject={taskSet} attendableId='story' />
+    </div>
+  );
+};
+
+/** The article under a key the play function can bump, so it unmounts and mounts afresh. */
+const RemountStory = () => {
+  const [mount, setMount] = useState(0);
+  return (
+    <div className='flex flex-col dx-expand'>
+      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+        Remount
+      </Button>
+      <DefaultStory key={mount} />
     </div>
   );
 };
@@ -492,6 +506,52 @@ export const CreateWithAttachment: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The filter is kept per device and per set: a hidden status and a typed query both survive the
+ * article unmounting and mounting again, as they do navigating away and back.
+ */
+export const FilterPersists: Story = {
+  render: RemountStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
+    const editor = () => canvasElement.querySelector<HTMLElement>('.cm-content');
+
+    await userEvent.click(trigger()!);
+    const done = await waitFor(
+      () => {
+        const found = document.querySelector<HTMLElement>('[data-testid="tasks.filter.status.done"]');
+        if (!found) {
+          throw new Error('Status menu not open.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await userEvent.click(done);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+
+    await userEvent.click(editor()!);
+    await userEvent.keyboard('roast');
+    await waitFor(() => expect(canvas.queryByText('Draft launch email')).toBeNull(), { timeout: 10_000 });
+
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(editor()?.textContent?.trim()).toEqual('roast'), { timeout: 10_000 });
+    await expect(canvas.queryByText('Draft launch email')).toBeNull();
+    await expect(canvas.queryByText('Source green coffee')).toBeNull();
+    await expect(trigger()).toHaveAttribute('data-filtered', 'true');
+
+    // Clearing is persisted too, so the next mount opens unfiltered.
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.clear"]')!);
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 
