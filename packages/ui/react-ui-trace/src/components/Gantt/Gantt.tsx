@@ -401,6 +401,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   // The viewport, not the drawing, is what the time axis is fitted to: the drawing may be wider.
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const followRef = useRef(true);
+  const glideRef = useRef(false);
   const drawnRef = useRef<number | undefined>(undefined);
   const [width, setWidth] = useState(600);
   useEffect(() => {
@@ -412,7 +413,15 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     observer.observe(element);
     // Listened for rather than taken as a prop: `ScrollArea.Viewport` accepts only what it slots.
     const onScroll = (): void => {
-      followRef.current = element.scrollWidth - element.clientWidth - element.scrollLeft <= FOLLOW_SLACK;
+      const atEdge = element.scrollWidth - element.clientWidth - element.scrollLeft <= FOLLOW_SLACK;
+      // A glide of our own emits scroll events all the way there, every one of them short of the
+      // edge. Reading those as the reader scrolling away would unpin the chart on the very frame it
+      // set out to follow; only its arrival is worth acting on.
+      if (glideRef.current) {
+        glideRef.current = !atEdge;
+        return;
+      }
+      followRef.current = atEdge;
     };
     element.addEventListener('scroll', onScroll, { passive: true });
     return () => {
@@ -528,7 +537,16 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     const grown = drawnRef.current !== undefined && scale.width > drawnRef.current;
     drawnRef.current = scale.width;
     if (element && grown && followRef.current) {
-      element.scrollLeft = element.scrollWidth;
+      // Glided rather than jumped: the drawing is unchanged to the left of the new event, and a jump
+      // asks the reader to re-find their place in it every time one arrives. Honour a reader who has
+      // asked for less motion, and fall back where `scrollTo` options are not understood.
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      glideRef.current = !reduced;
+      if (reduced || typeof element.scrollTo !== 'function') {
+        element.scrollLeft = element.scrollWidth;
+      } else {
+        element.scrollTo({ left: element.scrollWidth, behavior: 'smooth' });
+      }
     }
   }, [scale.width]);
 

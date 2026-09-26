@@ -376,6 +376,11 @@ const singleLaneMarkers: GanttMarker[] = [
   { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
 ];
 
+/** The same shape, named for what it does in the delegation story: hand work out and take it back. */
+const supervisorLanes: GanttLane[] = [
+  { id: 'lane', label: 'Supervisor', status: 'running', groupId: 'g', segments: [{ start: T0 }] },
+];
+
 /** The chart over the data it was drawn from, so a reader can match a bar to its lane. */
 const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   <div className='flex flex-col dx-fill overflow-hidden'>
@@ -392,18 +397,37 @@ const NO_MARKERS: readonly GanttMarker[] = [];
 type EventStreamOptions = {
   /** How often an event arrives, in milliseconds. The stream is static without it. */
   interval?: number;
-  /** The lane arrivals land on, until one opens a new band. */
+  /** The supervisor lane: what spawns children, and what they report back to. */
   laneId: string;
   /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
   step: number;
-  /** Open a new band, out of the lane in hand, every so many arrivals. */
+  /** Open another child every so many arrivals. The supervisor keeps all of them at once. */
   spawnEvery?: number;
+  /** How many events a child runs before it finishes and reports back, inclusive. */
+  childEvents?: readonly [number, number];
+};
+
+/** A child still working: how many events it has had, and how many it will stop at. */
+type ActiveChild = { laneId: string; seen: number; budget: number };
+
+type StreamState = {
+  groups: GanttGroup[];
+  lanes: GanttLane[];
+  markers: GanttMarker[];
+  active: ActiveChild[];
+  /** Which active child gets the next event, so several progress at once rather than in turn. */
+  turn: number;
+  tick: number;
 };
 
 /**
- * The seed, plus one event every `interval` — the only moving part any of these stories has. With
- * `spawnEvery` an arrival opens a band instead: a new group and lane, and the events after it land
- * there.
+ * The seed, plus one event every `interval` — the only moving part any of these stories has.
+ *
+ * With `spawnEvery` the supervisor fans out: it opens a child every so often and keeps every one it
+ * has opened, so several run at once. A child lives for `childEvents` events and then finishes —
+ * closing its segment, going `done`, and reporting back into a node of its own on the supervisor's
+ * lane. Children that terminate are the point: a cascade where nothing ever ends says nothing about
+ * what the chart does when work completes.
  *
  * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
  * has to carry one, while the event axis makes its own room and ignores it.
@@ -412,13 +436,15 @@ const useEventStream = (
   seedGroups: readonly GanttGroup[],
   seedLanes: readonly GanttLane[],
   seedMarkers: readonly GanttMarker[],
-  { interval, laneId, step, spawnEvery }: EventStreamOptions,
+  { interval, laneId, step, spawnEvery, childEvents = [2, 5] }: EventStreamOptions,
 ): { groups: GanttGroup[]; lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
-  const seed = () => ({
+  const seed = (): StreamState => ({
     groups: [...seedGroups],
     lanes: [...seedLanes],
     markers: [...seedMarkers],
-    current: laneId,
+    active: [],
+    turn: 0,
+    tick: 0,
   });
   const [state, setState] = useState(seed);
   useEffect(() => {
@@ -430,57 +456,116 @@ const useEventStream = (
     if (!interval) {
       return;
     }
+    const [minEvents, maxEvents] = childEvents;
     const timer = setInterval(() => {
-      setState(({ groups, lanes, markers, current }) => {
-        const count = markers.length;
-        const timestamp = Math.max(T0, ...markers.map((marker) => marker.timestamp)) + step;
-        if (!spawnEvery || count % spawnEvery !== 0) {
-          const event: GanttMarker = {
-            id: `live:${count}`,
-            laneId: current,
-            kind: 'tool',
-            timestamp,
-            label: random.lorem.word(),
+      setState(({ groups, lanes, markers, active, turn, tick }) => {
+        const at = (offset: number) => Math.max(T0, ...markers.map((marker) => marker.timestamp)) + offset * step;
+
+        // A spawn tick: the supervisor hands out more work while keeping what it already has.
+        if (spawnEvery && tick % spawnEvery === 0) {
+          const child = `lane:${lanes.length}`;
+          const band = `group:${lanes.length}`;
+          const parentBand = lanes.find((lane) => lane.id === laneId)?.groupId;
+          const spawn: GanttMarker = {
+            id: `spawn:${tick}`,
+            laneId,
+            kind: 'delegation',
+            timestamp: at(1),
+            label: `Opened ${child}`,
           };
-          return { groups, lanes, markers: [...markers, event], current };
+          return {
+            groups: [...groups, { id: band, ...(parentBand ? { parentId: parentBand } : {}) }],
+            lanes: [
+              ...lanes,
+              {
+                id: child,
+                label: `Process ${lanes.length}`,
+                status: 'running' as const,
+                groupId: band,
+                // A step after the spawn: a child's first event is its process starting, which is
+                // never simultaneous with the node that asked for it.
+                segments: [{ start: at(2) }],
+                openedFrom: { laneId, markerId: spawn.id },
+              },
+            ],
+            markers: [
+              ...markers,
+              spawn,
+              { id: `${child}:0`, laneId: child, kind: 'operation', timestamp: at(2), label: 'Run Instructions' },
+            ],
+            active: [
+              ...active,
+              { laneId: child, seen: 1, budget: random.number.int({ min: minEvents, max: maxEvents }) },
+            ],
+            turn,
+            tick: tick + 1,
+          };
         }
 
-        const child = `lane:${lanes.length}`;
-        const band = `group:${lanes.length}`;
-        const parentBand = lanes.find((lane) => lane.id === current)?.groupId;
-        const spawn: GanttMarker = {
-          id: `spawn:${count}`,
-          laneId: current,
-          kind: 'delegation',
+        // Otherwise one of the children in flight advances — and may be the event that finishes it.
+        if (active.length === 0) {
+          const event: GanttMarker = {
+            id: `live:${tick}`,
+            laneId,
+            kind: 'tool',
+            timestamp: at(1),
+            label: random.lorem.word(),
+          };
+          return { groups, lanes, markers: [...markers, event], active, turn, tick: tick + 1 };
+        }
+
+        const index = turn % active.length;
+        const child = active[index];
+        const seen = child.seen + 1;
+        const timestamp = at(1);
+        const event: GanttMarker = {
+          id: `${child.laneId}:${seen}`,
+          laneId: child.laneId,
+          kind: 'tool',
           timestamp,
-          label: `Opened ${child}`,
+          label: random.lorem.word(),
+        };
+        if (seen < child.budget) {
+          return {
+            groups,
+            lanes,
+            markers: [...markers, event],
+            active: active.map((candidate, at) => (at === index ? { ...candidate, seen } : candidate)),
+            turn: turn + 1,
+            tick: tick + 1,
+          };
+        }
+
+        // Its last event: close the segment where the work stopped, and report back a step later —
+        // the supervisor folds a result in when it next runs, never the instant the child stops.
+        const returned: GanttMarker = {
+          id: `return:${child.laneId}`,
+          laneId,
+          kind: 'delegation',
+          timestamp: at(2),
+          label: `Returned: ${child.laneId}`,
         };
         return {
-          groups: [...groups, { id: band, ...(parentBand ? { parentId: parentBand } : {}) }],
-          lanes: [
-            // A lane that has opened another is waiting on it, not working: it stops being the lane
-            // with a live edge, which is the whole point of marking one.
-            ...lanes.map((lane) => (lane.id === current ? { ...lane, status: 'blocked' as const } : lane)),
-            {
-              id: child,
-              label: `Process ${lanes.length}`,
-              status: 'running' as const,
-              groupId: band,
-              segments: [{ start: timestamp }],
-              openedFrom: { laneId: current, markerId: spawn.id },
-            },
-          ],
-          markers: [
-            ...markers,
-            spawn,
-            { id: `${child}:first`, laneId: child, kind: 'operation', timestamp, label: 'Run Instructions' },
-          ],
-          current: child,
+          groups,
+          lanes: lanes.map((lane) =>
+            lane.id === child.laneId
+              ? {
+                  ...lane,
+                  status: 'done' as const,
+                  segments: [{ start: lane.segments?.[0]?.start ?? timestamp, end: timestamp }],
+                  closedInto: { laneId, markerId: returned.id },
+                }
+              : lane,
+          ),
+          markers: [...markers, event, returned],
+          active: active.filter((_, at) => at !== index),
+          turn: turn + 1,
+          tick: tick + 1,
         };
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [interval, step, spawnEvery]);
+  }, [interval, step, spawnEvery, laneId, childEvents]);
 
   return {
     groups: state.groups,
@@ -601,12 +686,18 @@ export const SingleLane: Story = {
   },
 };
 
-/** Every fourth event opens a band: its connector draws out of the lane that opened it. */
+/**
+ * The supervisor fans out: every third arrival opens another child, and each child runs a handful of
+ * events before finishing and reporting back into a node of its own. Several are in flight at once,
+ * so the band grows sideways rather than into a chain.
+ */
 export const Delegation: Story = {
   args: {
     ...SingleLane.args,
-    interval: 1_500,
-    spawnEvery: 4,
+    lanes: supervisorLanes,
+    interval: 1_200,
+    spawnEvery: 3,
+    childEvents: [2, 5],
   },
 };
 
