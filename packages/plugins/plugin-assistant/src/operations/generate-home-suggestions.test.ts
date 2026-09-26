@@ -36,6 +36,8 @@ const addNotes = (count: number) =>
     const notes = yield* Effect.forEach(Array.from({ length: count }), (_, index) =>
       Database.add(Obj.make(TestNote, { name: `Note ${index}` })),
     );
+    // The handler reads the recent objects through a query, which only sees indexed objects.
+    yield* Database.flush({ indexes: true });
     return notes
       .map((note) => `${Obj.getTypename(note)}:${Obj.getLabel(note)}`)
       .sort()
