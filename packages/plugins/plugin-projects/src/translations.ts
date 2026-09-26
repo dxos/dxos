@@ -61,6 +61,7 @@ export const translations = [
         'move-task-dialog.title': 'Move task to project',
         'move-task.placeholder': 'Search projects…',
         'move-task-empty.message': 'There are no other projects in this space.',
+        'move-task-error.title': 'The task could not be moved',
         'untitled-project.label': 'Untitled project',
         'create-chat.label': 'Create session',
         'delegate-tasks.label': 'Assign selected tasks to agent',

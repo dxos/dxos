@@ -17,13 +17,24 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTaskToSet> = TaskO
     Effect.fnUntraced(function* ({ task: taskRef, taskSet: taskSetRef }) {
       const task = Database.peek(taskRef) ?? (yield* Database.load(taskRef));
       const target = Database.peek(taskSetRef) ?? (yield* Database.load(taskSetRef));
-      const source = yield* TaskSet.findTaskSet(task);
-      if (source?.id === target.id) {
+      // A move never crosses a space: the refs it writes would not resolve in the other database.
+      if (Obj.getDatabase(task)?.spaceId !== Obj.getDatabase(target)?.spaceId) {
+        return yield* Effect.fail(new InvalidOperationInput({ message: 'The task set is in another space.' }));
+      }
+
+      // The ECHO parent backs up the index lookup, which reads a failed query as "no set": moving a
+      // task whose set cannot be found would leave it filed in two sets.
+      const parent = Obj.getParent(task);
+      const source = (yield* TaskSet.findTaskSet(task)) ?? (TaskSet.instanceOf(parent) ? parent : undefined);
+      if (!source) {
+        return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to a task set.' }));
+      }
+      if (source.id === target.id) {
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The task already belongs to that task set.' }));
       }
 
       // Kept in the source's array order, so siblings arrive in the order they were listed.
-      const order = new Map((source?.tasks ?? []).map((ref, index) => [Task.refEntityId(ref), index]));
+      const order = new Map(source.tasks.map((ref, index) => [Task.refEntityId(ref), index]));
       const subtree = (yield* Task.collectSubtree(task)).toSorted(
         (a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity),
       );
