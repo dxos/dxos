@@ -3,6 +3,7 @@
 //
 
 import { format } from 'date-fns';
+import { v2025_03_26 } from 'effect/unstable/ai/McpProtocol';
 import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
@@ -74,42 +75,52 @@ const BEND_RADIUS = BAR_HEIGHT / 2;
 
 /**
  * Bar, node, thread and label colours per status: nodes and the thread through them are the bar's
- * hue in a lighter shade.
+ * hue in a lighter shade, and `edge` — the live end of a lane still running — is the stronger shade
+ * the legend's own status dot uses, so the two read as the same statement about the lane.
  */
-const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread: string; text: string }> = {
+const STATUS_COLOR: Record<
+  GanttLaneStatus,
+  { fill: string; node: string; edge: string; thread: string; text: string }
+> = {
   pending: {
     fill: 'fill-neutral-500/40',
     node: 'fill-neutral-300',
+    edge: 'fill-neutral-400',
     thread: 'stroke-neutral-300',
     text: 'text-neutral-400',
   },
   blocked: {
     fill: 'fill-orange-500/40',
     node: 'fill-orange-300',
+    edge: 'fill-orange-500',
     thread: 'stroke-orange-300',
     text: 'text-orange-500',
   },
   running: {
     fill: 'fill-sky-500/40',
     node: 'fill-sky-300',
+    edge: 'fill-sky-500',
     thread: 'stroke-sky-300',
     text: 'text-sky-500',
   },
   review: {
     fill: 'fill-cyan-500/40',
     node: 'fill-cyan-300',
+    edge: 'fill-cyan-500',
     thread: 'stroke-cyan-300',
     text: 'text-cyan-500',
   },
   done: {
     fill: 'fill-green-500/40',
     node: 'fill-green-300',
+    edge: 'fill-green-500',
     thread: 'stroke-green-300',
     text: 'text-green-500',
   },
   failed: {
     fill: 'fill-red-500/40',
     node: 'fill-red-300',
+    edge: 'fill-red-500',
     thread: 'stroke-red-300',
     text: 'text-red-500',
   },
@@ -459,10 +470,17 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   // came from, which is what the transitions below then travel out of. A lane's first node comes from
   // the node that spawned the lane, so a delegated lane reads as opening out of its parent.
   const markerX = new Map<string, number>();
+  // The newest node of a lane that is still running: the end the next event will land on, and the
+  // one thing in the drawing that is not yet history.
+  const activeEdges = new Set<string>();
   for (const [laneId, list] of laneMarkers) {
     const row = rowById.get(laneId);
     if (!row) {
       continue;
+    }
+    const newest = list[list.length - 1];
+    if (row.lane.status === 'running' && newest) {
+      activeEdges.add(newest.id);
     }
     list.forEach((marker, index) => {
       const previous = index > 0 ? list[index - 1] : undefined;
@@ -485,6 +503,13 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     return end === undefined ? undefined : x(end);
   };
 
+  // A lane whose first node has just arrived is opening: its bar extends from its own beginning
+  // rather than appearing at full length, and the connector that spawned it draws out to meet it.
+  const isOpening = (lane: GanttLane): boolean => {
+    const first = laneMarkers.get(lane.id)?.[0];
+    return animate === true && first !== undefined && isEntering(first.id);
+  };
+
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
   const grow = animate && mx('transition-[width]', ENTER_TRANSITION);
 
@@ -501,7 +526,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   }, [scale.width]);
 
   return (
-    <ScrollArea.Root orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+    <ScrollArea.Root thin orientation='horizontal' classNames={classNames} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
         <svg
           // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would
@@ -624,7 +649,14 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                 key={`delegation:${lane.id}`}
                 d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`}
                 fill='none'
-                className={DEPENDENCY_CLASSNAME}
+                // Drawn on by its dash rather than by its shape: `d` is beyond what a transition can
+                // reach, while `stroke-dashoffset` is a property every renderer animates. `pathLength`
+                // normalises the path to 1 so one dash covers it whatever its actual length — which is
+                // also why these are inert, and the connector solid, when it is not opening.
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={isOpening(lane) ? 1 : 0}
+                className={mx(animate && mx('transition-[stroke-dashoffset]', ENTER_TRANSITION), DEPENDENCY_CLASSNAME)}
               />,
             ];
           })}
@@ -638,7 +670,9 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
             const bar = {
               x: start,
               y: rowY(index) - BAR_HEIGHT / 2,
-              width: Math.max(endX + BAR_OVERHANG - start, BAR_HEIGHT),
+              // An opening lane is a dot at its own beginning for one frame, so it extends from where
+              // the connector lands instead of being there at full length before the connector is.
+              width: isOpening(lane) ? BAR_HEIGHT : Math.max(endX + BAR_OVERHANG - start, BAR_HEIGHT),
               height: BAR_HEIGHT,
               rx: BAR_HEIGHT / 2,
             };
@@ -692,7 +726,11 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
                       // slides out of the one before it, and where it does not it simply appears.
                       animate ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
-                      STATUS_COLOR[row.lane.status].node,
+                      // The live end pulses in the lane's stronger shade: scanning a wall of finished
+                      // lanes, the ones still moving should be findable without reading the legend.
+                      activeEdges.has(marker.id)
+                        ? mx('animate-pulse', STATUS_COLOR[row.lane.status].edge)
+                        : STATUS_COLOR[row.lane.status].node,
                     )}
                     onClick={() => onMarkerSelect?.(marker)}
                   />

@@ -169,52 +169,93 @@ const singleLaneMarkers: GanttMarker[] = [
   { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
 ];
 
-/** A stable empty seed: a fresh `[]` each render would retrigger the effect that adopts it. */
+/** Stable empty seeds: a fresh `[]` each render would retrigger the effect that adopts them. */
+const NO_LANES: readonly GanttLane[] = [];
 const NO_MARKERS: readonly GanttMarker[] = [];
 
 type EventStreamOptions = {
   /** How often an event arrives, in milliseconds. The stream is static without it. */
   interval?: number;
-  /** The lane arrivals land on. */
+  /** The lane arrivals land on, until one spawns a child. */
   laneId: string;
   /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
   step: number;
+  /** Spawn a child lane, delegated from the lane in hand, every so many arrivals. */
+  spawnEvery?: number;
 };
 
 /**
- * The seed markers, plus one more every `interval` — the only moving part any of these stories has.
+ * The seed, plus one event every `interval` — the only moving part any of these stories has. With
+ * `spawnEvery` an arrival is a delegation instead: a new lane, and the events after it land there.
  *
  * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
  * has to carry one, while the event axis makes its own room and ignores it.
  */
 const useEventStream = (
-  seed: readonly GanttMarker[],
-  { interval, laneId, step }: EventStreamOptions,
-): { markers: GanttMarker[]; now: number } => {
-  const [markers, setMarkers] = useState<GanttMarker[]>(() => [...seed]);
+  seedLanes: readonly GanttLane[],
+  seedMarkers: readonly GanttMarker[],
+  { interval, laneId, step, spawnEvery }: EventStreamOptions,
+): { lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
+  const seed = () => ({ lanes: [...seedLanes], markers: [...seedMarkers], current: laneId });
+  const [state, setState] = useState(seed);
   useEffect(() => {
-    setMarkers([...seed]);
-  }, [seed]);
+    setState(seed());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedLanes, seedMarkers, laneId]);
+
   useEffect(() => {
     if (!interval) {
       return;
     }
     const timer = setInterval(() => {
-      setMarkers((markers) => [
-        ...markers,
-        {
-          id: `live:${markers.length}`,
-          laneId,
-          kind: 'tool',
-          timestamp: Math.max(T0, ...markers.map((marker) => marker.timestamp)) + step,
-          label: random.lorem.word(),
-        },
-      ]);
+      setState(({ lanes, markers, current }) => {
+        const count = markers.length;
+        const timestamp = Math.max(T0, ...markers.map((marker) => marker.timestamp)) + step;
+        if (!spawnEvery || count % spawnEvery !== 0) {
+          const event = { id: `live:${count}`, laneId: current, kind: 'tool', timestamp, label: random.lorem.word() };
+          return { lanes, markers: [...markers, event as GanttMarker], current };
+        }
+
+        const child = `lane:${lanes.length}`;
+        const spawn: GanttMarker = {
+          id: `spawn:${count}`,
+          laneId: current,
+          kind: 'delegation',
+          timestamp,
+          label: `Spawned ${child}`,
+        };
+        return {
+          lanes: [
+            // A parent that has delegated is waiting on its child, not working: it stops being the
+            // lane with a live edge, which is the whole point of marking one.
+            ...lanes.map((lane) => (lane.id === current ? { ...lane, status: 'blocked' as const } : lane)),
+            {
+              id: child,
+              kind: 'session',
+              label: `Process ${lanes.length}`,
+              status: 'running',
+              parentId: current,
+              start: timestamp,
+              delegatedFrom: { laneId: current, markerId: spawn.id },
+            },
+          ],
+          markers: [
+            ...markers,
+            spawn,
+            { id: `${child}:first`, laneId: child, kind: 'operation', timestamp, label: 'Run Instructions' },
+          ],
+          current: child,
+        };
+      });
     }, interval);
     return () => clearInterval(timer);
-  }, [interval, laneId, step]);
+  }, [interval, step, spawnEvery]);
 
-  return { markers, now: Math.max(T0, ...markers.map((marker) => marker.timestamp)) };
+  return {
+    lanes: state.lanes,
+    markers: state.markers,
+    now: Math.max(T0, ...state.markers.map((marker) => marker.timestamp)),
+  };
 };
 
 type StoryArgs = GanttData &
@@ -225,8 +266,21 @@ type StoryArgs = GanttData &
     inspect?: boolean;
   };
 
-const DefaultStory = ({ chartOnly, inspect, interval, laneId = 'c', step = 0.5 * MINUTE, ...data }: StoryArgs) => {
-  const stream = useEventStream(data.markers ?? NO_MARKERS, { interval, laneId, step });
+const DefaultStory = ({
+  chartOnly,
+  inspect,
+  interval,
+  laneId = 'c',
+  step = 0.5 * MINUTE,
+  spawnEvery,
+  ...data
+}: StoryArgs) => {
+  const stream = useEventStream(data.lanes ?? NO_LANES, data.markers ?? NO_MARKERS, {
+    interval,
+    laneId,
+    step,
+    spawnEvery,
+  });
   // A live chart on the time axis has to be given room ahead of its newest event, and the range it
   // was handed ends before that event ever arrives; the event axis makes its own room.
   const live = interval !== undefined && data.axis !== 'event';
@@ -234,14 +288,14 @@ const DefaultStory = ({ chartOnly, inspect, interval, laneId = 'c', step = 0.5 *
   const now = live ? stream.now : data.now;
 
   const chart = (
-    <Gantt.Root {...data} markers={stream.markers} range={range} now={now} classNames='p-4'>
+    <Gantt.Root {...data} lanes={stream.lanes} markers={stream.markers} range={range} now={now} classNames='p-4'>
       {!chartOnly && <Gantt.Legend />}
       <Gantt.Chart />
       {!chartOnly && <Gantt.Meta />}
     </Gantt.Root>
   );
 
-  return inspect ? <Layout chart={chart} data={{ lanes: data.lanes, markers: stream.markers, range, now }} /> : chart;
+  return inspect ? <Layout chart={chart} data={{ lanes: stream.lanes, markers: stream.markers, range, now }} /> : chart;
 };
 
 const meta = {
@@ -298,5 +352,15 @@ export const SingleLane: Story = {
     range: undefined,
     now: undefined,
     inspect: false,
+  },
+};
+
+/** Every fourth event spawns a child: its connector draws out of the parent's node, and the child's
+ *  bar extends from where that connector lands. */
+export const Delegation: Story = {
+  args: {
+    ...SingleLane.args,
+    interval: 1_500,
+    spawnEvery: 4,
   },
 };
