@@ -5,8 +5,9 @@
 import React, { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, Toolbar, composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -164,6 +165,24 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
       onTaskSelect?.(undefined);
     }, [commitTitle, task, current, onTaskSelect]);
 
+    // Unlike the Save button, the key is a no-op on an untitled create row: the button is hidden
+    // there, and the key must not clear the draft the reader is still writing.
+    const handleSubmit = useCallback(() => {
+      if (!(task && current) && draft.trim().length === 0) {
+        return;
+      }
+      handleSave();
+    }, [task, current, draft, handleSave]);
+
+    // Read through a ref so the extension is built once: a new extensions array rebuilds the editor
+    // and drops focus, and `handleSubmit` changes on every keystroke of the title. Synced in an effect
+    // so the keymap only ever sees a committed render's handler.
+    const submitRef = useDynamicRef(handleSubmit);
+    const extensions = useMemo(
+      () => [...(descriptionExtensions ?? []), submitOnModEnter({ onSubmit: () => submitRef.current() })],
+      [descriptionExtensions],
+    );
+
     // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
     // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields. An
     // abandoned create is cleared rather than reverted — a blur may already have committed text into
@@ -283,7 +302,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               editing
               multiline
               placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
-              extensions={descriptionExtensions}
+              extensions={extensions}
               // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
               // land the reader in the description instead of the list.
               autoFocus={false}

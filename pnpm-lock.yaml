@@ -23391,6 +23391,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
