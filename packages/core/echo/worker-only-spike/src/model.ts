@@ -722,7 +722,8 @@ export class Model {
     if (visible.length < 2) {
       return undefined;
     }
-    return Object.fromEntries(visible.map((rec) => [this.#keyOf(rec), this.#value(rec, limits, false)]));
+    // Automerge lists concurrent values in op id order, the winner last.
+    return Object.fromEntries(visible.reverse().map((rec) => [this.#keyOf(rec), this.#value(rec, limits, false)]));
   }
 
   /** Automerge's `getCursor` on a text: the id of the character at `position`. */
