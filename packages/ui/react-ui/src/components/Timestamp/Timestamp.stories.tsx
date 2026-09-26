@@ -134,14 +134,19 @@ export const Ticks: Story = {
   render: () => {
     // Held in state so the identity never changes: a date built during render would give the effect
     // a new dependency every time, which is the very thing this story exists to rule out.
-    const [date] = useState(() => new Date(Date.now() - 59_500));
+    //
+    // Two seconds short of the minute, not half of one: the story has to observe `now` BEFORE the
+    // tick, and a 500ms window is inside the render-and-query latency of a loaded runner — the
+    // label would already read `1m` and the first assertion would fail for a reason that is not
+    // the component's.
+    const [date] = useState(() => new Date(Date.now() - 58_000));
     return <Timestamp date={date} />;
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('now')).resolves.toBeTruthy();
-    // ~500ms later by the component's own reckoning; the budget is generous for a loaded runner.
-    await waitFor(async () => await expect(canvas.queryByText('1m')).not.toBeNull(), { timeout: 5_000 });
+    // ~2s later by the component's own reckoning; the budget is generous for a loaded runner.
+    await waitFor(async () => await expect(canvas.queryByText('1m')).not.toBeNull(), { timeout: 10_000 });
   },
 };
 
