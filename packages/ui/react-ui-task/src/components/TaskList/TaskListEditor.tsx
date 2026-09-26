@@ -5,7 +5,7 @@
 import React, { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Field, Icon, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, Toolbar, composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -175,9 +175,9 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     }, [task, current, draft, handleSave]);
 
     // Read through a ref so the extension is built once: a new extensions array rebuilds the editor
-    // and drops focus, and `handleSubmit` changes on every keystroke of the title.
-    const submitRef = useRef(handleSubmit);
-    submitRef.current = handleSubmit;
+    // and drops focus, and `handleSubmit` changes on every keystroke of the title. Synced in an effect
+    // so the keymap only ever sees a committed render's handler.
+    const submitRef = useDynamicRef(handleSubmit);
     const extensions = useMemo(
       () => [...(descriptionExtensions ?? []), submitOnModEnter({ onSubmit: () => submitRef.current() })],
       [descriptionExtensions],
