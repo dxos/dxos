@@ -377,7 +377,8 @@ const TaskTreeHeading = ({
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
-        <TaskMnemonic task={current} />
+        {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
+        <TaskMnemonic task={task} />
         <span data-testid='taskList.item.title' className='truncate'>
           {current.title}
         </span>

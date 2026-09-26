@@ -194,6 +194,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         args: [{ min: 3, max: 10 }],
       }),
     ),
+
     description: Schema.optional(
       Schema.String.pipe(
         Schema.annotate({ title: 'Description' }),
