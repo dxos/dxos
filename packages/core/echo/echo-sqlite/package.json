@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/echo-sqlite",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Minimal SQLite-backed implementation of the ECHO Database interface",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:"
+  }
+}
