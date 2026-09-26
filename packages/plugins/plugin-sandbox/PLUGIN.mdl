@@ -8,7 +8,8 @@ Sandbox plugin for DXOS Composer providing isolated shell environments.
 
 ## Backends
 
-Sandboxes run on EDGE's sandbox-service by default. Under Node or Bun, `DX_SANDBOX_BACKEND=local`
+The operations run against `SandboxService.Service`, which the plugin contributes to the process
+runtime as an application-affinity `LayerSpec`. Sandboxes run on EDGE's sandbox-service by default. Under Node or Bun, `DX_SANDBOX_BACKEND=local`
 runs them on this machine instead, as processes confined by the OS sandbox (bubblewrap on Linux,
 Seatbelt on macOS) via `@carderne/sandbox-runtime`:
 

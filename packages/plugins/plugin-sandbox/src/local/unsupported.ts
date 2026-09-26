@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SandboxBackend } from '../services/SandboxBackend.ts';
+import * as SandboxService from '../types/SandboxService.ts';
 
 /** Browsers and webviews cannot spawn processes, so there is no local backend there. */
-export const getLocalSandboxBackend = (): SandboxBackend | undefined => undefined;
+export const getLocalSandboxBackend = (): SandboxService.Backend | undefined => undefined;

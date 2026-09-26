@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { SandboxOperation } from '#types';
+import { SandboxOperation, SandboxService } from '#types';
 
-import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
 import { mergeExecEnv } from '../../services/sandbox-env.ts';
 
 /**
@@ -27,6 +26,7 @@ export default SandboxOperation.Exec.pipe(
       const sandboxId = loaded.id;
       const spaceId = db.spaceId;
       const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
+      const sandboxService = yield* SandboxService.Service;
 
       // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
       // terminating the operation left the request running — the tool handler reported "Operation
@@ -36,8 +36,7 @@ export default SandboxOperation.Exec.pipe(
       // error channel, so a typed failure escaping here is not part of the operation's contract and
       // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
       // A non-zero exit carrying the reason is also what the model can actually act on.
-      return yield* resolveSandboxBackend.pipe(
-        Effect.flatMap((backend) => backend.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout })),
+      return yield* sandboxService.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }).pipe(
         Effect.catch((error) =>
           Effect.succeed({
             stdout: '',

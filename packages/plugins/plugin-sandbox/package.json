@@ -82,6 +82,11 @@
       "source": "./src/types/SandboxOperation.ts",
       "types": "./dist/types/src/types/SandboxOperation.d.ts",
       "import": "./dist/lib/SandboxOperation.mjs"
+    },
+    "./SandboxService": {
+      "source": "./src/types/SandboxService.ts",
+      "types": "./dist/types/src/types/SandboxService.d.ts",
+      "import": "./dist/lib/SandboxService.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -95,6 +100,9 @@
       ],
       "SandboxOperation": [
         "dist/types/src/types/SandboxOperation.d.ts"
+      ],
+      "SandboxService": [
+        "dist/types/src/types/SandboxService.d.ts"
       ]
     }
   },

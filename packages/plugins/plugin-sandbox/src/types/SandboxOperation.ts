@@ -6,13 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
 import * as Sandbox from './Sandbox.ts';
+import * as SandboxService from './SandboxService.ts';
 
 const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',
@@ -39,7 +39,7 @@ export const CreateSandbox = Operation.make({
       description: 'The ECHO object ID of the created sandbox (also used as the sandbox service ID).',
     }),
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, SandboxService.Service],
 });
 
 export const Exec = Operation.make({
@@ -72,7 +72,7 @@ export const Exec = Operation.make({
     exitCode: Schema.Number,
     success: Schema.Boolean,
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, SandboxService.Service],
 });
 
 export const UploadFile = Operation.make({
@@ -96,7 +96,7 @@ export const UploadFile = Operation.make({
       description: 'The path where the file was written in the sandbox.',
     }),
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, SandboxService.Service],
 });
 
 export const DownloadFile = Operation.make({
@@ -120,5 +120,5 @@ export const DownloadFile = Operation.make({
       description: 'The ECHO object ID of the File containing the downloaded content.',
     }),
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, SandboxService.Service],
 });

@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Sandbox, SandboxOperation } from '#types';
-
-import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
+import { Sandbox, SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.CreateSandbox.pipe(
   Operation.withHandler(
@@ -21,9 +19,9 @@ export default SandboxOperation.CreateSandbox.pipe(
 
       const sandboxId = sandbox.id;
       const spaceId = db.spaceId;
-      const backend = yield* resolveSandboxBackend.pipe(Effect.orDie);
+      const sandboxService = yield* SandboxService.Service;
 
-      const record = yield* backend.create(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
+      const record = yield* sandboxService.create(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;

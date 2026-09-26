@@ -14,8 +14,8 @@ import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { log } from '@dxos/log';
 
-import { type CreateSandboxOptions, type SandboxBackend, SandboxError } from '../services/SandboxBackend.ts';
 import { type ExecRequest, type ExecResult, type FileEntry, SandboxRecord } from '../services/SandboxClient.ts';
+import * as SandboxService from '../types/SandboxService.ts';
 import { type ResourceLimits, limitsPrelude } from './limits.ts';
 import { resolveSandboxPath } from './paths.ts';
 
@@ -76,7 +76,7 @@ type SandboxEntry = {
  * A sandbox is `<root>/<sandboxId>/` holding its record and a `workspace/` that is the command's
  * working directory and `$HOME`; `/workspace/…` paths in file calls map onto it.
  */
-export class LocalSandboxBackend implements SandboxBackend {
+export class LocalSandboxBackend implements SandboxService.Backend {
   readonly kind = 'local';
 
   readonly #root: string;
@@ -96,12 +96,16 @@ export class LocalSandboxBackend implements SandboxBackend {
   create(
     spaceId: string,
     sandboxId: string,
-    options: CreateSandboxOptions = {},
-  ): Effect.Effect<SandboxRecord, SandboxError> {
+    options: SandboxService.CreateOptions = {},
+  ): Effect.Effect<SandboxRecord, SandboxService.SandboxError> {
     return this.#ensureRecord(spaceId, sandboxId, options);
   }
 
-  exec(spaceId: string, sandboxId: string, request: ExecRequest): Effect.Effect<ExecResult, SandboxError> {
+  exec(
+    spaceId: string,
+    sandboxId: string,
+    request: ExecRequest,
+  ): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
       const cwd = request.cwd ? yield* this.#resolve(entry, request.cwd) : entry.workspaceDir;
@@ -113,7 +117,7 @@ export class LocalSandboxBackend implements SandboxBackend {
     spaceId: string,
     sandboxId: string,
     path: string,
-  ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxError> {
+  ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
       const hostPath = yield* this.#resolve(entry, path);
@@ -122,7 +126,12 @@ export class LocalSandboxBackend implements SandboxBackend {
     });
   }
 
-  writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError> {
+  writeFile(
+    spaceId: string,
+    sandboxId: string,
+    path: string,
+    content: Uint8Array,
+  ): Effect.Effect<void, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
       const hostPath = yield* this.#resolve(entry, path);
@@ -133,7 +142,11 @@ export class LocalSandboxBackend implements SandboxBackend {
     });
   }
 
-  listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError> {
+  listFiles(
+    spaceId: string,
+    sandboxId: string,
+    path: string,
+  ): Effect.Effect<readonly FileEntry[], SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
       const hostPath = yield* this.#resolve(entry, path);
@@ -153,7 +166,7 @@ export class LocalSandboxBackend implements SandboxBackend {
   }
 
   /** Stops the sandbox's proxies and deletes its directory. */
-  destroy(spaceId: string, sandboxId: string): Effect.Effect<void, SandboxError> {
+  destroy(spaceId: string, sandboxId: string): Effect.Effect<void, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       yield* this.#readRecord(spaceId, sandboxId);
       yield* this.#close(sandboxId);
@@ -162,7 +175,7 @@ export class LocalSandboxBackend implements SandboxBackend {
   }
 
   /** Stops every sandbox's proxies, leaving their files in place. */
-  close(): Effect.Effect<void, SandboxError> {
+  close(): Effect.Effect<void, SandboxService.SandboxError> {
     return Effect.forEach([...this.#entries.keys()], (sandboxId) => this.#close(sandboxId), { discard: true });
   }
 
@@ -174,14 +187,17 @@ export class LocalSandboxBackend implements SandboxBackend {
     return join(this.#root, sandboxId);
   }
 
-  #resolve(entry: SandboxEntry, path: string): Effect.Effect<string, SandboxError> {
+  #resolve(entry: SandboxEntry, path: string): Effect.Effect<string, SandboxService.SandboxError> {
     return Effect.try({
       try: () => resolveSandboxPath(entry.workspaceDir, path),
-      catch: (cause) => new SandboxError({ message: errorMessage(cause), cause }),
+      catch: (cause) => new SandboxService.SandboxError({ message: errorMessage(cause), cause }),
     });
   }
 
-  #readRecord(spaceId: string, sandboxId: string): Effect.Effect<SandboxRecord | undefined, SandboxError> {
+  #readRecord(
+    spaceId: string,
+    sandboxId: string,
+  ): Effect.Effect<SandboxRecord | undefined, SandboxService.SandboxError> {
     return attempt('read sandbox record', async () => {
       let text: string;
       try {
@@ -204,8 +220,8 @@ export class LocalSandboxBackend implements SandboxBackend {
   #ensureRecord(
     spaceId: string,
     sandboxId: string,
-    options: CreateSandboxOptions = {},
-  ): Effect.Effect<SandboxRecord, SandboxError> {
+    options: SandboxService.CreateOptions = {},
+  ): Effect.Effect<SandboxRecord, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const existing = yield* this.#readRecord(spaceId, sandboxId);
       if (existing) {
@@ -232,7 +248,7 @@ export class LocalSandboxBackend implements SandboxBackend {
   }
 
   /** The sandbox's live state, creating the sandbox on first use as sandbox-service does. */
-  #open(spaceId: string, sandboxId: string): Effect.Effect<SandboxEntry, SandboxError> {
+  #open(spaceId: string, sandboxId: string): Effect.Effect<SandboxEntry, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       yield* this.#ensureRecord(spaceId, sandboxId);
       const existing = this.#entries.get(sandboxId);
@@ -250,7 +266,10 @@ export class LocalSandboxBackend implements SandboxBackend {
     }).pipe(this.#openLock.withPermits(1));
   }
 
-  #initializeManager(workspaceDir: string, tmpDir: string): Effect.Effect<ISandboxManager, SandboxError> {
+  #initializeManager(
+    workspaceDir: string,
+    tmpDir: string,
+  ): Effect.Effect<ISandboxManager, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const home = homedir();
       const config = (socketFilterOff: boolean): SandboxRuntimeConfig => ({
@@ -309,7 +328,7 @@ export class LocalSandboxBackend implements SandboxBackend {
     });
   }
 
-  #run(entry: SandboxEntry, request: ExecRequest, cwd: string): Effect.Effect<ExecResult, SandboxError> {
+  #run(entry: SandboxEntry, request: ExecRequest, cwd: string): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       // The command travels as a script file, so newlines, heredocs and quotes reach the shell intact.
       const script = join(entry.tmpDir, `.exec-${randomUUID()}.sh`);
@@ -343,11 +362,11 @@ export class LocalSandboxBackend implements SandboxBackend {
     command: string,
     { cwd, env }: { cwd: string; env: Record<string, string> },
     timeout: number,
-  ): Effect.Effect<ExecResult, SandboxError> {
+  ): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     const maxOutputBytes = this.#options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
     return Effect.gen(function* () {
       const wrapped = yield* attempt('wrap command', () => manager.wrapWithSandbox(command));
-      return yield* Effect.callback<ExecResult, SandboxError>((resume) => {
+      return yield* Effect.callback<ExecResult, SandboxService.SandboxError>((resume) => {
         // Its own process group, so a timeout kills everything the command started, not just the shell.
         const child = spawn('bash', ['-c', wrapped], { cwd, env, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
         const stdout = new OutputBuffer(maxOutputBytes);
@@ -372,7 +391,11 @@ export class LocalSandboxBackend implements SandboxBackend {
 
         child.on('error', (cause) => {
           clearTimeout(timer);
-          resume(Effect.fail(new SandboxError({ message: `failed to start command: ${cause.message}`, cause })));
+          resume(
+            Effect.fail(
+              new SandboxService.SandboxError({ message: `failed to start command: ${cause.message}`, cause }),
+            ),
+          );
         });
         child.on('close', (code, signal) => {
           clearTimeout(timer);
@@ -400,7 +423,7 @@ export class LocalSandboxBackend implements SandboxBackend {
     });
   }
 
-  #close(sandboxId: string): Effect.Effect<void, SandboxError> {
+  #close(sandboxId: string): Effect.Effect<void, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = this.#entries.get(sandboxId);
       if (!entry) {
@@ -504,8 +527,8 @@ const isNotFound = (error: unknown): boolean =>
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-const attempt = <T>(action: string, run: () => Promise<T>): Effect.Effect<T, SandboxError> =>
+const attempt = <T>(action: string, run: () => Promise<T>): Effect.Effect<T, SandboxService.SandboxError> =>
   Effect.tryPromise({
     try: run,
-    catch: (cause) => new SandboxError({ message: `${action}: ${errorMessage(cause)}`, cause }),
+    catch: (cause) => new SandboxService.SandboxError({ message: `${action}: ${errorMessage(cause)}`, cause }),
   });

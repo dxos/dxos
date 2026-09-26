@@ -5,14 +5,12 @@
 import { createSandboxManager } from '@carderne/sandbox-runtime';
 import { afterAll, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Blob, Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -21,16 +19,15 @@ import { File } from '@dxos/types';
 
 import { Sandbox, SandboxOperation } from '#types';
 
-import { SANDBOX_BACKEND_ENV } from '../services/resolve-backend.ts';
+import { layerLocal } from '../services/layer.ts';
 import { SandboxHandlers } from '../skills/functions/index.ts';
 import SandboxSkill from '../skills/sandbox-skill.ts';
 
 const probe = createSandboxManager();
 const unavailable = !probe.isSupportedPlatform() || probe.checkDependencies().errors.length > 0;
 
-// Read when the handlers first resolve the backend, so set before any test runs.
+// Read when the local backend is first built, so set before any test runs.
 const root = mkdtempSync(join(tmpdir(), 'dx-sandbox-ops-'));
-process.env[SANDBOX_BACKEND_ENV] = 'local';
 process.env.DX_SANDBOX_ROOT = root;
 
 // A 1x1 red PNG.
@@ -41,8 +38,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,
   types: [Sandbox.Sandbox, File.File, Blob.Blob, Collection.Collection, Skill.Skill, Feed.Feed],
   skills: [SandboxSkill.make()],
-  // The operations declare the client for EDGE; the local backend never touches it.
-  extraServices: Layer.sync(ClientService, () => new Client()),
+  extraServices: layerLocal,
 });
 
 describe.skipIf(unavailable)('SandboxPlugin (local backend)', { timeout: 60_000 }, () => {

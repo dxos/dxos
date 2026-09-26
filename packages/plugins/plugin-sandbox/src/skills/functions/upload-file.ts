@@ -10,9 +10,7 @@ import { Blob, Database } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type File } from '@dxos/types';
 
-import { SandboxOperation } from '#types';
-
-import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
+import { SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.UploadFile.pipe(
   Operation.withHandler(
@@ -26,9 +24,9 @@ export default SandboxOperation.UploadFile.pipe(
       const bytes = yield* Blob.read(blob);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const backend = yield* resolveSandboxBackend.pipe(Effect.orDie);
+      const sandboxService = yield* SandboxService.Service;
 
-      yield* backend.writeFile(spaceId, sandboxId, path, bytes).pipe(Effect.orDie);
+      yield* sandboxService.writeFile(spaceId, sandboxId, path, bytes).pipe(Effect.orDie);
 
       return { path };
     }),

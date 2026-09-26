@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
+import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import type * as Effect from 'effect/Effect';
 
-import { type ExecRequest, type ExecResult, type FileEntry, type SandboxRecord } from './SandboxClient.ts';
+import type { ExecRequest, ExecResult, FileEntry, SandboxRecord } from '../services/SandboxClient.ts';
 
 /**
  * A sandbox request that could not be carried out — the backend failed, not the command: a command
@@ -13,20 +16,15 @@ import { type ExecRequest, type ExecResult, type FileEntry, type SandboxRecord }
  */
 export class SandboxError extends Data.TaggedError('SandboxError')<{ message: string; cause?: unknown }> {}
 
-export type CreateSandboxOptions = { name?: string; baseImage?: string; expiresIn?: number };
+export type CreateOptions = { name?: string; baseImage?: string; expiresIn?: number };
 
 /**
- * Where sandboxes run: EDGE's container service, or processes on this machine confined by the OS
- * sandbox. The operation handlers are written against this rather than a transport so either can
- * serve them.
+ * Runs sandboxes: EDGE's container service, or processes on this machine confined by the OS
+ * sandbox. Operation handlers depend on this rather than a transport so either can serve them.
  */
-export interface SandboxBackend {
+export interface Backend {
   readonly kind: 'edge' | 'local';
-  create(
-    spaceId: string,
-    sandboxId: string,
-    options?: CreateSandboxOptions,
-  ): Effect.Effect<SandboxRecord, SandboxError>;
+  create(spaceId: string, sandboxId: string, options?: CreateOptions): Effect.Effect<SandboxRecord, SandboxError>;
   exec(spaceId: string, sandboxId: string, request: ExecRequest): Effect.Effect<ExecResult, SandboxError>;
   readFileBytes(
     spaceId: string,
@@ -36,3 +34,6 @@ export interface SandboxBackend {
   writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError>;
   listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError>;
 }
+
+/** The sandbox backend, contributed to the process runtime by the plugin's layer spec. */
+export class Service extends Context.Service<Service, Backend>()('org.dxos.plugin.sandbox.SandboxService') {}

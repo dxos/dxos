@@ -9,9 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { SandboxOperation } from '#types';
-
-import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
+import { SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.DownloadFile.pipe(
   Operation.withHandler(
@@ -21,9 +19,9 @@ export default SandboxOperation.DownloadFile.pipe(
       const loadedSandbox = yield* Database.load(sandbox);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const backend = yield* resolveSandboxBackend.pipe(Effect.orDie);
+      const sandboxService = yield* SandboxService.Service;
 
-      const { bytes, type } = yield* backend.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
+      const { bytes, type } = yield* sandboxService.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
       const fileName = path.split('/').at(-1) ?? path;
 
       if (dest) {
