@@ -16,37 +16,60 @@ import * as Task from './Task.ts';
 /** A task's change entries — the ones that carry a `description`. */
 const changes = (task: Task.Task): Task.ChangeEntry[] => (task.history ?? []).filter(Task.isChangeEntry);
 
+/** A task whose `subtasks` own `children`, so their parent edges point at it. */
+const node = (title: string, children: Task.Task[] = [], props: Partial<Obj.MakeProps<typeof Task.Task>> = {}) =>
+  Task.make({ title, subtasks: children.map((child) => Ref.make(child)), ...props });
+
 /**
- * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,
- * and progress are computed, never stored, so these assert the two can never disagree. They act on
- * a plain task list, which is why they live here rather than on a container.
+ * Milestone grouping and progress are computed, never stored, so these assert the two can never
+ * disagree. They act on a plain task list, which is why they live here rather than on a container.
  */
 describe('Task derived views', () => {
-  test('roots and sub-tasks partition the flat array', ({ expect }) => {
-    const parent = Task.make({ title: 'Parent' });
-    const child = Task.make({ title: 'Child', parentTask: Ref.make(parent) });
-    const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
-    const tasks = [parent, child, grandchild];
+  test("roots and sub-tasks partition the list, sub-tasks in their parent's order", ({ expect }) => {
+    const grandchild = node('Grandchild');
+    const second = node('Second');
+    const child = node('Child', [grandchild]);
+    const parent = node('Parent', [second, child]);
+    const tasks = [parent, child, grandchild, second];
 
+    expect(Task.getParentTask(child)?.id).toBe(parent.id);
     expect(Task.rootTasks(tasks).map((task) => task.title)).toEqual(['Parent']);
-    expect(Task.subTasks(tasks, parent).map((task) => task.title)).toEqual(['Child']);
+    expect(Task.subTasks(tasks, parent).map((task) => task.title)).toEqual(['Second', 'Child']);
     expect(Task.subTasks(tasks, child).map((task) => task.title)).toEqual(['Grandchild']);
+    expect(Task.orderTree(tasks, [Ref.make(parent)]).map((task) => task.title)).toEqual([
+      'Parent',
+      'Second',
+      'Child',
+      'Grandchild',
+    ]);
   });
 
   test('a task whose parent is absent reads as a root rather than vanishing', ({ expect }) => {
-    const absent = Task.make({ title: 'Absent' });
-    const orphan = Task.make({ title: 'Orphan', parentTask: Ref.make(absent) });
+    const orphan = node('Orphan');
+    node('Absent', [orphan]);
 
     expect(Task.rootTasks([orphan]).map((task) => task.title)).toEqual(['Orphan']);
+  });
+
+  test('the parent edge wins over a stale entry in another list', ({ expect }) => {
+    const child = node('Child');
+    const stale = node('Stale', [child]);
+    const owner = node('Owner', [child]);
+    // A move writes the edge itself; the stale list keeps its entry, as after a concurrent move.
+    Obj.setParent(child, owner);
+
+    expect(Task.getParentTask(child)?.id).toBe(owner.id);
+    expect(Task.subTasks([stale, owner, child], stale)).toEqual([]);
+    expect(Task.subTasks([stale, owner, child], owner).map((task) => task.title)).toEqual(['Child']);
   });
 
   test('sub-tasks inherit the nearest ancestor milestone, and an own milestone overrides', ({ expect }) => {
     const first = Milestone.make({ name: 'First' });
     const second = Milestone.make({ name: 'Second' });
-    const parent = Task.make({ title: 'Parent', milestone: Ref.make(first) });
-    const inherits = Task.make({ title: 'Inherits', parentTask: Ref.make(parent) });
-    const overrides = Task.make({ title: 'Overrides', parentTask: Ref.make(parent), milestone: Ref.make(second) });
-    const deep = Task.make({ title: 'Deep', parentTask: Ref.make(inherits) });
+    const deep = node('Deep');
+    const inherits = node('Inherits', [deep]);
+    const overrides = node('Overrides', [], { milestone: Ref.make(second) });
+    const parent = node('Parent', [inherits, overrides], { milestone: Ref.make(first) });
     const backlog = Task.make({ title: 'Backlog' });
     const tasks = [parent, inherits, overrides, deep, backlog];
 
@@ -55,14 +78,19 @@ describe('Task derived views', () => {
     expect(Task.backlogTasks(tasks).map((task) => task.title)).toEqual(['Backlog']);
   });
 
-  test('a parentTask cycle terminates instead of hanging', ({ expect }) => {
-    const first = Task.make({ title: 'First' });
-    const second = Task.make({ title: 'Second', parentTask: Ref.make(first) });
-    Obj.update(first, (first) => {
-      first.parentTask = Ref.make(second);
+  test('a parent cycle terminates instead of hanging', ({ expect }) => {
+    const second = node('Second');
+    const first = node('First', [second]);
+    Obj.update(second, (second) => {
+      second.subtasks?.push(Ref.make(first));
     });
 
     expect(Task.backlogTasks([first, second]).map((task) => task.title)).toEqual(['First', 'Second']);
+    expect(
+      Task.orderTree([first, second], [])
+        .map((task) => task.title)
+        .sort(),
+    ).toEqual(['First', 'Second']);
   });
 
   test('progress counts done over non-cancelled, so a milestone cannot disagree with its tasks', ({ expect }) => {
@@ -102,10 +130,10 @@ describe('Task derived views', () => {
   });
 
   test('subtree walks descendants within the list, and stops at what the list holds', ({ expect }) => {
-    const root = Task.make({ title: 'Root' });
-    const child = Task.make({ title: 'Child', parentTask: Ref.make(root) });
-    const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
-    const sibling = Task.make({ title: 'Sibling' });
+    const grandchild = node('Grandchild');
+    const child = node('Child', [grandchild]);
+    const root = node('Root', [child]);
+    const sibling = node('Sibling');
 
     expect(Task.subtree([root, child, grandchild, sibling], root).map((task) => task.title)).toEqual([
       'Root',
@@ -139,10 +167,10 @@ describe('collectSubtree', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('reaches a sub-task no list holds, since the walk goes through the reverse-ref index', () =>
+  it.effect('reaches a sub-task only its parent edge records, since that is what a delete cascades along', () =>
     Effect.gen(function* () {
       const { root } = yield* seedTree();
-      const stray = yield* Database.add(Task.make({ title: 'stray', status: 'todo', parentTask: Ref.make(root) }));
+      const stray = yield* Database.add(Task.make({ [Obj.Parent]: root, title: 'stray', status: 'todo' }));
       yield* Database.flush();
 
       const subtree = yield* Task.collectSubtree(root);
@@ -162,6 +190,15 @@ describe('collectRoot', () => {
       expect((yield* Task.collectRoot(child)).id).toBe(root.id);
       expect((yield* Task.collectRoot(root)).id).toBe(root.id);
       expect((yield* Task.collectTree(grandchild)).map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('reads the parent edge synchronously, so there is no load to time out and misplace a PR', () =>
+    Effect.gen(function* () {
+      const { root, grandchild } = yield* seedTree();
+
+      // No Database service and no async boundary: the walk cannot stop early on a slow load.
+      expect(Effect.runSync(Task.collectRoot(grandchild)).id).toBe(root.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -483,11 +520,9 @@ const testLayer = () => TestDatabaseLayer({ types: [Blob.Blob, File.File, Milest
 
 const seedTree = () =>
   Effect.gen(function* () {
-    const root = yield* Database.add(Task.make({ title: 'root', status: 'todo' }));
-    const child = yield* Database.add(Task.make({ title: 'child', status: 'todo', parentTask: Ref.make(root) }));
-    const grandchild = yield* Database.add(
-      Task.make({ title: 'grandchild', status: 'todo', parentTask: Ref.make(child) }),
-    );
+    const grandchild = yield* Database.add(Task.make({ title: 'grandchild', status: 'todo' }));
+    const child = yield* Database.add(node('child', [grandchild], { status: 'todo' }));
+    const root = yield* Database.add(node('root', [child], { status: 'todo' }));
     const sibling = yield* Database.add(Task.make({ title: 'sibling', status: 'todo' }));
     yield* Database.flush();
     return { root, child, grandchild, sibling };

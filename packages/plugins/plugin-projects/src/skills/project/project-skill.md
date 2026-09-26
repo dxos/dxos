@@ -128,7 +128,8 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   it stores **no status** — `tasks-list-milestone` derives `done`/`total` from the tasks filed under it, so
   progress can never disagree with the work.
 - **Task set** — the ledger. Milestone membership is the task's `milestone` (`tasks-create` with
-  `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); sub-tasks use `parentTask`.
+  `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); pass `parentTask` to
+  file a sub-task under its parent, which then lists it in its own `subtasks`.
   Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.

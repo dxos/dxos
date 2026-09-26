@@ -20,7 +20,7 @@ import * as TaskSet from './TaskSet.ts';
 describe('TaskSet', () => {
   test('typename, version, and array defaults', ({ expect }) => {
     expect(Type.getTypename(TaskSet.TaskSet)).toBe('org.dxos.type.taskSet');
-    expect(Type.getVersion(TaskSet.TaskSet)).toBe('0.3.0');
+    expect(Type.getVersion(TaskSet.TaskSet)).toBe('0.4.0');
     const taskSet = TaskSet.make({ name: 'Work' });
     expect(taskSet.tasks).toEqual([]);
     expect(taskSet.milestones).toEqual([]);
@@ -62,38 +62,82 @@ describe('TaskSet', () => {
   });
 
   describe('moveTask', () => {
-    it.effect('repositions and re-parents in one write, so a drop lands whole', () =>
+    it.effect('re-parents and positions in one write, so a drop lands whole', () =>
       Effect.gen(function* () {
         const { taskSet, root, child, sibling } = yield* seedTree();
 
         TaskSet.moveTask(taskSet, sibling, { parentTask: root, beforeId: child.id });
 
-        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling', 'child', 'grandchild']);
+        expect(titles(taskSet.tasks)).toEqual(['root']);
+        expect(titles(root.subtasks ?? [])).toEqual(['sibling', 'child']);
         expect(Task.parentTaskId(sibling)).toBe(root.id);
+        expect(Obj.getParent(sibling)?.id).toBe(root.id);
       }).pipe(Effect.provide(testLayer())),
     );
 
-    it.effect('promotes to a root on a null parent, and leaves the hierarchy alone when omitted', () =>
+    it.effect('reorders within a parent without touching the parent edge', () =>
       Effect.gen(function* () {
-        const { taskSet, child, grandchild } = yield* seedTree();
-
-        TaskSet.moveTask(taskSet, child, { parentTask: null });
-        expect(child.parentTask).toBeUndefined();
-
-        TaskSet.moveTask(taskSet, grandchild, { beforeId: child.id });
-        expect(Task.parentTaskId(grandchild)).toBe(child.id);
-        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling', 'grandchild', 'child']);
-      }).pipe(Effect.provide(testLayer())),
-    );
-
-    it.effect('re-parents the last task, where the array order is already what the move asks for', () =>
-      Effect.gen(function* () {
-        const { taskSet, root, sibling } = yield* seedTree();
-
+        const { taskSet, root, child, sibling } = yield* seedTree();
         TaskSet.moveTask(taskSet, sibling, { parentTask: root });
+        expect(titles(root.subtasks ?? [])).toEqual(['child', 'sibling']);
 
-        expect(titles(taskSet.tasks)).toEqual(['root', 'child', 'grandchild', 'sibling']);
+        TaskSet.moveTask(taskSet, sibling, { beforeId: child.id });
+
+        expect(titles(root.subtasks ?? [])).toEqual(['sibling', 'child']);
         expect(Task.parentTaskId(sibling)).toBe(root.id);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('moves a sub-task between parents, carrying its own subtree', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
+
+        TaskSet.moveTask(taskSet, child, { parentTask: sibling });
+
+        expect(titles(root.subtasks ?? [])).toEqual([]);
+        expect(titles(sibling.subtasks ?? [])).toEqual(['child']);
+        expect(Task.parentTaskId(child)).toBe(sibling.id);
+        expect(Task.parentTaskId(grandchild)).toBe(child.id);
+        expect(TaskSet.resolveTasks(taskSet).map((task) => task.title)).toEqual([
+          'root',
+          'sibling',
+          'child',
+          'grandchild',
+        ]);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('promotes to a root on a null parent and demotes back', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, child } = yield* seedTree();
+
+        TaskSet.moveTask(taskSet, child, { parentTask: null, beforeId: root.id });
+        expect(titles(taskSet.tasks)).toEqual(['child', 'root', 'sibling']);
+        expect(root.subtasks ?? []).toHaveLength(0);
+        expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+        expect(Task.getParentTask(child)).toBeUndefined();
+
+        TaskSet.moveTask(taskSet, child, { parentTask: root });
+        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling']);
+        expect(titles(root.subtasks ?? [])).toEqual(['child']);
+        expect(Task.parentTaskId(child)).toBe(root.id);
+      }).pipe(Effect.provide(testLayer())),
+    );
+  });
+
+  describe('deleteTask', () => {
+    it.effect('takes the subtree with it along the parent edge', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
+
+        TaskSet.deleteTask(db, taskSet, child);
+        yield* Database.flush();
+
+        expect(root.subtasks ?? []).toHaveLength(0);
+        expect(Obj.isDeleted(child)).toBe(true);
+        expect(Obj.isDeleted(grandchild)).toBe(true);
+        expect(TaskSet.resolveTasks(taskSet).map((task) => task.id)).toEqual([root.id, sibling.id]);
       }).pipe(Effect.provide(testLayer())),
     );
   });
@@ -123,18 +167,12 @@ describe('TaskSet', () => {
     );
   });
 
-  describe('sub-trees', () => {
-    it.effect('a sub-task filed in another set is still part of the walk', () =>
+  describe('membership', () => {
+    it.effect('a sub-task resolves to the set holding the root of its tree', () =>
       Effect.gen(function* () {
-        const { root } = yield* seedTree();
-        const other = yield* Database.add(TaskSet.make({ name: 'Elsewhere' }));
-        const stray = yield* Database.add(Task.make({ title: 'stray', status: 'todo', parentTask: Ref.make(root) }));
-        TaskSet.addTaskToSet(other, stray);
-        yield* Database.flush();
+        const { taskSet, grandchild } = yield* seedTree();
 
-        const subtree = yield* Task.collectSubtree(root);
-
-        expect(subtree.map((task) => task.id)).toContain(stray.id);
+        expect((yield* TaskSet.findTaskSet(grandchild))?.id).toBe(taskSet.id);
       }).pipe(Effect.provide(testLayer())),
     );
 
@@ -156,13 +194,26 @@ describe('TaskSet', () => {
       }).pipe(Effect.provide(testLayer())),
     );
 
-    it.effect('removeTasksFromSet sweeps the array the cascade cannot reach', () =>
+    it.effect("a sub-task dropped from its parent's list is re-listed there, not in the set", () =>
       Effect.gen(function* () {
-        const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
+        const { taskSet, child } = yield* seedTree();
+        const dropped = yield* Database.add(Task.make({ [Obj.Parent]: child, title: 'dropped', status: 'todo' }));
+        yield* Database.flush();
 
-        TaskSet.removeTasksFromSet(taskSet, new Set([root.id, child.id, grandchild.id]));
+        expect(TaskSet.ensureMember(taskSet, dropped)).toBe(true);
 
-        expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toEqual([sibling.id]);
+        expect(titles(child.subtasks ?? [])).toEqual(['grandchild', 'dropped']);
+        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling']);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('a re-parent under its own subtree is refused', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, grandchild } = yield* seedTree();
+
+        const error = yield* TaskSet.resolveParentTask(taskSet, root, Ref.make(grandchild)).pipe(Effect.flip);
+
+        expect(error).toBeInstanceOf(TaskSet.InvalidParentTaskError);
       }).pipe(Effect.provide(testLayer())),
     );
   });
@@ -180,23 +231,15 @@ const seedTasks = (titles: readonly string[]) =>
     return tasks;
   });
 
+/** `root` → `child` → `grandchild`, beside a second root `sibling`. */
 const seedTree = () =>
   Effect.gen(function* () {
+    const { db } = yield* Database.Service;
     const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
-    const root = yield* Database.add(Task.make({ title: 'root', status: 'todo' }));
-    const child = yield* Database.add(Task.make({ title: 'child', status: 'todo' }));
-    const grandchild = yield* Database.add(Task.make({ title: 'grandchild', status: 'todo' }));
-    const sibling = yield* Database.add(Task.make({ title: 'sibling', status: 'todo' }));
-    TaskSet.addTaskToSet(taskSet, root);
-    TaskSet.addTaskToSet(taskSet, child);
-    TaskSet.addTaskToSet(taskSet, grandchild);
-    TaskSet.addTaskToSet(taskSet, sibling);
-    Obj.update(child, (child) => {
-      child.parentTask = Ref.make(root);
-    });
-    Obj.update(grandchild, (grandchild) => {
-      grandchild.parentTask = Ref.make(child);
-    });
+    const root = TaskSet.addTask(db, taskSet, 'root');
+    const child = TaskSet.addTask(db, taskSet, 'child', {}, { parent: root });
+    const grandchild = TaskSet.addTask(db, taskSet, 'grandchild', {}, { parent: child });
+    const sibling = TaskSet.addTask(db, taskSet, 'sibling');
     yield* Database.flush();
     return { taskSet, root, child, grandchild, sibling };
   });
@@ -260,6 +303,30 @@ describe('TaskSet concurrent membership', () => {
       TaskSet.moveTask(taskSet, first, {}),
     );
     expect([...ids].sort()).toEqual([first.id, second.id, pushed.id].sort());
+  });
+
+  test('a sub-task reorder keeps a sub-task a concurrent peer added', async () => {
+    const { db } = await builder.createDatabase({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+    const taskSet = db.add(TaskSet.make({ name: 'Sprint' }));
+    const parent = TaskSet.addTask(db, taskSet, 'parent');
+    const first = TaskSet.addTask(db, taskSet, 'first', {}, { parent });
+    const second = TaskSet.addTask(db, taskSet, 'second', {}, { parent });
+    await db.flush();
+
+    await createBranch(parent, 'peer');
+    await switchBranch(parent, 'peer');
+    const pushed = TaskSet.addTask(db, taskSet, 'pushed', {}, { parent });
+    await db.flush();
+    await switchBranch(parent, 'main');
+
+    TaskSet.moveTask(taskSet, first, {});
+    await db.flush();
+    await mergeBranch(parent, 'peer');
+    await db.flush();
+
+    const ids = (parent.subtasks ?? []).map((ref) => Task.refEntityId(ref));
+    expect([...ids].sort()).toEqual([first.id, second.id, pushed.id].sort());
+    expect(ids.indexOf(second.id)).toBeLessThan(ids.indexOf(first.id));
   });
 
   test('two peers re-listing the same dropped task converge on one entry', async () => {

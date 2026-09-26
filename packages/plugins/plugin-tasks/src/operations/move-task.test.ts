@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -40,22 +40,23 @@ describe('move-task', () => {
       const { task: dropped } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'dropped' });
       // The state a whole-array write merged against a concurrent push leaves: the parent edge
       // survives, the array entry does not.
-      TaskSet.removeTasksFromSet(taskSet, new Set([dropped.id]));
+      Obj.update(taskSet, (taskSet) => TaskSet.removeRefsInPlace(taskSet.tasks, new Set([dropped.id])));
 
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(listed), parentTask: Ref.make(dropped) });
 
       expect(Task.parentTaskId(listed)).toBe(dropped.id);
       expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toContain(dropped.id);
 
-      // Creating under it heals the same way.
+      // Creating under it heals the same way, one level down: `listed` goes back into `dropped`'s list.
       const { task: child } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'child',
         parentTask: Ref.make(listed),
       });
-      TaskSet.removeTasksFromSet(taskSet, new Set([listed.id]));
+      Obj.update(dropped, (dropped) => TaskSet.removeRefsInPlace(dropped.subtasks ?? [], new Set([listed.id])));
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'grandchild', parentTask: Ref.make(listed) });
-      expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toContain(listed.id);
+      expect(dropped.subtasks?.map((ref) => Task.refEntityId(ref))).toContain(listed.id);
+      expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).not.toContain(listed.id);
       expect(Task.parentTaskId(child)).toBe(listed.id);
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
@@ -66,7 +67,7 @@ describe('move-task', () => {
       yield* Database.flush();
       const [first, second, third] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
 
-      // `c` becomes a child of `a`, positioned before `b` in the array.
+      // `c` becomes a child of `a`; `b` is not among `a`'s children, so the anchor is ignored.
       yield* moveTask.handler({
         taskSet: Ref.make(taskSet),
         task: Ref.make(third),
@@ -95,8 +96,8 @@ describe('move-task', () => {
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(child), parentTask: Ref.make(parent) });
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(grandchild), parentTask: Ref.make(child) });
 
-      // `a` (holding b -> c) becomes a child of `d`. Only `a`'s own entry and parent ref are written;
-      // the descendants' `parentTask` refs are untouched, which is what carries them along.
+      // `a` (holding b -> c) becomes a child of `d`. Only `a`'s own list entry and parent edge are
+      // written; its descendants stay listed under it, which is what carries them along.
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(parent), parentTask: Ref.make(other) });
 
       const tasks = TaskSet.resolveTasks(taskSet);
@@ -109,6 +110,23 @@ describe('move-task', () => {
       const [movedChild] = Task.subTasks(tasks, movedParent);
       expect(movedChild.title).toEqual('b');
       expect(titles(Task.subTasks(tasks, movedChild))).toEqual(['c']);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('reorders sub-tasks within their parent, leaving the parent edge alone', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [parent, first, second, third] = yield* seedTasks(taskSet, ['p', 'a', 'b', 'c']);
+      for (const child of [first, second, third]) {
+        yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(child), parentTask: Ref.make(parent) });
+      }
+
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) });
+
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['p', 'c', 'a', 'b']);
+      expect(Task.parentTaskId(third)).toBe(parent.id);
+      expect(titles(Task.rootTasks(TaskSet.resolveTasks(taskSet)))).toEqual(['p']);
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 

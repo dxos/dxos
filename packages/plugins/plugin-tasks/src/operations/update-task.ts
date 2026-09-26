@@ -74,9 +74,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         });
       }
 
-      // Set membership is untouched — the task never left; only its place in the tree moved.
+      // Appended to its new parent's sub-tasks (or the set's roots); the set it belongs to is unchanged.
       if (parentTask !== undefined) {
-        TaskSet.applyParentTask(taskSet, task, newParent);
+        TaskSet.moveTask(taskSet, task, { parentTask: newParent ?? null });
       }
 
       // After any re-parent, so the cascade reaches the tree the task now belongs to.

@@ -172,6 +172,8 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
   Obj.update(container, (container) => {
     container.tasks.push(Ref.make(task));
   });
+  // `tasks` claims only an unparented task, so a move between sets moves the edge itself.
+  Obj.setParent(task, container);
 });
 
 //

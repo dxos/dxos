@@ -169,7 +169,7 @@ describe('update-task', () => {
     ),
   );
 
-  it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
+  it.effect('clearing parentTask moves the lifecycle edge to the set', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
@@ -179,13 +179,14 @@ describe('update-task', () => {
         title: 'Child',
         parentTask: Ref.make(parent),
       });
-      expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+      expect(Obj.getParent(child)?.id).toBe(parent.id);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      // Membership is untouched by promotion: the edge points at the set before and after.
-      expect(child.parentTask).toBeUndefined();
+      // Promotion hands the task to the set, so deleting the old parent no longer takes it along.
+      expect(Task.getParentTask(child)).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+      expect(parent.subtasks ?? []).toHaveLength(0);
     }).pipe(
       Effect.provide(
         Layer.provideMerge(
@@ -199,16 +200,14 @@ describe('update-task', () => {
   it.effect('clears the lifecycle edge for a task belonging to no set', () =>
     Effect.gen(function* () {
       // A task outside a task set has no parent to fall back to, so the edge must be cleared outright.
-      const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
-      const child = yield* Database.add(Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'todo' }));
-      Obj.update(child, (child) => {
-        child.parentTask = Ref.make(parent);
-      });
+      const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
+      const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo', subtasks: [Ref.make(child)] }));
       yield* Database.flush();
+      expect(Task.parentTaskId(child)).toBe(parent.id);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      expect(child.parentTask).toBeUndefined();
+      expect(parent.subtasks ?? []).toHaveLength(0);
       expect(Obj.getParent(child)).toBeUndefined();
     }).pipe(
       Effect.provide(
@@ -256,7 +255,7 @@ describe('update-task', () => {
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      expect(child.parentTask).toBeUndefined();
+      expect(Task.getParentTask(child)).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
     }).pipe(

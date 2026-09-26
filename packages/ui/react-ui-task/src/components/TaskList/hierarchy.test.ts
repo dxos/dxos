@@ -105,16 +105,16 @@ describe('keyboard placements', () => {
 });
 
 /**
- * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. Array order is
- * sibling order only, so the fixture deliberately does NOT store a pre-order traversal — `b` sits
- * between `a`'s children, which is exactly the divergence the walk has to absorb.
+ * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. The flat list is
+ * deliberately NOT a pre-order traversal — `b` sits between `a`'s children — so the walk has to
+ * take placement from the parent edges and sibling order from `subtasks`.
  */
 const fixture = () => {
-  const a = Task.make({ title: 'a', status: 'todo' });
-  const a1 = Task.make({ title: 'a1', status: 'todo', parentTask: Ref.make(a) });
+  const a1x = Task.make({ title: 'a1x', status: 'todo' });
+  const a1 = Task.make({ title: 'a1', status: 'todo', subtasks: [Ref.make(a1x)] });
+  const a2 = Task.make({ title: 'a2', status: 'todo' });
+  const a = Task.make({ title: 'a', status: 'todo', subtasks: [Ref.make(a1), Ref.make(a2)] });
   const b = Task.make({ title: 'b', status: 'todo' });
-  const a2 = Task.make({ title: 'a2', status: 'todo', parentTask: Ref.make(a) });
-  const a1x = Task.make({ title: 'a1x', status: 'todo', parentTask: Ref.make(a1) });
   return { a, a1, a1x, a2, b, tasks: [a, a1, b, a2, a1x] };
 };
 

@@ -56,8 +56,8 @@ describe('project skill operations', () => {
   it.effect('artifact-add records a pull request made for a sub-task on the root of its tree', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Voyage' }));
-      const root = yield* Database.add(Task.make({ title: 'Root' }));
-      const child = yield* Database.add(Task.make({ title: 'Child', parentTask: Ref.make(root) }));
+      const child = yield* Database.add(Task.make({ title: 'Child' }));
+      const root = yield* Database.add(Task.make({ title: 'Root', subtasks: [Ref.make(child)] }));
       const pullRequest = yield* Database.add(
         PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'Root', state: 'open' }),
       );
@@ -79,8 +79,8 @@ describe('project skill operations', () => {
   it.effect('artifact-add leaves the project unchanged when the task tree already has another open PR', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Voyage' }));
-      const root = yield* Database.add(Task.make({ title: 'Root' }));
-      const child = yield* Database.add(Task.make({ title: 'Child', parentTask: Ref.make(root) }));
+      const child = yield* Database.add(Task.make({ title: 'Child' }));
+      const root = yield* Database.add(Task.make({ title: 'Root', subtasks: [Ref.make(child)] }));
       const first = yield* Database.add(
         PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'First', state: 'open' }),
       );

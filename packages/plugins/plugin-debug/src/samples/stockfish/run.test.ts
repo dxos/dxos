@@ -148,7 +148,7 @@ const instantiateTemplate = Effect.fnUntraced(function* () {
 /** The one task with no parent: the plan's root. */
 const rootTask = Effect.gen(function* () {
   const tasks = yield* Database.query(Query.type(Task.Task)).run;
-  const roots = tasks.filter((task) => task.parentTask === undefined);
+  const roots = tasks.filter((task) => Task.getParentTask(task) === undefined);
   invariant(roots.length === 1, `Expected one root task, got ${roots.length}.`);
   return roots[0];
 });
@@ -184,7 +184,7 @@ describe('Chess MCP template, run live', { tags: ['manual'] }, () => {
         // And nothing below it: the plan's stages are ordered, and a run that starts stage one in
         // the same turn it reads the list has skipped the reader's two settings steps.
         const started = (yield* Database.query(Query.type(Task.Task)).run).filter(
-          (task) => task.parentTask !== undefined && task.status !== 'todo',
+          (task) => Task.getParentTask(task) !== undefined && task.status !== 'todo',
         );
         expect(started).toEqual([]);
       },

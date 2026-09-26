@@ -47,11 +47,10 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 };
 
 /**
- * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
- * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
- * deliberately not rendered yet (see TASKS.md). CRUD flows through the
- * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
- * are what keep the array, the refs and `parentTask` consistent.
+ * Every task in a set, rendered as the tree its `tasks` and each task's `subtasks` describe, and
+ * restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is deliberately not
+ * rendered yet (see TASKS.md). CRUD flows through the {@link TaskOperation} verbs so the article and
+ * external agents share one write path: the verbs are what keep the lists and parent edges consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -274,19 +273,18 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
 };
 
 /**
- * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
- * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves.
+ * The set's whole tree via transitive `childOf` — every task's ECHO parent is its holder, the set or a
+ * parent task — in tree pre-order: roots in `tasks` order, each followed by its `subtasks`. The query
+ * re-emits on membership changes only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   const atom = useMemo(() => {
     const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
     return Atom.make((get): readonly Task.Task[] => {
       const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
-      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
-      // and orders by the set's canonical array.
-      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      // Subscribes each list that orders the tree; a move always rewrites one of them.
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'subtasks')));
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
 

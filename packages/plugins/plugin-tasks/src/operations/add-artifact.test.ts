@@ -92,6 +92,28 @@ describe('add-artifact', () => {
     }).pipe(Effect.provide(prLayer)),
   );
 
+  it.effect('refuses a pull request when a sub-task already holds a different open one', () =>
+    Effect.gen(function* () {
+      const { root, child } = yield* makeTree();
+      const legacy = yield* makePullRequest(1);
+      const second = yield* makePullRequest(2);
+      yield* Database.flush();
+      // Recorded on the sub-task itself, as PRs were before they were routed to the root.
+      Task.addArtifact(child, legacy);
+
+      const error = yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(second) }).pipe(Effect.flip);
+
+      expect(error).toBeInstanceOf(Task.PullRequestConflictError);
+      expect(error.message).toContain('"Root"');
+      expect(error.message).toContain('https://github.com/dxos/dxos/pull/1');
+      expect(root.artifacts ?? []).toHaveLength(0);
+
+      // The sub-task's own PR is not a conflict with itself.
+      yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(legacy) });
+      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([legacy.id]);
+    }).pipe(Effect.provide(prLayer)),
+  );
+
   it.effect('accepts a new pull request once the earlier one is closed', () =>
     Effect.gen(function* () {
       const { root, child } = yield* makeTree();

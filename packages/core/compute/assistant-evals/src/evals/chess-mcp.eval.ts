@@ -234,13 +234,13 @@ const checklist = Scorer.shared(
       delegated,
       readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
       later: tasks.filter((candidate) => {
-        const parentTask = candidate?.parentTask;
+        const parentTask = candidate ? Task.getParentTask(candidate) : undefined;
         return (
           parentTask !== undefined &&
           candidate?.assignee?.role !== 'assistant' &&
           candidate?.assignee?.role !== 'user' &&
           !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
-          !delegated.some((stage) => stage && Task.refEntityId(parentTask) === stage.id)
+          !delegated.some((stage) => stage && parentTask.id === stage.id)
         );
       }),
     };
