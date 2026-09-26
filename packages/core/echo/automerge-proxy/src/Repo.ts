@@ -173,7 +173,21 @@ export class TabRepo<
   /** A new document, readable and writable at once; its first change creates it on the host. */
   create(initialValue?: unknown): H {
     this.#requireOpen();
-    const handle = this.#newHandle({ initialValue });
+    return this.#requestCreation(this.#newHandle({ initialValue }));
+  }
+
+  /**
+   * A new document holding another document's history, as `repo.import` makes one from a saved
+   * document; readable and writable at once, and created on the host from exactly those changes.
+   * @param changes Change chunks in causal order, as `A.getAllChanges` returns them.
+   */
+  import(changes: readonly Uint8Array[]): H {
+    this.#requireOpen();
+    return this.#requestCreation(this.#newHandle({ initialChanges: changes }));
+  }
+
+  /** Asks the host to create the handle's document from the changes the tab wrote or imported. */
+  #requestCreation(handle: H): H {
     const request = () => {
       const creation: Promise<void> = this.#host
         .createDocument(handle._creationChanges())
@@ -318,7 +332,7 @@ export class TabRepo<
     }
   }
 
-  #newHandle(options: { documentId?: Id; initialValue?: unknown }): H {
+  #newHandle(options: { documentId?: Id; initialValue?: unknown; initialChanges?: readonly Uint8Array[] }): H {
     const handle: H = this.#createHandle({
       ...options,
       onDelete: () => {

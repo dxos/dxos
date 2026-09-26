@@ -108,6 +108,40 @@ describe('tab documents over the host', () => {
     expect(withoutMeta(opened.doc())).toBe(withoutMeta(handle.doc()));
   });
 
+  test("a tab imports another document's history, which the host holds whole, and merges back into it", async () => {
+    const harness = await setup();
+    // A history from two actors, as a fork of a shared document carries it.
+    let source = A.from<Shape>(initial(), { actor: 'aaaa0000aaaa0000aaaa0000aaaa0000' });
+    let peer = A.clone(source, { actor: 'bbbb0000bbbb0000bbbb0000bbbb0000' });
+    peer = A.change(peer, (doc) => {
+      doc.title = 'from a peer';
+    });
+    source = A.merge(source, peer);
+    const repo = await harness.tab();
+    const original = repo.import(A.getAllChanges(source));
+    expect(original.doc().title).toBe('from a peer');
+    const fork = repo.import(A.getAllChanges(source));
+    fork.change((doc: Shape) => {
+      doc.items.push({ name: 'on the fork' });
+    });
+    await repo.flushCreations();
+    await repo.flush();
+    const [originalId, forkId] = [original.documentId, fork.documentId];
+    expect(originalId).toBeDefined();
+    expect(forkId).toBeDefined();
+    if (!originalId || !forkId) {
+      return;
+    }
+    expect(A.getHeads(harness.store.get<Shape>(originalId))).toEqual(A.getHeads(source));
+
+    // Merging the fork back relays the changes the original lacks, which the host checks like any other.
+    Automerge.merge(original.doc(), fork.doc());
+    await repo.flush();
+    const merged = A.toJS(harness.store.get<Shape>(originalId));
+    expect(merged.items).toEqual([{ name: 'on the fork' }]);
+    expect(A.getHeads(harness.store.get<Shape>(originalId))).toEqual(original.heads);
+  });
+
   test("a peer's change that reaches the host's store reaches every follower", async () => {
     const harness = await setup();
     harness.store.put('doc', A.from<Shape>(initial()));

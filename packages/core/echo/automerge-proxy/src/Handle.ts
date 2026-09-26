@@ -47,6 +47,8 @@ export type Options<T, Id extends string> = {
   documentId?: Id;
   /** Content of a document this tab is creating: its first change, written at once. */
   initialValue?: T;
+  /** Changes of a document this tab is creating from another's history, as `repo.import` brings them. */
+  initialChanges?: readonly Uint8Array[];
   onDelete?: () => void;
   /** The error {@link DocHandle.whenReady} rejects with when the host cannot produce the document. */
   unavailableError?: (documentId: string) => Error;
@@ -87,7 +89,7 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
   /** The next answer to a follow is the first this handle has, so it is a bulk delivery. */
   #loaded = false;
 
-  constructor({ documentId, initialValue, onDelete, unavailableError }: Options<T, Id>) {
+  constructor({ documentId, initialValue, initialChanges, onDelete, unavailableError }: Options<T, Id>) {
     super();
     this.#documentId = documentId;
     this.#onDelete = onDelete;
@@ -97,7 +99,11 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
       this.#outgoing.set(change.hash, bytes);
       this.outgoing.emit();
     };
-    if (this.#created) {
+    if (this.#created && initialChanges) {
+      // Relayed like changes `A.merge` brings, so the creation carries the whole history.
+      this.#tab = TabDoc.fromChanges<T>([], { send });
+      this.#tab.applyChanges(initialChanges.map(changeOf));
+    } else if (this.#created) {
       const root = initialValue ?? {};
       invariant(typeof root === 'object' && root !== null && !Array.isArray(root), 'A document is a map at its root');
       this.#tab = TabDoc.create<T>(root, { send });

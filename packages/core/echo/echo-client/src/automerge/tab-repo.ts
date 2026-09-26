@@ -13,6 +13,7 @@ import * as Handle from '@dxos/automerge-proxy/Handle';
 import * as Repo from '@dxos/automerge-proxy/Repo';
 import * as Wire from '@dxos/automerge-proxy/Wire';
 import { Resource, type Context as ResourceContext } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
@@ -48,8 +49,17 @@ export class TabDocHandle<T> extends Handle.DocHandle<T, DocumentId> implements 
     return this.whenStored();
   }
 
-  update(): void {
-    throw new Error('A tab document has no Automerge document to replace');
+  /**
+   * A tab document changes in place: `fn` gets it and returns it, as `A.merge` and `A.applyChanges`
+   * do, and the tab relays whatever changes it gained. A different document cannot replace it.
+   */
+  update(fn: (doc: A.Doc<T>) => A.Doc<T>): void {
+    const doc = this.doc();
+    const result = fn(doc);
+    invariant(
+      Handle.tagOf(result)?.tab === Handle.tagOf(doc)?.tab,
+      'update() must return the tab document it was given',
+    );
   }
 }
 
@@ -121,8 +131,10 @@ export class TabClientRepo extends Resource implements ClientRepo {
     return this.#repo.create(initialValue);
   }
 
-  import<T>(): ClientDocHandle<T> {
-    throw new Error('Importing a binary document into a tab document repo is not supported');
+  /** A new document holding a saved document's history, which the worker creates from exactly those changes. */
+  import<T>(dump: Uint8Array): ClientDocHandle<T> {
+    this.#requireOpen();
+    return this.#repo.import(A.getAllChanges(A.load(dump)));
   }
 
   release(documentId: DocumentId): boolean {

@@ -257,7 +257,7 @@ time it sends, so it resolves the positions itself, and a copy needs nothing it 
 
 ## As built
 
-Phases 1 to 6 have landed, phase 5's removals together with phases 2 and 3. The code departs from
+Phases 1 to 7 have landed, phase 5's removals together with phases 2 and 3. The code departs from
 the plan above in these places:
 
 1. **Phases 2, 3 and 5 are one commit.** The new `Contract` replaced the mirror's events and
@@ -311,13 +311,19 @@ the plan above in these places:
     hosts echo or keeps replicas. `documentModeFromConfig` from `@dxos/client` decides the mode as
     the client does. Replica boots measured the same before and after the move: medians of 2,111
     and 2,087 ms from a fresh profile, 3,452 and 3,490 ms on reload, three runs each.
+16. **Branches and imports run in the tab, not as worker calls.** A tab document holds every change,
+    so `repo.import` sends a saved document's history as the new document's changes
+    (`TabRepo.import`), which the worker checks as it checks any creation. `A.merge` into a tab
+    document applies the other document's changes in place and relays the ones the worker lacks, so
+    `mergeBranch` and `syncBranch` work unchanged through `update`. Nothing waits on a worker call. A
+    tab without Automerge reads a save only when it is change chunks, which is what the namespace's
+    `save` writes; a compressed save from Automerge itself needs the reader to inflate columns (risk
+    1).
 
-echo-client's suite passes in replica mode, 631 tests. In proxy mode 23 tests fail, and phase 7
-covers all of them: 20 branching and branch-binding tests, a branch-binding identity test, and two
-migration tests that call `repo.import`. automerge-proxy passes 98 tests and `@dxos/client` 47 under
-CI's filter. Over the real adapter, `tab-repo.test.ts` covers writes across tabs, final heads,
-concurrent text, anchors, history and update time, and `Repo.test.ts` covers restarts at the package
-level.
+echo-client's suite passes in both modes, 631 tests each. automerge-proxy passes 99 tests and
+`@dxos/client` 47 under CI's filter. Over the real adapter, `tab-repo.test.ts` covers writes across
+tabs, final heads, concurrent text, anchors, history and update time, and `Repo.test.ts` covers
+restarts at the package level.
 
 Composer in proxy mode fetches no Automerge module and instantiates no Automerge wasm, and edits
 persist across a reload in both modes. The page still instantiates one wasm module, sodium, which

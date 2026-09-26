@@ -117,7 +117,8 @@ host never gets a change before its dependencies.
 
 Sends go at most ten times a second, the first after a pause at once, and `pagehide` sends at once.
 A new document is created from the tab's first change: the host stores exactly those bytes, so the
-document's heads are the tab's from the start.
+document's heads are the tab's from the start. `TabRepo.import` creates one from another document's
+whole history the same way, which is how ECHO forks a branch.
 
 ## The host
 
