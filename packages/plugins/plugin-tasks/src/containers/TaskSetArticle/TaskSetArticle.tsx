@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -99,11 +99,48 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     spaceId,
   });
 
+  // A row opens its task through the shared reading gesture: the companion beside the list where the
+  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
+  // the host's node — the project's inside its Tasks tab.
+  const currentId = useSelection(attendableId, 'single');
+  const openDetail = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: detail === 'companion' ? 'task' : undefined,
+  });
+  const handleOpen = useCallback(
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
+    [openDetail],
+  );
+
+  // Named "New task" and opened at once, so the reader titles it where they read it: the list's own
+  // create pane has no notion of a parent, and a sub-task created there would land at the root.
+  const { invokePromise } = useOperationInvoker();
+  const handleAddSubTask = useCallback(
+    async (parent: Task.Task) => {
+      const { data } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), title: t('new-sub-task.title'), parentTask: Ref.make(parent) },
+        { spaceId },
+      );
+      if (data) {
+        openDetail(data.task.id);
+      }
+    },
+    [invokePromise, taskSet, spaceId, t, openDetail],
+  );
+
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
+        label: t('add-sub-task.label'),
+        icon: 'ph--plus--regular',
+        testId: 'tasks.task.addSubTask',
+      }),
       ...contributed(task),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
@@ -111,7 +148,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         testId: 'tasks.task.delete',
       }),
     ],
-    [contributed, handleDelete, t],
+    [contributed, handleAddSubTask, handleDelete, t],
   );
 
   // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
@@ -132,21 +169,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       Effect.runSync(move(task, placement));
     },
     [move],
-  );
-
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
-  const currentId = useSelection(attendableId, 'single');
-  const openDetail = useDetailNavigation({
-    contextId: attendableId,
-    getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
-  });
-  const handleOpen = useCallback(
-    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
-    [openDetail],
   );
 
   useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });

@@ -406,6 +406,56 @@ export const Behavior: Story = {
   },
 };
 
+/**
+ * A row's menu adds a sub-task under it: the new task is filed into the set with the row as its
+ * parent, so it appears one level down beneath the row it was added from.
+ */
+export const AddSubTask: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    const { taskSet } = context;
+    const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+
+    const row = canvas.getByText('Design label').closest<HTMLElement>('[data-testid="taskList.item"]')!;
+    await userEvent.click(row.querySelector<HTMLElement>('[data-testid="taskList.item.actions"]')!);
+    const item = await waitFor(
+      () => {
+        const found = document.querySelector<HTMLElement>('[data-testid="tasks.task.addSubTask"]');
+        if (!found) {
+          throw new Error('Add sub-task item not found.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await userEvent.click(item);
+
+    const child = await waitFor(
+      () => {
+        const found = TaskSet.resolveTasks(taskSet).find((task) => task.parentTask?.target?.id === parent.id);
+        if (!found) {
+          throw new Error('Sub-task not created.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(
+      () =>
+        expect(
+          canvasElement.querySelector(`[data-object-id="${child.id}"]`)?.closest('[role="treeitem"]'),
+        ).toHaveAttribute('aria-level', '2'),
+      { timeout: 10_000 },
+    );
+  },
+};
+
 /** Frames enough for React to flush a subscription, far short of an index round trip. */
 const flushRender = (): Promise<void> =>
   new Promise((resolve) => {
