@@ -105,12 +105,12 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return <MediaPlayer src={src} alt={alt} classNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
-    <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>
+    <ol className='ps-6 leading-tight list-decimal' {...props}>
       {children}
     </ol>
   ),
   ul: ({ children, ...props }) => (
-    <ul className='pt-1 pb-1 ps-6 leading-tight list-disc' {...props}>
+    <ul className='ps-6 leading-tight list-disc' {...props}>
       {children}
     </ul>
   ),

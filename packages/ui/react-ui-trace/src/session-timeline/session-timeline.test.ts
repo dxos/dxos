@@ -628,6 +628,79 @@ describe('buildSessionTimeline', () => {
       expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
     }, Effect.provide(TestTraceService.layer)),
   );
+  it.effect(
+    'pairs a sub-agent with the node its result returned into',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Compute', status: 'done' });
+      const chat = makeChat('Return', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' });
+          yield* TestTraceService.withMeta(
+            { pid: 'sub', parentPid: 'agent' },
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' });
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' });
+            }),
+          );
+          yield* Trace.write(Trace.DelegationCompleted, {
+            taskId: task.id,
+            pid: 'sub',
+            status: 'success',
+            result: '3628800',
+          });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, sessions: [chat.session], tasks: [task] });
+      const session = timeline.lanes.find((lane) => lane.id === `session:${chat.id}`);
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+
+      // Both edges land on the supervisor's lane, on different nodes: handing the work over and
+      // hearing back are separate moments, and the chart draws them as separate connectors.
+      const [spawn, returned] = timeline.markers.filter((marker) => marker.kind === 'delegation');
+      expect(returned?.laneId).toBe(session?.id);
+      expect(returned?.label).toBe('Returned: 3628800');
+      expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
+      expect(subSession?.returnedTo).toEqual({ laneId: session?.id, markerId: returned?.id });
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'leaves a sub-agent that never reported back with no return edge',
+    Effect.fnUntraced(function* ({ expect }) {
+      // Deliberately not inferred from the supervisor's next node: a child can end without ever
+      // answering, and guessing would draw a causal edge that does not exist.
+      const task = Task.make({ title: 'Compute', status: 'done' });
+      const chat = makeChat('No return', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' });
+          yield* TestTraceService.withMeta(
+            { pid: 'sub', parentPid: 'agent' },
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' });
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' });
+            }),
+          );
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, sessions: [chat.session], tasks: [task] });
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+      expect(subSession?.delegatedFrom).toBeDefined();
+      expect(subSession?.returnedTo).toBeUndefined();
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
   test('bounds task lanes and threads their nodes from the edit history alone', ({ expect }) => {
     const first = Task.make({ title: 'First', status: 'done' });
     const second = Task.make({ title: 'Second', status: 'started' });
