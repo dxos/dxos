@@ -12,7 +12,7 @@ The terminal leaves a blank line after a command's output, and selected text is 
 
 The task list's filter button is filled and accented whenever anything narrows the list — a typed query as well as hidden statuses — so a filtered list is recognisable at a glance.
 
-In the task list a task's chips — its tags, artifacts and assignee — sit on a line of their own under the title and above the description, instead of sharing the title line.
+In the task list a task's tags and artifacts sit on a line of their own under the title and above the description, instead of sharing the title line; the assignee stays right-aligned on the title line. `TaskTags` takes `assignee={false}` for a host that places the assignee itself.
 
 A task row's menu offers **Add sub-task**, which files a new task named "New task" under that row and opens it so it can be titled.
 

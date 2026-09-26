@@ -1048,8 +1048,9 @@ export const WithArtifacts: Story = {
 };
 
 /**
- * Tags render as chips in the same cell as the task's artifacts and assignee — a line of their own
- * under the title, starting where the title cell does and above the description.
+ * Tags render as chips with the task's artifacts — a line of their own under the title, starting
+ * where the title cell does and above the description — while the assignee stays on the title line,
+ * right-aligned before the trailing controls.
  */
 export const WithTags: Story = {
   render: ArtifactsStory,
@@ -1079,6 +1080,25 @@ export const WithTags: Story = {
       }
     }
     await expect(tagged.some((row) => row.querySelector('[data-testid="taskList.item.description"]'))).toBe(true);
+
+    const assigned = rows.filter((row) => row.querySelector('[data-testid="taskList.item.assignee"]'));
+    await expect(assigned.length).toBeGreaterThan(0);
+    for (const row of assigned) {
+      const assignee = row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!;
+      await expect(
+        row.querySelector('[data-testid="taskList.item.chips"] [data-testid="taskList.item.assignee"]'),
+      ).toBeNull();
+      const title = titleCell(row).getBoundingClientRect();
+      const box = assignee.getBoundingClientRect();
+      const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+      // On the title's line, after it, and flush against the trailing controls.
+      await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
+      await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
+      const priority = row
+        .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
+        .getBoundingClientRect();
+      await expect(priority.left - box.right).toBeLessThan(40);
+    }
 
     // A row with nothing to show as a chip holds no empty line for them.
     const untagged = rows.find(

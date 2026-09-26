@@ -318,6 +318,8 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
+    // Capped so a long session name truncates rather than squeezing the title to nothing.
+    ['assignee', 'fit-content(40%)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -456,15 +458,19 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's grid. The chips take a line of their own under the title and
-          above the description: on the title line they competed with it for width, and a long
-          artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps a
-          row with no chips from holding an empty line. */}
+      {/* Direct children of the row's grid. The tags and artifacts take a line of their own under the
+          title and above the description: on the title line they competed with it for width, and a
+          long artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps
+          a row with no chips from holding an empty line. The assignee stays on the title line, where
+          "who has it" is read with the title. */}
       <div
         data-testid='taskList.item.chips'
         className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
       >
-        <TaskTags task={task} />
+        <TaskTags task={task} assignee={false} />
+      </div>
+      <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
+        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
       {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
           `buildGridTemplate` declares a track only when its option is on, and the matching cell is
@@ -581,7 +587,14 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * same set in both is the point: a reader who learned the row's chips reads the pane's without
  * learning anything new.
  */
-export const TaskTags = ({ task }: { task: Task.Task }) => {
+export const TaskTags = ({
+  task,
+  assignee = true,
+}: {
+  task: Task.Task;
+  /** Off where the host places the assignee itself — the list row keeps it on the title line. */
+  assignee?: boolean;
+}) => {
   // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
   // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
   const [snapshot] = useObject(task);
@@ -590,7 +603,7 @@ export const TaskTags = ({ task }: { task: Task.Task }) => {
     <>
       <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
       <TaskListItemArtifacts task={task} />
-      {current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+      {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
     </>
   );
 };

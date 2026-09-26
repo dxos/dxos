@@ -38,7 +38,8 @@ export type TaskListContextValue = {
   showGutter: boolean;
   /**
    * The row's column template, built once from the options so the tree's rows and the edit pane
-   * lay out on the same named tracks (`gutter`, `status`, `title`, `estimate`, `priority`, `actions`).
+   * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,
+   * `actions`).
    */
   gridTemplateColumns: string;
   selected?: string;
