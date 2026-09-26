@@ -203,6 +203,9 @@ const manyLaneMarkers: GanttMarker[] = [
  * One band whose lanes branch off one another. `parentId` indents a lane under the one it belongs to
  * and `openedFrom` draws the node it came out of — two facts about the same pair of lanes, which is
  * exactly the distinction the model exists to keep.
+ *
+ * Each branch begins exactly at the node that opened it, because a lane cannot start before its own
+ * cause; the connector has nowhere sensible to go when it does.
  */
 const branchingGroups: GanttGroup[] = [{ id: 'g' }];
 const branchingLanes: GanttLane[] = [
@@ -213,7 +216,7 @@ const branchingLanes: GanttLane[] = [
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 2.4 * MINUTE, end: T0 + 5 * MINUTE }],
+    segments: [{ start: T0 + 2.5 * MINUTE, end: T0 + 5 * MINUTE }],
     openedFrom: { laneId: 'root', markerId: 'root:1' },
   },
   {
@@ -222,7 +225,7 @@ const branchingLanes: GanttLane[] = [
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 5.2 * MINUTE, end: T0 + 8 * MINUTE }],
+    segments: [{ start: T0 + 5 * MINUTE, end: T0 + 8 * MINUTE }],
     openedFrom: { laneId: 'root', markerId: 'root:2' },
   },
   {
@@ -231,15 +234,15 @@ const branchingLanes: GanttLane[] = [
     status: 'running',
     groupId: 'g',
     parentId: 'second',
-    segments: [{ start: T0 + 6.6 * MINUTE }],
+    segments: [{ start: T0 + 6.5 * MINUTE }],
     openedFrom: { laneId: 'second', markerId: 'second:1' },
   },
 ];
 const branchingMarkers: GanttMarker[] = [
   ...events('root', 5, T0, T0 + 10 * MINUTE),
-  ...events('first', 3, T0 + 2.4 * MINUTE, T0 + 5 * MINUTE),
-  ...events('second', 3, T0 + 5.2 * MINUTE, T0 + 8 * MINUTE),
-  ...events('sub', 3, T0 + 6.6 * MINUTE, T0 + 9.5 * MINUTE),
+  ...events('first', 3, T0 + 2.5 * MINUTE, T0 + 5 * MINUTE),
+  ...events('second', 3, T0 + 5 * MINUTE, T0 + 8 * MINUTE),
+  ...events('sub', 3, T0 + 6.5 * MINUTE, T0 + 9.5 * MINUTE),
 ];
 
 /**
@@ -561,6 +564,7 @@ export const OneLane: Story = {
     groups: oneLaneGroups,
     lanes: oneLaneLanes,
     markers: oneLaneMarkers,
+    axis: 'event',
     range: undefined,
     now: undefined,
   },
@@ -572,6 +576,7 @@ export const ManyLanes: Story = {
     groups: manyLaneGroups,
     lanes: manyLaneLanes,
     markers: manyLaneMarkers,
+    axis: 'event',
     range: undefined,
     now: undefined,
   },
@@ -583,6 +588,7 @@ export const Branching: Story = {
     groups: branchingGroups,
     lanes: branchingLanes,
     markers: branchingMarkers,
+    axis: 'event',
     range: undefined,
     now: undefined,
   },
@@ -594,6 +600,7 @@ export const ManyGroups: Story = {
     groups: manyGroupGroups,
     lanes: manyGroupLanes,
     markers: manyGroupMarkers,
+    axis: 'event',
     range: undefined,
     now: undefined,
   },

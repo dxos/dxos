@@ -639,10 +639,20 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
             }
             const sourceX = x(source.timestamp);
             const y = rowY(index);
+            const targetX = stretches[0].from;
+            // Down, a quarter bend, then right to where the lane begins — but only while there is
+            // somewhere forward to go. A lane that begins at or before the node that opened it has no
+            // run to make, and bending anyway would hook the connector sideways into the middle of its
+            // own bar; the drop lands on the row instead. The bar stays where the data puts it either
+            // way: a connector doubling back over itself reads as a line to somewhere else entirely.
+            const path =
+              targetX > sourceX + BEND_RADIUS
+                ? `M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`
+                : `M ${sourceX} ${rowY(sourceRow.index)} V ${y}`;
             return [
               <path
                 key={`opened:${lane.id}`}
-                d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${stretches[0].from}`}
+                d={path}
                 fill='none'
                 // Drawn on by its dash rather than by its shape: `d` is beyond what a transition can
                 // reach, while `stroke-dashoffset` is a property every renderer animates. `pathLength`
