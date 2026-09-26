@@ -15,7 +15,7 @@ import * as Struct from 'effect/Struct';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
   AiContext,
   Alarm,
@@ -222,12 +222,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
         const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
-        const requestModelLayer = AiService.languageModel(
-          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
-          {
-            provider: options.provider,
-          },
-        );
+        const requestModelLayer = AiService.languageModel(DXN.getName(model ?? Model.claudeSonnet5.id), {
+          provider: options.provider,
+        });
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 

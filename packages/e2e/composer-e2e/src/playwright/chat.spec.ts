@@ -20,6 +20,12 @@ if (process.env.DX_PWA !== 'false') {
  * checks that the chat is wired to the AI service at all — not agent behaviour — so it must never
  * grow a prompt that invites tool use or a long response.
  */
+/**
+ * The cheapest chat model. The default model re-sends the whole agent prompt to a frontier model on
+ * every run, which made this one-word round trip the largest AI cost on production EDGE.
+ */
+const MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+
 const PROMPT = 'What color is the sky on a clear day? Reply with exactly one word and nothing else.';
 const PROMPT_EXCERPT = 'What color is the sky';
 const REPLY = /blue/i;
@@ -53,6 +59,7 @@ test.describe('Chat', () => {
     const assistant = new Assistant(Assistant.plank(host.page));
     await expect(assistant.prompt).toBeVisible();
 
+    await assistant.selectModel(MODEL);
     await assistant.send(PROMPT);
 
     // Polled over one derived state rather than asserted step by step: a request that never reaches
