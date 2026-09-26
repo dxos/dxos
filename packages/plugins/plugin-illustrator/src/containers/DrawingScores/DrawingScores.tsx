@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useObject } from '@dxos/echo-react';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -60,48 +60,50 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
             {!result ? (
               <p className='p-3 text-description'>{t('scores.empty.label')}</p>
             ) : (
-              <div className='flex flex-col gap-3 p-3 text-sm' data-testid='illustrator.scores'>
-                <div className='flex items-baseline gap-2'>
-                  <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>
-                    {overall === undefined ? '—' : percent(overall)}
-                  </span>
-                  <span className='text-description'>overall</span>
-                </div>
-                {history.length > 1 && (
-                  <ol className='flex flex-wrap items-center gap-1 text-xs tabular-nums' aria-label='versions'>
-                    {history.map((score, index) => (
-                      <li key={index} className='flex items-center gap-1'>
-                        {index > 0 && <span className='text-description'>→</span>}
-                        <span className={mx('rounded px-1 text-white', tone(score))}>{percent(score)}</span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-                <ul className='flex flex-col gap-2'>
-                  {result.scores.map(({ id, kind, score, detail }) => (
-                    <li key={id} className='flex flex-col gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <span className='rounded border border-separator px-1 text-xs text-description'>{kind}</span>
-                        <span className='grow truncate'>{id}</span>
-                        <span className='tabular-nums'>{percent(score)}</span>
-                      </div>
-                      <div className='h-1.5 rounded bg-separator'>
-                        <div className={mx('h-full rounded', tone(score))} style={{ width: `${score * 100}%` }} />
-                      </div>
-                      {detail && <span className='text-xs text-description'>{detail}</span>}
-                    </li>
-                  ))}
-                </ul>
-                {result.diagnostics.length > 0 && (
-                  <ul className='flex flex-col gap-1 text-xs text-description'>
-                    {result.diagnostics.slice(0, 12).map(({ code, message }, index) => (
-                      <li key={index}>
-                        <span className='font-medium'>{code}</span> {message}
+              <Flex column gap='md' asChild classNames='p-3 text-sm'>
+                <div data-testid='illustrator.scores'>
+                  <Flex align='baseline' gap='sm'>
+                    <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>
+                      {overall === undefined ? '—' : percent(overall)}
+                    </span>
+                    <span className='text-description'>overall</span>
+                  </Flex>
+                  {history.length > 1 && (
+                    <ol className='flex flex-wrap items-center gap-1 text-xs tabular-nums' aria-label='versions'>
+                      {history.map((score, index) => (
+                        <li key={index} className='flex items-center gap-1'>
+                          {index > 0 && <span className='text-description'>→</span>}
+                          <span className={mx('rounded px-1 text-white', tone(score))}>{percent(score)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <ul className='flex flex-col gap-2'>
+                    {result.scores.map(({ id, kind, score, detail }) => (
+                      <li key={id} className='flex flex-col gap-1'>
+                        <Flex align='center' gap='sm'>
+                          <span className='rounded border border-separator px-1 text-xs text-description'>{kind}</span>
+                          <span className='grow truncate'>{id}</span>
+                          <span className='tabular-nums'>{percent(score)}</span>
+                        </Flex>
+                        <div className='h-1.5 rounded bg-separator'>
+                          <div className={mx('h-full rounded', tone(score))} style={{ width: `${score * 100}%` }} />
+                        </div>
+                        {detail && <span className='text-xs text-description'>{detail}</span>}
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
+                  {result.diagnostics.length > 0 && (
+                    <ul className='flex flex-col gap-1 text-xs text-description'>
+                      {result.diagnostics.slice(0, 12).map(({ code, message }, index) => (
+                        <li key={index}>
+                          <span className='font-medium'>{code}</span> {message}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Flex>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>

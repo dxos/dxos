@@ -74,6 +74,8 @@ export const runShell = <Name extends string, Input, ContextInput, E, R>(
         continue;
       }
 
+      const writtenBefore = bridge.written;
+
       // Failures are reported rather than propagated so the shell survives to the next prompt.
       // CLI errors are skipped because the parser has already rendered them.
       yield* run(tokens).pipe(
@@ -92,6 +94,12 @@ export const runShell = <Name extends string, Input, ContextInput, E, R>(
           return Console.error(Cause.pretty(cause));
         }),
       );
+
+      // A blank line after a response sets it apart from the next prompt; a command that printed
+      // nothing gets none, or every silent command would leave a gap.
+      if (bridge.written > writtenBefore) {
+        bridge.write(bridge.atLineStart ? '\n' : '\n\n');
+      }
     }
 
     bridge.write('\n');

@@ -84,7 +84,6 @@ export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
     <Card.Body data-testid='question-card'>
       <Card.Row>
         <TaskQuestion
-          classNames='w-full'
           thread={thread}
           busy={busy}
           message={failed ? t('question-failed.message') : stranded ? t('question-stranded.message') : undefined}

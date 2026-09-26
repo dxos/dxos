@@ -44,7 +44,7 @@ type OpfsWorkerMessage =
  * @category models
  * @since 1.0.0
  */
-export interface OpfsWorkerConfig {
+export interface Config {
   readonly port: EventTarget & Pick<MessagePort, 'postMessage' | 'close'>;
   readonly dbName: string;
   readonly journalMode?: SqliteJournalMode;
@@ -65,7 +65,7 @@ export interface OpfsWorkerConfig {
  * @category constructor
  * @since 1.0.0
  */
-export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.SqlError> =>
+export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
   Effect.gen(function* () {
     const factory = yield* Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory));
     const sqlite3 = WaSqlite.Factory(factory);

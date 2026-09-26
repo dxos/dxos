@@ -21,6 +21,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useSubmitOnEnter } from '@dxos/react-ui-form';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -275,20 +276,27 @@ export const ObjectFormDialog = ({
 
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
-    void Effect.gen(function* () {
-      // The object is already persisted; this only hands it to its parent.
-      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
-      yield* navigateTo(object);
-    }).pipe(
-      Effect.provideService(Capability.Service, manager.capabilities),
-      Effect.provideService(Operation.Service, operationInvoker),
-      EffectEx.runAndForwardErrors,
+    // Detached: the dialog has already unmounted, so a teardown interrupting the hand-off is not an error.
+    EffectEx.runDetached(
+      Effect.gen(function* () {
+        // The object is already persisted; this only hands it to its parent.
+        yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
+        yield* navigateTo(object);
+      }).pipe(
+        Effect.provideService(Capability.Service, manager.capabilities),
+        Effect.provideService(Operation.Service, operationInvoker),
+      ),
     );
   }, [object, target, parent, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(bodyRef, handleConfirm, { disabled: !object });
 
   //
   // Draft mode.
   //
+
+  const handleCancel = useCallback(() => closeRef.current?.click(), []);
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
@@ -341,7 +349,7 @@ export const ObjectFormDialog = ({
           <Dialog.ActionIconButton action='close' ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body>
+      <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
           options={options}
           spaces={spaces}
@@ -354,6 +362,7 @@ export const ObjectFormDialog = ({
           initialFormValues={defaults}
           resolve={resolve}
           onCreateObject={handleCreateObject}
+          onCancel={handleCancel}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />

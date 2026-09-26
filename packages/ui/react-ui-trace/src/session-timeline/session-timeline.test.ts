@@ -10,12 +10,14 @@ import { describe, test } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EID, EntityId, URI } from '@dxos/keys';
-import { Task } from '@dxos/types';
+import { Milestone, Task } from '@dxos/types';
+import { getHashHue } from '@dxos/ui-theme';
 
 import subAgentFixture from '../execution-graph/testing/sub-agent-delegation.json';
-import { buildSessionTimeline } from './session-timeline.ts';
+import { buildSessionTimeline, readTaskStatusChanges } from './session-timeline.ts';
 import { type Session } from './types.ts';
 
 /** The plain-JSON shape the fixture was captured in, before being replayed as real trace messages. */
@@ -627,6 +629,288 @@ describe('buildSessionTimeline', () => {
       expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
     }, Effect.provide(TestTraceService.layer)),
   );
+  it.effect(
+    'pairs a sub-agent with the node its result returned into',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Compute', status: 'done' });
+      const chat = makeChat('Return', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' });
+          yield* TestTraceService.withMeta(
+            { pid: 'sub', parentPid: 'agent' },
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' });
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' });
+            }),
+          );
+          yield* Trace.write(Trace.DelegationCompleted, {
+            taskId: task.id,
+            pid: 'sub',
+            status: 'success',
+            result: '3628800',
+          });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, sessions: [chat.session], tasks: [task] });
+      const session = timeline.lanes.find((lane) => lane.id === `session:${chat.id}`);
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+
+      // Both edges land on the supervisor's lane, on different nodes: handing the work over and
+      // hearing back are separate moments, and the chart draws them as separate connectors.
+      const [spawn, returned] = timeline.markers.filter((marker) => marker.kind === 'delegation');
+      expect(returned?.laneId).toBe(session?.id);
+      expect(returned?.label).toBe('Returned: 3628800');
+      expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
+      expect(subSession?.returnedTo).toEqual({ laneId: session?.id, markerId: returned?.id });
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'leaves a sub-agent that never reported back with no return edge',
+    Effect.fnUntraced(function* ({ expect }) {
+      // Deliberately not inferred from the supervisor's next node: a child can end without ever
+      // answering, and guessing would draw a causal edge that does not exist.
+      const task = Task.make({ title: 'Compute', status: 'done' });
+      const chat = makeChat('No return', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' });
+          yield* TestTraceService.withMeta(
+            { pid: 'sub', parentPid: 'agent' },
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' });
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' });
+            }),
+          );
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, sessions: [chat.session], tasks: [task] });
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+      expect(subSession?.delegatedFrom).toBeDefined();
+      expect(subSession?.returnedTo).toBeUndefined();
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  test('bounds task lanes and threads their nodes from the edit history alone', ({ expect }) => {
+    const first = Task.make({ title: 'First', status: 'done' });
+    const second = Task.make({ title: 'Second', status: 'started' });
+    Task.ask(first, { text: 'Which schema?', date: at(1_500) });
+    const chat = makeChat('History', [first, second]);
+
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [first, second],
+      taskStatusChanges: new Map([
+        [
+          first.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [second.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+      ]),
+    });
+
+    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+    expect(firstLane).toMatchObject({ status: 'done', start: 1_000, end: 2_000 });
+    expect(secondLane).toMatchObject({ status: 'running', start: 3_000, end: undefined });
+    expect(
+      timeline.markers
+        .filter((marker) => marker.laneId === firstLane?.id)
+        .toSorted((a, b) => a.timestamp - b.timestamp)
+        .map(({ label, timestamp, level }) => ({ label, timestamp, level })),
+    ).toEqual([
+      { label: 'Task started', timestamp: 1_000, level: undefined },
+      { label: 'Which schema?', timestamp: 1_500, level: 'warn' },
+      { label: 'Task done', timestamp: 2_000, level: undefined },
+    ]);
+    expect(timeline.range).toEqual({ start: 1_000, end: 3_000 });
+  });
+
+  it.effect(
+    'draws a status move once when both the trace and the edit history record it',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Both', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+        taskStatusChanges: new Map([[first.id, [{ timestamp: 2, status: 'started', previousStatus: 'todo' }]]]),
+      });
+
+      const markers = timeline.markers.filter((marker) => marker.kind === 'task');
+      // The trace event is drawn through the history, which takes its pid.
+      expect(markers.map(({ laneId, label, pid }) => ({ laneId, label, pid }))).toEqual([
+        { laneId: `task:${first.id}`, label: 'Task started', pid: 'agent' },
+      ]);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  test('closes a finished task whose history is missing its closing move', ({ expect }) => {
+    const first = Task.make({ title: 'First', status: 'done' });
+    const second = Task.make({ title: 'Second', status: 'todo' });
+    const chat = makeChat('Unrecorded', [first, second]);
+
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [first, second],
+      taskStatusChanges: new Map([[first.id, [{ timestamp: 1_000, status: 'started', previousStatus: 'todo' }]]]),
+    });
+
+    expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 1_000, end: 1_000 });
+  });
+
+  it.effect(
+    'draws a recorded status move the trace recorded off the chart',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Elsewhere', [first, second]);
+      // A process belonging to no session on this chart moved the task.
+      yield* TestTraceService.withMeta(
+        { pid: 'stranger' },
+        Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }), // 1.
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+        taskStatusChanges: new Map([[first.id, [{ timestamp: 1, status: 'started', previousStatus: 'todo' }]]]),
+      });
+
+      expect(
+        timeline.markers
+          .filter((marker) => marker.laneId === `task:${first.id}`)
+          .map(({ label, pid }) => ({ label, pid })),
+      ).toEqual([{ label: 'Task started', pid: undefined }]);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  test('draws a task no session works as a lane of its own, from its edit history', ({ expect }) => {
+    const done = Task.make({ title: 'Done elsewhere', status: 'done' });
+    const running = Task.make({ title: 'Running elsewhere', status: 'started', dependsOn: [Ref.make(done)] });
+    const untouched = Task.make({ title: 'Never started', status: 'todo' });
+
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [done, running, untouched],
+      taskStatusChanges: new Map([
+        [
+          done.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [running.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+      ]),
+    });
+
+    expect(timeline.lanes).toEqual([
+      {
+        id: `task:${done.id}`,
+        kind: 'task',
+        label: 'Done elsewhere',
+        status: 'done',
+        start: 1_000,
+        end: 2_000,
+        taskId: done.id,
+        hue: getHashHue(Obj.getMnemonic(done)),
+      },
+      {
+        id: `task:${running.id}`,
+        kind: 'task',
+        label: 'Running elsewhere',
+        status: 'running',
+        start: 3_000,
+        end: undefined,
+        taskId: running.id,
+        hue: getHashHue(Obj.getMnemonic(running)),
+        blockedOn: [`task:${done.id}`],
+      },
+    ]);
+    expect(timeline.markers.filter((marker) => marker.laneId === `task:${done.id}`).map(({ label }) => label)).toEqual([
+      'Task started',
+      'Task done',
+    ]);
+  });
+
+  test('reads no status moves for a task outside a database, which keeps no history', ({ expect }) => {
+    expect(readTaskStatusChanges(Task.make({ title: 'Loose', status: 'done' }))).toEqual([]);
+  });
+});
+
+describe('readTaskStatusChanges', () => {
+  it.effect(
+    "reads the status moves a stored task's edit history records, and the chart bounds its lane by them",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const first = yield* Database.add(Task.make({ title: 'First', status: 'todo' }));
+        const second = yield* Database.add(Task.make({ title: 'Second', status: 'todo' }));
+        yield* Database.flush();
+        Task.setStatus(first, 'started');
+        // An edit to another field is no status move.
+        Task.update(first, { priority: 'high' });
+        Task.setStatus(first, 'done');
+        yield* Database.flush();
+
+        const changes = readTaskStatusChanges(first);
+        expect(changes.map(({ status, previousStatus }) => ({ status, previousStatus }))).toEqual([
+          { status: 'todo', previousStatus: undefined },
+          { status: 'started', previousStatus: 'todo' },
+          { status: 'done', previousStatus: 'started' },
+        ]);
+        expect(readTaskStatusChanges(second).map(({ status }) => status)).toEqual(['todo']);
+
+        const chat = makeChat('Stored', [first, second]);
+        const timeline = buildSessionTimeline({
+          traceMessages: [],
+          sessions: [chat.session],
+          tasks: [first, second],
+          taskStatusChanges: new Map([
+            [first.id, changes],
+            [second.id, readTaskStatusChanges(second)],
+          ]),
+        });
+        expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({
+          status: 'done',
+          start: changes[1]?.timestamp,
+          end: changes[2]?.timestamp,
+        });
+        expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)?.start).toBeUndefined();
+      },
+      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] })),
+    ),
+  );
 });
 
 const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
@@ -666,6 +950,9 @@ const makeChat = (name: string, tasks: readonly Task.Task[]): TestChat => {
     },
   };
 };
+
+/** An ISO date `ms` after the epoch, for history entries set against the trace's clock. */
+const at = (ms: number): string => new Date(ms).toISOString();
 
 const toolCall = (name: string) =>
   Trace.write(Trace.CompleteBlock, {

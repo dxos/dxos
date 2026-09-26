@@ -11,7 +11,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, sleep } from '@dxos/async';
+import { Event, Trigger, waitForCondition } from '@dxos/async';
 import { Database, Entity, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -410,9 +410,17 @@ describe('Feed', () => {
       db._setFeedService(await makeFeedClient(closedHandlers));
 
       const feed = db.add(Feed.make({ name: 'closed' }));
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri, 'Expected the feed to have a URI once added to the database.');
+      const handle = db._getFeedHandleIfAvailable(feedUri);
+      invariant(handle, 'Expected a feed handle.');
+
       db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
 
-      await sleep(2_500);
+      // A closed endpoint abandons the append (and any retry) synchronously in the same failure
+      // that records `error` — wait for that state rather than a fixed delay, since callCount can
+      // never advance past it once set.
+      await waitForCondition({ condition: () => handle.error !== null, timeout: 2_500 });
       expect(callCount).toBe(1);
 
       // The handle can never send again, so a later append must say so rather than resolve over a

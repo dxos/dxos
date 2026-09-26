@@ -19,6 +19,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { resolveApps } from './apps.mjs';
+import { retainAssets } from './upload-assets.mjs';
 
 const [environment, only = 'all'] = process.argv.slice(2);
 if (!environment) {
@@ -38,7 +39,14 @@ if (apps.length === 0) {
   process.exit(1);
 }
 
-for (const { name, outDir, wranglerConfig } of apps) {
+for (const app of apps) {
+  const { name, outDir, wranglerConfig } = app;
+
+  // Retain this build's assets BEFORE the deploy that makes its predecessor's unreachable. Ordered so an
+  // upload failure stops the deploy: incomplete retention only shows up one deploy later. Missing R2
+  // credentials skip retention with a warning instead (see `retainAssets`).
+  await retainAssets(root, app, environment);
+
   console.log(`::group::Deploy ${name} -> ${environment}`);
 
   // A `_worker.js` in the asset dir is the Worker script (Pages advanced-mode carryover), not an asset —

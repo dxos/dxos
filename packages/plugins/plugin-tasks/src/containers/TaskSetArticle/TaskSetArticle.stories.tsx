@@ -4,16 +4,17 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Blob, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -22,9 +23,10 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Milestone, Person, Task, TaskSet } from '@dxos/types';
+import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
@@ -134,6 +136,19 @@ const DefaultStory = () => {
   );
 };
 
+/** The article under a key the play function can bump, so it unmounts and mounts afresh. */
+const RemountStory = () => {
+  const [mount, setMount] = useState(0);
+  return (
+    <div className='flex flex-col dx-expand'>
+      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+        Remount
+      </Button>
+      <DefaultStory key={mount} />
+    </div>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-tasks/containers/TaskSetArticle',
   render: DefaultStory,
@@ -146,7 +161,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person],
+          types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person, File.File, Blob.Blob],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -161,6 +176,8 @@ const meta = {
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
+        // Handles `FileOperation.Create`, which is what makes the create pane take dropped files.
+        FilePlugin.make(),
         // Contributes the editor extensions the description field takes (`#123` decoration and
         // link chips) and the resolver behind a chip's hover card; PreviewPlugin owns the popover
         // and the storybook layout renders it. Both activate on start events fired here at setup;
@@ -252,6 +269,8 @@ export const StatusFilter: Story = {
     const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
     const item = (status: string) =>
       document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
+    // The trigger reads as inactive until something narrows the list.
+    await expect(trigger()).toHaveAttribute('data-filtered', 'false');
     await userEvent.click(trigger()!);
     await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
 
@@ -261,6 +280,7 @@ export const StatusFilter: Story = {
 
     await userEvent.click(item('done')!);
     await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(trigger()).toHaveAttribute('data-filtered', 'true'), { timeout: 10_000 });
 
     // Still open, so the second status is one click away.
     await expect(item('cancelled')).toBeTruthy();
@@ -281,12 +301,7 @@ export const StatusFilter: Story = {
     }
     const { space, taskSet } = context;
     const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Source green coffee')!;
-    const subTask = space.db.add(
-      Task.make({ title: 'Cup the samples', status: 'started', parentTask: Ref.make(parent) }),
-    );
-    Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks.push(Ref.make(subTask));
-    });
+    TaskSet.addTask(space.db, taskSet, 'Cup the samples', { status: 'started' }, { parent });
     await expect(canvas.findByText('Cup the samples', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     await userEvent.click(item('done')!);
@@ -303,6 +318,7 @@ export const StatusFilter: Story = {
     await userEvent.click(clear);
     await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(trigger()).toHaveAttribute('data-filtered', 'false'), { timeout: 10_000 });
   },
 };
 
@@ -387,9 +403,7 @@ export const Behavior: Story = {
 
     const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
     const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
-    Obj.update(cuppings, (cuppings) => {
-      cuppings.parentTask = Ref.make(label);
-    });
+    TaskSet.moveTask(taskSet, cuppings, { parentTask: label });
     await flushRender();
     // `treeitem`, not `option`: the list renders through `Tree` now, and `aria-level` sits on the
     // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).
@@ -399,6 +413,240 @@ export const Behavior: Story = {
     // edge) — deleting it does.
     TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
+  },
+};
+
+/**
+ * A row's menu adds a sub-task under it: the new task is filed into the set with the row as its
+ * parent and no title yet — the reader names it in the detail it opens — and a collapsed parent is
+ * expanded so the new row is in view.
+ */
+export const AddSubTask: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    const { taskSet } = context;
+    const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    const parentRow = () => canvas.getByText('Design label').closest<HTMLElement>('[data-testid="taskList.item"]')!;
+    const children = () => TaskSet.resolveTasks(taskSet).filter((task) => Task.parentTaskId(task) === parent.id);
+    const visible = (id: string) => {
+      const row = canvasElement.querySelector<HTMLElement>(`[data-object-id="${id}"]`);
+      return !!row && !row.closest('[hidden]');
+    };
+
+    const addSubTask = async () => {
+      await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="taskList.item.actions"]')!);
+      const item = await waitFor(
+        () => {
+          const found = document.querySelector<HTMLElement>('[data-testid="tasks.task.addSubTask"]');
+          if (!found) {
+            throw new Error('Add sub-task item not found.');
+          }
+          return found;
+        },
+        { timeout: 10_000 },
+      );
+      await userEvent.click(item);
+    };
+
+    await addSubTask();
+    const first = await waitFor(
+      () => {
+        const [found] = children();
+        if (!found) {
+          throw new Error('Sub-task not created.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await expect(first.title).toEqual('');
+    await waitFor(
+      () =>
+        expect(
+          canvasElement.querySelector(`[data-object-id="${first.id}"]`)?.closest('[role="treeitem"]'),
+        ).toHaveAttribute('aria-level', '2'),
+      { timeout: 10_000 },
+    );
+
+    // Collapse the parent, then add another: the branch opens so both children are in view.
+    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!);
+    await waitFor(() => expect(visible(first.id)).toBe(false), { timeout: 10_000 });
+    await addSubTask();
+    await waitFor(() => expect(children()).toHaveLength(2), { timeout: 10_000 });
+    await waitFor(
+      async () => {
+        for (const child of children()) {
+          await expect(visible(child.id)).toBe(true);
+        }
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * A file dropped on the create pane is held until the task is created, then stored and attached to
+ * the new task.
+ */
+export const CreateWithAttachment: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new globalThis.File(['Grind size 18.'], 'notes.txt', { type: 'text/plain' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+    }
+    await waitFor(() => expect(pane.querySelectorAll('[data-testid="taskList.edit.file"]')).toHaveLength(1), {
+      timeout: 10_000,
+    });
+
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.keyboard('Dial in the grinder{Enter}');
+
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    await waitFor(
+      async () => {
+        const created = TaskSet.resolveTasks(context.taskSet).find((task) => task.title === 'Dial in the grinder');
+        await expect(created?.attachments?.[0]?.target?.name).toEqual('notes.txt');
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(pane.querySelectorAll('[data-testid="taskList.edit.file"]')).toHaveLength(0), {
+      timeout: 10_000,
+    });
+
+    // A file the store refuses (HTML is not an accepted type) is not lost: it stays on the pane.
+    const refused = new DataTransfer();
+    refused.items.add(new globalThis.File(['<p>hi</p>'], 'page.html', { type: 'text/html' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: refused }));
+    }
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.keyboard('Publish the page{Enter}');
+    await waitFor(
+      async () =>
+        await expect(TaskSet.resolveTasks(context.taskSet).some((task) => task.title === 'Publish the page')).toBe(
+          true,
+        ),
+      { timeout: 10_000 },
+    );
+    await waitFor(
+      async () =>
+        await expect(
+          [...pane.querySelectorAll('[data-testid="taskList.edit.file.name"]')].map((chip) => chip.textContent),
+        ).toEqual(['page.html']),
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * The filter is kept per device and per set: a hidden status and a typed query both survive the
+ * article unmounting and mounting again, as they do navigating away and back.
+ */
+export const FilterPersists: Story = {
+  render: RemountStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
+    const editor = () => canvasElement.querySelector<HTMLElement>('.cm-content');
+
+    await userEvent.click(trigger()!);
+    const done = await waitFor(
+      () => {
+        const found = document.querySelector<HTMLElement>('[data-testid="tasks.filter.status.done"]');
+        if (!found) {
+          throw new Error('Status menu not open.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await userEvent.click(done);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+
+    await userEvent.click(editor()!);
+    await userEvent.keyboard('roast');
+    await waitFor(() => expect(canvas.queryByText('Draft launch email')).toBeNull(), { timeout: 10_000 });
+
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(editor()?.textContent?.trim()).toEqual('roast'), { timeout: 10_000 });
+    await expect(canvas.queryByText('Draft launch email')).toBeNull();
+    await expect(canvas.queryByText('Source green coffee')).toBeNull();
+    await expect(trigger()).toHaveAttribute('data-filtered', 'true');
+
+    // Clearing is persisted too, so the next mount opens unfiltered.
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.clear"]')!);
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * Which branches are open is kept per device and per set: a collapsed branch stays collapsed, and an
+ * open one open, across the article unmounting and mounting again.
+ */
+export const CollapsePersists: Story = {
+  render: RemountStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    const { space, taskSet } = context;
+    const addChild = (parentTitle: string, title: string) => {
+      const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === parentTitle)!;
+      // A sub-task is held by its parent: parented to it and listed in its `subtasks`.
+      const child = space.db.add(Task.make({ [Obj.Parent]: parent, title, status: 'todo' }));
+      TaskSet.addTaskToSet(taskSet, child, { parent });
+    };
+    addChild('Design label', 'Pick the typeface');
+    addChild('Source green coffee', 'Order the samples');
+
+    const visible = (title: string) => {
+      const row = canvas.queryByText(title)?.closest<HTMLElement>('[data-testid="taskList.item"]');
+      return !!row && !row.closest('[hidden]');
+    };
+    const toggle = (title: string) =>
+      canvas
+        .getByText(title)
+        .closest<HTMLElement>('[data-testid="taskList.item"]')!
+        .querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
+    await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
+
+    await userEvent.click(toggle('Design label'));
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(false), { timeout: 10_000 });
+
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
+    await expect(visible('Pick the typeface')).toBe(false);
+
+    // Reopening is remembered too.
+    await userEvent.click(toggle('Design label'));
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
   },
 };
 

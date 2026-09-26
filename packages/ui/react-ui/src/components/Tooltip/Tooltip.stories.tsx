@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
+import { Grid } from '../../layout/index.ts';
 import { withTheme } from '../../testing/index.ts';
 import { Button } from '../Button/index.ts';
 import { Tooltip, type TooltipSide } from './Tooltip.tsx';
@@ -23,7 +24,7 @@ const DefaultStory = ({ tooltips, side, defaultOpen }: StoryArgs) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
       {/* Centered here, since the test runner ignores `layout` and a corner trigger flips the tooltip. */}
-      <div className='grid place-items-center w-screen h-screen'>
+      <Grid center grow={false} classNames='w-screen h-screen'>
         <div className='w-32'>
           {tooltips.map(({ label, content }, i) => (
             <Tooltip.Trigger asChild key={i} content={content} side={side}>
@@ -31,7 +32,7 @@ const DefaultStory = ({ tooltips, side, defaultOpen }: StoryArgs) => {
             </Tooltip.Trigger>
           ))}
         </div>
-      </div>
+      </Grid>
     </Tooltip.Provider>
   );
 };

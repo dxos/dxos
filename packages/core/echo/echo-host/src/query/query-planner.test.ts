@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Annotation, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -859,6 +860,23 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  test('type AND has-parent AND negated annotation keeps the type-indexed select', () => {
+    const Archived = Annotation.make({ id: 'org.dxos.annotation.test-archived', schema: Schema.Boolean });
+    const query = Query.select(
+      Filter.and(
+        Filter.type(TestSchema.Person),
+        Filter.hasParent(false),
+        Filter.not(Filter.annotation(Archived, true)),
+      ),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const select = plan.steps.find((step) => step._tag === 'SelectStep');
+    expect(select?._tag === 'SelectStep' && select.selector._tag).toEqual('TypeSelector');
+    const filters = plan.steps.flatMap((step) => (step._tag === 'FilterStep' ? [step.filter.type] : []));
+    expect(filters).toEqual(expect.arrayContaining(['has-parent', 'not']));
   });
 
   test('full-text search AND type pushes the typename into the selector', () => {

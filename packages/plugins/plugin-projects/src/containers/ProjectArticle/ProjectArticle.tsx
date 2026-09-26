@@ -23,7 +23,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -294,11 +294,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && (
-            <Flex justify='center' classNames='p-4 text-subdued'>
-              {t('no-task-set.message')}
-            </Flex>
-          )}
+          {tab === 'tasks' && !taskSet && <Banner.Empty label={t('no-task-set.message')} />}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
           {tab === 'tasks' && taskSet && (
@@ -375,8 +371,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   const ids = useSelection(taskSet?.id, 'multi');
   const { clear } = useSelectionActions(taskSet?.id);
 
-  // Same query the article's own list runs: membership is the ECHO parent edge, and the canonical
-  // array carries sibling order, which the forest walk turns into the order rows appear in.
+  // Same query the article's own list runs: membership is the ECHO parent edge, and the `tasks` and
+  // `subtasks` lists carry sibling order, which the tree walk turns into the order rows appear in.
   const atom = useMemo(() => {
     const query = taskSet
       ? Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)))
@@ -388,13 +384,13 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
-        get(Obj.atomProperty(task, 'parentTask'));
+        get(Obj.atomProperty(task, 'subtasks'));
         // The delegate action arms on whether the agent already holds a checked row, and delegation
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
       });
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
   const tasks = useAtomValue(atom);
