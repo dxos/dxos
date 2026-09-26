@@ -25,6 +25,15 @@
       "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
+    "#local-backend": {
+      "source": {
+        "node": "./src/local/index.ts",
+        "default": "./src/local/unsupported.ts"
+      },
+      "types": "./dist/types/src/local/index.d.ts",
+      "node": "./dist/lib/local-backend.node.mjs",
+      "default": "./dist/lib/local-backend.browser.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -73,6 +82,11 @@
       "source": "./src/types/SandboxOperation.ts",
       "types": "./dist/types/src/types/SandboxOperation.d.ts",
       "import": "./dist/lib/SandboxOperation.mjs"
+    },
+    "./SandboxService": {
+      "source": "./src/types/SandboxService.ts",
+      "types": "./dist/types/src/types/SandboxService.d.ts",
+      "import": "./dist/lib/SandboxService.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -86,6 +100,9 @@
       ],
       "SandboxOperation": [
         "dist/types/src/types/SandboxOperation.d.ts"
+      ],
+      "SandboxService": [
+        "dist/types/src/types/SandboxService.d.ts"
       ]
     }
   },
@@ -96,12 +113,14 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",

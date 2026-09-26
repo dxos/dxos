@@ -6,6 +6,22 @@ version: 0.1.0
 
 Sandbox plugin for DXOS Composer providing isolated shell environments.
 
+## Backends
+
+The operations run against `SandboxService.Service`, which the plugin contributes to the process
+runtime as an application-affinity `LayerSpec`. Sandboxes run on EDGE's sandbox-service by default. Under Node or Bun, `DX_SANDBOX_BACKEND=local`
+runs them on this machine instead, as processes confined by the OS sandbox (bubblewrap on Linux,
+Seatbelt on macOS) via `@carderne/sandbox-runtime`:
+
+- **Filesystem**: each sandbox is `$DX_SANDBOX_ROOT/<id>/` (default `~/.local/state/dxos/sandboxes`).
+  Commands write only its `workspace/` (their cwd and `$HOME`) and `tmp/`; the user's home directory
+  and other sandboxes are unreadable. `/workspace/…` paths in file operations map onto `workspace/`.
+- **Network**: only package registries and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Limits**: per-command CPU time, writable memory (Linux only) and file size, plus the wall-clock
+  `timeout`, which kills the command's whole process group.
+- **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
+  `WORKSPACE` and the operation's `env` are set.
+
 ## Extensions
 
 The following extension dialects are used in this document.

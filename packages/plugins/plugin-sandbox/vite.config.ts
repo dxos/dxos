@@ -15,6 +15,7 @@ export default defineConfig({
     Sandbox: 'src/types/Sandbox.ts',
     SandboxEvents: 'src/types/SandboxEvents.ts',
     SandboxOperation: 'src/types/SandboxOperation.ts',
+    SandboxService: 'src/types/SandboxService.ts',
     types: 'src/types/index.ts',
   },
   test: { node: true },
