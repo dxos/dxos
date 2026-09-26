@@ -22,7 +22,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 
 import * as AiRequest from './AiRequest.ts';
 
-const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
+const { text, toolCall, layer } = ScriptedLanguageModel;
 
 // Real handler, so a scripted tool call drives a genuine tool-call → result → continue cycle.
 const TestToolkit = Toolkit.make(
@@ -46,7 +46,7 @@ const toolkit = OpaqueToolkit.make(
 // `RunRequirements` types several services `run()` never yields on this path, hence the noops below.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
   Layer.mergeAll(
-    scriptedLanguageModelLayer(turns),
+    layer(turns),
     ToolExecutionService.layerEmpty,
     ToolResolverService.layerEmpty,
     TestDatabaseLayer(),

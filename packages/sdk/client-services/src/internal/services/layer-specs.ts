@@ -385,9 +385,15 @@ export const SigningContextProviderSpec = LayerSpec.make(
   () => SigningContextProviderLayer,
 );
 
+// The edge client is required only when configured, so the handler is built after it rather than
+// finding it absent; without it, edge-assisted admission is simply unavailable.
 export const InvitationsHandlerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
-    { affinity: 'application', requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
+    {
+      affinity: 'application',
+      requires: [SwarmNetworkManagerService, ...(options.edgeAvailable ? [EdgeHttpClientService] : [])],
+      provides: [InvitationsHandlerService],
+    },
     () => InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps }),
   );
 
@@ -453,11 +459,18 @@ export const InvitationFactoriesSpec = LayerSpec.make(
   () => InvitationFactoriesLayer,
 );
 
+// The edge client is required only when configured, so the manager is built after it rather than
+// finding it absent; without it, it stays dormant (see `EdgeAgentManager._open`).
 export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
-      requires: [Hook.Controller, SpacesContract.ManagerService, IdentityContract.ProviderService],
+      requires: [
+        Hook.Controller,
+        SpacesContract.ManagerService,
+        IdentityContract.ProviderService,
+        ...(options.edgeAvailable ? [EdgeHttpClientService] : []),
+      ],
       provides: [EdgeAgentManagerService],
     },
     () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),

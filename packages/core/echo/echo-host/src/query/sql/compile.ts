@@ -405,6 +405,15 @@ export class SqlPlanCompiler {
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
           WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
       }
+      case 'annotation': {
+        // Keys are matched with `json_each` rather than a JSON path, which cannot address every key
+        // (e.g. a legacy id containing `"`); a NULL column or absent key is a definite non-match, so
+        // `not` keeps entities that never carried the annotation.
+        const annotations = sql`json_each(COALESCE(m.annotations, '{}'))`;
+        return filter.value === undefined
+          ? sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key})`
+          : sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key} AND ${scalarEquals(sql, sql`a.value`, sql`a.type`, filter.value)})`;
+      }
       case 'text-search':
         // The executors behind an index resolve text search in the select; a residual node
         // matches nothing, as the in-memory matcher's `noTextSearch` does.

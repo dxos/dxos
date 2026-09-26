@@ -60,6 +60,8 @@ export type PluginConfig = State & {
   isStrict?: boolean;
   isPopover?: boolean;
   isMobile?: boolean;
+  /** Replaces the assistant's language models with the offline scripted model (`?model=scripted`). */
+  scriptedModel?: boolean;
 };
 
 /**

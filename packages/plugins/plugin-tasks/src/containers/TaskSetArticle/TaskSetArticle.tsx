@@ -3,15 +3,20 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder, parseEnumTerms, writeEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
+import { messageOf } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
@@ -24,7 +29,7 @@ import {
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
+import { type TaskCreateHandler, TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -32,6 +37,7 @@ import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
 import { ALL_STATUSES, STATUS_TERMS, filterTasks } from '../../util/index.ts';
+import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
@@ -44,11 +50,10 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 };
 
 /**
- * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
- * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
- * deliberately not rendered yet (see TASKS.md). CRUD flows through the
- * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
- * are what keep the array, the refs and `parentTask` consistent.
+ * Every task in a set, rendered as the tree its `tasks` and each task's `subtasks` describe, and
+ * restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is deliberately not
+ * rendered yet (see TASKS.md). CRUD flows through the {@link TaskOperation} verbs so the article and
+ * external agents share one write path: the verbs are what keep the lists and parent edges consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -82,10 +87,38 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const handleCreate = useOperation(
-    TaskOperation.CreateTask,
-    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
-    { spaceId },
+  const { invokePromise } = useOperationInvoker();
+  // Files dropped on the create pane attach once the task exists: the create answers with the new
+  // task's id, and the live object is in the working set by then, since this client wrote it.
+  const attachFile = useAttachFile();
+  // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
+  // pane keeps rather than dropping.
+  const handleCreate = useCallback<TaskCreateHandler>(
+    async (props, files = []) => {
+      const { data, error } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), ...props },
+        { spaceId },
+      );
+      if (error || !data) {
+        return { error: error ?? new Error('Task was not created.') };
+      }
+      if (files.length === 0) {
+        return;
+      }
+      const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (!task || !attachFile) {
+        return { rejectedFiles: files };
+      }
+      const rejectedFiles: globalThis.File[] = [];
+      for (const file of files) {
+        if (!(await attachFile(task, file))) {
+          rejectedFiles.push(file);
+        }
+      }
+      return { rejectedFiles };
+    },
+    [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
   const handleUpdate = useOperation(
@@ -94,22 +127,61 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     { spaceId },
   );
 
-  // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
-    TaskOperation.AnswerQuestion,
-    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
-    { spaceId },
-  );
-
   const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
+
+  // A row opens its task through the shared reading gesture: the companion beside the list where the
+  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
+  // the host's node — the project's inside its Tasks tab.
+  const currentId = useSelection(attendableId, 'single');
+  const openDetail = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: detail === 'companion' ? 'task' : undefined,
+  });
+  const handleOpen = useCallback(
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
+    [openDetail],
+  );
+
+  // Held here rather than left to the list, so adding a sub-task can open the branch it lands in, and
+  // persisted per device and per set so a collapsed branch stays collapsed across navigation.
+  const { collapsed, setCollapsed } = useTaskSetExpanded(taskSet.id);
+
+  // Created untitled and opened at once, so the reader names it in the detail, whose title field
+  // takes focus for an untitled task: the list's own create pane has no notion of a parent, and a
+  // sub-task created there would land at the root.
+  const handleAddSubTask = useCallback(
+    async (parent: Task.Task) => {
+      if (collapsed.has(parent.id)) {
+        const next = new Set(collapsed);
+        next.delete(parent.id);
+        setCollapsed(next);
+      }
+      const { data } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), title: '', parentTask: Ref.make(parent) },
+        { spaceId },
+      );
+      if (data) {
+        openDetail(data.task.id);
+      }
+    },
+    [collapsed, setCollapsed, invokePromise, taskSet, spaceId, openDetail],
+  );
 
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
+        label: t('add-sub-task.label'),
+        icon: 'ph--plus--regular',
+        testId: 'tasks.task.addSubTask',
+      }),
       ...contributed(task),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
@@ -117,7 +189,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         testId: 'tasks.task.delete',
       }),
     ],
-    [contributed, handleDelete, t],
+    [contributed, handleAddSubTask, handleDelete, t],
   );
 
   // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
@@ -135,24 +207,23 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   );
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
-      Effect.runSync(move(task, placement));
+      // A rejected drop (e.g. a parent outside this set) must not throw out of the gesture handler:
+      // nothing was written, so the list stays put and the reason is shown instead.
+      const exit = Effect.runSyncExit(move(task, placement));
+      if (Exit.isFailure(exit)) {
+        const error = Cause.squash(exit.cause);
+        log.warn('task move rejected', { task: task.id, error });
+        void invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/move-task-error`,
+          icon: 'ph--warning--regular',
+          duration: 5_000,
+          title: ['move-task-error.title', { ns: meta.profile.key }],
+          description: messageOf(error) ?? String(error),
+          closeLabel: ['close.label', { ns: meta.profile.key }],
+        });
+      }
     },
-    [move],
-  );
-
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
-  const currentId = useSelection(attendableId, 'single');
-  const openDetail = useDetailNavigation({
-    contextId: attendableId,
-    getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
-  });
-  const handleOpen = useCallback(
-    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
-    [openDetail],
+    [move, invokePromise],
   );
 
   useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });
@@ -177,6 +248,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     <TaskList.Root
       tasks={tasks}
       hierarchical
+      collapsed={collapsed}
+      onCollapsedChange={setCollapsed}
       selectable
       showDescription
       descriptionComponents={descriptionComponents}
@@ -189,7 +262,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskUpdate={handleUpdate}
       onTaskMove={handleMove}
       onTaskSelect={handleOpen}
-      onQuestionAnswer={handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -198,12 +270,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
       <div className='px-trim-md'>
-        <TaskList.Edit
+        <TaskList.Editor
           createOnly
           showDescription
+          // Only where a plugin can store the file, as the task's own article decides.
+          acceptFiles={!!attachFile}
           descriptionExtensions={descriptionExtensions}
           // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-          // and a fourth line would double it.
+          // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
+          // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
+          // existing `p-2`'s horizontal component and silently dropped.
           classNames='bg-input-surface border-x border-t border-separator rounded-t-md p-2'
           placeholder={t('task-create.placeholder')}
         />
@@ -239,6 +315,44 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
+ * Which branches are open, held in {@link TaskSetView.aspect} as task id → open. The list speaks in
+ * collapsed ids, so a change is written as the ids that entered (closed) or left (opened) the set,
+ * and every other entry is kept as it was.
+ */
+const useTaskSetExpanded = (contextId: string) => {
+  const { expanded } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  const collapsed = useMemo<ReadonlySet<string>>(
+    () =>
+      new Set(
+        Object.entries(expanded ?? {})
+          .filter(([, open]) => !open)
+          .map(([id]) => id),
+      ),
+    [expanded],
+  );
+  const setCollapsed = useCallback(
+    (next: ReadonlySet<string>) =>
+      update((view) => {
+        const map = { ...view.expanded };
+        for (const id of next) {
+          map[id] = false;
+        }
+        // Read from the stored map rather than the render's set, so two changes before a render compose.
+        for (const [id, open] of Object.entries(view.expanded ?? {})) {
+          if (!open && !next.has(id)) {
+            map[id] = true;
+          }
+        }
+        return { ...view, expanded: map };
+      }),
+    [update],
+  );
+
+  return { collapsed, setCollapsed };
+};
+
+/**
  * The set's filter query, held in {@link TaskSetView.aspect} and mirrored into the query editor.
  *
  * The editor takes its text once, as `initialValue`, so a write that did not come from typing — the
@@ -264,6 +378,14 @@ const useFilterQuery = (
       }),
     [manager, contextId, editorRef],
   );
+
+  // A status choice stored as its own field, before the query carried it, is written into the query
+  // once and the field dropped, so upgrading keeps what the reader had hidden.
+  useEffect(() => {
+    update(({ statuses, ...view }) =>
+      statuses === undefined ? view : { ...view, query: writeEnumTerms(view.query, STATUS_TERMS, statuses) },
+    );
+  }, [update]);
 
   // Unchanged text keeps the same value, so the editor echoing a pushed text back is not a write.
   const setQuery = useCallback(
@@ -296,19 +418,18 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
 };
 
 /**
- * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
- * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves.
+ * The set's whole tree via transitive `childOf` — every task's ECHO parent is its holder, the set or a
+ * parent task — in tree pre-order: roots in `tasks` order, each followed by its `subtasks`. The query
+ * re-emits on membership changes only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   const atom = useMemo(() => {
     const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
     return Atom.make((get): readonly Task.Task[] => {
       const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
-      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
-      // and orders by the set's canonical array.
-      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      // Subscribes each list that orders the tree; a move always rewrites one of them.
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'subtasks')));
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
 

@@ -3,7 +3,7 @@
 //
 
 import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
-import { Memory } from '@dxos/assistant-toolkit';
+import * as Memory from '@dxos/assistant-toolkit/Memory';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';

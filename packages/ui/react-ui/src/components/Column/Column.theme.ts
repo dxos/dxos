@@ -45,7 +45,14 @@ const root: ComponentFunction<ColumnStyleProps> = ({ gap }, ...etc) => {
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
 const row: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-3 grid grid-cols-subgrid', '[&>*:not(.dx-gutter)]:col-start-2', ...etc);
+  return mx(
+    // The marker is what keeps an enclosing `Column.Section` from placing the row in the content
+    // track: a row already spans all three, and `col-start-2` on top of `col-span-3` walks it one
+    // track right, leaving its content in the trailing gutter.
+    'dx-column-row col-span-3 grid grid-cols-subgrid',
+    '[&>*:not(.dx-gutter):not(.dx-column-span)]:col-start-2',
+    ...etc,
+  );
 };
 
 /**
@@ -71,9 +78,28 @@ const center: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
   return mx(withColumn.center(), 'min-h-0', ...etc);
 };
 
+/**
+ * A labelled run of content: the row's placement rules (gutters stay in the gutters, everything else
+ * lands in the content track) plus a row gap, so a section's heading and its rows are one stack.
+ */
+const section: ComponentFunction<ColumnStyleProps> = ({ gap }, ...etc) =>
+  mx(
+    'col-span-3 grid grid-cols-subgrid',
+    // Plain content lands in the content track; a gutter slot, a row, and anything that spans the
+    // tracks to re-expose them (`withColumn.propagate`) place themselves.
+    '[&>*:not(.dx-gutter):not(.dx-column-row):not(.dx-column-span)]:col-start-2',
+    gap && columnGapClasses[gap],
+    ...etc,
+  );
+
+/** The heading itself: subdued and small, since it names the content rather than competing with it. */
+const sectionLabel: ComponentFunction<{}> = (_, ...etc) => mx('text-sm text-subdued', ...etc);
+
 export const columnTheme = {
   root,
   row,
   block,
   center,
+  section,
+  sectionLabel,
 };

@@ -29,11 +29,19 @@ export const presetsForProvider = (provider: DXN.DXN): AiServicePreset[] =>
   }));
 
 /**
- * The preset a chat settles on: the configured default when the list still offers it, else the
- * first available one.
+ * The model a chat runs on when settings name none — chosen explicitly rather than inherited from the
+ * catalog's order, whose first edge entry is the most expensive model.
+ */
+export const DEFAULT_MODEL: DXN.DXN = Model.claudeSonnet5.id;
+
+/**
+ * The preset a chat settles on: the configured default when the list still offers it, else
+ * {@link DEFAULT_MODEL}, else the first available one.
  */
 export const pickPreset = (presets: readonly AiServicePreset[], defaultModel?: string): AiServicePreset | undefined =>
-  (defaultModel ? presets.find((preset) => preset.model === defaultModel) : undefined) ?? presets[0];
+  (defaultModel ? presets.find((preset) => preset.model === defaultModel) : undefined) ??
+  presets.find((preset) => preset.model === DEFAULT_MODEL) ??
+  presets[0];
 
 /**
  * The preset a chat with no model of its own falls back to, derived from settings alone — what

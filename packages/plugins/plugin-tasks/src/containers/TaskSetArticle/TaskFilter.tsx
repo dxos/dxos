@@ -52,7 +52,7 @@ export const TaskFilter = ({
         onChange={onChange}
         ref={editorRef}
       />
-      <TaskStatusFilter value={statuses} onChange={onStatusesChange} />
+      <TaskStatusFilter value={statuses} active={value.trim().length > 0} onChange={onStatusesChange} />
       <IconButton
         icon='ph--x--regular'
         iconOnly

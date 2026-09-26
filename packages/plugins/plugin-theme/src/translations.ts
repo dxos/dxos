@@ -98,6 +98,7 @@ export const translations = [
         'back.label': 'Back',
         'next.label': 'Next',
         'open.label': 'Open',
+        'add-to-collection.label': 'Add to collection',
         'close.label': 'Close',
         'auth-choices.label': 'Choose an identity',
         'create-identity.label': 'Create an identity',

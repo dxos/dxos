@@ -111,7 +111,10 @@ export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.t
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     objects: Schema.Array(Ref.Ref(Obj.Unknown)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' }),
+    Annotation.UserType.set({ tags: [ItemTag] }),
+  ),
 ) {}
 
 // Relation type
@@ -120,6 +123,8 @@ export class HasManager extends Type.makeRelation<HasManager>(DXN.make('com.exam
   target: Person,
 })(Schema.Struct({})) {}
 ```
+
+**A static type is internal until it opts in.** Without `Annotation.UserType.set()` it stays out of the nav tree, pickers, search, and collections. Add it to any type users create or browse; leave it off implementation details (a drawing's canvas, a game's state). Types persisted in a space are always user-facing. `tags` are keys a surface filters on: `Collection.ItemTag` puts the type in a collection's create dialog (`Annotation.UserType.set({ tags: [Collection.ItemTag] })`). Check with `TypeOptions.isUserType(type, { tag })` / `isUserObject` (`@dxos/app-toolkit/TypeOptions`), never by reading the annotation directly.
 
 **No separate `type X = ...` or `interface X extends ...` is needed.** The class name itself is the TypeScript type for instances.
 
@@ -178,9 +183,9 @@ Schema.Struct({
 
 Do NOT annotate a field whose targets a different holder owns (a pinned or recently-used list
 referencing objects that live in their own collections) — every write to the holder would
-re-parent them to it. An app-level relationship among a container's members (e.g.
-`Task.parentTask`) is not ownership: the container's annotated array stays the one parent, and the
-relationship stays a plain ref field.
+re-parent them to it. A hierarchy among a container's members IS ownership when each member has
+one place: `TaskSet.tasks` owns the root tasks and each `Task.subtasks` owns its sub-tasks, so the
+parent edge is the tree and a move splices one list and appends to another.
 The annotation updates the parent on write; it is not an invariant that the target's parent IS the
 holder — `Obj.setParent` can re-parent it afterwards, and an unresolved ref is skipped. Read the
 parent with `Obj.getParent`, never from the field. Removing a ref does not clear the target's

@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
-import { Task, TaskSet } from '@dxos/types';
+import { Task, TaskMigration, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TasksPlugin } from '#plugin';
@@ -29,6 +29,17 @@ describe('TasksPlugin', () => {
     // Rendering is unavailable in a node host, so the React surfaces must stay out of the variant.
     expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
     expect(harness.manager.getActive()).not.toContain(moduleId('AppGraphBuilder'));
+  });
+
+  test('contributes the task hierarchy migrations', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin.make({}), TasksPlugin()],
+    });
+
+    await harness.waitForCapability(ClientCapabilities.Migration);
+    expect(harness.getAll(ClientCapabilities.Migration).flat()).toEqual(
+      expect.arrayContaining(TaskMigration.migrations),
+    );
   });
 
   test('registers the task types with the client', async ({ expect }) => {

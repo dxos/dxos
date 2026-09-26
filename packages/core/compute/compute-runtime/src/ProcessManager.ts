@@ -328,7 +328,7 @@ export interface Manager {
 export { ProcessManagerService };
 export { ProcessManagerService as Service };
 
-export interface ProcessManagerImplOpts {
+export interface ImplOpts {
   registry: Registry.AtomRegistry;
   kvStore: KeyValueStore.KeyValueStore;
   traceSink: Trace.Sink;
@@ -344,9 +344,9 @@ export interface ProcessManagerImplOpts {
   runtimeName?: Trace.RuntimeName;
 }
 
-export class ProcessManagerImpl implements Manager {
+export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
-  readonly #handles = new Map<Process.ID, ProcessHandle.ProcessHandleImpl<any, any, any>>();
+  readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -367,7 +367,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #lifecycleSemaphore = Effect.runSync(Semaphore.make(1));
   #shutDown = false;
 
-  constructor(opts: ProcessManagerImplOpts) {
+  constructor(opts: ImplOpts) {
     this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
@@ -422,7 +422,7 @@ export class ProcessManagerImpl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle)) {
+      if (handle.parentId === parentPid && Impl.#isNonTerminal(handle)) {
         return true;
       }
     }
@@ -432,7 +432,7 @@ export class ProcessManagerImpl implements Manager {
   #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const children = [...this.#handles.values()].filter(
-        (handle) => handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle),
+        (handle) => handle.parentId === parentPid && Impl.#isNonTerminal(handle),
       );
       for (const child of children) {
         log('lifecycle: terminate child', { parentPid, childPid: child.pid });
@@ -441,7 +441,7 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  static #isNonTerminal(handle: ProcessHandle.ProcessHandleImpl<any, any, any>): boolean {
+  static #isNonTerminal(handle: ProcessHandle.Impl<any, any, any>): boolean {
     const { state } = handle.snapshotStatus();
     return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
   }
@@ -546,7 +546,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandle.ProcessHandleImpl<I, O, any> | null = null;
+      let handleRef: ProcessHandle.Impl<I, O, any> | null = null;
 
       const annotations = Annotation.buildDictionary((dictionary) => {
         if (options?.target != null) {
@@ -579,7 +579,7 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
-      // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
+      // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
       let builtinCtx = Context.empty().pipe(
@@ -686,7 +686,7 @@ export class ProcessManagerImpl implements Manager {
       // process scope, dispatching to the handlers the process declared via `create()`.
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
 
-      const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
+      const handle = new ProcessHandle.Impl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
         callbacks,
@@ -745,7 +745,7 @@ export class ProcessManagerImpl implements Manager {
   #rehydrate(
     record: PersistedProcess,
     definition: Process.Process<any, any, any, any>,
-  ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
+  ): Effect.Effect<ProcessHandle.Impl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
@@ -770,7 +770,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
+      let handleRef: ProcessHandle.Impl<any, any, any> | null = null;
 
       const params: Process.Params = {
         name: record.params.name,
@@ -878,7 +878,7 @@ export class ProcessManagerImpl implements Manager {
 
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
 
-      const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
+      const handle = new ProcessHandle.Impl<any, any, any>(
         id,
         Option.getOrNull(parentOption),
         callbacks,
@@ -1089,7 +1089,7 @@ export class ProcessManagerImpl implements Manager {
 
 /**
  * Read-only handle view of a persisted process that is not currently live.
- * Returned by {@link ProcessManagerImpl.list} until {@link Handle.hydrate} is called.
+ * Returned by {@link Impl.list} until {@link Handle.hydrate} is called.
  */
 class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly pid: Process.ID;
@@ -1192,7 +1192,7 @@ export const layer = (opts?: {
       const registry = yield* Registry.AtomRegistry;
       const traceSink = yield* Trace.TraceSink;
 
-      const manager = new ProcessManagerImpl({
+      const manager = new Impl({
         registry,
         kvStore,
         traceSink,

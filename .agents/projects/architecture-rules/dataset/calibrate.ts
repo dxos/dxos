@@ -12,7 +12,7 @@
 // Usage: bun calibrate.ts [--out=CALIBRATION.md]   (needs TYPESAFE_API_KEY)
 //        bun calibrate.ts --from-json                                  (rebuild from saved scores)
 
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -22,6 +22,7 @@ import { repoRoot } from '../../../skills/agentic-review/lib/git.ts';
 import { estimateTokens, packQuestions } from '../../../skills/agentic-review/lib/system-one/budget.ts';
 import { makeClient } from '../../../skills/agentic-review/lib/system-one/client.ts';
 import { verdictQuestion } from '../../../skills/agentic-review/lib/system-one/questions.ts';
+import { loadLabels, mean, median, pct, rate } from './dataset.ts';
 
 const { values } = parseArgs({
   options: {
@@ -39,52 +40,11 @@ const RELATIVE: [number, number][] = [
   [0.15, 0.2],
 ];
 
-/** One review comment record, cut to the fields this script reads. */
-type Comment = { url: string; path: string; diff_hunk?: string };
-
 /** A rule's own scores on the hunks it was mined from, versus its scores on every other hunk. */
 type RuleScores = { own: number[]; other: number[] };
 
-// Cluster sections carry their example comment URLs; a rule's `Source:` line names one of them.
-const clusterExamples: string[][] = [];
-for (const name of readdirSync(join(here, 'clusters'))) {
-  for (const section of readFileSync(join(here, 'clusters', name), 'utf8').split(/\n(?=## \d+\.)/)) {
-    const urls = section.match(/^- examples:(.*)$/m)?.[1].match(/https:\/\/github\.com\/\S+?discussion_r\d+/g);
-    if (urls) {
-      clusterExamples.push(urls);
-    }
-  }
-}
-const comments = new Map<string, Comment>();
-for (const name of readdirSync(join(here, 'chunks'))) {
-  for (const line of readFileSync(join(here, 'chunks', name), 'utf8')
-    .split('\n')
-    .filter(Boolean)) {
-    const comment = JSON.parse(line) as Comment;
-    comments.set(comment.url, comment);
-  }
-}
-
 const rules = discoverRules(repoRoot()).filter((rule) => rule.systemOne && rule.unit === 'file');
-const positives = new Map<string, Comment[]>();
-for (const rule of rules) {
-  const source = rule.instructions.match(/https:\/\/github\.com\/\S+?discussion_r\d+/)?.[0];
-  const urls = clusterExamples.find((examples) => examples.includes(source ?? '')) ?? (source ? [source] : []);
-  const hunks = urls
-    .map((url) => comments.get(url))
-    .filter((comment): comment is Comment => Boolean(comment?.diff_hunk));
-  if (hunks.length > 0) {
-    positives.set(rule.id, hunks);
-  }
-}
-const hunks = new Map<string, { comment: Comment; rules: Set<string> }>();
-for (const [ruleId, list] of positives) {
-  for (const comment of list) {
-    const entry = hunks.get(comment.url) ?? { comment, rules: new Set<string>() };
-    entry.rules.add(ruleId);
-    hunks.set(comment.url, entry);
-  }
-}
+const { positives, hunks } = loadLabels(here, rules);
 const calibrated = rules.filter((rule) => positives.has(rule.id));
 console.error(`calibrate: ${calibrated.length} rules with cited hunks, ${hunks.size} distinct hunks`);
 
@@ -126,17 +86,7 @@ if (values['from-json']) {
   );
 }
 
-const median = (list: number[]): number => {
-  const sorted = [...list].sort((left, right) => left - right);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-};
 const ratio = (part: number, whole: number): number => (whole ? part / whole : NaN);
-const mean = (list: number[]): number =>
-  list.length ? list.reduce((sum, value) => sum + value, 0) / list.length : NaN;
-const rate = (list: number[], threshold: number): number =>
-  list.length ? list.filter((value) => value >= threshold).length / list.length : NaN;
-const pct = (value: number): string => (Number.isNaN(value) ? 'n/a' : `${Math.round(value * 100)}%`);
 const rows = calibrated
   .map((rule) => {
     const ruleScores = scores.get(rule.id) ?? { own: [], other: [] };

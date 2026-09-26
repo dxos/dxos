@@ -15,6 +15,8 @@ import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import {
+  AddToCollectionDialog,
+  type AddToCollectionDialogProps,
   CardMasonry,
   CollectionArticle,
   CollectionSection,
@@ -35,6 +37,7 @@ import {
 import { meta } from '#meta';
 
 import {
+  ADD_TO_COLLECTION_DIALOG,
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
@@ -186,6 +189,12 @@ export default Capability.makeModule(
         component: ImportSpaceDialog,
       }),
       Surface.create({
+        id: ADD_TO_COLLECTION_DIALOG,
+        filter: AppSurface.component<AddToCollectionDialogProps>(AppSurface.Dialog, ADD_TO_COLLECTION_DIALOG),
+        component: AddToCollectionDialog,
+        props: ({ data: { props } }) => ({ ...props }),
+      }),
+      Surface.create({
         id: OBJECT_FORM_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ObjectFormDialog>>(AppSurface.Dialog, OBJECT_FORM_DIALOG),
         component: ObjectFormDialog,
@@ -261,7 +270,13 @@ export default Capability.makeModule(
         id: 'cardMasonry',
         filter: Surface.makeFilter(AppSurface.CardMasonry),
         component: CardMasonry,
-        props: ({ data: { objects } }) => ({ objects }),
+        props: ({ data: { objects, size, inline, CardMenu, pending } }) => ({
+          objects,
+          size,
+          inline,
+          CardMenu,
+          pending,
+        }),
       }),
       Surface.create({
         id: 'collectionSection',

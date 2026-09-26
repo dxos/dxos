@@ -22,7 +22,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
   const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
-    <ul className={mx('flex', classNames)}>
+    <ul className={mx('flex gap-1', classNames)}>
       {objects.map((obj) => {
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);

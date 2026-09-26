@@ -350,7 +350,7 @@ test QA-1: Create a sheet, set values, evaluate a formula, read back
     - an identity exists
     - space: a space is open
     - root: the space's root collection — [op:create] takes no target and files the Sheet
-      there via `ContainerModel.add`, so the test cannot choose a different one
+      there via its default parent (`DefaultParent.add`), so the test cannot choose a different one
     - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this test did not create
   steps:
     - name: Create the sheet
@@ -393,7 +393,7 @@ test QA-1: Create a sheet, set values, evaluate a formula, read back
       invoke: org.dxos.operation.space.removeObjects { objects: [space.db.getObjectById($created.id.split('/').pop())] }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
-        No `target` — `op:create` calls `ContainerModel.add({ object })` with no target, so the
+        No `target` — `op:create` calls `DefaultParent.add({ object })` with no target, so the
         Sheet lands in the space's root collection; omitting `target` here lets `removeObjects`
         default to that same collection rather than a different one.
 ```
