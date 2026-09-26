@@ -4,7 +4,8 @@ Branches, merge, edit history, versioning and migrations can work in a tab that 
 History reads run in the tab from the document's saved bytes, read in plain JS. History writes run in
 the worker, which owns the documents, and their results reach the tab as ordinary changes. This
 builds on the model in [OP-IDS.md](./OP-IDS.md). The reads were checked in node against Automerge
-3.5.0; nothing is built.
+3.5.0, and a spike, [`@dxos/worker-only-spike`](../../worker-only-spike/README.md), runs ECHO's own
+history functions over it; nothing in ECHO uses it yet.
 
 ## Short answer
 
@@ -22,14 +23,15 @@ builds on the model in [OP-IDS.md](./OP-IDS.md). The reads were checked in node 
 
 ## What was checked
 
-| Claim                                                         | Evidence                                                                                                                                                                                                                       |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| The model reads any version of a whole document               | Random ECHO-shaped documents with concurrent editors (nested maps, lists of scalars and of objects, text, `RawString`, numbers, dates, null, replaced nested objects): 7,680 versions, each equal to `A.view` then `toJS`      |
-| The model reproduces `A.getHistory`                           | 1,421 entries: each snapshot and each change's actor, seq and time identical                                                                                                                                                   |
-| The model's diff reproduces `A.diff` between any two versions | 2,700 random pairs: every patch list reaches the target version; 97% identical patch for patch                                                                                                                                 |
-| The model answers `getConflicts` for any version              | Identical to Automerge at the current version. On an older view Automerge reports the current conflicts, including values the view does not contain; the model answers for the version asked                                   |
-| The model can be built from the saved bytes alone             | From the saved document plus its change hashes in stored order, with no decoded changes: 3,840 versions and 2,883 `getHistory` snapshots identical, and every change's actor, seq, time, highest op and dependencies identical |
-| Reading the saved bytes is quick                              | The untuned reader takes the op columns of a 31 KB save (31k characters, 20,000 keystrokes of history) in 95 ms, and of a 131 KB save (156k characters, 100,000 keystrokes) in 820 ms                                          |
+| Claim                                                         | Evidence                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The model reads any version of a whole document               | Random ECHO-shaped documents with concurrent editors (nested maps, lists of scalars and of objects, text, `RawString`, numbers, dates, null, replaced nested objects): 7,680 versions, each equal to `A.view` then `toJS`                    |
+| The model reproduces `A.getHistory`                           | 1,421 entries: each snapshot and each change's actor, seq and time identical                                                                                                                                                                 |
+| The model's diff reproduces `A.diff` between any two versions | 2,700 random pairs: every patch list reaches the target version; 97% identical patch for patch                                                                                                                                               |
+| The model answers `getConflicts` for any version              | Identical to Automerge at the current version. On an older view Automerge reports the current conflicts, including values the view does not contain; the model answers for the version asked                                                 |
+| The model can be built from the saved bytes alone             | From the saved document plus its change hashes in stored order, with no decoded changes: 3,840 versions and 2,883 `getHistory` snapshots identical, and every change's actor, seq, time, highest op and dependencies identical               |
+| Reading the saved bytes is quick                              | The untuned reader takes the op columns of a 31 KB save (31k characters, 20,000 keystrokes of history) in 95 ms, and of a 131 KB save (156k characters, 100,000 keystrokes) in 820 ms                                                        |
+| ECHO's history functions run unmodified over the model        | In the spike, `getEditHistory`, `checkoutVersion`, `A.getChangesMetaSince` and `getEditHistoryWithDiffs` give the same results over a tab document as over Automerge; `migrateDocument` rewrites one (`history.test.ts`, `hostless.test.ts`) |
 
 Memory depends on the layout. The fuzzed model keeps every op as a JS object: 25 MB for the
 20,000-keystroke history and 112 MB for 100,000. The same history in typed arrays, one row per op with
@@ -71,9 +73,10 @@ replica it replaces:
 | 31k characters after 20,000 keystrokes   | 20.2 MB                                    | 1.1 MB                  | 0.6 MB        |
 | 156k characters after 100,000 keystrokes | 100.1 MB                                   | 5.3 MB                  | 3.2 MB        |
 
-The hashes are 32 bytes per change. The tab could compute them itself instead, if it could encode a
-change exactly as Automerge does (see [Open questions](#open-questions)). The recommendation is the
-first placement. Documents a tab only lists or queries are not loaded at all under index reads, so
+The hashes are 32 bytes per change. The tab can compute them itself, since the spike's encoder matches
+Automerge byte for byte, but hashing costs load time: the spike's test space loads in 0.4 s with the
+hashes and 1.2 s without when text arrives in bursts, and in 0.9 and 5.5 s when every keystroke is a
+change. The recommendation is the first placement, with the worker sending the hashes. Documents a tab only lists or queries are not loaded at all under index reads, so
 they carry nothing.
 
 ## Writes
@@ -90,10 +93,9 @@ merge or the new document.
 
 ## Waiting for the tab's edits
 
-With tab-minted changes the worker knows each of the tab's changes by actor and seq. A write carries
-the tab's current heads, tokens included, and the worker waits until it has applied the changes
-behind those tokens. A change the worker refuses fails the call, as it fails the
-edit.
+A write carries the tab's current heads, which name real hashes even for changes the worker has not
+applied yet, and the worker waits until it has those changes. A change the worker refuses fails the
+call, as it fails the edit.
 
 ## Branches
 
@@ -118,12 +120,12 @@ Space migrations and compaction (`sdk/migrations/src/migration-builder.ts`,
 | Use                                              | On a proxy                                                                          |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `toJS` of a document                             | The proxy's JSON                                                                    |
-| `new A.RawString`                                | Automerge's class, which is plain JS, from the slim entry                           |
+| `new A.RawString`                                | The tab's own class, since even Automerge's slim entry touches WebAssembly          |
 | `A.save` then `repo.import`, to copy a document  | The copy or import worker call                                                      |
 | `A.clone` then `A.change`, to rewrite a document | A new document whose first change the tab mints from the rewritten JSON (OP-IDS.md) |
 
-This table comes from the first inventory of tab code; a caller-by-caller map of branches, history,
-versioning and migrations is still being collected.
+This table comes from the first inventory of tab code. The spike runs `migrateDocument` unmodified
+over a tab document, which exercises the last two rows.
 
 ## Shared code on EDGE
 
@@ -137,10 +139,9 @@ calling Automerge, and in proxy mode they become the worker calls.
 
 ## Open questions
 
-1. Should the tab encode changes itself? A JS encoder that matches `A.encodeChange` byte for byte
-   would let the tab compute every change hash from the saved bytes instead of receiving them, and
-   give its own unconfirmed changes real hashes instead of tokens (OP-IDS.md). The change format is
-   specified, and a fuzz against `A.encodeChange` would check it.
-2. Should the worker send stored chunks instead of calling `A.save`? The tab can read the document
-   chunk already; reading change chunks as well would let the worker serve a document without loading
-   it into Automerge.
+1. Should the worker send stored chunks instead of calling `A.save`? The tab reads document chunks and
+   change chunks already, so the worker could serve a document without loading it into Automerge.
+
+The tab now encodes changes itself, which was the first open question here. The spike's encoder
+matches Automerge's bytes for every change it was given (`codec.test.ts`), so a tab computes change
+hashes from saved bytes and gives its own changes real hashes.

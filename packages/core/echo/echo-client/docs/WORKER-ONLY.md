@@ -3,6 +3,11 @@
 Status: built into ECHO's client services behind `runtime.client.document_mode`, which is off
 (`REPLICA`) by default. Branch `claude/compassionate-davinci-z0634h`.
 
+The tab-document design that replaces the mirror ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md),
+[HISTORY.md](../../automerge-proxy/docs/HISTORY.md)) has a spike for every row of
+[Blockers](#blockers): [`@dxos/worker-only-spike`](../../worker-only-spike/README.md). It runs ECHO's
+own code, unmodified, over documents a tab holds with no Automerge and no WebAssembly.
+
 Tabs keep a JSON mirror of each document plus their own unconfirmed edits. Only the worker runs
 Automerge. This document evaluates that design, describes the spike that tested it, and records how
 it now fits into ECHO's services (see [Folding the proxy into client services](#folding-the-proxy-into-client-services)).
@@ -25,8 +30,9 @@ boundary in Chromium.
    tasks and three long documents, the replica costs 16 MB when typing arrives in 20-character
    changes and 72 MB when every keystroke is its own change. The editor writes one change per
    keystroke today, so 72 MB is the realistic case. The mirror costs 0.4 MB. A resident-memory check
-   gives 67 to 110 MB against 1.2 to 1.5 MB. Compiled wasm adds several MB per renderer on top. The
-   figures are a Node proxy and have not been measured in a browser.
+   gives 67 to 110 MB against 1.2 to 1.5 MB. Compiled wasm adds several MB per renderer on top. These
+   figures come from a Node model. The spike measured replicas and tab documents in Chromium (see
+   [In Chromium](#in-chromium)).
 4. **A JSON mirror cannot be drop-in for every Automerge library, so the proposal is a hybrid.**
    Tabs hold mirrors by default and a real Automerge replica of any document handed to code that
    needs the Automerge API. The replica syncs through the existing byte protocol and converges with
@@ -91,7 +97,8 @@ where a fresh `A.load(A.save(doc))` has `"Rt195"`, and the elements after it shi
 `A.diff` over the same heads are correct. A script that replays the recorded steps with only
 `A.load`, `A.change` and `A.merge` reproduces it, and the fuzz from before the per-change work showed
 it in 1 of 2,000 sessions. The worker builds snapshots from those properties, and replica-mode ECHO
-reads them too, so both can show the drift. It needs an upstream report with the replay script.
+reads them too, so both can show the drift. It is listed for later investigation in the spike's
+README. Tab documents read the worker's saved bytes and changes, so the drift cannot reach them.
 
 ## Memory
 
@@ -124,9 +131,28 @@ Not counted above: the compiled code of the Automerge module, which a page heap 
 at 7.4 MB together with Subduction's (the leader tab may share it with the worker). Tabs no longer
 instantiate Subduction unless ECHO runs in the tab (`DX_HOST`), since abbf4983. Part of the saving
 needs no mirror: compacting text history would bring the keystroke case close to the burst case, at
-the cost of the history that branches and versioning read. In a single run of a preview build in Chromium, with the same
-three documents open, one tab's Automerge linear memory matched the worker's (21.2 against 21.4 MB),
-which suggests a second copy per tab. The 2- and 3-tab runs have not been done.
+the cost of the history that branches and versioning read.
+
+### In Chromium
+
+The spike's browser bench (`worker-only-spike/src/bench/browser/run.ts`) loads the same space into one
+shared worker and opens one, two and three tabs, each holding the space as Automerge replicas or as tab
+documents. Chrome counts wasm memory in its heap figure; the wasm share is in brackets.
+
+| Tabs | Bursts, replicas | Bursts, tab documents | Keystrokes, replicas | Keystrokes, tab documents |
+| ---- | ---------------- | --------------------- | -------------------- | ------------------------- |
+| 1    | 14.3 MB (11.7)   | 20.1 MB               | 69.8 MB (67.2)       | 32.4 MB                   |
+| 3    | 41.9 MB total    | 59.3 MB total         | 208.4 MB total       | 96.1 MB total             |
+
+- **Each replica tab holds a second copy.** Its wasm memory equals the worker's, 11.7 and 67.2 MB, and
+  it keeps that memory after dropping every document. A tab-document tab keeps 2.0 to 2.3 MB.
+- **Tab documents carry the full history**, which ECHO's synchronous history APIs read, so they cost
+  far more than the mirror's 0.4 MB. The model keeps a JS record per op; the space's 201,989 ops would
+  take 5.7 MB at the 28 bytes per op a typed-array prototype used ([HISTORY.md](../../automerge-proxy/docs/HISTORY.md)).
+- **Writes cost more in the tab.** A write takes 2.0 to 2.2 ms in a tab-document tab against 0.3 to
+  0.6 ms in a replica tab. The worker spends 18.6 to 19.2 ms applying each change to a
+  45,000-character text in both modes, so it applies each document's queued changes in one call.
+- The JSON mirror's memory has not been measured in Chromium.
 
 ### Wasm in the tab
 
@@ -145,6 +171,12 @@ ECHO in the dedicated worker, the tab instantiates one wasm module at boot: Auto
 
 SQLite runs in the worker. esbuild, Excalidraw's font subsetting and pdf.js run in their own workers,
 and pdf.js falls back to its JS decoders because Composer passes it no wasm URL.
+
+The spike checked two of these. Its `bench/wasm/analyze.ts` bundles the storage probe's import of
+`@dxos/client-services`: 1,853 modules, carrying sodium, Automerge's `.wasm` and Subduction's base64
+wasm. Importing the storage module directly bundles 924 modules and no wasm. Its `run-manifold.ts`
+runs one manifold job in the page, which keeps 208.4 MB of wasm memory for good, and the same job in a
+worker the page terminates when idle, which frees all but 1.0 MB.
 
 The worker's own cost is unmeasured. The sequencer keeps no copy of the document, so the worker
 evicts it 30 s after its last call on it. It keeps up to 1,000 recent entries and 1,000 applied batch
@@ -185,6 +217,11 @@ Automerge has. So the requirement is met by construction instead:
   automerge-repo `Repo`, and neither handle implements `broadcast`, `heads()`, `history()` or `view()`.
   A thin `Repo` and `DocHandle` facade over replica handles would serve libraries like the React
   hooks, in either design.
+
+Tab documents ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)) cover tiers 2 and 4 without a
+replica: they hold every op with its Automerge id and the full history. The spike runs the unmodified
+editor binding, ECHO's history functions and the store adapter over them. Tier 3 is still out, since the
+model has no marks.
 
 ## API proposal
 
@@ -316,6 +353,11 @@ They and the three defects they found are in its
 7. An edit the worker refuses disappears from the tab. Apps should listen to `db.editsRejected` and
    tell the user. A replica has no such case: Automerge refuses a bad write inside `change()`, and
    the mirror's draft refuses the same writes there too.
+
+Tab documents remove items 1 to 6. Heads name a change's final hash as soon as it is written, history
+reads and cursors are synchronous, `changeAt` works at any version the tab holds, and tabs merge by
+Automerge's own rules because they write Automerge ops. Item 7 remains: the worker still refuses a
+change that fails its checks, which only a bug in the tab can produce.
 
 ## Snapshot atoms
 
@@ -681,28 +723,31 @@ Before the default flips, each of these has to hold:
 
 ## Blockers
 
-Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week.
+Ordered by risk. Size: S is up to a day, M is 2 to 5 days, L is more than a week. The last column
+names the test or bench in [`@dxos/worker-only-spike`](../../worker-only-spike/README.md) that proves
+the fix; the spike's README gives the evidence for each.
 
-| Blocker                                                                                                               | What it takes                                                                                                                                                                                                                                                                                       | Size |
-| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| The editor's replica: a tab holds Automerge for every document open in an editor                                      | Op ids in the proxy, phases 1 to 3 of [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)                                                                                                                                                                                                             | L    |
-| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE)            | The `Automerge` namespace serves both realms: EDGE's functions runtime runs replica mode with Automerge documents, and text writes in echo-doc and plugin-markdown use the namespace. `getObjectOnBranch` reads the branch's document like any other; creating and merging branches is the next row | S    |
-| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                               | They resolve through the replica an open editor holds, so with no editor open they have no cursors; with op ids in the proxy ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)) they would resolve in the tab                                                                                      | M    |
-| Branches, merge, edit history, versioning, migrations                                                                 | History reads in the tab from each document's saved bytes, read in plain JS, so `Obj.getVersion`, `Obj.getChanges` and `checkoutVersion` stay synchronous; forks, merges and imports as worker calls ([HISTORY.md](../../automerge-proxy/docs/HISTORY.md))                                          | L    |
-| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                               | Port to change events, or give them `diff` on proxies ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)), which is all they use                                                                                                                                                                    | M    |
-| Heads read right after a write                                                                                        | The flush contract plus the audit's versioning fixes; about 20 tests and stories                                                                                                                                                                                                                    | M    |
-| Recovery after an abrupt worker restart                                                                               | Persist a small per-document op log, or accept the rebuild path; with tab-minted changes the tab resends what the worker has not acknowledged ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md))                                                                                                   | M    |
-| Automerge 3.5.0's cached view can drift after `A.merge`                                                               | A minimal repro and an upstream fix; until then, build snapshots from a fresh load or check them against one                                                                                                                                                                                        | S    |
-| Remaining Automerge in the tab                                                                                        | Wasm init in `main.tsx`, the devtools hook, a `RawString` replacement, imports in echo-client and echo-doc, objects made before they join a database; phase 4 of [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)                                                                                  | M    |
-| A real worker boundary and a browser run                                                                              | Structured-clone encoding with `RawString` tags; 1-, 2- and 3-tab A/B in Chromium; write latency and worker CPU, since every batch is its own change and save                                                                                                                                       | S    |
-| `meta.updatedAt`                                                                                                      | The worker sends change times; the saved bytes and every change carry them ([HISTORY.md](../../automerge-proxy/docs/HISTORY.md))                                                                                                                                                                    | S    |
-| Edits pending when a tab closes                                                                                       | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                                                                                                                             | S    |
-| Publishing: `@dxos/automerge-proxy` is private, but echo-client, echo-doc, ui-editor and plugin-markdown depend on it | A trusted publisher, then drop `private`                                                                                                                                                                                                                                                            | S    |
-| Other wasm in the tab                                                                                                 | Sodium on a fresh profile's first boot, because the storage check imports all of `@dxos/client-services`; pica, manifold, wnfs and panproto when their features run (see [Wasm in the tab](#wasm-in-the-tab))                                                                                       | S    |
+| Blocker                                                                                                                                     | What it takes                                                                                                                                                                                                                                                                                       | Size | Proven by                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------ |
+| The editor's replica: a tab holds Automerge for every document open in an editor                                                            | Op ids in the proxy, phases 1 to 3 of [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)                                                                                                                                                                                                             | L    | `editor.test.ts`, `foundation.test.ts`                 |
+| Shared operation code calling Automerge through `Doc.Handle` (plugin-markdown operations also run on EDGE)                                  | The `Automerge` namespace serves both realms: EDGE's functions runtime runs replica mode with Automerge documents, and text writes in echo-doc and plugin-markdown use the namespace. `getObjectOnBranch` reads the branch's document like any other; creating and merging branches is the next row | S    | `edge.test.ts`                                         |
+| Cursor consumers outside an open editor (anchor sort, review, AI edits)                                                                     | They resolve in the tab's model, with no editor open and no replica                                                                                                                                                                                                                                 | M    | `cursors.test.ts`                                      |
+| Branches, merge, edit history, versioning, migrations                                                                                       | History reads in the tab from each document's saved bytes, read in plain JS, so `Obj.getVersion`, `Obj.getChanges` and `checkoutVersion` stay synchronous; forks, merges and imports as worker calls ([HISTORY.md](../../automerge-proxy/docs/HISTORY.md))                                          | L    | `history.test.ts`, `hostless.test.ts`                  |
+| Store adapters (tldraw, excalidraw) diff heads with `A.diff(lastHeads)`                                                                     | `diff` on tab documents, which is all they use                                                                                                                                                                                                                                                      | M    | `store-adapter.test.ts`                                |
+| Heads read right after a write                                                                                                              | Real hashes at write time: the tab encodes each change as Automerge does, and the worker applies only canonical bytes ([OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md))                                                                                                                           | M    | `heads.test.ts`                                        |
+| Recovery after an abrupt worker restart                                                                                                     | No op log: every tab rebuilds any change it holds byte for byte and sends what the worker lacks                                                                                                                                                                                                     | M    | `restart.test.ts`                                      |
+| Automerge 3.5.0's cached view can drift after `A.merge`                                                                                     | Tab documents read saved bytes and changes, never the cached view; replica mode still reads it, and the issue is listed for later investigation                                                                                                                                                     | S    | `drift.test.ts`                                        |
+| Remaining Automerge in the tab                                                                                                              | Wasm init in `main.tsx`, the devtools hook, imports in echo-client and echo-doc, objects made before they join a database, and the tab's own `ImmutableString`, since even Automerge's slim entry touches WebAssembly; phase 4 of [OP-IDS.md](../../automerge-proxy/docs/OP-IDS.md)                 | M    | `hostless.test.ts`, `codec.test.ts`, `no-wasm.test.ts` |
+| A real worker boundary and a browser run                                                                                                    | Done in the spike: memory with 1, 2 and 3 tabs and write latency in Chromium (see [In Chromium](#in-chromium))                                                                                                                                                                                      | S    | `bench/browser/run.ts`                                 |
+| `meta.updatedAt`                                                                                                                            | Change times from the tab's model, which the saved bytes and every change carry                                                                                                                                                                                                                     | S    | `hostless.test.ts`                                     |
+| Edits pending when a tab closes                                                                                                             | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                                                                                                                             | S    | `pagehide.test.ts`                                     |
+| Publishing: `@dxos/automerge-proxy` is private, but echo-client, echo-doc, echo-host, plugin-markdown, protocols and ui-editor depend on it | A trusted publisher, then drop `private`; until then `check-public-dependencies` fails on this branch                                                                                                                                                                                               | S    | `bench/publish/pack.ts`                                |
+| Other wasm in the tab                                                                                                                       | Import the storage module directly instead of the root of `@dxos/client-services`; run plugin wasm in a worker that ends when idle (see [Wasm in the tab](#wasm-in-the-tab))                                                                                                                        | S    | `bench/wasm/`                                          |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
-contracts, plus about 345 at risk, not counting the worker and protocol side. The spike adds about
-5,000 lines of production code and 3,000 lines of tests.
+contracts, plus about 345 at risk, not counting the worker and protocol side. The mirror spike adds
+about 5,000 lines of production code and 3,000 lines of tests. The tab-document spike is about 3,900
+lines of source, 1,700 of tests and 1,000 of benches.
 
 ## Review findings
 
@@ -745,8 +790,11 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 ## Open questions
 
 1. Is last-writer-wins by arrival acceptable for two writes to one key between tabs of one worker?
-   Automerge picks by op counter, so the two can choose different winners.
-2. Should recovery persist an op log in the worker, or is the rebuild path enough?
+   Automerge picks by op counter, so the two can choose different winners. Tab documents write
+   Automerge ops, so Automerge's rule holds between tabs too.
+2. Should recovery persist an op log in the worker, or is the rebuild path enough? With tab
+   documents, neither: tabs send back every change the worker lost (`restart.test.ts` in the spike).
 3. Should HOST mode keep a second in-process replica, or use the mirror over the in-process bridge?
 4. Which documents get replicas besides those open in an editor, which hold one for cursors: only
-   those code asks for explicitly, or every document an Automerge-API plugin opens?
+   those code asks for explicitly, or every document an Automerge-API plugin opens? Tab documents
+   need no replica for cursors or history.

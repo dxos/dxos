@@ -2,8 +2,9 @@
 
 A proxy document can answer Automerge's cursor and recent-history API itself, so an editor binding
 written for Automerge runs over it unchanged and the tab needs no Automerge. The mechanisms were
-checked in node against Automerge 3.5.0 (see [What was checked](#what-was-checked)); the rest is
-design. None of it is built.
+checked in node against Automerge 3.5.0 (see [What was checked](#what-was-checked)). A spike,
+[`@dxos/worker-only-spike`](../../worker-only-spike/README.md), builds the design and runs ECHO's own
+code over it; nothing in ECHO uses it yet.
 
 ## Short answer
 
@@ -13,8 +14,9 @@ client can follow on its own:
 1. Give each tab its own actor.
 2. The tab numbers its ops the way Automerge would: the first op of a change is one more than the
    highest op counter the tab has seen, and each op after it takes the next number.
-3. The worker writes the tab's change with exactly those numbers. `A.encodeChange` takes the actor,
-   seq, start op, deps and ops, and `A.applyChanges` merges the result like any peer's change.
+3. The tab encodes the change byte for byte as Automerge would, so it knows the change's hash at
+   once. The worker checks the bytes and applies exactly those with `A.applyChanges`, which merges
+   them like any peer's change.
 4. The worker sends the tab everyone else's ops with their ids.
 
 Then text the tab just typed has its final id at once, and `getCursor`, `getCursorPosition`,
@@ -48,6 +50,8 @@ remote op arrives (see [Sequences](#sequences)).
 | The model's whole-document diff reproduces `A.diff`                                                  | 2,700 random version pairs: every patch list turns the first version into the second; 97% are identical to `A.diff` patch for patch, and the rest differ because Automerge also re-sends a key whose conflicts changed                                                                                                  |
 | A saved document can be read without Automerge                                                       | A JS reader of the saved format recovers every element's id, origin and deletion, since Automerge stores sequences in document order: same runs, tombstones, text and cursors as the replay below                                                                                                                       |
 | Taking refused changes back out of the model is exact                                                | 400 refusals of a random tab change and every later one, with a remote peer editing meanwhile: the model's state equals Automerge's document built without those changes                                                                                                                                                |
+| The tab can encode a change exactly as Automerge does                                                | A JS encoder reproduces the bytes of every change of a fuzzed document and of one with every value type (`codec.test.ts` in the spike)                                                                                                                                                                                  |
+| Automerge must receive canonical bytes                                                               | A change with its preds out of Lamport order is indexed under one hash and exported under another, and the document's save no longer loads (`heads.test.ts`)                                                                                                                                                            |
 
 The map check had to use a fresh load: after many merges, Automerge 3.5.0's cached view dropped a
 conflicting value in about 0.4% of keys, though the winner stayed right. That is the drift already
@@ -95,19 +99,26 @@ The draft records Automerge ops instead of positional ops:
 4. A new object is a `make*` op, and its id becomes the object id.
 5. Strings become text objects unless they are `RawString`, as Automerge 3 does.
 
-The tab applies the change to its own state at once, with the same rules as remote ops, and submits
-the actor, seq, start op, time, the heads it edited and the ops. Its previous unconfirmed change stands
-in the deps as a reference the worker resolves.
+The tab applies the change to its own state at once, with the same rules as remote ops, encodes it,
+and submits the bytes. The encoding orders each op's preds by Lamport order, and the other actors and
+the deps as Automerge does, so the bytes are canonical and the hash is final. The deps are the heads it
+edited, which name real hashes, its own unconfirmed changes included.
 
-The worker checks every reference before Automerge sees it, because a bad one corrupts the stored
-document. Each element and object must exist in the version the tab edited, the seq must continue the
-actor's chain, the start op must be above that version's highest op, and each `pred` must match its
-values there. It then fills in the deps as hashes, encodes
-with `A.encodeChange` and applies with `A.applyChanges`. The acknowledgement carries the hash.
+The worker checks the bytes and every reference before Automerge sees them. The bytes must decode to
+the hash the tab claims and be canonical: Automerge indexes a change under the hash of the bytes it
+receives but exports it re-encoded, so other bytes would leave heads that no peer can reach. Each
+element and object must exist in the version the tab edited, the seq must continue the actor's chain,
+the start op must be above that version's highest op, and each `pred` must match its values there,
+because a bad reference corrupts the stored document. The worker then applies the tab's bytes with
+`A.applyChanges`. Acknowledgements and refusals name the hash.
+
+The worker cannot build the change with `A.encodeChange` instead: it sorts preds itself, and it writes
+some float64 values one unit in the last place off, so its bytes can hash differently from the tab's.
 
 A refused change and the tab's later changes come out of the tab's state: their elements go,
-their deletes come back, and the values they overwrote return. After a worker restart the tab resends
-its unconfirmed changes, which is safe because the same change encodes to the same hash.
+their deletes come back, and the values they overwrote return. After a worker restart each tab sends
+every change it holds that the worker lacks, its own or not, since any change rebuilt from the model
+encodes to the bytes of its hash.
 
 This removes the `Transform` module. Positional ops needed rebasing because a position means
 something only in one state; an op that names ids means the same thing in every state.
@@ -155,17 +166,16 @@ actor, which is Automerge's own rule, since an actor's changes form a chain.
 
 | API                              | On a proxy                                                                                                               |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `getHeads`                       | The current version: hashes once confirmed, and a local token for each unconfirmed change                                |
+| `getHeads`                       | The current version, whose hashes are final as soon as a change is written                                               |
 | `equals`                         | Automerge's own, which is plain JS                                                                                       |
 | `hasHeads`                       | Clock comparison for heads the tab has seen                                                                              |
 | `diff(before, after)`            | A walk over the elements and values that compares visibility under both clocks; matched `A.diff` patch for patch on text |
 | `view(heads)`                    | A read-only document at that clock                                                                                       |
-| `changeAt(heads, fn)`            | A draft that reads at that clock; returns the new change's token, and switches actor as Automerge does                   |
+| `changeAt(heads, fn)`            | A draft that reads at that clock; returns the new change's hash, and switches actor as Automerge does                    |
 | `getCursor`, `getCursorPosition` | Lookups in the element runs                                                                                              |
 | `getConflicts`                   | The current values of the key                                                                                            |
 
-A token becomes an alias of the hash when the worker confirms the change, so heads captured before
-the confirmation keep working. A tab that loaded the document's full history ([HISTORY.md](./HISTORY.md))
+A tab that loaded the document's full history ([HISTORY.md](./HISTORY.md))
 can name every version; one seeded from a snapshot names every version since the snapshot, and older
 heads throw, as Automerge throws for heads it does not have.
 
@@ -211,48 +221,50 @@ From the inventory of tab code, beyond cursors and recent history:
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Wasm initialization at boot                                                 | `composer-app/src/main.tsx:268`                                                                                                   | Only in replica mode and `DX_HOST`                                                                                |
 | `A.from` for an object before it joins a database                           | `echo-client/src/core-db/object-core.ts:252`                                                                                      | A proxy document with no host, whose first change the tab mints                                                   |
-| `RawString`                                                                 | 8 files                                                                                                                           | Automerge's class is plain JS; import it from `@automerge/automerge/slim`                                         |
+| `RawString`                                                                 | 8 files                                                                                                                           | The tab's own class, marked with the symbol Automerge checks                                                      |
 | The devtools hook exposes the Automerge namespace                           | `sdk/client/src/devtools/devtools.ts:30`                                                                                          | Expose `@dxos/automerge-proxy/Automerge`                                                                          |
 | Edit history, branches, merge, migrations, versioning, import, change times | `echo-handler/edit-history.ts`, `core-db/branching.ts`, `entity-manager.ts`, `sdk/migrations`, `sdk/versioning`, `object-core.ts` | History reads in the tab from saved bytes; forks, merges and imports as worker calls ([HISTORY.md](./HISTORY.md)) |
 
-The namespace would re-export `@automerge/automerge/slim` instead of the default entry, so importing
-it never starts the wasm, and a test would check that a proxy tab never does. Nothing in the tab uses
-marks, so the model leaves them out.
+Even Automerge's slim entry touches WebAssembly when imported, so the tab's namespace imports nothing
+from Automerge. The spike runs its tab side in a process where `WebAssembly` does not exist
+(`no-wasm.test.ts`). Nothing in the tab uses marks, so the model leaves them out.
 
 ## Phases
 
 Size: S is up to a day, M is 2 to 5 days, L is more than a week.
 
-| Phase                                                                                                                                           | Size |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 1. Ids on the read side: snapshots with ids, remote changes as ops, cursors answered in the tab, the model fuzzed against Automerge in CI       | M    |
-| 2. Tab-minted writes: the draft records Automerge ops, the worker checks, encodes and batches, refusal and resend; `Transform` and `Cursors` go | L    |
-| 3. Versions: `getHeads`, `diff`, `view`, `changeAt`; the Automerge binding and store adapters over proxies; `mirrorSync` and replica leases go  | M    |
-| 4. No wasm in a proxy tab: slim re-export, hostless documents, `RawString`, devtools, no initialization, a check                                | M    |
-| 5. Faster snapshots: a tuned reader of the saved document, in the tab or the worker                                                             | M    |
+| Phase                                                                                                                                                           | Size |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 1. Ids on the read side: snapshots with ids, remote changes as ops, cursors answered in the tab, the model fuzzed against Automerge in CI                       | M    |
+| 2. Tab-minted writes: the draft records Automerge ops, the tab encodes, the worker checks and batches, refusal and resend; `Transform` and `Cursors` go         | L    |
+| 3. Versions: `getHeads`, `diff`, `view`, `changeAt`; the Automerge binding and store adapters over proxies; `mirrorSync` and replica leases go                  | M    |
+| 4. No wasm in a proxy tab: a namespace that imports nothing from Automerge, hostless documents, the tab's own `RawString`, devtools, no initialization, a check | M    |
+| 5. Faster snapshots: a tuned reader of the saved document, in the tab or the worker                                                                             | M    |
 
-The full-history RPCs stay a separate L blocker.
+The full-history RPCs stay a separate L blocker. The spike proves each phase; its README gives the
+evidence.
 
 ## Risks
 
 1. The model is right only while it follows Automerge's merge rules. Those rules are part of the
    storage format, since old peers have to converge with new ones, so they cannot change quietly. The
    fuzz tests against Automerge would run in CI.
-2. The worker pays Automerge's per-call cost for remote changes; batching bounds it, and an upstream
-   fix would remove it.
+2. The worker pays Automerge's per-call cost for remote changes: about 19 ms at 45,000 characters in
+   the spike, for one change or a batch. Batching bounds it.
 3. Snapshots of long histories are slow until phase 5.
 4. Automerge corrupts a document it is handed a bad reference for. The worker's checks guard the
    tab's changes; changes from other peers reach Automerge unchecked today, in both modes.
 5. Each tab session adds an actor to each document it edits, as replica mode does today.
-6. Heads with unconfirmed changes carry local tokens. Code that sends heads to the worker has to wait
-   for confirmation, which the heads-after-write audit in
-   [Blockers](../../echo-client/docs/WORKER-ONLY.md#blockers) already covers.
+6. Heads can name changes the worker has not applied yet. A worker call that takes heads waits for
+   those changes, as [HISTORY.md](./HISTORY.md) describes.
+7. Hashing in JS costs load time: the spike loads its keystroke corpus in 5.5 s when the tab hashes
+   every change and in 0.9 s when the worker sends the hashes.
 
 ## Open questions
 
-1. Should heads with unconfirmed changes carry real hashes instead of tokens? The tab would have to
-   encode each change byte for byte as Automerge does. The change format is specified, and the worker
-   could compare each against `A.encodeChange`. It would let code hand such heads to the worker
-   without waiting.
-2. Should these go upstream to Automerge: the per-call cost of remote changes on large texts, a call
-   that lists a sequence's elements with ids, and the corruption a bad reference causes?
+1. Should every snapshot carry the change hashes? The tab can compute them, but hashing takes the
+   burst corpus from 0.4 to 1.2 s and the keystroke corpus from 0.9 to 5.5 s.
+
+Heads with unconfirmed changes carry real hashes, which was the first open question here: the spike's
+encoder matches Automerge byte for byte. The Automerge issues found along the way are listed in the
+spike's README for later investigation.
