@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Blob, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -21,7 +22,7 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
-import { Person, Task, TaskSet } from '@dxos/types';
+import { File, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -91,6 +92,24 @@ const seedTasks = (space: Space) => {
   seeded = { space, worked };
 };
 
+/** A 4×3 PNG of three coloured rows, standing in for a screenshot. */
+const PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
+
+const pngFile = () =>
+  new globalThis.File([Uint8Array.from(atob(PNG_BASE64), (character) => character.charCodeAt(0))], 'screenshot.png', {
+    type: 'image/png',
+  });
+
+/** Dispatches the native drag sequence a file dragged in from the desktop produces. */
+const dropFiles = (target: Element, files: globalThis.File[]) => {
+  const dataTransfer = new DataTransfer();
+  files.forEach((file) => dataTransfer.items.add(file));
+  for (const type of ['dragenter', 'dragover', 'drop']) {
+    target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+  }
+};
+
 type StoryArgs = {
   /** Title of the task the pane opens. */
   title: string;
@@ -111,39 +130,43 @@ const DefaultStory = ({ title }: StoryArgs) => {
   );
 };
 
+/**
+ * The plugin manager, not a bare client provider: the pane edits through `TaskOperation.UpdateTask`,
+ * which throws without PluginManagerContext and dies with NoHandlerError without the plugin below.
+ * Per story, so a story can run with or without plugin-file.
+ */
+const withPlugins = ({ files }: { files: boolean }) =>
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      TasksPlugin.make(),
+      // The card grid under the editor: `cardMasonry` is plugin-space's surface, so without this
+      // plugin the artifacts resolve to nothing and the pane renders the editor alone.
+      SpacePlugin.make({}),
+      // Fills each card's body: a card with no `CardContent` surface is its header alone.
+      PreviewPlugin.make(),
+      ClientPlugin.make({
+        types: [Task.Task, TaskSet.TaskSet, Person.Person, Text.Text, File.File, Blob.Blob],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            const { defaultSpace } = yield* initializeIdentity(client);
+            yield* Effect.promise(async () => {
+              seedTasks(defaultSpace);
+              await defaultSpace.db.flush({ indexes: true });
+            });
+          }),
+      }),
+      StorybookPlugin.make({}),
+      // Handles `FileOperation.Create`: without it the pane offers no drop at all.
+      ...(files ? [FilePlugin.make()] : []),
+    ],
+    setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
+  });
+
 const meta = {
   title: 'plugins/plugin-tasks/containers/TaskArticle',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    // The plugin manager, not a bare client provider: the pane edits through `TaskOperation.UpdateTask`,
-    // which throws without PluginManagerContext and dies with NoHandlerError without the plugin below.
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        TasksPlugin.make(),
-        // The card grid under the editor: `cardMasonry` is plugin-space's surface, so without this
-        // plugin the artifacts resolve to nothing and the pane renders the editor alone.
-        SpacePlugin.make({}),
-        // Fills each card's body: a card with no `CardContent` surface is its header alone.
-        PreviewPlugin.make(),
-        ClientPlugin.make({
-          types: [Task.Task, TaskSet.TaskSet, Person.Person, Text.Text],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(async () => {
-                seedTasks(defaultSpace);
-                await defaultSpace.db.flush({ indexes: true });
-              });
-            }),
-        }),
-        StorybookPlugin.make({}),
-      ],
-      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -157,6 +180,7 @@ type Story = StoryObj<typeof meta>;
 
 /** A worked task: title and description in the editor, its history beneath, its artifacts as cards. */
 export const Default: Story = {
+  decorators: [withPlugins({ files: false })],
   args: { title: WORKED_TASK },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -194,6 +218,7 @@ export const Default: Story = {
 
 /** A task nobody has worked yet: the editor alone, with no history and no cards under it. */
 export const Plain: Story = {
+  decorators: [withPlugins({ files: false })],
   args: { title: PLAIN_TASK },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -203,5 +228,39 @@ export const Plain: Story = {
     await waitFor(() => expect(canvasElement.querySelector('[data-testid="cardMasonry"]')).toBeNull(), {
       timeout: 10_000,
     });
+  },
+};
+
+/**
+ * A file dropped on the task becomes a `File` attachment that previews as an image, and can be
+ * removed; both are recorded in the task's history.
+ */
+export const DropAttachment: Story = {
+  decorators: [withPlugins({ files: true })],
+  args: { title: PLAIN_TASK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const zone = await canvas.findByTestId('tasksPlugin.attachments.dropZone', undefined, { timeout: 10_000 });
+
+    dropFiles(zone, [pngFile()]);
+    const attachment = await canvas.findByTestId('tasksPlugin.attachment', undefined, { timeout: 10_000 });
+    await expect(within(attachment).getByText('screenshot.png')).toBeInTheDocument();
+    await waitFor(() => expect(attachment.querySelector('img')).not.toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Attached "screenshot.png".')).resolves.toBeInTheDocument();
+
+    await userEvent.click(within(attachment).getByRole('button', { name: 'Remove attachment' }));
+    await waitFor(() => expect(canvas.queryByTestId('tasksPlugin.attachment')).toBeNull());
+    await expect(canvas.findByText('Removed attachment "screenshot.png".')).resolves.toBeInTheDocument();
+  },
+};
+
+/** Without plugin-file nothing can store a file, so the pane offers no drop at all. */
+export const WithoutFilePlugin: Story = {
+  decorators: [withPlugins({ files: false })],
+  args: { title: PLAIN_TASK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByDisplayValue(PLAIN_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.queryByTestId('tasksPlugin.attachments.dropZone')).toBeNull();
   },
 };
