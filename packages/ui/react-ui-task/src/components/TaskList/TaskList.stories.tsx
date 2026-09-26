@@ -482,6 +482,10 @@ const seedTagged = (): Task.Task[] => {
       for (const tag of byTitle[task.title] ?? []) {
         Obj.addTag(task, Ref.make(tag));
       }
+      // A tagged row with a description, so the story shows the chips sitting between the two.
+      if (task.title === 'Design the new label') {
+        task.description = 'Two variants for the spring blend.';
+      }
     });
   }
   return tasks;
@@ -984,8 +988,8 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
- * A long artifact tag takes at most half the row: the chips cell scrolls what does not fit and the
- * title truncates instead of collapsing to nothing.
+ * A long artifact tag cannot squeeze the title: the chips run on their own line under it, and the
+ * title keeps the row's width.
  */
 export const TestLongArtifactTag: Story = {
   args: {
@@ -1009,11 +1013,12 @@ export const TestLongArtifactTag: Story = {
       { timeout: 10_000 },
     );
     const title = row.querySelector<HTMLElement>('span.truncate')!;
-    const chips = row.querySelector<HTMLElement>('.col-\\[chips\\]')!;
+    const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]')!;
     await waitFor(async () => {
-      await expect(chips.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width / 2);
-      await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
-      await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
+      await expect(chips.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        title.getBoundingClientRect().bottom - 0.5,
+      );
+      await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
     });
   },
 };
@@ -1032,7 +1037,10 @@ export const WithArtifacts: Story = {
   },
 };
 
-/** Tags render as chips in the same cell as the task's artifacts and assignee. */
+/**
+ * Tags render as chips in the same cell as the task's artifacts and assignee — a line of their own
+ * under the title, starting where the title cell does and above the description.
+ */
 export const WithTags: Story = {
   render: ArtifactsStory,
   args: {
@@ -1044,6 +1052,35 @@ export const WithTags: Story = {
     await waitFor(async () => {
       await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.tag"]')).toHaveLength(6);
     });
+
+    const rows = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')];
+    const tagged = rows.filter((row) => row.querySelector('[data-testid="taskList.item.tag"]'));
+    await expect(tagged.length).toBeGreaterThan(0);
+    for (const row of tagged) {
+      const title = titleCell(row).getBoundingClientRect();
+      const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]');
+      await expect(chips).toBeTruthy();
+      const box = chips!.getBoundingClientRect();
+      await expect(box.top).toBeGreaterThanOrEqual(title.bottom - 0.5);
+      await expect(Math.abs(box.left - title.left)).toBeLessThan(1);
+      const description = row.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+      if (description) {
+        await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(box.bottom - 0.5);
+      }
+    }
+    await expect(tagged.some((row) => row.querySelector('[data-testid="taskList.item.description"]'))).toBe(true);
+
+    // A row with nothing to show as a chip holds no empty line for them.
+    const untagged = rows.find(
+      (row) =>
+        !row.querySelector('[data-testid="taskList.item.chips"] > *') &&
+        !row.querySelector('[data-testid="taskList.item.description"]'),
+    );
+    if (untagged) {
+      await expect(Math.round(untagged.getBoundingClientRect().height)).toBeLessThanOrEqual(
+        Math.round(titleCell(untagged).getBoundingClientRect().height) + 8,
+      );
+    }
   },
 };
 
@@ -1057,7 +1094,7 @@ export const TestArtifactPreviews: Story = {
   },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"] .col-\\[chips\\] *')].find(
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.chips"] *')].find(
         (element) => element.textContent === label,
       );
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');

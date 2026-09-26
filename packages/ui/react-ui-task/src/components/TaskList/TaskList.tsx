@@ -317,9 +317,6 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    // Capped at half the row: `min-content` let one long artifact tag push the title to nothing;
-    // the cell scrolls what does not fit and the title truncates instead.
-    ['chips', 'fit-content(50%)', 'chips-end'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -458,16 +455,19 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's subgrid, flowing into the `chips`, `estimate`, `priority` and
-          `actions` tracks in this order — `buildGridTemplate` declares a track only when its option
-          is on, and the matching cell is omitted on the same condition, so the two never drift.
-          Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
-          a column; every control after it is one rail-item square and needs no wrapper. */}
-      {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
-          reach overflow on its end side, and `justify-end` spills the excess off the start. */}
-      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
+      {/* Direct children of the row's grid. The chips take a line of their own under the title and
+          above the description: on the title line they competed with it for width, and a long
+          artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps a
+          row with no chips from holding an empty line. */}
+      <div
+        data-testid='taskList.item.chips'
+        className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
+      >
         <TaskTags task={task} />
       </div>
+      {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
+          `buildGridTemplate` declares a track only when its option is on, and the matching cell is
+          omitted on the same condition, so the two never drift. */}
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
