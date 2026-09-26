@@ -116,21 +116,34 @@ export const captureCiEvents = async (events, { historical = false } = {}) => {
     return false;
   }
 
-  const batch = events.map(({ event, properties, timestamp, dedup }) => ({
-    event,
-    timestamp: timestamp ?? new Date().toISOString(),
-    // `dedup` distinguishes several facts emitted from one run, which would otherwise share a commit
-    // and so a uuid, leaving them separated by timestamp alone. Absent, the seed is unchanged, so an
-    // event keyed by its commit still resolves a rerun onto the same row.
-    uuid: uuidV5([event, properties.commitSha ?? timestamp, dedup].filter((part) => part !== undefined).join('|')),
-    properties: {
-      distinct_id: DISTINCT_ID,
-      // Without this every event mints a person, and a person per commit pollutes every
-      // person-scoped insight in the project for no gain.
-      $process_person_profile: false,
-      ...Object.fromEntries(Object.entries(properties).map(([key, value]) => [namespaced(key), value])),
-    },
-  }));
+  const batch = events.map(({ event, properties, timestamp, dedup }) => {
+    const at = timestamp ?? new Date().toISOString();
+    return {
+      event,
+      timestamp: at,
+      properties: {
+        distinct_id: DISTINCT_ID,
+        // Without this every event mints a person, and a person per commit pollutes every
+        // person-scoped insight in the project for no gain.
+        $process_person_profile: false,
+        ...Object.fromEntries(Object.entries(properties).map(([key, value]) => [namespaced(key), value])),
+      },
+      /**
+       * Seeded on the commit AND the resolved timestamp, plus `dedup` where several facts come from
+       * one run.
+       *
+       * The commit alone is not enough: a schedule fires against whatever main happens to be, so two
+       * nights with no merge between them measure different deployments under one sha and would
+       * share a uuid. The timestamp alone is not enough either: an event dated by its commit — which
+       * is what keys `ci.boot-budget` — must survive a rerun onto the same row, and two commits can
+       * carry the same committer date. Together, each addresses the other's collision.
+       *
+       * It is the resolved timestamp rather than the supplied one, so `--timestamp now` seeds on the
+       * moment it actually sent rather than dropping out of the seed entirely.
+       */
+      uuid: uuidV5([event, properties.commitSha, at, dedup].filter((part) => part !== undefined).join('|')),
+    };
+  });
 
   for (let offset = 0; offset < batch.length; offset += BATCH_SIZE) {
     const chunk = batch.slice(offset, offset + BATCH_SIZE);
