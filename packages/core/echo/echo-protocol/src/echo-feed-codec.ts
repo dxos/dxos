@@ -3,6 +3,7 @@
 //
 
 import { FeedProtocol } from '@dxos/protocols';
+import { makeBoundedTextDecoder } from '@dxos/util';
 
 import type { ForeignKey } from './foreign-key.ts';
 
@@ -37,7 +38,8 @@ export type FeedBlockData = {
  */
 export class EchoFeedCodec {
   static readonly #encoder = new TextEncoder();
-  static readonly #decoder = new TextDecoder();
+  // Held for the worker's lifetime, so it must stay under Safari 18's per-instance 2 GiB decode cap.
+  static readonly #decoder = new (makeBoundedTextDecoder(TextDecoder))();
 
   /**
    * Feed blocks are always whole-object snapshots; the index collapses entries by id to the latest

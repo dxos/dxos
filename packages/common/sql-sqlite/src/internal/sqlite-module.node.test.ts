@@ -12,7 +12,7 @@ import { afterEach, describe, test } from 'vitest';
 // @ts-expect-error - No type declarations for this module.
 import DxosSQLiteESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite.mjs';
 
-import { type SqliteModuleFactory, instantiateSqliteModule, makeBoundedTextDecoder } from './sqlite-module.ts';
+import { type SqliteModuleFactory, instantiateSqliteModule } from './sqlite-module.ts';
 
 const require = createRequire(import.meta.url);
 
@@ -78,26 +78,4 @@ describe('instantiateSqliteModule', () => {
       await sqlite3.close(db);
     },
   );
-});
-
-describe('makeBoundedTextDecoder', () => {
-  test('replaces its native decoder before the budget, but never mid-stream', ({ expect }) => {
-    const instances: Array<TextDecoder> = [];
-    class CountingTextDecoder extends TextDecoder {
-      constructor(label?: string, options?: TextDecoderOptions) {
-        super(label, options);
-        instances.push(this);
-      }
-    }
-    const decoder = new (makeBoundedTextDecoder(CountingTextDecoder, 4))();
-    const euro = new TextEncoder().encode('\u20ac');
-
-    expect(decoder.decode(new TextEncoder().encode('abc'))).toBe('abc');
-    // Over budget but streaming: the split sequence must reach the decoder holding its first bytes.
-    expect(decoder.decode(euro.subarray(0, 2), { stream: true })).toBe('');
-    expect(decoder.decode(euro.subarray(2))).toBe('\u20ac');
-    const beforeRotation = instances.length;
-    expect(decoder.decode(new TextEncoder().encode('defg'))).toBe('defg');
-    expect(instances.length).toBe(beforeRotation + 1);
-  });
 });
