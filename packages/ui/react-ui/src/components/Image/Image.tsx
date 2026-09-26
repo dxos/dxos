@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type SyntheticEvent, useCallback, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -22,6 +22,7 @@ export type ImageProps = ThemedClassName<
      * image host sends CORS headers and you want the dominant-color gradient.
      */
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
+    /** Makes the image a button, operable by pointer and by Enter or Space. */
     onClick?: () => void;
   } & ColorOptions
 >;
@@ -76,6 +77,16 @@ export const Image = ({
     [sampleSize, contrast, src],
   );
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLImageElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick?.();
+      }
+    },
+    [onClick],
+  );
+
   return (
     <div
       // `isolate` (`isolation: isolate`) creates a new stacking context so
@@ -120,7 +131,7 @@ export const Image = ({
         }}
         onError={handleImageError}
         onLoad={handleImageLoad}
-        onClick={onClick}
+        {...(onClick && { role: 'button', tabIndex: 0, onClick, onKeyDown: handleKeyDown })}
       />
     </div>
   );
