@@ -29,6 +29,9 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 /**
  * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
  *
+ * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
+ * NDJSON is still accepted because native builds already in the field upload it uncompressed.
+ *
  * Admits `nativeOrigins`, whose uploads are necessarily cross-origin, and carries the CORS headers on
  * every response, since the client reads the returned key.
  */
@@ -74,16 +77,17 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Empty body', { status: 400, headers: cors });
   }
 
+  const gzipped = request.headers.get('content-type')?.split(';')[0].trim() === 'application/gzip';
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
-  const key = `logs/${date}/${id}.ndjson`;
+  const key = `logs/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
     // near its memory limit, and a Worker torn down that way resets the connection — the client
     // then sees a rejected `fetch` with no status rather than an error response.
     await env.FEEDBACK_LOGS.put(key, request.body, {
-      httpMetadata: { contentType: 'application/x-ndjson' },
+      httpMetadata: { contentType: gzipped ? 'application/gzip' : 'application/x-ndjson' },
     });
   } catch {
     // R2 rejects a body that does not match Content-Length, as well as its own failures.
