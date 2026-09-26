@@ -62,6 +62,8 @@ const TASK_ANSWER = 'On for internal spaces only';
 const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
+const OTHER_PROJECT_NAME = 'Project 2';
+const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -71,7 +73,14 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  */
 let generation = 0;
 let seeded:
-  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | {
+      generation: number;
+      space: Space;
+      project: Project.Project;
+      taskSet: TaskSet.TaskSet;
+      task: Task.Task;
+      destination: Project.Project;
+    }
   | undefined;
 
 /** Seeded at client init so every story starts populated, including the ones with no play function. */
@@ -140,7 +149,10 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  seeded = { generation: storyGeneration, space, project, taskSet, task };
+  // A second project, so a task row's `Move to…` has somewhere to go.
+  const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
+
+  seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
 };
 
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
@@ -283,7 +295,6 @@ const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -337,6 +348,9 @@ const meta = {
       // the first render.
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, as the app's theme is: the storybook layout portals its dialog outside the story,
+    // so a theme inside the plugin manager would leave the dialog without translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -536,6 +550,43 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Move to…` action: it opens the project picker (a dialog the storybook layout hosts),
+ * and picking another project transfers the task into that project's task set.
+ */
+export const MoveTaskToProject: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { taskSet, task, destination } = await seedContent();
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    const row = title.closest('[data-testid="taskList.item"]');
+    await expect(row).toBeTruthy();
+    await userEvent.click(
+      await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+    );
+    await userEvent.click(await screen.findByText(MOVE_ACTION_LABEL, undefined, { timeout: 10_000 }));
+
+    // The picker lists the other project only: the task's own project is not a destination.
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await expect(within(dialog).findByText('Move task to project')).resolves.toBeTruthy();
+    await expect(within(dialog).queryByText(PROJECT_NAME)).toBeNull();
+    await userEvent.click(await within(dialog).findByText(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 }));
+
+    await waitFor(
+      async () => {
+        await expect(TaskSet.resolveTasks(taskSet).map(({ id }) => id)).not.toContain(task.id);
+        await expect(destination.taskSet?.target?.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
   },
 };
 
