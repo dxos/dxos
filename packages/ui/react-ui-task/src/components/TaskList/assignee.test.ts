@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
-import { type Actor, RemoteSession } from '@dxos/types';
+import { type Actor, RemoteSession, Task } from '@dxos/types';
 
 import { AGENT_ICON, PERSON_ICON, getAssigneeDisplay } from './assignee.ts';
 
@@ -54,6 +54,16 @@ describe('getAssigneeDisplay', () => {
     expect(result.label).toEqual(`…${session.id.slice(-8)}`);
     expect(result.icon).toEqual(AGENT_ICON);
     expect(result.session).toBeUndefined();
+  });
+
+  test('an agent standing for an object that is not a session reads as an agent, not an id', ({ expect }) => {
+    // A chat in the app; any loaded object that is not a `RemoteSession` stands in for it here.
+    const other = Task.make({ title: 'Conversation' });
+    expect(display({ role: 'assistant', subject: Ref.make(other) }, { subject: other })).toMatchObject({
+      label: 'Agent',
+      icon: AGENT_ICON,
+      agent: true,
+    });
   });
 
   test('an agent with nothing to name it by reads as the translated fallback', ({ expect }) => {

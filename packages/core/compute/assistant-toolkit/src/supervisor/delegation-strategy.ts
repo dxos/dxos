@@ -120,6 +120,32 @@ const sweepOrphanedTasks = (
   });
 
 /**
+ * Fails the tasks the conversation's own agent holds when its turn fails — a model error ends the
+ * process before any reconcile, so a task left `started` would read as underway indefinitely.
+ * Sub-agent tasks are left to their own process's exit, which may still succeed.
+ */
+const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Effect<void, never, Database.Service> =>
+  Effect.gen(function* () {
+    const held = (yield* Chat.loadTasks(chat)).filter((task) => Task.isAgentWorking(task) && !isSubAgentTask(task));
+    if (held.length === 0) {
+      return;
+    }
+
+    // The reader sees the error message; the full cause goes to the log.
+    const reason = Cause.prettyErrors(cause)
+      .map((error) => error.message)
+      .join('; ');
+    log.warn('agent turn failed; failing held tasks', { chatId: chat.id, cause: Cause.pretty(cause) });
+    for (const task of held) {
+      Task.setStatus(task, 'failed', {
+        actor: { role: 'assistant', subject: Ref.make(chat) },
+        description: `The agent's request failed${reason ? `: ${reason}` : '.'}`,
+      });
+    }
+    yield* Database.flush();
+  });
+
+/**
  * Supervisor behaviour for the conversational agent: after each turn, every queued agent task
  * whose dependencies are done is run by a sub-agent (a synthesized minimal `Routine` executed via
  * `RunInstructions`), marked started at spawn; on exit the task is marked done/failed and a
@@ -190,6 +216,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       yield* Database.flush();
       return delegations;
     }),
+
+  onTurnFailed: failHeldTasks,
 
   onComplete: (chat, id, exit) =>
     Effect.gen(function* () {
