@@ -2,6 +2,8 @@
 -- (`Obj.toJSON` plus `@parent`, `@meta` included) and is the source of truth; every other column is
 -- denormalized from it so compiled queries can select, join and order without reading bodies.
 CREATE TABLE IF NOT EXISTS echo_entities (
+  -- Explicit rowid alias: `echo_fts` rows are keyed by it, and an implicit rowid may be renumbered by VACUUM.
+  seq INTEGER PRIMARY KEY,
   space_id TEXT NOT NULL,
   id TEXT NOT NULL,
   kind TEXT NOT NULL,
@@ -13,7 +15,7 @@ CREATE TABLE IF NOT EXISTS echo_entities (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   body TEXT NOT NULL,
-  PRIMARY KEY (space_id, id)
+  UNIQUE (space_id, id)
 );
 
 CREATE INDEX IF NOT EXISTS echo_entities_type ON echo_entities (space_id, type_dxn, id);
@@ -36,5 +38,5 @@ CREATE TABLE IF NOT EXISTS echo_refs (
 
 CREATE INDEX IF NOT EXISTS echo_refs_target ON echo_refs (space_id, target_id, prop_path);
 
--- Extracted string values for text search; the rowid is the entity row's rowid.
+-- Extracted string values for text search; the rowid is the entity row's `seq`.
 CREATE VIRTUAL TABLE IF NOT EXISTS echo_fts USING fts5(text, tokenize = 'trigram');

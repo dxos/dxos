@@ -104,7 +104,7 @@ export class ObjectStore {
       const sql = yield* SqlClient.SqlClient;
       const writeOne = (record: EntityRecord) =>
         Effect.gen(function* () {
-          const [{ rowid }] = yield* sql<{ rowid: number }>`
+          const [{ seq }] = yield* sql<{ seq: number }>`
             INSERT INTO echo_entities
               (space_id, id, kind, type_dxn, deleted, parent_id, source_id, target_id, created_at, updated_at, body)
             VALUES (${spaceId}, ${record.id}, ${record.kind}, ${record.typeDxn}, ${record.deleted ? 1 : 0},
@@ -113,22 +113,22 @@ export class ObjectStore {
               kind = excluded.kind, type_dxn = excluded.type_dxn, deleted = excluded.deleted,
               parent_id = excluded.parent_id, source_id = excluded.source_id, target_id = excluded.target_id,
               updated_at = excluded.updated_at, body = excluded.body
-            RETURNING rowid
+            RETURNING seq
           `;
           yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id = ${record.id}`;
           for (const ref of record.refs) {
             yield* sql`INSERT OR IGNORE INTO echo_refs (space_id, source_id, prop_path, target_id)
               VALUES (${spaceId}, ${record.id}, ${ref.path}, ${ref.targetId})`;
           }
-          yield* sql`DELETE FROM echo_fts WHERE rowid = ${rowid}`;
-          yield* sql`INSERT INTO echo_fts (rowid, text) VALUES (${rowid}, ${record.text})`;
+          yield* sql`DELETE FROM echo_fts WHERE rowid = ${seq}`;
+          yield* sql`INSERT INTO echo_fts (rowid, text) VALUES (${seq}, ${record.text})`;
         });
       yield* sql.withTransaction(
         Effect.gen(function* () {
           yield* Effect.forEach(records, writeOne, { discard: true });
           if (purged.length > 0) {
             const ids = JSON.stringify(purged);
-            yield* sql`DELETE FROM echo_fts WHERE rowid IN (SELECT rowid FROM echo_entities
+            yield* sql`DELETE FROM echo_fts WHERE rowid IN (SELECT seq FROM echo_entities
               WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids})))`;
             yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id IN (SELECT value FROM json_each(${ids}))`;
             yield* sql`DELETE FROM echo_entities WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids}))`;
@@ -139,13 +139,26 @@ export class ObjectStore {
   }
 
   /**
-   * Ids of rows whose own deleted flag is set.
+   * Ids of deleted rows and of everything their deletion hides: descendants through `parent_id` and
+   * relations with a purged endpoint. Purging only the flagged rows would make those visible again.
    */
   deletedIds(): Store<string[]> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ id: string }>`SELECT id FROM echo_entities WHERE space_id = ${spaceId} AND deleted = 1`;
+      // One recursive branch per indexed column: an OR across them would scan the space.
+      const rows = yield* sql<{ id: string }>`
+        WITH RECURSIVE gone(id) AS (
+          SELECT id FROM echo_entities WHERE space_id = ${spaceId} AND deleted = 1
+          UNION
+          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.parent_id = g.id
+          UNION
+          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.source_id = g.id
+          UNION
+          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.target_id = g.id
+        )
+        SELECT id FROM gone
+      `;
       return rows.map((row) => row.id);
     });
   }

@@ -368,7 +368,8 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   }
 
   /**
-   * Permanently removes rows whose own deleted flag is set, with their reference and text rows.
+   * Permanently removes deleted rows and everything their deletion hides (descendants and relations
+   * with a removed endpoint), with their reference and text rows.
    */
   async runGarbageCollection(_options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
     await this.flush();

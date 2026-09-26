@@ -560,6 +560,30 @@ describe('SqliteDatabase', () => {
     }),
   );
 
+  it.effect('garbage collection purges what a deletion hides, so it stays hidden', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      yield* session(
+        async (db) => {
+          const org = db.add(Obj.make(TestSchema.Organization, { name: 'Gone' }));
+          db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: org, title: 'Child' }));
+          const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+          db.add(
+            Relation.make(TestSchema.EmployedBy, { [Relation.Source]: alice, [Relation.Target]: org, role: 'CTO' }),
+          );
+          db.remove(org);
+
+          // Org, its child task and the relation to it; Alice survives.
+          expect((await db.runGarbageCollection()).unlinkedObjects).toBe(3);
+          expect(await db.query(Filter.type(TestSchema.Task)).run()).toEqual([]);
+          expect(await db.query(Filter.type(TestSchema.EmployedBy)).run()).toEqual([]);
+          expect(names(await db.query(Filter.everything()).run())).toEqual(['Alice']);
+        },
+        { spaceId },
+      );
+    }),
+  );
+
   it.effect('retries a failed write instead of dropping it (T-9)', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();

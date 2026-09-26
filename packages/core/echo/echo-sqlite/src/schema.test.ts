@@ -59,6 +59,18 @@ describe('echo-sqlite migrations', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  // `echo_fts` rows are keyed by the entity rowid; only an explicit alias survives VACUUM unchanged.
+  it.effect('entities have an explicit INTEGER PRIMARY KEY for the text index to key on', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* new ObjectStore(SpaceId.random()).migrate();
+      const columns = yield* sql<{ name: string; type: string; pk: number }>`PRAGMA table_info(echo_entities)`;
+      expect(columns.filter((column) => column.pk > 0)).toEqual([
+        expect.objectContaining({ name: 'seq', type: 'INTEGER', pk: 1 }),
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('is a no-op on a database that already has the tables', () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
