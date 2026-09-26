@@ -24,7 +24,8 @@ the `depot` CLI reads it automatically.
 
 ## Get the CLI
 
-Not preinstalled. Fetch the release binary (the published installer pipes curl into sh, which
+`.config/claude-code-setup.sh` installs it to `/usr/local/bin` in the cloud container. Where it
+is missing, fetch the release binary (the published installer pipes curl into sh, which
 the sandbox's command classifier blocks — resolve the redirect and untar instead):
 
 ```bash
