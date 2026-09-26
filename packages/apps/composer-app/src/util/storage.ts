@@ -60,8 +60,9 @@ export const runStorageResetMigration = async (): Promise<void> => {
 
 export const defaultStorageIsEmpty = async (config?: defs.Runtime_Client_Storage): Promise<boolean> => {
   try {
-    const { Storage } = await import('@dxos/client-services');
-    const storage = Storage.createStorageObjects(config ?? create(Runtime_Client_StorageSchema, {})).storage;
+    // The storage entry alone: the package root would load its key modules' wasm and Automerge.
+    const { createStorageObjects } = await import('@dxos/client-services/storage');
+    const storage = createStorageObjects(config ?? create(Runtime_Client_StorageSchema, {})).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();

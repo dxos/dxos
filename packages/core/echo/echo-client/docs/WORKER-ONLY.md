@@ -162,23 +162,24 @@ documents. Chrome counts wasm memory in its heap figure; the wasm share is in br
 
 ### Wasm in the tab
 
-Read from the source and a full-catalog build, not observed in a browser. With the default plugins and
-ECHO in the dedicated worker, the tab instantiates one wasm module at boot: Automerge's.
+Read from the source and a full-catalog build, then checked in a browser with Composer's wasm probe.
+With the default plugins and ECHO in the dedicated worker, a replica-mode tab instantiates one wasm
+module at boot, Automerge's, and a proxy-mode tab none.
 
-| Module                                 | Size of the .wasm | When the tab instantiates it                                                                                                                                                         |
-| -------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Automerge                              | 3.6 MB            | At boot, in every mode (`composer-app/src/main.tsx:268`)                                                                                                                             |
-| Subduction                             | 1.7 MB            | At boot, only with `DX_HOST`                                                                                                                                                         |
-| Five sodium modules (hypercore-crypto) | 19 KB             | On a fresh profile's first boot: the storage probe (`src/util/storage.ts:63`) imports the root of `@dxos/client-services`, whose key module instantiates them; always with `DX_HOST` |
-| pica (in Excalidraw)                   | 2.5 KB            | Inserting an image into a drawing                                                                                                                                                    |
-| manifold                               | 490 KB            | Opening a Spacetime scene (experimental plugin)                                                                                                                                      |
-| wnfs                                   | 1.0 MB            | The first `wnfs://` blob (experimental plugin)                                                                                                                                       |
-| panproto                               | 7.3 MB            | plugin-library's atproto lenses (development builds only)                                                                                                                            |
+| Module                                 | Size of the .wasm | When the tab instantiates it                                                                                    |
+| -------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| Automerge                              | 3.6 MB            | At boot, in replica mode and with `DX_HOST` (`initPageAutomerge` in `composer-app/src/main.tsx`)                |
+| Subduction                             | 1.7 MB            | At boot, only with `DX_HOST`                                                                                    |
+| Five sodium modules (hypercore-crypto) | 19 KB             | Only with `DX_HOST`. The first boot's storage probe imports `@dxos/client-services/storage`, which carries none |
+| pica (in Excalidraw)                   | 2.5 KB            | Inserting an image into a drawing                                                                               |
+| manifold                               | 490 KB            | Opening a Spacetime scene (experimental plugin)                                                                 |
+| wnfs                                   | 1.0 MB            | The first `wnfs://` blob (experimental plugin)                                                                  |
+| panproto                               | 7.3 MB            | plugin-library's atproto lenses (development builds only)                                                       |
 
 SQLite runs in the worker. esbuild, Excalidraw's font subsetting and pdf.js run in their own workers,
 and pdf.js falls back to its JS decoders because Composer passes it no wasm URL.
 
-Only Automerge is in scope for now. Sodium and panproto, with its core extension, are follow-ups;
+Automerge and sodium are out of proxy-mode tabs. panproto, with its core extension, is a follow-up;
 manifold, wnfs and pica belong to plugins. The spike checked two of these. Its `bench/wasm/analyze.ts`
 bundles the storage probe's import of
 `@dxos/client-services`: 1,853 modules, carrying sodium, Automerge's `.wasm` and Subduction's base64
@@ -753,7 +754,7 @@ its measurements are in [MEASUREMENTS.md](../../automerge-proxy/docs/MEASUREMENT
 | `meta.updatedAt`                                                                                                                            | Change times from the tab's model, which the saved bytes and every change carry                                                                                                                                                                                                                     | S    | echo-client `tab-repo.test.ts`                                 |
 | Edits pending when a tab closes                                                                                                             | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                                                                                                                             | S    | `Repo.test.ts`                                                 |
 | Publishing: `@dxos/automerge-proxy` is private, but echo-client, echo-doc, echo-host, plugin-markdown, protocols and ui-editor depend on it | A trusted publisher, then drop `private`; until then `check-public-dependencies` fails on this branch                                                                                                                                                                                               | S    | The package's `pack` task                                      |
-| Other wasm in the tab                                                                                                                       | Follow-up, after the core SDK: sodium (import the storage module directly instead of the root of `@dxos/client-services`) and panproto; plugin wasm is out of scope (see [Wasm in the tab](#wasm-in-the-tab))                                                                                       | S    | Composer's wasm probe                                          |
+| Other wasm in the tab                                                                                                                       | Sodium is done: Composer's storage check imports `@dxos/client-services/storage`. panproto is a follow-up, and plugin wasm is out of scope (see [Wasm in the tab](#wasm-in-the-tab))                                                                                                                | S    | Composer's wasm probe                                          |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The mirror spike adds

@@ -337,26 +337,31 @@ the plan above in these places:
     benches, whose findings are under "Wasm in the tab" in WORKER-ONLY.md. Rerun on the package, the
     benches give the spike's figures on the same machine.
 
+18. **Composer's first-run storage check loads only client-services' storage entry.** It imported the
+    package root, whose key modules instantiate sodium and whose profile archive reaches Automerge
+    through automerge-repo's root. A fresh profile's first boot in proxy mode therefore loaded
+    sodium's wasm and evaluated Automerge's JS, which made it about 150 ms slower than replica mode's.
+    `@dxos/client-services/storage` exports `createStorageObjects` alone, and the build check now
+    walks it instead of stopping at it.
+
 echo-client's suite passes in both modes, 633 tests each. automerge-proxy passes 113 tests,
 ui-editor 461, echo-doc 22 and `@dxos/client` 47 under CI's filter. Over the real adapter,
 `tab-repo.test.ts` covers writes across tabs, final heads, concurrent text, anchors, history, update
 time and objects made before they join a database, and `Repo.test.ts` covers restarts at the
 package level.
 
-Composer in proxy mode fetches no Automerge module and instantiates no Automerge wasm, and edits
-persist across a reload in both modes. The page still instantiates one wasm module, sodium, which
-`hypercore-crypto` loads at startup, so phase 6's "no wasm" holds for Automerge only. Composer's e2e
+Composer in proxy mode fetches no Automerge module and instantiates no wasm at all, on a fresh
+profile's first boot or on reload, and edits persist across a reload in both modes. Composer's e2e
 suite in proxy mode passes 28 tests and skips 15. Its one failure, "drag object into collection",
 fails in replica mode too.
 
 | Composer build | First boot, fresh profile | Reload   |
 | -------------- | ------------------------- | -------- |
-| Replica        | 2,087 ms                  | 3,490 ms |
-| Proxy          | 2,265 ms                  | 3,425 ms |
+| Replica        | 1,957 ms                  | 3,722 ms |
+| Proxy          | 1,954 ms                  | 3,409 ms |
 
-These are medians of three runs of the app's own `composer.startup` total. Reloads are at parity.
-Proxy's first boot is about 150 ms slower and not yet explained; a fourth proxy run measured
-2,063 ms.
+These are medians of three runs of the app's own `composer.startup` total, both builds with item 18
+in. Before it, proxy's first boot took 2,265 ms.
 
 ## Tests that move
 

@@ -448,8 +448,8 @@ export default defineConfig((env) => ({
         /composer-app\/src\/util\/automerge-wasm\.ts$/,
         // Replica mode, from echo-client's `loadCreateRepo`.
         /echo-client\/src\/automerge\/repo-proxy\.ts$/,
-        // HOST mode's services, and the first run's check for existing storage.
-        /packages\/sdk\/client-services\//,
+        // HOST mode's services. The storage entry is walked, since every first run loads it.
+        /packages\/sdk\/client-services\/(?!dist\/lib\/storage\.mjs$)/,
       ],
     }),
     ShutdownPlugin(),
