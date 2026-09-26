@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Task } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent, resolveTaskPlacement } from './hierarchy.ts';
 import { buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
@@ -136,21 +136,28 @@ describe('keyboard moves applied', () => {
 });
 
 /**
- * Applies a placement the way `MoveTask` does — re-parent, then reposition in the flat array before
- * the anchor or at the end — so a test reads the tree the move produces rather than its two terms.
+ * Applies a placement the way `MoveTask` does — out of the old parent's `subtasks`, into the new
+ * one's before the anchor, re-parented, and repositioned in the root order — so a test reads the tree
+ * the move produces rather than its two terms.
  */
 const move = (tasks: readonly Task.Task[], task: Task.Task, placement: TaskPlacement | undefined): Task.Task[] => {
   if (!placement) {
     throw new Error(`No placement for ${task.title}.`);
   }
   const { parentTask, before } = placement;
-  Obj.update(task, (task) => {
-    if (parentTask) {
-      task.parentTask = Ref.make(parentTask);
-    } else {
-      delete task.parentTask;
-    }
-  });
+  const previous = Task.getParentTask(task);
+  if (previous) {
+    Obj.update(previous, (previous) => {
+      TaskSet.removeRefsInPlace(previous.subtasks ?? [], new Set([task.id]));
+    });
+  }
+  if (parentTask) {
+    Obj.update(parentTask, (parentTask) => {
+      parentTask.subtasks ??= [];
+      TaskSet.insertInPlace(parentTask.subtasks, Ref.make(task), before?.id);
+    });
+  }
+  Obj.setParent(task, parentTask ?? undefined);
   const rest = tasks.filter((candidate) => candidate.id !== task.id);
   const anchor = before ? rest.findIndex((candidate) => candidate.id === before.id) : -1;
   return anchor === -1 ? [...rest, task] : [...rest.slice(0, anchor), task, ...rest.slice(anchor)];

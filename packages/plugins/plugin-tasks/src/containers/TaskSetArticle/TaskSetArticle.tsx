@@ -205,7 +205,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       ...(before ? { before: Ref.make(before) } : {}),
     }),
   );
-  const { invokePromise } = useOperationInvoker();
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
       // A rejected drop (e.g. a parent outside this set) must not throw out of the gesture handler:

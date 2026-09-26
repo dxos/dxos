@@ -433,7 +433,7 @@ export const AddSubTask: Story = {
     const { taskSet } = context;
     const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
     const parentRow = () => canvas.getByText('Design label').closest<HTMLElement>('[data-testid="taskList.item"]')!;
-    const children = () => TaskSet.resolveTasks(taskSet).filter((task) => task.parentTask?.target?.id === parent.id);
+    const children = () => TaskSet.resolveTasks(taskSet).filter((task) => Task.parentTaskId(task) === parent.id);
     const visible = (id: string) => {
       const row = canvasElement.querySelector<HTMLElement>(`[data-object-id="${id}"]`);
       return !!row && !row.closest('[hidden]');
@@ -614,10 +614,9 @@ export const CollapsePersists: Story = {
     const { space, taskSet } = context;
     const addChild = (parentTitle: string, title: string) => {
       const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === parentTitle)!;
-      const child = space.db.add(Task.make({ title, status: 'todo', parentTask: Ref.make(parent) }));
-      Obj.update(taskSet, (taskSet) => {
-        taskSet.tasks.push(Ref.make(child));
-      });
+      // A sub-task is held by its parent: parented to it and listed in its `subtasks`.
+      const child = space.db.add(Task.make({ [Obj.Parent]: parent, title, status: 'todo' }));
+      TaskSet.addTaskToSet(taskSet, child, { parent });
     };
     addChild('Design label', 'Pick the typeface');
     addChild('Source green coffee', 'Order the samples');
