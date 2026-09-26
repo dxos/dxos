@@ -57,6 +57,9 @@ const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
+const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
+const TASK_ANSWER = 'On for internal spaces only';
+const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 
@@ -98,6 +101,25 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
+  // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
+  // pair is what the detail pane renders as two lines — the question an agent asked, and the answer
+  // it was resumed on. `answer` refuses an id that is not in this task's log, so seeding through
+  // them is also the check that the two entries are joined.
+  const question = Task.ask(task, {
+    text: TASK_QUESTION,
+    context: 'The section ships behind a flag either way; the question is what the flag defaults to.',
+    options: [{ title: TASK_ANSWER }, { title: 'Off for everyone' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  Task.answer(task, question.id, TASK_ANSWER, { actor: { role: 'user', name: 'Rich' } });
+  // A second question, left open: answered, a question is a record and reads as two lines of the
+  // log; open, it is a prompt the pane puts to the reader, which is the other half of the surface.
+  Task.ask(task, {
+    text: TASK_OPEN_QUESTION,
+    context: 'Nobody has said which spaces count as internal, and the flag needs a list.',
+    options: [{ title: 'Every space the team owns' }, { title: 'Only the demo space' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
   // What the task produced, linked the way the verbs link it: a ref on the task, with the object
   // filed in the space rather than parented to the task.
   Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
@@ -224,9 +246,8 @@ const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
           <TestGrid.Panel>
             {/* The companion the deck mounts, not the task article directly: it reads the ledger's
                 selection itself, renders the article through the surface (so plugin-tasks'
-                `article.task` registration is still what resolves), and adds the task's artifacts
-                as cards beneath it. */}
-            <ProjectTaskCompanion role={role} attendableId={attendableId} project={project} />
+                `article.task` registration is still what resolves). */}
+            <ProjectTaskCompanion role={role} attendableId={attendableId} companionTo={project} />
           </TestGrid.Panel>
         )}
       </TestGrid.Stack>
@@ -362,16 +383,58 @@ export const TaskDetail: Story = {
     // The detail panel renders the same title as an editable field, so the form is what is asserted
     // rather than a second copy of the row's text.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // What the task produced, under its editor: the card grid plugin-space contributes. Scoped to
-    // the grid rather than the canvas — the ledger row carries a chip with the same text, which
-    // would pass this assertion with no grid rendered at all.
+    // What the task produced, under its editor: the card grid the task article hands its artifacts
+    // to. Scoped to the grid rather than the canvas — the ledger row carries a chip with the same
+    // text, which would pass this assertion with no grid rendered at all.
     const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
     await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
+    // Once only: the companion used to render the same artifacts a second time beneath the article.
+    await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
+    // The exchange reads as two lines of the log: what was asked, and what it was answered with.
+    // Answered, so it is a record rather than a prompt — the pane offers no controls for it.
+    const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
+    await waitFor(() => expect(history()).toBeTruthy(), { timeout: 10_000 });
+    await expect(within(history()!).findByText(TASK_QUESTION, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(within(history()!).findByText(TASK_ANSWER, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // The open one is a prompt instead: its text, the options it suggests, and a field for an answer
+    // it did not think of. Scoped to the prompt, since the ledger row summarises every question.
+    const prompt = () => canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
+    await waitFor(() => expect(prompt()).toBeTruthy(), { timeout: 10_000 });
+    await expect(
+      within(prompt()!).findByText(TASK_OPEN_QUESTION, undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(within(prompt()!).findAllByTestId('task-question.option')).resolves.toHaveLength(2);
+    // The answered one stays a record: exactly one prompt, not two.
+    await expect(canvasElement.querySelectorAll('[data-testid="task-question.input"]')).toHaveLength(1);
+
     // `findAllByText`: the card names the artifact in its header and again in the form its type
     // contributes as the card's body, so the single-match query would throw on its own success.
     await expect(
       within(cards()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
     ).resolves.not.toHaveLength(0);
+
+    // The description is edited with the host's contributed extensions live in it, as the ledger's
+    // own strip is: a task opened in the pane decorates `#123` and a pull-request URL rather than
+    // showing the reader raw markdown the list would have rendered.
+    await userEvent.click(await canvas.findByText(LINK_TASK_TITLE, undefined, { timeout: 10_000 }));
+    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskEditor.description"]');
+    await waitFor(async () => await expect(editor()?.textContent).toContain('supersedes'), { timeout: 10_000 });
+    await waitFor(
+      async () =>
+        await expect(
+          [...(editor()?.querySelectorAll('a.cm-link') ?? [])].map((link) => link.getAttribute('href')),
+        ).toContain('https://github.com/dxos/dxos/issues/12431'),
+      { timeout: 10_000 },
+    );
+    // A pasted URL is a chip here as it is in the row: the reader wrote a bare link either way, and
+    // the pane used to leave it as raw text while the row named it `#12752`.
+    await waitFor(
+      async () =>
+        await expect(
+          [...(editor()?.querySelectorAll('.dx-tag--anchor') ?? [])].map((chip) => chip.textContent),
+        ).toContain('#12752'),
+      { timeout: 10_000 },
+    );
   },
 };
 

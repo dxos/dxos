@@ -25,7 +25,6 @@ export class Milestone extends Type.makeObject<Milestone>(DXN.make('org.dxos.typ
   }).pipe(
     Schema.annotate({ title: 'Milestone' }),
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--flag-banner--regular', hue: 'amber' }),
   ),
 ) {}

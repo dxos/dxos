@@ -29,7 +29,7 @@ export const AddMailbox = Operation.make({
   input: Schema.Struct({
     object: Obj.Unknown,
     // The database comes from the invocation's space id, never from the input; absent, the mailbox
-    // is filed at the space root.
+    // is filed in no collection.
     target: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({

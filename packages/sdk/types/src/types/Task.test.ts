@@ -332,6 +332,50 @@ describe('mutations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('edits the text without narrating it', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      // The text is edited by typing, and every blur commits: a log of "Description updated." buries
+      // the entries a reader opens the history for.
+      const entry = Task.update(task, { title: 'Draft the launch email', description: 'Send it Friday.' });
+      yield* Database.flush();
+
+      expect(entry).toBeUndefined();
+      expect(task.history).toBeUndefined();
+      expect(task.title).toEqual('Draft the launch email');
+      expect(task.description).toEqual('Send it Friday.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('narrates the work an edit changed, not the text beside it', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.update(task, { title: 'Draft the launch email', status: 'started' });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Status changed from todo to started.');
+      expect(task.history).toHaveLength(1);
+      expect(task.title).toEqual('Draft the launch email');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('records a caller that has something to say about a silent edit', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.update(task, { description: 'Send it Friday.' }, { description: 'Scope agreed in standup.' });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Scope agreed in standup.');
+      expect(task.history).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('setStatus records the transition, and the caller may date it', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(Task.make({ title: 'Draft launch email' }));

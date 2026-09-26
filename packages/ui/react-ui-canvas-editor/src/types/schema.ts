@@ -58,7 +58,7 @@ export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos
      * Graph of shapes positioned on the canvas.
      */
     layout: GraphModel.Data,
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' }), Annotation.UserType.set()),
 ) {}
 
 /**

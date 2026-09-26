@@ -191,7 +191,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
       <div className='px-trim-md'>
-        <TaskList.Edit
+        <TaskList.Editor
           createOnly
           showDescription
           descriptionExtensions={descriptionExtensions}

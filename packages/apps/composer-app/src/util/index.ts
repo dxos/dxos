@@ -8,6 +8,7 @@ export * from './constants.ts';
 export * from './dev-rss-banner.ts';
 export * from './halo.ts';
 export * from './log-download.ts';
+export * from './preload-recovery.ts';
 export * from './profiler.ts';
 export * from './storage.ts';
 export * from './translations.ts';

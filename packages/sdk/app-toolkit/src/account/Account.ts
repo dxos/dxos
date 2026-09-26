@@ -6,7 +6,6 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
 import { DEFAULT_AUTH_URL, DEFAULT_HUB_URL } from '@dxos/client-protocol';
@@ -24,8 +23,10 @@ import {
   ACCOUNT_ERROR_TYPES,
   type AccountErrorType,
   ATMOSPHERE_SOURCE,
-  InvitationCodeSchema,
+  INVITATION_CODE_LENGTH,
   OAuthProvider,
+  VANITY_PREFIX_MAX_LENGTH,
+  VANITY_SUFFIX_LENGTH,
 } from '@dxos/protocols';
 import { requirePublicKey } from '@dxos/protocols/buf';
 
@@ -129,13 +130,19 @@ export const createHubClient = (clientOrUrl: Client | string): HubHttpClient =>
 // Access codes
 //
 
-/** Hub-service matches the canonical form only ({@link InvitationCodeSchema}): no hyphens, upper case. */
+/**
+ * Canonical form: no hyphens, upper case. Hub-service ignores case and hyphens, so a vanity code like
+ * `SF-MEETUP-7K2Q` redeems as `SFMEETUP7K2Q`; hubs that predate vanity codes match this form only.
+ */
 export const normalizeAccessCode = (code: string): string => code.trim().replace(/-/g, '').toUpperCase();
 
-const isCanonicalAccessCode = Schema.is(InvitationCodeSchema);
+/** Generated codes are {@link INVITATION_CODE_LENGTH} characters; vanity codes run up to prefix plus suffix. */
+const CANONICAL_ACCESS_CODE = new RegExp(
+  `^[A-Z0-9]{${INVITATION_CODE_LENGTH},${VANITY_PREFIX_MAX_LENGTH + VANITY_SUFFIX_LENGTH}}$`,
+);
 
 /** Whether user input normalizes to a well-formed access code — hyphens and case are forgiven. */
-export const isValidAccessCodeFormat = (code: string): boolean => isCanonicalAccessCode(normalizeAccessCode(code));
+export const isValidAccessCodeFormat = (code: string): boolean => CANONICAL_ACCESS_CODE.test(normalizeAccessCode(code));
 
 /** Validate an access code against hub-service. Resolves false on any failure — never throws. */
 export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHttpClient; code: string }) {

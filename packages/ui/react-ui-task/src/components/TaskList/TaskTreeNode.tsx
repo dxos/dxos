@@ -7,14 +7,12 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
 import {
   type TaskDropIntent,
   type TaskPlacement,
@@ -25,7 +23,7 @@ import {
   resolveTaskPlacement,
 } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
-import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
+import { TaskCheckbox, TaskMnemonic, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
 import {
   TASK_TREE_ROOT_ID,
   type TaskNode,
@@ -70,8 +68,6 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /** Render the questions in each task's history under its title. */
-  showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
@@ -100,7 +96,6 @@ export const TaskTreeNode = ({
   translationKey,
   showDescription = false,
   descriptionComponents,
-  showQuestions = false,
   onCollapseToggle,
   onTaskCheck,
   onTaskSelect,
@@ -175,23 +170,12 @@ export const TaskTreeNode = ({
           translationKey,
           showDescription,
           descriptionComponents,
-          showQuestions,
           onTaskCheck,
           onTaskUpdate,
         }}
       />
     ),
-    [
-      showGutter,
-      ordinals,
-      checked,
-      translationKey,
-      showDescription,
-      descriptionComponents,
-      showQuestions,
-      onTaskCheck,
-      onTaskUpdate,
-    ],
+    [showGutter, ordinals, checked, translationKey, showDescription, descriptionComponents, onTaskCheck, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -321,10 +305,6 @@ export const TaskTreeNode = ({
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
-      // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
-      // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
       virtualize
       debug={debug}
       renderHeading={renderHeading}
@@ -349,7 +329,6 @@ const TaskTreeHeading = ({
   translationKey,
   showDescription,
   descriptionComponents,
-  showQuestions,
   onTaskCheck,
   onTaskUpdate,
 }: {
@@ -360,7 +339,6 @@ const TaskTreeHeading = ({
   translationKey: string;
   showDescription: boolean;
   descriptionComponents?: TaskDescriptionProps['components'];
-  showQuestions: boolean;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
@@ -377,8 +355,6 @@ const TaskTreeHeading = ({
   }
 
   const description = showDescription ? current.description?.trim() || undefined : undefined;
-  // Read off the snapshot, so an answer given anywhere else lands in the row as it is written.
-  const questions = showQuestions ? Task.getQuestions(current.history) : [];
 
   return (
     // Cells, not a container: they are direct children of the tree row's subgrid and take the
@@ -401,35 +377,20 @@ const TaskTreeHeading = ({
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
-        <SystemIconButton.Clipboard
-          classNames='font-mono'
-          density='sm'
-          variant='tag'
-          hue='emerald'
-          label={Obj.getMnemonic(current)}
-          iconEnd
-          onCopy={() => '@' + Obj.getMnemonic(current)}
-          data-testid='taskList.item.mnemonic'
-        />
+        <TaskMnemonic task={current} />
         <span data-testid='taskList.item.title' className='truncate'>
           {current.title}
         </span>
       </div>
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
-          short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
-      {(description || questions.length > 0) && (
+          short of the trailing controls so it does not run beneath the estimate, priority and menu.
+          What the task says, and nothing the log recorded — an exchange replayed here grew the row
+          by a line per question and pushed the next task off the screen; the detail pane a click
+          opens has the room for it. */}
+      {description && (
         <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
-          {description && <TaskDescription content={description} components={descriptionComponents} />}
-          {questions.map((thread) => (
-            <TaskQuestion
-              key={thread.question.id}
-              thread={thread}
-              // One line each: answering takes the room of the detail pane, which a click on the
-              // row opens.
-              compact
-            />
-          ))}
+          <TaskDescription content={description} components={descriptionComponents} />
         </div>
       )}
     </>

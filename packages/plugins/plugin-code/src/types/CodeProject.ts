@@ -21,6 +21,7 @@ export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: meta.profile.icon?.hue }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

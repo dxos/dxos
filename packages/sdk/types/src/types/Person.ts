@@ -115,7 +115,9 @@ const _PersonSchema = PersonSchema.pipe(
   CardAnnotation.set(true),
 );
 
-export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(_PersonSchema) {}
+export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(
+  _PersonSchema.pipe(Annotation.UserType.set()),
+) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);
 

@@ -4,7 +4,8 @@
 
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { Button, Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -113,6 +114,35 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
 };
 
 TaskStatusControl.displayName = 'TaskList.StatusControl';
+
+/**
+ * The task's mnemonic, as a chip that copies a reference to it.
+ *
+ * Copies `@mnemonic` rather than the bare id: that is the form an agent is addressed with, so what
+ * lands on the clipboard can be pasted into a prompt as it stands.
+ */
+export const TaskMnemonic = ({
+  task,
+  classNames,
+}: {
+  // A snapshot too: the row reads its subject off one, and the mnemonic comes from the id, which a
+  // snapshot carries like the object does.
+  task: Obj.Unknown | Obj.Snapshot;
+  classNames?: string;
+}) => (
+  <SystemIconButton.Clipboard
+    classNames={mx('font-mono', classNames)}
+    density='sm'
+    variant='tag'
+    hue='emerald'
+    label={Obj.getMnemonic(task)}
+    iconEnd
+    onCopy={() => '@' + Obj.getMnemonic(task)}
+    data-testid='taskList.item.mnemonic'
+  />
+);
+
+TaskMnemonic.displayName = 'TaskList.Mnemonic';
 
 export type TaskOrdinalProps = {
   task: Task.Task;
