@@ -15,17 +15,16 @@ import React, {
 } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
+import { useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
-import { Card, Column, Icon, useTranslation } from '@dxos/react-ui';
+import { CardMasonry } from '@dxos/plugin-space/components';
+import { Column, Icon, useTranslation } from '@dxos/react-ui';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { TaskMasonry } from '#components';
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
@@ -110,9 +109,6 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
 
   return { onFiles: canCreateFiles ? attach : undefined, pending };
 };
-
-/** Removes an attachment; read by the masonry tiles, whose props are fixed to the tile signature. */
-const RemoveAttachmentContext = createContext<((ref: Ref.Ref<File.File>) => void) | undefined>(undefined);
 
 /** Whether files are being dragged over the pane, so the attachments section can mark its target. */
 const FileDragContext = createContext(false);
@@ -208,36 +204,41 @@ export type TaskAttachmentsProps = {
   pending?: readonly PendingAttachment[];
 };
 
-type AttachmentTileData = { kind: 'file'; ref: Ref.Ref<File.File> } | { kind: 'pending'; entry: PendingAttachment };
-
 /**
- * The files attached to a task (`Task.attachments`) as cards in a masonry, the same grid as the
- * task's artifacts, each with the file's own `CardContent` surface as its body — so an image
- * previews as an image — followed by a card per file still uploading. With nothing attached the
- * section is a drop area; with cards, the grid itself is the target. Either is marked while files
- * are dragged over the pane, which takes the drop itself. Renders nothing only when there is
- * nothing attached and nothing could be.
+ * The files attached to a task (`Task.attachments`) as compact cards, the same grid as the task's
+ * artifacts, each with the file's own `CardContent` surface as its body — so an image previews as an
+ * image — followed by a placeholder per file still uploading. With nothing attached the section is a
+ * drop area; with cards, the grid itself is the target. Either is marked while files are dragged
+ * over the pane, which takes the drop itself. Renders nothing only when there is nothing attached
+ * and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
-  const handleRemove = useOperation(
+  const removeAttachment = useOperation(
     TaskOperation.RemoveAttachment,
     (file: Ref.Ref<File.File>) => ({ task: Ref.make(task), file }),
     { spaceId: Obj.getDatabase(task)?.spaceId },
   );
-
-  const items = useMemo<AttachmentTileData[]>(
-    () => [
-      ...(refs ?? []).map((ref) => ({ kind: 'file' as const, ref })),
-      ...pending.map((entry) => ({ kind: 'pending' as const, entry })),
-    ],
-    [refs, pending],
+  // The grid hands back the ref it was given, as an untyped object ref; the task's own ref is the typed one.
+  const handleRemove = useCallback(
+    (object: Ref.Ref<Obj.Unknown>) => {
+      const attachment = refs?.find((ref) => ref.uri === object.uri);
+      if (attachment) {
+        removeAttachment(attachment);
+      }
+    },
+    [refs, removeAttachment],
   );
 
-  const hasCards = items.length > 0;
+  const placeholders = useMemo(
+    () => pending.map(({ id, name }) => ({ id, label: t('task-attachment.uploading.label', { name }) })),
+    [pending, t],
+  );
+
+  const hasCards = (refs?.length ?? 0) > 0 || pending.length > 0;
   if (!canAttach && !hasCards) {
     return null;
   }
@@ -257,14 +258,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
         {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
       >
         {hasCards ? (
-          <RemoveAttachmentContext.Provider value={handleRemove}>
-            <TaskMasonry
-              items={items}
-              getId={getAttachmentTileId}
-              Tile={AttachmentTile}
-              cacheKey={`${Obj.getURI(task).toString()}/attachments`}
-            />
-          </RemoveAttachmentContext.Provider>
+          <CardMasonry objects={refs ?? []} size='compact' inline onRemove={handleRemove} pending={placeholders} />
         ) : (
           <>
             <Icon icon='ph--paperclip--regular' />
@@ -273,61 +267,5 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
         )}
       </div>
     </Column.Section>
-  );
-};
-
-const getAttachmentTileId = (item: AttachmentTileData): string =>
-  item.kind === 'file' ? item.ref.uri : `pending:${item.entry.id}`;
-
-const AttachmentTile = ({ data }: { data: AttachmentTileData }) =>
-  data.kind === 'file' ? <AttachmentCard attachment={data.ref} /> : <PendingAttachmentCard name={data.entry.name} />;
-
-/** A file still being stored and attached: its header alone, the title saying so. */
-const PendingAttachmentCard = ({ name }: { name: string }) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <Card.Root fullWidth data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
-      <Card.Header>
-        <Card.Block>
-          <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
-        </Card.Block>
-        <Card.Title classNames='truncate text-description'>{t('task-attachment.uploading.label', { name })}</Card.Title>
-      </Card.Header>
-    </Card.Root>
-  );
-};
-
-/** One attachment, resolved by the card itself so a file that replicates in later still appears. */
-const AttachmentCard = ({ attachment }: { attachment: Ref.Ref<File.File> }) => {
-  const { t } = useTranslation(meta.profile.key);
-  const onRemove = useContext(RemoveAttachmentContext);
-  const [file] = useObject(attachment);
-  const data = useMemo(() => (file ? { subject: file } : undefined), [file]);
-  if (!file || !data) {
-    return null;
-  }
-
-  const icon = Obj.getIcon(file)?.icon ?? 'ph--file--regular';
-  return (
-    <Card.Root fullWidth data-testid='tasksPlugin.attachment'>
-      <Card.Header>
-        <Card.Block>
-          <CardIconSlot subject={file}>
-            <Icon icon={icon} />
-          </CardIconSlot>
-        </Card.Block>
-        <Card.Title classNames='truncate'>{file.name ?? file.id}</Card.Title>
-        {onRemove && (
-          <Card.ActionIconButton
-            action='delete'
-            label={t('task-attachment.remove.label')}
-            onClick={() => onRemove(attachment)}
-          />
-        )}
-      </Card.Header>
-      <Card.Body>
-        <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-      </Card.Body>
-    </Card.Root>
   );
 };

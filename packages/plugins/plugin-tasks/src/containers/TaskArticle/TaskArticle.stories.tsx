@@ -101,6 +101,12 @@ const pngFile = () =>
     type: 'image/png',
   });
 
+/** The resolved object cards in one of the pane's card sections, not counting upload placeholders. */
+const sectionCards = (root: HTMLElement, section: string): HTMLElement[] =>
+  Array.from(root.querySelectorAll<HTMLElement>(`[data-testid="${section}"] [role="listitem"]`)).filter(
+    (tile) => !tile.querySelector('[data-testid="cardMasonry.pending"]'),
+  );
+
 /** Dispatches the native drag sequence a file dragged in from the desktop produces. */
 const dropFiles = (target: Element, files: globalThis.File[]) => {
   const dataTransfer = new DataTransfer();
@@ -190,7 +196,9 @@ export const Default: Story = {
     ).resolves.toBeTruthy();
 
     // The artifacts render as cards in the pane's own masonry, one per artifact.
-    await waitFor(() => expect(canvas.getAllByTestId('tasksPlugin.artifact')).toHaveLength(3), { timeout: 10_000 });
+    await waitFor(() => expect(sectionCards(canvasElement, 'tasksPlugin.artifacts')).toHaveLength(3), {
+      timeout: 10_000,
+    });
 
     // The properties read as a list, each row naming the value its glyph stands for — including the
     // assignee, which is a person in the space rather than a literal on the task.
@@ -248,13 +256,16 @@ export const DropAttachment: Story = {
     await waitFor(() => expect(dropArea).not.toHaveClass('border-accent-bg'));
 
     dropFiles(zone, [pngFile()]);
-    const attachment = await canvas.findByTestId('tasksPlugin.attachment', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(sectionCards(canvasElement, 'tasksPlugin.attachments')).toHaveLength(1), {
+      timeout: 10_000,
+    });
+    const [attachment] = sectionCards(canvasElement, 'tasksPlugin.attachments');
     await expect(within(attachment).getByText('screenshot.png')).toBeInTheDocument();
     await waitFor(() => expect(attachment.querySelector('img')).not.toBeNull(), { timeout: 10_000 });
     await expect(canvas.findByText('Attached "screenshot.png".')).resolves.toBeInTheDocument();
 
-    await userEvent.click(within(attachment).getByRole('button', { name: 'Remove attachment' }));
-    await waitFor(() => expect(canvas.queryByTestId('tasksPlugin.attachment')).toBeNull());
+    await userEvent.click(within(attachment).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(sectionCards(canvasElement, 'tasksPlugin.attachments')).toHaveLength(0));
     await expect(canvas.findByText('Removed attachment "screenshot.png".')).resolves.toBeInTheDocument();
   },
 };
@@ -296,15 +307,17 @@ export const WithAttachments: Story = {
       new globalThis.File(['Sweetness 7, acidity 8, body 6.'], 'cupping-notes.txt', { type: 'text/plain' }),
     ]);
 
-    await waitFor(() => expect(canvas.getAllByTestId('tasksPlugin.attachment')).toHaveLength(2), { timeout: 10_000 });
+    await waitFor(() => expect(sectionCards(canvasElement, 'tasksPlugin.attachments')).toHaveLength(2), {
+      timeout: 10_000,
+    });
     await waitFor(
-      () => expect(canvasElement.querySelector('[data-testid="tasksPlugin.attachment"] img')).not.toBeNull(),
+      () => expect(canvasElement.querySelector('[data-testid="tasksPlugin.attachments"] img')).not.toBeNull(),
       {
         timeout: 10_000,
       },
     );
     // The stored file's card can render a moment before its attach settles and clears the pending card.
-    await waitFor(() => expect(canvas.queryByTestId('tasksPlugin.attachment.pending')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByTestId('cardMasonry.pending')).toBeNull(), { timeout: 10_000 });
   },
 };
 

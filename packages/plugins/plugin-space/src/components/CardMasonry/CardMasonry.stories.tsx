@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -84,7 +84,7 @@ const withPlugins = (extraPlugins: Plugin.Plugin[] = []) =>
   });
 
 const meta = {
-  title: 'plugins/plugin-space/containers/CardMasonry',
+  title: 'plugins/plugin-space/components/CardMasonry',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -140,5 +140,57 @@ export const ViaSurface: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('Acme', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+const onRemove = fn();
+
+/**
+ * A companion at its default 30rem: compact cards in two columns, each removable and opening from
+ * its title, with a placeholder for an object still being added.
+ */
+const CompactStory = () => {
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const tasks = useQuery(space?.db, Filter.type(Task.Task));
+  const owner = tasks.find((task) => task.title === OWNER_TITLE);
+  if (!owner) {
+    return <Loading />;
+  }
+
+  return (
+    <div className='w-[30rem] p-2'>
+      <CardMasonry
+        objects={owner.artifacts ?? []}
+        size='compact'
+        inline
+        onRemove={onRemove}
+        pending={[{ id: 'upload', label: 'Uploading diagram.png…' }]}
+      />
+    </div>
+  );
+};
+
+export const Compact: Story = {
+  decorators: [withPlugins()],
+  render: CompactStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Acme', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Uploading diagram.png…')).resolves.toBeTruthy();
+
+    // Two columns: the tiles sit at exactly two distinct horizontal offsets.
+    await waitFor(() => {
+      const offsets = new Set(
+        Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="listitem"]')).map(
+          (tile) => tile.getBoundingClientRect().left,
+        ),
+      );
+      expect(offsets.size).toBe(2);
+    });
+
+    const [remove] = await canvas.findAllByRole('button', { name: 'Remove' });
+    await userEvent.click(remove);
+    await expect(onRemove).toHaveBeenCalledTimes(1);
   },
 };

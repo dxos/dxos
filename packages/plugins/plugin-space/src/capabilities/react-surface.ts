@@ -270,7 +270,13 @@ export default Capability.makeModule(
         id: 'cardMasonry',
         filter: Surface.makeFilter(AppSurface.CardMasonry),
         component: CardMasonry,
-        props: ({ data: { objects } }) => ({ objects }),
+        props: ({ data: { objects, size, inline, onRemove, pending } }) => ({
+          objects,
+          size,
+          inline,
+          onRemove,
+          pending,
+        }),
       }),
       Surface.create({
         id: 'collectionSection',

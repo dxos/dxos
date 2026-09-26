@@ -512,6 +512,26 @@ export type CardMasonryData = {
   objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   /** The plank the grid renders in, so a card's actions resolve against the right node. */
   attendableId?: string;
+  /**
+   * `compact` renders the cards at three quarters of their size, so a companion-width host fits two
+   * columns where full-size cards would stack in one.
+   */
+  size?: 'default' | 'compact';
+  /**
+   * In the host's flow rather than in a scroller of its own: for a host that already scrolls, such
+   * as a section of an article, where a nested scroller would also pad and centre the grid.
+   */
+  inline?: boolean;
+  /** Offered on each card when present: removes the object from the host's list, not the space. */
+  onRemove?: (object: Ref.Ref<Obj.Unknown>) => void;
+  /** Placeholder cards, after the resolved ones, for objects the host is still adding. */
+  pending?: ReadonlyArray<CardMasonryPending>;
+};
+
+/** A card-masonry placeholder: a card header with a spinner, titled with what is being added. */
+export type CardMasonryPending = {
+  id: string;
+  label: string;
 };
 
 /** Surface data for card-role ECHO object. */
