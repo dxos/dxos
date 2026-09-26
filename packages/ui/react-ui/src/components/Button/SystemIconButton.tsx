@@ -180,7 +180,7 @@ type ClipboardIconButtonProps = StaticPresetProps & {
 } & ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, value, onCopy, icon = 'ph--clipboard--regular', classNames, ...props }, forwardedRef) => {
+  ({ label, value, onCopy, icon = 'ph--clipboard--regular', hue, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
@@ -211,7 +211,8 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
       <IconButton
         {...props}
         classNames={classNames}
-        iconClassNames={copied && 'text-green-500'}
+        hue={hue}
+        iconClassNames={!hue && copied && 'text-green-500'}
         icon={copied ? 'ph--check--regular' : icon}
         label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
         onClick={handleCopy}
