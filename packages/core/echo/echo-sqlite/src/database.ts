@@ -24,38 +24,29 @@ import {
   Relation,
   Type,
 } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import {
-  ATTR_PARENT,
   ObjectDatabaseId,
   ObjectDeletedId,
   SelfURIId,
   defineHiddenProperty,
   getRefSavedTarget,
   makeDecodedEntityLive,
-  makeSettledRequest,
   objectFromJSON,
   setRefResolver,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EID, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ObjectRecord, ObjectStore } from './object-store.ts';
-import { type QuerySource, executeQuery } from './query-engine.ts';
+import { UnsupportedOperationError } from './errors.ts';
+import { DatabaseRefResolver, type EntitySource, SqliteHypergraph } from './graph.ts';
+import { ObjectStore, type StoredEntity } from './object-store.ts';
 import { LiveQueryResult } from './query-result.ts';
-import { SimpleRegistry } from './registry.ts';
-
-/**
- * Raised by the parts of the `Database` interface this backend deliberately leaves out
- * (feeds, branches, history, external blob storage).
- */
-export class UnsupportedOperationError extends Error {
-  constructor(operation: string) {
-    super(`Not supported by echo-sqlite: ${operation}`);
-    this.name = 'UnsupportedOperationError';
-  }
-}
+import { localEntityId, toRecord } from './record.ts';
+import { SimpleRegistry, matchRegistry } from './registry.ts';
+import { type CompiledQuery, compileQuery } from './sql/compile.ts';
 
 export type OpenOptions = {
   /**
@@ -70,68 +61,80 @@ export type OpenOptions = {
   types?: readonly Type.AnyEntity[];
 };
 
-type Tracked = {
-  readonly entity: Entity.Unknown;
-  readonly unsubscribe: CleanupFn;
-  createdAt: number;
-  updatedAt: number;
+/**
+ * Counters for asserting and benchmarking how much of the space is read and held.
+ */
+export type Diagnostics = {
+  /** Hydrated entities still reachable from outside the database. */
+  readonly resident: number;
+  /** Entities hydrated from storage since open. */
+  readonly hydrated: number;
+  /** Compiled query statements executed. */
+  readonly queries: number;
+  /** Single-row loads (ref resolution, relation endpoints, parents). */
+  readonly loads: number;
+  /** Working-set entries, live or awaiting finalization. */
+  readonly tracked: number;
 };
 
+type Run = <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>;
+
 /**
- * ECHO {@link Database.Database} backed by a single SQLite table.
- *
- * Every entity of the space is resident as an ordinary in-memory live object (`Obj.make` proxy), so
- * reads and queries are synchronous scans. Mutations are observed with `Obj.subscribe` and written
- * behind to SQLite as whole JSON rows, batched per microtask; {@link flush} awaits the writes.
- * There is no Automerge, no feed, no replication and no client/host split.
+ * ECHO {@link Database.Database} backed by SQLite, which is the source of truth: the space is never
+ * resident. Queries compile to one SQL statement and hydrate only their result rows; refs load their
+ * single target row. Hydrated objects are ordinary live objects held weakly, so an object nobody holds
+ * is garbage-collected; mutations are observed with `Entity.subscribe` and written behind, batched per
+ * microtask, and held strongly until durable.
  */
-export class SqliteDatabase implements Database.Database {
+export class SqliteDatabase implements Database.Database, EntitySource {
   readonly [Database.TypeId]: Database.TypeId = Database.TypeId;
 
   readonly #spaceId: SpaceId;
   readonly #store: ObjectStore;
-  readonly #run: <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>;
+  readonly #run: Run;
   readonly #registry: SimpleRegistry;
+  readonly #resolver: DatabaseRefResolver;
   readonly #graph: SqliteHypergraph;
-  readonly #resolver: Ref.Resolver;
-  readonly #querySource: QuerySource;
 
-  readonly #tracked = new Map<string, Tracked>();
-  /** Stored rows not yet materialized while the database is opening. */
-  readonly #records = new Map<string, ObjectRecord>();
+  /** The working set: one live instance per id while anything outside holds it. */
+  readonly #live = new Map<string, WeakRef<Entity.Unknown>>();
+  readonly #finalizer = new FinalizationRegistry<string>((id) => {
+    if (this.#live.get(id)?.deref() === undefined) {
+      this.#live.delete(id);
+    }
+  });
+  /** Keyed by the entity so a subscription never keeps its entity alive. */
+  readonly #subscriptions = new WeakMap<Entity.Unknown, CleanupFn>();
   readonly #hydrating = new Map<string, Promise<Entity.Unknown | undefined>>();
+  /** Persisted type entities; few, and needed to hydrate anything, so held for the database's life. */
+  readonly #types = new Map<string, Entity.Unknown>();
 
-  readonly #changed = new Event<void>();
-  readonly #dirty = new Set<string>();
-  readonly #purged = new Set<string>();
+  /** Changed entities, held strongly until their write is durable. */
+  #dirty = new Map<string, Entity.Unknown>();
+  #purged = new Set<string>();
+  /** A delete or restore in the pending batch: the cascade can hide rows of any type. */
+  #deletionChanged = false;
   #scheduled = false;
   #writes: Promise<void> = Promise.resolve();
   #writeError: unknown = undefined;
   #closed = false;
 
-  private constructor(
-    spaceId: SpaceId,
-    run: <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>,
-    types: readonly Type.AnyEntity[],
-  ) {
+  /** Fires with the type DXNs of each committed write batch; subscribed queries re-execute on it. */
+  readonly #committed = new Event<ReadonlySet<string>>();
+  readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
+
+  private constructor(spaceId: SpaceId, run: Run, types: readonly Type.AnyEntity[]) {
     this.#spaceId = spaceId;
     this.#store = new ObjectStore(spaceId);
     this.#run = run;
     // The meta-type is registered so persisted `Type.Type` rows decode.
     this.#registry = new SimpleRegistry([Type.Type, ...types]);
-    this.#graph = new SqliteHypergraph(this);
     this.#resolver = new DatabaseRefResolver(this);
-    this.#querySource = {
-      spaceId,
-      entities: () => [...this.#tracked.values()].map(({ entity }) => entity),
-      getEntity: (id) => this.#tracked.get(id)?.entity,
-      getTimestamps: (id) => this.#tracked.get(id),
-      registryEntities: () => this.#registry.list(),
-    };
+    this.#graph = new SqliteHypergraph(this, this.#resolver);
   }
 
   /**
-   * Opens (creating if needed) the database for a space, loading every stored entity into memory.
+   * Opens (creating if needed) the database for a space. Reads only the persisted type rows.
    * Pending writes are flushed when the scope closes.
    */
   static open(
@@ -146,8 +149,8 @@ export class SqliteDatabase implements Database.Database {
           options.types ?? [],
         );
         yield* db.#store.migrate();
-        const records = yield* db.#store.list();
-        yield* Effect.promise(() => db.#load(records));
+        const types = yield* db.#store.loadTypes();
+        yield* Effect.promise(() => db.#registerTypes(types));
         return db;
       }),
       (db) => Effect.promise(() => db.close()),
@@ -173,19 +176,39 @@ export class SqliteDatabase implements Database.Database {
     return this.#registry;
   }
 
-  /**
-   * Fires (batched per microtask) after any entity is added, removed or mutated.
-   */
-  get changed(): Event<void> {
-    return this.#changed;
-  }
-
   toJSON(): object {
-    return { spaceId: this.#spaceId, objects: this.#tracked.size };
+    return { spaceId: this.#spaceId };
   }
 
   /**
-   * Flushes pending writes and stops observing objects. Idempotent.
+   * How much has been read and how much is held.
+   */
+  diagnostics(): Diagnostics {
+    let resident = 0;
+    for (const ref of this.#live.values()) {
+      if (ref.deref() !== undefined) {
+        resident++;
+      }
+    }
+    return { resident, tracked: this.#live.size, ...this.#counters };
+  }
+
+  /**
+   * The compiled statement for a query, for inspection and `EXPLAIN` tests.
+   */
+  compile(query: Query.Any | Filter.Any): CompiledQuery {
+    return compileQuery(toAst(query), { spaceId: this.#spaceId });
+  }
+
+  /**
+   * `EXPLAIN QUERY PLAN` detail lines for a query's compiled statement.
+   */
+  explain(query: Query.Any | Filter.Any): Promise<string[]> {
+    return this.#run(this.#store.explain(this.compile(query)));
+  }
+
+  /**
+   * Flushes pending writes and releases every subscription. Idempotent.
    */
   async close(): Promise<void> {
     if (this.#closed) {
@@ -195,9 +218,13 @@ export class SqliteDatabase implements Database.Database {
       await this.flush();
     } finally {
       this.#closed = true;
-      for (const tracked of this.#tracked.values()) {
-        tracked.unsubscribe();
+      for (const ref of this.#live.values()) {
+        const entity = ref.deref();
+        if (entity) {
+          this.#subscriptions.get(entity)?.();
+        }
       }
+      this.#live.clear();
     }
   }
 
@@ -205,20 +232,16 @@ export class SqliteDatabase implements Database.Database {
   // Objects.
   //
 
+  /**
+   * Resident objects only: the synchronous API cannot read storage. Prefer a query or a ref.
+   */
   getObjectById<T extends Obj.Unknown = Obj.Unknown>(id: string, opts?: Database.GetObjectByIdOptions): T | undefined {
-    const entity = this.#tracked.get(id)?.entity;
-    if (!entity || (Entity.isDeleted(entity) && !opts?.deleted) || !Obj.isObject(entity)) {
+    const entity = this.#live.get(id)?.deref();
+    if (!entity || !Obj.isObject(entity) || (Entity.isDeleted(entity) && !opts?.deleted)) {
       return undefined;
     }
     // Callers name the expected type; the id lookup cannot check it.
     return entity as T;
-  }
-
-  /**
-   * Any tracked entity (object, relation or type), deleted ones included.
-   */
-  getEntity(id: string): Entity.Unknown | undefined {
-    return this.#tracked.get(id)?.entity;
   }
 
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & Database.RejectTypeEntity<T>, opts?: Database.AddOptions): T {
@@ -236,16 +259,16 @@ export class SqliteDatabase implements Database.Database {
     invariant(Type.isType(type), 'addType expects a Type entity');
     const typename = Type.getTypename(type);
     const version = Type.getVersion(type);
-    const existing = [...this.#tracked.values()].find(
-      ({ entity }) =>
-        Type.isType(entity) &&
-        !Entity.isDeleted(entity) &&
-        Type.getTypename(entity) === typename &&
-        Type.getVersion(entity) === version,
-    );
-    if (existing) {
-      // Matched on typename + version, which is what identifies the caller's `T`.
-      return existing.entity as T;
+    for (const existing of this.#types.values()) {
+      if (
+        Type.isType(existing) &&
+        !Entity.isDeleted(existing) &&
+        Type.getTypename(existing) === typename &&
+        Type.getVersion(existing) === version
+      ) {
+        // Matched on typename + version, which is what identifies the caller's `T`.
+        return existing as T;
+      }
     }
 
     // Static types carry an Effect schema rather than stored JSON Schema, so persist a copy built from it.
@@ -255,14 +278,14 @@ export class SqliteDatabase implements Database.Database {
       jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)),
     });
     this.#attach(persisted);
+    this.#types.set(persisted.id, persisted);
     this.#registry.add([persisted]);
     // The stored copy stands in for the caller's type of the same typename + version.
     return persisted as T;
   }
 
   remove(obj: Entity.Unknown): void {
-    const tracked = this.#tracked.get(obj.id);
-    invariant(tracked?.entity === obj, 'Object is not in this database.');
+    invariant(Entity.getDatabase(obj) === this, 'Object is not in this database.');
     if (Entity.isDeleted(obj)) {
       return;
     }
@@ -270,7 +293,8 @@ export class SqliteDatabase implements Database.Database {
     if (Type.isType(obj)) {
       this.#registry.remove(obj.id);
     }
-    this.#markDirty(obj.id);
+    this.#deletionChanged = true;
+    this.#markDirty(obj);
   }
 
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T> {
@@ -279,14 +303,27 @@ export class SqliteDatabase implements Database.Database {
     return ref;
   }
 
-  query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) =>
-    new LiveQueryResult({
-      ast: (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast,
-      changed: this.#changed,
+  query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {
+    const ast = toAst(queryOrFilter);
+    const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
+    const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
+    const fromSpace = scopes === undefined || scopes.some((scope) => scope._tag !== 'registry');
+    // Compiled up front: compilation is pure, and an unsupported clause should fail at the call site.
+    const compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
+    const typenames = queryTypenames(ast);
+    return new LiveQueryResult({
       source: 'local',
-      evaluate: (ast) => executeQuery(this.#querySource, ast),
-      // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
-    })) as Database.QueryFn;
+      invalidated: this.#committed,
+      affectedBy: (written) =>
+        typenames === undefined || written.has(ANY_TYPE) || [...written].some((dxn) => typenames.has(typenameOf(dxn))),
+      execute: async () => {
+        const stored = compiled ? await this.#execute(compiled) : [];
+        const registered = fromRegistry && ast.type === 'from' ? matchRegistry(ast.query, this.#registry.list()) : [];
+        return [...stored, ...registered.filter((entity) => !stored.includes(entity))];
+      },
+    });
+    // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
+  }) as Database.QueryFn;
 
   async flush(_opts?: Database.FlushOptions): Promise<void> {
     // A failed batch is requeued without rescheduling, so flushing is what retries it.
@@ -309,17 +346,18 @@ export class SqliteDatabase implements Database.Database {
   //
 
   async stats(): Promise<Database.DatabaseStats> {
-    const entities = [...this.#tracked.values()].map(({ entity }) => entity);
-    const deleted = entities.filter((entity) => Entity.isDeleted(entity)).length;
+    await this.flush();
+    const objects = await this.#run(this.#store.counts());
+    const { resident } = this.diagnostics();
     return {
-      objects: { alive: entities.length - deleted, deleted },
+      objects,
       documents: 0,
       feeds: 0,
       feedBlocks: 0,
       loaded: {
         client: {
           documents: 0,
-          objects: entities.length,
+          objects: resident,
           feeds: 0,
           feedObjects: 0,
           registryTotal: this.#registry.list().length,
@@ -330,22 +368,27 @@ export class SqliteDatabase implements Database.Database {
   }
 
   /**
-   * Permanently drops soft-deleted entities from memory and storage.
+   * Permanently removes rows whose own deleted flag is set, with their reference and text rows.
    */
   async runGarbageCollection(_options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
-    const ids = [...this.#tracked.values()]
-      .filter(({ entity }) => Entity.isDeleted(entity))
-      .map(({ entity }) => entity.id);
-    this.#purge(ids);
+    await this.flush();
+    const ids = await this.#run(this.#store.deletedIds());
+    for (const id of ids) {
+      const entity = this.#live.get(id)?.deref();
+      if (entity) {
+        this.#subscriptions.get(entity)?.();
+      }
+      this.#live.delete(id);
+      this.#types.delete(id);
+      this.#purged.add(id);
+    }
     await this.flush();
     return { unlinkedObjects: ids.length, removedDocuments: 0, removedIndexEntries: ids.length, purgedFeedBlocks: 0 };
   }
 
-  retainObjects(keep: Iterable<string>): string[] {
-    const retained = new Set(keep);
-    const ids = [...this.#tracked.keys()].filter((id) => !retained.has(id));
-    this.#purge(ids);
-    return ids;
+  retainObjects(_keep: Iterable<string>): string[] {
+    // Returning the dropped ids synchronously would require the whole space in memory.
+    throw new UnsupportedOperationError('retainObjects');
   }
 
   async getSyncState(_options?: Database.GetSyncStateOptions): Promise<Database.SyncState> {
@@ -490,79 +533,93 @@ export class SqliteDatabase implements Database.Database {
   }
 
   //
-  // Internals.
+  // Working set.
   //
 
-  /**
-   * Resolves an entity URI (`echo:///<id>` or `echo://<space>/<id>`) against the working set.
-   */
-  lookup(uri: string): Entity.Unknown | undefined {
+  peek(uri: string): Entity.Unknown | undefined {
     const id = this.#entityIdOf(uri);
-    return id ? this.#tracked.get(id)?.entity : undefined;
+    return id ? this.#live.get(id)?.deref() : undefined;
   }
 
-  /**
-   * {@link lookup}, materializing the row first when the database is still opening.
-   */
   async load(uri: string): Promise<Entity.Unknown | undefined> {
     const id = this.#entityIdOf(uri);
-    return id ? (this.#tracked.get(id)?.entity ?? this.#hydrate(id)) : undefined;
-  }
-
-  get resolver(): Ref.Resolver {
-    return this.#resolver;
+    if (!id) {
+      return undefined;
+    }
+    const resident = this.#live.get(id)?.deref();
+    if (resident) {
+      return resident;
+    }
+    const hydrating = this.#hydrating.get(id);
+    if (hydrating) {
+      return hydrating;
+    }
+    this.#counters.loads++;
+    const stored = await this.#run(this.#store.load(id));
+    return stored ? this.#hydrate(stored) : undefined;
   }
 
   #entityIdOf(uri: string): string | undefined {
-    const eid = EID.tryParse(uri);
-    if (!eid) {
-      return undefined;
-    }
-    const spaceId = EID.getSpaceId(eid);
-    return spaceId === undefined || spaceId === this.#spaceId ? EID.getEntityId(eid) : undefined;
+    return localEntityId(uri, this.#spaceId) ?? undefined;
   }
 
-  async #load(records: readonly ObjectRecord[]): Promise<void> {
-    records.forEach((record) => this.#records.set(record.id, record));
-    // Types first, so objects of persisted types find their schema.
-    for (const record of records.filter((record) => record.kind === Entity.Kind.Type)) {
-      await this.#hydrate(record.id);
-    }
-    for (const record of records) {
-      await this.#hydrate(record.id);
-    }
-    this.#records.clear();
+  /**
+   * Runs a compiled statement after committing pending writes (read-your-writes), and hydrates only
+   * the rows it returns.
+   */
+  async #execute(compiled: CompiledQuery): Promise<Entity.Unknown[]> {
+    await this.flush();
+    this.#counters.queries++;
+    const rows = await this.#run(this.#store.query(compiled));
+    const entities = await Promise.all(rows.map((row) => this.#hydrate(row)));
+    return entities.filter((entity): entity is Entity.Unknown => entity !== undefined);
   }
 
-  #hydrate(id: string): Promise<Entity.Unknown | undefined> {
-    const record = this.#records.get(id);
-    if (!record) {
-      return Promise.resolve(this.#tracked.get(id)?.entity);
+  async #registerTypes(rows: readonly StoredEntity[]): Promise<void> {
+    for (const row of rows) {
+      const entity = await this.#hydrate(row);
+      if (entity && Type.isType(entity)) {
+        this.#types.set(entity.id, entity);
+        this.#registry.add([entity]);
+      }
     }
-    let hydrating = this.#hydrating.get(id);
+  }
+
+  /**
+   * The live instance for a stored row: the resident one if any, otherwise a newly hydrated one.
+   */
+  #hydrate(stored: StoredEntity): Promise<Entity.Unknown | undefined> {
+    const resident = this.#live.get(stored.id)?.deref();
+    if (resident) {
+      return Promise.resolve(resident);
+    }
+    let hydrating = this.#hydrating.get(stored.id);
     if (!hydrating) {
       hydrating = (async () => {
         try {
-          const snapshot = await objectFromJSON(record.data, {
+          const snapshot = await objectFromJSON(stored.body, {
             refResolver: this.#resolver,
-            uri: EID.make({ spaceId: this.#spaceId, entityId: id }),
+            uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
             database: this,
           });
           const entity = makeDecodedEntityLive(snapshot);
           invariant(Entity.isEntity(entity));
-          this.#records.delete(id);
-          this.#track(entity, record.createdAt, record.updatedAt);
-          if (Type.isType(entity) && !record.deleted) {
-            this.#registry.add([entity]);
+          // A concurrent add or hydration may have registered the id while this one decoded.
+          const raced = this.#live.get(stored.id)?.deref();
+          if (raced) {
+            return raced;
           }
+          this.#register(entity);
+          this.#counters.hydrated++;
           return entity;
         } catch (err) {
-          log.warn('failed to load object; skipped', { id, typename: record.typename, error: err });
-          this.#records.delete(id);
+          log.warn('failed to hydrate entity; skipped', { id: stored.id, error: err });
           return undefined;
+        } finally {
+          this.#hydrating.delete(stored.id);
         }
       })();
-      this.#hydrating.set(id, hydrating);
+      this.#hydrating.set(stored.id, hydrating);
     }
     return hydrating;
   }
@@ -574,27 +631,26 @@ export class SqliteDatabase implements Database.Database {
     if (!Entity.isEntity(obj)) {
       throw new TypeError('db.add expects a live ECHO object. Create it with Obj.make(Type, props).');
     }
-
-    const existing = this.#tracked.get(obj.id);
-    if (existing) {
-      invariant(existing.entity === obj, `Another object with id ${obj.id} is already in the database.`);
+    const owner = Entity.getDatabase(obj);
+    if (owner === this) {
       if (Entity.isDeleted(obj)) {
         // Re-adding a removed object restores it.
         defineHiddenProperty(obj, ObjectDeletedId, false);
         if (Type.isType(obj)) {
           this.#registry.add([obj]);
         }
-        this.#markDirty(obj.id);
+        this.#deletionChanged = true;
+        this.#markDirty(obj);
       }
       return;
     }
-
-    const owner = Entity.getDatabase(obj);
-    invariant(owner === undefined || owner === this, 'Object belongs to another database.');
+    invariant(owner === undefined, 'Object belongs to another database.');
+    const resident = this.#live.get(obj.id)?.deref();
+    invariant(resident === undefined || resident === obj, `Another object with id ${obj.id} is in the database.`);
 
     if (Relation.isRelation(obj)) {
       for (const endpoint of [Relation.getSource(obj), Relation.getTarget(obj)]) {
-        if (Entity.isEntity(endpoint) && !this.#tracked.has(endpoint.id)) {
+        if (Entity.isEntity(endpoint) && Entity.getDatabase(endpoint) === undefined) {
           this.#attach(endpoint);
         }
       }
@@ -602,30 +658,41 @@ export class SqliteDatabase implements Database.Database {
 
     defineHiddenProperty(obj, SelfURIId, EID.make({ spaceId: this.#spaceId, entityId: obj.id }));
     defineHiddenProperty(obj, ObjectDatabaseId, this);
-    const now = Date.now();
-    this.#track(obj, now, now);
+    this.#register(obj);
     this.#adoptReferences(obj);
-    this.#markDirty(obj.id);
-  }
-
-  #track(entity: Entity.Unknown, createdAt: number, updatedAt: number): void {
-    const unsubscribe = Entity.subscribe(entity, () => {
-      this.#adoptReferences(entity);
-      this.#markDirty(entity.id);
-    });
-    this.#tracked.set(entity.id, { entity, unsubscribe, createdAt, updatedAt });
+    this.#markDirty(obj);
   }
 
   /**
-   * Makes refs held by the entity resolvable here, and adds their inline targets that are not stored yet,
-   * so a graph built with `Ref.make` persists as a whole.
+   * Enters an entity into the working set, weakly, and observes its mutations.
+   */
+  #register(entity: Entity.Unknown): void {
+    const id = entity.id;
+    this.#live.set(id, new WeakRef(entity));
+    this.#finalizer.register(entity, id);
+    // The callback captures only the id: the entity must stay collectable.
+    const unsubscribe = Entity.subscribe(entity, () => this.#onChanged(id));
+    this.#subscriptions.set(entity, unsubscribe);
+  }
+
+  #onChanged(id: string): void {
+    const entity = this.#live.get(id)?.deref();
+    if (entity) {
+      this.#adoptReferences(entity);
+      this.#markDirty(entity);
+    }
+  }
+
+  /**
+   * Makes refs held by the entity resolvable here, and adds their inline targets that are not stored
+   * yet, so a graph built with `Ref.make` persists as a whole.
    */
   #adoptReferences(entity: Entity.Unknown): void {
     setRefResolverOnData(entity, this.#resolver);
     const visit = (value: unknown): void => {
       if (Ref.isRef(value)) {
         const target = getRefSavedTarget(value);
-        if (Entity.isEntity(target) && !this.#tracked.has(target.id) && Entity.getDatabase(target) === undefined) {
+        if (Entity.isEntity(target) && Entity.getDatabase(target) === undefined) {
           this.#attach(target);
         }
       } else if (Array.isArray(value)) {
@@ -637,33 +704,17 @@ export class SqliteDatabase implements Database.Database {
     visit(Object.values(entity));
   }
 
-  #markDirty(id: string): void {
-    const tracked = this.#tracked.get(id);
-    if (tracked) {
-      tracked.updatedAt = Math.max(Date.now(), tracked.updatedAt);
+  #markDirty(entity: Entity.Unknown): void {
+    if (this.#closed) {
+      return;
     }
-    this.#dirty.add(id);
-    this.#schedule();
-  }
-
-  #purge(ids: readonly string[]): void {
-    for (const id of ids) {
-      const tracked = this.#tracked.get(id);
-      if (!tracked) {
-        continue;
-      }
-      tracked.unsubscribe();
-      this.#tracked.delete(id);
-      this.#registry.remove(id);
-      this.#dirty.delete(id);
-      this.#purged.add(id);
-    }
+    this.#dirty.set(entity.id, entity);
     this.#schedule();
   }
 
   /**
-   * Batches the current turn's changes into one transaction, serialized now so later edits cannot
-   * leak into it, and chains it behind earlier writes to keep them ordered.
+   * Batches the current turn's changes into one transaction, serialized now so later edits cannot leak
+   * into it, and chains it behind earlier writes to keep them ordered. A failed batch is requeued.
    */
   #schedule(): void {
     if (this.#scheduled) {
@@ -672,115 +723,111 @@ export class SqliteDatabase implements Database.Database {
     this.#scheduled = true;
     queueMicrotask(() => {
       this.#scheduled = false;
-      const records = [...this.#dirty].flatMap((id) => {
-        const tracked = this.#tracked.get(id);
-        return tracked ? [this.#serialize(tracked)] : [];
-      });
+      const batch = this.#dirty;
       const purged = [...this.#purged];
-      this.#dirty.clear();
+      const deletionChanged = this.#deletionChanged;
+      this.#dirty = new Map();
       this.#purged.clear();
-      this.#changed.emit();
-
-      if (this.#closed || (records.length === 0 && purged.length === 0)) {
+      this.#deletionChanged = false;
+      if (batch.size === 0 && purged.length === 0) {
         return;
       }
+      const records = [...batch.values()].map((entity) => toRecord(entity, this.#spaceId));
       this.#writes = this.#writes.then(async () => {
         try {
-          await this.#run(Effect.andThen(this.#store.write(records), this.#store.delete(purged)));
+          await this.#run(this.#store.write(records, purged));
+          // Deletion cascades and purges reach rows of any type, so they invalidate every query.
+          const everything = deletionChanged || purged.length > 0;
+          this.#committed.emit(new Set(everything ? [ANY_TYPE] : records.map((record) => record.typeDxn)));
         } catch (err) {
-          log.error('failed to persist objects', { count: records.length, error: err });
+          log.error('failed to persist entities', { count: records.length, error: err });
           this.#writeError = err;
-          // Requeue the batch so memory and disk cannot silently diverge; the next flush retries it.
-          records.filter(({ id }) => this.#tracked.has(id)).forEach(({ id }) => this.#dirty.add(id));
-          purged.filter((id) => !this.#tracked.has(id)).forEach((id) => this.#purged.add(id));
+          // Requeue so memory and disk cannot silently diverge; newer changes to the same id win.
+          for (const [id, entity] of batch) {
+            if (!this.#dirty.has(id)) {
+              this.#dirty.set(id, entity);
+            }
+          }
+          purged.forEach((id) => this.#purged.add(id));
+          this.#deletionChanged ||= deletionChanged;
         }
       });
     });
   }
+}
 
-  #serialize({ entity, createdAt, updatedAt }: Tracked): ObjectRecord {
-    const data: Record<string, unknown> = { ...Entity.toJSON(entity) };
-    const parent = Obj.isObject(entity) ? Obj.getParent(entity) : undefined;
-    if (parent) {
-      data[ATTR_PARENT] = EID.make({ entityId: parent.id });
+/** Marks a write batch that must invalidate every query. */
+const ANY_TYPE = '*';
+
+const typenameOf = (dxn: string): string => {
+  const parsed = DXN.tryMake(dxn);
+  return parsed ? DXN.getName(parsed) : dxn;
+};
+
+/**
+ * The typenames a query's result can depend on, or undefined when any write could change it. Only
+ * queries whose every select names a type, with no traversal, deletion cascade or parent relation
+ * involved, are narrowed.
+ */
+const queryTypenames = (ast: QueryAST.Query): Set<string> | undefined => {
+  switch (ast.type) {
+    case 'select':
+      return filterTypenames(ast.filter);
+    case 'filter':
+      return filterTypenames(ast.filter) === undefined ? undefined : queryTypenames(ast.selection);
+    case 'options':
+      // The deleted option pulls in cascades through parents and endpoints of any type.
+      return ast.options.deleted === undefined ? queryTypenames(ast.query) : undefined;
+    case 'order':
+    case 'limit':
+    case 'skip':
+    case 'from':
+      return queryTypenames(ast.query);
+    case 'union': {
+      const names = new Set<string>();
+      for (const branch of ast.queries) {
+        const branchNames = queryTypenames(branch);
+        if (branchNames === undefined) {
+          return undefined;
+        }
+        branchNames.forEach((name) => names.add(name));
+      }
+      return names;
     }
-    return {
-      id: entity.id,
-      kind: Type.isType(entity)
-        ? Entity.Kind.Type
-        : Relation.isRelation(entity)
-          ? Entity.Kind.Relation
-          : Entity.Kind.Object,
-      typename: Entity.getTypeURI(entity) ?? '',
-      deleted: Entity.isDeleted(entity),
-      data,
-      createdAt,
-      updatedAt,
-    };
+    default:
+      return undefined;
   }
-}
+};
 
-/**
- * Resolves refs against one {@link SqliteDatabase} and its registry.
- */
-class DatabaseRefResolver implements Ref.Resolver {
-  constructor(private readonly _db: SqliteDatabase) {}
-
-  resolve(uri: URI.URI): ReturnType<Ref.Resolver['resolve']> {
-    const entity = this.resolveSync(uri);
-    return makeSettledRequest(entity ? 'ready' : 'unavailable', entity);
+const filterTypenames = (filter: QueryAST.Filter): Set<string> | undefined => {
+  if (filter.type === 'object' && filter.typename !== null && Object.values(filter.props).every(isLocal)) {
+    return new Set([typenameOf(filter.typename)]);
   }
-
-  resolveSync(uri: URI.URI): Entity.Unknown | undefined {
-    return this._db.lookup(uri) ?? this._db.registry.getByURI(uri);
+  if (filter.type === 'or' || filter.type === 'and') {
+    const names = new Set<string>();
+    for (const inner of filter.filters) {
+      const innerNames = filterTypenames(inner);
+      if (innerNames === undefined) {
+        return undefined;
+      }
+      innerNames.forEach((name) => names.add(name));
+    }
+    return filter.type === 'or' || names.size > 0 ? names : undefined;
   }
+  return undefined;
+};
 
-  async resolveLegacy(uri: URI.URI): Promise<Entity.Unknown | undefined> {
-    return (await this._db.load(uri)) ?? this._db.registry.getByURI(uri);
-  }
+/** A property filter that reads only the row itself (no subquery over other types). */
+const isLocal = (filter: QueryAST.Filter): boolean =>
+  filter.type === 'in-query'
+    ? false
+    : filter.type === 'object'
+      ? Object.values(filter.props).every(isLocal)
+      : filter.type === 'not'
+        ? isLocal(filter.filter)
+        : filter.type === 'and' || filter.type === 'or'
+          ? filter.filters.every(isLocal)
+          : true;
 
-  async resolveSchema(uri: URI.URI) {
-    const type = this._db.registry.getByURI(uri);
-    return type && Type.isType(type) ? Type.getSchema(type) : undefined;
-  }
-
-  async resolveType(uri: URI.URI): Promise<Entity.Unknown | undefined> {
-    const type = this._db.registry.getByURI(uri);
-    return type && Type.isType(type) ? type : undefined;
-  }
-}
-
-/**
- * The single-database graph a {@link SqliteDatabase} belongs to.
- */
-class SqliteHypergraph implements Hypergraph.Hypergraph {
-  constructor(private readonly _db: SqliteDatabase) {}
-
-  get registry(): SimpleRegistry {
-    return this._db.registry;
-  }
-
-  get defaultBlobStorage(): string {
-    return Blob.Storage.inline;
-  }
-
-  get query(): Database.QueryFn {
-    return this._db.query;
-  }
-
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T> {
-    return this._db.makeRef<T>(uri);
-  }
-
-  createRefResolver(_options: Hypergraph.RefResolverOptions): Ref.Resolver {
-    return this._db.resolver;
-  }
-
-  getDatabase(spaceId: SpaceId): Database.Database | undefined {
-    return spaceId === this._db.spaceId ? this._db : undefined;
-  }
-
-  registerBlobBackend(): CleanupFn {
-    throw new UnsupportedOperationError('registerBlobBackend');
-  }
-}
+const toAst = (queryOrFilter: Query.Any | Filter.Any): QueryAST.Query =>
+  (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast;

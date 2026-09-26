@@ -10,33 +10,21 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { type SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
+import { type EntityRecord } from './record.ts';
+import { type CompiledQuery } from './sql/compile.ts';
 
 /**
- * Stored form of one entity.
+ * A stored entity as the store returns it: its id and its ECHO JSON.
  */
-export type ObjectRecord = {
-  id: string;
-  kind: string;
-  typename: string;
-  deleted: boolean;
-  /** ECHO JSON (`Obj.toJSON`) plus `@parent`. */
-  data: Record<string, unknown>;
-  createdAt: number;
-  updatedAt: number;
-};
+export type StoredEntity = { readonly id: string; readonly body: Record<string, unknown> };
 
-type ObjectRow = {
-  id: string;
-  kind: string;
-  typename: string;
-  deleted: number;
-  data: string;
-  created_at: number;
-  updated_at: number;
-};
+type BodyRow = { id: string; body: string };
+
+type Store<A> = Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>;
 
 /**
- * SQLite persistence for the entities of one space.
+ * SQLite I/O for the entities of one space. Every statement is constrained to the space, and every
+ * read is either by id, by a compiled query, or of the (small) set of persisted types.
  */
 export class ObjectStore {
   readonly #spaceId: SpaceId;
@@ -48,7 +36,7 @@ export class ObjectStore {
   /**
    * Applies pending schema migrations.
    */
-  migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+  migrate(): Store<void> {
     return Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
       // A malformed bundled manifest is a defect, not something a caller recovers from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
@@ -58,66 +46,124 @@ export class ObjectStore {
   }
 
   /**
-   * Reads every stored entity of the space, deleted ones included.
+   * Reads the persisted type entities, which must be registered before any object can hydrate.
    */
-  list(): Effect.Effect<ObjectRecord[], SqlError.SqlError, SqlClient.SqlClient> {
+  loadTypes(): Store<StoredEntity[]> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<ObjectRow>`
-        SELECT id, kind, typename, deleted, data, created_at, updated_at
-        FROM echo_objects WHERE space_id = ${spaceId} ORDER BY id
+      const rows = yield* sql<BodyRow>`
+        SELECT id, body FROM echo_entities INDEXED BY echo_entities_kind
+        WHERE space_id = ${spaceId} AND kind = 'type' AND deleted = 0
       `;
-      return rows.map((row): ObjectRecord => ({
-        id: row.id,
-        kind: row.kind,
-        typename: row.typename,
-        deleted: Number(row.deleted) !== 0,
-        data: JSON.parse(row.data),
-        createdAt: Number(row.created_at),
-        updatedAt: Number(row.updated_at),
-      }));
-    }).pipe(Effect.withSpan('ObjectStore.list'));
+      return rows.map(parseRow);
+    }).pipe(Effect.withSpan('ObjectStore.loadTypes'));
   }
 
   /**
-   * Inserts or replaces entities in a single transaction.
+   * Reads one entity by id.
    */
-  write(records: readonly ObjectRecord[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+  load(id: string): Store<StoredEntity | undefined> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      yield* sql.withTransaction(
-        Effect.forEach(
-          records,
-          (record) => sql`
-            INSERT INTO echo_objects (space_id, id, kind, typename, deleted, data, created_at, updated_at)
-            VALUES (${spaceId}, ${record.id}, ${record.kind}, ${record.typename}, ${record.deleted ? 1 : 0},
-              ${JSON.stringify(record.data)}, ${record.createdAt}, ${record.updatedAt})
+      const rows = yield* sql<BodyRow>`SELECT id, body FROM echo_entities WHERE space_id = ${spaceId} AND id = ${id}`;
+      return rows.length > 0 ? parseRow(rows[0]) : undefined;
+    }).pipe(Effect.withSpan('ObjectStore.load'));
+  }
+
+  /**
+   * Runs a compiled query.
+   */
+  query(compiled: CompiledQuery): Store<StoredEntity[]> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<BodyRow>(compiled.sql, compiled.params);
+      return rows.map(parseRow);
+    }).pipe(Effect.withSpan('ObjectStore.query'));
+  }
+
+  /**
+   * `EXPLAIN QUERY PLAN` of a compiled query, one detail line per step.
+   */
+  explain(compiled: CompiledQuery): Store<string[]> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<{ detail: string }>(`EXPLAIN QUERY PLAN ${compiled.sql}`, compiled.params);
+      return rows.map((row) => row.detail);
+    });
+  }
+
+  /**
+   * Upserts entities (row, reference rows and text) and permanently removes `purged` ids, in one
+   * transaction.
+   */
+  write(records: readonly EntityRecord[], purged: readonly string[] = [], now = Date.now()): Store<void> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const writeOne = (record: EntityRecord) =>
+        Effect.gen(function* () {
+          const [{ rowid }] = yield* sql<{ rowid: number }>`
+            INSERT INTO echo_entities
+              (space_id, id, kind, type_dxn, deleted, parent_id, source_id, target_id, created_at, updated_at, body)
+            VALUES (${spaceId}, ${record.id}, ${record.kind}, ${record.typeDxn}, ${record.deleted ? 1 : 0},
+              ${record.parentId}, ${record.sourceId}, ${record.targetId}, ${now}, ${now}, ${JSON.stringify(record.body)})
             ON CONFLICT (space_id, id) DO UPDATE SET
-              kind = excluded.kind,
-              typename = excluded.typename,
-              deleted = excluded.deleted,
-              data = excluded.data,
-              updated_at = excluded.updated_at
-          `,
-          { discard: true },
-        ),
+              kind = excluded.kind, type_dxn = excluded.type_dxn, deleted = excluded.deleted,
+              parent_id = excluded.parent_id, source_id = excluded.source_id, target_id = excluded.target_id,
+              updated_at = excluded.updated_at, body = excluded.body
+            RETURNING rowid
+          `;
+          yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id = ${record.id}`;
+          for (const ref of record.refs) {
+            yield* sql`INSERT OR IGNORE INTO echo_refs (space_id, source_id, prop_path, target_id)
+              VALUES (${spaceId}, ${record.id}, ${ref.path}, ${ref.targetId})`;
+          }
+          yield* sql`DELETE FROM echo_fts WHERE rowid = ${rowid}`;
+          yield* sql`INSERT INTO echo_fts (rowid, text) VALUES (${rowid}, ${record.text})`;
+        });
+      yield* sql.withTransaction(
+        Effect.gen(function* () {
+          yield* Effect.forEach(records, writeOne, { discard: true });
+          if (purged.length > 0) {
+            const ids = JSON.stringify(purged);
+            yield* sql`DELETE FROM echo_fts WHERE rowid IN (SELECT rowid FROM echo_entities
+              WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids})))`;
+            yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id IN (SELECT value FROM json_each(${ids}))`;
+            yield* sql`DELETE FROM echo_entities WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids}))`;
+          }
+        }),
       );
     }).pipe(Effect.withSpan('ObjectStore.write'));
   }
 
   /**
-   * Permanently removes entities.
+   * Ids of rows whose own deleted flag is set.
    */
-  delete(ids: readonly string[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+  deletedIds(): Store<string[]> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
-      if (ids.length === 0) {
-        return;
-      }
       const sql = yield* SqlClient.SqlClient;
-      yield* sql`DELETE FROM echo_objects WHERE space_id = ${spaceId} AND ${sql.in('id', ids)}`;
-    }).pipe(Effect.withSpan('ObjectStore.delete'));
+      const rows = yield* sql<{ id: string }>`SELECT id FROM echo_entities WHERE space_id = ${spaceId} AND deleted = 1`;
+      return rows.map((row) => row.id);
+    });
+  }
+
+  /**
+   * Row counts by deleted flag.
+   */
+  counts(): Store<{ alive: number; deleted: number }> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ alive: number; deleted: number }>`
+        SELECT COALESCE(SUM(deleted = 0), 0) AS alive, COALESCE(SUM(deleted = 1), 0) AS deleted
+        FROM echo_entities WHERE space_id = ${spaceId}
+      `;
+      return { alive: Number(row.alive), deleted: Number(row.deleted) };
+    });
   }
 }
+
+const parseRow = (row: BodyRow): StoredEntity => ({ id: row.id, body: JSON.parse(row.body) });

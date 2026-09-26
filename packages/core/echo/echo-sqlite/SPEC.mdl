@@ -19,9 +19,9 @@ Two properties define it and outrank simplicity:
   `packages/core/echo/echo-host/src/query/sql/compile.ts`. Only the result rows are hydrated; nothing is
   filtered, traversed or ordered in JavaScript [F-4].
 
-The package started as a whole-space-in-memory prototype (loads every row on open, evaluates queries by
-scanning the working set). That prototype does not meet [F-3] or [F-4]; this spec is the target it is
-rewritten to.
+Tests map to the acceptance scenarios: `src/memory.test.ts` (T-1, T-2), `src/differential.test.ts`
+(T-3), `src/sql/explain.test.ts` (T-4, T-5), `src/database.test.ts` (T-6 to T-9). Benchmarks are in
+`src/database.bench.ts` and `src/memory.report.test.ts`; results are recorded in `BENCHMARKS.md`.
 
 ## Extensions
 
@@ -55,7 +55,8 @@ feat F-1: Database interface
           pending writes and releases every subscription
 
   req F-1.4:
-    when: a caller uses feeds, branches, history (getVersion) or a non-inline blob backend
+    when: a caller uses feeds, branches, history (getVersion), a non-inline blob backend, or
+          retainObjects (whose synchronous list of dropped ids would need the whole space in memory)
     then: the call fails with UnsupportedOperationError; nothing silently no-ops or returns a
           fabricated value
 ```
@@ -129,15 +130,21 @@ feat F-3: Bounded memory — the space is never loaded whole
     when: relations, parents or references are added or resolved
     then: endpoints and targets are resolved one row at a time on demand; no traversal preloads a
           subgraph
+
+  req F-3.7:
+    when: db.diagnostics() is read
+    then: it reports resident objects, rows hydrated, compiled statements and single-row loads, so
+          tests and benchmarks can assert how much of the space was read and is held
 ```
 
 ```mdl
 feat F-4: Queries compile to SQL
 
   desc: |
-    Follows packages/core/echo/echo-host/docs/SQL_QUERY_EXECUTION.md. The compiler may be shared with
-    echo-host's SqlPlanCompiler where the table layout allows, or ported; either way the semantics
-    and invariants below match it.
+    Follows packages/core/echo/echo-host/docs/SQL_QUERY_EXECUTION.md with the package's own compiler
+    (src/sql/compile.ts), so the package does not depend on echo-host. Joins are CROSS JOIN so SQLite
+    keeps the written order: each step walks its input and seeks an index, rather than the
+    unanalyzed planner scanning a space.
 
   req F-4.1:
     when: a query (Query or Filter) is executed
@@ -160,8 +167,9 @@ feat F-4: Queries compile to SQL
 
   req F-4.4:
     when: a query selects by type, id, timestamp, tag, foreign key, meta key or text
-    then: type/id/timestamp read the denormalized columns through their indexes, tag/foreignKeys/
-          metaKey read $."@meta" in the body, and text search reads the FTS5 table ranked by bm25
+    then: type/id/timestamp read the denormalized columns through their indexes (a typed select is
+          pinned to the (space_id, type_dxn, id) index, which also supplies id order for paging),
+          tag/foreignKeys/metaKey read $."@meta" in the body, and text search reads the FTS5 table
 
   req F-4.5:
     when: a query traverses references, incoming references, relations or the hierarchy
@@ -212,8 +220,9 @@ feat F-5: Query results and reactivity
   req F-5.3:
     when: a query has a subscriber (subscribe or atom)
     then: it executes once on subscribe and re-executes after each committed write batch that could
-          affect it — any write when the query is not simple, otherwise a write whose typenames, ids
-          or spaces overlap the query's scope
+          affect it — any batch for a query that is not a plain typed select, and any batch with a
+          delete, restore or purge (the cascade reaches rows of every type); otherwise only a batch
+          that wrote one of the query's types
 
   req F-5.4:
     when: a re-execution returns the same rows in the same order
@@ -275,14 +284,14 @@ scenario T-1: Opening a large space reads nothing
   then:
     - open reads zero object rows
     - the query hydrates exactly 10 objects
-    - heap growth stays bounded independent of the space size
+    - heap growth stays bounded independent of the space size (see memory.report.test.ts)
   tags: [memory, F-3]
 ```
 
 ```mdl
 scenario T-2: The working set releases unheld objects
   given: 10,000 objects hydrated by queries whose results are then dropped
-  when: garbage collection runs (node --expose-gc)
+  when: garbage collection runs (forced via v8.setFlagsFromString('--expose-gc'))
   then:
     - the working set size returns to the number of objects still referenced
     - a later lookup of a released id re-reads its row and returns a fresh live object

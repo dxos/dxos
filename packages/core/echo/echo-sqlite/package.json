@@ -36,6 +36,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:"
   }

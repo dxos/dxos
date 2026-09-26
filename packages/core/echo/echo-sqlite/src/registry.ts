@@ -4,9 +4,10 @@
 
 import { Event } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, Registry, Type } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
+import { filterMatchEntity } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
-import { executeQuery } from './query-engine.ts';
 import { LiveQueryResult } from './query-result.ts';
 
 let nextRegistryId = 0;
@@ -18,10 +19,12 @@ export class SimpleRegistry implements Registry.Registry {
   readonly [Registry.TypeId]: Registry.TypeId = Registry.TypeId;
   readonly id = `echo-sqlite-registry-${nextRegistryId++}`;
   readonly changed = new Event<void>();
+  readonly #invalidated = new Event<ReadonlySet<string>>();
   readonly #entities = new Map<string, Entity.Unknown>();
 
   constructor(initial: readonly Entity.Unknown[] = []) {
     initial.forEach((entity) => this.#entities.set(entity.id, entity));
+    this.changed.on(() => this.#invalidated.emit(new Set()));
   }
 
   get local(): readonly Entity.Unknown[] {
@@ -74,25 +77,15 @@ export class SimpleRegistry implements Registry.Registry {
     return [...this.#entities.values()];
   }
 
-  query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) =>
-    new LiveQueryResult({
-      ast: (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast,
-      changed: this.changed,
+  query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {
+    const ast = (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast;
+    return new LiveQueryResult({
+      execute: async () => matchRegistry(ast, this.list()),
+      invalidated: this.#invalidated,
       source: 'registry',
-      evaluate: (ast) =>
-        executeQuery(
-          {
-            // Scope clauses in a direct registry query are ignored: it always targets its own entities.
-            spaceId: undefined,
-            entities: () => this.list(),
-            getEntity: (id) => this.get(id),
-            getTimestamps: () => undefined,
-            registryEntities: () => this.list(),
-          },
-          ast,
-        ),
-      // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
-    })) as Database.QueryFn;
+    });
+    // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
+  }) as Database.QueryFn;
 }
 
 const keyOf = (entity: Entity.Unknown): { name: string; version?: string } | undefined => {
@@ -101,4 +94,27 @@ const keyOf = (entity: Entity.Unknown): { name: string; version?: string } | und
   }
   const meta = Entity.getMeta(entity);
   return meta.key ? { name: meta.key, version: meta.version } : undefined;
+};
+
+/**
+ * Evaluates a query over the in-process registry: a small, code-shipped set of entities, and the one
+ * place in-memory matching is allowed. Scope clauses are unwrapped; only locally-evaluable clauses are
+ * supported.
+ */
+export const matchRegistry = (ast: QueryAST.Query, entities: readonly Entity.Unknown[]): Entity.Unknown[] => {
+  switch (ast.type) {
+    case 'select':
+      return entities.filter((entity) => filterMatchEntity(ast.filter, entity));
+    case 'filter':
+      return matchRegistry(ast.selection, entities).filter((entity) => filterMatchEntity(ast.filter, entity));
+    case 'limit':
+      return matchRegistry(ast.query, entities).slice(0, ast.limit);
+    case 'skip':
+      return matchRegistry(ast.query, entities).slice(ast.skip);
+    case 'from':
+    case 'options':
+      return matchRegistry(ast.query, entities);
+    default:
+      throw new Error(`Query clause not supported by the registry: ${ast.type}`);
+  }
 };

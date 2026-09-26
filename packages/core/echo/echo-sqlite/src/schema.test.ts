@@ -34,7 +34,10 @@ describe('echo-sqlite migrations', () => {
   test('every CREATE in the initial migration is idempotent', () => {
     const bare = SqlMigrations.splitStatements(init)
       .filter((statement) => /^CREATE\s/i.test(statement))
-      .filter((statement) => !/^CREATE\s+(?:UNIQUE\s+INDEX|TABLE|INDEX)\s+IF\s+NOT\s+EXISTS\s/i.test(statement));
+      .filter(
+        (statement) =>
+          !/^CREATE\s+(?:VIRTUAL\s+TABLE|UNIQUE\s+INDEX|TABLE|INDEX)\s+IF\s+NOT\s+EXISTS\s/i.test(statement),
+      );
     expect(bare).toEqual([]);
   });
 
@@ -62,14 +65,14 @@ describe('echo-sqlite migrations', () => {
       const spaceId = SpaceId.random();
       yield* SqlMigrations.apply(init);
       yield* sql`
-        INSERT INTO echo_objects (space_id, id, kind, typename, deleted, data, created_at, updated_at)
-        VALUES (${spaceId}, 'legacy', 'object', 'dxn:com.example.type.legacy:0.1.0', 0, '{}', 1, 1)
+        INSERT INTO echo_entities (space_id, id, kind, type_dxn, deleted, created_at, updated_at, body)
+        VALUES (${spaceId}, 'legacy', 'object', 'dxn:com.example.type.legacy:0.1.0', 0, 1, 1, '{}')
       `;
 
       const store = new ObjectStore(spaceId);
       yield* store.migrate();
       expect(yield* applied).toEqual(ids);
-      expect((yield* store.list()).map((record) => record.id)).toEqual(['legacy']);
+      expect((yield* store.load('legacy'))?.id).toBe('legacy');
     }).pipe(Effect.provide(TestLayer)),
   );
 });
