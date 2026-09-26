@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
@@ -133,20 +133,32 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     [openDetail],
   );
 
-  // Named "New task" and opened at once, so the reader titles it where they read it: the list's own
-  // create pane has no notion of a parent, and a sub-task created there would land at the root.
+  // Held here rather than left to the list, so adding a sub-task can open the branch it lands in.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+
+  // Created untitled and opened at once, so the reader names it in the detail, whose title field
+  // takes focus for an untitled task: the list's own create pane has no notion of a parent, and a
+  // sub-task created there would land at the root.
   const handleAddSubTask = useCallback(
     async (parent: Task.Task) => {
+      setCollapsed((collapsed) => {
+        if (!collapsed.has(parent.id)) {
+          return collapsed;
+        }
+        const next = new Set(collapsed);
+        next.delete(parent.id);
+        return next;
+      });
       const { data } = await invokePromise(
         TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), title: t('new-sub-task.title'), parentTask: Ref.make(parent) },
+        { taskSet: Ref.make(taskSet), title: '', parentTask: Ref.make(parent) },
         { spaceId },
       );
       if (data) {
         openDetail(data.task.id);
       }
     },
-    [invokePromise, taskSet, spaceId, t, openDetail],
+    [invokePromise, taskSet, spaceId, openDetail],
   );
 
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
@@ -211,6 +223,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     <TaskList.Root
       tasks={tasks}
       hierarchical
+      collapsed={collapsed}
+      onCollapsedChange={setCollapsed}
       selectable
       showDescription
       descriptionComponents={descriptionComponents}
@@ -230,19 +244,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
-      <TaskList.Editor
-        createOnly
-        showDescription
-        // Only where a plugin can store the file, as the task's own article decides.
-        acceptFiles={!!attachFile}
-        descriptionExtensions={descriptionExtensions}
-        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-        // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
-        // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
-        // existing `p-2`'s horizontal component and silently dropped.
-        classNames='mx-trim-md bg-input-surface border-x border-t border-separator rounded-t-md p-2'
-        placeholder={t('task-create.placeholder')}
-      />
+      <div className='px-trim-md'>
+        <TaskList.Editor
+          createOnly
+          showDescription
+          // Only where a plugin can store the file, as the task's own article decides.
+          acceptFiles={!!attachFile}
+          descriptionExtensions={descriptionExtensions}
+          // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
+          // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
+          // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
+          // existing `p-2`'s horizontal component and silently dropped.
+          classNames='bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+          placeholder={t('task-create.placeholder')}
+        />
+      </div>
     </TaskList.Root>
   );
 

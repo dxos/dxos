@@ -353,6 +353,7 @@ const TaskTreeHeading = ({
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
+  const { t } = useTranslation(translationKey);
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
   // does not change, so a rename made anywhere else would leave the row showing its old title.
@@ -390,7 +391,12 @@ const TaskTreeHeading = ({
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
         {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
         <TaskMnemonic task={task} />
-        <span data-testid='taskList.item.title' className='truncate'>
+        {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
+        <span
+          data-testid='taskList.item.title'
+          data-placeholder={t('task-title.placeholder')}
+          className='truncate empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]'
+        >
           {current.title}
         </span>
       </div>

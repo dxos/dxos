@@ -14,7 +14,7 @@ The task list's filter button is filled and accented whenever anything narrows t
 
 In the task list a task's tags and artifacts sit on a line of their own under the title and above the description, instead of sharing the title line; the assignee stays right-aligned on the title line. `TaskTags` takes `assignee={false}` for a host that places the assignee itself.
 
-A task row's menu offers **Add sub-task**, which files a new task named "New task" under that row and opens it so it can be titled.
+A task row's menu offers **Add sub-task**, which files an untitled task under that row, expands the row if it was collapsed, and opens the new task. A task editor focuses its title when the task has none, so the new task is named where it opens; an untitled row shows an "Untitled" placeholder.
 
 A task's questions appear in its activity log where they were asked, with their answers, and an open one is answered there; the article's separate Questions section is gone. Each option of a question is an item of its own in a list.
 

@@ -425,7 +425,8 @@ export const Behavior: Story = {
 
 /**
  * A row's menu adds a sub-task under it: the new task is filed into the set with the row as its
- * parent, so it appears one level down beneath the row it was added from.
+ * parent and no title yet — the reader names it in the detail it opens — and a collapsed parent is
+ * expanded so the new row is in view.
  */
 export const AddSubTask: Story = {
   play: async ({ canvasElement }) => {
@@ -438,24 +439,32 @@ export const AddSubTask: Story = {
     }
     const { taskSet } = context;
     const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    const parentRow = () => canvas.getByText('Design label').closest<HTMLElement>('[data-testid="taskList.item"]')!;
+    const children = () => TaskSet.resolveTasks(taskSet).filter((task) => task.parentTask?.target?.id === parent.id);
+    const visible = (id: string) => {
+      const row = canvasElement.querySelector<HTMLElement>(`[data-object-id="${id}"]`);
+      return !!row && !row.closest('[hidden]');
+    };
 
-    const row = canvas.getByText('Design label').closest<HTMLElement>('[data-testid="taskList.item"]')!;
-    await userEvent.click(row.querySelector<HTMLElement>('[data-testid="taskList.item.actions"]')!);
-    const item = await waitFor(
-      () => {
-        const found = document.querySelector<HTMLElement>('[data-testid="tasks.task.addSubTask"]');
-        if (!found) {
-          throw new Error('Add sub-task item not found.');
-        }
-        return found;
-      },
-      { timeout: 10_000 },
-    );
-    await userEvent.click(item);
+    const addSubTask = async () => {
+      await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="taskList.item.actions"]')!);
+      const item = await waitFor(
+        () => {
+          const found = document.querySelector<HTMLElement>('[data-testid="tasks.task.addSubTask"]');
+          if (!found) {
+            throw new Error('Add sub-task item not found.');
+          }
+          return found;
+        },
+        { timeout: 10_000 },
+      );
+      await userEvent.click(item);
+    };
 
-    const child = await waitFor(
+    await addSubTask();
+    const first = await waitFor(
       () => {
-        const found = TaskSet.resolveTasks(taskSet).find((task) => task.parentTask?.target?.id === parent.id);
+        const [found] = children();
         if (!found) {
           throw new Error('Sub-task not created.');
         }
@@ -463,11 +472,26 @@ export const AddSubTask: Story = {
       },
       { timeout: 10_000 },
     );
+    await expect(first.title).toEqual('');
     await waitFor(
       () =>
         expect(
-          canvasElement.querySelector(`[data-object-id="${child.id}"]`)?.closest('[role="treeitem"]'),
+          canvasElement.querySelector(`[data-object-id="${first.id}"]`)?.closest('[role="treeitem"]'),
         ).toHaveAttribute('aria-level', '2'),
+      { timeout: 10_000 },
+    );
+
+    // Collapse the parent, then add another: the branch opens so both children are in view.
+    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!);
+    await waitFor(() => expect(visible(first.id)).toBe(false), { timeout: 10_000 });
+    await addSubTask();
+    await waitFor(() => expect(children()).toHaveLength(2), { timeout: 10_000 });
+    await waitFor(
+      async () => {
+        for (const child of children()) {
+          await expect(visible(child.id)).toBe(true);
+        }
+      },
       { timeout: 10_000 },
     );
   },

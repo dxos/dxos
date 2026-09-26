@@ -66,7 +66,6 @@ export const translations = [
         'delete-object.label': 'Delete object',
         'delete-task.label': 'Delete task',
         'add-sub-task.label': 'Add sub-task',
-        'new-sub-task.title': 'New task',
         'task-deleted.label': 'Task deleted',
         'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',

@@ -86,8 +86,10 @@ const seedTasks = (space: Space) => {
   }
 
   const plain = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: PLAIN_TASK, status: 'todo' }));
+  // Untitled, as a sub-task added from a row's menu starts.
+  const untitled = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: '', status: 'todo' }));
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [Ref.make(worked), Ref.make(plain)];
+    taskSet.tasks = [Ref.make(worked), Ref.make(plain), Ref.make(untitled)];
   });
 
   seeded = { space, worked };
@@ -269,6 +271,41 @@ export const QuestionInActivity: Story = {
     await waitFor(
       () =>
         expect(inHistory()?.querySelector('[data-testid="task-question.answer"]')).toHaveTextContent('Colombian Huila'),
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * A task with no title opens with its title field focused, so a sub-task added from a row's menu is
+ * named where it is read — a titled task leaves focus where it was.
+ */
+export const UntitledTaskFocus: Story = {
+  decorators: [withPlugins({ files: false })],
+  args: { title: '' },
+  play: async ({ canvasElement }) => {
+    const title = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskEditor.title"]');
+        if (!found) {
+          throw new Error('Title field not rendered.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(document.activeElement).toBe(title), { timeout: 10_000 });
+    await userEvent.keyboard('Cup the samples{Enter}');
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task.');
+    }
+    const { space } = context;
+    await waitFor(
+      async () =>
+        await expect(
+          (await space.db.query(Filter.type(Task.Task)).run()).some((task) => task.title === 'Cup the samples'),
+        ).toBe(true),
       { timeout: 10_000 },
     );
   },
