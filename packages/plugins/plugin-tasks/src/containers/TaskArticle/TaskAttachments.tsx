@@ -81,8 +81,11 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
         { spaceId: db.spaceId },
       );
       if (attachError) {
-        // Nothing references the stored file once the attach fails, so it would linger unowned.
-        db.remove(object);
+        // Removed only while nothing references it: a failure after the attach (the flush) leaves the
+        // task holding the file, and removing it then would leave the task pointing at nothing.
+        if (!(task.attachments ?? []).some((ref) => Task.refEntityId(ref) === object.id)) {
+          db.remove(object);
+        }
         log.warn('attachment failed', { name: file.name, error: attachError });
       }
     },
