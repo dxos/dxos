@@ -10,6 +10,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Task } from '@dxos/types';
+import { getHashHue } from '@dxos/ui-theme';
 
 import { type Span, buildSpanTree, flattenSpanTree } from '../execution-graph/index.ts';
 import {
@@ -682,6 +683,14 @@ export const buildSessionTimeline = ({
         markers[index] = { ...marker, laneId: session.id };
       }
     });
+  }
+
+  // Hashed from the mnemonic, as the task's mnemonic chip is, so a lane and its chip share a hue.
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (task) {
+      lane.hue = getHashHue(Obj.getMnemonic(task));
+    }
   }
 
   const times = [

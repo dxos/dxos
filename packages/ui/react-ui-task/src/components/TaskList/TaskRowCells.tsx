@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -134,7 +134,8 @@ export const TaskMnemonic = ({
     classNames={mx('font-mono', classNames)}
     density='sm'
     variant='tag'
-    hue='emerald'
+    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+    hue={getHashHue(Obj.getMnemonic(task))}
     label={Obj.getMnemonic(task)}
     iconEnd
     onCopy={() => '@' + Obj.getMnemonic(task)}

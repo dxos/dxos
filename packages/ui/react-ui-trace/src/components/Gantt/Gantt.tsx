@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMe
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { HoverCard, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type Hue, mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
 export type GanttLaneKind = 'session' | 'task';
@@ -23,6 +23,8 @@ export type GanttLane = {
   end?: number;
   parentId?: string;
   taskId?: string;
+  /** Colours the legend dot, the bar, its nodes and its thread in place of the status colour. */
+  hue?: Hue;
   blockedOn?: readonly string[];
   delegatedFrom?: { laneId: string; markerId: string };
   tokens?: { input: number; output: number; total: number };
@@ -104,6 +106,12 @@ const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread
     text: 'text-red-500',
   },
 };
+
+/**
+ * A hued lane's colour: the theme's tag surface token, read as a variable because the hue is data, so
+ * the bar matches a `Tag` of the same hue.
+ */
+const hueColor = (hue: Hue): string => `var(--color-${hue}-surface)`;
 
 const DEPENDENCY_CLASSNAME = 'stroke-fuchsia-500';
 
@@ -284,7 +292,10 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
             },
           })}
         >
-          <span className={mx('shrink-0 w-2 h-2 rounded-full bg-current', STATUS_COLOR[lane.status].text)} />
+          <span
+            className={mx('shrink-0 w-2 h-2 rounded-full bg-current', !lane.hue && STATUS_COLOR[lane.status].text)}
+            style={lane.hue ? { color: hueColor(lane.hue) } : undefined}
+          />
           <span className='truncate text-base-fg'>{lane.label}</span>
         </div>
       ))}
@@ -518,7 +529,11 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
         return (
           <g key={lane.id} className='cursor-pointer' onClick={() => onLaneSelect?.(lane)}>
             <rect {...bar} className='fill-base-surface' />
-            <rect {...bar} className={STATUS_COLOR[lane.status].fill} />
+            {lane.hue ? (
+              <rect {...bar} style={{ fill: hueColor(lane.hue), fillOpacity: 0.4 }} />
+            ) : (
+              <rect {...bar} className={STATUS_COLOR[lane.status].fill} />
+            )}
           </g>
         );
       })}
@@ -536,7 +551,8 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
             x2={nodeX(lane, Math.max(...times))}
             y1={rowY(index)}
             y2={rowY(index)}
-            className={STATUS_COLOR[lane.status].thread}
+            className={lane.hue ? undefined : STATUS_COLOR[lane.status].thread}
+            style={lane.hue ? { stroke: hueColor(lane.hue) } : undefined}
           />
         );
       })}
@@ -553,8 +569,9 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
                 r={NODE_RADIUS}
                 className={mx(
                   'cursor-pointer stroke-base-surface transition-[stroke-width] hover:stroke-[3px] hover:stroke-base-fg',
-                  STATUS_COLOR[row.lane.status].node,
+                  !row.lane.hue && STATUS_COLOR[row.lane.status].node,
                 )}
+                style={row.lane.hue ? { fill: hueColor(row.lane.hue) } : undefined}
                 onClick={() => onMarkerSelect?.(marker)}
               />
             </HoverCard.Trigger>

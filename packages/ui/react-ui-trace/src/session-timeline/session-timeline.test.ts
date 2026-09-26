@@ -14,6 +14,7 @@ import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EID, EntityId, URI } from '@dxos/keys';
 import { Milestone, Task } from '@dxos/types';
+import { getHashHue } from '@dxos/ui-theme';
 
 import subAgentFixture from '../execution-graph/testing/sub-agent-delegation.json';
 import { buildSessionTimeline, readTaskStatusChanges } from './session-timeline.ts';
@@ -770,6 +771,7 @@ describe('buildSessionTimeline', () => {
         start: 1_000,
         end: 2_000,
         taskId: done.id,
+        hue: getHashHue(Obj.getMnemonic(done)),
       },
       {
         id: `task:${running.id}`,
@@ -779,6 +781,7 @@ describe('buildSessionTimeline', () => {
         start: 3_000,
         end: undefined,
         taskId: running.id,
+        hue: getHashHue(Obj.getMnemonic(running)),
         blockedOn: [`task:${done.id}`],
       },
     ]);
