@@ -356,6 +356,10 @@ export const SharedFilterState: Story = {
     await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
     await waitFor(() => expect(stored()).toContain('"query":""'), { timeout: 10_000 });
     await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await clickElement(trigger());
+    await waitFor(() => expect(item('done')).toHaveAttribute('aria-checked', 'true'), { timeout: 10_000 });
+    await userEvent.keyboard('{Escape}');
+    await clickElement(editor());
     await userEvent.keyboard('status:started');
     await waitFor(() => expect(canvas.queryByText('Design label')).toBeNull(), { timeout: 10_000 });
     await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();

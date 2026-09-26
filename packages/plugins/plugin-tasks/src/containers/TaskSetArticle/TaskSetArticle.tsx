@@ -42,7 +42,7 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { ALL_STATUSES, STATUS_TERMS, filterTasks, groupTasks, sortTasks } from '../../util/index.ts';
+import { ALL_STATUSES, STATUS_TERMS, filterTasks, foldStatuses, groupTasks, sortTasks } from '../../util/index.ts';
 import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
@@ -111,8 +111,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
-    (next: readonly Task.Status[]) => setFilterText(writeEnumTerms(filterText, STATUS_TERMS, next)),
-    [filterText, setFilterText],
+    // Rewrites the stored query rather than this render's copy, which can trail fast typing.
+    (next: readonly Task.Status[]) => setFilterText((query) => writeEnumTerms(query, STATUS_TERMS, next)),
+    [setFilterText],
   );
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
@@ -398,7 +399,7 @@ const useTaskSetExpanded = (contextId: string) => {
 const useFilterQuery = (
   contextId: string,
   editorRef: RefObject<EditorController | null>,
-): [string, (query: string) => void] => {
+): [string, (query: string | ((query: string) => string)) => void] => {
   const manager = useManagerOptional();
   const { query } = useViewState(TaskSetView.aspect, contextId);
   const { update } = useViewStateActions(TaskSetView.aspect, contextId);
@@ -417,13 +418,17 @@ const useFilterQuery = (
   // once and the field dropped, so upgrading keeps what the reader had hidden.
   useEffect(() => {
     update(({ statuses, ...view }) =>
-      statuses === undefined ? view : { ...view, query: writeEnumTerms(view.query, STATUS_TERMS, statuses) },
+      statuses === undefined ? view : { ...view, query: foldStatuses(view.query, statuses) },
     );
   }, [update]);
 
   // Unchanged text keeps the same value, so the editor echoing a pushed text back is not a write.
   const setQuery = useCallback(
-    (query: string) => update((view) => (view.query === query ? view : { ...view, query })),
+    (next: string | ((query: string) => string)) =>
+      update((view) => {
+        const query = typeof next === 'function' ? next(view.query) : next;
+        return view.query === query ? view : { ...view, query };
+      }),
     [update],
   );
   return [query, setQuery];
