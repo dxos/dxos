@@ -26,6 +26,8 @@ import {
   useApp,
 } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import type { CreateClientServicesOptions } from '@dxos/client';
+import type { Config } from '@dxos/config';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
@@ -168,6 +170,40 @@ const DEV_RELOAD_GUARD_KEY = 'dxos.composer.dev-worker-reload';
 if (import.meta.env?.DEV) {
   new BroadcastChannel(DEV_RELOAD_CHANNEL).onmessage = () => window.location.reload();
 }
+
+// A tab and the leader's worker on different deploys disagree on RPC contracts, so the older of the
+// two reloads onto the current deploy. The guard stops a deploy that keeps serving an older build
+// (a stale CDN edge) from reloading the tab in a loop.
+const BUILD_RELOAD_GUARD_KEY = 'dxos.composer.build-mismatch-reload';
+const BUILD_RELOAD_GUARD_MS = 60_000;
+
+/** Orders by build time first, so comparing two ids says which deploy is newer. */
+const buildIdOf = (config: Config): string | undefined => {
+  const timestamp: string | undefined = config.get('runtime.app.build.timestamp');
+  const commitHash: string | undefined = config.get('runtime.app.build.commitHash');
+  return timestamp ? `${timestamp}/${commitHash ?? ''}` : undefined;
+};
+
+const handleWorkerBuildMismatch: NonNullable<CreateClientServicesOptions['onWorkerBuildMismatch']> = ({
+  role,
+  local,
+  remote,
+}) => {
+  if (local === undefined || remote === undefined || local >= remote) {
+    // This tab is the newer build. The other side reloads itself if it knows how; a leader from before
+    // build ids never will, and only closing or reloading that tab ends the refused connection.
+    log.warn('worker build mismatch: waiting for the older tab', { role, local, remote });
+    return;
+  }
+  const lastReload = Number(sessionStorage.getItem(BUILD_RELOAD_GUARD_KEY) ?? 0);
+  if (Date.now() - lastReload < BUILD_RELOAD_GUARD_MS) {
+    log.error('worker build mismatch persists after reloading', { role, local, remote });
+    return;
+  }
+  log.warn('worker build mismatch: reloading onto the current build', { role, local, remote });
+  sessionStorage.setItem(BUILD_RELOAD_GUARD_KEY, String(Date.now()));
+  window.location.reload();
+};
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -539,6 +575,8 @@ const main = async () => {
     // boot spinner with only a console warning; in dev, force every same-origin tab through one
     // coordinated reload so all generations converge. Production relies on the fatal dialog via the
     // startup timeout (tagged for telemetry — see ResetDialog).
+    buildId: buildIdOf(config),
+    onWorkerBuildMismatch: handleWorkerBuildMismatch,
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
       if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {

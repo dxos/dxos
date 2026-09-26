@@ -393,6 +393,8 @@ export const makeConnection = (
     maxLeaderFailures?: number;
     createWorker?: () => WorkerProtocol.WorkerOrPort;
     createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
+    buildId?: string;
+    onBuildMismatch?: Client.Options['onBuildMismatch'];
   } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
@@ -403,6 +405,8 @@ export const makeConnection = (
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
     maxLeaderFailures: options.maxLeaderFailures,
+    buildId: options.buildId,
+    onBuildMismatch: options.onBuildMismatch,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner, livenessLockKey, leaderId }) => {
       postRunnerReady(workerToClient);

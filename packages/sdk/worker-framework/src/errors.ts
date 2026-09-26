@@ -16,6 +16,15 @@ export class WorkerError extends BaseError.extend('WorkerError', 'Worker failed'
 export class WorkerConnectionError extends BaseError.extend('WorkerConnectionError', 'Worker connection failed') {}
 
 /**
+ * The leader's worker runs a different build than this tab, so the tab refused its port rather than
+ * speak an RPC contract the two builds may not share. Its {@link BaseError.context} carries both builds.
+ */
+export class WorkerBuildMismatchError extends BaseError.extend(
+  'WorkerBuildMismatchError',
+  'Worker runs a different app build than this tab',
+) {}
+
+/**
  * A worker ignored the cooperative displacement signal for its whole grace period and had to be
  * killed by the tab owning its handle. Raised at error level because a worker that stops servicing
  * its event loop is a fault rather than routine displacement, so it reaches error telemetry; its
