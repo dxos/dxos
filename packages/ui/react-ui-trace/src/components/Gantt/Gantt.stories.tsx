@@ -212,6 +212,40 @@ const LiveStory = (props: StoryArgs) => {
   );
 };
 
+const SECOND = 1_000;
+
+const singleLane: GanttLane[] = [
+  { id: 'lane', kind: 'session', label: 'Process — one event a second', status: 'running', start: T0 },
+];
+
+/**
+ * The primitives on their own: one lane on the event axis, gaining an event a second. Each arrival
+ * steps the axis forward by one unit and opens out of the event before it; nothing already drawn moves,
+ * which is what the event axis buys over a fitted one.
+ */
+const SingleLaneStory = () => {
+  const [events, setEvents] = useState<GanttMarker[]>(() => [
+    { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
+  ]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEvents((events) => [
+        ...events,
+        {
+          id: `e:${events.length}`,
+          laneId: 'lane',
+          kind: 'tool',
+          timestamp: T0 + events.length * SECOND,
+          label: random.lorem.word(),
+        },
+      ]);
+    }, SECOND);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <Chart lanes={singleLane} markers={events} axis='event' animate />;
+};
+
 const meta = {
   title: 'ui/react-ui-trace/Gantt',
   render: DefaultStory,
@@ -240,4 +274,15 @@ export const ChartOnly: Story = {
 
 export const Live: Story = {
   render: LiveStory,
+};
+
+/** The same run measured in events rather than seconds: every gap is one step, whatever it lasted. */
+export const EventAxis: Story = {
+  args: {
+    axis: 'event',
+  },
+};
+
+export const SingleLane: Story = {
+  render: SingleLaneStory,
 };

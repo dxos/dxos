@@ -3,3 +3,4 @@
 //
 
 export * from './Gantt.tsx';
+export * from './gantt-scale.ts';

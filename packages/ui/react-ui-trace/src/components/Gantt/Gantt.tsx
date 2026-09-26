@@ -5,10 +5,13 @@
 import { format } from 'date-fns';
 import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createContext, useComposedRefs } from '@dxos/react-hooks';
-import { HoverCard, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { createContext } from '@dxos/react-hooks';
+import { HoverCard, ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
+
+import { type GanttAxis, type GanttScale, eventScale, timeScale } from './gantt-scale.ts';
+import { useEnter } from './useEnter.ts';
 
 export type GanttLaneKind = 'session' | 'task';
 export type GanttLaneStatus = 'pending' | 'blocked' | 'running' | 'review' | 'done' | 'failed';
@@ -41,9 +44,15 @@ export type GanttMarker = {
 const PAD_X = 16;
 const ROW_HEIGHT = 24;
 const HEADER_HEIGHT = 20;
-/** Upper bound on axis ticks; the count shrinks with the width so `HH:mm:ss` labels never overlap. */
-const MAX_TICKS = 5;
-const TICK_MIN_WIDTH = 72;
+
+/** Pixels per event on the `event` axis — wide enough that two adjacent nodes read as two. */
+const EVENT_STEP = 32;
+
+/** How long a newly arrived element takes to travel from where it came from to where it belongs. */
+const ENTER_TRANSITION = 'duration-300 ease-out';
+
+/** Within this of the live edge the chart keeps following it; past it the reader is reading history. */
+const FOLLOW_SLACK = 4;
 
 const NODE_RADIUS = 6;
 const BAR_HEIGHT = 15;
@@ -171,6 +180,16 @@ export type GanttData = {
   range?: { start: number; end: number };
   now?: number;
   showNow?: boolean;
+  /** What the horizontal axis measures; real time by default. */
+  axis?: GanttAxis;
+  /** Pixels per event on the `event` axis. */
+  eventStep?: number;
+  /**
+   * Slide a newly arrived event out of the one before it — out of the node that spawned its lane, for
+   * a lane's first — and grow its bar to meet it. Only events that arrive while the chart is on screen
+   * animate, so a chart that is merely mounted is still.
+   */
+  animate?: boolean;
   onLaneSelect?: (lane: GanttLane) => void;
   onMarkerSelect?: (marker: GanttMarker) => void;
 };
@@ -183,7 +202,7 @@ type GanttContextValue = {
   markers: readonly GanttMarker[];
   markerById: Map<string, GanttMarker>;
   range: { start: number; end: number };
-} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow'>;
+} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow' | 'axis' | 'eventStep' | 'animate'>;
 
 const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt');
 
@@ -201,7 +220,20 @@ type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
  */
 const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
   (
-    { lanes, markers = [], range: rangeProp, now, showNow, onLaneSelect, onMarkerSelect, children, ...props },
+    {
+      lanes,
+      markers = [],
+      range: rangeProp,
+      now,
+      showNow,
+      axis,
+      eventStep,
+      animate,
+      onLaneSelect,
+      onMarkerSelect,
+      children,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { rows, groups } = useMemo(() => orderRows(lanes), [lanes]);
@@ -228,6 +260,9 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         range={range}
         now={now}
         showNow={showNow}
+        axis={axis}
+        eventStep={eventStep}
+        animate={animate}
         onLaneSelect={onLaneSelect}
         onMarkerSelect={onMarkerSelect}
       >
@@ -333,34 +368,76 @@ type GanttChartProps = ThemedClassName<{}>;
 /**
  * The drawing: every lane is a rounded bar with its markers threaded through it as nodes, a session's
  * rectangle encloses the tasks it works, and connectors draw dependencies and delegations.
+ *
+ * The part owns its horizontal scroll: on the `event` axis the drawing is as wide as the events need
+ * and follows the newest of them, while the legend beside it stays where it is.
  */
-const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, forwardedRef) => {
-  const { rows, groups, rowById, markers, markerById, range, now, showNow, onLaneSelect, onMarkerSelect } =
-    useGanttContext('Gantt.Chart');
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const ref = useComposedRefs(svgRef, forwardedRef);
+const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, forwardedRef) => {
+  const {
+    rows,
+    groups,
+    rowById,
+    markers,
+    markerById,
+    range,
+    now,
+    showNow,
+    axis = 'time',
+    eventStep = EVENT_STEP,
+    animate,
+    onLaneSelect,
+    onMarkerSelect,
+  } = useGanttContext('Gantt.Chart');
+  // The viewport, not the drawing, is what the time axis is fitted to: the drawing may be wider.
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const followRef = useRef(true);
   const [width, setWidth] = useState(600);
   useEffect(() => {
-    const element = svgRef.current;
+    const element = viewportRef.current;
     if (!element) {
       return;
     }
     const observer = new ResizeObserver(([entry]) => entry && setWidth(entry.contentRect.width));
     observer.observe(element);
-    return () => observer.disconnect();
+    // Listened for rather than taken as a prop: `ScrollArea.Viewport` accepts only what it slots.
+    const onScroll = (): void => {
+      followRef.current = element.scrollWidth - element.clientWidth - element.scrollLeft <= FOLLOW_SLACK;
+    };
+    element.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      element.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
-  const span = Math.max(range.end - range.start, 1);
-  const x = (time: number): number => PAD_X + ((time - range.start) / span) * (width - 2 * PAD_X);
+  /** Each lane's markers in the order they happened: the thread, the bars and the enter origins read it. */
+  const laneMarkers = useMemo(() => {
+    const byLane = new Map<string, GanttMarker[]>();
+    for (const marker of markers) {
+      const list = byLane.get(marker.laneId);
+      if (list) {
+        list.push(marker);
+      } else {
+        byLane.set(marker.laneId, [marker]);
+      }
+    }
+    for (const list of byLane.values()) {
+      list.sort((left, right) => left.timestamp - right.timestamp);
+    }
+    return byLane;
+  }, [markers]);
+
+  const scale: GanttScale = useMemo(
+    () =>
+      axis === 'event'
+        ? eventScale({ times: markers.map((marker) => marker.timestamp), step: eventStep, pad: PAD_X })
+        : timeScale({ range, width, pad: PAD_X }),
+    [axis, markers, eventStep, range, width],
+  );
+  const isEntering = useEnter(markers.map((marker) => marker.id));
+
+  const x = scale.at;
   const rowY = (index: number): number => HEADER_HEIGHT + index * ROW_HEIGHT + ROW_HEIGHT / 2;
-  const laneTimes = (lane: GanttLane): number[] =>
-    markers.filter((marker) => marker.laneId === lane.id).map((marker) => marker.timestamp);
-  // A bar reaches its last node, not `now`: a lane without a fresh event is not shown as still
-  // busy, and a terminated one ends where its last event did.
-  const laneEnd = (lane: GanttLane): number | undefined => {
-    const times = laneTimes(lane);
-    return times.length > 0 ? Math.max(...times) : (lane.end ?? now);
-  };
   const delegationSource = (lane: GanttLane): GanttMarker | undefined =>
     lane.delegatedFrom && markerById.get(lane.delegatedFrom.markerId);
   // A delegated lane's bar begins where the connector's bend lands, never under the drop from the
@@ -375,208 +452,265 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
   // which is where the connector drops, so that node is nudged in past the bar's edge.
   const nodeX = (lane: GanttLane, time: number): number =>
     lane.start === undefined ? x(time) : Math.max(x(time), barStart(lane, lane.start) + BAR_OVERHANG);
+
+  // Where each node is drawn: its own place, or — for the one frame in which it arrives — the place it
+  // came from, which is what the transitions below then travel out of. A lane's first node comes from
+  // the node that spawned the lane, so a delegated lane reads as opening out of its parent.
+  const markerX = new Map<string, number>();
+  for (const [laneId, list] of laneMarkers) {
+    const row = rowById.get(laneId);
+    if (!row) {
+      continue;
+    }
+    list.forEach((marker, index) => {
+      const previous = index > 0 ? list[index - 1] : undefined;
+      const source = previous ? undefined : delegationSource(row.lane);
+      const origin = previous ? nodeX(row.lane, previous.timestamp) : source && x(source.timestamp);
+      const resting = nodeX(row.lane, marker.timestamp);
+      markerX.set(marker.id, animate && origin !== undefined && isEntering(marker.id) ? origin : resting);
+    });
+  }
+
+  // A bar reaches its last node, not `now`: a lane without a fresh event is not shown as still busy,
+  // and a terminated one ends where its last event did. Taking the node's drawn position rather than
+  // its instant is what makes the bar grow with an arriving event instead of jumping ahead of it.
+  const laneEndX = (lane: GanttLane): number | undefined => {
+    const list = laneMarkers.get(lane.id);
+    if (list && list.length > 0) {
+      return markerX.get(list[list.length - 1].id);
+    }
+    const end = lane.end ?? now;
+    return end === undefined ? undefined : x(end);
+  };
+
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
-  const tickCount = Math.max(2, Math.min(MAX_TICKS, Math.floor((width - 2 * PAD_X) / TICK_MIN_WIDTH)));
-  const ticks = Array.from({ length: tickCount }, (_, index) => range.start + (span * index) / (tickCount - 1));
+  const grow = animate && mx('transition-[width]', ENTER_TRANSITION);
+
+  // The event axis grows to the right, so the newest event has to be followed — but only while the
+  // reader is at the edge: having scrolled back to an earlier event, they are reading, not watching.
+  useEffect(() => {
+    const element = viewportRef.current;
+    if (element && followRef.current) {
+      element.scrollLeft = element.scrollWidth;
+    }
+  }, [scale.width]);
 
   return (
-    <svg
-      className={mx('flex-1 min-w-0', classNames)}
-      ref={ref}
-      // Pixel coordinates against the measured width, with no viewBox: a viewBox would letterbox
-      // the drawing to the column's aspect ratio and shrink every node with it.
-      style={{ height }}
-    >
-      {ticks.map((tick, index) => (
-        <g key={index}>
-          <line x1={x(tick)} x2={x(tick)} y1={HEADER_HEIGHT} y2={height} className='stroke-separator' />
-          <text
-            x={x(tick)}
-            y={HEADER_HEIGHT - 6}
-            textAnchor={index === 0 ? 'start' : index === tickCount - 1 ? 'end' : 'middle'}
-            className='fill-current text-subdued'
-          >
-            {format(tick, 'HH:mm:ss')}
-          </text>
-        </g>
-      ))}
+    <ScrollArea.Root orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+      <ScrollArea.Viewport ref={viewportRef}>
+        <svg
+          // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would
+          // letterbox the drawing to the column's aspect ratio and shrink every node with it.
+          className='shrink-0 min-w-full'
+          style={{ width: scale.width, height }}
+        >
+          {scale.ticks.map(({ at, label }, index) => (
+            <g key={index}>
+              <line x1={at} x2={at} y1={HEADER_HEIGHT} y2={height} className='stroke-separator' />
+              <text
+                x={at}
+                y={HEADER_HEIGHT - 6}
+                // Anchored inward at the drawing's own edges, so no label is drawn outside it.
+                textAnchor={at <= PAD_X ? 'start' : at >= scale.width - PAD_X ? 'end' : 'middle'}
+                className='fill-current text-subdued'
+              >
+                {label}
+              </text>
+            </g>
+          ))}
 
-      {/* Under the lanes and connectors: a dependency on a still-running lane anchors at `now`
-          and would otherwise be hidden by this line. */}
-      {now !== undefined && showNow && (
-        <line
-          x1={x(now)}
-          x2={x(now)}
-          y1={0}
-          y2={height}
-          strokeDasharray='3 3'
-          className={STATUS_COLOR.running.thread}
-        />
-      )}
-
-      {/* A session's rectangle encloses its own bar and the tasks it works in-session; a task it
-          spawned is a session of its own, drawn as a rectangle further down. */}
-      {groups.flatMap(({ session, first, last }) => {
-        const members = rows.slice(first, last + 1).map((row) => row.lane);
-        const starts = members.flatMap((lane) => (lane.start === undefined ? [] : [barStart(lane, lane.start)]));
-        // Only lanes with a bar bound the rectangle: a task not yet started has no extent.
-        const ends = members.flatMap((lane) => {
-          const end = lane.start === undefined ? undefined : laneEnd(lane);
-          return end === undefined ? [] : [x(end) + BAR_OVERHANG];
-        });
-        if (starts.length === 0 || ends.length === 0) {
-          return [];
-        }
-        const left = Math.min(...starts) - GROUP_PAD;
-        const right = Math.max(...ends) + GROUP_PAD;
-        return [
-          <rect
-            key={`group:${session.id}`}
-            x={left}
-            y={rowY(first) - ROW_HEIGHT / 2 + GROUP_INSET}
-            width={Math.max(right - left, ROW_HEIGHT)}
-            height={(last - first + 1) * ROW_HEIGHT - 2 * GROUP_INSET}
-            rx={GROUP_RADIUS}
-            className='fill-input-surface'
-          />,
-        ];
-      })}
-
-      {/* Connectors next, so the drop to a child passes beneath any bar it crosses. */}
-      {rows.flatMap(({ lane, index }) =>
-        (lane.blockedOn ?? []).flatMap((depId) => {
-          const dep = rowById.get(depId);
-          // Anchored on the dependency's last node, so the line meets a node rather than a bar edge.
-          const anchor = dep && (laneEnd(dep.lane) ?? dep.lane.start);
-          if (!dep || anchor === undefined) {
-            return [];
-          }
-          const anchorX = nodeX(dep.lane, anchor);
-          return [
+          {/* Under the lanes and connectors: a dependency on a still-running lane anchors at `now`
+            and would otherwise be hidden by this line. */}
+          {now !== undefined && showNow && (
             <line
-              key={`${lane.id}:${depId}`}
-              x1={anchorX}
-              x2={anchorX}
-              y1={rowY(dep.index)}
-              y2={rowY(index)}
-              strokeDasharray='2 2'
-              className={STATUS_COLOR.blocked.thread}
-            />,
-            // A waiter with no bar has nothing on its row for the line to reach, so it ends on a
-            // hollow node: the point the waiter is held at until the dependency resolves.
-            ...(lane.start === undefined
-              ? [
-                  <circle
-                    key={`${lane.id}:${depId}:hold`}
-                    cx={anchorX}
-                    cy={rowY(index)}
-                    r={NODE_RADIUS}
-                    strokeDasharray='2 2'
-                    className={mx('fill-base-surface', STATUS_COLOR.blocked.thread)}
-                  />,
-                ]
-              : []),
-          ];
-        }),
-      )}
+              x1={x(now)}
+              x2={x(now)}
+              y1={0}
+              y2={height}
+              strokeDasharray='3 3'
+              className={STATUS_COLOR.running.thread}
+            />
+          )}
 
-      {/* Down from the parent node, a quarter bend, then right to the centre of the child's first node. */}
-      {rows.flatMap(({ lane, index }) => {
-        const source = delegationSource(lane);
-        const sourceRow = lane.delegatedFrom && rowById.get(lane.delegatedFrom.laneId);
-        if (!source || !sourceRow || lane.start === undefined) {
-          return [];
-        }
-        const sourceX = x(source.timestamp);
-        const y = rowY(index);
-        const firstNode = Math.min(...laneTimes(lane));
-        const targetX = Number.isFinite(firstNode) ? nodeX(lane, firstNode) : barStart(lane, lane.start) + BAR_OVERHANG;
-        return [
-          <path
-            key={`delegation:${lane.id}`}
-            d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`}
-            fill='none'
-            className={DEPENDENCY_CLASSNAME}
-          />,
-        ];
-      })}
+          {/* A session's rectangle encloses its own bar and the tasks it works in-session; a task it
+            spawned is a session of its own, drawn as a rectangle further down. */}
+          {groups.flatMap(({ session, first, last }) => {
+            const members = rows.slice(first, last + 1).map((row) => row.lane);
+            const starts = members.flatMap((lane) => (lane.start === undefined ? [] : [barStart(lane, lane.start)]));
+            // Only lanes with a bar bound the rectangle: a task not yet started has no extent.
+            const ends = members.flatMap((lane) => {
+              const end = lane.start === undefined ? undefined : laneEndX(lane);
+              return end === undefined ? [] : [end + BAR_OVERHANG];
+            });
+            if (starts.length === 0 || ends.length === 0) {
+              return [];
+            }
+            const left = Math.min(...starts) - GROUP_PAD;
+            const right = Math.max(...ends) + GROUP_PAD;
+            return [
+              <rect
+                key={`group:${session.id}`}
+                x={left}
+                y={rowY(first) - ROW_HEIGHT / 2 + GROUP_INSET}
+                width={Math.max(right - left, ROW_HEIGHT)}
+                height={(last - first + 1) * ROW_HEIGHT - 2 * GROUP_INSET}
+                rx={GROUP_RADIUS}
+                className={mx('fill-input-surface', grow)}
+              />,
+            ];
+          })}
 
-      {rows.map(({ lane, index }) => {
-        const end = laneEnd(lane);
-        if (lane.start === undefined || end === undefined) {
-          return null;
-        }
-        const bar = {
-          x: barStart(lane, lane.start),
-          y: rowY(index) - BAR_HEIGHT / 2,
-          width: Math.max(x(end) + BAR_OVERHANG - barStart(lane, lane.start), BAR_HEIGHT),
-          height: BAR_HEIGHT,
-          rx: BAR_HEIGHT / 2,
-        };
-        // An opaque backing under the translucent tint: the connectors pass beneath the bars, and
-        // without it they would show through.
-        return (
-          <g key={lane.id} className='cursor-pointer' onClick={() => onLaneSelect?.(lane)}>
-            <rect {...bar} className='fill-base-surface' />
-            <rect {...bar} className={STATUS_COLOR[lane.status].fill} />
-          </g>
-        );
-      })}
+          {/* Connectors next, so the drop to a child passes beneath any bar it crosses. */}
+          {rows.flatMap(({ lane, index }) =>
+            (lane.blockedOn ?? []).flatMap((depId) => {
+              const dep = rowById.get(depId);
+              if (!dep) {
+                return [];
+              }
+              // Anchored on the dependency's last node, so the line meets a node rather than a bar edge.
+              const anchorX =
+                laneEndX(dep.lane) ?? (dep.lane.start === undefined ? undefined : nodeX(dep.lane, dep.lane.start));
+              if (anchorX === undefined) {
+                return [];
+              }
+              return [
+                <line
+                  key={`${lane.id}:${depId}`}
+                  x1={anchorX}
+                  x2={anchorX}
+                  y1={rowY(dep.index)}
+                  y2={rowY(index)}
+                  strokeDasharray='2 2'
+                  className={STATUS_COLOR.blocked.thread}
+                />,
+                // A waiter with no bar has nothing on its row for the line to reach, so it ends on a
+                // hollow node: the point the waiter is held at until the dependency resolves.
+                ...(lane.start === undefined
+                  ? [
+                      <circle
+                        key={`${lane.id}:${depId}:hold`}
+                        cx={anchorX}
+                        cy={rowY(index)}
+                        r={NODE_RADIUS}
+                        strokeDasharray='2 2'
+                        className={mx('fill-base-surface', STATUS_COLOR.blocked.thread)}
+                      />,
+                    ]
+                  : []),
+              ];
+            }),
+          )}
 
-      {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
-      {rows.map(({ lane, index }) => {
-        const times = laneTimes(lane);
-        if (times.length < 2) {
-          return null;
-        }
-        return (
-          <line
-            key={`thread:${lane.id}`}
-            x1={nodeX(lane, Math.min(...times))}
-            x2={nodeX(lane, Math.max(...times))}
-            y1={rowY(index)}
-            y2={rowY(index)}
-            className={STATUS_COLOR[lane.status].thread}
-          />
-        );
-      })}
+          {/* Down from the parent node, a quarter bend, then right to the centre of the child's first node. */}
+          {rows.flatMap(({ lane, index }) => {
+            const source = delegationSource(lane);
+            const sourceRow = lane.delegatedFrom && rowById.get(lane.delegatedFrom.laneId);
+            if (!source || !sourceRow || lane.start === undefined) {
+              return [];
+            }
+            const sourceX = x(source.timestamp);
+            const y = rowY(index);
+            const firstNode = laneMarkers.get(lane.id)?.[0];
+            // The run ends where the child's first node comes to rest, so an arriving node travels
+            // along the connector rather than dragging its end along with it.
+            const targetX = firstNode ? nodeX(lane, firstNode.timestamp) : barStart(lane, lane.start) + BAR_OVERHANG;
+            return [
+              <path
+                key={`delegation:${lane.id}`}
+                d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`}
+                fill='none'
+                className={DEPENDENCY_CLASSNAME}
+              />,
+            ];
+          })}
 
-      {/* Nodes last, over the bars and every line, so a line reads as ending at a node's centre. */}
-      {markers.map((marker) => {
-        const row = rowById.get(marker.laneId);
-        return row ? (
-          <HoverCard.Root key={marker.id}>
-            <HoverCard.Trigger asChild>
-              <circle
-                cx={nodeX(row.lane, marker.timestamp)}
-                cy={rowY(row.index)}
-                r={NODE_RADIUS}
-                className={mx(
-                  'cursor-pointer stroke-base-surface transition-[stroke-width] hover:stroke-[3px] hover:stroke-base-fg',
-                  STATUS_COLOR[row.lane.status].node,
-                )}
-                onClick={() => onMarkerSelect?.(marker)}
+          {rows.map(({ lane, index }) => {
+            const endX = laneEndX(lane);
+            if (lane.start === undefined || endX === undefined) {
+              return null;
+            }
+            const start = barStart(lane, lane.start);
+            const bar = {
+              x: start,
+              y: rowY(index) - BAR_HEIGHT / 2,
+              width: Math.max(endX + BAR_OVERHANG - start, BAR_HEIGHT),
+              height: BAR_HEIGHT,
+              rx: BAR_HEIGHT / 2,
+            };
+            // An opaque backing under the translucent tint: the connectors pass beneath the bars, and
+            // without it they would show through.
+            return (
+              <g key={lane.id} className='cursor-pointer' onClick={() => onLaneSelect?.(lane)}>
+                <rect {...bar} className={mx('fill-base-surface', grow)} />
+                <rect {...bar} className={mx(STATUS_COLOR[lane.status].fill, grow)} />
+              </g>
+            );
+          })}
+
+          {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
+          {rows.map(({ lane, index }) => {
+            const list = laneMarkers.get(lane.id) ?? [];
+            const from = list.length > 1 ? markerX.get(list[0].id) : undefined;
+            const to = list.length > 1 ? markerX.get(list[list.length - 1].id) : undefined;
+            if (from === undefined || to === undefined) {
+              return null;
+            }
+            return (
+              <line
+                key={`thread:${lane.id}`}
+                x1={from}
+                x2={to}
+                y1={rowY(index)}
+                y2={rowY(index)}
+                className={mx(animate && mx('transition-[x1,x2]', ENTER_TRANSITION), STATUS_COLOR[lane.status].thread)}
               />
-            </HoverCard.Trigger>
-            <HoverCard.Portal>
-              <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
-                <div className='font-medium truncate'>{marker.label}</div>
-                <div className='text-description'>
-                  {marker.kind} · {format(marker.timestamp, 'HH:mm:ss.SSS')}
-                  {marker.level && marker.level !== 'info' && (
-                    <span className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}>
-                      {marker.level}
-                    </span>
-                  )}
-                </div>
-                <div className='text-description truncate'>{row.lane.label}</div>
-                <HoverCard.Arrow />
-              </HoverCard.Content>
-            </HoverCard.Portal>
-          </HoverCard.Root>
-        ) : null;
-      })}
-    </svg>
+            );
+          })}
+
+          {/* Nodes last, over the bars and every line, so a line reads as ending at a node's centre. */}
+          {markers.map((marker) => {
+            const row = rowById.get(marker.laneId);
+            const cx = markerX.get(marker.id);
+            return row && cx !== undefined ? (
+              <HoverCard.Root key={marker.id}>
+                <HoverCard.Trigger asChild>
+                  <circle
+                    cx={cx}
+                    cy={rowY(row.index)}
+                    r={NODE_RADIUS}
+                    className={mx(
+                      'cursor-pointer stroke-base-surface hover:stroke-[3px] hover:stroke-base-fg',
+                      // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
+                      // slides out of the one before it, and where it does not it simply appears.
+                      animate ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
+                      STATUS_COLOR[row.lane.status].node,
+                    )}
+                    onClick={() => onMarkerSelect?.(marker)}
+                  />
+                </HoverCard.Trigger>
+                <HoverCard.Portal>
+                  <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
+                    <div className='font-medium truncate'>{marker.label}</div>
+                    <div className='text-description'>
+                      {marker.kind} · {format(marker.timestamp, 'HH:mm:ss.SSS')}
+                      {marker.level && marker.level !== 'info' && (
+                        <span
+                          className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
+                        >
+                          {marker.level}
+                        </span>
+                      )}
+                    </div>
+                    <div className='text-description truncate'>{row.lane.label}</div>
+                    <HoverCard.Arrow />
+                  </HoverCard.Content>
+                </HoverCard.Portal>
+              </HoverCard.Root>
+            ) : null;
+          })}
+        </svg>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 
