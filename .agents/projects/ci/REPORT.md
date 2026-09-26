@@ -245,6 +245,60 @@ Two results worth keeping, since they cut against the recommendation:
   derivable as `production/<installation-model-id>/<github-repository-id>/bazel` — but that
   borrows Bazel's identity, and the endpoint is undocumented.
 
+## Depot re-measured after their blob-batching fix (2026-08-18)
+
+Depot support (Pedro) reported the root cause independently: moon requests hundreds of blobs at
+once, Depot was fetching them from its own backend one at a time, so the small per-blob delay
+compounded — the same mechanism as "Why Depot is slow" above. They shipped a fix and asked for a
+retest.
+
+### Dev machine
+
+Method: same harness, `.moon/workspace.yml` temporarily repointed at the pre-#12494 Depot config
+(`grpcs://cache.depot.dev`, `DEPOT_TOKEN`), 5 reps of `:build` on commit `83bfa75fad`, moon 2.4.5.
+Rep 1 was the config-switch cold build (0 hits, expected — excluded below); reps 2–5 hit
+328–329/329 and are the comparison.
+
+| metric              | Depot, before | Depot, retest | self-hosted (current) |
+| ------------------- | ------------: | ------------: | --------------------: |
+| wall median         |       338.0 s |        51.8 s |                29.9 s |
+| hydration median    |     1,100.1 s |       207.9 s |               109.2 s |
+| per-task p50        |      2,027 ms |        389 ms |                173 ms |
+| wall CV             |          4.7% |          3.3% |                     — |
+| dropped-batch fails |   1 of 5 reps |   0 of 5 reps |                     — |
+
+**Depot is 6.5× faster on wall clock and 5.2× faster per-task than before the fix**, and the
+per-task collapse (2,027 ms → 389 ms) is the signature of the sequential-round-trip mechanism
+being fixed rather than a general speedup. No dropped-blob-batch failures in this run, against 1
+of 5 previously — too small a sample to call reliability fixed, but consistent with it.
+
+**Self-hosted is still faster** — 1.7× on wall clock, 2.25× per-task — but the margin dropped from
+an order of magnitude to a real-but-modest gap.
+
+### On an actual Depot runner
+
+The 338 s/2,027 ms "before" numbers above were always from a laptop 25 ms from Depot's cache, never
+from a runner co-located with it — the per-target CI-vs-laptop comparison earlier in this doc
+covered only five individual build targets, not a full aggregate `:build`. A temporary
+`push`-triggered workflow (`.github/workflows/moon-cache-bench-depot-retest.yml`, deleted after
+this measurement) ran the same 5-rep bench as a two-arm matrix on `depot-ubuntu-24.04-8`, commit
+`239dce9d47`, moon 2.4.5. Depot's rep 1 was again the config-switch cold build and is excluded;
+self-hosted needed no config switch, so all 5 of its reps count.
+
+| metric           | Depot, CI runner | self-hosted, CI runner | self-hosted is |
+| ---------------- | ---------------: | ---------------------: | -------------: |
+| wall median      |           31.1 s |                 14.8 s |    2.1× faster |
+| hydration median |          120.1 s |                 37.8 s |    3.2× faster |
+| per-task p50     |           265 ms |                  60 ms |    4.4× faster |
+
+From a co-located runner Depot is faster still than from the laptop (31.1 s vs 51.8 s wall
+median, lower RTT doing what the latency-bound model predicts), but the gap to self-hosted is
+_wider_ here than the dev-machine retest suggested (2–4× against 1.7–2.25×) — the dev-machine
+numbers understated how far ahead self-hosted actually is on the hardware that matters. This
+changes the shape of the "cancel the Depot subscription" call in [`TASKS.md`](./TASKS.md): the
+original decision rested on an 11× gap on a Depot runner, now closer to 2–4×, not the 1.7× the
+laptop retest implied.
+
 ## Limits
 
 - **Everything above "In CI" is from one dev machine**, and only the CI section is not. The
