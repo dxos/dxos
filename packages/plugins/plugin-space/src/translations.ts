@@ -231,7 +231,7 @@ export const translations = [
         'create-space-dialog.templates.label': 'Templates',
         'create-space-dialog.templates.description': 'Select a pre-built template to get started quickly.',
         'create-object-dialog.title': 'Create {{object}}',
-        'object-form-confirm.label': 'OK',
+        'object-form-confirm.label': 'Create',
         'object-form-cancel.label': 'Cancel',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
