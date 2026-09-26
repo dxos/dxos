@@ -8,7 +8,7 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
-const { text, reasoning, toolCall, promptIncludes, scriptedLanguageModelLayer, __testing } = ScriptedLanguageModel;
+const { text, reasoning, toolCall, promptIncludes, layer, __testing } = ScriptedLanguageModel;
 
 describe('ScriptedLanguageModel', () => {
   describe('encoders', () => {
@@ -111,7 +111,7 @@ describe('ScriptedLanguageModel', () => {
         const exit = yield* LanguageModel.generateText({ prompt: 'ignored' }).pipe(Effect.exit);
         expect(exit._tag).toEqual('Failure');
       },
-      Effect.provide(scriptedLanguageModelLayer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+      Effect.provide(layer([{ parts: [text('one')] }, { parts: [text('two')] }])),
     ),
   );
 
@@ -122,13 +122,13 @@ describe('ScriptedLanguageModel', () => {
         expect((yield* LanguageModel.generateText({ prompt: 'alpha' })).text).toEqual('0:alpha');
         expect((yield* LanguageModel.generateText({ prompt: 'beta' })).text).toEqual('1:beta');
       },
-      Effect.provide(scriptedLanguageModelLayer((request, index) => ({ parts: [text(`${index}:${request.text}`)] }))),
+      Effect.provide(layer((request, index) => ({ parts: [text(`${index}:${request.text}`)] }))),
     ),
   );
 
   describe('routed scripts', () => {
     const routedLayer = () =>
-      scriptedLanguageModelLayer([
+      layer([
         {
           name: 'supervisor',
           match: promptIncludes('You are the supervisor'),

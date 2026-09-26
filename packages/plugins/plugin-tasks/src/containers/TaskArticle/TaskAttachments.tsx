@@ -19,7 +19,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, Column, Icon, useTranslation } from '@dxos/react-ui';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -198,14 +198,14 @@ export const TaskAttachments = ({ task }: TaskAttachmentsProps) => {
   }
 
   return (
-    <section className='flex flex-col gap-2 p-2' data-testid='tasksPlugin.attachments'>
-      <h2 className='text-sm text-subdued'>{t('task-attachments.label')}</h2>
+    // A section of the pane's column, headed like the questions and artifacts around it.
+    <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
       <div className='grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'>
         {refs.map((ref) => (
           <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
         ))}
       </div>
-    </section>
+    </Column.Section>
   );
 };
 

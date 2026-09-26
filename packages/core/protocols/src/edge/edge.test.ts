@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import {
+  AdminCreateInvitationCodesRequestSchema,
   EdgeCredentialsHeaderCodec,
   INVITATION_CODE_ALPHABET,
   INVITATION_CODE_LENGTH,
@@ -22,23 +23,47 @@ describe('InvitationCodeSchema', () => {
     expect(decode('ZZZZZZZZ')).toBe('ZZZZZZZZ');
   });
 
-  test('rejects wrong length', () => {
+  test('accepts vanity codes as typed', () => {
     const decode = Schema.decodeUnknownSync(InvitationCodeSchema);
-    expect(() => decode('ABC')).toThrow();
-    expect(() => decode('ABCDEFGHI')).toThrow();
+    expect(decode('SF-MEETUP-7K2Q')).toBe('SF-MEETUP-7K2Q');
+    expect(decode('sf-meetup-7k2q')).toBe('sf-meetup-7k2q');
   });
 
-  test('rejects ambiguous characters (Crockford excludes I, L, O, U)', () => {
+  test('rejects codes that are too short, too long, or contain other characters', () => {
     const decode = Schema.decodeUnknownSync(InvitationCodeSchema);
-    expect(() => decode('IIIIIIII')).toThrow();
-    expect(() => decode('LLLLLLLL')).toThrow();
-    expect(() => decode('OOOOOOOO')).toThrow();
-    expect(() => decode('UUUUUUUU')).toThrow();
+    expect(() => decode('ABC')).toThrow();
+    expect(() => decode('A'.repeat(51))).toThrow();
+    expect(() => decode('SF MEETUP')).toThrow();
   });
 
   test('alphabet has the expected length', () => {
     expect(INVITATION_CODE_ALPHABET).toHaveLength(32);
     expect(INVITATION_CODE_LENGTH).toBe(8);
+  });
+});
+
+describe('AdminCreateInvitationCodesRequestSchema', () => {
+  const decode = Schema.decodeUnknownSync(AdminCreateInvitationCodesRequestSchema);
+
+  test('accepts an event code', () => {
+    expect(decode({ count: 1, prefix: 'sf-meetup', maxRedemptions: 50 })).toMatchObject({ maxRedemptions: 50 });
+  });
+
+  test('rejects capacity outside 1-100 and fractional counts', () => {
+    expect(() => decode({ count: 1, maxRedemptions: 0 })).toThrow();
+    expect(() => decode({ count: 1, maxRedemptions: 101 })).toThrow();
+    expect(() => decode({ count: 1.5 })).toThrow();
+  });
+
+  test('rejects malformed prefixes and batches of vanity codes', () => {
+    expect(() => decode({ count: 1, prefix: 'ab' })).toThrow();
+    expect(() => decode({ count: 1, prefix: 'a-b-c' })).toThrow();
+    expect(() => decode({ count: 1, prefix: 'sf--meetup' })).toThrow();
+    expect(() => decode({ count: 2, prefix: 'MEETUP' })).toThrow();
+  });
+
+  test('rejects a plan on a multi-use code', () => {
+    expect(() => decode({ count: 1, maxRedemptions: 5, planName: 'internal' })).toThrow();
   });
 });
 
@@ -57,7 +82,7 @@ describe('RedeemInvitationCodeRequestSchema', () => {
     const decode = Schema.decodeUnknownSync(RedeemInvitationCodeRequestSchema);
     expect(() =>
       decode({
-        code: 'lowercase',
+        code: 'not a code',
         identityKey: 'identity-hex',
         email: 'user@example.com',
       }),

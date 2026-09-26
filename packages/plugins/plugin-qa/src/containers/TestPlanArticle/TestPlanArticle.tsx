@@ -101,7 +101,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         )}
 
         <section>
-          <h2 className='text-sm text-subdued'>Cases</h2>
+          <Field.Label>Cases</Field.Label>
           <div className='flex gap-2 py-2'>
             <Field.Input
               classNames='w-24'
@@ -145,7 +145,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         </section>
 
         <section>
-          <h2 className='text-sm text-subdued'>Runs</h2>
+          <Field.Label>Runs</Field.Label>
           {newestFirst.length === 0 ? (
             <p className='text-subdued' data-testid='qa.plan.no-runs'>
               No runs yet.

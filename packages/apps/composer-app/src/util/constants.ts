@@ -42,3 +42,6 @@ export const BOOT_ASSET_FAILURE_KEY = 'dxos.composer.boot-asset-failure';
 
 /** sessionStorage key for that script's once-per-session retry guard. */
 export const BOOT_ASSET_RETRY_KEY = 'dxos.composer.boot-asset-retry';
+
+/** sessionStorage key guarding the once-per-session reload after a lazy chunk fails to load. */
+export const PRELOAD_RETRY_KEY = 'dxos.composer.preload-retry';

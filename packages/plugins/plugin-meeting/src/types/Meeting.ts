@@ -47,6 +47,7 @@ export class Meeting extends Type.makeObject<Meeting>(DXN.make('org.dxos.type.me
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--handshake--regular', hue: 'yellow' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

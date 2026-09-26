@@ -306,7 +306,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                   // the column, or a narrow (single-column, mobile) container overflows
                   // and shows a horizontal scrollbar.
                   className={[
-                    '[&>*]:min-w-0!',
+                    '*:min-w-0!',
                     selectable && 'cursor-pointer',
                     selected && 'rounded-md ring-2 ring-inset ring-primary-500',
                   ]

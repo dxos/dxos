@@ -23,6 +23,7 @@ export const handlers = OperationHandlerSet.lazy([
   TaskOperation.ListTasks.pipe(Operation.lazyHandler(() => import('./list-tasks.ts'))),
   TaskOperation.MoveMilestone.pipe(Operation.lazyHandler(() => import('./move-milestone.ts'))),
   TaskOperation.MoveTask.pipe(Operation.lazyHandler(() => import('./move-task.ts'))),
+  TaskOperation.MoveTaskToSet.pipe(Operation.lazyHandler(() => import('./move-task-to-set.ts'))),
   OutlineOperation.QuickJournalEntry.pipe(Operation.lazyHandler(() => import('./quick-entry.ts'))),
   RemoteSessionOperation.RecordSession.pipe(Operation.lazyHandler(() => import('./report-session.ts'))),
   TaskOperation.RemoveAttachment.pipe(Operation.lazyHandler(() => import('./remove-attachment.ts'))),

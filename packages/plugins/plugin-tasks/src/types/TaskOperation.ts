@@ -343,6 +343,38 @@ export const MoveTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Moves a task, with its whole sub-task tree, into another task set (e.g. another project's).
+ * `MoveTask` cannot: it only repositions within one set, whose parent edge it re-asserts.
+ *
+ * - The subtree travels: every descendant leaves its old set, keeping its `parentTask` so the tree
+ *   arrives intact, while the moved root becomes a root of the target (its parent stays behind).
+ * - `milestone` is cleared on every moved task: milestones belong to the old set, and a ref into
+ *   another set's sequence would group the task under a milestone the target cannot show.
+ * - `dependsOn` is kept in both directions: it is an execution constraint, not set membership, and
+ *   a set's readiness reads a dependency outside its task list as satisfied, so nothing is stranded.
+ */
+export const MoveTaskToSet = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.moveToSet'),
+    name: 'Move Task To Set',
+    description:
+      'Move a task and its sub-tasks into another task set (e.g. another project), clearing their milestones.',
+    icon: 'ph--arrow-square-out--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    /** The destination set; the moved tasks are appended at its end, in their existing order. */
+    taskSet: Ref.Ref(TaskSet.TaskSet),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+    /** Ids of the task and every sub-task that moved with it. */
+    moved: Schema.Array(Schema.String),
+  }),
+}).pipe(Operation.mutation('write'));
+
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
 

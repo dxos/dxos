@@ -9,9 +9,8 @@ import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { EffectEx } from '@dxos/effect';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -53,8 +52,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
     () =>
       Filter.or(
         ...(db ? db.graph.registry.list().filter(Type.isType) : [])
-          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
-          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+          .filter((schema) => TypeOptions.isUserType(schema))
           .map((schema) => Filter.type(Type.getURI(schema))),
       ),
     [db],

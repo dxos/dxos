@@ -15,6 +15,7 @@ import queueObjectIdBySpace from './0006_queue_object_id_by_space.sql?raw';
 import { addConvergenceKey } from './0007_convergence_key.ts';
 import { addNormalizedIds } from './0008_normalized_ids.ts';
 import { backfillNormalizedIds } from './0009_backfill_normalized_ids.ts';
+import { addAnnotations } from './0010_annotations.ts';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
@@ -58,6 +59,7 @@ export const MIGRATIONS = {
   '0007_convergence_key': addConvergenceKey,
   '0008_normalized_ids': addNormalizedIds,
   '0009_backfill_normalized_ids': backfillNormalizedIds,
+  '0010_annotations': addAnnotations,
 };
 
 /** Own history table per store, since many stores share the client database. */

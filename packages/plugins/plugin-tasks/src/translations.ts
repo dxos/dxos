@@ -52,6 +52,7 @@ export const translations = [
         'task-attachments.label': 'Attachments',
         'task-attachments.drop.label': 'Drop to attach',
         'task-attachment.remove.label': 'Remove attachment',
+        'task-questions.label': 'Questions',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'filter.label': 'Filter tasks',
