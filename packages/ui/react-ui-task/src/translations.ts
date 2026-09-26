@@ -32,6 +32,7 @@ export const translations = [
         'set-estimate.label': 'Set estimate',
         'set-assignee.label': 'Set assignee',
         'assignee-none.label': 'Unassigned',
+        'assignee-agent.label': 'Agent',
         'estimate-none.label': 'None',
         'priority-low.label': 'Low',
         'priority-medium.label': 'Medium',
