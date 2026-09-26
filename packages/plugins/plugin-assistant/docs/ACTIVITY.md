@@ -97,8 +97,8 @@ erDiagram
   Project ||--o| Instructions : "owns (SetParent)"
   Project ||--o| TaskSet : "owns (SetParent) — the ledger"
   Project ||--o{ Chat : "files (ECHO parent edge; Chat.peekProject walks up)"
-  TaskSet ||--o{ Task : "tasks[] flat, ordered, sub-tasks included"
-  Task }o--o| Task : "parentTask"
+  TaskSet ||--o{ Task : "tasks[] root tasks, ordered (SetParent)"
+  Task |o--o{ Task : "subtasks[] ordered (SetParent)"
   Task }o--o{ Task : "dependsOn"
   Chat ||--|| Feed : "feed (SetParent)"
   Chat }o--o{ Task : "tasks[] checklist — NOT owning; a delegated task stays in its set"
@@ -317,7 +317,7 @@ classDiagram
   class Task {
     title, description
     status: todo|backlog|started|review|done|duplicate|blocked|cancelled|failed
-    parentTask: Ref~Task~
+    subtasks: Ref~Task~[]
     dependsOn: Ref~Task~[]
     assignee, reviewers: Actor
     history: HistoryEntry[] created and updated only
@@ -366,7 +366,7 @@ classDiagram
   Project "1" --> "0..1" TaskSet : owns
   Project "1" --> "0..*" Chat : parent edge (peekProject)
   TaskSet "1" --> "0..*" Task : tasks[]
-  Task --> Task : parentTask / dependsOn
+  Task --> Task : subtasks / dependsOn
   Chat "1" --> "1" Feed : feed
   Chat "1" --> "0..*" Task : checklist
   Chat ..> Task : addTask parents to Chat

@@ -16,7 +16,10 @@ export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.type.si
     createDraft: Schema.optional(Schema.Boolean),
     researchEnabled: Schema.optional(Schema.Boolean),
     lastUpdated: Schema.optional(Schema.String),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--user-circle--regular', hue: 'violet' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--user-circle--regular', hue: 'violet' }),
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 /** Creates a sidekick profile with default capability flags and timestamp metadata. */

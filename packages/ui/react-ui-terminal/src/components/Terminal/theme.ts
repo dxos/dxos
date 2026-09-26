@@ -43,6 +43,12 @@ const makeResolver = (scope: Element) => {
   const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
 
   const resolve = (token: string): string | undefined => {
+    // An undefined token makes `color` fall back to the inherited text color, which would pass as a
+    // real value — the selection then matched the text and hid it — so it resolves to nothing instead.
+    if (getComputedStyle(probe).getPropertyValue(token).trim().length === 0) {
+      return undefined;
+    }
+
     probe.style.color = `var(${token})`;
     const computed = getComputedStyle(probe).color;
     if (!context || computed.length === 0) {
@@ -78,7 +84,9 @@ export const createXtermTheme = (element: Element): ITheme => {
       foreground,
       cursor: foreground,
       cursorAccent: surface,
-      selectionBackground: resolve('--color-accent-surface'),
+      // The editor's selection, so selected terminal text looks like selected text elsewhere; opaque,
+      // since the resolver drops alpha and a translucent token would come out solid.
+      selectionBackground: resolve('--color-cm-focused-selection'),
       ...ansi,
     };
   } finally {

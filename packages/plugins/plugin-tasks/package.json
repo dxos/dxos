@@ -93,6 +93,11 @@
       "types": "./dist/types/src/types/TaskOperation.d.ts",
       "import": "./dist/lib/TaskOperation.mjs"
     },
+    "./TaskSetView": {
+      "source": "./src/types/TaskSetView.ts",
+      "types": "./dist/types/src/types/TaskSetView.d.ts",
+      "import": "./dist/lib/TaskSetView.mjs"
+    },
     "./TasksCapabilities": {
       "source": "./src/types/TasksCapabilities.ts",
       "types": "./dist/types/src/types/TasksCapabilities.d.ts",
@@ -167,6 +172,7 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

@@ -19,7 +19,7 @@ export namespace TestSchema {
     Schema.Struct({
       name: Schema.String,
       content: Schema.String,
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -41,7 +41,9 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
 
-  export const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(OrganizationSchema);
+  export const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(
+    OrganizationSchema.pipe(Annotation.UserType.set()),
+  );
 
   export type Organization = Schema.Schema.Type<typeof Organization>;
 
@@ -69,7 +71,9 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'green' }),
   );
 
-  export const Person = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(PersonSchema);
+  export const Person = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+    PersonSchema.pipe(Annotation.UserType.set()),
+  );
 
   export type Person = Schema.Schema.Type<typeof Person>;
 
@@ -87,7 +91,9 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'purple' }),
   );
 
-  export const Project = Type.makeObject(DXN.make('com.example.type.project', '0.1.0'))(ProjectSchema);
+  export const Project = Type.makeObject(DXN.make('com.example.type.project', '0.1.0'))(
+    ProjectSchema.pipe(Annotation.UserType.set()),
+  );
 
   export type Pipeline = Schema.Schema.Type<typeof Project>;
 
@@ -102,7 +108,9 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(Schema.annotate({ title: 'Message' }), Annotation.LabelAnnotation.set(['name']));
 
-  export const Message = Type.makeObject(DXN.make('com.example.type.message', '0.1.0'))(MessageSchema);
+  export const Message = Type.makeObject(DXN.make('com.example.type.message', '0.1.0'))(
+    MessageSchema.pipe(Annotation.UserType.set()),
+  );
 
   export type Message = Schema.Schema.Type<typeof Message>;
 

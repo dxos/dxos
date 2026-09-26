@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -9,6 +10,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { SpaceOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
+  CollectionOperation.OpenAddToCollection.pipe(Operation.lazyHandler(() => import('./open-add-to-collection.ts'))),
   SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag.ts'))),
   SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects.ts'))),
   SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects.ts'))),
@@ -45,6 +47,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.RenameObject.pipe(Operation.lazyHandler(() => import('./rename-object.ts'))),
   SpaceOperation.RestoreField.pipe(Operation.lazyHandler(() => import('./restore-field.ts'))),
   SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects.ts'))),
+  SpaceOperation.SetArchived.pipe(Operation.lazyHandler(() => import('./set-archived.ts'))),
   SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share.ts'))),
   SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
 ]);

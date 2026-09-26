@@ -15,6 +15,7 @@ import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo'
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
+import { ArchivedAnnotation } from '@dxos/schema';
 import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
@@ -45,9 +46,14 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
-/** The objects a type section lists: those without a parent, an owned object being reached through its owner. */
+/**
+ * The objects a type section lists: unarchived ones without a parent, an owned object being reached
+ * through its owner.
+ */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
-  Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
+  Query.select(
+    Filter.and(Filter.type(type), Filter.hasParent(false), Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+  );
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under

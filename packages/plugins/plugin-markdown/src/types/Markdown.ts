@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
+import { CardAnnotation, Text } from '@dxos/schema';
 import { History } from '@dxos/versioning';
 
 export const SKILL_KEY = 'org.dxos.skill.markdown';
@@ -37,7 +37,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
     CardAnnotation.set(true),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 import { concat } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
@@ -92,9 +92,8 @@ const renderPrompt = ({ task, project, context }: PromptInput): string => {
     `- Task ID: ${task.id}`,
   ];
 
-  // The ECHO parent is the set the task belongs to; a sub-task's `parentTask` is a separate,
-  // app-level edge, so the check is what keeps the label honest.
-  const parent = Obj.getParent(task);
+  // A sub-task's ECHO parent is its parent task, so the set is the parent of the tree's root.
+  const parent = Obj.getParent(Effect.runSync(Task.collectRoot(task)));
   if (parent && Obj.instanceOf(TaskSet.TaskSet, parent)) {
     lines.push(`- Task set URI: ${Obj.getURI(parent)}`);
   }

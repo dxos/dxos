@@ -8,8 +8,8 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttLane } from '@dxos/react-ui-trace';
+import { Banner, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Gantt, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -49,12 +49,12 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
   );
 
   if (timeline.lanes.length === 0) {
-    return (
-      <Flex justify='center' classNames='p-4 text-subdued'>
-        {t('no-sessions.message')}
-      </Flex>
-    );
+    return <Banner.Empty label={t('no-sessions.message')} />;
   }
+
+  // The timeline speaks of sessions and tasks; the chart speaks of groups and lanes. One mapping at
+  // the boundary keeps either vocabulary free to change without the other.
+  const chart = sessionTimelineToGantt(timeline);
 
   // Named and totalled here rather than read off the ledger above: a ledger row is several lines
   // tall and a chart row is one, so nothing lines up between them.
@@ -62,8 +62,7 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
     <ScrollArea.Root>
       <ScrollArea.Viewport>
         <Gantt.Root
-          lanes={timeline.lanes}
-          markers={timeline.markers}
+          {...chart}
           range={timeline.range}
           now={Date.now()}
           onLaneSelect={onSelectChat && handleLaneSelect}

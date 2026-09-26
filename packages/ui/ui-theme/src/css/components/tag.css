@@ -4,7 +4,8 @@
 
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-sm cursor-default truncate;
+    /* No margin: spacing between chips belongs to the container's `gap`, which a margin doubled. */
+    @apply inline-flex items-center text-xs font-semibold px-1 rounded-sm cursor-default truncate;
     padding-block: var(--spacing-tag-padding-block);
     user-select: none;
     /* A row dims its icons through this variable; a tag's icon is part of the tag's hue, not the row's. */

@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Field, Flex, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Field, Flex, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
 import { meta } from '#meta';
@@ -40,13 +39,14 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   const checkSummary = useCheckSummary(runs);
 
   return (
-    <ScrollArea.Root thin>
-      <ScrollArea.Viewport>
-        <Flex column gap='form-section' classNames='w-full max-w-[min(72rem,100%-3rem)] mx-auto py-4'>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='px-8'>
+        {/* Document width, so the description reads like a markdown document and the sections under it share its column. */}
+        <Flex column gap='form-section' classNames='dx-document py-4'>
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Empty label={t('no-description.message')} />
+            <Banner.Empty label={t('no-description.message')} />
           )}
           <Section label={t('details.label')}>
             <PullRequestDetails values={details} />

@@ -40,6 +40,7 @@ export const Dashboard = Capability.lazyModule(
   },
   () => import('./dashboard.ts'),
 );
+export const DefaultParent = AppCapability.defaultParent(() => import('./default-parent.ts'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -67,6 +68,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
+    'org.dxos.role.cardMasonry',
     'org.dxos.role.dialog',
     'org.dxos.role.formInput',
     'org.dxos.role.navbarEnd',

@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { DevtoolsApp } from '@dxos/devtools';
 import { meta as devtoolsMeta } from '@dxos/plugin-devtools';
 
-import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 
 const main = async () => {
   const enter =
@@ -25,7 +25,7 @@ const main = async () => {
 
   // The devtools client runs echo on this page; automerge is slim-resolved and must be
   // initialized before it (see util/automerge-wasm.ts).
-  await initAutomergeWasm();
+  await initEchoHostWasm();
 
   const searchProps = new URLSearchParams(window.location.search);
   const target = searchProps.get('target');

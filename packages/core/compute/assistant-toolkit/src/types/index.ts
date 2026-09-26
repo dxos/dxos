@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Memory from './Memory.ts';
+export { Memory } from './Memory.ts';

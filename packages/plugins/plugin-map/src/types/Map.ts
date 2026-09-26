@@ -25,6 +25,7 @@ export class Map extends Type.makeObject<Map>(DXN.make('org.dxos.type.map', '0.1
     LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

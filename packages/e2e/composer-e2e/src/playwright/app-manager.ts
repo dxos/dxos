@@ -615,7 +615,16 @@ export class AppManager {
   async dragTo(
     active: Locator,
     over: Locator,
-    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+    {
+      instruction,
+      offset = { x: 0, y: 0 },
+      holdUntil,
+    }: {
+      instruction: string;
+      offset?: { x: number; y: number };
+      /** Keeps the pointer in the zone until this holds, then drops. */
+      holdUntil?: () => Promise<boolean>;
+    },
   ): Promise<void> {
     const start = await active.boundingBox();
     const initial = await over.boundingBox();
@@ -645,10 +654,22 @@ export class AppManager {
       .poll(async () => {
         nudge = 1 - nudge;
         await this.page.mouse.move(x, y + nudge);
-        return over.getAttribute('data-instruction');
+        const zone = await over.getAttribute('data-instruction');
+        if (zone !== instruction) {
+          return zone;
+        }
+        return !holdUntil || (await holdUntil()) ? zone : `${zone} (holding)`;
       })
       .toBe(instruction);
     await this.page.mouse.up();
+  }
+
+  /** Drops `active` inside `collection`, holding over it until the tree opens it. */
+  async dragInto(active: Locator, collection: Locator): Promise<void> {
+    await this.dragTo(active, collection, {
+      instruction: 'make-child',
+      holdUntil: async () => (await collection.getAttribute('data-state')) === 'open',
+    });
   }
 
   //

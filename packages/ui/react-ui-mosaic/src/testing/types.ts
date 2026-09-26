@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Ref, Type } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 
 //
@@ -16,7 +16,7 @@ export class TestItem extends Type.makeObject<TestItem>(DXN.make('com.example.ty
     name: Schema.String,
     description: Schema.optional(Schema.String),
     label: Schema.optional(Schema.String),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 export class TestColumn extends Type.makeObject<TestColumn>(DXN.make('com.example.type.column', '0.1.0'))(
@@ -24,5 +24,5 @@ export class TestColumn extends Type.makeObject<TestColumn>(DXN.make('com.exampl
     id: EntityId,
     name: Schema.String,
     items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}

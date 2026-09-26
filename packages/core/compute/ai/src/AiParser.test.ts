@@ -583,7 +583,7 @@ describe('parser', () => {
           ]);
         },
         Effect.provide(
-          ScriptedLanguageModel.scriptedLanguageModelLayer([
+          ScriptedLanguageModel.layer([
             {
               parts: [
                 ScriptedLanguageModel.toolCall('alpha', { x: 1 }),

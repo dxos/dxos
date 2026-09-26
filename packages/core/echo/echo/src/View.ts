@@ -75,10 +75,7 @@ export class View extends Type.makeObject<View>(DXN.make('org.dxos.type.view', '
      * Projection of the data returned from the query.
      */
     projection: Projection,
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' })),
 ) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof View>>): Type.InstanceType<typeof View> => {

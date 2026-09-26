@@ -4,8 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
+import { palette } from '@dxos/ui-theme';
+
 export const LaneKind = Schema.Literals(['session', 'task']);
 export type LaneKind = Schema.Schema.Type<typeof LaneKind>;
+
+export const LaneHue = Schema.Literals([palette.neutral.hue, ...palette.hues.map((style) => style.hue)]);
+export type LaneHue = Schema.Schema.Type<typeof LaneHue>;
 
 export const LaneStatus = Schema.Literals(['pending', 'blocked', 'running', 'review', 'done', 'failed']);
 export type LaneStatus = Schema.Schema.Type<typeof LaneStatus>;
@@ -56,10 +61,14 @@ export const Lane = Schema.Struct({
   parentId: Schema.optional(Schema.String),
   sessionId: Schema.optional(Schema.String),
   taskId: Schema.optional(Schema.String),
+  /** The task's hue, hashed from its mnemonic, so the lane matches the task's mnemonic chip. */
+  hue: Schema.optional(LaneHue),
   pid: Schema.optional(Schema.String),
   /** Lane ids this lane waits on (task dependencies). */
   blockedOn: Schema.optional(Schema.Array(Schema.String)),
   delegatedFrom: Schema.optional(DelegationSource),
+  /** Node in the supervisor lane this lane's result was folded back into. */
+  returnedTo: Schema.optional(DelegationSource),
   tokens: Schema.optional(TokenUsage),
   toolCalls: Schema.optional(Schema.Number),
 });

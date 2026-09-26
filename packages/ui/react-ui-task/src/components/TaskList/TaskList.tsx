@@ -20,7 +20,7 @@ import {
 import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
-import { type Actor, PullRequest, RemoteSession, Task } from '@dxos/types';
+import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
 
@@ -30,12 +30,11 @@ import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
 import { STATUS_ORDER } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
-import { TaskListEdit, type TaskListEditProps } from './TaskListEdit.tsx';
+import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
-
-const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
+import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
@@ -59,7 +58,7 @@ type TaskListRootProps = PropsWithChildren<{
    */
   groupByStatus?: boolean;
   /**
-   * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
+   * Render the set as the tree it stores (`Task.subtasks`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
@@ -110,11 +109,6 @@ type TaskListRootProps = PropsWithChildren<{
   showDescription?: boolean;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /**
-   * Render the questions in each task's history under its title; rows grow to fit. On by default:
-   * an open question is why a task is blocked, so it should not need opening anything to find.
-   */
-  showQuestions?: boolean;
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -126,9 +120,10 @@ type TaskListRootProps = PropsWithChildren<{
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /**
-   * Enables `Create`; called with a draft carrying at least the trimmed title.
+   * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
+   * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
    */
-  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskCreate?: TaskCreateHandler;
   /**
    * Enables the row's edit controls. Every mutation is delegated.
    */
@@ -153,12 +148,20 @@ type TaskListRootProps = PropsWithChildren<{
    * Enables collapsing/expanding a task's sub-tasks; called with the new set of collapsed ids.
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
-  /**
-   * Enables answering a task's open questions in its row; called with the question entry's id and
-   * the answer. Without it the questions render read-only.
-   */
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 }>;
+
+/**
+ * What a create came to. `error` means no task was created, so the pane keeps the whole draft;
+ * `rejectedFiles` are files the task was created without, which the pane keeps to retry. Nothing
+ * (or neither field) means the task and every file were taken.
+ */
+export type TaskCreateResult = { error?: unknown; rejectedFiles?: readonly File[] };
+
+/** Creates a task from the pane's draft; see {@link TaskCreateResult} for what it may report back. */
+export type TaskCreateHandler = (
+  task: Task.Draft,
+  files?: readonly File[],
+) => void | TaskCreateResult | Promise<void | TaskCreateResult>;
 
 const TaskListRoot = ({
   children,
@@ -170,7 +173,6 @@ const TaskListRoot = ({
   showDescription = false,
   descriptionComponents,
   showEstimates = false,
-  showQuestions = true,
   hierarchical = false,
   collapsed,
   selected: selectedProp,
@@ -183,7 +185,6 @@ const TaskListRoot = ({
   onTaskCheck,
   onTaskMove,
   onCollapsedChange,
-  onQuestionAnswer,
 }: TaskListRootProps) => {
   // Uncontrolled by default: a host that only wants the click callback still gets the selected
   // styling, and one that owns the selection passes `selected`.
@@ -250,7 +251,6 @@ const TaskListRoot = ({
       showDescription={showDescription}
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
-      showQuestions={showQuestions}
       hierarchical={hierarchical}
       debug={debug}
       showGutter={showGutter}
@@ -266,7 +266,6 @@ const TaskListRoot = ({
       onTaskSelect={selectable ? handleSelect : undefined}
       onTaskCheck={onTaskCheck}
       onTaskMove={onTaskMove}
-      onQuestionAnswer={onQuestionAnswer}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
       <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
@@ -332,9 +331,8 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    // Capped at half the row: `min-content` let one long artifact tag push the title to nothing;
-    // the cell scrolls what does not fit and the title truncates instead.
-    ['chips', 'fit-content(50%)', 'chips-end'],
+    // Capped so a long session name truncates rather than squeezing the title to nothing.
+    ['assignee', 'fit-content(40%)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -374,7 +372,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     showOrdinals,
     showDescription,
     descriptionComponents,
-    showQuestions,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -383,7 +380,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
-    onQuestionAnswer,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
   const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
@@ -423,7 +419,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       selected={selected}
       checked={checked}
       showDescription={showDescription}
-      showQuestions={showQuestions}
       renderTrailing={TaskTreeTrailing}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}
@@ -431,7 +426,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
-      onQuestionAnswer={onQuestionAnswer}
       // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
       // and `Tree` takes a plain list.
       classNames={mx(classNames)}
@@ -477,18 +471,23 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's subgrid, flowing into the `chips`, `estimate`, `priority` and
-          `actions` tracks in this order — `buildGridTemplate` declares a track only when its option
-          is on, and the matching cell is omitted on the same condition, so the two never drift.
-          Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
-          a column; every control after it is one rail-item square and needs no wrapper. */}
-      {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
-          reach overflow on its end side, and `justify-end` spills the excess off the start. */}
-      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-        <TaskListItemArtifacts task={task} />
+      {/* Direct children of the row's grid. The tags and artifacts take a line of their own under the
+          title and above the description: on the title line they competed with it for width, and a
+          long artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps
+          a row with no chips from holding an empty line. The assignee stays on the title line, where
+          "who has it" is read with the title. */}
+      <div
+        data-testid='taskList.item.chips'
+        className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
+      >
+        <TaskTags task={task} assignee={false} />
+      </div>
+      <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
+      {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
+          `buildGridTemplate` declares a track only when its option is on, and the matching cell is
+          omitted on the same condition, so the two never drift. */}
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
@@ -594,6 +593,37 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 /**
+ * Everything a task carries as a chip: its tags, what it produced, and who has it.
+ *
+ * Bare chips with no layout of their own, so a host decides how they run — the row scrolls them on
+ * one line inside its chip cell, a detail pane wraps them into a flow under the title. Rendering the
+ * same set in both is the point: a reader who learned the row's chips reads the pane's without
+ * learning anything new.
+ */
+export const TaskTags = ({
+  task,
+  assignee = true,
+}: {
+  task: Task.Task;
+  /** Off where the host places the assignee itself — the list row keeps it on the title line. */
+  assignee?: boolean;
+}) => {
+  // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
+  // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  return (
+    <>
+      <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      <TaskListItemArtifacts task={task} />
+      {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+    </>
+  );
+};
+
+TaskTags.displayName = 'TaskList.Tags';
+
+/**
  * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
  * reason artifacts are: a tag's target is not in memory on a cold load.
  */
@@ -695,30 +725,16 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
 };
 
 //
-// Assignee — actor-aware chip: a Person ref resolves to the contact's name; otherwise fall back to
-// name, email, or a shortened DID; agents (`role: 'assistant'`) are marked with a sparkle.
+// Assignee — actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
+// properties row.
 //
 
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
   const tagRef = useRef<HTMLSpanElement>(null);
-  const [contact] = useObject(assignee.contact);
-  // An agent's actor stands for its session rather than a person, so the pill names the harness the
-  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
-  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
-  const sessionLabel = harness && RemoteSession.harnessName(harness);
-  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
-  // the sparkle stays the generic "an assistant owns this" fallback.
-  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
-  const label =
-    contact?.fullName ??
-    sessionLabel ??
-    assignee.name ??
-    assignee.email ??
-    (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
-  const agent = assignee.role === 'assistant';
 
   // Hover, not click, because the session is context for the row rather than a place to navigate to:
   // the reader wants to know which run owns the task while their eye is already on it. The grace
@@ -751,6 +767,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     <Tag
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
+      data-testid='taskList.item.assignee'
       // Focus as well as hover: the card is the only place the row says which run owns the task, so
       // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
       tabIndex={session ? 0 : undefined}
@@ -761,7 +778,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       classNames={session && 'cursor-help'}
     >
       {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
-      {label ?? 'agent'}
+      {label}
     </Tag>
   );
 });
@@ -777,14 +794,14 @@ export const TaskList = {
   Viewport: TaskListViewport,
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
-  Edit: TaskListEdit,
   Assignee: TaskListAssignee,
+  Editor: TaskListEditor,
 };
 
 export type {
   TaskListAssigneeProps,
   TaskListContentProps,
-  TaskListEditProps,
+  TaskListEditorProps,
   TaskListGroupLabelProps,
   TaskListRootProps,
   TaskListViewportProps,

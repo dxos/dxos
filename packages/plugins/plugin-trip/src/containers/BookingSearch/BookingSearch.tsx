@@ -9,7 +9,6 @@ import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
@@ -237,7 +236,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <>
           <Separator />
           {flightOffers.length === 0 ? (
-            <Empty label={t('booking.no-offers.message')} />
+            <Banner.Empty label={t('booking.no-offers.message')} />
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}

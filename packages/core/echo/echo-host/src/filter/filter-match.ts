@@ -51,12 +51,12 @@ const objectJSONAccessor: FilterRecordAccessor<ObjectJSON> = {
 /** Untyped objects are indexed under this placeholder type. */
 const UNTYPED_INDEX_TYPE = 'type';
 
-/** Index rows carry no properties or meta keys, so only id, type and parent predicates can match. */
+/** Index rows carry no properties or meta keys, so only id, type, parent and annotation predicates can match. */
 const entityMetaAccessor: FilterRecordAccessor<EntityMeta> = {
   getId: (meta) => meta.objectId,
   getTypeURI: (meta) => (meta.typeDXN === UNTYPED_INDEX_TYPE ? undefined : meta.typeDXN),
   getProps: () => undefined,
-  getMeta: () => ({}),
+  getMeta: (meta) => (meta.annotations === null ? {} : { annotations: JSON.parse(meta.annotations) }),
   hasParent: (meta) => meta.parent !== null,
   matchTextSearch: noTextSearch,
 };

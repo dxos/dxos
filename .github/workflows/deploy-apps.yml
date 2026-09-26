@@ -401,6 +401,11 @@ jobs:
         run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
+          # Asset retention (upload-assets.mjs) signs against R2's S3 endpoint, which needs an R2 API
+          # token rather than the Workers one — Cloudflare's REST API rate-limits far below the ~7,600
+          # objects a build uploads.
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). Every env
       # tags each app it deployed — per-app even for `all`, so an individual redeploy (hotfix) moves only
