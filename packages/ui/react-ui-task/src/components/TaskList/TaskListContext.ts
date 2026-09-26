@@ -50,7 +50,7 @@ export type TaskListContextValue = {
   /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
   dragging: ReadonlySet<string>;
   onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskCreate?: (task: Task.Draft, files?: readonly File[]) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */

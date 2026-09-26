@@ -10,10 +10,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Blob, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -24,7 +25,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Milestone, Person, Task, TaskSet } from '@dxos/types';
+import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
@@ -146,7 +147,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person],
+          types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person, File.File, Blob.Blob],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -161,6 +162,8 @@ const meta = {
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
+        // Handles `FileOperation.Create`, which is what makes the create pane take dropped files.
+        FilePlugin.make(),
         // Contributes the editor extensions the description field takes (`#123` decoration and
         // link chips) and the resolver behind a chip's hover card; PreviewPlugin owns the popover
         // and the storybook layout renders it. Both activate on start events fired here at setup;
@@ -451,6 +454,42 @@ export const AddSubTask: Story = {
         expect(
           canvasElement.querySelector(`[data-object-id="${child.id}"]`)?.closest('[role="treeitem"]'),
         ).toHaveAttribute('aria-level', '2'),
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * A file dropped on the create pane is held until the task is created, then stored and attached to
+ * the new task.
+ */
+export const CreateWithAttachment: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new globalThis.File(['Grind size 18.'], 'notes.txt', { type: 'text/plain' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+    }
+    await waitFor(() => expect(pane.querySelectorAll('[data-testid="taskList.edit.file"]')).toHaveLength(1), {
+      timeout: 10_000,
+    });
+
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.keyboard('Dial in the grinder{Enter}');
+
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    await waitFor(
+      async () => {
+        const created = TaskSet.resolveTasks(context.taskSet).find((task) => task.title === 'Dial in the grinder');
+        await expect(created?.attachments?.[0]?.target?.name).toEqual('notes.txt');
+      },
       { timeout: 10_000 },
     );
   },

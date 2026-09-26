@@ -520,6 +520,7 @@ const DefaultStory = ({
   showEstimates,
   debug,
   framed = true,
+  acceptFiles = false,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -544,8 +545,12 @@ const DefaultStory = ({
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
+  /** Let the create pane take dropped files, recording what each create was handed. */
+  acceptFiles?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
+  // Stands in for the host's attach: the names of the files each create was handed.
+  const [attached, setAttached] = useState<string[]>([]);
 
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
@@ -574,8 +579,11 @@ const DefaultStory = ({
     [],
   );
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
+  const handleCreate = useCallback(({ title, ...props }: Task.Draft, files?: readonly globalThis.File[]) => {
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
+    if (files && files.length > 0) {
+      setAttached((attached) => [...attached, ...files.map((file) => `${title}:${file.name}`)]);
+    }
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
@@ -632,8 +640,10 @@ const DefaultStory = ({
         <div className='p-2'>
           <TaskList.Editor
             showDescription={showDescription}
+            acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
+          {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </div>
       ) : (
         <TaskList.Editor grid showDescription={showDescription} />
@@ -1318,6 +1328,48 @@ export const TestEdit: Story = {
  * Creating with a description: the pane's description field is present with nothing selected, and
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
+/**
+ * Files dropped on the create pane are held there, one chip each, until the task is created — then
+ * they are handed over with it, for the host to store and attach. A chip can be taken back first.
+ */
+export const TestCreateWithAttachments: Story = {
+  args: {
+    showGroupLabels: false,
+    acceptFiles: true,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const chips = () => [...pane.querySelectorAll<HTMLElement>('[data-testid="taskList.edit.file"]')];
+
+    const dataTransfer = new DataTransfer();
+    for (const name of ['notes.txt', 'draft.txt']) {
+      dataTransfer.items.add(new globalThis.File(['text'], name, { type: 'text/plain' }));
+    }
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+    }
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['notes.txt', 'draft.txt'],
+      ),
+    );
+
+    await userEvent.click(chips()[1].querySelector<HTMLElement>('button')!);
+    await waitFor(async () => expect(chips()).toHaveLength(1));
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Read the notes{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent(
+        'Read the notes:notes.txt',
+      ),
+    );
+    // Handed over with the task, so the pane starts the next one empty.
+    await expect(chips()).toHaveLength(0);
+  },
+};
+
 export const TestCreateWithDescription: Story = {
   args: {
     showGroupLabels: false,

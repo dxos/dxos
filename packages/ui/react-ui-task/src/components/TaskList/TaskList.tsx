@@ -120,9 +120,10 @@ type TaskListRootProps = PropsWithChildren<{
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /**
-   * Enables `Create`; called with a draft carrying at least the trimmed title.
+   * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
+   * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
    */
-  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskCreate?: (task: Task.Draft, files?: readonly File[]) => void;
   /**
    * Enables the row's edit controls. Every mutation is delegated.
    */

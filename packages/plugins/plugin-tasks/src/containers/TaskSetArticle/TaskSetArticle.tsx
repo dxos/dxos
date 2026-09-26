@@ -29,6 +29,7 @@ import { TaskOperation, TasksCapabilities } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
 import { filterTasks } from '../../util/index.ts';
+import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 import { ALL_STATUSES } from './TaskStatusFilter.tsx';
 
@@ -83,10 +84,29 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   }, []);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const handleCreate = useOperation(
-    TaskOperation.CreateTask,
-    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
-    { spaceId },
+  const { invokePromise } = useOperationInvoker();
+  // Files dropped on the create pane attach once the task exists: the create answers with the new
+  // task's id, and the live object is in the working set by then, since this client wrote it.
+  const attachFile = useAttachFile();
+  const handleCreate = useCallback(
+    async (props: Task.Draft, files?: readonly globalThis.File[]) => {
+      const { data } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), ...props },
+        { spaceId },
+      );
+      if (!data || !files || files.length === 0 || !attachFile) {
+        return;
+      }
+      const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (!task) {
+        return;
+      }
+      for (const file of files) {
+        await attachFile(task, file);
+      }
+    },
+    [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
   const handleUpdate = useOperation(
@@ -116,7 +136,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 
   // Named "New task" and opened at once, so the reader titles it where they read it: the list's own
   // create pane has no notion of a parent, and a sub-task created there would land at the root.
-  const { invokePromise } = useOperationInvoker();
   const handleAddSubTask = useCallback(
     async (parent: Task.Task) => {
       const { data } = await invokePromise(
@@ -215,6 +234,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       <TaskList.Editor
         createOnly
         showDescription
+        // Only where a plugin can store the file, as the task's own article decides.
+        acceptFiles={!!attachFile}
         descriptionExtensions={descriptionExtensions}
         // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
         // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
