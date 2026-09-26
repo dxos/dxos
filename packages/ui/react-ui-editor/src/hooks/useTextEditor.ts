@@ -11,6 +11,7 @@ import {
   type RefObject,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -70,7 +71,12 @@ export const useTextEditor = (
   const [view, setView] = useState<EditorView | null>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Layout effect, not a passive one: the view is what fills the editor's box, so building it after
+  // the browser paints shows a frame of empty container and then reflows everything below it — a
+  // field in a pane (a task's description) drops its siblings by the editor's height on every
+  // subject change. Constructing before paint costs that work in the commit instead; see PERF.md in
+  // `react-ui-markdown/src/MarkdownEditable` for what that costs on a large document.
+  useLayoutEffect(() => {
     let view: EditorView | null = null;
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });

@@ -43,6 +43,15 @@ export const resolveApps = (root, { environment, only = 'all' } = {}) =>
     };
   }).filter((app) => (!environment || app.environments.includes(environment)) && (only === 'all' || only === app.name));
 
+// The R2 bucket an app retains its built assets in for <environment>, or undefined when it declares no
+// `ASSET_ARCHIVE` binding there. Read from the committed wrangler config for the same reason everything
+// else here is: the config is the one place that knows which bucket an environment uses.
+export const assetArchiveBucket = (root, app, environment) => {
+  const config = JSON5.parse(readFileSync(join(root, app.wranglerConfig), 'utf8'));
+  const buckets = config.env?.[environment]?.r2_buckets ?? [];
+  return buckets.find((bucket) => bucket.binding === 'ASSET_ARCHIVE')?.bucket_name;
+};
+
 // CLI: `apps.mjs <environment> [app|all]` prints the resolved app names, one per line.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const [environment, only = 'all'] = process.argv.slice(2);

@@ -11,10 +11,11 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
+import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
 
 /** Callbacks are absent on a read-only tile (e.g. a staged merge result). */
@@ -53,6 +54,8 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
   const type = Obj.getType(object);
   const showCardContent = !!type && Option.getOrElse(CardAnnotation.get(Type.getSchema(type)), () => false);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
+
+  const { archived, item: archiveItem } = useArchiveMenuItem(object);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter. A card click toggles selection —
   // the companion follows the selection, so navigating away on every click would fight the review
@@ -95,8 +98,9 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             },
           ]
         : []),
+      ...(archiveItem ? [archiveItem] : []),
     ],
-    [t, typename, onOpen, onDelete, object, invokePromise],
+    [t, typename, onOpen, onDelete, archiveItem, object, invokePromise],
   );
 
   return (
@@ -111,6 +115,11 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
+        {archived && (
+          <Card.Row>
+            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+          </Card.Row>
+        )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>

@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
@@ -68,6 +68,7 @@ export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.
 export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }: PullRequestArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  const [subject] = useObject(pullRequest);
   const db = Obj.getDatabase(pullRequest);
   const spaceId = db?.spaceId;
 
@@ -77,7 +78,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const [status, setStatus] = useState<Status>();
   // The live state where it has arrived, the stored one until then — an absent status is unknown,
   // not "open", and GitHub accepts an approval on a merged pull request rather than rejecting it.
-  const state = status?.state ?? pullRequest.state;
+  const state = status?.state ?? subject.state;
   const [tab, setTab] = useState<Tab>('overview');
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -251,12 +252,12 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   }, [invokePromise, pullRequestRef, spaceId, walkthrough, toast, failureToast]);
 
   const handleCopyLink = useCallback(async () => {
-    if (!pullRequest.url) {
+    if (!subject.url) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(pullRequest.url);
+      await navigator.clipboard.writeText(subject.url);
     } catch (error) {
       // Denied permission, or a document that is not focused; either way the link is not on the
       // clipboard and the success toast would be a lie.
@@ -265,7 +266,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       return;
     }
     await toast('copy-link', 'copy-link-success.title', true);
-  }, [pullRequest.url, toast]);
+  }, [subject.url, toast]);
 
   const handleComment = useCallback(async () => {
     const text = comment.trim();
@@ -415,18 +416,18 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         {
           label: ['open-on-github.label', { ns: meta.profile.key }],
           icon: 'ph--arrow-square-out--regular',
-          disabled: !pullRequest.url,
+          disabled: !subject.url,
           disposition: 'toolbar',
           testId: 'pull-request.toolbar.open-on-github',
         },
-        () => pullRequest.url && window.open(pullRequest.url, '_blank', 'noopener,noreferrer'),
+        () => subject.url && window.open(subject.url, '_blank', 'noopener,noreferrer'),
       )
       .action(
         'copyLink',
         {
           label: ['copy-link.label', { ns: meta.profile.key }],
           icon: 'ph--link--regular',
-          disabled: !pullRequest.url,
+          disabled: !subject.url,
           disposition: 'toolbar',
           testId: 'pull-request.toolbar.copy-link',
         },
@@ -443,7 +444,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     busy,
     generating,
     walkthrough,
-    pullRequest.url,
+    subject.url,
     state,
     handleApprove,
     handleGenerate,
@@ -459,10 +460,10 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         ? `${t(ciLabel[status.ci])}${status.checks.total > 0 ? ` ${status.checks.passed}/${status.checks.total}` : ''}`
         : t('ci-status.unknown.label'),
       branches:
-        pullRequest.headBranch &&
-        (pullRequest.baseBranch ? `${pullRequest.headBranch} → ${pullRequest.baseBranch}` : pullRequest.headBranch),
+        subject.headBranch &&
+        (subject.baseBranch ? `${subject.headBranch} → ${subject.baseBranch}` : subject.headBranch),
     }),
-    [reference, state, status, pullRequest.headBranch, pullRequest.baseBranch, t],
+    [reference, state, status, subject.headBranch, subject.baseBranch, t],
   );
 
   const composerProps = {
@@ -496,11 +497,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             {/* Rendered by hand rather than through `Tabs.Panel`, so each tab's editor exists only while
               the tab is shown and is built against a visible, measured element. */}
             {tab === 'overview' && (
-              <PullRequestOverview
-                body={status?.body ?? pullRequest.description}
-                details={details}
-                runs={status?.runs}
-              />
+              <PullRequestOverview body={status?.body ?? subject.description} details={details} runs={status?.runs} />
             )}
             {tab === 'walkthrough' &&
               (walkthrough ? (

@@ -8,9 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Banner, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -103,7 +102,7 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
         </Panel.Toolbar>
         <Panel.Content>
           {empty ? (
-            <Empty classNames='h-full' label={empty} />
+            <Banner.Empty classNames='h-full' label={empty} />
           ) : (
             <ObjectMasonry cacheKey={attendableId} items={items} />
           )}

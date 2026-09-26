@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 export type EchoObjectItem = {
   id: string;
@@ -33,7 +33,7 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           {objects.length === 0 ? (
-            <Empty label='No objects.' />
+            <Banner.Empty label='No objects.' />
           ) : (
             <Listbox.Root>
               <Listbox.Content aria-label='ECHO objects'>

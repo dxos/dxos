@@ -3,6 +3,7 @@
 //
 
 export * from './api-key.ts';
+export * from './archive.ts';
 export * from './atproto-record.ts';
 export * from './atproto-visibility.ts';
 export * from './card.ts';

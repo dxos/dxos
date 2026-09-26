@@ -15,9 +15,9 @@ import { daysAgo } from './util.ts';
 //
 // The task set, authored as a tree.
 //
-// `TaskSet.tasks` is flat — the hierarchy lives on `Task.parentTask`, at unbounded depth. So the
-// seeds are nested for legibility and flattened on the way in, which keeps the shape of the work
-// visible in the source rather than reconstructable only by following refs.
+// The set lists its root tasks and each task lists its own sub-tasks (`Task.subtasks`), at unbounded
+// depth. The seeds are nested the same way, which keeps the shape of the work visible in the source
+// rather than reconstructable only by following refs.
 //
 
 type TaskSeed = {
@@ -149,13 +149,18 @@ export type TasksResult = {
   milestones: Milestone.Milestone[];
 };
 
-/** Depth-first flatten, resolving each seed against its parent task and milestone. */
+/**
+ * Depth-first flatten, resolving each seed against its parent's milestone and recording each task's
+ * children so they can be filed under it once stored.
+ */
 const buildTasks = (
   seeds: ReadonlyArray<TaskSeed>,
   people: PersonMap,
   milestones: Record<MilestoneKey, Milestone.Milestone>,
-): Task.Task[] => {
+): { tasks: Task.Task[]; roots: Task.Task[]; children: Map<Task.Task, Task.Task[]> } => {
   const tasks: Task.Task[] = [];
+  const roots: Task.Task[] = [];
+  const children = new Map<Task.Task, Task.Task[]>();
   const visit = (seed: TaskSeed, parent: Task.Task | undefined, milestone: MilestoneKey | undefined) => {
     const key = seed.milestone ?? milestone;
     const task = Task.make({
@@ -166,7 +171,6 @@ const buildTasks = (
       estimate: seed.estimate,
       assignee: seed.assignee ? { contact: Ref.make(people[seed.assignee]) } : undefined,
       milestone: key ? Ref.make(milestones[key]) : undefined,
-      parentTask: parent ? Ref.make(parent) : undefined,
       // Task carries no due date; its dates are activity-log lines, so that is where they go.
       history: [
         {
@@ -188,6 +192,11 @@ const buildTasks = (
       ],
     });
     tasks.push(task);
+    if (parent) {
+      children.set(parent, [...(children.get(parent) ?? []), task]);
+    } else {
+      roots.push(task);
+    }
     for (const child of seed.subTasks ?? []) {
       visit(child, task, key);
     }
@@ -196,15 +205,12 @@ const buildTasks = (
   for (const seed of seeds) {
     visit(seed, undefined, undefined);
   }
-  return tasks;
+  return { tasks, roots, children };
 };
 
 /**
- * The project's work: three milestones and a two-level task tree.
- *
- * Hierarchy is set on the seeds rather than through a `SpaceTemplate` helper — `parentTask` is a Task
- * field, so a generic "children" helper would have nothing to say about it. Membership and order
- * are still the set's flat `tasks` array, which is what `SampleSpace.children` writes.
+ * The project's work: three milestones and a two-level task tree. The set lists the roots and each
+ * parent lists its sub-tasks, both written through `SampleSpace.children`.
  */
 export const Tasks: SampleSpace.Phase<TasksResult, PersonMap> = SampleSpace.phase('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task, Milestone.Milestone],
@@ -221,10 +227,15 @@ export const Tasks: SampleSpace.Phase<TasksResult, PersonMap> = SampleSpace.phas
         taskSet.milestones = refs;
       });
 
-      const tasks = buildTasks(TASK_SEEDS, people, milestones);
-      yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {
+      const { tasks, roots, children } = buildTasks(TASK_SEEDS, people, milestones);
+      yield* SampleSpace.children(taskSet, roots, (taskSet, refs) => {
         taskSet.tasks = refs;
       });
+      for (const [parent, subtasks] of children) {
+        yield* SampleSpace.children(parent, subtasks, (parent, refs) => {
+          parent.subtasks = refs;
+        });
+      }
 
       // One execution dependency, so the blocked soak test reads as blocked for a stated reason
       // rather than by status alone.

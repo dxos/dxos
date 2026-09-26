@@ -169,7 +169,7 @@ describe('update-task', () => {
     ),
   );
 
-  it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
+  it.effect('clearing parentTask moves the lifecycle edge to the set', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
@@ -179,13 +179,14 @@ describe('update-task', () => {
         title: 'Child',
         parentTask: Ref.make(parent),
       });
-      expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+      expect(Obj.getParent(child)?.id).toBe(parent.id);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      // Membership is untouched by promotion: the edge points at the set before and after.
-      expect(child.parentTask).toBeUndefined();
+      // Promotion hands the task to the set, so deleting the old parent no longer takes it along.
+      expect(Task.getParentTask(child)).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+      expect(parent.subtasks ?? []).toHaveLength(0);
     }).pipe(
       Effect.provide(
         Layer.provideMerge(
@@ -199,16 +200,14 @@ describe('update-task', () => {
   it.effect('clears the lifecycle edge for a task belonging to no set', () =>
     Effect.gen(function* () {
       // A task outside a task set has no parent to fall back to, so the edge must be cleared outright.
-      const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
-      const child = yield* Database.add(Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'todo' }));
-      Obj.update(child, (child) => {
-        child.parentTask = Ref.make(parent);
-      });
+      const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
+      const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo', subtasks: [Ref.make(child)] }));
       yield* Database.flush();
+      expect(Task.parentTaskId(child)).toBe(parent.id);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      expect(child.parentTask).toBeUndefined();
+      expect(parent.subtasks ?? []).toHaveLength(0);
       expect(Obj.getParent(child)).toBeUndefined();
     }).pipe(
       Effect.provide(
@@ -256,7 +255,7 @@ describe('update-task', () => {
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      expect(child.parentTask).toBeUndefined();
+      expect(Task.getParentTask(child)).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
     }).pipe(
@@ -267,6 +266,76 @@ describe('update-task', () => {
         ),
       ),
     ),
+  );
+});
+
+describe('update-task subtree', () => {
+  const layer = Layer.provideMerge(
+    Trace.writerLayerNoop,
+    TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+  );
+
+  /** Two levels deep, so the cascade has to walk rather than look one level. */
+  const makeTree = Effect.fnUntraced(function* () {
+    const taskSet = yield* Database.add(TaskSet.make({}));
+    yield* Database.flush();
+    const { task: root } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Root' });
+    const { task: child } = yield* createTask.handler({
+      taskSet: Ref.make(taskSet),
+      title: 'Child',
+      parentTask: Ref.make(root),
+    });
+    const { task: grandchild } = yield* createTask.handler({
+      taskSet: Ref.make(taskSet),
+      title: 'Grandchild',
+      parentTask: Ref.make(child),
+    });
+    const { task: other } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Other' });
+    return { root, child, grandchild, other };
+  });
+
+  it.effect('assigning a sub-task assigns its whole tree', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild, other } = yield* makeTree();
+
+      yield* updateTask.handler({ task: Ref.make(child), assignee: { role: 'assistant', name: 'agent' } });
+
+      for (const member of [root, child, grandchild]) {
+        expect(member.assignee?.name).toBe('agent');
+        const changes = (member.history ?? []).filter(Task.isChangeEntry);
+        expect(changes.at(-1)?.description).toContain('Assigned to');
+      }
+      // Assignment alone starts nothing.
+      expect(root.status).toBe('todo');
+      expect(other.assignee).toBeUndefined();
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('starting a sub-task starts its unstarted tree, leaving finished members alone', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild, other } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(child), status: 'done' });
+
+      yield* updateTask.handler({ task: Ref.make(grandchild), status: 'started' });
+
+      expect(grandchild.status).toBe('started');
+      expect(root.status).toBe('started');
+      expect(child.status).toBe('done');
+      expect(other.status).toBe('todo');
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('finishing a root finishes only the root', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(child), status: 'started' });
+
+      yield* updateTask.handler({ task: Ref.make(root), status: 'done' });
+
+      expect(root.status).toBe('done');
+      expect(child.status).toBe('started');
+      expect(grandchild.status).toBe('started');
+    }).pipe(Effect.provide(layer)),
   );
 });
 

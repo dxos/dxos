@@ -255,7 +255,10 @@ describe('RepoProxy', () => {
         }
       },
     );
-    await sleep(300);
+    // Poll rather than block for a fixed delay: an accidental resolution flips `readyResolved`
+    // immediately instead of only being checked once after the wait, and the expected outcome
+    // is this timing out with the flag still `false`.
+    await waitForCondition({ condition: () => readyResolved, timeout: 300 }).catch(() => {});
 
     expect(readyResolved).toBe(false);
     expect(handle.state).toEqual('requesting');

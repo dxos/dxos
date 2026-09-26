@@ -3,13 +3,13 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
+import { Button, Flex, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -59,6 +59,8 @@ export type CreateObjectPanelProps = {
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
+  /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
+  onCancel?: () => void;
 };
 
 export const CreateObjectPanel = ({
@@ -75,6 +77,7 @@ export const CreateObjectPanel = ({
   onTargetChange,
   onTypenameChange,
   onCreateObject,
+  onCancel,
 }: CreateObjectPanelProps) => {
   const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
@@ -164,10 +167,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <Form.Content>
-            <Form.Fields />
-            <Form.Submit />
-          </Form.Content>
+          <CreateObjectFormContent onCancel={onCancel} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -177,6 +177,41 @@ export const CreateObjectPanel = ({
 };
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
+
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel'>;
+
+/** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
+const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const {
+    form: { canSave, onSave },
+  } = useFormContext(CreateObjectFormContent.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handleSubmit = useCallback(() => {
+    if (canSave) {
+      void onSave();
+    }
+  }, [canSave, onSave]);
+  useSubmitOnEnter(contentRef, handleSubmit);
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields />
+      <Flex gap='sm' justify='end' classNames='pt-form-padding'>
+        {onCancel && (
+          <Button onClick={onCancel} data-testid='cancel-button'>
+            {t('object-form-cancel.label')}
+          </Button>
+        )}
+        <Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+          {t('object-form-confirm.label')}
+        </Button>
+      </Flex>
+    </Form.Content>
+  );
+};
+
+CreateObjectFormContent.displayName = 'CreateObjectPanel.FormContent';
 
 type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
   onChange: (id: string) => void;

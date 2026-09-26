@@ -235,6 +235,7 @@ export type FilterRecordMeta = {
   version?: string;
   /** Encoded references or bare URI strings — {@link matchesTag} normalizes both. */
   tags?: readonly unknown[];
+  annotations?: Readonly<Record<string, unknown>>;
 };
 
 /**
@@ -324,6 +325,14 @@ export const makeFilterMatcher = <T>(
         return matchesTag(accessor.getMeta(record).tags ?? [], filter.tag);
       }
 
+      case 'annotation': {
+        const annotations = accessor.getMeta(record).annotations;
+        if (annotations === undefined || !(filter.key in annotations)) {
+          return false;
+        }
+        return filter.value === undefined || annotations[filter.key] === filter.value;
+      }
+
       case 'text-search': {
         return accessor.matchTextSearch(filter, record);
       }
@@ -389,6 +398,7 @@ const entityAccessor: FilterRecordAccessor<AnyEntity> = {
       keys: meta.keys,
       key: meta.key,
       version: meta.version,
+      annotations: meta.annotations,
       // Lazy: meta tags surface as `Ref`s on a live proxy and only the `tag` arm needs them encoded.
       get tags() {
         return meta.tags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));

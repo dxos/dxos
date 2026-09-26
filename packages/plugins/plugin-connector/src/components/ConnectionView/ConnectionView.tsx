@@ -8,9 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Empty } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type TestConnectionStatus } from '#hooks';
@@ -234,7 +233,9 @@ export const ConnectionView = ({
                   {canSync && (
                     <Form.FieldSet label={t('targets.label')}>
                       {bindings.length === 0 ? (
-                        <Empty label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')} />
+                        <Banner.Empty
+                          label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
+                        />
                       ) : (
                         bindings.map((binding) => (
                           <BindingRow

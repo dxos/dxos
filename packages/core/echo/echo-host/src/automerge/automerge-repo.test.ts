@@ -30,7 +30,7 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -75,6 +75,22 @@ const waitForQueryState = async <T>(
     await trigger.wait({ timeout });
   } finally {
     unsubscribe();
+  }
+};
+
+/**
+ * Assert `handle` does not emit `heads-changed` within `timeoutMs` — gives a would-be
+ * replication a real window to land before asserting it did not, rather than guessing a
+ * sleep duration unrelated to any event the handle actually emits.
+ */
+const expectNoChangeWithin = async (handle: DocHandle<any>, timeoutMs: number): Promise<void> => {
+  const changed = new Trigger();
+  const onChange = () => changed.wake();
+  handle.on('heads-changed', onChange);
+  try {
+    await expect(changed.wait({ timeout: timeoutMs })).rejects.toThrow();
+  } finally {
+    handle.off('heads-changed', onChange);
   }
 };
 
@@ -293,7 +309,7 @@ describe('AutomergeRepo', () => {
           doc.offlineText = offlineText;
         });
 
-        await sleep(100);
+        await expectNoChangeWithin(docOnClient, 100);
         await asyncTimeout(docOnClient.whenReady(), 1000);
         expect(docOnClient.doc().offlineText).to.be.undefined;
       }
@@ -378,7 +394,7 @@ describe('AutomergeRepo', () => {
       // peers are announced and a reconnect re-enters sync.
       const progress = client.findWithProgress(docA.url);
       const { documentId: clientDocId } = parseAutomergeUrl(docA.url);
-      await sleep(100);
+      await expect(waitForQueryState(progress, ['ready'], { timeout: 100 })).rejects.toThrow();
       expect(progress.peek().state).to.not.equal('ready');
       expect(client.handles[clientDocId].doc()).to.deep.equal({});
 
@@ -492,7 +508,18 @@ describe('AutomergeRepo', () => {
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
-      const storage = await createSqliteAdapter();
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+      // Keyed on the document id, same as the "reload document without flush" case above: `save`
+      // no-ops once the adapter is closed, so guessing how long the write takes can silently drop it.
+      const saved = new Trigger();
+      const { adapter: storage, dispose } = await createTestSqliteStorageAdapter(':memory:', {
+        afterSave: (key) => {
+          if (key[0] === documentId) {
+            saved.wake();
+          }
+        },
+      });
+      onTestFinished(dispose);
 
       const repo = new Repo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
@@ -502,7 +529,6 @@ describe('AutomergeRepo', () => {
       };
 
       let clientDoc = A.from<{ field?: string }>({ field: 'foo' });
-      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
       let sentHeads: Heads = [];
 
@@ -524,7 +550,7 @@ describe('AutomergeRepo', () => {
         expect(serverHandle.doc()!.field).to.deep.equal(value);
       }
 
-      await sleep(100);
+      await asyncTimeout(saved.wait(), RELOAD_WINDOW_MS);
 
       // Re-open repo.
       {
@@ -551,8 +577,10 @@ describe('AutomergeRepo', () => {
 
       expect(handleA.doc()!.text).to.equal(text);
 
-      await sleep(100);
       await asyncTimeout(handleB.whenReady(), 1000);
+      // `whenReady()` only resolves once the document has finished its initial load; it does not
+      // wait for a subsequent update to replicate, so poll for the replicated value instead.
+      await waitForCondition({ condition: () => handleB.doc()?.text === text, timeout: 1_000 });
       expect(handleB.doc()!.text).to.equal(text);
     });
 
@@ -579,7 +607,7 @@ describe('AutomergeRepo', () => {
       // body stays empty. Asserting on doc body is the substantive check;
       // the query state is incidentally `'loading'` here.
       const progress = repoB.findWithProgress<{ text: string }>(docA.url);
-      await sleep(100);
+      await expect(waitForQueryState(progress, ['ready'], { timeout: 100 })).rejects.toThrow();
       const docB = repoB.handles[parseAutomergeUrl(docA.url).documentId] as DocHandle<{ text: string }>;
       expect(progress.peek().state).to.not.equal('ready');
       expect(docB.doc()).to.deep.equal({});
@@ -743,7 +771,7 @@ describe('AutomergeRepo', () => {
           doc.offlineText = offlineText;
         });
         const docOnPeer2 = await peer2.repo.find<any>(handle.url);
-        await sleep(100);
+        await expectNoChangeWithin(docOnPeer2, 100);
         await asyncTimeout(docOnPeer2.whenReady(), 1000);
         expect(docOnPeer2.doc()!.offlineText).to.be.undefined;
       }
@@ -802,7 +830,7 @@ describe('AutomergeRepo', () => {
       // Substantive assertion: the handle body stays empty. (The query
       // state may be either `'loading'` or `'unavailable'` depending on
       // peer share-policy resolution timing — the body is the invariant.)
-      await sleep(200);
+      await expect(waitForQueryState(shouldNotFindProgress, ['ready'], { timeout: 200 })).rejects.toThrow();
       const shouldNotFindDoc = peer2.repo.handles[parseAutomergeUrl(docNotInRemoteCollection.url).documentId];
       expect(shouldNotFindProgress.peek().state).to.not.equal('ready');
       expect(shouldNotFindDoc.doc()).to.deep.equal({});
@@ -847,7 +875,7 @@ describe('AutomergeRepo', () => {
       // body stays empty. The query state may be `'loading'` or
       // `'unavailable'` depending on peer share-policy resolution timing.
       const otherSpaceProgress = peerFromAnotherSpace.repo.findWithProgress(document.url);
-      await sleep(200);
+      await expect(waitForQueryState(otherSpaceProgress, ['ready'], { timeout: 200 })).rejects.toThrow();
       const otherSpaceDoc = peerFromAnotherSpace.repo.handles[parseAutomergeUrl(document.url).documentId];
       expect(otherSpaceProgress.peek().state).to.not.equal('ready');
       expect(otherSpaceDoc.doc()).to.deep.equal({});

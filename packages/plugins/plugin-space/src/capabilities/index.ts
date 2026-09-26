@@ -68,6 +68,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
+    'org.dxos.role.cardMasonry',
     'org.dxos.role.dialog',
     'org.dxos.role.formInput',
     'org.dxos.role.navbarEnd',

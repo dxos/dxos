@@ -5,9 +5,9 @@
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
 import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
-import { Field, Icon, IconButton, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Banner, Field, Icon, IconButton, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -170,7 +170,7 @@ const FactViewerList = ({ classNames }: FactViewerListProps) => {
     <Panel.Content asChild>
       <ScrollArea.Root padding classNames={classNames}>
         <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Empty label='No facts.' />}
+          {groups.length === 0 && <Banner.Empty label='No facts.' />}
           {groups.map((group) => (
             <FactViewerGroup key={group.subject} group={group} />
           ))}
@@ -195,7 +195,7 @@ const FactViewerGraph = ({ classNames }: FactViewerGraphProps) => {
       {graph ? (
         <Tree data={graph} variant='tidy' margin={80} classNames={styles.graphTree()} />
       ) : (
-        <Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
+        <Banner.Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
       )}
     </Panel.Content>
   );
