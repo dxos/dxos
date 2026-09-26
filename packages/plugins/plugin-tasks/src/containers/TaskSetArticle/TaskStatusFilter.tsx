@@ -27,7 +27,7 @@ export type TaskStatusFilterProps = {
  * stays open across several toggles — picking one value and closing is single-select behaviour.
  *
  * A view over the query rather than state of its own: the caller derives `value` from the query's
- * `status:` terms and writes a change back into them (see `parseStatusTerms`), so the menu and the
+ * `status:` terms and writes a change back into them (see `parseEnumTerms`), so the menu and the
  * text cannot disagree about what the list is showing.
  */
 export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => {
