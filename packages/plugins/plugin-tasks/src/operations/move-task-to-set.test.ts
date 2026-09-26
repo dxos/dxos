@@ -99,6 +99,18 @@ describe('move-task-to-set', () => {
       expect(titles(TaskSet.resolveTasks(source))).toEqual(['a', 'b']);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('rejects a task that belongs to no set, rather than filing it in the target', () =>
+    Effect.gen(function* () {
+      const { target } = yield* makeSets();
+      const orphan = yield* Database.add(Task.make({ title: 'orphan', status: 'todo' }));
+      yield* Database.flush();
+
+      const result = yield* Effect.exit(moveTaskToSet.handler({ task: Ref.make(orphan), taskSet: Ref.make(target) }));
+      expect(result._tag).toEqual('Failure');
+      expect(target.tasks).toHaveLength(0);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
 
 const makeSets = () =>

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -11,7 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';
@@ -26,6 +26,7 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(task);
+  const [error, setError] = useState<string>();
   const projects = useQuery(db, Filter.type(Project.Project));
 
   // The task's set is its ECHO parent, so its own project is the one owning that set; a project
@@ -46,10 +47,22 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
       if (!taskSet || !db) {
         return;
       }
+      setError(undefined);
       void (async () => {
-        await invokePromise(TaskOperation.MoveTaskToSet, { task: Ref.make(task), taskSet }, { spaceId: db.spaceId });
+        // `invokePromise` resolves with the failure rather than rejecting, so it is checked here: a
+        // failed move keeps the dialog open with the reason instead of closing as if it had worked.
+        const { error } = await invokePromise(
+          TaskOperation.MoveTaskToSet,
+          { task: Ref.make(task), taskSet },
+          { spaceId: db.spaceId },
+        );
+        if (error) {
+          log.warn('move task failed', { error });
+          setError(error.message);
+          return;
+        }
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-      })().catch((err) => log.warn('move task failed', { err }));
+      })();
     },
     [invokePromise, task, db],
   );
@@ -63,6 +76,14 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
+        {error && (
+          <Banner.Root valence='error'>
+            <Banner.Content data-testid='move-task-dialog.error'>
+              <Banner.Title icon='ph--warning--regular'>{t('move-task-error.title')}</Banner.Title>
+              <Banner.Body>{error}</Banner.Body>
+            </Banner.Content>
+          </Banner.Root>
+        )}
         <MoveTaskPanel projects={candidates} onSelect={handleSelect} />
       </Dialog.Body>
     </Dialog.Content>
