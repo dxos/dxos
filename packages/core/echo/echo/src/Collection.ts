@@ -15,6 +15,12 @@ import * as Ref from './Ref.ts';
 import * as Type from './Type.ts';
 
 /**
+ * {@link Annotation.UserType} tag for types made to live in a collection, which creating into a collection
+ * offers. Any user type can join a collection; untagged ones do so from the object itself.
+ */
+export const ItemTag = 'org.dxos.tag.collectionItem';
+
+/**
  * A an ordered set of objects.
  */
 export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.type.collection', '0.1.0'))(
@@ -25,7 +31,10 @@ export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.t
       Annotation.SetParent.set({ override: false }),
       internal.FormInputAnnotation.set(false),
     ),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' }),
+    Annotation.UserType.set({ tags: [ItemTag] }),
+  ),
 ) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Type.InstanceType<typeof Collection> =>

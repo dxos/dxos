@@ -11,8 +11,8 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -125,7 +125,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty label={t('no-available-targets.message')} />
+          <Banner.Empty label={t('no-available-targets.message')} />
         ) : (
           <ScrollArea.Root padding>
             <ScrollArea.Viewport>

@@ -15,6 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Blob from './Blob.ts';
+import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
 import type * as Feed from './Feed.ts';
@@ -237,6 +238,12 @@ export interface Database extends Queryable {
    * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
    */
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /**
+   * The object's history, oldest first: one entry per document change that touched the object (or,
+   * given `property`, that property). Prefer `Obj.getChanges(obj, opts)`.
+   */
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[];
 
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];

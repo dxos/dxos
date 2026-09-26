@@ -95,13 +95,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     { spaceId },
   );
 
-  // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
-    TaskOperation.AnswerQuestion,
-    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
-    { spaceId },
-  );
-
   const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
@@ -190,7 +183,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskUpdate={handleUpdate}
       onTaskMove={handleMove}
       onTaskSelect={handleOpen}
-      onQuestionAnswer={handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -199,7 +191,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
       <div className='px-trim-md'>
-        <TaskList.Edit
+        <TaskList.Editor
           createOnly
           showDescription
           descriptionExtensions={descriptionExtensions}

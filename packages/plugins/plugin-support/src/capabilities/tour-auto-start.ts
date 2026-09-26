@@ -28,6 +28,7 @@ export default Capability.makeModule(
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const attention = yield* AttentionCapabilities.Attention;
+    const seenToursAtom = yield* HelpCapabilities.SeenTours;
     const stateAtom = yield* HelpCapabilities.State;
     const toursAtom = yield* Capability.atom(AppCapabilities.Tour);
 
@@ -46,7 +47,8 @@ export default Capability.makeModule(
         return undefined;
       }
 
-      const unseen = get(toursAtom).filter((tour) => tour.auto && !state.seenTours.includes(tour.id));
+      const seenTours = get(seenToursAtom);
+      const unseen = get(toursAtom).filter((tour) => tour.auto && !seenTours[tour.id]);
       return Tour.matching(unseen, data)[0]?.id;
     });
 

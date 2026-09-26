@@ -69,6 +69,7 @@ export const translations = [
         'setup-project.label': 'Set up project',
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
+        'object-card.archived.label': 'Archived',
       },
     },
   },

@@ -40,6 +40,7 @@ type CommentRecord = {
   created_at: string;
   path: string;
   line: number | null;
+  original_line: number | null;
   side: string | undefined;
   commit_id: string | undefined;
   original_commit_id: string | undefined;

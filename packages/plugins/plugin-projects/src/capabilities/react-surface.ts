@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Project.Project),
         ),
         component: ProjectTaskCompanion,
-        props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, companionTo, attendableId }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.

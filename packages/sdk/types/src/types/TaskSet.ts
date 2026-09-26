@@ -46,7 +46,6 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
   }).pipe(
     Schema.annotate({ title: 'Task Set' }),
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
   ),
 ) {}

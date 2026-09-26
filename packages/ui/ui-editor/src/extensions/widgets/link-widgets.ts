@@ -141,12 +141,22 @@ export function linkWidgets<TProps extends LinkWidgetProps>(
 ): Extension;
 export function linkWidgets({ match, link, image, props: toProps }: LinkWidgetsOptions): Extension {
   const matcher: WidgetMatcher = {
-    nodes: ['Link', 'Image'],
+    // `URL` is the bare autolink a reader gets by pasting: GFM writes it as a `URL` node with no
+    // marks, and the same link typed as `[label](url)` arrives as a `Link` with a `URL` child. A
+    // matcher that took only the second form left a pasted link as plain text in the editor while
+    // the read-only renderer — which overrides every `a`, autolinks included — showed a chip.
+    nodes: ['Link', 'Image', 'URL'],
     debug: link?.debug || image?.debug,
     match: (node, { state, context, widgetStateMap, notifier, counters }) => {
-      const urlNode = node.node.getChild('URL');
-      const markNodes = node.node.getChildren('LinkMark');
-      if (!urlNode || markNodes.length < 2) {
+      const bare = node.type.name === 'URL';
+      // A `URL` inside a link is that link's own target, decorated by the `Link` case.
+      if (bare && (node.node.parent?.name === 'Link' || node.node.parent?.name === 'Image')) {
+        return undefined;
+      }
+
+      const urlNode = bare ? node.node : node.node.getChild('URL');
+      const markNodes = bare ? [] : node.node.getChildren('LinkMark');
+      if (!urlNode || (!bare && markNodes.length < 2)) {
         return undefined;
       }
       const url = state.sliceDoc(urlNode.from, urlNode.to);
@@ -159,7 +169,9 @@ export function linkWidgets({ match, link, image, props: toProps }: LinkWidgetsO
         return undefined;
       }
 
-      const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
+      // A bare URL is its own text; a widget that wants to say something shorter derives it from the
+      // URL, which is the only thing the reader wrote.
+      const label = bare ? url : state.sliceDoc(markNodes[0].to, markNodes[1].from);
       if (!label) {
         return undefined;
       }

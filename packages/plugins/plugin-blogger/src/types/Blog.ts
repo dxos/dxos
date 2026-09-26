@@ -35,6 +35,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -78,6 +79,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     // Connection for the registered publisher exists — associating a publisher connection with the
     // Publication, mirroring plugin-studio's Artifact.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: resolvePublicationConnectorIds }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
