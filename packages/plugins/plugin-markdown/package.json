@@ -159,7 +159,6 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",

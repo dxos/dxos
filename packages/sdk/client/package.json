@@ -101,7 +101,6 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
@@ -141,7 +140,6 @@
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

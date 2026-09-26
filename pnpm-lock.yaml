@@ -12926,9 +12926,6 @@ importers:
 
   packages/plugins/plugin-markdown:
     dependencies:
-      '@automerge/automerge':
-        specifier: 3.5.0
-        version: 3.5.0
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.1
@@ -18796,9 +18793,6 @@ importers:
 
   packages/sdk/client:
     dependencies:
-      '@automerge/automerge':
-        specifier: 3.5.0
-        version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
         version: 2.6.0-subduction.48(patch_hash=69aebf5e3e977116bb476b0dcbaba78eaeff38a28cec5d535992c66daeeeab67)
