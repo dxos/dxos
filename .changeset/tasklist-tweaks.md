@@ -2,6 +2,7 @@
 '@dxos/react-ui-task': patch
 '@dxos/react-ui-terminal': patch
 '@dxos/plugin-tasks': patch
+'@dxos/react-ui-list': patch
 ---
 
 A task's ID chip copies the task's full `echo://<space>/<id>` URI rather than `@mnemonic`, so the copied reference resolves wherever it is pasted; in the task list it reads the space from the live task rather than the row's snapshot.
@@ -23,3 +24,5 @@ The task list's create pane takes files dropped or pasted on it (`TaskList.Edito
 In a hierarchical task list `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its parent, alongside the existing `Shift+Arrow` moves; `Tab` is left to move focus when there is nothing to indent under or focus is on a control inside the row.
 
 The task set's filter — the query text and the statuses shown — is kept per device and per set (`TaskSetView.aspect`, the view-state `local` backend), so it survives navigating away and reloading.
+
+A tree row keeps focus after a key the consumer handles on it (e.g. a restructuring `Shift+Arrow` or `Tab` in the task list), so consecutive moves work without refocusing the row.

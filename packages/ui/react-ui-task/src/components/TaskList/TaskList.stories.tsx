@@ -1650,6 +1650,38 @@ export const TestTabIndent: Story = {
       expect(shape().slice(1, 3)).toEqual(['Approve the label art:2', 'Proofread the back label:3']),
     );
 
+    // Consecutive moves with no refocus in between: the moved row keeps focus as it re-renders under
+    // its new parent, so the next key reaches it.
+    const pressFocused = (key: string, shiftKey = false) => {
+      const target = document.activeElement;
+      if (!(target instanceof HTMLElement)) {
+        throw new Error('Nothing focused.');
+      }
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true }));
+    };
+    const focusedTitle = () =>
+      document.activeElement?.closest('[data-object-id]')?.querySelector('[data-testid="taskList.item.title"]')
+        ?.textContent;
+    row('Log every profile').focus();
+    pressFocused('ArrowRight', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowLeft', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab');
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowUp', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Sample the Ethiopian lots:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowDown', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+
     // Nothing to indent under, so the key is not taken and focus is free to leave the list.
     await expect(press(row('Ship the spring release'), 'Tab')).toBe(false);
 
