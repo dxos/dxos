@@ -107,6 +107,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@noble/hashes": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:"
   },

@@ -252,6 +252,9 @@ catalogs:
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
+    '@noble/hashes':
+      specifier: ^1.8.0
+      version: 1.8.0
     '@observablehq/plot':
       specifier: ^0.6.11
       version: 0.6.11
@@ -5527,6 +5530,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
