@@ -73,3 +73,12 @@ export const Default: Story = {
     content,
   },
 };
+
+/** Every block at the container's line height, as a clamped preview needs. */
+export const UniformLineHeight: Story = {
+  args: {
+    classNames: 'p-4 border border-separator rounded-md overflow-y-auto dx-base-surface text-sm',
+    content,
+    uniformLineHeight: true,
+  },
+};

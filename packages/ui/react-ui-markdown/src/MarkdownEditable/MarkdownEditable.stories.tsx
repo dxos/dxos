@@ -139,3 +139,40 @@ export const TestReadonly: Story = {
     await expect(canvas.queryByTestId('markdownEditable.editor')).toBeNull();
   },
 };
+
+export const TestBulletList: Story = {
+  args: { initialValue: '', multiline: true, editing: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('markdownEditable.editor');
+    const content = await waitFor(() => {
+      const found = editor.querySelector<HTMLElement>('.cm-content');
+      if (!found) {
+        throw new Error('Editor content not mounted.');
+      }
+      return found;
+    });
+
+    await userEvent.click(content);
+    await userEvent.keyboard('Samples:{Enter}- first{Enter}second');
+
+    // The marker is drawn as a bullet widget, which must land inside the field: the list item's
+    // hanging indent pushes it left of the line by its own width.
+    await waitFor(async () => expect(editor.querySelectorAll('.cm-list-mark-bullet').length).toEqual(2));
+    const bounds = editor.getBoundingClientRect();
+
+    // A plain line still starts flush with the field, as the preview's text does.
+    const plain = editor.querySelector<HTMLElement>('.cm-line:not(.cm-list-item)');
+    await expect(plain?.textContent).toEqual('Samples:');
+    await expect(getComputedStyle(plain ?? editor).paddingLeft).toEqual('0px');
+    for (const bullet of editor.querySelectorAll<HTMLElement>('.cm-list-mark-bullet')) {
+      const glyph = bullet.getBoundingClientRect();
+      await expect(glyph.width).toBeGreaterThan(0);
+      await expect(glyph.left).toBeGreaterThanOrEqual(bounds.left);
+    }
+
+    // Enter continues the list, so the second line is an item too.
+    await expect(editor.querySelectorAll('.cm-list-item').length).toEqual(2);
+    await expect(editor.textContent).toContain('second');
+  },
+};
