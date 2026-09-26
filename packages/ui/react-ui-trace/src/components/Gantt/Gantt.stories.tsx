@@ -208,50 +208,55 @@ const manyLaneMarkers: GanttMarker[] = [
 ];
 
 /**
- * One band whose lanes branch off one another. `parentId` indents a lane under the one it belongs to
- * and `openedFrom` draws the node it came out of — two facts about the same pair of lanes, which is
- * exactly the distinction the model exists to keep.
+ * One band whose lanes branch off one another, and answer back.
+ *
+ * Four facts about the same pairs of lanes, deliberately kept apart: `parentId` indents a branch
+ * under the lane it belongs to, `openedFrom` draws the node it came out of, `closedInto` draws the
+ * node its result landed on, and the segment says when it was actually worked. The sub-branch is
+ * still working, so it has no return edge — which is the case that makes the separation earn itself.
  *
  * Each branch begins exactly at the node that opened it, because a lane cannot start before its own
- * cause; the connector has nowhere sensible to go when it does.
+ * cause; and each returns at a *later* node than its own end, because the supervisor folds a result
+ * in when it next runs, not the instant the child stops.
  */
 const branchingGroups: GanttGroup[] = [{ id: 'g' }];
 const branchingLanes: GanttLane[] = [
   { id: 'root', label: 'Root', status: 'done', groupId: 'g', segments: [{ start: T0, end: T0 + 10 * MINUTE }] },
   {
     id: 'first',
-    label: 'Branch at #2',
+    label: 'Branch, returns',
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 2.5 * MINUTE, end: T0 + 5 * MINUTE }],
+    segments: [{ start: T0 + 2 * MINUTE, end: T0 + 3.5 * MINUTE }],
     openedFrom: { laneId: 'root', markerId: 'root:1' },
     closedInto: { laneId: 'root', markerId: 'root:2' },
   },
   {
     id: 'second',
-    label: 'Branch at #3',
+    label: 'Branch, returns later',
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 5 * MINUTE, end: T0 + 8 * MINUTE }],
+    segments: [{ start: T0 + 4 * MINUTE, end: T0 + 7 * MINUTE }],
     openedFrom: { laneId: 'root', markerId: 'root:2' },
+    closedInto: { laneId: 'root', markerId: 'root:4' },
   },
   {
     id: 'sub',
-    label: 'Sub-branch',
+    label: 'Sub-branch, still working',
     status: 'running',
     groupId: 'g',
     parentId: 'second',
-    segments: [{ start: T0 + 6.5 * MINUTE }],
+    segments: [{ start: T0 + 5.5 * MINUTE }],
     openedFrom: { laneId: 'second', markerId: 'second:1' },
   },
 ];
 const branchingMarkers: GanttMarker[] = [
-  ...events('root', 5, T0, T0 + 10 * MINUTE),
-  ...events('first', 3, T0 + 2.5 * MINUTE, T0 + 5 * MINUTE),
-  ...events('second', 3, T0 + 5 * MINUTE, T0 + 8 * MINUTE),
-  ...events('sub', 3, T0 + 6.5 * MINUTE, T0 + 9.5 * MINUTE),
+  ...events('root', 6, T0, T0 + 10 * MINUTE),
+  ...events('first', 3, T0 + 2 * MINUTE, T0 + 3.5 * MINUTE),
+  ...events('second', 3, T0 + 4 * MINUTE, T0 + 7 * MINUTE),
+  ...events('sub', 3, T0 + 5.5 * MINUTE, T0 + 9.5 * MINUTE),
 ];
 
 /**
@@ -595,7 +600,7 @@ export const ManyLanes: Story = {
   },
 };
 
-/** One band whose lanes branch off one another: `parentId` indents, `openedFrom` connects. */
+/** One band whose lanes branch off one another: `parentId` indents, `openedFrom` and `closedInto` connect. */
 export const Branching: Story = {
   args: {
     groups: branchingGroups,
