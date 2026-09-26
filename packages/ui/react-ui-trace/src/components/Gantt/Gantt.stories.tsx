@@ -160,90 +160,88 @@ const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   </div>
 );
 
-type StoryArgs = GanttData & {
-  /** Render the drawing alone, as a host that already lists the lanes does. */
-  chartOnly?: boolean;
-};
-
-const Chart = ({ chartOnly, ...data }: StoryArgs) => (
-  <Gantt.Root {...data} classNames='p-4'>
-    {!chartOnly && <Gantt.Legend />}
-    <Gantt.Chart />
-    {!chartOnly && <Gantt.Meta />}
-  </Gantt.Root>
-);
-
-const DefaultStory = (props: StoryArgs) => (
-  <Layout
-    chart={<Chart {...props} />}
-    data={{ lanes: props.lanes, markers: props.markers, range: props.range, now: props.now }}
-  />
-);
-
-/** Appends a tool marker to the running sub-agent every tick, so its box grows with `now`. */
-const LiveStory = (props: StoryArgs) => {
-  const [now, setNow] = useState(T0 + 10 * MINUTE);
-  const [live, setLive] = useState<GanttMarker[]>([...(props.markers ?? [])]);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow((now) => {
-        const next = now + 0.5 * MINUTE;
-        setLive((markers) => [
-          ...markers,
-          {
-            id: `m:live-${markers.length}`,
-            laneId: 'c',
-            kind: 'tool',
-            timestamp: next,
-            label: random.lorem.word(),
-          },
-        ]);
-        return next;
-      });
-    }, 1_000);
-    return () => clearInterval(interval);
-  }, []);
-  const range = { start: T0, end: now + MINUTE };
-  return (
-    <Layout
-      chart={<Chart {...props} markers={live} now={now} range={range} />}
-      data={{ lanes: props.lanes, markers: live, range, now }}
-    />
-  );
-};
-
-const SECOND = 1_000;
-
+/** One lane whose whole history is the stream: what the axis and the animation are for, alone. */
 const singleLane: GanttLane[] = [
   { id: 'lane', kind: 'session', label: 'Process — one event a second', status: 'running', start: T0 },
 ];
 
+const singleLaneMarkers: GanttMarker[] = [
+  { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
+];
+
+/** A stable empty seed: a fresh `[]` each render would retrigger the effect that adopts it. */
+const NO_MARKERS: readonly GanttMarker[] = [];
+
+type EventStreamOptions = {
+  /** How often an event arrives, in milliseconds. The stream is static without it. */
+  interval?: number;
+  /** The lane arrivals land on. */
+  laneId: string;
+  /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
+  step: number;
+};
+
 /**
- * The primitives on their own: one lane on the event axis, gaining an event a second. Each arrival
- * steps the axis forward by one unit and opens out of the event before it; nothing already drawn moves,
- * which is what the event axis buys over a fitted one.
+ * The seed markers, plus one more every `interval` — the only moving part any of these stories has.
+ *
+ * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
+ * has to carry one, while the event axis makes its own room and ignores it.
  */
-const SingleLaneStory = () => {
-  const [events, setEvents] = useState<GanttMarker[]>(() => [
-    { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
-  ]);
+const useEventStream = (
+  seed: readonly GanttMarker[],
+  { interval, laneId, step }: EventStreamOptions,
+): { markers: GanttMarker[]; now: number } => {
+  const [markers, setMarkers] = useState<GanttMarker[]>(() => [...seed]);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setEvents((events) => [
-        ...events,
+    setMarkers([...seed]);
+  }, [seed]);
+  useEffect(() => {
+    if (!interval) {
+      return;
+    }
+    const timer = setInterval(() => {
+      setMarkers((markers) => [
+        ...markers,
         {
-          id: `e:${events.length}`,
-          laneId: 'lane',
+          id: `live:${markers.length}`,
+          laneId,
           kind: 'tool',
-          timestamp: T0 + events.length * SECOND,
+          timestamp: Math.max(T0, ...markers.map((marker) => marker.timestamp)) + step,
           label: random.lorem.word(),
         },
       ]);
-    }, SECOND);
-    return () => clearInterval(interval);
-  }, []);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [interval, laneId, step]);
 
-  return <Chart lanes={singleLane} markers={events} axis='event' animate />;
+  return { markers, now: Math.max(T0, ...markers.map((marker) => marker.timestamp)) };
+};
+
+type StoryArgs = GanttData &
+  Partial<EventStreamOptions> & {
+    /** Render the drawing alone, as a host that already lists the lanes does. */
+    chartOnly?: boolean;
+    /** Show the data the chart was drawn from beneath it. */
+    inspect?: boolean;
+  };
+
+const DefaultStory = ({ chartOnly, inspect, interval, laneId = 'c', step = 0.5 * MINUTE, ...data }: StoryArgs) => {
+  const stream = useEventStream(data.markers ?? NO_MARKERS, { interval, laneId, step });
+  // A live chart on the time axis has to be given room ahead of its newest event, and the range it
+  // was handed ends before that event ever arrives; the event axis makes its own room.
+  const live = interval !== undefined && data.axis !== 'event';
+  const range = live && data.range ? { start: data.range.start, end: stream.now + step } : data.range;
+  const now = live ? stream.now : data.now;
+
+  const chart = (
+    <Gantt.Root {...data} markers={stream.markers} range={range} now={now} classNames='p-4'>
+      {!chartOnly && <Gantt.Legend />}
+      <Gantt.Chart />
+      {!chartOnly && <Gantt.Meta />}
+    </Gantt.Root>
+  );
+
+  return inspect ? <Layout chart={chart} data={{ lanes: data.lanes, markers: stream.markers, range, now }} /> : chart;
 };
 
 const meta = {
@@ -255,6 +253,7 @@ const meta = {
     markers,
     now: T0 + 10 * MINUTE,
     range: { start: T0, end: T0 + 11 * MINUTE },
+    inspect: true,
     onLaneSelect: (lane: GanttLane) => console.log('lane', lane),
     onMarkerSelect: (marker: GanttMarker) => console.log('marker', marker),
   },
@@ -272,8 +271,11 @@ export const ChartOnly: Story = {
   },
 };
 
+/** The time axis under a stream: every arrival widens the range, so the whole history shifts left. */
 export const Live: Story = {
-  render: LiveStory,
+  args: {
+    interval: 1_000,
+  },
 };
 
 /** The same run measured in events rather than seconds: every gap is one step, whatever it lasted. */
@@ -283,6 +285,18 @@ export const EventAxis: Story = {
   },
 };
 
+/** The primitives alone: one lane, one event a second, each opening out of the one before it. */
 export const SingleLane: Story = {
-  render: SingleLaneStory,
+  args: {
+    lanes: singleLane,
+    markers: singleLaneMarkers,
+    axis: 'event',
+    animate: true,
+    interval: 1_000,
+    laneId: 'lane',
+    step: 1_000,
+    range: undefined,
+    now: undefined,
+    inspect: false,
+  },
 };

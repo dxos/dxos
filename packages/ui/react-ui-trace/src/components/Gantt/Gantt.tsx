@@ -47,15 +47,16 @@ const HEADER_HEIGHT = 20;
 
 /** Pixels per event on the `event` axis — wide enough that two adjacent nodes read as two. */
 const EVENT_STEP = 32;
-
 /** How long a newly arrived element takes to travel from where it came from to where it belongs. */
-const ENTER_TRANSITION = 'duration-300 ease-out';
+const ENTER_TRANSITION = 'duration-500 ease-out';
 
 /** Within this of the live edge the chart keeps following it; past it the reader is reading history. */
 const FOLLOW_SLACK = 4;
 
 const NODE_RADIUS = 6;
 const BAR_HEIGHT = 15;
+/** The thread through a lane's nodes: a hairline, so the nodes remain what the row reads as. */
+const THREAD_HEIGHT = 1;
 /**
  * A bar reaches half its height past its first and last instant, so a node sitting on either one is
  * as far from the bar's end as it is from its top and bottom.
@@ -391,6 +392,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   // The viewport, not the drawing, is what the time axis is fitted to: the drawing may be wider.
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const followRef = useRef(true);
+  const drawnRef = useRef<number | undefined>(undefined);
   const [width, setWidth] = useState(600);
   useEffect(() => {
     const element = viewportRef.current;
@@ -486,11 +488,14 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
   const grow = animate && mx('transition-[width]', ENTER_TRANSITION);
 
-  // The event axis grows to the right, so the newest event has to be followed — but only while the
-  // reader is at the edge: having scrolled back to an earlier event, they are reading, not watching.
+  // The event axis grows to the right, so the newest event has to be followed — but only a drawing
+  // that just grew, and only while the reader is at its edge. On first paint they are at the start of
+  // the history, which is where they should be; having scrolled back, they are reading, not watching.
   useEffect(() => {
     const element = viewportRef.current;
-    if (element && followRef.current) {
+    const grown = drawnRef.current !== undefined && scale.width > drawnRef.current;
+    drawnRef.current = scale.width;
+    if (element && grown && followRef.current) {
       element.scrollLeft = element.scrollWidth;
     }
   }, [scale.width]);
@@ -655,14 +660,18 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
             if (from === undefined || to === undefined) {
               return null;
             }
+            // A hairline rect rather than a line: a line's `x1`/`x2` are attributes and nothing else,
+            // while `x` and `width` are geometry properties a transition can reach, so the thread can
+            // grow with the node it is reaching for instead of arriving ahead of it. The node's fill is
+            // the thread's own shade.
             return (
-              <line
+              <rect
                 key={`thread:${lane.id}`}
-                x1={from}
-                x2={to}
-                y1={rowY(index)}
-                y2={rowY(index)}
-                className={mx(animate && mx('transition-[x1,x2]', ENTER_TRANSITION), STATUS_COLOR[lane.status].thread)}
+                x={from}
+                y={rowY(index) - THREAD_HEIGHT / 2}
+                width={Math.max(to - from, 0)}
+                height={THREAD_HEIGHT}
+                className={mx(animate && mx('transition-[x,width]', ENTER_TRANSITION), STATUS_COLOR[lane.status].node)}
               />
             );
           })}
