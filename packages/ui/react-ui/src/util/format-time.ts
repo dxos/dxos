@@ -13,6 +13,9 @@ const COMPACT_MINUTES = 120;
 /** Beyond a day, hours are a number the reader has to divide; the calendar date says it directly. */
 const COMPACT_HOURS = 24;
 
+/** `setTimeout` treats anything past this as zero, so a longer wait has to be capped, not requested. */
+const MAX_TIMEOUT = 2_147_483_647;
+
 /**
  * A timestamp in the space a column has: `12m`, `90m`, `5h`, then `12 Sep`.
  *
@@ -74,8 +77,11 @@ export const compactInterval = (date: string | Date, { now }: FormatCompactOptio
   }
 
   const elapsed = (now ?? new Date()).getTime() - parsed.getTime();
+  // A future instant shows a date until the clock catches up, and then becomes a counter: wake when
+  // it does. Capped to the range a timer accepts — beyond ~24 days `setTimeout` fires immediately,
+  // which would spin rather than wait.
   if (elapsed < 0) {
-    return undefined;
+    return Math.min(-elapsed, MAX_TIMEOUT);
   }
 
   const minutes = Math.floor(elapsed / 60_000);
@@ -83,10 +89,13 @@ export const compactInterval = (date: string | Date, { now }: FormatCompactOptio
     // The next whole minute: what is left of the current one.
     return 60_000 - (elapsed % 60_000);
   }
-  if (minutes < COMPACT_MINUTES * (COMPACT_HOURS / 2)) {
+  // Up to the hour count's own limit, so the last hour before a timestamp becomes a date still ticks.
+  if (minutes < COMPACT_HOURS * 60) {
     return 3_600_000 - (elapsed % 3_600_000);
   }
 
-  // A calendar date: it changes at midnight, which no counter here is watching.
+  // A calendar date: it changes at midnight, and nothing here is watching for that — a date label is
+  // read as "when", not as a countdown, and a timer per row to catch a year boundary costs more than
+  // the staleness it prevents.
   return undefined;
 };

@@ -49,6 +49,20 @@ describe('compactInterval', () => {
     expect(compactInterval(new Date(now.getTime() - elapsed), { now })).to.eq(3_600_000 - 600_000);
   });
 
+  test('an hour counter keeps ticking up to the day it becomes a date', ({ expect }) => {
+    // 23h59m: the last minute of the hour form, which must still be scheduled or the label freezes
+    // one hour short of the date it should become.
+    const elapsed = 23 * 3_600_000 + 59 * 60_000;
+    expect(compactInterval(new Date(now.getTime() - elapsed), { now })).to.eq(3_600_000 - 59 * 60_000);
+  });
+
+  test('a future instant wakes when the clock catches up', ({ expect }) => {
+    expect(compactInterval(new Date(now.getTime() + 5 * 60_000), { now })).to.eq(5 * 60_000);
+    // Beyond the timer's range the wait is capped rather than requested, since `setTimeout` would
+    // otherwise fire at once and spin.
+    expect(compactInterval(new Date(now.getTime() + 400 * 24 * 3_600_000), { now })).to.eq(2_147_483_647);
+  });
+
   test('a date never changes again on any timer this component owns', ({ expect }) => {
     expect(compactInterval(daysBefore(30), { now })).to.eq(undefined);
     expect(compactInterval('not a date', { now })).to.eq(undefined);
