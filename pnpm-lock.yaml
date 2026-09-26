@@ -6136,9 +6136,15 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.9
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/automerge-proxy':
         specifier: workspace:*
         version: link:../automerge-proxy
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
