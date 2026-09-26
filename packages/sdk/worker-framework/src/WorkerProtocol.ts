@@ -170,6 +170,20 @@ export type CoordinatorMessage =
       workerToClient: MessagePort;
       livenessLockKey: string;
       isOwner: boolean;
+      /**
+       * Build of the leader tab, which is the build its worker runs. Absent from a leader that
+       * predates the field or runs without a build id.
+       */
+      buildId?: string;
+    }
+  | {
+      // A follower refused a leader's port because the two run different builds, whose RPC contracts
+      // need not agree. Broadcast so the leader, which cannot otherwise tell, learns of it too.
+      type: 'build-mismatch';
+      /** The leader whose port was refused. */
+      leaderId: string;
+      clientId: string;
+      buildId?: string;
     }
   | {
       // The session behind an earlier `provide-port` could not be built; see

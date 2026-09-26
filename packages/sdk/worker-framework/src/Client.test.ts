@@ -567,6 +567,142 @@ describe('Connection multi-client', () => {
   });
 });
 
+describe('Connection build mismatch', () => {
+  const TIMEOUTS: Client.LeaderTimeouts = {
+    heartbeatInterval: 50,
+    staleTimeout: 1_000,
+    portTimeout: 3_000,
+    retryBackoff: 20,
+  };
+
+  /** Opens a follower whose boot is expected to fail while its leader runs another build. */
+  const openFollower = (follower: ReturnType<typeof makeConnection>) => {
+    void follower.connection.open().catch(() => {});
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+  };
+
+  test('a follower refuses the port of a leader running another build, and both sides hear of it', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const leaderMismatch = new Trigger<Client.BuildMismatch>();
+    const leader = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-old',
+      onBuildMismatch: (mismatch) => leaderMismatch.wake(mismatch),
+    });
+    await asyncTimeout(leader.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+    await asyncTimeout(leader.connected, 5_000);
+
+    const followerMismatch = new Trigger<Client.BuildMismatch>();
+    let followerConnected = false;
+    const follower = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-new',
+      onBuildMismatch: (mismatch) => followerMismatch.wake(mismatch),
+    });
+    void follower.connected.then(() => {
+      followerConnected = true;
+    });
+    openFollower(follower);
+
+    expect(await asyncTimeout(followerMismatch.wait(), 5_000)).toEqual({
+      role: 'follower',
+      local: 'build-new',
+      remote: 'build-old',
+    });
+    expect(await asyncTimeout(leaderMismatch.wait(), 5_000)).toEqual({
+      role: 'leader',
+      local: 'build-old',
+      remote: 'build-new',
+    });
+    await sleep(200);
+    expect(followerConnected).toBe(false);
+  });
+
+  test('a leader that reports no build counts as another build', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    // A leader from before build ids were exchanged.
+    const leader = makeConnection(hub, keys, TIMEOUTS);
+    await asyncTimeout(leader.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+    await asyncTimeout(leader.connected, 5_000);
+
+    const followerMismatch = new Trigger<Client.BuildMismatch>();
+    const follower = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-new',
+      onBuildMismatch: (mismatch) => followerMismatch.wake(mismatch),
+    });
+    openFollower(follower);
+
+    expect(await asyncTimeout(followerMismatch.wait(), 5_000)).toEqual({
+      role: 'follower',
+      local: 'build-new',
+      remote: undefined,
+    });
+  });
+
+  test('a follower on the same build connects', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const mismatches: Client.BuildMismatch[] = [];
+
+    const leader = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-a',
+      onBuildMismatch: (m) => mismatches.push(m),
+    });
+    await asyncTimeout(leader.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+    await asyncTimeout(leader.connected, 5_000);
+
+    const follower = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-a',
+      onBuildMismatch: (m) => mismatches.push(m),
+    });
+    await asyncTimeout(follower.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+    expect((await asyncTimeout(follower.connected, 5_000)).isOwner).toBe(false);
+    expect(mismatches).toEqual([]);
+  });
+
+  test('a refused follower connects once the older leader steps down', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const leader = makeConnection(hub, keys, TIMEOUTS, { buildId: 'build-old' });
+    await asyncTimeout(leader.connection.open(), 5_000);
+    await asyncTimeout(leader.connected, 5_000);
+
+    const refused = new Trigger();
+    const follower = makeConnection(hub, keys, TIMEOUTS, {
+      buildId: 'build-new',
+      onBuildMismatch: () => refused.wake(),
+    });
+    const opened = follower.connection.open();
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+    await asyncTimeout(refused.wait(), 5_000);
+
+    // What the app does with the older tab: reload it, which releases the leader lock.
+    await leader.connection.close();
+
+    await asyncTimeout(opened, 10_000);
+    expect((await asyncTimeout(follower.connected, 5_000)).isOwner).toBe(true);
+  });
+});
+
 describe('Worker session lifetime', () => {
   test('a session stays open while its tab is connected', async () => {
     const hub = createHub();
