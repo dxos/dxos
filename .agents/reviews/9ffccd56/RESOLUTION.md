@@ -47,7 +47,7 @@
 - 9ffccd56-43 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx:83:23
 - 9ffccd56-44 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx:70:11
 - 9ffccd56-45 - resolved - subscribe-where-you-read - packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx:51:19
-- 9ffccd56-46 - resolved - no-hand-rolled-lists - packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArtifacts.tsx:34
+- 9ffccd56-46 - ignored - no-hand-rolled-lists - packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArtifacts.tsx:34
 - 9ffccd56-47 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-tasks/src/containers/TaskSetArticle/TaskSetArticle.tsx:201:7
 - 9ffccd56-48 - resolved - toolbars-are-menu-actions - packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx:175
 - 9ffccd56-49 - resolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/agents/edge-agent-manager.ts:234
@@ -62,8 +62,8 @@
 - 9ffccd56-58 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx:244:13
 - 9ffccd56-59 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx:274:9
 - 9ffccd56-60 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx:308:5
-- 9ffccd56-61 - resolved - no-hand-rolled-lists - packages/ui/react-ui-task/src/components/TaskList/TaskHistory.tsx:86
-- 9ffccd56-62 - resolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskTreeNode.tsx:428:9
+- 9ffccd56-61 - ignored - no-hand-rolled-lists - packages/ui/react-ui-task/src/components/TaskList/TaskHistory.tsx:86
+- 9ffccd56-62 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskTreeNode.tsx:428:9
 - 9ffccd56-63 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:69:5
 - 9ffccd56-64 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:78:7
 - 9ffccd56-65 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:88:9
