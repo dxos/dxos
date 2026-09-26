@@ -241,7 +241,15 @@ export const DropAttachment: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const zone = await canvas.findByTestId('tasksPlugin.attachments.dropZone', undefined, { timeout: 10_000 });
-    await expect(canvas.findByTestId('tasksPlugin.attachments.dropArea')).resolves.toBeInTheDocument();
+    const dropArea = await canvas.findByTestId('tasksPlugin.attachments.dropArea');
+
+    // Dragging over the pane marks the drop area, not the pane.
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(pngFile());
+    zone.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer }));
+    await waitFor(() => expect(dropArea).toHaveClass('border-accent-bg'));
+    zone.dispatchEvent(new DragEvent('dragleave', { bubbles: true, cancelable: true, dataTransfer }));
+    await waitFor(() => expect(dropArea).not.toHaveClass('border-accent-bg'));
 
     dropFiles(zone, [pngFile()]);
     const attachment = await canvas.findByTestId('tasksPlugin.attachment', undefined, { timeout: 10_000 });

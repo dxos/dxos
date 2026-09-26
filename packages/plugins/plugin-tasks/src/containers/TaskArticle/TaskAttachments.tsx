@@ -6,7 +6,9 @@ import React, {
   type ClipboardEvent,
   type DragEvent,
   type PropsWithChildren,
+  createContext,
   useCallback,
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -108,6 +110,9 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
   return { onFiles: canCreateFiles ? attach : undefined, pending };
 };
 
+/** Whether files are being dragged over the pane, so the attachments section can mark its target. */
+const FileDragContext = createContext(false);
+
 /** Whether a drag carries files from outside the page, rather than an element dragged within it. */
 const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
@@ -122,7 +127,6 @@ export type TaskAttachmentDropZoneProps = PropsWithChildren<{
  * renders either way, so the editor inside is not remounted when file support arrives.
  */
 export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDropZoneProps) => {
-  const { t } = useTranslation(meta.profile.key);
   const [over, setOver] = useState(false);
   // Counted because `dragleave` fires on every child the pointer crosses, not only on leaving the zone.
   const depth = useRef(0);
@@ -178,7 +182,7 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
 
   return (
     <div
-      className='relative flex flex-col min-h-full'
+      className='flex flex-col min-h-full'
       {...(onFiles && {
         'data-testid': 'tasksPlugin.attachments.dropZone',
         'onDragEnterCapture': handleDragEnter,
@@ -188,18 +192,7 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
         'onPasteCapture': handlePaste,
       })}
     >
-      {children}
-      {over && (
-        <div
-          className={mx(
-            'absolute inset-1 z-10 pointer-events-none flex items-center justify-center gap-2',
-            'rounded-md border-2 border-dashed border-accent-bg bg-base-surface/70 backdrop-blur-sm text-description',
-          )}
-        >
-          <Icon icon='ph--paperclip--regular' />
-          {t('task-attachments.drop.label')}
-        </div>
-      )}
+      <FileDragContext.Provider value={over}>{children}</FileDragContext.Provider>
     </div>
   );
 };
@@ -214,12 +207,14 @@ export type TaskAttachmentsProps = {
 /**
  * The files attached to a task (`Task.attachments`), each as a card whose body is the file's own
  * `CardContent` surface — so an image previews as an image — followed by a card per file still
- * uploading and a standing drop area. Renders nothing only when there is nothing attached and
- * nothing could be.
+ * uploading. With nothing attached the section is a drop area; with cards, the grid itself is the
+ * target. Either is marked while files are dragged over the pane, which takes the drop itself.
+ * Renders nothing only when there is nothing attached and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
+  const dragging = useContext(FileDragContext);
 
   const handleRemove = useOperation(
     TaskOperation.RemoveAttachment,
@@ -235,29 +230,33 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
     <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
-      {hasCards && (
-        <div className='grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'>
-          {refs?.map((ref) => (
-            <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
-          ))}
-          {pending.map((entry) => (
-            <PendingAttachmentCard key={entry.id} name={entry.name} />
-          ))}
-        </div>
-      )}
-      {canAttach && (
-        // A visible target only: the drop and paste themselves are taken by the pane-wide zone.
-        <div
-          className={mx(
-            'flex items-center justify-center gap-2 p-4',
-            'rounded-md border-2 border-dashed border-separator text-description',
-          )}
-          data-testid='tasksPlugin.attachments.dropArea'
-        >
-          <Icon icon='ph--paperclip--regular' />
-          {t('task-attachments.drop-area.label')}
-        </div>
-      )}
+      <div
+        className={mx(
+          'rounded-md border-2 border-dashed',
+          dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
+          hasCards
+            ? // Inset by the border and padding so the cards stay on the column's content track.
+              '-m-1.5 p-1 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'
+            : 'flex items-center justify-center gap-2 p-4 text-description',
+        )}
+        {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
+      >
+        {hasCards ? (
+          <>
+            {refs?.map((ref) => (
+              <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
+            ))}
+            {pending.map((entry) => (
+              <PendingAttachmentCard key={entry.id} name={entry.name} />
+            ))}
+          </>
+        ) : (
+          <>
+            <Icon icon='ph--paperclip--regular' />
+            {t('task-attachments.drop-area.label')}
+          </>
+        )}
+      </div>
     </Column.Section>
   );
 };
