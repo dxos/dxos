@@ -58,7 +58,7 @@ export class Assistant {
 
   /**
    * Selects the chat's model through the options popover's model tab, then closes the popover so the
-   * prompt is reachable again. `model` is the model's DXN, which is the id of its picker row.
+   * prompt is reachable again. `model` is the model's full DXN (`dxn:…`), which is the id of its picker row.
    */
   async selectModel(model: string): Promise<void> {
     const page = this.#locator.page();
