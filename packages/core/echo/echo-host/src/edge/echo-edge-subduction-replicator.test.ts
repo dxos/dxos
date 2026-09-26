@@ -12,7 +12,14 @@ import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { EdgeService } from '@dxos/protocols';
+import {
+  EdgeService,
+  MESSAGE_TYPE_SUBDUCTION_BATCH,
+  MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+  MESSAGE_TYPE_SUBDUCTION_FRAME,
+  type PeerId,
+  type SubductionConnectionMessage,
+} from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -123,6 +130,52 @@ describe('EchoEdgeSubductionReplicator', () => {
     await replicator.disconnect();
   });
 
+  // The edge relays replies one router message per frame until the connection has sent it a batch, so a
+  // plain-frame handshake would leave a new session's fan-out unbatched.
+  test('the handshake ships alone in a batch envelope, also after an in-place re-handshake', async () => {
+    const { client, server } = await createClientServer({ payloadDecoder: (payload) => cbor.decode(payload) });
+
+    const spaceId = SpaceId.random();
+    const { context, openConnections, connectionOpen, transportResets } = createMockContext();
+    const replicator = await connectReplicator(client, context);
+
+    const waitForOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), spaceId);
+    await waitForOpen;
+
+    const sendFrame = async (byte: number) => {
+      const writer = openConnections[0].writable.getWriter();
+      try {
+        await writer.write(subductionFrame(byte));
+      } finally {
+        writer.releaseLock();
+      }
+    };
+    const envelopes = () =>
+      server.messageSink.filter(
+        (payload) => payload?.type === MESSAGE_TYPE_SUBDUCTION_BATCH || payload?.type === MESSAGE_TYPE_SUBDUCTION_FRAME,
+      );
+
+    await sendFrame(1);
+    await waitForCondition({ condition: () => envelopes().length === 1 });
+    expect(envelopes()[0]).toMatchObject({
+      type: MESSAGE_TYPE_SUBDUCTION_BATCH,
+      frames: [{ data: new Uint8Array([1]) }],
+    });
+
+    await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
+    await waitForCondition({ condition: () => transportResets.length === 1 });
+
+    await sendFrame(2);
+    await waitForCondition({ condition: () => envelopes().length === 2 });
+    expect(envelopes()[1]).toMatchObject({
+      type: MESSAGE_TYPE_SUBDUCTION_BATCH,
+      frames: [{ data: new Uint8Array([2]) }],
+    });
+
+    await replicator.disconnect();
+  });
+
   describe('shouldAdvertise', () => {
     test('true if space document belongs to connection space', async () => {
       const { client } = await createClientServer();
@@ -175,8 +228,8 @@ describe('EchoEdgeSubductionReplicator', () => {
     return replicator;
   };
 
-  const createClientServer = async () => {
-    const server = await createTestEdgeWsServer(await getRandomPort());
+  const createClientServer = async (params?: Parameters<typeof createTestEdgeWsServer>[1]) => {
+    const server = await createTestEdgeWsServer(await getRandomPort(), params);
     onTestFinished(server.cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: server.endpoint });
     await openAndClose(client);
@@ -232,6 +285,14 @@ const sendErrorForCurrentConnection = async (
     ),
   );
 };
+
+/** A transport frame as automerge-repo hands it to the connection; the byte tells frames apart. */
+const subductionFrame = (byte: number): SubductionConnectionMessage => ({
+  type: MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+  senderId: 'client' as PeerId,
+  targetId: 'edge' as PeerId,
+  data: new Uint8Array([byte]),
+});
 
 const createSubductionErrorMessage = (target: Peer, spaceId: SpaceId, connectionId: string) =>
   createBuf(MessageSchema, {
