@@ -138,7 +138,14 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
       continue;
     }
     Obj.update(set, (set) => {
-      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+      TaskSet.removeRefsInPlace(set.tasks, new Set([task.id]));
+    });
+  }
+  // A task filed as a sub-task is listed by its parent rather than a set; it leaves that list too.
+  const parent = Task.getParentTask(task);
+  if (parent) {
+    Obj.update(parent, (parent) => {
+      TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
     });
   }
   Obj.update(container, (container) => {

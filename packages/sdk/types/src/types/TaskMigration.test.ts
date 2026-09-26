@@ -34,13 +34,15 @@ const setup = async () => {
   return db;
 };
 
+type Database = Awaited<ReturnType<typeof setup>>;
+
 type LegacyDraft = { title: string; parent?: string; status?: Task.Status };
 
 /**
  * A set as stored before the move: every task in the flat list, the set as each one's ECHO parent,
  * and the hierarchy as `parentTask` refs.
  */
-const seedLegacy = async (db: Awaited<ReturnType<typeof setup>>, drafts: readonly LegacyDraft[]) => {
+const seedLegacy = async (db: Database, drafts: readonly LegacyDraft[]) => {
   const set = db.add(Obj.make(TaskMigration.LegacyTaskSet, { name: 'Sprint', tasks: [], milestones: [] }));
   const byTitle = new Map<string, TaskMigration.LegacyTask>();
   for (const { title, parent, status } of drafts) {
@@ -62,7 +64,7 @@ const seedLegacy = async (db: Awaited<ReturnType<typeof setup>>, drafts: readonl
   return { setId: set.id, ids: new Map([...byTitle].map(([title, task]) => [title, task.id])) };
 };
 
-const load = async (db: Awaited<ReturnType<typeof setup>>) => {
+const load = async (db: Database) => {
   const [taskSet] = await db.query(Filter.type(TaskSet.TaskSet)).run();
   const tasks = await db.query(Filter.type(Task.Task)).run();
   const byTitle = new Map(tasks.map((task) => [task.title, task]));
@@ -145,6 +147,68 @@ describe('task hierarchy migration', () => {
     expect(titles(taskSet.tasks)).toEqual(['b', 'c']);
     expect(titles(get('b').subtasks ?? [])).toEqual(['a']);
     expect(Obj.getParent(get('c'))?.id).toBe(taskSet.id);
+  });
+
+  test("moves a sub-task filed in another set under its parent, after the parent's own children", async ({
+    expect,
+  }) => {
+    const db = await setup();
+    const home = db.add(Obj.make(TaskMigration.LegacyTaskSet, { name: 'Home', tasks: [], milestones: [] }));
+    const away = db.add(Obj.make(TaskMigration.LegacyTaskSet, { name: 'Away', tasks: [], milestones: [] }));
+    const make = (set: TaskMigration.LegacyTaskSet, title: string, parent?: TaskMigration.LegacyTask) => {
+      const task = db.add(
+        Obj.make(TaskMigration.LegacyTask, {
+          [Obj.Parent]: set,
+          title,
+          ...(parent ? { parentTask: Ref.make(parent) } : {}),
+        }),
+      );
+      Obj.update(set, (set) => {
+        set.tasks.push(Ref.make(task));
+      });
+      return task;
+    };
+    // The stray is listed first in its own set, so a plain position sort would put it ahead.
+    const epic = make(home, 'epic');
+    make(away, 'stray', epic);
+    make(away, 'other');
+    make(home, 'step', epic);
+    await db.flush();
+
+    await db.runMigrations(TaskMigration.migrations);
+
+    const sets = await db.query(Filter.type(TaskSet.TaskSet)).run();
+    const setNamed = (name: string) => sets.find((set) => set.name === name);
+    const { get, titles } = await load(db);
+    expect(titles(setNamed('Home')?.tasks ?? [])).toEqual(['epic']);
+    expect(titles(setNamed('Away')?.tasks ?? [])).toEqual(['other']);
+    expect(titles(get('epic').subtasks ?? [])).toEqual(['step', 'stray']);
+    expect(Task.parentTaskId(get('stray'))).toBe(get('epic').id);
+  });
+
+  test('runs on a client that registers only the current types', async ({ expect }) => {
+    // A plugin registers `Task`/`TaskSet` alone; registering the legacy versions would put a second
+    // `org.dxos.type.task` in every type picker. The migration must read the legacy data without them.
+    const { db, peer, key } = await builder.createDatabase();
+    db.graph.registry.add([
+      Milestone.Milestone,
+      TaskMigration.LegacyTask,
+      TaskMigration.LegacyTaskSet,
+      Task.Task,
+      TaskSet.TaskSet,
+    ]);
+    await seedLegacy(db, [{ title: 'epic' }, { title: 'loose' }, { title: 'step', parent: 'epic' }]);
+
+    const client = await peer.createClient();
+    await client.graph.registry.add([Milestone.Milestone, Task.Task, TaskSet.TaskSet]);
+    const reopened = await peer.openDatabase(key, undefined, { client });
+
+    await reopened.runMigrations(TaskMigration.migrations);
+
+    const { taskSet, get, titles } = await load(reopened);
+    expect(titles(taskSet.tasks)).toEqual(['epic', 'loose']);
+    expect(titles(get('epic').subtasks ?? [])).toEqual(['step']);
+    expect(Task.parentTaskId(get('step'))).toBe(get('epic').id);
   });
 
   test('is idempotent', async ({ expect }) => {

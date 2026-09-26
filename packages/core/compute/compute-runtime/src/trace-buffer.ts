@@ -71,17 +71,51 @@ export class EphemeralTraceBuffer {
  *
  * ECHO objects already carry non-configurable schema metadata on nested
  * properties; `Obj.make` recurses into `Schema.Unknown` children and fails
- * trying to re-define them. We convert the value via JSON round-trip when
- * possible, falling back to the original reference if the value isn't
- * JSON-safe (circular refs, functions, etc.).
+ * trying to re-define them. The value is therefore always copied through JSON,
+ * never passed through by reference: a DOM node (e.g. a popover `anchor`) carries
+ * framework expandos that reference back to it, and handing that graph to
+ * `Obj.make` recursed until the stack overflowed. DOM nodes are replaced by a
+ * short description and a repeated ancestor by a marker, so the copy is total.
  */
 export const detachData = (data: unknown): unknown => {
   if (data === null || typeof data !== 'object') {
     return data;
   }
-  try {
-    return JSON.parse(JSON.stringify(data));
-  } catch {
-    return data;
-  }
+  return JSON.parse(JSON.stringify(data, cycleSafeReplacer()));
 };
+
+/** The marker a reference back to one of its own ancestors is written as. */
+export const CIRCULAR = '[Circular]';
+
+/**
+ * A `JSON.stringify` replacer that writes DOM nodes as `<tag>`, a bigint as its digits, and a reference to an ancestor on
+ * the current path as {@link CIRCULAR}. Tracks the path rather than every object seen, so a value
+ * shared by two siblings is still written twice, as plain JSON would.
+ */
+const cycleSafeReplacer = () => {
+  const ancestors: object[] = [];
+  return function (this: unknown, _key: string, value: unknown): unknown {
+    // `JSON.stringify` throws on a bigint, which would otherwise fail the whole trace write.
+    if (typeof value === 'bigint') {
+      return value.toString();
+    }
+    if (value === null || typeof value !== 'object') {
+      return value;
+    }
+    if (isDomNode(value)) {
+      return `<${value.nodeName.toLowerCase()}>`;
+    }
+    // `this` is the holder of `value`; unwind the path to it before checking for a cycle.
+    while (ancestors.length > 0 && ancestors[ancestors.length - 1] !== this) {
+      ancestors.pop();
+    }
+    if (ancestors.includes(value)) {
+      return CIRCULAR;
+    }
+    ancestors.push(value);
+    return value;
+  };
+};
+
+const isDomNode = (value: object): value is { nodeName: string } =>
+  typeof Node !== 'undefined' && value instanceof Node;

@@ -100,12 +100,9 @@ const buildPlan = async (db: Database.Database): Promise<Plan> => {
   const accepted = new Map<string, Obj.Unknown>();
   for (const task of ordered) {
     const parent = task.parentTask ? (task.parentTask.target ?? (await task.parentTask.tryLoad())) : undefined;
-    // A parent in another set read as a root in the old list, so it stays one rather than jumping sets.
-    if (
-      !parent ||
-      Obj.getTypename(parent) !== Type.getTypename(Task.Task) ||
-      setOf.get(task.id) !== setOf.get(parent.id)
-    ) {
+    // A parent in another set still wins: the task follows it into that set, since a tree now lives
+    // in exactly one set.
+    if (!parent || Obj.getTypename(parent) !== Type.getTypename(Task.Task)) {
       continue;
     }
     let cycle = false;
@@ -123,10 +120,18 @@ const buildPlan = async (db: Database.Database): Promise<Plan> => {
     }
   }
 
+  // Children from the parent's own set keep their flat-list order; ones joining from another set,
+  // whose positions are not comparable, follow them.
+  const siblingOrder = [...ordered].sort((left, right) => {
+    const parentSet = (task: Obj.Unknown) => setOf.get(accepted.get(task.id)?.id ?? '');
+    const joins = (task: Obj.Unknown) => (setOf.get(task.id) === parentSet(task) ? 0 : 1);
+    return joins(left) - joins(right);
+  });
+
   const pending = new Set(legacy.map((task) => task.id));
   const children = new Map<string, Obj.Unknown[]>();
   const late = new Map<string, Task.Task>();
-  for (const task of ordered) {
+  for (const task of siblingOrder) {
     const parent = accepted.get(task.id);
     if (!parent) {
       continue;
@@ -143,7 +148,8 @@ const buildPlan = async (db: Database.Database): Promise<Plan> => {
 
 /**
  * `org.dxos.type.task` 0.5.0 → 0.6.0: `parentTask` becomes the parent's ordered `subtasks`, and each
- * sub-task's ECHO parent moves from the set to its parent task. Runs before {@link taskSetMigration},
+ * sub-task's ECHO parent moves from the set to its parent task — across sets too, so a sub-task
+ * filed in another set than its parent joins the parent's. Runs before {@link taskSetMigration},
  * which needs the parent edges this writes.
  */
 export const taskMigration = Migration.define({
