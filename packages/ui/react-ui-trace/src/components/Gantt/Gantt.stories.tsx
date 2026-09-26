@@ -9,101 +9,96 @@ import { random } from '@dxos/random';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Gantt, type GanttData, type GanttLane, type GanttMarker } from './Gantt.tsx';
+import { Gantt, type GanttData, type GanttGroup, type GanttLane, type GanttMarker } from './Gantt.tsx';
 
 random.seed(1);
 
 const T0 = Date.UTC(2026, 8, 11, 10, 0, 0);
 const MINUTE = 60_000;
+const SECOND = 1_000;
+
+/** `count` markers spread evenly over `[start, end]`, which is all a static fixture needs. */
+const events = (laneId: string, count: number, start: number, end: number, prefix = laneId): GanttMarker[] =>
+  Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}:${index}`,
+    laneId,
+    kind: 'tool',
+    timestamp: count < 2 ? start : start + ((end - start) * index) / (count - 1),
+    label: random.lorem.word(),
+  }));
+
+//
+// Fixture: a run of processes and the tasks they work, mapped onto the chart's own nouns.
+//
 
 /**
- * Process A works two tasks itself and spawns process B for a third, which in turn works two subtasks
- * in-session; process C is a second spawn from A. Two runs have terminated (one failed), the rest are
- * still going, and the last task waits on C.
+ * Process A works three tasks itself and spawns process B for one of them and process C for another.
+ * Each process is a band; the tasks it works are lanes inside it; a spawned process is a band nested
+ * under its parent's, whose own lane opens out of the exact node that spawned it.
  */
+const groups: GanttGroup[] = [{ id: 'g:a' }, { id: 'g:b', parentId: 'g:a' }, { id: 'g:c', parentId: 'g:a' }];
+
 const lanes: GanttLane[] = [
   {
     id: 'a',
-    kind: 'session',
     label: 'Process A — Plan the release',
     status: 'running',
-    start: T0,
-    tokens: { input: 12_400, output: 3_100, total: 15_500 },
-    toolCalls: 6,
+    groupId: 'g:a',
+    segments: [{ start: T0 }],
+    meta: [{ label: '15.5k', title: '12400 in / 3100 out' }, { label: '6 tools' }],
   },
   {
     id: 'a:triage',
-    kind: 'task',
-    taskId: 'task:triage',
     label: 'Triage open issues',
     status: 'done',
-    parentId: 'a',
-    start: T0 + 0.5 * MINUTE,
-    end: T0 + 1.8 * MINUTE,
+    groupId: 'g:a',
+    segments: [{ start: T0 + 0.5 * MINUTE, end: T0 + 1.8 * MINUTE }],
   },
   {
     id: 'a:docs',
-    kind: 'task',
-    taskId: 'task:docs',
     label: 'Update docs',
     status: 'failed',
-    parentId: 'a',
-    start: T0 + 2.4 * MINUTE,
-    end: T0 + 3.6 * MINUTE,
-  },
-  {
-    id: 'b',
-    kind: 'session',
-    taskId: 'task:changelog',
-    label: 'Process B — Draft changelog',
-    status: 'done',
-    parentId: 'a',
-    start: T0 + 4.1 * MINUTE,
-    end: T0 + 7.2 * MINUTE,
-    delegatedFrom: { laneId: 'a', markerId: 'm:a-spawn-b' },
-    tokens: { input: 40_200, output: 8_900, total: 49_100 },
-    toolCalls: 4,
-  },
-  {
-    id: 'b:titles',
-    kind: 'task',
-    taskId: 'task:titles',
-    label: 'Collect PR titles',
-    status: 'done',
-    parentId: 'b',
-    start: T0 + 4.6 * MINUTE,
-    end: T0 + 5.7 * MINUTE,
-  },
-  {
-    id: 'b:highlights',
-    kind: 'task',
-    taskId: 'task:highlights',
-    label: 'Write highlights',
-    status: 'done',
-    parentId: 'b',
-    start: T0 + 6 * MINUTE,
-    end: T0 + 6.9 * MINUTE,
-  },
-  {
-    id: 'c',
-    kind: 'session',
-    taskId: 'task:notes',
-    label: 'Process C — Write release notes',
-    status: 'running',
-    parentId: 'a',
-    start: T0 + 5.1 * MINUTE,
-    delegatedFrom: { laneId: 'a', markerId: 'm:a-spawn-c' },
-    tokens: { input: 8_000, output: 900, total: 8_900 },
-    toolCalls: 2,
+    groupId: 'g:a',
+    segments: [{ start: T0 + 2.4 * MINUTE, end: T0 + 3.6 * MINUTE }],
   },
   {
     id: 'a:announce',
-    kind: 'task',
-    taskId: 'task:announce',
     label: 'Publish announcement',
     status: 'blocked',
-    parentId: 'a',
+    groupId: 'g:a',
     blockedOn: ['c'],
+  },
+  {
+    id: 'b',
+    label: 'Process B — Draft changelog',
+    status: 'done',
+    groupId: 'g:b',
+    segments: [{ start: T0 + 4.1 * MINUTE, end: T0 + 7.2 * MINUTE }],
+    openedFrom: { laneId: 'a', markerId: 'm:a-spawn-b' },
+    meta: [{ label: '49.1k', title: '40200 in / 8900 out' }, { label: '4 tools' }],
+  },
+  {
+    id: 'b:titles',
+    label: 'Collect PR titles',
+    status: 'done',
+    groupId: 'g:b',
+    segments: [{ start: T0 + 4.6 * MINUTE, end: T0 + 5.7 * MINUTE }],
+  },
+  {
+    id: 'b:highlights',
+    label: 'Write highlights',
+    status: 'done',
+    groupId: 'g:b',
+    segments: [{ start: T0 + 6 * MINUTE, end: T0 + 6.9 * MINUTE }],
+  },
+  {
+    id: 'c',
+    label: 'Process C — Write release notes',
+    status: 'running',
+    groupId: 'g:c',
+    segments: [{ start: T0 + 5.1 * MINUTE }],
+    openedFrom: { laneId: 'a', markerId: 'm:a-spawn-c' },
+    meta: [{ label: '8.9k', title: '8000 in / 900 out' }, { label: '2 tools' }],
   },
 ];
 
@@ -152,6 +147,176 @@ const markers: GanttMarker[] = [
   { id: 'm:c-tool-2', laneId: 'c', kind: 'tool', timestamp: T0 + 8.3 * MINUTE, label: 'create-document' },
 ];
 
+//
+// Static fixtures: one shape of the model each, with nothing moving.
+//
+
+/** One band, one lane, one run of events — the smallest thing the model can say. */
+const oneLaneGroups: GanttGroup[] = [{ id: 'g' }];
+const oneLaneLanes: GanttLane[] = [
+  { id: 'l', label: 'One lane', status: 'done', groupId: 'g', segments: [{ start: T0, end: T0 + 8 * MINUTE }] },
+];
+const oneLaneMarkers: GanttMarker[] = events('l', 6, T0, T0 + 8 * MINUTE);
+
+/**
+ * One band, four lanes over different spans — including one worked in two stretches and one still
+ * open. Segments are what makes the gap in the third lane sayable: a lane put down and picked back up
+ * is two bars, not one long one.
+ */
+const manyLaneGroups: GanttGroup[] = [{ id: 'g' }];
+const manyLaneLanes: GanttLane[] = [
+  {
+    id: 'early',
+    label: 'Early and brief',
+    status: 'done',
+    groupId: 'g',
+    segments: [{ start: T0, end: T0 + 3 * MINUTE }],
+  },
+  {
+    id: 'long',
+    label: 'Long, overlapping',
+    status: 'done',
+    groupId: 'g',
+    segments: [{ start: T0 + 1 * MINUTE, end: T0 + 9 * MINUTE }],
+  },
+  {
+    id: 'twice',
+    label: 'Put down and picked up',
+    status: 'review',
+    groupId: 'g',
+    segments: [
+      { start: T0 + 2 * MINUTE, end: T0 + 4 * MINUTE },
+      { start: T0 + 7 * MINUTE, end: T0 + 10 * MINUTE },
+    ],
+  },
+  { id: 'open', label: 'Still running', status: 'running', groupId: 'g', segments: [{ start: T0 + 6 * MINUTE }] },
+];
+const manyLaneMarkers: GanttMarker[] = [
+  ...events('early', 3, T0, T0 + 3 * MINUTE),
+  ...events('long', 7, T0 + 1 * MINUTE, T0 + 9 * MINUTE),
+  ...events('twice', 3, T0 + 2 * MINUTE, T0 + 4 * MINUTE, 'twice-a'),
+  ...events('twice', 4, T0 + 7 * MINUTE, T0 + 10 * MINUTE, 'twice-b'),
+  ...events('open', 4, T0 + 6 * MINUTE, T0 + 11 * MINUTE),
+];
+
+/**
+ * One band whose lanes branch off one another. `parentId` indents a lane under the one it belongs to
+ * and `openedFrom` draws the node it came out of — two facts about the same pair of lanes, which is
+ * exactly the distinction the model exists to keep.
+ */
+const branchingGroups: GanttGroup[] = [{ id: 'g' }];
+const branchingLanes: GanttLane[] = [
+  { id: 'root', label: 'Root', status: 'done', groupId: 'g', segments: [{ start: T0, end: T0 + 10 * MINUTE }] },
+  {
+    id: 'first',
+    label: 'Branch at #2',
+    status: 'done',
+    groupId: 'g',
+    parentId: 'root',
+    segments: [{ start: T0 + 2.4 * MINUTE, end: T0 + 5 * MINUTE }],
+    openedFrom: { laneId: 'root', markerId: 'root:1' },
+  },
+  {
+    id: 'second',
+    label: 'Branch at #3',
+    status: 'done',
+    groupId: 'g',
+    parentId: 'root',
+    segments: [{ start: T0 + 5.2 * MINUTE, end: T0 + 8 * MINUTE }],
+    openedFrom: { laneId: 'root', markerId: 'root:2' },
+  },
+  {
+    id: 'sub',
+    label: 'Sub-branch',
+    status: 'running',
+    groupId: 'g',
+    parentId: 'second',
+    segments: [{ start: T0 + 6.6 * MINUTE }],
+    openedFrom: { laneId: 'second', markerId: 'second:1' },
+  },
+];
+const branchingMarkers: GanttMarker[] = [
+  ...events('root', 5, T0, T0 + 10 * MINUTE),
+  ...events('first', 3, T0 + 2.4 * MINUTE, T0 + 5 * MINUTE),
+  ...events('second', 3, T0 + 5.2 * MINUTE, T0 + 8 * MINUTE),
+  ...events('sub', 3, T0 + 6.6 * MINUTE, T0 + 9.5 * MINUTE),
+];
+
+/**
+ * Four bands: two nested under the first — each opening out of a node on its parent's lane — and one
+ * unrelated band of its own. Nesting a band and opening a lane are separate statements, so the fourth
+ * band sits beside the others without claiming any relation to them.
+ */
+const manyGroupGroups: GanttGroup[] = [
+  { id: 'one' },
+  { id: 'one:a', parentId: 'one' },
+  { id: 'one:b', parentId: 'one' },
+  { id: 'two' },
+];
+const manyGroupLanes: GanttLane[] = [
+  { id: 'p1', label: 'Group one', status: 'done', groupId: 'one', segments: [{ start: T0, end: T0 + 9 * MINUTE }] },
+  {
+    id: 'p1:task',
+    label: 'Worked in-band',
+    status: 'done',
+    groupId: 'one',
+    segments: [{ start: T0 + 0.6 * MINUTE, end: T0 + 2.5 * MINUTE }],
+  },
+  {
+    id: 'p2',
+    label: 'Nested band A',
+    status: 'done',
+    groupId: 'one:a',
+    segments: [{ start: T0 + 3.2 * MINUTE, end: T0 + 6 * MINUTE }],
+    openedFrom: { laneId: 'p1', markerId: 'p1:1' },
+  },
+  {
+    id: 'p2:task',
+    label: 'Its own lane',
+    status: 'done',
+    groupId: 'one:a',
+    segments: [{ start: T0 + 3.8 * MINUTE, end: T0 + 5.4 * MINUTE }],
+  },
+  {
+    id: 'p3',
+    label: 'Nested band B',
+    status: 'running',
+    groupId: 'one:b',
+    segments: [{ start: T0 + 6.2 * MINUTE }],
+    openedFrom: { laneId: 'p1', markerId: 'p1:2' },
+  },
+  {
+    id: 'p4',
+    label: 'Unrelated band',
+    status: 'review',
+    groupId: 'two',
+    segments: [{ start: T0 + 1.5 * MINUTE, end: T0 + 7.5 * MINUTE }],
+  },
+];
+const manyGroupMarkers: GanttMarker[] = [
+  ...events('p1', 4, T0, T0 + 9 * MINUTE),
+  ...events('p1:task', 3, T0 + 0.6 * MINUTE, T0 + 2.5 * MINUTE),
+  ...events('p2', 4, T0 + 3.2 * MINUTE, T0 + 6 * MINUTE),
+  ...events('p2:task', 3, T0 + 3.8 * MINUTE, T0 + 5.4 * MINUTE),
+  ...events('p3', 4, T0 + 6.2 * MINUTE, T0 + 10 * MINUTE),
+  ...events('p4', 5, T0 + 1.5 * MINUTE, T0 + 7.5 * MINUTE),
+];
+
+/** One band, one lane, gaining an event a second — the fixture the live stories start from. */
+const singleLaneGroups: GanttGroup[] = [{ id: 'g' }];
+const singleLaneLanes: GanttLane[] = [
+  {
+    id: 'lane',
+    label: 'Process — one event a second',
+    status: 'running',
+    groupId: 'g',
+    segments: [{ start: T0 }],
+  },
+];
+const singleLaneMarkers: GanttMarker[] = [
+  { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
+];
+
 /** The chart over the data it was drawn from, so a reader can match a bar to its lane. */
 const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   <div className='flex flex-col dx-fill overflow-hidden'>
@@ -160,83 +325,90 @@ const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   </div>
 );
 
-/** One lane whose whole history is the stream: what the axis and the animation are for, alone. */
-const singleLane: GanttLane[] = [
-  { id: 'lane', kind: 'session', label: 'Process — one event a second', status: 'running', start: T0 },
-];
-
-const singleLaneMarkers: GanttMarker[] = [
-  { id: 'e:0', laneId: 'lane', kind: 'request', timestamp: T0, label: 'Request started' },
-];
-
 /** Stable empty seeds: a fresh `[]` each render would retrigger the effect that adopts them. */
+const NO_GROUPS: readonly GanttGroup[] = [];
 const NO_LANES: readonly GanttLane[] = [];
 const NO_MARKERS: readonly GanttMarker[] = [];
 
 type EventStreamOptions = {
   /** How often an event arrives, in milliseconds. The stream is static without it. */
   interval?: number;
-  /** The lane arrivals land on, until one spawns a child. */
+  /** The lane arrivals land on, until one opens a new band. */
   laneId: string;
   /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
   step: number;
-  /** Spawn a child lane, delegated from the lane in hand, every so many arrivals. */
+  /** Open a new band, out of the lane in hand, every so many arrivals. */
   spawnEvery?: number;
 };
 
 /**
  * The seed, plus one event every `interval` — the only moving part any of these stories has. With
- * `spawnEvery` an arrival is a delegation instead: a new lane, and the events after it land there.
+ * `spawnEvery` an arrival opens a band instead: a new group and lane, and the events after it land
+ * there.
  *
  * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
  * has to carry one, while the event axis makes its own room and ignores it.
  */
 const useEventStream = (
+  seedGroups: readonly GanttGroup[],
   seedLanes: readonly GanttLane[],
   seedMarkers: readonly GanttMarker[],
   { interval, laneId, step, spawnEvery }: EventStreamOptions,
-): { lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
-  const seed = () => ({ lanes: [...seedLanes], markers: [...seedMarkers], current: laneId });
+): { groups: GanttGroup[]; lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
+  const seed = () => ({
+    groups: [...seedGroups],
+    lanes: [...seedLanes],
+    markers: [...seedMarkers],
+    current: laneId,
+  });
   const [state, setState] = useState(seed);
   useEffect(() => {
     setState(seed());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedLanes, seedMarkers, laneId]);
+  }, [seedGroups, seedLanes, seedMarkers, laneId]);
 
   useEffect(() => {
     if (!interval) {
       return;
     }
     const timer = setInterval(() => {
-      setState(({ lanes, markers, current }) => {
+      setState(({ groups, lanes, markers, current }) => {
         const count = markers.length;
         const timestamp = Math.max(T0, ...markers.map((marker) => marker.timestamp)) + step;
         if (!spawnEvery || count % spawnEvery !== 0) {
-          const event = { id: `live:${count}`, laneId: current, kind: 'tool', timestamp, label: random.lorem.word() };
-          return { lanes, markers: [...markers, event as GanttMarker], current };
+          const event: GanttMarker = {
+            id: `live:${count}`,
+            laneId: current,
+            kind: 'tool',
+            timestamp,
+            label: random.lorem.word(),
+          };
+          return { groups, lanes, markers: [...markers, event], current };
         }
 
         const child = `lane:${lanes.length}`;
+        const band = `group:${lanes.length}`;
+        const parentBand = lanes.find((lane) => lane.id === current)?.groupId;
         const spawn: GanttMarker = {
           id: `spawn:${count}`,
           laneId: current,
           kind: 'delegation',
           timestamp,
-          label: `Spawned ${child}`,
+          label: `Opened ${child}`,
         };
         return {
+          groups: [...groups, { id: band, ...(parentBand ? { parentId: parentBand } : {}) }],
           lanes: [
-            // A parent that has delegated is waiting on its child, not working: it stops being the
-            // lane with a live edge, which is the whole point of marking one.
+            // A lane that has opened another is waiting on it, not working: it stops being the lane
+            // with a live edge, which is the whole point of marking one.
             ...lanes.map((lane) => (lane.id === current ? { ...lane, status: 'blocked' as const } : lane)),
             {
               id: child,
-              kind: 'session',
               label: `Process ${lanes.length}`,
-              status: 'running',
-              parentId: current,
-              start: timestamp,
-              delegatedFrom: { laneId: current, markerId: spawn.id },
+              status: 'running' as const,
+              groupId: band,
+              segments: [{ start: timestamp }],
+              openedFrom: { laneId: current, markerId: spawn.id },
             },
           ],
           markers: [
@@ -252,6 +424,7 @@ const useEventStream = (
   }, [interval, step, spawnEvery]);
 
   return {
+    groups: state.groups,
     lanes: state.lanes,
     markers: state.markers,
     now: Math.max(T0, ...state.markers.map((marker) => marker.timestamp)),
@@ -275,7 +448,7 @@ const DefaultStory = ({
   spawnEvery,
   ...data
 }: StoryArgs) => {
-  const stream = useEventStream(data.lanes ?? NO_LANES, data.markers ?? NO_MARKERS, {
+  const stream = useEventStream(data.groups ?? NO_GROUPS, data.lanes ?? NO_LANES, data.markers ?? NO_MARKERS, {
     interval,
     laneId,
     step,
@@ -288,14 +461,26 @@ const DefaultStory = ({
   const now = live ? stream.now : data.now;
 
   const chart = (
-    <Gantt.Root {...data} lanes={stream.lanes} markers={stream.markers} range={range} now={now} classNames='p-4'>
+    <Gantt.Root
+      {...data}
+      groups={stream.groups}
+      lanes={stream.lanes}
+      markers={stream.markers}
+      range={range}
+      now={now}
+      classNames='p-4'
+    >
       {!chartOnly && <Gantt.Legend />}
       <Gantt.Chart />
       {!chartOnly && <Gantt.Meta />}
     </Gantt.Root>
   );
 
-  return inspect ? <Layout chart={chart} data={{ lanes: stream.lanes, markers: stream.markers, range, now }} /> : chart;
+  return inspect ? (
+    <Layout chart={chart} data={{ groups: stream.groups, lanes: stream.lanes, markers: stream.markers, range, now }} />
+  ) : (
+    chart
+  );
 };
 
 const meta = {
@@ -303,6 +488,7 @@ const meta = {
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   args: {
+    groups,
     lanes,
     markers,
     now: T0 + 10 * MINUTE,
@@ -342,25 +528,73 @@ export const EventAxis: Story = {
 /** The primitives alone: one lane, one event a second, each opening out of the one before it. */
 export const SingleLane: Story = {
   args: {
-    lanes: singleLane,
+    groups: singleLaneGroups,
+    lanes: singleLaneLanes,
     markers: singleLaneMarkers,
     axis: 'event',
     animate: true,
     interval: 1_000,
     laneId: 'lane',
-    step: 1_000,
+    step: SECOND,
     range: undefined,
     now: undefined,
     inspect: false,
   },
 };
 
-/** Every fourth event spawns a child: its connector draws out of the parent's node, and the child's
- *  bar extends from where that connector lands. */
+/** Every fourth event opens a band: its connector draws out of the lane that opened it. */
 export const Delegation: Story = {
   args: {
     ...SingleLane.args,
     interval: 1_500,
     spawnEvery: 4,
+  },
+};
+
+//
+// Static: one shape of the model each, nothing moving.
+//
+
+/** One band, one lane, six events. */
+export const OneLane: Story = {
+  args: {
+    groups: oneLaneGroups,
+    lanes: oneLaneLanes,
+    markers: oneLaneMarkers,
+    range: undefined,
+    now: undefined,
+  },
+};
+
+/** One band, four lanes over different spans — one worked twice, one still open. */
+export const ManyLanes: Story = {
+  args: {
+    groups: manyLaneGroups,
+    lanes: manyLaneLanes,
+    markers: manyLaneMarkers,
+    range: undefined,
+    now: undefined,
+  },
+};
+
+/** One band whose lanes branch off one another: `parentId` indents, `openedFrom` connects. */
+export const Branching: Story = {
+  args: {
+    groups: branchingGroups,
+    lanes: branchingLanes,
+    markers: branchingMarkers,
+    range: undefined,
+    now: undefined,
+  },
+};
+
+/** Four bands: two nested under the first, one unrelated. */
+export const ManyGroups: Story = {
+  args: {
+    groups: manyGroupGroups,
+    lanes: manyGroupLanes,
+    markers: manyGroupMarkers,
+    range: undefined,
+    now: undefined,
   },
 };
