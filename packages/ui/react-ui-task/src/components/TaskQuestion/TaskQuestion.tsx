@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,6 +20,8 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 export type TaskQuestionProps = ThemedClassName<{
   thread: Task.QuestionThread;
+  /** When it was asked, beside the question — for a host that shows it among dated entries. */
+  date?: string;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
@@ -47,6 +49,7 @@ export type TaskQuestionProps = ThemedClassName<{
 export const TaskQuestion = ({
   classNames,
   thread: { question, answer },
+  date,
   busy,
   message,
   compact,
@@ -126,7 +129,11 @@ export const TaskQuestion = ({
       <div className={TASK_GRID_ICON}>
         <Icon icon='ph--question--regular' classNames='text-warning-text' />
       </div>
-      <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
+      {/* The time rides with the text, flush right, as it does on the history's other entries. */}
+      <div className='flex gap-2 min-w-0'>
+        <span className='grow font-medium wrap-break-word min-w-0'>{question.text}</span>
+        {date && <Timestamp date={date} classNames='shrink-0 text-right text-description' />}
+      </div>
 
       {question.context && !answer && (
         <p className={mx(TASK_GRID_CONTENT, 'text-description wrap-break-word line-clamp-3 min-w-0')}>
@@ -145,31 +152,40 @@ export const TaskQuestion = ({
         </>
       ) : (
         onAnswer && (
-          <div className={mx(TASK_GRID_CONTENT, 'flex flex-col gap-1 min-w-0')}>
-            {question.options?.map((option, index) => (
-              <Button
-                key={option.title}
-                variant='default'
-                disabled={busy}
-                // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
-                // to its text instead of clipping it.
-                classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
-                data-testid='task-question.option'
-                onClick={() => handleSubmit(option.title)}
-              >
-                {/* Numbered, so the options can be referred to — an agent asking again, a person
-                    saying "the second one" — rather than quoted back in full. On the first line and
-                    top-aligned, since an option's text wraps. */}
-                <div className='shrink-0 tabular-nums text-description self-start'>{index + 1}.</div>
-                {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
-                <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
-                  <div className='font-medium wrap-break-word'>{option.title}</div>
-                  {option.description && (
-                    <div className='text-xs text-description wrap-break-word leading-snug'>{option.description}</div>
-                  )}
-                </div>
-              </Button>
-            ))}
+          <div className={mx(TASK_GRID_CONTENT, 'flex flex-col gap-2 min-w-0')}>
+            {/* A list of its own, one item per option: each is a separate choice with its own
+                description, and read as one block of buttons they ran together. */}
+            {question.options && question.options.length > 0 && (
+              <div role='list' aria-label={question.text} className='flex flex-col gap-1 min-w-0'>
+                {question.options.map((option, index) => (
+                  <div key={option.title} role='listitem' className='min-w-0'>
+                    <Button
+                      variant='default'
+                      disabled={busy}
+                      // `h-auto` and wrapping: an option is a sentence, not a label, so the button
+                      // grows to its text instead of clipping it.
+                      classNames='w-full min-w-0 h-auto py-1.5 justify-start text-start whitespace-normal'
+                      data-testid='task-question.option'
+                      onClick={() => handleSubmit(option.title)}
+                    >
+                      {/* Numbered, so the options can be referred to — an agent asking again, a
+                          person saying "the second one" — rather than quoted back in full. On the
+                          first line and top-aligned, since an option's text wraps. */}
+                      <div className='shrink-0 tabular-nums text-description self-start'>{index + 1}.</div>
+                      {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
+                      <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
+                        <div className='font-medium wrap-break-word'>{option.title}</div>
+                        {option.description && (
+                          <div className='text-xs text-description wrap-break-word leading-snug'>
+                            {option.description}
+                          </div>
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             {/* Wraps rather than squeezes: in a narrow host (a popover card) the field keeps a usable
                 width and the button drops below it. */}
             <div className='flex flex-wrap gap-1'>

@@ -53,7 +53,6 @@ export const translations = [
         'task-attachment.remove.label': 'Remove attachment',
         'task-attachments.drop-area.label': 'Drop or paste files to attach',
         'task-attachment.uploading.label': 'Uploading {{name}}…',
-        'task-questions.label': 'Questions',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'filter.label': 'Filter tasks',

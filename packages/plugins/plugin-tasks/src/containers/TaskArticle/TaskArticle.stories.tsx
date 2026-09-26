@@ -225,6 +225,55 @@ export const Default: Story = {
   },
 };
 
+/**
+ * A question asked on the task shows in its activity log, where it was asked, with each option an
+ * item of its own; picking one records the answer on the task, and the question stays in place with
+ * its answer under it.
+ */
+export const QuestionInActivity: Story = {
+  decorators: [withPlugins({ files: false })],
+  args: { title: WORKED_TASK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByDisplayValue(WORKED_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task.');
+    }
+    const { worked } = context;
+    const question = Task.ask(worked, {
+      text: 'Which lot should anchor the blend?',
+      options: [{ title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' }, { title: 'Colombian Huila' }],
+      actor: { name: 'Scout', role: 'assistant' },
+    });
+
+    const inHistory = () =>
+      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"] [data-testid="task-question"]');
+    await waitFor(() => expect(inHistory()).toBeTruthy(), { timeout: 10_000 });
+    // No section of its own: the log is the only place it appears.
+    await expect(canvasElement.querySelectorAll('[data-testid="task-question"]')).toHaveLength(1);
+
+    const options = inHistory()!.querySelectorAll<HTMLElement>(
+      '[role="listitem"] [data-testid="task-question.option"]',
+    );
+    await expect(options).toHaveLength(2);
+    await userEvent.click(options[1]);
+
+    await waitFor(
+      () =>
+        expect(
+          Task.getQuestions(worked.history).find((thread) => thread.question.id === question.id)?.answer?.answer,
+        ).toEqual('Colombian Huila'),
+      { timeout: 10_000 },
+    );
+    await waitFor(
+      () =>
+        expect(inHistory()?.querySelector('[data-testid="task-question.answer"]')).toHaveTextContent('Colombian Huila'),
+      { timeout: 10_000 },
+    );
+  },
+};
+
 /** A task nobody has worked yet: the editor alone, with no history and no cards under it. */
 export const Plain: Story = {
   decorators: [withPlugins({ files: false })],

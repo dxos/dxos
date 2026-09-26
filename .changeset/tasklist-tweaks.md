@@ -15,3 +15,5 @@ The task list's filter button is filled and accented whenever anything narrows t
 In the task list a task's chips — its tags, artifacts and assignee — sit on a line of their own under the title and above the description, instead of sharing the title line.
 
 A task row's menu offers **Add sub-task**, which files a new task named "New task" under that row and opens it so it can be titled.
+
+A task's questions appear in its activity log where they were asked, with their answers, and an open one is answered there; the article's separate Questions section is gone. Each option of a question is an item of its own in a list.
