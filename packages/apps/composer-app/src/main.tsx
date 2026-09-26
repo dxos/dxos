@@ -26,6 +26,7 @@ import {
   useApp,
 } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import type { CreateClientServicesOptions } from '@dxos/client';
 import type { Config } from '@dxos/config';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
@@ -44,7 +45,6 @@ import { defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-import type { BuildMismatch } from '@dxos/worker-framework/Client';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -184,7 +184,11 @@ const buildIdOf = (config: Config): string | undefined => {
   return timestamp ? `${timestamp}/${commitHash ?? ''}` : undefined;
 };
 
-const handleWorkerBuildMismatch = ({ role, local, remote }: BuildMismatch) => {
+const handleWorkerBuildMismatch: NonNullable<CreateClientServicesOptions['onWorkerBuildMismatch']> = ({
+  role,
+  local,
+  remote,
+}) => {
   if (local === undefined || remote === undefined || local >= remote) {
     // This tab is the newer build. The other side reloads itself if it knows how; a leader from before
     // build ids never will, and only closing or reloading that tab ends the refused connection.
