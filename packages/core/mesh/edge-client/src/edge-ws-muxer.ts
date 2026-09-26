@@ -9,6 +9,7 @@ import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messe
 import { concatUint8Arrays } from '@dxos/util';
 
 import { protocol } from './defs.ts';
+import { EdgeConnectionClosedError } from './errors.ts';
 
 /**
  * 0000 0001 - message contains a part of segmented message chunk sequence.
@@ -70,6 +71,7 @@ export class WebSocketMuxer {
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
+   * Rejects with {@link EdgeConnectionClosedError} if the socket closes before the last chunk is enqueued.
    */
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
@@ -239,8 +241,9 @@ export class WebSocketMuxer {
         return;
       }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-        log.warn('send called for closed websocket');
+        log.warn('send called for closed websocket', { pendingChannels: this._outMessageChunks.size });
         this._sendTimeout = undefined;
+        this._rejectPendingSends(new EdgeConnectionClosedError());
         return;
       }
 
@@ -277,6 +280,16 @@ export class WebSocketMuxer {
       }
     };
     this._sendTimeout = setTimeout(send);
+  }
+
+  /**
+   * Settles every queued `send()` and drops its chunks, since nothing will be written to a closing socket.
+   */
+  private _rejectPendingSends(error: Error): void {
+    for (const channelChunks of this._outMessageChunks.values()) {
+      channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
+    }
+    this._outMessageChunks.clear();
   }
 
   private _resolveChannel(message: Message): number | undefined {
