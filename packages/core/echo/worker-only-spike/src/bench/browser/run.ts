@@ -14,6 +14,7 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
+import { packHashes } from '../../changes.ts';
 import { saveNoCompress } from '../../save.ts';
 import { type DocInput, type Latency, type Measure, median } from './common.ts';
 
@@ -27,10 +28,10 @@ const tabCounts = (process.argv.includes('--tabs') ? process.argv[process.argv.i
   .map(Number);
 
 const docs = corpus.docs.map((entry) => A.load(Buffer.from(entry.bytes, 'base64')));
-const replicaInput: DocInput[] = corpus.docs.map((entry) => ({ bytes: entry.bytes, hash: [], heads: [] }));
+const replicaInput: DocInput[] = corpus.docs.map((entry) => ({ bytes: entry.bytes, hashes: '', heads: [] }));
 const tabInput: DocInput[] = docs.map((doc) => ({
   bytes: Buffer.from(saveNoCompress(doc)).toString('base64'),
-  hash: A.getAllChanges(doc).map((change) => A.decodeChange(change).hash),
+  hashes: Buffer.from(packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash))).toString('base64'),
   heads: A.getHeads(doc),
 }));
 const textDoc = corpus.docs.findIndex((entry) => entry.kind === 'document');
@@ -110,6 +111,7 @@ type Row = { mode: string; tabs: number; perTab: Measure[]; workerWasm: number }
 const rows: Row[] = [];
 const latencies: Record<string, Latency> = {};
 const receives: Record<string, number[]> = {};
+const loads: Record<string, number[]> = {};
 
 for (const mode of ['empty', 'replica', 'tab-docs']) {
   for (const tabs of tabCounts) {
@@ -126,7 +128,10 @@ for (const mode of ['empty', 'replica', 'tab-docs']) {
           corpus.docs.map((entry) => entry.bytes),
         );
       }
-      await tab.evaluate(() => Reflect.get(globalThis, 'load')());
+      const loaded: Measure = await tab.evaluate(() => Reflect.get(globalThis, 'load')());
+      if (mode !== 'empty') {
+        (loads[mode] ??= []).push(loaded.loadMs);
+      }
       pages.push(tab);
     }
     // Measure every tab once all are loaded.
@@ -204,7 +209,9 @@ for (const [mode, latency] of Object.entries(latencies)) {
     mode.padEnd(10),
     'write: tab',
     median(latency.tabMs).toFixed(2),
-    'ms, round trip',
+    'ms (the first',
+    latency.tabMs[0].toFixed(2),
+    'ms), round trip',
     median(latency.roundTripMs).toFixed(2),
     'ms (p95',
     [...latency.roundTripMs]
@@ -213,6 +220,18 @@ for (const [mode, latency] of Object.entries(latencies)) {
     '), worker',
     median(latency.workerMs).toFixed(2),
     'ms',
+  );
+}
+for (const [mode, times] of Object.entries(loads)) {
+  console.log(
+    mode.padEnd(10),
+    'load the space into a tab:',
+    median(times).toFixed(0),
+    'ms (of',
+    times.length,
+    'tabs, slowest',
+    Math.max(...times).toFixed(0),
+    'ms)',
   );
 }
 for (const [mode, times] of Object.entries(receives)) {

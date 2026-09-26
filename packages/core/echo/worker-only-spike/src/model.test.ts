@@ -23,7 +23,8 @@ const ACTORS = [
   'bbbb0000bbbb0000bbbb0000bbbb0000',
   'cccc0000cccc0000cccc0000cccc0000',
 ];
-const words = ['a', 'bc', 'é', '😀', 'xyz', ' '];
+// One to four UTF-8 bytes a character, and strings of several.
+const words = ['a', 'bc', 'é', '中', '😀', 'xyz', ' '];
 const keys = ['k1', 'k2', 'k3'];
 
 /** A random edit of every kind the model must follow: text, lists, nested maps, scalars and deletes. */

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type SavedChanges } from './reader.ts';
+
 // Change metadata in typed arrays, about 63 bytes a change: the hash as 32 bytes, 32-bit columns, the
 // first dependency inline (a merge's others in a side map), and an open-addressing table on the hash
 // instead of a map entry per change. The table also keeps the frontier (the changes nothing depends
@@ -20,34 +22,70 @@ export type ChangeRow = {
 
 const HEX = Array.from({ length: 256 }, (_value, byte) => byte.toString(16).padStart(2, '0'));
 
+/** Each hex digit's value by character code, or -1. */
+const DIGITS = new Int8Array(128).fill(-1);
+for (let digit = 0; digit < 16; digit++) {
+  DIGITS['0123456789abcdef'.charCodeAt(digit)] = digit;
+  DIGITS['0123456789ABCDEF'.charCodeAt(digit)] = digit;
+}
+
+/** Byte `i` of a hex hash, or -1 where the hash has no two hex digits. */
+const byteOf = (hash: string, i: number): number => {
+  const high = hash.charCodeAt(i * 2);
+  const low = hash.charCodeAt(i * 2 + 1);
+  const value = high < 128 && low < 128 ? (DIGITS[high] << 4) | DIGITS[low] : -1;
+  return value < 0 ? -1 : value;
+};
+
+/** Writes a hex hash's 32 bytes into `out` at `offset`. */
+export const writeHash = (hash: string, out: Uint8Array, offset: number): void => {
+  if (hash.length !== 64) {
+    throw new RangeError(`Not a change hash: ${hash}`);
+  }
+  for (let i = 0; i < 32; i++) {
+    const byte = byteOf(hash, i);
+    if (byte < 0) {
+      throw new RangeError(`Not a change hash: ${hash}`);
+    }
+    out[offset + i] = byte;
+  }
+};
+
+/** Hex hashes as 32 bytes each, back to back: how the worker sends a snapshot's hashes. */
+export const packHashes = (hashes: readonly string[]): Uint8Array => {
+  const out = new Uint8Array(hashes.length * 32);
+  hashes.forEach((hash, index) => writeHash(hash, out, index * 32));
+  return out;
+};
+
 const UINT32 = 0xffffffff;
 
-const grow = <T extends { length: number; set(array: T): void }>(
-  array: T,
-  size: number,
-  make: (length: number) => T,
-): T => {
-  if (array.length >= size) {
-    return array;
-  }
-  const next = make(Math.max(size, array.length * 2));
-  next.set(array);
+/**
+ * Capacity for `length` entries plus an eighth, for an array that must grow. Growing by an eighth
+ * rather than doubling bounds the unused part to an eighth.
+ */
+export const room = (length: number): number => length + Math.max(16, length >> 3);
+
+type Column = Uint8Array | Uint16Array | Uint32Array | Int32Array;
+
+const resized = <T extends Column>(array: T, next: T): T => {
+  next.set(array.subarray(0, Math.min(array.length, next.length)));
   return next;
 };
 
 export class ChangeTable {
   #count = 0;
-  #hashes = new Uint8Array(32 * 16);
-  #actor = new Uint16Array(16);
-  #seq = new Uint32Array(16);
-  #startOp = new Uint32Array(16);
-  #maxOp = new Uint32Array(16);
-  #time = new Uint32Array(16);
+  #hashes = new Uint8Array(0);
+  #actor = new Uint16Array(0);
+  #seq = new Uint32Array(0);
+  #startOp = new Uint32Array(0);
+  #maxOp = new Uint32Array(0);
+  #time = new Uint32Array(0);
   /** Times that do not fit 32 unsigned bits. */
   readonly #wideTimes = new Map<number, number>();
-  #removed = new Uint8Array(16);
+  #removed = new Uint8Array(0);
   /** Each change's first dependency, or -1; a merge's other dependencies are in `#moreDeps`. */
-  #dep = new Int32Array(16);
+  #dep = new Int32Array(0);
   readonly #moreDeps = new Map<number, number[]>();
   readonly #messages = new Map<number, string>();
   /** Open addressing on a hash's first 32 bits: a slot holds a change index plus one, or zero when empty. */
@@ -60,14 +98,25 @@ export class ChangeTable {
     return this.#count;
   }
 
+  #resize(capacity: number): void {
+    this.#hashes = resized(this.#hashes, new Uint8Array(capacity * 32));
+    this.#actor = resized(this.#actor, new Uint16Array(capacity));
+    this.#seq = resized(this.#seq, new Uint32Array(capacity));
+    this.#startOp = resized(this.#startOp, new Uint32Array(capacity));
+    this.#maxOp = resized(this.#maxOp, new Uint32Array(capacity));
+    this.#time = resized(this.#time, new Uint32Array(capacity));
+    this.#removed = resized(this.#removed, new Uint8Array(capacity));
+    this.#dep = resized(this.#dep, new Int32Array(capacity));
+  }
+
   static #probe(hash: string): number {
-    return parseInt(hash.slice(0, 8), 16) >>> 0;
+    return ((byteOf(hash, 0) << 24) | (byteOf(hash, 1) << 16) | (byteOf(hash, 2) << 8) | byteOf(hash, 3)) >>> 0;
   }
 
   #matches(index: number, hash: string): boolean {
     const offset = index * 32;
     for (let i = 0; i < 32; i++) {
-      if (HEX[this.#hashes[offset + i]] !== hash.slice(i * 2, i * 2 + 2)) {
+      if (this.#hashes[offset + i] !== byteOf(hash, i)) {
         return false;
       }
     }
@@ -112,12 +161,23 @@ export class ChangeTable {
 
   #place(index: number): void {
     const mask = this.#slots.length - 1;
-    const bytes = this.#hashes.subarray(index * 32, index * 32 + 4);
-    let slot = (((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0) & mask;
+    const offset = index * 32;
+    const hashes = this.#hashes;
+    let slot =
+      (((hashes[offset] << 24) | (hashes[offset + 1] << 16) | (hashes[offset + 2] << 8) | hashes[offset + 3]) >>> 0) &
+      mask;
     while (this.#slots[slot] !== 0) {
       slot = (slot + 1) & mask;
     }
     this.#slots[slot] = index + 1;
+  }
+
+  #setTime(index: number, time: number): void {
+    if (Number.isInteger(time) && time >= 0 && time <= UINT32) {
+      this.#time[index] = time;
+    } else {
+      this.#wideTimes.set(index, time);
+    }
   }
 
   add(row: Omit<ChangeRow, 'deps'> & { deps: readonly string[] }): number {
@@ -132,27 +192,15 @@ export class ChangeTable {
       throw new RangeError('Op counters and seqs must fit 32 bits');
     }
     const index = this.#count;
-    const size = index + 1;
-    this.#hashes = grow(this.#hashes, size * 32, (length) => new Uint8Array(length));
-    this.#actor = grow(this.#actor, size, (length) => new Uint16Array(length));
-    this.#seq = grow(this.#seq, size, (length) => new Uint32Array(length));
-    this.#startOp = grow(this.#startOp, size, (length) => new Uint32Array(length));
-    this.#maxOp = grow(this.#maxOp, size, (length) => new Uint32Array(length));
-    this.#time = grow(this.#time, size, (length) => new Uint32Array(length));
-    this.#removed = grow(this.#removed, size, (length) => new Uint8Array(length));
-    this.#dep = grow(this.#dep, size, (length) => new Int32Array(length));
-    for (let i = 0; i < 32; i++) {
-      this.#hashes[index * 32 + i] = parseInt(row.hash.slice(i * 2, i * 2 + 2), 16);
+    if (index === this.#actor.length) {
+      this.#resize(room(index + 1));
     }
+    writeHash(row.hash, this.#hashes, index * 32);
     this.#actor[index] = row.actor;
     this.#seq[index] = row.seq;
     this.#startOp[index] = row.startOp;
     this.#maxOp[index] = row.maxOp;
-    if (Number.isInteger(row.time) && row.time >= 0 && row.time <= UINT32) {
-      this.#time[index] = row.time;
-    } else {
-      this.#wideTimes.set(index, row.time);
-    }
+    this.#setTime(index, row.time);
     if (row.message !== null) {
       this.#messages.set(index, row.message);
     }
@@ -161,7 +209,7 @@ export class ChangeTable {
       this.#moreDeps.set(index, deps.slice(1));
     }
     this.#slot(index);
-    this.#count = size;
+    this.#count = index + 1;
     deps.forEach((dep) => this.#frontier.delete(dep));
     this.#frontier.add(index);
     if (this.#clock) {
@@ -170,17 +218,70 @@ export class ChangeTable {
     return index;
   }
 
-  /** Shrinks every column to what the table holds; growth doubles them, so a load can leave half unused. */
-  trim(): void {
-    const size = this.#count;
-    this.#hashes = this.#hashes.slice(0, size * 32);
-    this.#actor = this.#actor.slice(0, size);
-    this.#seq = this.#seq.slice(0, size);
-    this.#startOp = this.#startOp.slice(0, size);
-    this.#maxOp = this.#maxOp.slice(0, size);
-    this.#time = this.#time.slice(0, size);
-    this.#removed = this.#removed.slice(0, size);
-    this.#dep = this.#dep.slice(0, size);
+  /**
+   * Fills an empty table with a saved document's changes in one pass. Saved changes come in causal
+   * order and name each dependency by its position, so no hash is looked up; `hashes` holds each
+   * change's 32 bytes back to back and `actors` maps the document's actor indexes to the model's.
+   * The columns fit exactly: most documents are never written to, and the first write grows them.
+   */
+  load(saved: SavedChanges, actors: readonly number[], startOps: Uint32Array, hashes: Uint8Array): void {
+    const count = saved.count;
+    if (this.#count > 0) {
+      throw new Error('Only an empty table loads a saved document');
+    }
+    if (hashes.length !== count * 32) {
+      throw new RangeError(`Expected ${count} hashes of 32 bytes, got ${hashes.length} bytes`);
+    }
+    this.#resize(count);
+    this.#hashes.set(hashes);
+    this.#seq.set(saved.seq);
+    this.#startOp.set(startOps);
+    this.#maxOp.set(saved.maxOp);
+    const depended = new Uint8Array(count);
+    let depAt = 0;
+    for (let index = 0; index < count; index++) {
+      const actor = saved.actor[index];
+      if (actor < 0 || actor >= actors.length) {
+        throw new Error('A saved change names no actor');
+      }
+      this.#actor[index] = actors[actor];
+      this.#setTime(index, saved.time[index]);
+      const message = saved.message[index];
+      if (message !== null) {
+        this.#messages.set(index, message);
+      }
+      const depCount = saved.depCount[index];
+      this.#dep[index] = -1;
+      for (let position = 0; position < depCount; position++) {
+        const dep = saved.deps[depAt++];
+        if (!(dep >= 0 && dep < index)) {
+          throw new Error('A saved change depends on a change after it');
+        }
+        depended[dep] = 1;
+        if (position === 0) {
+          this.#dep[index] = dep;
+        } else {
+          const more = this.#moreDeps.get(index);
+          if (more) {
+            more.push(dep);
+          } else {
+            this.#moreDeps.set(index, [dep]);
+          }
+        }
+      }
+    }
+    this.#count = count;
+    let slots = 64;
+    while (slots < count * 2) {
+      slots *= 2;
+    }
+    this.#slots = new Int32Array(slots);
+    for (let index = 0; index < count; index++) {
+      this.#place(index);
+      if (!depended[index]) {
+        this.#frontier.add(index);
+      }
+    }
   }
 
   /** Takes changes out; their dependents must go with them. */

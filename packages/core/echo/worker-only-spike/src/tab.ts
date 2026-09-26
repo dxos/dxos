@@ -29,8 +29,11 @@ export type HostMessage =
   | { type: 'ack'; hash: string }
   | { type: 'refuse'; hash: string; reason: string };
 
-/** What a tab opens a document from. Without `hashes`, the tab computes them from the bytes. */
-export type Snapshot = { bytes: Uint8Array; hashes?: string[]; heads: string[] };
+/**
+ * What a tab opens a document from. `hashes` holds each change's hash as 32 bytes, back to back in the
+ * saved order; without it, the tab computes them from the bytes.
+ */
+export type Snapshot = { bytes: Uint8Array; hashes?: Uint8Array; heads: string[] };
 
 /** A new version of a tab document, with Automerge-shaped patches from the one before. */
 export type TabChange<T> = { before: T; after: T; patches: Patch[]; source: 'change' | 'host' };

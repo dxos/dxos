@@ -25,10 +25,16 @@ const acks = new Map<string, Promise<{ workerMs: number; error?: string }>>();
 
 Reflect.set(globalThis, 'load', async () => {
   const docs = await fetchInput('input-tab');
+  // Decoded before the clock starts: a worker hands the tab bytes, not base64.
+  const inputs = docs.map((doc) => ({
+    bytes: fromBase64(doc.bytes),
+    hashes: fromBase64(doc.hashes),
+    heads: doc.heads,
+  }));
   const start = performance.now();
-  held = docs.map(
+  held = inputs.map(
     (doc, index) =>
-      new TabDoc<Space>(Model.fromSaved(fromBase64(doc.bytes), doc.hash), doc.heads, {
+      new TabDoc<Space>(Model.fromSaved(doc.bytes, doc.hashes), doc.heads, {
         send: (change, bytes) => acks.set(change.hash, request({ type: 'submit', doc: index, bytes })),
       }),
   );

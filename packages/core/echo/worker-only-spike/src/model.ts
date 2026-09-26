@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ChangeTable } from './changes.ts';
+import { ChangeTable, room, writeHash } from './changes.ts';
 import { encodeChange } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, parseId } from './ids.ts';
 import { immutableString } from './immutable-string.ts';
-import { readSavedColumns } from './reader.ts';
+import { type SavedChanges, readSavedColumns } from './reader.ts';
 
 export type Patch =
   | { action: 'put'; path: (string | number)[]; value: unknown; conflict?: boolean }
@@ -89,6 +89,50 @@ const resize = <T extends Typed>(array: T, capacity: number, make: (length: numb
   const next = make(capacity);
   next.set(array.subarray(0, Math.min(array.length, capacity)));
   return next;
+};
+
+/** A LEB128 integer at `offset`. */
+const readLeb = (bytes: Uint8Array, offset: number, signed: boolean): number => {
+  let result = 0;
+  let shift = 0;
+  let byte = 0;
+  let position = offset;
+  do {
+    byte = bytes[position++];
+    result += (byte & 0x7f) * 2 ** shift;
+    shift += 7;
+  } while (byte & 0x80);
+  return signed && byte & 0x40 ? result - 2 ** shift : result;
+};
+
+/**
+ * The code point of `bytes[offset, offset + length)` when they encode exactly one UTF-8 character, or -1.
+ * Most text ops hold one character, so this spares a `TextDecoder` call and a string per op.
+ */
+const singleCodePoint = (bytes: Uint8Array, offset: number, length: number): number => {
+  const first = bytes[offset];
+  if (length === 1) {
+    return first < 0x80 ? first : -1;
+  }
+  const second = bytes[offset + 1];
+  if (length === 2) {
+    const point = ((first & 0x1f) << 6) | (second & 0x3f);
+    return (first & 0xe0) === 0xc0 && (second & 0xc0) === 0x80 && point >= 0x80 ? point : -1;
+  }
+  const third = bytes[offset + 2];
+  if (length === 3) {
+    const point = ((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f);
+    const valid = (first & 0xf0) === 0xe0 && (second & 0xc0) === 0x80 && (third & 0xc0) === 0x80;
+    return valid && point >= 0x800 && (point < 0xd800 || point > 0xdfff) ? point : -1;
+  }
+  const fourth = bytes[offset + 3];
+  if (length === 4) {
+    const point = ((first & 0x07) << 18) | ((second & 0x3f) << 12) | ((third & 0x3f) << 6) | (fourth & 0x3f);
+    const valid =
+      (first & 0xf8) === 0xf0 && (second & 0xc0) === 0x80 && (third & 0xc0) === 0x80 && (fourth & 0xc0) === 0x80;
+    return valid && point >= 0x10000 && point <= 0x10ffff ? point : -1;
+  }
+  return -1;
 };
 
 /** The first position in `counters[0, length)` whose counter is at least `counter`. */
@@ -186,7 +230,7 @@ export class Model {
 
   #reserve(size: number): void {
     if (size > this.#ctr.length) {
-      this.#resizeOps(Math.max(size, this.#ctr.length * 2));
+      this.#resizeOps(room(size));
     }
   }
 
@@ -225,8 +269,8 @@ export class Model {
     let ops = this.#idOp[actor];
     const length = this.#idLength[actor];
     if (length === counters.length) {
-      counters = this.#idCtr[actor] = resize(counters, length * 2, (size) => new Uint32Array(size));
-      ops = this.#idOp[actor] = resize(ops, length * 2, (size) => new Int32Array(size));
+      counters = this.#idCtr[actor] = resize(counters, room(length + 1), (size) => new Uint32Array(size));
+      ops = this.#idOp[actor] = resize(ops, room(length + 1), (size) => new Int32Array(size));
     }
     if (!sorted || length === 0 || counters[length - 1] < counter) {
       counters[length] = counter;
@@ -242,33 +286,44 @@ export class Model {
     this.#maxOp = Math.max(this.#maxOp, counter);
   }
 
-  /** Sorts each actor's ids by counter after a load appended them in stored order. */
+  /**
+   * Sorts each actor's ids by counter after a load appended them out of order. Only the part after the
+   * sorted prefix is sorted, then merged in, so appending a few ids to sorted ones costs a linear pass.
+   */
   #sortIds(): void {
     this.#idCtr.forEach((counters, actor) => {
       const length = this.#idLength[actor];
-      let sorted = true;
-      for (let i = 1; i < length && sorted; i++) {
-        sorted = counters[i - 1] <= counters[i];
+      let prefix = 1;
+      while (prefix < length && counters[prefix - 1] <= counters[prefix]) {
+        prefix++;
       }
-      if (sorted) {
+      if (prefix >= length) {
         return;
       }
-      if (length >= 2_097_152) {
+      if (length - prefix >= 2_097_152) {
         throw new RangeError('An actor has too many ops to sort');
       }
       const ops = this.#idOp[actor];
       // Counters fit 32 bits and positions 21, so both pack into one exact double, which sorts natively.
-      const packed = new Float64Array(length);
-      for (let i = 0; i < length; i++) {
-        packed[i] = counters[i] * 2_097_152 + i;
+      const rest = new Float64Array(length - prefix);
+      for (let i = prefix; i < length; i++) {
+        rest[i - prefix] = counters[i] * 2_097_152 + (i - prefix);
       }
-      packed.sort();
+      rest.sort();
       const nextCounters = new Uint32Array(counters.length);
       const nextOps = new Int32Array(ops.length);
-      for (let i = 0; i < length; i++) {
-        const position = packed[i] % 2_097_152;
-        nextCounters[i] = counters[position];
-        nextOps[i] = ops[position];
+      let left = 0;
+      let right = 0;
+      for (let out = 0; out < length; out++) {
+        const position = right < rest.length ? prefix + (rest[right] % 2_097_152) : -1;
+        if (position < 0 || (left < prefix && counters[left] <= counters[position])) {
+          nextCounters[out] = counters[left];
+          nextOps[out] = ops[left++];
+        } else {
+          nextCounters[out] = counters[position];
+          nextOps[out] = ops[position];
+          right++;
+        }
       }
       this.#idCtr[actor] = nextCounters;
       this.#idOp[actor] = nextOps;
@@ -390,6 +445,10 @@ export class Model {
         this.#extraType.push(datatype);
       }
     }
+    this.#setKind(op, kind, slot);
+  }
+
+  #setKind(op: number, kind: number, slot: number): void {
     this.#flags[op] = (this.#flags[op] & ~KIND_MASK) | (kind << KIND_SHIFT);
     this.#val[op] = slot;
   }
@@ -426,22 +485,9 @@ export class Model {
     return kind === EXTRA ? this.#extraType[this.#val[op]] : undefined;
   }
 
-  /** Reads a saved op's value from the raw column. */
+  /** Reads a saved op's value, `meta >>> 4` bytes of the raw column from `offset`. */
   #loadValue(op: number, action: number, meta: number, raw: Uint8Array, offset: number): void {
-    const length = Math.floor(meta / 16);
-    const bytes = raw.subarray(offset, offset + length);
-    const leb = (signed: boolean): number => {
-      let result = 0;
-      let shift = 0;
-      let byte = 0;
-      let position = 0;
-      do {
-        byte = bytes[position++];
-        result += (byte & 0x7f) * 2 ** shift;
-        shift += 7;
-      } while (byte & 0x80);
-      return signed && byte & 0x40 ? result - 2 ** shift : result;
-    };
+    const length = meta >>> 4;
     switch (meta & 0xf) {
       case 0:
         return this.#setValue(op, action, null, undefined);
@@ -450,24 +496,29 @@ export class Model {
       case 2:
         return this.#setValue(op, action, true, undefined);
       case 3:
-        return this.#setValue(op, action, leb(false), 'uint');
+        return this.#setValue(op, action, readLeb(raw, offset, false), 'uint');
       case 4:
-        return this.#setValue(op, action, leb(true), 'int');
+        return this.#setValue(op, action, readLeb(raw, offset, true), 'int');
       case 5:
         return this.#setValue(
           op,
           action,
-          new DataView(bytes.buffer, bytes.byteOffset, 8).getFloat64(0, true),
+          new DataView(raw.buffer, raw.byteOffset + offset, 8).getFloat64(0, true),
           'float64',
         );
-      case 6:
-        return this.#setValue(op, action, length === 0 ? '' : UTF8.decode(bytes), undefined);
+      case 6: {
+        const point = length >= 1 && length <= 4 ? singleCodePoint(raw, offset, length) : -1;
+        if (point >= 0 && (action === SET || action === INC)) {
+          return this.#setKind(op, CHAR, point);
+        }
+        return this.#setValue(op, action, UTF8.decode(raw.subarray(offset, offset + length)), undefined);
+      }
       case 8:
-        return this.#setValue(op, action, leb(true), 'counter');
+        return this.#setValue(op, action, readLeb(raw, offset, true), 'counter');
       case 9:
-        return this.#setValue(op, action, leb(true), 'timestamp');
+        return this.#setValue(op, action, readLeb(raw, offset, true), 'timestamp');
       default:
-        return this.#setValue(op, action, bytes.slice(), undefined);
+        return this.#setValue(op, action, raw.slice(offset, offset + length), undefined);
     }
   }
 
@@ -476,10 +527,11 @@ export class Model {
   //
 
   /**
-   * A document read from Automerge's saved bytes, column by column. Given no change hashes, it computes
-   * each by encoding the change again, and checks them against the saved heads as Automerge's own load does.
+   * A document read from Automerge's saved bytes, column by column. `hashes` holds each change's hash as
+   * 32 bytes, back to back in the saved order; given none, it computes each by encoding the change again.
+   * Either way it checks them against the saved heads, as Automerge's own load does.
    */
-  static fromSaved(bytes: Uint8Array, hashes?: readonly string[]): Model {
+  static fromSaved(bytes: Uint8Array, hashes?: Uint8Array): Model {
     const model = new Model();
     const { actors, heads, strings, ops, changes } = readSavedColumns(bytes);
     const actorIndex = actors.map((actor) => model.#actorOf(actor));
@@ -493,26 +545,53 @@ export class Model {
       model.#indexId(i, false);
     }
     model.#sortIds();
-    const resolve = (actor: number, counter: number): number =>
-      actor < 0 ? ROOT : model.#lookup(actorIndex[actor], counter);
+    const resolve = (actor: number, counter: number): number => {
+      if (actor < 0) {
+        return ROOT;
+      }
+      const op = model.#lookup(actorIndex[actor], counter);
+      if (op < 0) {
+        throw new Error(`A saved op names an unknown op ${counter}@${actors[actor]}`);
+      }
+      return op;
+    };
 
+    // Runs of ops share an object, and typing stores each character after the one it follows, so the
+    // previous object and the previous op spare most lookups.
+    let lastActor = -1;
+    let lastCounter = 0;
+    let obj = ROOT;
+    let container = model.#object('_root');
     let offset = 0;
     for (let i = 0; i < count; i++) {
       const meta = ops.valueMeta[i];
       model.#loadValue(i, ops.action[i], meta, ops.raw, offset);
-      offset += Math.floor(meta / 16);
-      const obj = resolve(ops.objActor[i], ops.objCounter[i]);
-      const container = model.#objects.get(obj);
-      if (!container) {
-        throw new Error('A saved op names an object that is not one');
+      offset += meta >>> 4;
+      const objActor = ops.objActor[i];
+      const objCounter = ops.objCounter[i];
+      if (objActor !== lastActor || objCounter !== lastCounter) {
+        obj = resolve(objActor, objCounter);
+        const found = model.#objects.get(obj);
+        if (!found) {
+          throw new Error('A saved op names an object that is not one');
+        }
+        container = found;
+        lastActor = objActor;
+        lastCounter = objCounter;
       }
       model.#obj[i] = obj;
-      model.#key[i] =
-        container.type === 'map'
-          ? (keyIndex[ops.keyString[i]] ?? model.#intern(''))
-          : resolve(ops.keyActor[i], ops.keyCounter[i]);
+      if (container.type === 'map') {
+        model.#key[i] = keyIndex[ops.keyString[i]] ?? model.#intern('');
+      } else {
+        const keyActor = ops.keyActor[i];
+        const keyCounter = ops.keyCounter[i];
+        model.#key[i] =
+          i > 0 && keyActor === ops.idActor[i - 1] && keyCounter === ops.idCounter[i - 1]
+            ? i - 1
+            : resolve(keyActor, keyCounter);
+      }
       // Saved documents store a sequence in document order, so its elements are appended as they come.
-      model.#place(i, false);
+      model.#place(i, container, false);
     }
 
     // A saved document keeps no delete ops: a successor that is not an op is one.
@@ -542,82 +621,102 @@ export class Model {
     model.#sortIds();
 
     // A change's ops are its actor's ops above the previous change's highest op, so one pass per actor
-    // over the sorted ids finds each change's first op.
+    // over the sorted ids finds each change's first op. Saved changes come in causal order, which takes
+    // each actor's changes in seq order; the sort is for a document that breaks that.
+    let inSeqOrder = true;
+    const lastSeq = new Uint32Array(actors.length);
+    for (let index = 0; index < changes.count; index++) {
+      const actor = changes.actor[index];
+      if (actor < 0 || actor >= actors.length) {
+        throw new Error('A saved change names no actor');
+      }
+      inSeqOrder &&= changes.seq[index] > lastSeq[actor];
+      lastSeq[actor] = changes.seq[index];
+    }
+    const order = inSeqOrder
+      ? undefined
+      : Array.from({ length: changes.count }, (_value, index) => index).sort(
+          (left, right) => changes.actor[left] - changes.actor[right] || changes.seq[left] - changes.seq[right],
+        );
     const startOps = new Uint32Array(changes.count);
-    const bySeq = Array.from({ length: changes.count }, (_value, index) => index).sort(
-      (left, right) => changes.actor[left] - changes.actor[right] || changes.seq[left] - changes.seq[right],
-    );
-    const nextId = new Map<number, number>();
-    for (const index of bySeq) {
+    const nextId = new Uint32Array(actors.length);
+    for (let position = 0; position < changes.count; position++) {
+      const index = order ? order[position] : position;
       const actor = actorIndex[changes.actor[index]];
       const counters = model.#idCtr[actor];
       const length = model.#idLength[actor];
       const maxOp = changes.maxOp[index];
-      let position = nextId.get(actor) ?? 0;
-      const first = position < length ? counters[position] : undefined;
-      while (position < length && counters[position] <= maxOp) {
-        position++;
+      let next = nextId[actor];
+      const first = next < length ? counters[next] : maxOp + 1;
+      while (next < length && counters[next] <= maxOp) {
+        next++;
       }
-      nextId.set(actor, position);
-      startOps[index] = first !== undefined && first <= maxOp ? first : maxOp + 1;
+      nextId[actor] = next;
+      startOps[index] = first <= maxOp ? first : maxOp + 1;
     }
-    // Saved changes come in causal order, so each change's deps are hashed before it.
-    const known: string[] = [];
-    let depAt = 0;
-    for (let index = 0; index < changes.count; index++) {
-      const actor = actorIndex[changes.actor[index]];
-      const deps: string[] = [];
-      for (let remaining = changes.depCount[index]; remaining > 0; remaining--) {
-        deps.push(known[changes.deps[depAt++]]);
-      }
-      const startOp = startOps[index];
-      const maxOp = changes.maxOp[index];
-      const hash =
-        hashes?.[index] ??
-        encodeChange({
-          actor: actors[changes.actor[index]],
-          seq: changes.seq[index],
-          startOp,
-          time: changes.time[index],
-          message: changes.message[index],
-          deps,
-          ops: model.#opsOf(actor, startOp, maxOp),
-        }).hash;
-      known.push(hash);
-      model.#changes.add({
-        hash,
-        actor,
-        seq: changes.seq[index],
-        startOp,
-        maxOp,
-        time: changes.time[index],
-        message: changes.message[index],
-        deps,
-      });
-    }
-    if (!hashes && model.#changes.heads().join() !== [...heads].sort().join()) {
+    model.#changes.load(
+      changes,
+      actorIndex,
+      startOps,
+      hashes ?? model.#hashSaved(actors, actorIndex, changes, startOps),
+    );
+    if (model.#changes.heads().join() !== [...heads].sort().join()) {
       throw new Error('The saved heads do not match the changes read');
     }
-    model.#changes.trim();
     model.#trim();
     return model;
   }
 
+  /** Each saved change's hash, found by encoding it again from the ops; deps are hashed before dependents. */
+  #hashSaved(
+    actors: readonly string[],
+    actorIndex: readonly number[],
+    changes: SavedChanges,
+    startOps: Uint32Array,
+  ): Uint8Array {
+    const out = new Uint8Array(changes.count * 32);
+    const known: string[] = [];
+    let depAt = 0;
+    for (let index = 0; index < changes.count; index++) {
+      const deps: string[] = [];
+      for (let remaining = changes.depCount[index]; remaining > 0; remaining--) {
+        const dep = known[changes.deps[depAt++]];
+        if (dep === undefined) {
+          throw new Error('A saved change depends on a change after it');
+        }
+        deps.push(dep);
+      }
+      const actor = changes.actor[index];
+      const startOp = startOps[index];
+      const { hash } = encodeChange({
+        actor: actors[actor],
+        seq: changes.seq[index],
+        startOp,
+        time: changes.time[index],
+        message: changes.message[index],
+        deps,
+        ops: this.#opsOf(actorIndex[actor], startOp, changes.maxOp[index]),
+      });
+      known.push(hash);
+      writeHash(hash, out, index * 32);
+    }
+    return out;
+  }
+
   /**
-   * Shrinks the arrays a load grew by doubling to what they hold plus an eighth, so a space of many
-   * small documents does not carry a spare column each.
+   * Shrinks every array a load filled to exactly what it holds: most documents in a space are never
+   * written to, and the first write grows only the arrays it touches.
    */
   #trim(): void {
-    const room = (length: number) => length + Math.max(8, length >> 3);
-    this.#resizeOps(room(this.#count));
+    this.#resizeOps(this.#count);
     this.#idCtr.forEach((counters, actor) => {
-      const length = room(this.#idLength[actor]);
+      const length = this.#idLength[actor];
       this.#idCtr[actor] = resize(counters, length, (size) => new Uint32Array(size));
       this.#idOp[actor] = resize(this.#idOp[actor], length, (size) => new Int32Array(size));
     });
     for (const object of this.#objects.values()) {
       if (object.type !== 'map') {
-        object.elems = resize(object.elems, room(object.length), (size) => new Int32Array(size));
+        object.elems = resize(object.elems, object.length, (size) => new Int32Array(size));
       }
     }
   }
@@ -754,18 +853,14 @@ export class Model {
       this.#link(this.#require(pred, 'pred'), index);
     }
     this.#indexId(index, true);
-    this.#place(index, true);
+    this.#place(index, container, true);
   }
 
-  /** Puts an op in its object: at its key, in its sequence, or on its element. */
-  #place(op: number, reorder: boolean): void {
+  /** Puts an op in its object, `container`: at its key, in its sequence, or on its element. */
+  #place(op: number, container: ObjectInfo, reorder: boolean): void {
     const flags = this.#flags[op];
     if ((flags & ACTION_MASK) === DEL) {
       return;
-    }
-    const container = this.#objects.get(this.#obj[op]);
-    if (!container) {
-      throw new Error('An op names an object that is not one');
     }
     if (container.type === 'map') {
       const values = container.keys.get(this.#key[op]);
@@ -797,7 +892,7 @@ export class Model {
         }
       }
       if (container.length === container.elems.length) {
-        container.elems = resize(container.elems, container.elems.length * 2, (length) => new Int32Array(length));
+        container.elems = resize(container.elems, room(container.length + 1), (length) => new Int32Array(length));
       }
       container.elems.copyWithin(position + 1, position, container.length);
       container.elems[position] = op;

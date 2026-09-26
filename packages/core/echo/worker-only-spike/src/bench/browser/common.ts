@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export type DocInput = { bytes: string; hash: string[]; heads: string[] };
+/** A document as base64 bytes, its change hashes as base64 of 32 bytes each, and its heads. */
+export type DocInput = { bytes: string; hashes: string; heads: string[] };
 
 export type Measure = { heap: number; wasm: number; loadMs: number };
 

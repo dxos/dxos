@@ -32,12 +32,13 @@ if (isMainThread) {
   const A = await import('@automerge/automerge');
   // The worker would send the tab uncompressed bytes; the corpus holds compressed saves.
   const { saveNoCompress } = await import('../save.ts');
+  const { packHashes } = await import('../changes.ts');
   const corpus: Corpus = JSON.parse(readFileSync(process.argv[2], 'utf8'));
   const docs = corpus.docs.map((entry) => A.load(Uint8Array.from(Buffer.from(entry.bytes, 'base64'))));
   const payload = {
     compressed: corpus.docs.map((entry) => Buffer.from(entry.bytes, 'base64')),
     plain: docs.map(saveNoCompress),
-    hashes: docs.map((doc) => A.getAllChanges(doc).map((change) => A.decodeChange(change).hash)),
+    hashes: docs.map((doc) => packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash))),
   };
   const run = (mode: string) =>
     new Promise<Result>((resolve, reject) => {
@@ -84,21 +85,23 @@ if (isMainThread) {
   let held: unknown;
   parentPort?.once(
     'message',
-    async (payload: { compressed: Uint8Array[]; plain: Uint8Array[]; hashes: string[][] }) => {
+    async (payload: { compressed: Uint8Array[]; plain: Uint8Array[]; hashes: Uint8Array[] }) => {
+      // Each mode loads only its own code, before the clock starts, so the time is the documents' alone.
+      const tab = workerData.mode === 'tab' || workerData.mode === 'tab-hashed';
+      const A = workerData.mode === 'replica' ? await import('@automerge/automerge') : undefined;
+      const Model = tab ? (await import('../model.ts')).Model : undefined;
       const start = performance.now();
       let ops = 0;
-      if (workerData.mode === 'replica') {
-        const A = await import('@automerge/automerge');
+      if (A) {
         held = payload.compressed.map((bytes) => A.load(bytes));
-      } else if (workerData.mode === 'tab' || workerData.mode === 'tab-hashed') {
-        const { Model } = await import('../model.ts');
+      } else if (Model) {
         // `tab` computes each change's hash from the bytes; `tab-hashed` is told them, as the worker can.
         held = payload.plain.map((bytes, index) =>
           workerData.mode === 'tab' ? Model.fromSaved(bytes) : Model.fromSaved(bytes, payload.hashes[index]),
         );
       }
       const ms = performance.now() - start;
-      if (workerData.mode === 'tab' || workerData.mode === 'tab-hashed') {
+      if (tab) {
         const { readSavedColumns } = await import('../reader.ts');
         ops = payload.plain.reduce((sum, bytes) => sum + readSavedColumns(bytes).ops.count, 0);
       }

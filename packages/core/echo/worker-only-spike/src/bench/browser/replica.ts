@@ -25,8 +25,10 @@ const ready = A.initializeWasm('/automerge.wasm');
 Reflect.set(globalThis, 'load', async () => {
   const docs = await fetchInput('input-replica');
   await ready;
+  // Decoded before the clock starts: a worker hands the tab bytes, not base64.
+  const bytes = docs.map((doc) => fromBase64(doc.bytes));
   const start = performance.now();
-  held = docs.map((doc) => A.load<Space>(fromBase64(doc.bytes)));
+  held = bytes.map((saved) => A.load<Space>(saved));
   return measure(performance.now() - start);
 });
 

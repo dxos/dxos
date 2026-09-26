@@ -4,6 +4,7 @@
 
 import * as A from '@automerge/automerge';
 
+import { packHashes } from './changes.ts';
 import { encodeChange } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
 import { Model } from './model.ts';
@@ -51,6 +52,10 @@ export const decodeChange = (bytes: Uint8Array): Change => {
   };
 };
 
+/** Every change's hash in the order a save stores them, packed as a snapshot carries them. */
+const hashesOf = (doc: A.Doc<unknown>): Uint8Array =>
+  packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash));
+
 const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length && left.every((byte, index) => byte === right[index]);
 
@@ -71,10 +76,7 @@ export class SpikeHost {
 
   adopt<T>(docId: string, doc: A.Doc<T>): A.Doc<T> {
     const bytes = saveNoCompress(doc);
-    const model = Model.fromSaved(
-      bytes,
-      A.getAllChanges(doc).map((change) => A.decodeChange(change).hash),
-    );
+    const model = Model.fromSaved(bytes, hashesOf(doc));
     this.#docs.set(docId, {
       doc,
       model,
@@ -113,7 +115,7 @@ export class SpikeHost {
     hostDoc.subscribers.set(tabId, deliver);
     return {
       bytes: saveNoCompress(hostDoc.doc),
-      hashes: A.getAllChanges(hostDoc.doc).map((change) => A.decodeChange(change).hash),
+      hashes: hashesOf(hostDoc.doc),
       heads: A.getHeads(hostDoc.doc),
     };
   }
