@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 export type EmptyPanelProps = {
@@ -37,7 +36,7 @@ export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content classNames='bg-scrim-surface'>
-        <Empty classNames='h-full' label={label} />
+        <Banner.Empty classNames='h-full' label={label} />
       </Panel.Content>
     </Panel.Root>
   );

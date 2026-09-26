@@ -55,6 +55,7 @@ export class Terra extends Type.makeObject<Terra>(DXN.make('org.dxos.type.terra'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--globe-hemisphere-west--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

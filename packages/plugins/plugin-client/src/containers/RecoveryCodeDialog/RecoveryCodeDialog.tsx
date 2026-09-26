@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Field, Flex, Grid, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -59,14 +59,14 @@ const Code = ({ code }: { code: string }) => {
         value={code}
         classNames='absolute top-2 right-2 invisible group-hover:visible'
       />
-      <div className='grid grid-cols-4' data-testid='recoveryCode.code' data-code={code}>
+      <Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
           <Flex key={i} gap='sm' align='center' classNames='p-2'>
             <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
           </Flex>
         ))}
-      </div>
+      </Grid>
     </div>
   );
 };

@@ -8,8 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Card, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Card, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Message } from '@dxos/types';
@@ -184,7 +183,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         </Panel.Toolbar>
         <Panel.Content asChild>
           {empty ? (
-            <Empty label={empty} />
+            <Banner.Empty label={empty} />
           ) : (
             <ScrollArea.Root orientation='vertical' padding thin>
               <ScrollArea.Viewport classNames='dx-document'>

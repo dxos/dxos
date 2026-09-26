@@ -159,6 +159,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

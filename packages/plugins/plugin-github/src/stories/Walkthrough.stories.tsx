@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -79,6 +80,13 @@ type Story = StoryObj<typeof meta>;
 /** The whole thing: prose, headings, side-by-side chunks and the navigation rail. */
 export const Default: Story = {
   args: { text: WALKTHROUGH },
+  play: async ({ canvasElement }) => {
+    // The rail overflows in a short pane; it must scroll with the app's scrollbar, not the browser's.
+    await waitFor(() => expect(canvasElement.querySelector('.cm-walkthrough-sidebar')).not.toBeNull(), {
+      timeout: 10_000,
+    });
+    await expect(canvasElement.querySelector('.cm-walkthrough-sidebar')).toHaveClass('dx-scrollbar-thin');
+  },
 };
 
 /** The rail Graphite collapses to when the reader wants the width back. */

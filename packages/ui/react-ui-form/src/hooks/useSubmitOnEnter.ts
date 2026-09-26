@@ -45,6 +45,8 @@ export const useSubmitOnEnter = (
         event.key !== 'Enter' ||
         event.defaultPrevented ||
         event.isComposing ||
+        // Safari ends an IME composition with an Enter whose `isComposing` is false but `keyCode` is 229.
+        event.keyCode === 229 ||
         event.shiftKey ||
         event.altKey ||
         event.metaKey ||
