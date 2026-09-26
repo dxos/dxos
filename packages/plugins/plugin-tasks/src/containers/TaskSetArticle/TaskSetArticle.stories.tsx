@@ -301,12 +301,7 @@ export const StatusFilter: Story = {
     }
     const { space, taskSet } = context;
     const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Source green coffee')!;
-    const subTask = space.db.add(
-      Task.make({ title: 'Cup the samples', status: 'started', parentTask: Ref.make(parent) }),
-    );
-    Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks.push(Ref.make(subTask));
-    });
+    TaskSet.addTask(space.db, taskSet, 'Cup the samples', { status: 'started' }, { parent });
     await expect(canvas.findByText('Cup the samples', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     await userEvent.click(item('done')!);
@@ -408,9 +403,7 @@ export const Behavior: Story = {
 
     const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
     const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
-    Obj.update(cuppings, (cuppings) => {
-      cuppings.parentTask = Ref.make(label);
-    });
+    TaskSet.moveTask(taskSet, cuppings, { parentTask: label });
     await flushRender();
     // `treeitem`, not `option`: the list renders through `Tree` now, and `aria-level` sits on the
     // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).

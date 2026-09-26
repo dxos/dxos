@@ -58,7 +58,7 @@ type TaskListRootProps = PropsWithChildren<{
    */
   groupByStatus?: boolean;
   /**
-   * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
+   * Render the set as the tree it stores (`Task.subtasks`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;

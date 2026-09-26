@@ -56,6 +56,8 @@ export const translations = [
         'task-attachment.uploading.label': 'Uploading {{name}}…',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
+        'move-task-error.title': 'Could not move task',
+        'close.label': 'Close',
         'filter.label': 'Filter tasks',
         'filter.placeholder': 'Filter',
         'filter-clear.label': 'Clear filter',

@@ -10,10 +10,9 @@ import { Task } from '@dxos/types';
  * (pragmatic-drag-and-drop uses native HTML5 drag events), so the placement calculation is tested
  * directly instead.
  *
- * `TaskSet.tasks` is flat and holds every task; `Task.parentTask` is the hierarchy. The array is
- * NOT a pre-order traversal and is deliberately not made into one: array order decides SIBLING
- * order only, and the walk supplies the rest. A parent therefore moves without dragging its
- * subtree's entries along, and a peer reordering one branch cannot corrupt another.
+ * `TaskSet.tasks` lists the roots and each `Task.subtasks` its own children, so every list orders
+ * one set of siblings only: a parent moves without touching its subtree's entries, and a peer
+ * reordering one branch cannot corrupt another.
  */
 
 /** One rendered row: the task, its depth, and where it sits among its siblings. */
@@ -65,8 +64,8 @@ export const resolveReparent = (
 
 /**
  * Where a task lands, in the two terms `MoveTask` takes. `parentTask` is `null` for a root task
- * (matching the verb's convention) and `before` is undefined when the task goes last — which is
- * also last among its new siblings, since nothing after it in the array shares the parent.
+ * (matching the verb's convention) and `before` is undefined when the task goes last among its new
+ * siblings.
  */
 export type TaskPlacement = {
   parentTask: Task.Task | null;

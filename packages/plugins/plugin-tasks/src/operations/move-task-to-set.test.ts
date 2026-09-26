@@ -35,9 +35,11 @@ describe('move-task-to-set', () => {
       expect(titles(Task.subTasks(tasks, parent))).toEqual(['c']);
       expect(titles(Task.subTasks(tasks, child))).toEqual(['d']);
 
-      // Membership is the ECHO parent edge as well as the array; both must follow the move.
+      // The moved task is re-parented to the target; its subtree stays parented within it.
+      expect(Obj.getParent(parent)?.id).toEqual(target.id);
+      expect(Task.parentTaskId(child)).toEqual(parent.id);
+      expect(Task.parentTaskId(grandchild)).toEqual(child.id);
       for (const task of [parent, child, grandchild]) {
-        expect(Obj.getParent(task)?.id).toEqual(target.id);
         expect((yield* TaskSet.findTaskSet(task))?.id).toEqual(target.id);
       }
       expect(Obj.getParent(sibling)?.id).toEqual(source.id);
@@ -52,7 +54,8 @@ describe('move-task-to-set', () => {
 
       yield* moveTaskToSet.handler({ task: Ref.make(child), taskSet: Ref.make(target) });
 
-      expect(child.parentTask).toBeUndefined();
+      expect(Task.getParentTask(child)).toBeUndefined();
+      expect(parent.subtasks ?? []).toHaveLength(0);
       expect(titles(Task.rootTasks(TaskSet.resolveTasks(target)))).toEqual(['b']);
       expect(titles(TaskSet.resolveTasks(source))).toEqual(['a']);
     }).pipe(Effect.provide(TestLayer)),
