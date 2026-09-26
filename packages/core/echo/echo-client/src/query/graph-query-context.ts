@@ -213,6 +213,7 @@ export class SpaceQuerySource implements QuerySource {
         return _database.spaceId;
       },
       allCores: () => _database.allObjectCores(),
+      coresLinkedTo: (link, ids) => _database.coresLinkedTo(link, ids),
       getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
       areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
       areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),

@@ -10,6 +10,7 @@ import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
+import { createBranch, switchBranch } from '../echo-handler/branching.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
@@ -320,6 +321,73 @@ describe('WorkingSetQueryExecutor', () => {
     expect(ids).toContain(manages.id);
   });
 
+  test('children and relation traversals read the reverse-link index, never the whole working set', async ({
+    expect,
+  }) => {
+    const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+    const manages = db.add(Relation.make(TestSchema.HasManager, { [Relation.Source]: alice, [Relation.Target]: bob }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: alice, name: 'Child' }));
+    await db.flush();
+
+    const provider = makeProvider(db);
+    let scans = 0;
+    const executor = new WorkingSetQueryExecutor({
+      ...provider,
+      allCores: () => {
+        scans++;
+        return provider.allCores();
+      },
+    });
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+    const run = (query: Query.Any) => executor.tryExecute(planner.createPlan(query.ast))?.map((item) => item.objectId);
+
+    expect(run(Query.select(Filter.id(alice.id)).from(db).sourceOf())).toEqual([manages.id]);
+    expect(run(Query.select(Filter.id(bob.id)).from(db).targetOf())).toEqual([manages.id]);
+    expect(run(Query.select(Filter.id(alice.id)).from(db).children())).toEqual([child.id]);
+    expect(scans).toEqual(0);
+  });
+
+  test('the reverse-link index follows re-parenting and removal', async ({ expect }) => {
+    const first = db.add(Obj.make(TestSchema.Expando, { name: 'First' }));
+    const second = db.add(Obj.make(TestSchema.Expando, { name: 'Second' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: first, name: 'Child' }));
+    await db.flush();
+
+    const childrenOf = (parent: Obj.Any) =>
+      planAndExecute(db, Query.select(Filter.id(parent.id)).children()).map((item) => item.objectId);
+    expect(childrenOf(first)).toEqual([child.id]);
+
+    Obj.setParent(child, second);
+    await db.flush();
+    expect(childrenOf(first)).toEqual([]);
+    expect(childrenOf(second)).toEqual([child.id]);
+
+    db.remove(child);
+    await db.flush();
+    expect(childrenOf(second)).toEqual([]);
+  });
+
+  test('the reverse-link index follows a branch switch', async ({ expect }) => {
+    const first = db.add(Obj.make(TestSchema.Expando, { name: 'First' }));
+    const second = db.add(Obj.make(TestSchema.Expando, { name: 'Second' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: first, name: 'Child' }));
+    await db.flush();
+
+    const childrenOf = (parent: Obj.Any) =>
+      planAndExecute(db, Query.select(Filter.id(parent.id)).children()).map((item) => item.objectId);
+
+    await createBranch(child, 'draft');
+    await switchBranch(child, 'draft');
+    Obj.setParent(child, second);
+    await db.flush();
+    expect(childrenOf(second)).toEqual([child.id]);
+
+    await switchBranch(child, 'main');
+    expect(childrenOf(first)).toEqual([child.id]);
+    expect(childrenOf(second)).toEqual([]);
+  });
+
   test('filter-deleted step filters out deleted objects', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
@@ -535,6 +603,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
     return db.spaceId;
   },
   allCores: () => db.allObjectCores(),
+  coresLinkedTo: (link, ids) => db.coresLinkedTo(link, ids),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
   areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
