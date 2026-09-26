@@ -11,7 +11,7 @@ import { random } from '@dxos/random';
 import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { File, PullRequest, Task } from '@dxos/types';
+import { File, PullRequest, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -126,6 +126,13 @@ const seedMany = (n = 40): Task.Task[] =>
     }),
   );
 
+/** Lists `children` under `parent`, which also makes it their parent (`subtasks` owns its entries). */
+const adopt = (parent: Task.Task, ...children: Task.Task[]): void => {
+  Obj.update(parent, (parent) => {
+    parent.subtasks?.push(...children.map((child) => Ref.make(child)));
+  });
+};
+
 /**
  * A full tree: every node down to `depth` has `children` sub-tasks, so the seed exercises what a
  * two-level fixture cannot — indentation compounding past the second level, a branch under a
@@ -142,8 +149,10 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
       description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
-      ...(parent && { parentTask: Ref.make(parent) }),
     });
+    if (parent) {
+      adopt(parent, task);
+    }
     tasks.push(task);
     if (path.length < depth) {
       for (let index = 1; index <= children; index++) {
@@ -158,9 +167,9 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
 };
 
 /**
- * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
- * deliberately interleaves the two branches — a list that walked the array instead of the tree
- * would render them out of order, which is the bug this story exists to catch.
+ * Two roots with sub-tasks two levels deep. The flat list deliberately interleaves the two branches
+ * — a list that walked it instead of the tree would render them out of order, which is the bug this
+ * story exists to catch.
  */
 const seedHierarchy = (): Task.Task[] => {
   const task1 = Task.make({
@@ -175,29 +184,27 @@ const seedHierarchy = (): Task.Task[] => {
   const task3 = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
-    parentTask: Ref.make(task1),
     description: 'One paragraph per lot, in the order they are poured.',
   });
   const task4 = Task.make({
     title: 'Sample the Ethiopian lots',
     status: 'done',
-    parentTask: Ref.make(task2),
   });
   const task5 = Task.make({
     title: 'Approve the label art',
     status: 'todo',
-    parentTask: Ref.make(task1),
   });
   const task6 = Task.make({
     title: 'Log every profile',
     status: 'started',
-    parentTask: Ref.make(task2),
   });
   const task7 = Task.make({
     title: 'Proofread the back label',
     status: 'todo',
-    parentTask: Ref.make(task5),
   });
+  adopt(task1, task3, task5);
+  adopt(task2, task4, task6);
+  adopt(task5, task7);
 
   return [task1, task2, task3, task4, task5, task6, task7];
 };
@@ -208,8 +215,9 @@ const seedHierarchy = (): Task.Task[] => {
  */
 const seedDrag = (): Task.Task[] => {
   const a = Task.make({ title: 'A', status: 'todo' });
-  const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
-  const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
+  const b = Task.make({ title: 'B', status: 'todo' });
+  const c = Task.make({ title: 'C', status: 'todo' });
+  adopt(a, b, c);
   return [a, b, c];
 };
 
@@ -588,13 +596,20 @@ const DefaultStory = ({
   // Stands in for the `MoveTask` verb: re-parent and reposition in one step, since that is the
   // contract the list is written against.
   const handleMove = useCallback((task: Task.Task, { parentTask, before }: TaskPlacement) => {
-    Obj.update(task, (task) => {
-      if (parentTask) {
-        task.parentTask = Ref.make(parentTask);
-      } else {
-        delete task.parentTask;
-      }
-    });
+    const previous = Task.getParentTask(task);
+    if (previous) {
+      Obj.update(previous, (previous) => {
+        TaskSet.removeRefsInPlace(previous.subtasks ?? [], new Set([task.id]));
+      });
+    }
+    if (parentTask) {
+      Obj.update(parentTask, (parentTask) => {
+        parentTask.subtasks ??= [];
+        TaskSet.insertInPlace(parentTask.subtasks, Ref.make(task), before?.id);
+      });
+    }
+    Obj.setParent(task, parentTask ?? undefined);
+    // Root order is the list's own array order, as the set's `tasks` is for the real verb.
     setTasks((tasks) => {
       const rest = tasks.filter(({ id }) => id !== task.id);
       const anchor = before ? rest.findIndex(({ id }) => id === before.id) : -1;
@@ -1600,8 +1615,7 @@ export const TestHierarchy: Story = {
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
-    // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
-    // descendants' refs still point at it wherever it lands.
+    // Moving a parent carries its sub-tasks: they stay listed in its `subtasks` wherever it lands.
     const release = rows().find(({ title }) => title === 'Ship the spring release')!;
     press(release.row, 'ArrowDown');
     await waitFor(async () =>

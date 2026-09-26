@@ -74,15 +74,46 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         });
       }
 
-      // Set membership is untouched — the task never left; only its place in the tree moved.
+      // Appended to its new parent's sub-tasks (or the set's roots); the set it belongs to is unchanged.
       if (parentTask !== undefined) {
-        TaskSet.applyParentTask(taskSet, task, newParent);
+        TaskSet.moveTask(taskSet, task, { parentTask: newParent ?? null });
       }
+
+      // After any re-parent, so the cascade reaches the tree the task now belongs to.
+      yield* cascadeClaim(task, { assignee: sessionAssignee ?? assignee ?? undefined, started: status === 'started' });
 
       return { task: task };
     }),
   ),
 );
+
+/** Statuses a claim moves to `started`; anything further along keeps its own state. */
+const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
+
+/**
+ * A task with sub-tasks is one unit of work that lands in one PR, so claiming any task in the tree —
+ * assigning it, or starting it — claims the root and every descendant with it; otherwise a sub-task
+ * can be picked up by a second session and shipped on its own.
+ */
+const cascadeClaim = Effect.fnUntraced(function* (
+  task: Task.Task,
+  { assignee, started }: { assignee: Actor.Actor | undefined; started: boolean },
+) {
+  if (!assignee && !started) {
+    return;
+  }
+  const tree = yield* Task.collectTree(task);
+  for (const member of tree) {
+    if (member.id === task.id) {
+      continue;
+    }
+    Task.update(member, {
+      // A copy per task: ECHO refuses to store a record another object already owns.
+      ...(assignee ? { assignee: { ...assignee } } : {}),
+      ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
+    });
+  }
+});
 
 /**
  * The actor for a coding-agent session, creating the session record when the space does not hold

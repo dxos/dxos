@@ -3,15 +3,20 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
+import { messageOf } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
@@ -42,11 +47,10 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 };
 
 /**
- * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
- * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
- * deliberately not rendered yet (see TASKS.md). CRUD flows through the
- * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
- * are what keep the array, the refs and `parentTask` consistent.
+ * Every task in a set, rendered as the tree its `tasks` and each task's `subtasks` describe, and
+ * restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is deliberately not
+ * rendered yet (see TASKS.md). CRUD flows through the {@link TaskOperation} verbs so the article and
+ * external agents share one write path: the verbs are what keep the lists and parent edges consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -127,11 +131,26 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       ...(before ? { before: Ref.make(before) } : {}),
     }),
   );
+  const { invokePromise } = useOperationInvoker();
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
-      Effect.runSync(move(task, placement));
+      // A rejected drop (e.g. a parent outside this set) must not throw out of the gesture handler:
+      // nothing was written, so the list stays put and the reason is shown instead.
+      const exit = Effect.runSyncExit(move(task, placement));
+      if (Exit.isFailure(exit)) {
+        const error = Cause.squash(exit.cause);
+        log.warn('task move rejected', { task: task.id, error });
+        void invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/move-task-error`,
+          icon: 'ph--warning--regular',
+          duration: 5_000,
+          title: ['move-task-error.title', { ns: meta.profile.key }],
+          description: messageOf(error) ?? String(error),
+          closeLabel: ['close.label', { ns: meta.profile.key }],
+        });
+      }
     },
-    [move],
+    [move, invokePromise],
   );
 
   // A row opens its task through the shared reading gesture: the companion beside the list where the
@@ -254,19 +273,18 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
 };
 
 /**
- * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
- * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves.
+ * The set's whole tree via transitive `childOf` — every task's ECHO parent is its holder, the set or a
+ * parent task — in tree pre-order: roots in `tasks` order, each followed by its `subtasks`. The query
+ * re-emits on membership changes only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   const atom = useMemo(() => {
     const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
     return Atom.make((get): readonly Task.Task[] => {
       const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
-      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
-      // and orders by the set's canonical array.
-      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      // Subscribes each list that orders the tree; a move always rewrites one of them.
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'subtasks')));
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
 

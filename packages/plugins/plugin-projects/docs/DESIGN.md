@@ -33,6 +33,11 @@ to be one of the core aspects of Composer.
   many-to-one refs on the task, Linear-shaped. Parent edges are still set — but only
   for deletion cascade, never as the queryable data model. This is the task-model slice
   of a broader `Project` slimming — see that section for the full scope.
+  (REVISED 2026-09-26: the hierarchy is now owned lists — `TaskSet.tasks` holds the roots and
+  `Task.subtasks` each task's children, with the list as the parent edge; `parentTask` is gone
+  from the schema and `Task.getParentTask` reads the edge. The flat list and the per-task ref
+  drifted apart under concurrent edits: a sub-task could drop out of the list while its
+  `parentTask` still claimed it. Migrated by `TaskMigration` in `@dxos/types`.)
 - **Delegation is the promotion moment for agents**: only a durable `Task` can be
   delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
   no separate `Plan` type; the conversation's working set IS its outline plus the open
@@ -139,7 +144,7 @@ ref for structure, parent for cascade).
 TaskSet (org.dxos.type.taskSet)
    name?, description?, image?         meta.keys: [linear team/project | github repo]
    milestones: Array<Ref<Milestone>>   ordered — the milestone sequence
-   tasks:      Array<Ref<Task>>        ordered — EVERY task in the set, flat (incl. sub-tasks)
+   tasks:      Array<Ref<Task>>        ordered — the ROOT tasks (REVISED 2026-09-26; was flat)
 
 Milestone (org.dxos.type.milestone — NEW)   meta.keys: [linear/github milestone]
    name, description?                  description carries "what done means" (absorbs Goal)
@@ -149,7 +154,7 @@ Milestone (org.dxos.type.milestone — NEW)   meta.keys: [linear/github mileston
 Task (org.dxos.type.task)
    title, priority?, status?, assignee?, estimate?, description?
    milestone?:  Ref<Milestone>         unset ⇒ backlog (sub-tasks: inherit nearest ancestor's)
-   parentTask?: Ref<Task>              unset ⇒ root task; recursion unbounded
+   subtasks?:  Array<Ref<Task>>        ordered children, owned (SetParent); recursion unbounded
 ```
 
 Parent-edge bookkeeping (cascade only): tasks and milestones parent to their TaskSet;
