@@ -3,6 +3,14 @@
 '@dxos/react-ui-terminal': patch
 '@dxos/plugin-tasks': patch
 '@dxos/react-ui-list': patch
+'@dxos/ui-theme': patch
+'@dxos/lit-grid': patch
+'@dxos/react-ui-card': patch
+'@dxos/react-ui-chat': patch
+'@dxos/react-ui-thread': patch
+'@dxos/devtools': patch
+'@dxos/plugin-assistant': patch
+'@dxos/plugin-registry': patch
 ---
 
 A task's ID chip copies the task's full `echo://<space>/<id>` URI rather than `@mnemonic`, so the copied reference resolves wherever it is pasted; in the task list it reads the space from the live task rather than the row's snapshot.
@@ -26,3 +34,5 @@ In a hierarchical task list `Tab` indents the focused task under its previous si
 The task set's filter — the query text and the statuses shown — is kept per device and per set (`TaskSetView.aspect`, the view-state `local` backend), so it survives navigating away and reloading.
 
 A tree row keeps focus after a key the consumer handles on it (e.g. a restructuring `Shift+Arrow` or `Tab` in the task list), so consecutive moves work without refocusing the row.
+
+`.dx-tag` no longer carries a margin, so chips are spaced only by their container's `gap` and tags and tag-styled buttons line up evenly; containers that relied on the margin (select cells in the grid, chat references, plugin list tags, devtools tree, card rows) now own a gap, and tags inline in CodeMirror text and the transcript gutter keep a local `mx-0.5`.
