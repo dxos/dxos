@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import * as A from '@dxos/automerge-proxy/Automerge';
 import * as Handle from '@dxos/automerge-proxy/Handle';
+import { withoutAutomerge } from '@dxos/automerge-proxy/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -16,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { getEditHistory } from '../echo-handler/edit-history.ts';
-import { getObjectCore } from '../echo-handler/index.ts';
+import { createObject, getObjectCore } from '../echo-handler/index.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 import { getRangeFromCursor, getTextInAnchorRange, toCursorRange } from '../text.ts';
 import { TabClientRepo } from './tab-repo.ts';
@@ -144,6 +145,17 @@ describe('tab documents in ECHO', () => {
     anchors.forEach((anchor, index) => {
       expect(getTextInAnchorRange(reader, anchor)).toBe(texts[index]);
     });
+    // plugin-markdown sorts anchors by position, which needs every anchor resolved in the reader.
+    const start = (anchor: string): number => {
+      const range = getRangeFromCursor(reader, anchor);
+      invariant(range, `Anchor ${anchor} does not resolve`);
+      return range.start;
+    };
+    expect([...anchors].sort((left, right) => start(left) - start(right))).toEqual([
+      anchors[1],
+      anchors[0],
+      anchors[2],
+    ]);
 
     reader.handle.change((doc) => A.splice(doc, reader.path.slice(), 5, 17, ''));
     await readerDb.flush();
@@ -161,6 +173,34 @@ describe('tab documents in ECHO', () => {
       expect(getRangeFromCursor(reader, anchor)).toEqual(want);
       expect(getRangeFromCursor(writer, anchor)).toEqual(want);
     }
+  });
+
+  test('an object made in a tab with no Automerge starts in a tab document and moves into the database', async () => {
+    const [db, other] = await openTabs(2);
+    // A proxy-mode tab in a browser registers no Automerge, so an object's first document is a tab document.
+    const task = withoutAutomerge(() => createObject(Obj.make(TestSchema.Expando, { title: 'Draft', status: 'todo' })));
+    expect(Handle.tagOf(getObjectCore(task).getDoc())).toBeDefined();
+    Obj.update(task, (task) => {
+      task.status = 'doing';
+    });
+    const version = Obj.version(task);
+    expect(version.versioned).toBe(true);
+    expect(version.automergeHeads).toEqual(A.getHeads(getObjectCore(task).getDoc()));
+
+    // Adding it copies its value into the database's document, as with a replica; so does adding a plain object.
+    withoutAutomerge(() => db.add(task));
+    const direct = withoutAutomerge(() => db.add(Obj.make(TestSchema.Expando, { title: 'Added', status: 'todo' })));
+    Obj.update(task, (task) => {
+      task.title = 'Final';
+    });
+    await db.flush();
+    const worker = await workerDoc(documentOf(task).documentId);
+    expect(Automerge.toJS(worker).objects?.[task.id]?.data).toMatchObject({ title: 'Final', status: 'doing' });
+    expect(Obj.version(task).automergeHeads).toEqual(Automerge.getHeads(worker));
+    const directWorker = await workerDoc(documentOf(direct).documentId);
+    expect(Automerge.toJS(directWorker).objects?.[direct.id]?.data).toMatchObject({ title: 'Added', status: 'todo' });
+    const [inOther] = await other.query(Filter.id(task.id)).run();
+    await expect.poll(() => inOther?.title, { timeout: 5_000 }).toBe('Final');
   });
 
   test("an object's history and update time read from the tab document as they do from Automerge", async () => {

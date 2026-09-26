@@ -1,7 +1,8 @@
 # Tab documents in ECHO: integration plan
 
-The spike in [`@dxos/worker-only-spike`](../../worker-only-spike/README.md) proved a fix for every
-blocker to a tab with no Automerge, and met replica mode's bar on latency and memory. This plan maps
+A spike, `@dxos/worker-only-spike`, proved a fix for every blocker to a tab with no Automerge, and
+met replica mode's bar on latency and memory. It is gone now: its tests live in the packages that own
+the code (see "As built", item 17), and its measurements in [MEASUREMENTS.md](./MEASUREMENTS.md). This plan maps
 that design and its five fixes onto ECHO's packages. It is judged by one measure: code outside ECHO's
 core keeps working as it was written for replica mode. ECHO's core here means the packages that
 implement the document backend: `@dxos/automerge-proxy`, echo-client, echo-host, protocols and
@@ -319,11 +320,28 @@ the plan above in these places:
     tab without Automerge reads a save only when it is change chunks, which is what the namespace's
     `save` writes; a compressed save from Automerge itself needs the reader to inflate columns (risk
     1).
+17. **The spike is gone, and every one of its tests has a home.** Some behaviours had none after
+    phases 1 to 7, so they were ported before the package was deleted:
 
-echo-client's suite passes in both modes, 631 tests each. automerge-proxy passes 99 tests and
-`@dxos/client` 47 under CI's filter. Over the real adapter, `tab-repo.test.ts` covers writes across
-tabs, final heads, concurrent text, anchors, history and update time, and `Repo.test.ts` covers
-restarts at the package level.
+    | Spike test                               | Now                                                                                                               |
+    | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+    | `heads.test.ts`, `restart.test.ts`       | `internal/tab-doc.test.ts`; canonical bytes on the real host in `Repo.test.ts`                                    |
+    | `pagehide.test.ts`, `foundation.test.ts` | `Repo.test.ts` (send cadence, bursts); ui-editor `tab-document.test.ts`                                           |
+    | `drift.test.ts`                          | `internal/drift.test.ts`                                                                                          |
+    | `hostless.test.ts`                       | `Automerge.test.ts`; echo-client `tab-repo.test.ts` and `migrate-document.test.ts`; echo-doc `AddOnlySet.test.ts` |
+    | `edge.test.ts`                           | ui-editor `review/shared-code.test.ts`                                                                            |
+    | `cursors.test.ts`, `history.test.ts`     | echo-client `tab-repo.test.ts`, and its branching and migration suites in proxy mode                              |
+
+    The benches moved to this package's `scripts/bench`, not `tools/`, since they import its internal
+    modules. The pack bench went, since the package's `pack` task packs it, and so did the wasm
+    benches, whose findings are under "Wasm in the tab" in WORKER-ONLY.md. Rerun on the package, the
+    benches give the spike's figures on the same machine.
+
+echo-client's suite passes in both modes, 633 tests each. automerge-proxy passes 113 tests,
+ui-editor 461, echo-doc 22 and `@dxos/client` 47 under CI's filter. Over the real adapter,
+`tab-repo.test.ts` covers writes across tabs, final heads, concurrent text, anchors, history, update
+time and objects made before they join a database, and `Repo.test.ts` covers restarts at the
+package level.
 
 Composer in proxy mode fetches no Automerge module and instantiates no Automerge wasm, and edits
 persist across a reload in both modes. The page still instantiates one wasm module, sodium, which

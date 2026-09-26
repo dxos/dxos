@@ -20,6 +20,8 @@ export class MemoryStore implements Host.Store {
   #created = 0;
   /** Fails the next saves, as a storage error would. */
   failSaves = 0;
+  /** How many times the host applied changes to a document, to show batching. */
+  applyCalls = 0;
 
   /** The document as Automerge holds it; `T` is the caller's claim about its shape, as in `A.load<T>`. */
   get<T = unknown>(documentId: string): A.Doc<T> {
@@ -58,6 +60,7 @@ export class MemoryStore implements Host.Store {
     return fn({
       doc: () => this.get(documentId),
       applyChanges: (changes) => {
+        this.applyCalls++;
         this.#docs.set(documentId, A.applyChanges(this.get(documentId), [...changes])[0]);
         this.#notify(documentId);
       },

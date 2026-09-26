@@ -8,11 +8,10 @@
 // eslint-disable-next-line import/order
 import './probe.ts';
 
-import * as Draft from '@dxos/automerge-proxy/Draft';
-
-import { Model } from '../../model.ts';
-import { readChange } from '../../reader.ts';
-import { TabDoc } from '../../tab.ts';
+import * as Draft from '../../../src/Draft.ts';
+import { Model } from '../../../src/internal/model.ts';
+import { readChange } from '../../../src/internal/reader.ts';
+import { TabDoc } from '../../../src/internal/tab-doc.ts';
 import { type Latency, connect, fetchInput, fromBase64, measure } from './common.ts';
 
 type Space = { objects: Record<string, { data: { content: string } }> };

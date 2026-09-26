@@ -2,14 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { decodeChange } from './host.ts';
+import { seeded } from '../testing/index.ts';
+import { decodeChange, saveNoCompress } from './automerge.ts';
 import { Model } from './model.ts';
-import { saveNoCompress } from './save.ts';
-import { TabDoc } from './tab.ts';
-import { seeded } from './testing.ts';
+import { TabDoc } from './tab-doc.ts';
 
 type Registers = { m: Record<string, number> };
 
@@ -46,7 +45,7 @@ describe("Automerge's cached view after a merge", () => {
       }
       const fresh = A.load<Registers>(A.save(merged));
       const heads = A.getHeads(merged);
-      // What a tab holds: the model from the worker's saved bytes, and a document built from the changes.
+      // What a tab holds: the model from the host's saved bytes, and a document built from the changes.
       const fromBytes = Model.fromSaved(saveNoCompress(merged));
       const fromChanges = TabDoc.fromChanges<Registers>(A.getAllChanges(merged).map(decodeChange), {});
       const clock = fromBytes.clockOf(heads);
@@ -68,7 +67,8 @@ describe("Automerge's cached view after a merge", () => {
         );
       }
     }
-    // The drift is rare but real: Automerge's own view got some keys wrong, and the tab documents none.
+    // Automerge 3.5.0 gets some keys wrong in its cached view; once an upgrade fixes that, this fails
+    // and the risk comes out of the docs.
     expect(drifted).toBeGreaterThan(0);
     expect(checked).toBe(900);
   });

@@ -4,8 +4,8 @@ Branches, merge, edit history, versioning and migrations can work in a tab that 
 History reads run in the tab from the document's saved bytes, read in plain JS. History writes run in
 the worker, which owns the documents, and their results reach the tab as ordinary changes. This
 builds on the model in [OP-IDS.md](./OP-IDS.md). The reads were checked in node against Automerge
-3.5.0, and a spike, [`@dxos/worker-only-spike`](../../worker-only-spike/README.md), runs ECHO's own
-history functions over it; nothing in ECHO uses it yet.
+3.5.0, and a spike ran ECHO's own history functions over it. ECHO now runs on it:
+[INTEGRATION.md](./INTEGRATION.md) records how it landed.
 
 ## Short answer
 

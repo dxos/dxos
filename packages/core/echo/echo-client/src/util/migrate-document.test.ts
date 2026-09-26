@@ -5,9 +5,26 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
+import * as Automerge from '@dxos/automerge-proxy/Automerge';
+import * as Handle from '@dxos/automerge-proxy/Handle';
+import { withoutAutomerge } from '@dxos/automerge-proxy/testing';
+
 import { migrateDocument } from './migrate-document.ts';
 
 describe('migrateDocument', () => {
+  test('clones and rewrites a tab document as it does an Automerge one', () => {
+    const source = { title: 'Old', legacy: { name: 'x' }, keep: [1, 2] };
+    const target = { title: 'New', renamed: { name: 'x' }, keep: [1, 2, 3] };
+    const tab = withoutAutomerge(() => Automerge.from(source));
+    const migrated = migrateDocument(tab, target);
+    const reference = migrateDocument(A.from(source), target);
+    expect(Handle.tagOf(migrated)).toBeDefined();
+    expect(Automerge.toJS(migrated)).toEqual(A.toJS(reference));
+    expect(Automerge.getHistory(migrated)).toHaveLength(A.getHistory(reference).length);
+    // The source is untouched, as `A.clone` leaves it.
+    expect(Automerge.toJS(tab)).toEqual(source);
+  });
+
   test('migrates strings', () => {
     const source = { text: 'Hello, world!', version: 1 };
     const target = { text: 'Hello, DXOS!', version: 2 };

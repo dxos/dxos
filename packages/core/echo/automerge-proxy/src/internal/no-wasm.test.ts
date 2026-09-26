@@ -40,7 +40,7 @@ describe('a tab with no WebAssembly', () => {
         '--conditions=browser',
         '--import',
         'tsx',
-        'src/internal/tab-child.ts',
+        'src/internal/tab-subprocess.ts',
       ],
       {
         cwd: import.meta.dirname.replace(/\/src\/internal$/, ''),

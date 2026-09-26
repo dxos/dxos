@@ -1018,9 +1018,6 @@
       "path": "packages/sdk/worker-framework/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/worker-only-spike/tsconfig.json"
-    },
-    {
       "path": "tools/x/tsconfig.json"
     }
   ],

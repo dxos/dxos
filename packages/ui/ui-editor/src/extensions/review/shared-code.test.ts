@@ -2,33 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
-import { describe, expect, test, vi } from 'vitest';
+import { next as A } from '@automerge/automerge';
+import { afterEach, describe, expect, test } from 'vitest';
 
-vi.mock('@automerge/automerge', async (importOriginal) =>
-  (await import('./mocks.ts')).automergeFactory(importOriginal),
-);
-vi.mock('@dxos/automerge-proxy/Automerge', async (importOriginal) =>
-  (await import('./mocks.ts')).proxyNamespaceFactory(importOriginal),
-);
-
-// eslint-disable-next-line import/first
-import * as Namespace from '@dxos/automerge-proxy/Automerge';
-// eslint-disable-next-line import/first
+import * as Automerge from '@dxos/automerge-proxy/Automerge';
+import { TabHarness, canon } from '@dxos/automerge-proxy/testing';
 import { getRangeFromCursor, toCursorRange } from '@dxos/echo-client';
-// eslint-disable-next-line import/first
 import { Doc, applyEdits } from '@dxos/echo-doc';
-// eslint-disable-next-line import/first
-import { cherryPickHunk } from '@dxos/ui-editor/headless';
 
-// eslint-disable-next-line import/first
-import { SpikeHost } from './host.ts';
-// eslint-disable-next-line import/first
-import { leaks } from './namespace.ts';
-// eslint-disable-next-line import/first
-import { Network } from './network.ts';
-// eslint-disable-next-line import/first
-import { canon, unknownTo } from './testing.ts';
+import { cherryPickHunk } from './diff.ts';
 
 type Text = { content: string };
 
@@ -65,25 +47,38 @@ const acceptChange = (accessor: Doc.Accessor<Text>, anchor: string, compare: str
   const splice = range && cherryPickHunk(Doc.getValue<string>(accessor), compare, range);
   if (splice) {
     accessor.handle.change((doc) =>
-      Namespace.splice(doc, accessor.path.slice(), splice.from, splice.del, splice.insert),
+      Automerge.splice(doc, accessor.path.slice(), splice.from, splice.del, splice.insert),
     );
   }
   return splice;
 };
 
+let harness: TabHarness<Text> | undefined;
+
+afterEach(async () => {
+  await harness?.close();
+  harness = undefined;
+});
+
 describe('shared operation code in both realms', () => {
-  test("echo-doc and plugin-markdown text writes run unmodified on EDGE's Automerge handle and on a tab handle", () => {
-    leaks.length = 0;
-    const host = new SpikeHost();
-    host.create('doc', {
-      content: 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
-    });
-    const network = new Network(host);
-    const tab = network.open<Text>('doc');
-    const edge = new ReplicaHandle(A.clone(host.doc<Text>('doc'), { actor: 'edee0000edee0000edee0000edee0000' }));
+  test("echo-doc and plugin-markdown text writes run unmodified on EDGE's Automerge handle and on a tab handle", async () => {
+    harness = new TabHarness<Text>();
+    await harness.open();
+    harness.store.put(
+      'doc',
+      A.from<Text>({
+        content: 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
+      }),
+    );
+    const repo = await harness.tab();
+    const tab = repo.find('doc');
+    await tab.whenReady();
+    const edge = new ReplicaHandle(
+      A.clone(harness.store.get<Text>('doc'), { actor: 'edee0000edee0000edee0000edee0000' }),
+    );
     const accessors: Doc.Accessor<Text>[] = [
       { handle: edge, path: ['content'] },
-      { handle: tab.handle, path: ['content'] },
+      { handle: tab, path: ['content'] },
     ];
 
     // echo-doc's find and replace.
@@ -106,11 +101,12 @@ describe('shared operation code in both realms', () => {
       onEdge.replace('d0zen', 'hundred'),
     ]);
 
-    // EDGE's changes reach the worker by sync and the tab's through the tab protocol; all converge.
-    host.applyRemote('doc', unknownTo(host.doc('doc'), edge.doc()));
-    network.settle();
-    const merged = A.load<Text>(A.save(host.doc('doc')));
-    expect(canon(tab.handle.doc())).toBe(canon(A.toJS(merged)));
-    expect(leaks).toEqual([]);
+    // EDGE's changes reach the host by sync and the tab's through the tab protocol; all converge.
+    await repo.flush();
+    harness.store.merge('doc', edge.doc());
+    const current = harness;
+    const stored = () => A.getHeads(current.store.get<Text>('doc')).join();
+    await expect.poll(() => tab.heads.join() === stored(), { timeout: 5_000 }).toBe(true);
+    expect(canon(tab.doc())).toBe(canon(A.toJS(A.load(A.save(harness.store.get<Text>('doc'))))));
   });
 });

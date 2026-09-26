@@ -12,11 +12,10 @@ import './probe.ts';
 
 import * as A from '@automerge/automerge';
 
-import { hashesByActor } from '../../changes.ts';
-import { CheckIndex } from '../../check-index.ts';
-import { encodeChange } from '../../encode.ts';
-import { decodeChange } from '../../host.ts';
-import { saveNoCompress } from '../../save.ts';
+import { decodeChange, saveNoCompress } from '../../../src/internal/automerge.ts';
+import { hashesByActor } from '../../../src/internal/changes.ts';
+import { CheckIndex } from '../../../src/internal/check-index.ts';
+import { encodeChange } from '../../../src/internal/encode.ts';
 import { fromBase64 } from './common.ts';
 
 type Request =

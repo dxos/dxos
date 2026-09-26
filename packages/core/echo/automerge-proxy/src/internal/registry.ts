@@ -21,6 +21,20 @@ export const register = (automerge: AutomergeModule): void => {
 /** The registered Automerge, if any: a realm without it makes tab documents where Automerge would make its own. */
 export const getRegistered = (): AutomergeModule | undefined => registered;
 
+/**
+ * Runs `fn` as a realm that registered no Automerge, as a proxy-mode tab in a browser is, so a test in
+ * Node reaches what the namespace does there. `fn` must be synchronous: the registration returns with it.
+ */
+export const withoutAutomerge = <T>(fn: () => T): T => {
+  const previous = registered;
+  registered = undefined;
+  try {
+    return fn();
+  } finally {
+    registered = previous;
+  }
+};
+
 /** A call reached Automerge in a realm that registered none, which only a tab document could have answered. */
 export class AutomergeNotRegisteredError extends Error {
   constructor(name: string) {

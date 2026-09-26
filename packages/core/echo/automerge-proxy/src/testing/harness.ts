@@ -38,8 +38,11 @@ export class TabHarness<T = unknown> {
     await this.host.open();
   }
 
-  /** A new tab: a repo of tab documents behind its own transport. */
-  async tab(): Promise<Repo.TabRepo<string, Handle.DocHandle<T>>> {
+  /**
+   * A new tab: a repo of tab documents behind its own transport.
+   * @param maxSendRate The repo's send passes a second, lowered by tests that time a pass's slot.
+   */
+  async tab({ maxSendRate }: { maxSendRate?: number } = {}): Promise<Repo.TabRepo<string, Handle.DocHandle<T>>> {
     const transport = new Transport({
       host: () => this.host,
       random: () => this.#random.next(),
@@ -51,6 +54,7 @@ export class TabHarness<T = unknown> {
       createHandle: (options) => new Handle.DocHandle<T>(options),
       pageEvents,
       resubscribeDelay: 5,
+      maxSendRate,
     });
     await repo.open();
     this.transports.push(transport);

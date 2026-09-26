@@ -231,7 +231,6 @@
       "@dxos/web-context-solid",
       "@dxos/websocket-rpc",
       "@dxos/worker-framework",
-      "@dxos/worker-only-spike",
       "@dxos/x"
     ],
     [

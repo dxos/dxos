@@ -2,9 +2,9 @@
 
 A proxy document can answer Automerge's cursor and recent-history API itself, so an editor binding
 written for Automerge runs over it unchanged and the tab needs no Automerge. The mechanisms were
-checked in node against Automerge 3.5.0 (see [What was checked](#what-was-checked)). A spike,
-[`@dxos/worker-only-spike`](../../worker-only-spike/README.md), builds the design and runs ECHO's own
-code over it; nothing in ECHO uses it yet.
+checked in node against Automerge 3.5.0 (see [What was checked](#what-was-checked)). A spike built
+the design and ran ECHO's own code over it, and ECHO now runs on it:
+[INTEGRATION.md](./INTEGRATION.md) records how it landed.
 
 ## Short answer
 

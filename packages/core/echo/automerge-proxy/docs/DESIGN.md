@@ -160,13 +160,54 @@ event after a random delay and can drop a stream as a restart does, and seeded r
 | The cached value equals the model read afresh after local, older-version, remote, refused and merged changes                                         | `internal/cache.test.ts`       | seeded                                        |
 | Every change the check index accepts, Automerge applies and the model reads the same; it refuses the rest, and a refusal leaves it unchanged         | `internal/check-index.test.ts` | seeded                                        |
 | A tab loads, applies, writes, encodes and saves where WebAssembly does not exist                                                                     | `internal/no-wasm.test.ts`     | a child process under the `browser` condition |
-| Tabs converge with the host across creation, peers, refusals, restarts, `pagehide` and random interleavings                                          | `Repo.test.ts`                 | cases, and seeded interleavings               |
+| Heads read right after a write are final and a version the host ends with; refusals name changes by hash; tabs resend exactly what a restart lost    | `internal/tab-doc.test.ts`     | seeded, over an in-memory host                |
+| Tab documents read a merged document right where Automerge's own cached view drifts                                                                  | `internal/drift.test.ts`       | seeded, 300 rounds                            |
+| With no Automerge registered, the namespace makes tab documents from nothing, and Automerge loads what they save                                     | `Automerge.test.ts`            | cases                                         |
+| Tabs converge with the host across creation, imports, peers, refusals, restarts, send cadence, `pagehide` and random interleavings                   | `Repo.test.ts`                 | cases, and seeded interleavings               |
 | The draft against `A.change`: the same calls give the same document or the same refusal                                                              | `Draft.test.ts`                | seeded, and 67 cases                          |
 | The copy codec round-trips any value Automerge stores, including objects that look like its tags                                                     | `Wire.test.ts`                 | fast-check, 500 runs                          |
 
 ECHO's `tab-repo.test.ts` in echo-client runs tabs over the real `DataService` and worker: writes
-across tabs, final heads, concurrent text, anchors and history.
+across tabs, final heads, concurrent text, anchors, history, and objects made before they join a
+database. ui-editor's editor binding and shared text operations, and echo-doc's store adapter and
+`AddOnlySet`, have their own tests over `TabHarness`. `withoutAutomerge` from `/testing` runs code as
+a realm that registered no Automerge, as a proxy-mode tab in a browser is.
 
-[INTEGRATION.md](./INTEGRATION.md) is the plan that brought tab documents into ECHO, with what each
-phase changed. [OP-IDS.md](./OP-IDS.md) and [HISTORY.md](./HISTORY.md) record the design work behind
-op ids and history in the tab.
+[MEASUREMENTS.md](./MEASUREMENTS.md) gives memory and latency against replicas, from the benches in
+`scripts/bench`. [INTEGRATION.md](./INTEGRATION.md) is the plan that brought tab documents into ECHO,
+with what each phase changed. [OP-IDS.md](./OP-IDS.md) and [HISTORY.md](./HISTORY.md) record the
+design work behind op ids and history in the tab.
+
+## Automerge 3.5.0 behaviour the design works around
+
+Found while building tab documents. None has been reported upstream.
+
+1. **`applyChanges` accepts bytes that are not canonical**, such as preds out of Lamport order. It
+   indexes the change under the hash of those bytes, exports it re-encoded under another hash, and
+   `A.load(A.save(doc))` then throws "mismatching heads". The host refuses such bytes, and
+   `Repo.test.ts` shows the corruption without the check.
+2. **A bad reference corrupts the document without an error**: an unknown object or element, a pred
+   at another key, in another object or on another element, a delete or update with no pred, a map
+   op on a list. The save then no longer loads. An insert after an element of another list panics in
+   the wasm instead. The check index refuses all of these.
+3. **A change that skips its actor's previous change breaks saves.** Automerge applies a seq 2 whose
+   deps do not reach the actor's seq 1, then `A.load(A.save(doc))` throws "missing ops".
+4. **An increment applies where it means nothing.** An `inc` whose pred is not a counter makes the key
+   read as deleted; one with no pred changes nothing. The host refuses increments.
+5. **The cached view drifts after `A.merge`.** Properties of the document disagree with a fresh load
+   for 0.3 to 0.4% of keys. Tab documents read saved bytes and changes, never the cached view
+   (`internal/drift.test.ts`).
+6. **`getConflicts` on `A.view(doc, heads)` ignores the heads** and reports the current conflicts.
+7. **`A.encodeChange` writes some float64 values one unit in the last place off**, so a change rebuilt
+   through it gets another hash. The package's encoder writes the stored bits.
+8. **`A.encodeChange` sorts preds itself**, which hides issue 1 from code that encodes through it.
+9. **A remote change costs time proportional to the text it touches**, 13 to 19 ms at 45,000
+   characters, and about as much for a batch as for one change.
+10. **Sequence ops are stored in document order**, where the format spec says element id order. The
+    tab's reader relies on document order.
+11. **Some bad changes wait or pass silently.** A change with an unknown dependency waits in the queue,
+    and a start op below the ops it depends on is accepted.
+12. **The slim entry touches `WebAssembly` on import**, through wasm-bindgen's `new WebAssembly.Tag`,
+    so the tab has its own `ImmutableString` and value classes.
+13. **`A.decodeChange` returns byte values as plain arrays**, and its `Op` type leaves out `elemId` and
+    `insert`.

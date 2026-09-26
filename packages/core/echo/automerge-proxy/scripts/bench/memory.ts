@@ -6,7 +6,7 @@
 // worker's check index, which the worker holds beside Automerge in place of a model.
 // Each mode runs in its own worker thread, so the figures are that realm's alone: its V8 heap plus its
 // external memory (array buffers, typed arrays and wasm memory).
-// Usage: node --expose-gc --conditions=source src/bench/memory.ts <corpus.json>
+// Usage: node --expose-gc --conditions=source scripts/bench/memory.ts <corpus.json>
 
 import { readFileSync } from 'node:fs';
 import v8 from 'node:v8';
@@ -32,8 +32,8 @@ if (isMainThread) {
   // Imported here, not at the top: a worker thread that measures tab documents must not load Automerge.
   const A = await import('@automerge/automerge');
   // The worker would send the tab uncompressed bytes; the corpus holds compressed saves.
-  const { saveNoCompress } = await import('../save.ts');
-  const { hashesByActor } = await import('../changes.ts');
+  const { saveNoCompress } = await import('../../src/internal/automerge.ts');
+  const { hashesByActor } = await import('../../src/internal/changes.ts');
   const corpus: Corpus = JSON.parse(readFileSync(process.argv[2], 'utf8'));
   const docs = corpus.docs.map((entry) => A.load(Uint8Array.from(Buffer.from(entry.bytes, 'base64'))));
   const payload = {
@@ -90,8 +90,9 @@ if (isMainThread) {
       // Each mode loads only its own code, before the clock starts, so the time is the documents' alone.
       const tab = workerData.mode === 'tab' || workerData.mode === 'tab-hashed';
       const A = workerData.mode === 'replica' ? await import('@automerge/automerge') : undefined;
-      const Model = tab ? (await import('../model.ts')).Model : undefined;
-      const CheckIndex = workerData.mode === 'index' ? (await import('../check-index.ts')).CheckIndex : undefined;
+      const Model = tab ? (await import('../../src/internal/model.ts')).Model : undefined;
+      const CheckIndex =
+        workerData.mode === 'index' ? (await import('../../src/internal/check-index.ts')).CheckIndex : undefined;
       const start = performance.now();
       let ops = 0;
       if (A) {
@@ -106,7 +107,7 @@ if (isMainThread) {
       }
       const ms = performance.now() - start;
       if (tab) {
-        const { readSavedColumns } = await import('../reader.ts');
+        const { readSavedColumns } = await import('../../src/internal/reader.ts');
         ops = payload.plain.reduce((sum, bytes) => sum + readSavedColumns(bytes).ops.count, 0);
       }
       // Only what the mode built stays: the input goes before the heap is read.

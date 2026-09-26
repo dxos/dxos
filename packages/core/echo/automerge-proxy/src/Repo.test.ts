@@ -3,12 +3,13 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { waitForCondition } from '@dxos/async';
+import { sleep, waitForCondition } from '@dxos/async';
 
 import * as Automerge from './Automerge.ts';
 import type * as Contract from './Contract.ts';
+import { decodeChange } from './internal/automerge.ts';
 import { encodeChange } from './internal/encode.ts';
 import { TabHarness, canon, seeded } from './testing/index.ts';
 
@@ -180,6 +181,133 @@ describe('tab documents over the host', () => {
     });
     expect(result.status).toBe('accepted');
     expect(events).toContainEqual(expect.objectContaining({ type: 'refuse', hash: '00'.repeat(32) }));
+  });
+
+  test('the host refuses bytes that are not canonical, which Automerge would index and export under different hashes', async () => {
+    const harness = await setup();
+    // Concurrent writes to one key, so overwriting both gives an op with two preds.
+    let doc = A.from<Shape>(initial(), { actor: 'aaaa0000aaaa0000aaaa0000aaaa0000' });
+    let peer = A.clone(doc, { actor: 'bbbb0000bbbb0000bbbb0000bbbb0000' });
+    doc = A.change(doc, (draft) => {
+      draft.title = 'left';
+    });
+    peer = A.change(peer, (draft) => {
+      draft.title = 'right';
+    });
+    harness.store.put('doc', A.merge(doc, peer));
+    const merged = A.change(
+      A.clone(harness.store.get<Shape>('doc'), { actor: 'cccc0000cccc0000cccc0000cccc0000' }),
+      (draft) => {
+        draft.title = 'merged';
+      },
+    );
+    const canonical = A.getLastLocalChange(merged);
+    expect(canonical).toBeDefined();
+    if (!canonical) {
+      return;
+    }
+    const change = decodeChange(canonical);
+    expect(change.ops[0].pred).toHaveLength(2);
+    const reversed = { ...change, ops: change.ops.map((op) => ({ ...op, pred: [...op.pred].reverse() })) };
+    const { bytes, hash } = encodeChange(reversed, { predOrder: 'given' });
+    expect(hash).not.toBe(change.hash);
+
+    const subscriptionId = 'subscription';
+    const events: Contract.DocumentEvent[] = [];
+    harness.host.subscribe({ subscriptionId, clientId: 'client' }, { onEvents: (batch) => events.push(...batch) });
+    await harness.host.updateSubscription({ subscriptionId, add: [{ documentId: 'doc' }] });
+    await waitForCondition({ condition: () => events.some((event) => event.type === 'snapshot') });
+    await harness.host.submit({ subscriptionId, batches: [{ documentId: 'doc', changes: [{ hash, bytes }] }] });
+    expect(events).toContainEqual(expect.objectContaining({ type: 'refuse', hash, reason: 'not canonically encoded' }));
+
+    // Without the check the heads name one hash and the exported change another, so the save does not load.
+    const [poisoned] = A.applyChanges(A.clone(harness.store.get('doc')), [bytes]);
+    expect(A.getHeads(poisoned)).toEqual([hash]);
+    expect(A.getAllChanges(poisoned).map((stored) => A.decodeChange(stored).hash)).not.toContain(hash);
+    expect(() => A.load(A.save(poisoned))).toThrow(/mismatching heads/);
+
+    // The canonical bytes of the same change go through.
+    await harness.host.submit({
+      subscriptionId,
+      batches: [{ documentId: 'doc', changes: [{ hash: change.hash, bytes: canonical }] }],
+    });
+    await waitForCondition({ condition: () => events.some((event) => event.type === 'ack') });
+    expect(A.getHeads(harness.store.get('doc'))).toEqual([change.hash]);
+    expect(A.getHeads(A.load(A.save(harness.store.get('doc'))))).toEqual([change.hash]);
+  });
+
+  test('the host applies a burst of tab changes in one Automerge call', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab();
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    const before = harness.store.applyCalls;
+    for (let i = 0; i < 50; i++) {
+      handle.change((doc: Shape) => {
+        Automerge.splice(doc, ['content'], doc.content.length, 0, 'x');
+      });
+    }
+    await repo.flush();
+    expect(harness.store.applyCalls - before).toBe(1);
+    expect(A.toJS(harness.store.get<Shape>('doc')).content).toBe(`hello${'x'.repeat(50)}`);
+  });
+
+  test('the first change after a pause leaves at once, a burst goes as one batch, and the page hiding sends the rest', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    // One pass a second, so the test can act inside a pass's slot however slow the machine.
+    const repo = await harness.tab({ maxSendRate: 1 });
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    const submit = vi.spyOn(harness.host, 'submit');
+    const sent = () =>
+      submit.mock.calls.map(([request]) => request.batches.reduce((sum, batch) => sum + batch.changes.length, 0));
+    const type = (text: string) => {
+      for (const char of text) {
+        handle.change((doc: Shape) => {
+          Automerge.splice(doc, ['content'], doc.content.length, 0, char);
+        });
+      }
+    };
+    // The follow is a pass and its answer schedules another, so a pause is two slots long.
+    await sleep(2_100);
+
+    // Typed in one task: the batch leaves as soon as the task ends, not after a timer.
+    type(' abcd');
+    await waitForCondition({ condition: () => submit.mock.calls.length > 0, timeout: 300 });
+    expect(sent()).toEqual([5]);
+
+    // Within a second of that pass, the next changes wait for their slot, as RepoProxy's do.
+    type(' efghi');
+    await sleep(100);
+    expect(sent()).toEqual([5]);
+
+    // The page hides before the slot comes; what is queued still reaches the host at once.
+    harness.pageEvents[0].dispatchEvent(new Event('pagehide'));
+    await waitForCondition({ condition: () => submit.mock.calls.length > 1, timeout: 500 });
+    expect(sent()).toEqual([5, 6]);
+    await repo.flush();
+    expect(A.toJS(harness.store.get<Shape>('doc')).content).toBe('hello abcd efghi');
+    expect(A.getHeads(harness.store.get('doc'))).toEqual(handle.heads);
+  });
+
+  test('changes waiting for their slot are lost with a tab that closes without pagehide', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab({ maxSendRate: 1 });
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    handle.change((doc: Shape) => {
+      Automerge.splice(doc, ['content'], 5, 0, ' kept');
+    });
+    await repo.flush();
+    handle.change((doc: Shape) => {
+      Automerge.splice(doc, ['content'], 10, 0, ' lost');
+    });
+    await repo.close();
+    await sleep(100);
+    expect(A.toJS(harness.store.get<Shape>('doc')).content).toBe('hello kept');
   });
 
   test('a restarted host loses nothing a tab holds: every tab sends back what the host lacks', async () => {

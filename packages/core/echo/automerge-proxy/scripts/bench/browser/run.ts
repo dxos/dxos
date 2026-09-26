@@ -4,22 +4,23 @@
 
 // Memory and write latency in Chromium: one, two and three tabs holding a space as tab documents or
 // as Automerge replicas, sharing one worker that holds the space in Automerge.
-// Usage: node --conditions=source src/bench/browser/run.ts <corpus.json> [--tabs 1,2,3]
+// Usage: node --conditions=source scripts/bench/browser/run.ts <corpus.json> [--tabs 1,2,3]
 
 import * as A from '@automerge/automerge';
 import { chromium } from '@playwright/test';
 import { type BuildOptions, build } from 'esbuild';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { hashesByActor } from '../../changes.ts';
-import { saveNoCompress } from '../../save.ts';
+import { saveNoCompress } from '../../../src/internal/automerge.ts';
+import { hashesByActor } from '../../../src/internal/changes.ts';
 import { type DocInput, type Latency, type Measure, median } from './common.ts';
 
 const here = import.meta.dirname;
-const out = join(here, '../../../dist/bench');
+const out = mkdtempSync(join(tmpdir(), 'automerge-proxy-bench-'));
 const require = createRequire(import.meta.url);
 
 const corpus: { docs: { kind: string; bytes: string }[] } = JSON.parse(readFileSync(process.argv[2], 'utf8'));
