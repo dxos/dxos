@@ -31,6 +31,7 @@ export const CLOUDFLARE_MESSAGE_MAX_BYTES = 1000 * 1000; // 1MB
 export const CLOUDFLARE_RPC_MAX_BYTES = 32 * 1000 * 1000; // 32MB
 
 const MAX_CHUNK_LENGTH = 16384;
+const MAX_OUT_CHANNEL_ID = 255;
 const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
@@ -56,6 +57,13 @@ export class WebSocketMuxer {
   private _inMessageAccumulatedBytes = 0;
   private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
   private readonly _outMessageChannelByService = new Map<string, number>();
+  /** Channels whose last sent segment left the receiver mid-sequence. */
+  private readonly _outOpenSequences = new Set<number>();
+  /**
+   * Set once pending sends were dropped with a sequence still open at the receiver: the wire format has no abort, so
+   * the receiver keeps those segments and would prepend them to the next sequence on that channel.
+   */
+  private _segmentedSendError: Error | undefined;
 
   private _sendTimeout: any | undefined;
 
@@ -70,6 +78,9 @@ export class WebSocketMuxer {
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
+   * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing or the muxer is
+   * destroyed first, or with the error the socket's `send` throws; any of these drops every queued segmented message,
+   * not just this one. Once a message was cut off mid-sequence, every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
@@ -90,6 +101,9 @@ export class WebSocketMuxer {
     if (channelId == null || binary.length < this._maxChunkLength) {
       this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
       return;
+    }
+    if (this._segmentedSendError) {
+      throw this._segmentedSendError;
     }
 
     const chunkCount = Math.ceil(binary.length / this._maxChunkLength);
@@ -211,10 +225,7 @@ export class WebSocketMuxer {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
     }
-    for (const channelChunks of this._outMessageChunks.values()) {
-      channelChunks.forEach((chunk) => chunk.trigger?.wake());
-    }
-    this._outMessageChunks.clear();
+    this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
     this._inMessageAccumulator.clear();
     this._inMessageAccumulatorBytes.clear();
     this._inMessageAccumulatedBytes = 0;
@@ -239,7 +250,11 @@ export class WebSocketMuxer {
         return;
       }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-        log.warn('send called for closed websocket');
+        log.warn('send called for closed websocket', {
+          readyState: this._ws.readyState,
+          pendingChannels: this._outMessageChunks.size,
+        });
+        this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
         this._sendTimeout = undefined;
         return;
       }
@@ -261,7 +276,21 @@ export class WebSocketMuxer {
 
         const nextMessage = messages.shift();
         if (nextMessage) {
-          this._ws.send(nextMessage.payload);
+          try {
+            this._ws.send(nextMessage.payload);
+          } catch (error) {
+            log.warn('muxer failed to send segmented message chunk', { channelId, error });
+            const sendError = error instanceof Error ? error : new Error(String(error));
+            nextMessage.trigger?.throw(sendError);
+            this._rejectPendingSends(sendError);
+            this._sendTimeout = undefined;
+            return;
+          }
+          if ((nextMessage.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
+            this._outOpenSequences.add(channelId);
+          } else {
+            this._outOpenSequences.delete(channelId);
+          }
           nextMessage.trigger?.wake();
         } else {
           emptyChannels.push(channelId);
@@ -279,13 +308,27 @@ export class WebSocketMuxer {
     this._sendTimeout = setTimeout(send);
   }
 
+  /** Rejects every queued segmented send and drops the chunks they had yet to send. */
+  private _rejectPendingSends(error: Error): void {
+    for (const channelChunks of this._outMessageChunks.values()) {
+      channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
+    }
+    this._outMessageChunks.clear();
+    if (this._outOpenSequences.size > 0) {
+      this._segmentedSendError ??= error;
+      this._outOpenSequences.clear();
+    }
+  }
+
   private _resolveChannel(message: Message): number | undefined {
     if (!message.serviceId) {
       return undefined;
     }
     let id = this._outMessageChannelByService.get(message.serviceId);
     if (!id) {
-      id = this._outMessageChannelByService.size + 1;
+      // Channel ids are one byte on the wire. Past that many services they are shared, which is safe because a
+      // channel is a single queue: its services take turns rather than interleave segments.
+      id = (this._outMessageChannelByService.size % MAX_OUT_CHANNEL_ID) + 1;
       this._outMessageChannelByService.set(message.serviceId, id);
     }
     return id;
@@ -306,6 +349,16 @@ export class SegmentedMessageLimitError extends Error {
   }
 }
 
+/**
+ * Rejects a segmented send whose remaining segments were dropped because the socket began closing, or the muxer was
+ * destroyed, before they could be handed to it.
+ */
+export class WebSocketClosedError extends Error {
+  constructor(public readonly readyState: number) {
+    super(`WebSocket closed (readyState ${readyState}) before a segmented message was sent.`);
+  }
+}
+
 type WebSocketCompat = {
   readonly readyState: number;
   /**
@@ -318,7 +371,7 @@ type WebSocketCompat = {
 type MessageChunk = {
   payload: Uint8Array;
   /**
-   * Wakes when the payload is enqueued by WebSocket.
+   * Wakes when the payload is enqueued by WebSocket, or throws if the socket fails or the muxer is destroyed first.
    */
   trigger?: Trigger;
 };

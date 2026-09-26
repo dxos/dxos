@@ -5,7 +5,7 @@
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -19,10 +19,10 @@ import {
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge/index.ts';
+import { AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
-import { SpaceStateManager } from './space-state-manager.ts';
+import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager.ts';
 
 describe('SpaceStateManager and EchoHost persistent space store', () => {
   test('SpaceStateManager persists and restores space root mappings', async () => {
@@ -414,5 +414,87 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     // fire, so a context that outlived its space surfaces here rather than after the test.
     await sleep(200);
     expect(updates).not.toContain(spaceA);
+  });
+
+  test('a reopened space keeps its collection sync state when its document list changes', async ({ expect }) => {
+    const dbPath = join(__dirname, 'test-reopened-space-sync-state.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    {
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      await host.createSpaceRoot(Context.default(), spaceKey);
+      await host.close();
+      await dispose();
+    }
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => dispose());
+    const host = new EchoHost({ runtime });
+    await openAndClose(host);
+    const clearLocalCollectionState = vi.spyOn(host.automergeHost, 'clearLocalCollectionState');
+    const updateLocalCollectionState = vi.spyOn(host.automergeHost, 'updateLocalCollectionState');
+
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    const collectionId = deriveCollectionIdFromSpaceId(spaceId, root.documentId);
+
+    // Creating an object links a new document from the directory, which is what changes the list.
+    using object = await host.createDoc({});
+    using directory = host.automergeHost.acquireDoc<DatabaseDirectory>(root.documentId);
+    directory.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: object.url };
+    });
+    await expect
+      .poll(() =>
+        updateLocalCollectionState.mock.calls.some(
+          ([updatedCollectionId, documentIds]) =>
+            updatedCollectionId === collectionId && documentIds.includes(object.documentId),
+        ),
+      )
+      .toBe(true);
+
+    // Clearing the live collection drops every peer's recorded state, so sync with each restarts.
+    expect(clearLocalCollectionState).not.toHaveBeenCalledWith(collectionId);
+  });
+
+  test('a replaced directory is reported once, not on every later change', async ({ expect }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+
+    const createDirectory = () =>
+      automergeHost.createDoc<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT, objects: {}, links: {} });
+    using first = await createDirectory();
+    using second = await createDirectory();
+    const spaceId = SpaceId.random();
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(first.documentId));
+
+    const updates: SpaceDocumentListUpdatedEvent[] = [];
+    manager.spaceDocumentListUpdated.on((event) => {
+      updates.push(event);
+    });
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(second.documentId));
+    await expect.poll(() => updates.some((event) => event.spaceRootId === second.documentId)).toBe(true);
+    const swap = updates.find((event) => event.spaceRootId === second.documentId);
+    expect(swap?.previousRootId).toBe(first.documentId);
+
+    using object = await automergeHost.createDoc({});
+    second.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: object.url };
+    });
+    await expect.poll(() => updates.some((event) => event.documentIds.includes(object.documentId))).toBe(true);
+
+    // Only the swap retires the first directory: repeating it makes every later list change look like one.
+    const linked = updates.find((event) => event.documentIds.includes(object.documentId));
+    expect(linked?.previousRootId).toBeUndefined();
   });
 });
