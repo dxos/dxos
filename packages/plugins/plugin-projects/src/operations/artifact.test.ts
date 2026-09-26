@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
-import { Task } from '@dxos/types';
+import { PullRequest, Task } from '@dxos/types';
 
 import artifactAdd from './artifact-add.ts';
 import artifactList from './artifact-list.ts';
@@ -51,6 +51,29 @@ describe('project skill operations', () => {
       // Refs, not children — finishing the task must not cascade to the document.
       expect(Obj.getParent(doc)?.id).not.toBe(task.id);
     }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('artifact-add records a pull request made for a sub-task on the root of its tree', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Voyage' }));
+      const root = yield* Database.add(Task.make({ title: 'Root' }));
+      const child = yield* Database.add(Task.make({ title: 'Child', parentTask: Ref.make(root) }));
+      const pullRequest = yield* Database.add(
+        PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'Root', state: 'open' }),
+      );
+      yield* Database.flush();
+
+      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(pullRequest), task: Ref.make(child) });
+
+      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([pullRequest.id]);
+      expect(child.artifacts ?? []).toHaveLength(0);
+    }).pipe(
+      Effect.provide(
+        TestDatabaseLayer({
+          types: [Project.Project, Instructions.Instructions, Text.Text, Task.Task, PullRequest.PullRequest],
+        }),
+      ),
+    ),
   );
 
   it.effect('artifact-list returns dxn, typename, and label per artifact', () =>

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it, test } from '@effect/vitest';
+import { afterEach, beforeEach, describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref, Type } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { createBranch, mergeBranch, switchBranch } from '@dxos/echo-client';
+import { EchoTestBuilder, TestDatabaseLayer } from '@dxos/echo-client/testing';
 
 import * as Milestone from './Milestone.ts';
 import * as Task from './Task.ts';
@@ -25,13 +26,13 @@ describe('TaskSet', () => {
     expect(taskSet.milestones).toEqual([]);
   });
 
-  describe('reorder', () => {
+  describe('reorderInPlace', () => {
     it.effect('moves an entry before its anchor', () =>
       Effect.gen(function* () {
         const tasks = yield* seedTasks(['a', 'b', 'c']);
         const refs = tasks.map((task) => Ref.make(task));
 
-        const next = TaskSet.reorder(refs, tasks[2].id, tasks[0].id);
+        const next = reordered(refs, tasks[2].id, tasks[0].id);
 
         expect(titles(next)).toEqual(['c', 'a', 'b']);
       }).pipe(Effect.provide(testLayer())),
@@ -43,8 +44,8 @@ describe('TaskSet', () => {
         const refs = tasks.map((task) => Ref.make(task));
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
-        expect(titles(TaskSet.reorder(refs, tasks[0].id, undefined))).toEqual(['b', 'c', 'a']);
-        expect(titles(TaskSet.reorder(refs, tasks[0].id, stranger.id))).toEqual(['b', 'c', 'a']);
+        expect(titles(reordered(refs, tasks[0].id, undefined))).toEqual(['b', 'c', 'a']);
+        expect(titles(reordered(refs, tasks[0].id, stranger.id))).toEqual(['b', 'c', 'a']);
       }).pipe(Effect.provide(testLayer())),
     );
 
@@ -54,8 +55,8 @@ describe('TaskSet', () => {
         const refs = tasks.map((task) => Ref.make(task));
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
-        expect(titles(TaskSet.reorder(refs, stranger.id, tasks[0].id))).toEqual(['a', 'b']);
-        expect(titles(TaskSet.reorder(refs, tasks[0].id, tasks[0].id))).toEqual(['a', 'b']);
+        expect(titles(reordered(refs, stranger.id, tasks[0].id))).toEqual(['a', 'b']);
+        expect(titles(reordered(refs, tasks[0].id, tasks[0].id))).toEqual(['a', 'b']);
       }).pipe(Effect.provide(testLayer())),
     );
   });
@@ -137,6 +138,24 @@ describe('TaskSet', () => {
       }).pipe(Effect.provide(testLayer())),
     );
 
+    it.effect('a member listed only by its parent edge is re-listed rather than refused', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, sibling } = yield* seedTree();
+        const dropped = yield* Database.add(Task.make({ [Obj.Parent]: taskSet, title: 'dropped', status: 'todo' }));
+        const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
+        yield* Database.flush();
+
+        const parent = yield* TaskSet.resolveParentTask(taskSet, sibling, Ref.make(dropped));
+
+        expect(parent.id).toBe(dropped.id);
+        expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toContain(dropped.id);
+        expect((yield* TaskSet.findTaskSet(dropped))?.id).toBe(taskSet.id);
+
+        const error = yield* TaskSet.resolveParentTask(taskSet, root, Ref.make(stranger)).pipe(Effect.flip);
+        expect(error).toBeInstanceOf(TaskSet.InvalidParentTaskError);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
     it.effect('removeTasksFromSet sweeps the array the cascade cannot reach', () =>
       Effect.gen(function* () {
         const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
@@ -182,5 +201,73 @@ const seedTree = () =>
     return { taskSet, root, child, grandchild, sibling };
   });
 
+/** `reorderInPlace` on a copy, so each assertion starts from the same order. */
+const reordered = (
+  refs: ReadonlyArray<Ref.Ref<Task.Task>>,
+  id: string,
+  beforeId: string | undefined,
+): Ref.Ref<Task.Task>[] => {
+  const copy = [...refs];
+  TaskSet.reorderInPlace(copy, id, beforeId);
+  return copy;
+};
+
 const titles = (refs: ReadonlyArray<Ref.Ref<Task.Task>>): (string | undefined)[] =>
   refs.map((ref) => ref.target?.title);
+
+/**
+ * A reorder merged against a concurrent push must keep the pushed entry. The push is made on a
+ * branch forked before the reorder and merged back, which is exactly what a peer that had not yet
+ * seen the reorder produces; the whole-array write is the control showing the scenario can lose it.
+ */
+describe('TaskSet concurrent membership', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const mergeConcurrentPush = async (reorder: (taskSet: TaskSet.TaskSet, first: Task.Task) => void) => {
+    const { db } = await builder.createDatabase({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+    const taskSet = db.add(TaskSet.make({ name: 'Sprint' }));
+    const first = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'first', status: 'todo' }));
+    const second = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'second', status: 'todo' }));
+    const pushed = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'pushed', status: 'todo' }));
+    TaskSet.addTaskToSet(taskSet, first);
+    TaskSet.addTaskToSet(taskSet, second);
+    await db.flush();
+
+    await createBranch(taskSet, 'peer');
+    await switchBranch(taskSet, 'peer');
+    TaskSet.addTaskToSet(taskSet, pushed);
+    await db.flush();
+    await switchBranch(taskSet, 'main');
+
+    reorder(taskSet, first);
+    await db.flush();
+    await mergeBranch(taskSet, 'peer');
+    await db.flush();
+
+    return { ids: taskSet.tasks.map((ref) => Task.refEntityId(ref)), first, second, pushed };
+  };
+
+  test('a reorder keeps an entry a concurrent peer pushed', async () => {
+    const { ids, first, second, pushed } = await mergeConcurrentPush((taskSet, first) =>
+      TaskSet.moveTask(taskSet, first, {}),
+    );
+    expect([...ids].sort()).toEqual([first.id, second.id, pushed.id].sort());
+  });
+
+  test('control: a whole-array write drops it', async () => {
+    const { ids, pushed } = await mergeConcurrentPush((taskSet) =>
+      Obj.update(taskSet, (taskSet) => {
+        taskSet.tasks = [...taskSet.tasks].reverse();
+      }),
+    );
+    expect(ids).not.toContain(pushed.id);
+  });
+});

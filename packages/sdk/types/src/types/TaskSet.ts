@@ -82,7 +82,7 @@ export const addTask = (
  */
 export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = taskSet.tasks.filter((ref) => Task.refEntityId(ref) !== task.id);
+    removeRefsInPlace(taskSet.tasks, new Set([task.id]));
   });
   db.remove(task);
 };
@@ -112,17 +112,39 @@ const resolveRefs = <T extends Obj.Unknown>(refs: ReadonlyArray<Ref.Ref<T>>): Ar
 //
 
 /**
- * The task set a task belongs to, found through the reverse-ref index rather than `Obj.getParent`:
- * a legacy task's parent edge may not yet be healed to the set, while the `tasks` array always
- * states membership.
+ * The task set a task belongs to, found through the reverse-ref index first: a legacy task's parent
+ * edge may not yet be healed to the set. The ECHO parent is the fallback, for a task whose array
+ * entry was dropped (see {@link ensureMember}).
  */
 export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const sets = yield* Database.query(Query.select(Filter.id(task.id)).referencedBy(TaskSet, 'tasks')).run.pipe(
       Effect.orElseSucceed(() => []),
     );
-    return sets[0];
+    if (sets[0]) {
+      return sets[0];
+    }
+    const parent = Obj.getParent(task);
+    return instanceOf(parent) ? parent : undefined;
   });
+
+/**
+ * Whether `task` is a member of `taskSet`, re-listing it when only its ECHO parent edge says so.
+ *
+ * The two records of membership can disagree: the list shows `Filter.childOf(set)`, while a
+ * whole-array write merged against a concurrent push drops that entry from `tasks`. The edge is the
+ * one that survives, so it wins and the array is healed rather than the task being refused.
+ */
+export const ensureMember = (taskSet: TaskSet, task: Task.Task): boolean => {
+  if (taskSet.tasks.some((ref) => Task.refEntityId(ref) === task.id)) {
+    return true;
+  }
+  if (Obj.getParent(task)?.id !== taskSet.id) {
+    return false;
+  }
+  addTaskToSet(taskSet, task);
+  return true;
+};
 
 /** The task set a milestone belongs to (see {@link findTaskSet}). */
 export const findMilestoneTaskSet = (
@@ -211,13 +233,49 @@ export const addPersisted = <T extends Obj.Any>(
  */
 export const removeTasksFromSet = (taskSet: TaskSet, taskIds: ReadonlySet<EntityId>): void => {
   Obj.update(taskSet, (taskSet) => {
-    // Matched on the ref's own entity id rather than its target, so an entry whose object is not
-    // loaded is still swept.
-    taskSet.tasks = taskSet.tasks.filter((ref) => {
-      const id = Task.refEntityId(ref);
-      return id === undefined || !taskIds.has(id);
-    });
+    removeRefsInPlace(taskSet.tasks, taskIds);
   });
+};
+
+//
+// In-place array writes. Membership arrays are spliced, never reassigned: a whole-array write
+// replaces the list in the CRDT, so merged against a concurrent peer's push it drops that entry.
+//
+
+/**
+ * Remove every ref whose entity id is in `ids`, splicing in place. Matched on the ref's own entity
+ * id rather than its target, so an entry whose object is not loaded is still swept.
+ */
+export const removeRefsInPlace = <T extends Obj.Unknown>(refs: Ref.Ref<T>[], ids: ReadonlySet<string>): void => {
+  for (let index = refs.length - 1; index >= 0; index--) {
+    const id = Task.refEntityId(refs[index]);
+    if (id !== undefined && ids.has(id)) {
+      refs.splice(index, 1);
+    }
+  }
+};
+
+/**
+ * Move the ref keyed `id` to sit immediately before `beforeId` (or to the end when unanchored),
+ * splicing in place. The same contract as {@link reorderItems}, which the UI uses to predict it.
+ */
+export const reorderInPlace = <T extends Obj.Unknown>(
+  refs: Ref.Ref<T>[],
+  id: EntityId,
+  beforeId: EntityId | undefined,
+): void => {
+  if (beforeId === id) {
+    return;
+  }
+  const index = refs.findIndex((ref) => Task.refEntityId(ref) === id);
+  if (index === -1) {
+    return;
+  }
+  // Read before the splice: the removed elements it returns are the stored encoding, not refs.
+  const moved = refs[index];
+  refs.splice(index, 1);
+  const anchor = beforeId === undefined ? -1 : refs.findIndex((ref) => Task.refEntityId(ref) === beforeId);
+  refs.splice(anchor === -1 ? refs.length : anchor, 0, moved);
 };
 
 /**
@@ -291,8 +349,7 @@ export const resolveParentTask = (
         ? (Database.peek(ancestor.parentTask) ?? (yield* Database.load(ancestor.parentTask)))
         : undefined;
     }
-    const belongs = taskSet ? taskSet.tasks.some((ref) => Task.refEntityId(ref) === candidate.id) : false;
-    if (!belongs) {
+    if (!taskSet || !ensureMember(taskSet, candidate)) {
       return yield* Effect.fail(
         new InvalidParentTaskError({ message: 'The parent task does not belong to this task set.' }),
       );
@@ -331,7 +388,7 @@ export const moveTask = (
   { parentTask, beforeId }: { parentTask?: Task.Task | null; beforeId?: EntityId },
 ): void => {
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = reorder(taskSet.tasks, task.id, beforeId);
+    reorderInPlace(taskSet.tasks, task.id, beforeId);
   });
   if (parentTask !== undefined) {
     applyParentTask(taskSet, task, parentTask ?? undefined);

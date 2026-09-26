@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -11,10 +12,12 @@ import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type }
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/echo/Key';
+import { BaseError } from '@dxos/errors';
 import { type MakeRequired } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
 import * as Milestone from './Milestone.ts';
+import * as PullRequest from './PullRequest.ts';
 
 export type Option<T> = { id: T; title: string; color?: string; icon?: string };
 
@@ -898,4 +901,82 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
       queue.push(...children);
     }
     return subtree;
+  });
+
+/** How long one cold ref may take to resolve: an unresolvable ref waits out the resolver's own 30s timeout. */
+const REF_LOAD_TIMEOUT = Duration.seconds(5);
+
+/** The ref's target, or `undefined` when it is gone or does not resolve in time. */
+const loadOrUndefined = <T extends Obj.Unknown>(ref: Ref.Ref<T>): Effect.Effect<T | undefined> => {
+  const target = Database.peek(ref);
+  return target
+    ? Effect.succeed(target)
+    : Database.load(ref).pipe(
+        Effect.timeout(REF_LOAD_TIMEOUT),
+        Effect.orElseSucceed(() => undefined),
+      );
+};
+
+/**
+ * The top of `task`'s tree, walking `parentTask` up — the unit of work every task in the tree lands
+ * with. A dangling or unloadable parent ends the walk there, as {@link rootTasks} reads it. Cycle-safe.
+ */
+export const collectRoot = (task: Task): Effect.Effect<Task, never, Database.Service> =>
+  Effect.gen(function* () {
+    const seen = new Set<string>([task.id]);
+    let current = task;
+    while (current.parentTask) {
+      const ref = current.parentTask;
+      const parent = yield* loadOrUndefined(ref);
+      if (!parent || seen.has(parent.id)) {
+        break;
+      }
+      seen.add(parent.id);
+      current = parent;
+    }
+    return current;
+  });
+
+/** The whole tree `task` belongs to — its root first, then every descendant. */
+export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
+  Effect.flatMap(collectRoot(task), collectSubtree);
+
+/** Statuses a task does not leave on its own: closing a tree leaves these as they are. */
+export const TerminalStatuses: ReadonlySet<Status> = new Set(['done', 'duplicate', 'cancelled', 'failed']);
+
+/** A task tree already has a different open PR: every sub-task of a task lands in one PR. */
+export class PullRequestConflictError extends BaseError.extend(
+  'PullRequestConflictError',
+  'Task tree already has an open pull request.',
+) {}
+
+/**
+ * The task an artifact produced for `task` is recorded on. A pull request goes to the ROOT of the
+ * tree, since a task with sub-tasks is one unit of work that lands in one PR; anything else stays on
+ * `task`. Fails when the root already holds a DIFFERENT pull request that is still open.
+ */
+export const artifactTarget = (
+  task: Task,
+  artifact: Obj.Unknown,
+): Effect.Effect<Task, PullRequestConflictError, Database.Service> =>
+  Effect.gen(function* () {
+    if (!PullRequest.instanceOf(artifact)) {
+      return task;
+    }
+    const root = yield* collectRoot(task);
+    for (const ref of root.artifacts ?? []) {
+      if (refEntityId(ref) === artifact.id) {
+        continue;
+      }
+      const existing = yield* loadOrUndefined(ref);
+      if (PullRequest.instanceOf(existing) && existing.state === 'open') {
+        const url = existing.url ?? PullRequest.reference(existing);
+        return yield* Effect.fail(
+          new PullRequestConflictError({
+            message: `Task tree "${root.title}" already has PR ${url}; all subtasks land in one PR.`,
+          }),
+        );
+      }
+    }
+    return root;
   });

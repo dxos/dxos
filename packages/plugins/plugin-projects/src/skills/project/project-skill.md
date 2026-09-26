@@ -256,7 +256,8 @@ spaceId }`. Report the new project id.
   guess. For each selected row call this session's task-chip tool once, with a prompt that **stands
   alone**: the receiving agent has none of this conversation, so include the project name, the task
   headline and its notes verbatim, any file paths or PR numbers it references, and the project and
-  task-set ids. Do **not** start the work yourself and do **not** complete the task — a chip is a
+  task-set ids. A selected sub-task is **promoted to its root task**: the chip carries the root and
+  ALL its sub-tasks, and two chips never share a tree. Do **not** start the work yourself and do **not** complete the task — a chip is a
   handoff, and the task stays open until the spawned session finishes it. If this session has no
   task-chip tool, say so and stop; a subagent is not a substitute, since it would run the work now
   instead of handing it off.
@@ -281,6 +282,9 @@ spaceId }`. Report the new project id.
 5. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
+6. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
+   never a lone sub-task; the PR covers every sub-task, and is attached to the root
+   (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
 
 ## Common mistakes
 

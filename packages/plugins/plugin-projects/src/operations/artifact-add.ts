@@ -33,7 +33,8 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = Proj
       if (taskRef) {
         const task = yield* Database.load(taskRef);
         const object = yield* Database.load(objectRef);
-        Task.addArtifact(task, object);
+        // A PR goes to the root of the task's tree, where every sub-task finds it.
+        Task.addArtifact(yield* Task.artifactTarget(task, object), object);
       }
 
       yield* Database.flush();

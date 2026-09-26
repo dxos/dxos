@@ -32,6 +32,34 @@ describe('move-task', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
+  it.effect('heals a member whose array entry was dropped, rather than refusing the drop', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const { task: listed } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'listed' });
+      const { task: dropped } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'dropped' });
+      // The state a whole-array write merged against a concurrent push leaves: the parent edge
+      // survives, the array entry does not.
+      TaskSet.removeTasksFromSet(taskSet, new Set([dropped.id]));
+
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(listed), parentTask: Ref.make(dropped) });
+
+      expect(Task.parentTaskId(listed)).toBe(dropped.id);
+      expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toContain(dropped.id);
+
+      // Creating under it heals the same way.
+      const { task: child } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'child',
+        parentTask: Ref.make(listed),
+      });
+      TaskSet.removeTasksFromSet(taskSet, new Set([listed.id]));
+      yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'grandchild', parentTask: Ref.make(listed) });
+      expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toContain(listed.id);
+      expect(Task.parentTaskId(child)).toBe(listed.id);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
   it.effect('re-parents and repositions in one call, so a drop is a single mutation', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

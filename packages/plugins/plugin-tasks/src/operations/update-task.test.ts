@@ -270,6 +270,79 @@ describe('update-task', () => {
   );
 });
 
+describe('update-task subtree', () => {
+  const layer = Layer.provideMerge(
+    Trace.writerLayerNoop,
+    TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+  );
+
+  /** Two levels deep, so the cascade has to walk rather than look one level. */
+  const makeTree = Effect.fnUntraced(function* () {
+    const taskSet = yield* Database.add(TaskSet.make({}));
+    yield* Database.flush();
+    const { task: root } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Root' });
+    const { task: child } = yield* createTask.handler({
+      taskSet: Ref.make(taskSet),
+      title: 'Child',
+      parentTask: Ref.make(root),
+    });
+    const { task: grandchild } = yield* createTask.handler({
+      taskSet: Ref.make(taskSet),
+      title: 'Grandchild',
+      parentTask: Ref.make(child),
+    });
+    const { task: other } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Other' });
+    return { root, child, grandchild, other };
+  });
+
+  it.effect('assigning a sub-task assigns its whole tree', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild, other } = yield* makeTree();
+
+      yield* updateTask.handler({ task: Ref.make(child), assignee: { role: 'assistant', name: 'agent' } });
+
+      for (const member of [root, child, grandchild]) {
+        expect(member.assignee?.name).toBe('agent');
+        const changes = (member.history ?? []).filter(Task.isChangeEntry);
+        expect(changes.at(-1)?.description).toContain('Assigned to');
+      }
+      // Assignment alone starts nothing.
+      expect(root.status).toBe('todo');
+      expect(other.assignee).toBeUndefined();
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('starting a sub-task starts its unstarted tree, leaving finished members alone', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild, other } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(child), status: 'done' });
+
+      yield* updateTask.handler({ task: Ref.make(grandchild), status: 'started' });
+
+      expect(grandchild.status).toBe('started');
+      expect(root.status).toBe('started');
+      expect(child.status).toBe('done');
+      expect(other.status).toBe('todo');
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('finishing a root finishes its open sub-tasks; finishing a sub-task does not', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(grandchild), status: 'cancelled' });
+
+      yield* updateTask.handler({ task: Ref.make(child), status: 'done' });
+      expect(root.status).toBe('todo');
+
+      yield* updateTask.handler({ task: Ref.make(child), status: 'started' });
+      yield* updateTask.handler({ task: Ref.make(root), status: 'done' });
+      expect(root.status).toBe('done');
+      expect(child.status).toBe('done');
+      expect(grandchild.status).toBe('cancelled');
+    }).pipe(Effect.provide(layer)),
+  );
+});
+
 describe('update-task tracing', () => {
   it.effect(
     'traces a status change, and stays silent when the status is unchanged',

@@ -79,10 +79,61 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         TaskSet.applyParentTask(taskSet, task, newParent);
       }
 
+      // After any re-parent, so the cascade reaches the tree the task now belongs to.
+      yield* cascadeClaim(task, { assignee: sessionAssignee ?? assignee ?? undefined, started: status === 'started' });
+      if (status === 'done' && task.status === 'done') {
+        yield* cascadeDone(task);
+      }
+
       return { task: task };
     }),
   ),
 );
+
+/** Statuses a claim moves to `started`; anything further along keeps its own state. */
+const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
+
+/**
+ * A task with sub-tasks is one unit of work that lands in one PR, so claiming any task in the tree —
+ * assigning it, or starting it — claims the root and every descendant with it; otherwise a sub-task
+ * can be picked up by a second session and shipped on its own.
+ */
+const cascadeClaim = Effect.fnUntraced(function* (
+  task: Task.Task,
+  { assignee, started }: { assignee: Actor.Actor | undefined; started: boolean },
+) {
+  if (!assignee && !started) {
+    return;
+  }
+  const tree = yield* Task.collectTree(task);
+  for (const member of tree) {
+    if (member.id === task.id) {
+      continue;
+    }
+    Task.update(member, {
+      // A copy per task: ECHO refuses to store a record another object already owns.
+      ...(assignee ? { assignee: { ...assignee } } : {}),
+      ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
+    });
+  }
+});
+
+/**
+ * Finishing a root finishes its tree: the sub-tasks shipped in the root's PR, so leaving them open
+ * would report work outstanding that already landed. Only a root cascades — a sub-task finishing
+ * says nothing about its siblings.
+ */
+const cascadeDone = Effect.fnUntraced(function* (task: Task.Task) {
+  const root = yield* Task.collectRoot(task);
+  if (root.id !== task.id) {
+    return;
+  }
+  for (const member of yield* Task.collectSubtree(task)) {
+    if (member.id !== task.id && !Task.TerminalStatuses.has(member.status ?? 'todo')) {
+      Task.setStatus(member, 'done');
+    }
+  }
+});
 
 /**
  * The actor for a coding-agent session, creating the session record when the space does not hold

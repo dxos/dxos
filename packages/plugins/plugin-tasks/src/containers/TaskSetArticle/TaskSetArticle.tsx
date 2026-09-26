@@ -3,15 +3,20 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
+import { messageOf } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
@@ -127,11 +132,26 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       ...(before ? { before: Ref.make(before) } : {}),
     }),
   );
+  const { invokePromise } = useOperationInvoker();
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
-      Effect.runSync(move(task, placement));
+      // A rejected drop (e.g. a parent outside this set) must not throw out of the gesture handler:
+      // nothing was written, so the list stays put and the reason is shown instead.
+      const exit = Effect.runSyncExit(move(task, placement));
+      if (Exit.isFailure(exit)) {
+        const error = Cause.squash(exit.cause);
+        log.warn('task move rejected', { task: task.id, error });
+        void invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/move-task-error`,
+          icon: 'ph--warning--regular',
+          duration: 5_000,
+          title: ['move-task-error.title', { ns: meta.profile.key }],
+          description: messageOf(error) ?? String(error),
+          closeLabel: ['close.label', { ns: meta.profile.key }],
+        });
+      }
     },
-    [move],
+    [move, invokePromise],
   );
 
   // A row opens its task through the shared reading gesture: the companion beside the list where the

@@ -152,6 +152,19 @@ describe('collectSubtree', () => {
   );
 });
 
+describe('collectRoot', () => {
+  it.effect('walks parents up to the top of the tree', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* seedTree();
+
+      expect((yield* Task.collectRoot(grandchild)).id).toBe(root.id);
+      expect((yield* Task.collectRoot(child)).id).toBe(root.id);
+      expect((yield* Task.collectRoot(root)).id).toBe(root.id);
+      expect((yield* Task.collectTree(grandchild)).map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('review', () => {
   it.effect('carries reviewers and the artifacts a task produced', () =>
     Effect.gen(function* () {
