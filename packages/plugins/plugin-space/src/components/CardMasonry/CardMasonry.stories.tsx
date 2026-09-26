@@ -191,13 +191,13 @@ export const Compact: Story = {
     await expect(canvas.findByText('Uploading diagram.png…')).resolves.toBeTruthy();
 
     // Two columns: the tiles sit at exactly two distinct horizontal offsets.
-    await waitFor(() => {
+    await waitFor(async () => {
       const offsets = new Set(
         Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="listitem"]')).map(
           (tile) => tile.getBoundingClientRect().left,
         ),
       );
-      expect(offsets.size).toBe(2);
+      await expect(offsets.size).toBe(2);
     });
 
     // The host's item joins the object's own in the card's one menu, not a second row of actions.

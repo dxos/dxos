@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { CardMasonry } from '@dxos/plugin-space/components';
 import { Column, useTranslation } from '@dxos/react-ui';
