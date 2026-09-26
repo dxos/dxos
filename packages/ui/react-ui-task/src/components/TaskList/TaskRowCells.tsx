@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -115,6 +116,9 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
 
 TaskStatusControl.displayName = 'TaskList.StatusControl';
 
+/** The Task type's icon, leading the chip so it reads as the object it names. */
+const TASK_ICON = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(Task.Task)))?.icon;
+
 /**
  * The task's mnemonic, as a chip that copies a reference to it.
  *
@@ -134,9 +138,10 @@ export const TaskMnemonic = ({
     classNames={mx('font-mono', classNames)}
     density='sm'
     variant='tag'
-    hue='emerald'
+    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+    hue={getHashHue(Obj.getMnemonic(task))}
     label={Obj.getMnemonic(task)}
-    iconEnd
+    icon={TASK_ICON}
     onCopy={() => '@' + Obj.getMnemonic(task)}
     data-testid='taskList.item.mnemonic'
   />

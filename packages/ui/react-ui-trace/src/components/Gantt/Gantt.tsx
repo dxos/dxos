@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMe
 
 import { createContext } from '@dxos/react-hooks';
 import { HoverCard, ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type Hue, mx } from '@dxos/ui-theme';
 
 import { type Band, type Row, orderRows } from './gantt-rows.ts';
 import { type GanttAxis, type GanttScale, eventScale, timeScale } from './gantt-scale.ts';
@@ -65,6 +65,8 @@ export type GanttLane = {
    * separate fact: a lane can open out of another and end without ever reporting back.
    */
   closedInto?: { laneId: string; markerId: string };
+  /** Colours the legend dot, the bar, its nodes and its thread in place of the status colour. */
+  hue?: Hue;
   /** Lanes this one waits on. */
   blockedOn?: readonly string[];
   meta?: readonly GanttMeta[];
@@ -121,6 +123,12 @@ const BEND_RADIUS = BAR_HEIGHT / 2;
  * hue in a lighter shade, and `edge` — the live end of a lane still running — is the stronger shade
  * the legend's own status dot uses, so the two read as the same statement about the lane.
  */
+/**
+ * A hued lane's colour: the theme's tag surface token, read as a variable because the hue is data, so
+ * the lane matches a `Tag` of the same hue.
+ */
+const hueColor = (hue: Hue): string => `var(--color-${hue}-surface)`;
+
 const STATUS_COLOR: Record<
   GanttLaneStatus,
   { fill: string; node: string; edge: string; thread: string; text: string }
@@ -322,7 +330,10 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
             },
           })}
         >
-          <span className={mx('shrink-0 w-2 h-2 rounded-full bg-current', STATUS_COLOR[lane.status].text)} />
+          <span
+            className={mx('shrink-0 w-2 h-2 rounded-full bg-current', !lane.hue && STATUS_COLOR[lane.status].text)}
+            style={lane.hue ? { color: hueColor(lane.hue) } : undefined}
+          />
           <span className='truncate text-base-fg'>{lane.label}</span>
         </div>
       ))}
@@ -776,7 +787,11 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
               return (
                 <g key={`${lane.id}:${segment}`} className='cursor-pointer' onClick={() => onLaneSelect?.(lane)}>
                   <rect {...bar} className={mx('fill-base-surface', grow)} />
-                  <rect {...bar} className={mx(STATUS_COLOR[lane.status].fill, grow)} />
+                  {lane.hue ? (
+                    <rect {...bar} className={mx(grow)} style={{ fill: hueColor(lane.hue), fillOpacity: 0.4 }} />
+                  ) : (
+                    <rect {...bar} className={mx(STATUS_COLOR[lane.status].fill, grow)} />
+                  )}
                 </g>
               );
             }),
@@ -799,8 +814,9 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       height={THREAD_HEIGHT}
                       className={mx(
                         animate && mx('transition-[x,width]', ENTER_TRANSITION),
-                        STATUS_COLOR[lane.status].node,
+                        !lane.hue && STATUS_COLOR[lane.status].node,
                       )}
+                      style={lane.hue ? { fill: hueColor(lane.hue) } : undefined}
                     />,
                   ],
             ),
@@ -825,9 +841,10 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       // The live end pulses in the lane's stronger shade: scanning a wall of finished
                       // lanes, the ones still moving should be findable without reading the legend.
                       activeEdges.has(marker.id)
-                        ? mx('animate-pulse', STATUS_COLOR[row.lane.status].edge)
-                        : STATUS_COLOR[row.lane.status].node,
+                        ? mx('animate-pulse', !row.lane.hue && STATUS_COLOR[row.lane.status].edge)
+                        : !row.lane.hue && STATUS_COLOR[row.lane.status].node,
                     )}
+                    style={row.lane.hue ? { fill: hueColor(row.lane.hue) } : undefined}
                     onClick={() => onMarkerSelect?.(marker)}
                   />
                 </HoverCard.Trigger>

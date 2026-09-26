@@ -87,6 +87,7 @@ export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttDat
       ...(segmentsOf(lane) ? { segments: segmentsOf(lane) } : {}),
       ...(lane.delegatedFrom ? { openedFrom: lane.delegatedFrom } : {}),
       ...(lane.returnedTo ? { closedInto: lane.returnedTo } : {}),
+      ...(lane.hue ? { hue: lane.hue } : {}),
       ...(lane.blockedOn ? { blockedOn: lane.blockedOn } : {}),
       ...(meta.length > 0 ? { meta } : {}),
     });
