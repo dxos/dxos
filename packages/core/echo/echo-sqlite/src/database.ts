@@ -11,6 +11,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { type CleanupFn, Event } from '@dxos/async';
 import {
   Blob,
+  type Change,
   Database,
   Error as EchoError,
   Entity,
@@ -474,6 +475,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   getVersion<T extends Obj.Unknown>(_obj: T, _heads: readonly string[]): Obj.Snapshot<T> {
     throw new UnsupportedOperationError('getVersion');
+  }
+
+  getChanges<T extends Obj.Unknown>(_obj: T, _opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
+    throw new UnsupportedOperationError('getChanges');
   }
 
   async createBranch(): Promise<void> {

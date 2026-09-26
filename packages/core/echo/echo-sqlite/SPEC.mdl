@@ -55,7 +55,7 @@ feat F-1: Database interface
           pending writes and releases every subscription
 
   req F-1.4:
-    when: a caller uses feeds, branches, history (getVersion), a non-inline blob backend, or
+    when: a caller uses feeds, branches, history (getVersion, getChanges), a non-inline blob backend, or
           retainObjects (whose synchronous list of dropped ids would need the whole space in memory)
     then: the call fails with UnsupportedOperationError; nothing silently no-ops or returns a
           fabricated value

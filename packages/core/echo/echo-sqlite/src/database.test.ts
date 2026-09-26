@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach } from 'vitest';
 
-import { Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { Annotation, Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -423,6 +423,39 @@ describe('SqliteDatabase', () => {
     }),
   );
 
+  it.effect('matches annotations in SQL', () =>
+    Effect.gen(function* () {
+      const Color = Annotation.make({ id: 'org.dxos.annotation.echo-sqlite-color', schema: Schema.String });
+      const spaceId = SpaceId.random();
+      yield* session(
+        async (db) => {
+          for (const [name, color] of [
+            ['Red', 'red'],
+            ['Blue', 'blue'],
+            ['Plain', undefined],
+          ] as const) {
+            const person = db.add(Obj.make(TestSchema.Person, { name }));
+            if (color !== undefined) {
+              Obj.update(person, (person) => Annotation.set(person, Color, color));
+            }
+          }
+        },
+        { spaceId },
+      );
+      yield* session(
+        async (db) => {
+          expect(names(await db.query(Filter.annotation(Color)).run()).sort()).toEqual(['Blue', 'Red']);
+          expect(names(await db.query(Filter.annotation(Color, 'red')).run())).toEqual(['Red']);
+          expect(names(await db.query(Filter.not(Filter.annotation(Color, 'red'))).run()).sort()).toEqual([
+            'Blue',
+            'Plain',
+          ]);
+        },
+        { spaceId },
+      );
+    }),
+  );
+
   it.effect('notifies subscribers only when results change (T-7)', () =>
     session(async (db) => {
       const query = db.query(Filter.type(TestSchema.Person, { age: Filter.gt(18) }));
@@ -641,6 +674,7 @@ describe('SqliteDatabase', () => {
       expect(db.listBranches('x')).toEqual(['main']);
       await expect(db.createBranch()).rejects.toBeInstanceOf(UnsupportedOperationError);
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
+      expect(() => db.getChanges(Obj.make(TestSchema.Person, {}))).toThrow(UnsupportedOperationError);
       expect(() => db.query(Filter.key('com.example.key', { version: '^1.0.0' }))).toThrow(UnsupportedQueryError);
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
       expect(() => db.query(Filter.text('alice', { type: 'vector' }))).toThrow(UnsupportedQueryError);

@@ -290,6 +290,13 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
         return conditions.length === 0 ? raw('1') : sql`(${join(conditions, ' AND ')})`;
       }
 
+      case 'annotation': {
+        const keys = ['@meta', 'annotations', filter.key];
+        return filter.value === undefined
+          ? sql`(json_type(${a}.body, ${jsonPath(keys)}) IS NOT NULL)`
+          : strictEquals(sql`${a}.body`, keys, filter.value);
+      }
+
       case 'tag': {
         const eid = EID.tryParse(filter.tag);
         const target = (eid && EID.getEntityId(eid)) || filter.tag;
