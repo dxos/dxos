@@ -101,10 +101,17 @@ export const renderTypes = (types: readonly SandboxType[]): string =>
 
 const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
 
-/** One operation's line in the API reference, `call` rendering the dialect's own call syntax. */
-export const renderOperation = (operation: SandboxOperation, call: (name: string) => string): string => trim`
+/**
+ * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
+ */
+export const renderOperation = (
+  operation: SandboxOperation,
+  call: (name: string) => string,
+  input: string = JSON.stringify(operation.parameters),
+): string => trim`
   - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
-    input: ${JSON.stringify(operation.parameters)}
+    input: ${input}
 `;
 
 /** Shown in place of the operations section when the conversation binds no skills. */
