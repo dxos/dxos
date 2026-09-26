@@ -24,6 +24,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
-    "eventemitter3": "catalog:"
+    "eventemitter3": "catalog:",
+    "manifold-3d": "catalog:"
   }
 }

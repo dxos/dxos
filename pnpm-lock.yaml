@@ -6163,6 +6163,9 @@ importers:
       eventemitter3:
         specifier: 'catalog:'
         version: 5.0.1
+      manifold-3d:
+        specifier: 'catalog:'
+        version: 3.4.1(esbuild-wasm@0.28.0)
 
   packages/core/halo/credentials:
     dependencies:
