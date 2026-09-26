@@ -151,13 +151,17 @@ type TaskListRootProps = PropsWithChildren<{
 }>;
 
 /**
- * Creates a task from the pane's draft. May resolve to the files it could not attach, which the pane
- * then keeps so they are not lost; anything else means every file was taken.
+ * What a create came to. `error` means no task was created, so the pane keeps the whole draft;
+ * `rejectedFiles` are files the task was created without, which the pane keeps to retry. Nothing
+ * (or neither field) means the task and every file were taken.
  */
+export type TaskCreateResult = { error?: unknown; rejectedFiles?: readonly File[] };
+
+/** Creates a task from the pane's draft; see {@link TaskCreateResult} for what it may report back. */
 export type TaskCreateHandler = (
   task: Task.Draft,
   files?: readonly File[],
-) => void | readonly File[] | Promise<void | readonly File[]>;
+) => void | TaskCreateResult | Promise<void | TaskCreateResult>;
 
 const TaskListRoot = ({
   children,

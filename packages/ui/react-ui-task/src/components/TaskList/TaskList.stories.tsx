@@ -16,7 +16,7 @@ import { File, PullRequest, Task } from '@dxos/types';
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy.ts';
-import { TaskList } from './TaskList.tsx';
+import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 
 random.seed(1);
 
@@ -579,12 +579,19 @@ const DefaultStory = ({
     [],
   );
 
-  // Stands in for the host's store-and-attach, which fails for any file named `fail…`.
-  const handleCreate = useCallback(async ({ title, ...props }: Task.Draft, files?: readonly globalThis.File[]) => {
+  // Stands in for the host: a title starting `fail` is refused, one starting `slow` lands late, and
+  // store-and-attach fails for any file named `fail…`.
+  const handleCreate = useCallback<TaskCreateHandler>(async ({ title, ...props }, files) => {
+    if (title.startsWith('fail')) {
+      return { error: new Error('Refused.') };
+    }
+    if (title.startsWith('slow')) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
     const attachable = (files ?? []).filter((file) => !file.name.startsWith('fail'));
     setAttached((attached) => [...attached, ...attachable.map((file) => `${title}:${file.name}`)]);
-    return (files ?? []).filter((file) => file.name.startsWith('fail'));
+    return { rejectedFiles: (files ?? []).filter((file) => file.name.startsWith('fail')) };
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
@@ -1349,6 +1356,34 @@ export const TestEdit: Story = {
  * Creating with a description: the pane's description field is present with nothing selected, and
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
+/**
+ * A create the host refuses keeps the draft, so nothing typed is lost; one that lands late does not
+ * clear text typed while it was pending.
+ */
+export const TestCreateFailureKeepsDraft: Story = {
+  args: {
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const titles = () =>
+      [...canvasElement.querySelectorAll('[data-testid="taskList.item.title"]')].map((element) => element.textContent);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('fail to file{Enter}');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(title().value).toEqual('fail to file');
+    await expect(titles()).not.toContain('fail to file');
+
+    await userEvent.clear(title());
+    await userEvent.keyboard('slow to land{Enter}');
+    await userEvent.keyboard(' and more');
+    await waitFor(async () => expect(titles()).toContain('slow to land'), { timeout: 5_000 });
+    await expect(title().value).toEqual('slow to land and more');
+  },
+};
+
 /**
  * Files dropped on the create pane are held there, one chip each, until the task is created — then
  * they are handed over with it, for the host to store and attach. A chip can be taken back first.

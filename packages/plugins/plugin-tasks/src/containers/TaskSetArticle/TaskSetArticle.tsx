@@ -87,30 +87,32 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
   const attachFile = useAttachFile();
-  // Resolves to the files left unattached, which the pane keeps rather than dropping.
+  // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
+  // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
     async (props, files = []) => {
-      const { data } = await invokePromise(
+      const { data, error } = await invokePromise(
         TaskOperation.CreateTask,
         { taskSet: Ref.make(taskSet), ...props },
         { spaceId },
       );
+      if (error || !data) {
+        return { error: error ?? new Error('Task was not created.') };
+      }
       if (files.length === 0) {
         return;
       }
-      const [task] = data
-        ? (db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [])
-        : [];
+      const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
       if (!task || !attachFile) {
-        return files;
+        return { rejectedFiles: files };
       }
-      const rejected: globalThis.File[] = [];
+      const rejectedFiles: globalThis.File[] = [];
       for (const file of files) {
         if (!(await attachFile(task, file))) {
-          rejected.push(file);
+          rejectedFiles.push(file);
         }
       }
-      return rejected;
+      return { rejectedFiles };
     },
     [invokePromise, taskSet, spaceId, attachFile, db],
   );

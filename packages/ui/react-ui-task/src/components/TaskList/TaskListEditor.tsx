@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import {
   Field,
   Icon,
@@ -32,6 +33,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
@@ -134,6 +136,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
     // creating (there is no task to read from), so clearing it means remounting it.
     const [createEpoch, setCreateEpoch] = useState(0);
+    // Set while a create is in flight, so a second Enter on the still-shown draft does not file it twice.
+    const creating = useRef(false);
 
     // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
     // holds rather than carrying the previous one's across. The description ref is cleared here too:
@@ -157,26 +161,48 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         if (title.length > 0 && title !== current.title) {
           onTaskUpdate?.(task, { title });
         }
-      } else if (title.length > 0) {
+      } else if (title.length > 0 && !creating.current) {
         // Nothing has committed the description yet — it is held open and the reader is in the
         // title — so commit it here, before assembling the draft it belongs to.
         descriptionRef.current?.commit();
-        const description = draftDescription.current.trim();
+        const sentDescription = draftDescription.current;
+        const description = sentDescription.trim();
+        const sentTitle = draft;
         const sent = files;
-        const result = onTaskCreate?.(
-          { title, ...(description.length > 0 && { description }) },
-          sent.length > 0 ? sent : undefined,
-        );
-        // Cleared only once the host has taken them: a file it could not attach stays as a chip to
-        // retry with the next task, rather than vanishing with nothing saying it was dropped.
-        // A host that throws keeps every file, and its error surfaces rather than being swallowed here.
-        void Promise.resolve(result).then((rejected) => {
-          const kept = new Set(rejected ?? []);
+        // The draft is cleared only once the host reports the task created: a refused create keeps
+        // what was typed, and each field is cleared only if it still holds what was sent, so a create
+        // that lands late does not wipe text typed while it was pending.
+        const settle = (result: TaskCreateResult | void) => {
+          creating.current = false;
+          if (result?.error) {
+            log.warn('task create failed', { error: result.error });
+            return;
+          }
+          const kept = new Set(result?.rejectedFiles ?? []);
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
+          setDraft((draft) => (draft === sentTitle ? '' : draft));
+          if (draftDescription.current === sentDescription) {
+            draftDescription.current = '';
+            setCreateEpoch((epoch) => epoch + 1);
+          }
+        };
+        let result: ReturnType<TaskCreateHandler> | undefined;
+        creating.current = true;
+        try {
+          result = onTaskCreate?.(
+            { title, ...(description.length > 0 && { description }) },
+            sent.length > 0 ? sent : undefined,
+          );
+        } catch (error) {
+          // Keeps the whole draft and every file, as a reported failure does.
+          creating.current = false;
+          log.catch(error);
+          return;
+        }
+        void Promise.resolve(result).then(settle, (error) => {
+          creating.current = false;
+          log.catch(error);
         });
-        setDraft('');
-        draftDescription.current = '';
-        setCreateEpoch((epoch) => epoch + 1);
       }
     }, [draft, files, task, current, onTaskCreate, onTaskUpdate]);
 

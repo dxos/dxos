@@ -23376,6 +23376,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
