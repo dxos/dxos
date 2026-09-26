@@ -148,10 +148,8 @@ describe('EdgeWsConnection', () => {
 });
 
 //
-// On a device doing heavy local work, the watchdog restarted the connection in 34 of 34 cases with the
-// last ping under 0.9s old: the loop had been blocked for most of the 12s window, then fired both the
-// overdue ping and the watchdog, which was still within its lateness tolerance, before reading the
-// pongs that had arrived. The restart cost a re-handshake and failed the in-flight sync rounds.
+// A loop blocked for most of the 12s window frees up and fires the overdue ping and the watchdog, still
+// within its lateness tolerance, before it reads the pongs that arrived meanwhile.
 //
 describe('EdgeWsConnection keepalive watchdog', () => {
   // Wall clock under test control, so a blocked loop can be modelled: timers fall due while it does
