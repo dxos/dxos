@@ -9,7 +9,7 @@ import { type Actor, type Person, RemoteSession, Task } from '@dxos/types';
 export const PERSON_ICON = 'ph--user--regular';
 
 /** The glyph for an assistant whose harness has no mark of its own. */
-export const AGENT_ICON = 'ph--sparkle--regular';
+export const AGENT_ICON = 'ph--robot--regular';
 
 export type AssigneeDisplay = {
   /** Absent only for a non-agent actor that carries nothing to name it by. */
@@ -50,7 +50,11 @@ export const getAssigneeDisplay = ({
 }: GetAssigneeDisplayProps): AssigneeDisplay => {
   const session = Obj.instanceOf(RemoteSession.RemoteSession, subject) ? subject : undefined;
   const agent = assignee.role === 'assistant';
-  const sessionId = (session && RemoteSession.getSessionId(session)) ?? Task.refEntityId(assignee.subject);
+  // The id tail stands in for a session's name, so only a session — or a subject not yet loaded, which
+  // may be one — is named by it; a resolved chat or service is an agent like any other.
+  const sessionId =
+    (session && RemoteSession.getSessionId(session)) ??
+    (session || subject === undefined ? Task.refEntityId(assignee.subject) : undefined);
   const label =
     contact?.fullName ??
     session?.title ??

@@ -31,7 +31,8 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
   return (
     <Card.Body>
       {type.startsWith('image/') ? (
-        <Card.Poster alt={file.name ?? ''} image={url} fit='contain' />
+        // Cover, not contain: a contained image letterboxes inside the 16:9 poster instead of spanning the card.
+        <Card.Poster alt={file.name ?? ''} image={url} />
       ) : type.startsWith('video/') ? (
         <video src={url} muted playsInline preload='metadata' className='block w-full aspect-video object-contain' />
       ) : (

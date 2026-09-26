@@ -513,9 +513,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 })
                 .pipe(
                   Effect.onExit((exit) =>
-                    Trace.write(Trace.AgentRequestEnd, {
-                      status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                      error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                    Effect.gen(function* () {
+                      yield* Trace.write(Trace.AgentRequestEnd, {
+                        status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                        error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                      });
+                      // The failure ends the process below, skipping the reconcile, so the strategy
+                      // hears of it here or not at all. A stop the reader asked for is not a failure.
+                      const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;
+                      if (onTurnFailed && Exit.isFailure(exit) && !Cause.hasInterrupts(exit.cause)) {
+                        yield* onTurnFailed(chat, exit.cause);
+                      }
                     }),
                   ),
                 );
