@@ -127,10 +127,12 @@ describe('keyboard moves applied', () => {
   });
 
   test('a subtree moves with its root', ({ expect }) => {
-    const { tasks, a1, b } = fixture();
+    const { tasks, a1 } = fixture();
     const nudged = move(tasks, a1, resolveNudge(tasks, a1, 'down'));
     expect(outline(nudged)).to.eq('a .a2 .a1 ..a1x b');
-    const indented = move(tasks, b, resolveIndent(tasks, b));
+    // A fresh tree: a move rewrites the parents' `subtasks`, so the nudge above would carry over.
+    const fresh = fixture();
+    const indented = move(fresh.tasks, fresh.b, resolveIndent(fresh.tasks, fresh.b));
     expect(outline(indented)).to.eq('a .a1 ..a1x .a2 .b');
   });
 });
