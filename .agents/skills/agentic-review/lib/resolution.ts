@@ -27,12 +27,15 @@ const isResolutionStatus = (value: string): value is ResolutionStatus =>
 /** Both line regexes only ever capture one of `STATUSES`, so lower-cased this is always a `ResolutionStatus`. */
 const toResolutionStatus = (value: string): ResolutionStatus => (isResolutionStatus(value) ? value : 'unresolved');
 
+/** One RESOLUTION.md row; `ruleId` and `location` are absent on legacy one-field rows. */
+export type ResolutionEntry = { id: string; status: ResolutionStatus; ruleId?: string; location?: string };
+
 /**
- * Parse RESOLUTION.md into a Map of issue id → status. Blank lines and `#` /
- * HTML comments are ignored; any other non-empty line throws.
+ * Parse RESOLUTION.md into its rows, in file order. Blank lines and `#` / HTML
+ * comments are ignored; any other non-empty line throws.
  */
-export const parseResolution = (text: string): Map<string, ResolutionStatus> => {
-  const statuses = new Map<string, ResolutionStatus>();
+export const parseResolutionEntries = (text: string): ResolutionEntry[] => {
+  const entries: ResolutionEntry[] = [];
   const lines = text.split(/\r?\n/);
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index];
@@ -40,16 +43,25 @@ export const parseResolution = (text: string): Map<string, ResolutionStatus> => 
     if (trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith('<!--')) {
       continue;
     }
-    const match = line.match(LINE_RE) ?? line.match(LEGACY_LINE_RE);
+    const full = line.match(LINE_RE);
+    const match = full ?? line.match(LEGACY_LINE_RE);
     if (!match) {
       throw new Error(
         `RESOLUTION.md:${index + 1}: unparseable line ${JSON.stringify(line)} — expected \`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>\``,
       );
     }
-    statuses.set(match[1], toResolutionStatus(match[2].toLowerCase()));
+    entries.push({
+      id: match[1],
+      status: toResolutionStatus(match[2].toLowerCase()),
+      ...(full ? { ruleId: full[3], location: full[4] } : {}),
+    });
   }
-  return statuses;
+  return entries;
 };
+
+/** Parse RESOLUTION.md into a Map of issue id → status (see {@link parseResolutionEntries}). */
+export const parseResolution = (text: string): Map<string, ResolutionStatus> =>
+  new Map(parseResolutionEntries(text).map(({ id, status }) => [id, status]));
 
 /**
  * Render RESOLUTION.md for a finalized run. New issues default to unresolved;
