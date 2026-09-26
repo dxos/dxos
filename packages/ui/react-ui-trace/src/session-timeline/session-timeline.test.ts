@@ -740,6 +740,54 @@ describe('buildSessionTimeline', () => {
     }, Effect.provide(TestTraceService.layer)),
   );
 
+  test('draws a task no session works as a lane of its own, from its edit history', ({ expect }) => {
+    const done = Task.make({ title: 'Done elsewhere', status: 'done' });
+    const running = Task.make({ title: 'Running elsewhere', status: 'started', dependsOn: [Ref.make(done)] });
+    const untouched = Task.make({ title: 'Never started', status: 'todo' });
+
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [done, running, untouched],
+      taskStatusChanges: new Map([
+        [
+          done.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [running.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+      ]),
+    });
+
+    expect(timeline.lanes).toEqual([
+      {
+        id: `task:${done.id}`,
+        kind: 'task',
+        label: 'Done elsewhere',
+        status: 'done',
+        start: 1_000,
+        end: 2_000,
+        taskId: done.id,
+      },
+      {
+        id: `task:${running.id}`,
+        kind: 'task',
+        label: 'Running elsewhere',
+        status: 'running',
+        start: 3_000,
+        end: undefined,
+        taskId: running.id,
+        blockedOn: [`task:${done.id}`],
+      },
+    ]);
+    expect(timeline.markers.filter((marker) => marker.laneId === `task:${done.id}`).map(({ label }) => label)).toEqual([
+      'Task started',
+      'Task done',
+    ]);
+  });
+
   test('reads no status moves for a task outside a database, which keeps no history', ({ expect }) => {
     expect(readTaskStatusChanges(Task.make({ title: 'Loose', status: 'done' }))).toEqual([]);
   });

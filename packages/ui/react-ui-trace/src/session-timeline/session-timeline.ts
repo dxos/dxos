@@ -499,6 +499,36 @@ export const buildSessionTimeline = ({
     }
   }
 
+  // A task no drawn session works (an external harness's, a person's) is drawn from its edit history
+  // alone, as a lane of its own, so the chart still shows it; one never started has no span to draw.
+  const lanedTaskIds = new Set(lanes.flatMap((lane) => (lane.taskId === undefined ? [] : [lane.taskId])));
+  const unownedLanes = new Map<string, MutableLane>();
+  for (const task of tasks) {
+    const span = lanedTaskIds.has(task.id) ? undefined : historySpan(taskStatusChanges?.get(task.id) ?? []);
+    if (!span) {
+      continue;
+    }
+    unownedLanes.set(task.id, {
+      id: taskLaneId(task.id),
+      kind: 'task',
+      label: task.title,
+      status: taskLaneStatus(task, tasks),
+      start: span.start,
+      end: span.end === undefined && task.status === 'started' ? undefined : (span.end ?? span.last),
+      taskId: task.id,
+    });
+  }
+  for (const [taskId, lane] of unownedLanes) {
+    const blockedOn = (taskById.get(taskId)?.dependsOn ?? [])
+      .map((ref) => Task.refEntityId(ref))
+      .filter((id): id is string => id !== undefined && unownedLanes.has(id))
+      .map(taskLaneId);
+    if (blockedOn.length > 0) {
+      lane.blockedOn = blockedOn;
+    }
+    lanes.push(lane);
+  }
+
   // A delegated task IS its child session, drawn with the child's own span; the parent's markers in
   // that stretch are the parent's work of handing it over, so the segment goes rather than moving.
   for (const [sessionId, segments] of segmentsBySession) {
