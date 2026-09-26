@@ -55,8 +55,8 @@ export type AttachFiles = {
   pending: readonly PendingAttachment[];
 };
 
-/** Stores one browser file and attaches it to a task; resolves once both writes have settled. */
-export type AttachFile = (task: Task.Task, file: globalThis.File) => Promise<void>;
+/** Stores one browser file and attaches it to a task; resolves to whether it is now attached. */
+export type AttachFile = (task: Task.Task, file: globalThis.File) => Promise<boolean>;
 
 /**
  * Stores a browser file as a `File` object and attaches it to a task. The file goes through
@@ -72,13 +72,13 @@ export const useAttachFile = (): AttachFile | undefined => {
     async (task, file) => {
       const db = Obj.getDatabase(task);
       if (!db) {
-        return;
+        return false;
       }
 
       const { data, error } = await invokePromise(FileOperation.Create, { db, file });
       if (error || !data) {
         log.warn('attachment rejected', { name: file.name, type: file.type, error });
-        return;
+        return false;
       }
 
       const object = db.add(data.object);
@@ -94,7 +94,9 @@ export const useAttachFile = (): AttachFile | undefined => {
           db.remove(object);
         }
         log.warn('attachment failed', { name: file.name, error: attachError });
+        return false;
       }
+      return true;
     },
     [invokePromise],
   );

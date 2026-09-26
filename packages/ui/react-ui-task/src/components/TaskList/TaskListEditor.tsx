@@ -162,9 +162,19 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         // title — so commit it here, before assembling the draft it belongs to.
         descriptionRef.current?.commit();
         const description = draftDescription.current.trim();
-        onTaskCreate?.({ title, ...(description.length > 0 && { description }) }, files.length > 0 ? files : undefined);
+        const sent = files;
+        const result = onTaskCreate?.(
+          { title, ...(description.length > 0 && { description }) },
+          sent.length > 0 ? sent : undefined,
+        );
+        // Cleared only once the host has taken them: a file it could not attach stays as a chip to
+        // retry with the next task, rather than vanishing with nothing saying it was dropped.
+        // A host that throws keeps every file, and its error surfaces rather than being swallowed here.
+        void Promise.resolve(result).then((rejected) => {
+          const kept = new Set(rejected ?? []);
+          setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
+        });
         setDraft('');
-        setFiles([]);
         draftDescription.current = '';
         setCreateEpoch((epoch) => epoch + 1);
       }

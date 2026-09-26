@@ -24,7 +24,7 @@ import {
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
+import { type TaskCreateHandler, TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -87,23 +87,30 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
   const attachFile = useAttachFile();
-  const handleCreate = useCallback(
-    async (props: Task.Draft, files?: readonly globalThis.File[]) => {
+  // Resolves to the files left unattached, which the pane keeps rather than dropping.
+  const handleCreate = useCallback<TaskCreateHandler>(
+    async (props, files = []) => {
       const { data } = await invokePromise(
         TaskOperation.CreateTask,
         { taskSet: Ref.make(taskSet), ...props },
         { spaceId },
       );
-      if (!data || !files || files.length === 0 || !attachFile) {
+      if (files.length === 0) {
         return;
       }
-      const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
-      if (!task) {
-        return;
+      const [task] = data
+        ? (db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [])
+        : [];
+      if (!task || !attachFile) {
+        return files;
       }
+      const rejected: globalThis.File[] = [];
       for (const file of files) {
-        await attachFile(task, file);
+        if (!(await attachFile(task, file))) {
+          rejected.push(file);
+        }
       }
+      return rejected;
     },
     [invokePromise, taskSet, spaceId, attachFile, db],
   );

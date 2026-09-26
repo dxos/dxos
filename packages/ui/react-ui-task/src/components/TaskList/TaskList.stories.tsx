@@ -579,11 +579,12 @@ const DefaultStory = ({
     [],
   );
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft, files?: readonly globalThis.File[]) => {
+  // Stands in for the host's store-and-attach, which fails for any file named `fail…`.
+  const handleCreate = useCallback(async ({ title, ...props }: Task.Draft, files?: readonly globalThis.File[]) => {
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
-    if (files && files.length > 0) {
-      setAttached((attached) => [...attached, ...files.map((file) => `${title}:${file.name}`)]);
-    }
+    const attachable = (files ?? []).filter((file) => !file.name.startsWith('fail'));
+    setAttached((attached) => [...attached, ...attachable.map((file) => `${title}:${file.name}`)]);
+    return (files ?? []).filter((file) => file.name.startsWith('fail'));
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
@@ -1386,7 +1387,26 @@ export const TestCreateWithAttachments: Story = {
       ),
     );
     // Handed over with the task, so the pane starts the next one empty.
-    await expect(chips()).toHaveLength(0);
+    await waitFor(async () => expect(chips()).toHaveLength(0));
+
+    // A file the host could not attach stays on the pane, so it is not lost and can be retried.
+    const failing = new DataTransfer();
+    failing.items.add(new globalThis.File(['text'], 'fail.txt', { type: 'text/plain' }));
+    failing.items.add(new globalThis.File(['text'], 'plan.txt', { type: 'text/plain' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: failing }));
+    }
+    await waitFor(async () => expect(chips()).toHaveLength(2));
+    await userEvent.click(title());
+    await userEvent.keyboard('Plan the week{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent('Plan the week:plan.txt'),
+    );
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['fail.txt'],
+      ),
+    );
   },
 };
 

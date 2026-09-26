@@ -123,7 +123,7 @@ type TaskListRootProps = PropsWithChildren<{
    * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
    * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
    */
-  onTaskCreate?: (task: Task.Draft, files?: readonly File[]) => void;
+  onTaskCreate?: TaskCreateHandler;
   /**
    * Enables the row's edit controls. Every mutation is delegated.
    */
@@ -149,6 +149,15 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
 }>;
+
+/**
+ * Creates a task from the pane's draft. May resolve to the files it could not attach, which the pane
+ * then keeps so they are not lost; anything else means every file was taken.
+ */
+export type TaskCreateHandler = (
+  task: Task.Draft,
+  files?: readonly File[],
+) => void | readonly File[] | Promise<void | readonly File[]>;
 
 const TaskListRoot = ({
   children,

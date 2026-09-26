@@ -530,6 +530,32 @@ export const CreateWithAttachment: Story = {
       },
       { timeout: 10_000 },
     );
+    await waitFor(() => expect(pane.querySelectorAll('[data-testid="taskList.edit.file"]')).toHaveLength(0), {
+      timeout: 10_000,
+    });
+
+    // A file the store refuses (HTML is not an accepted type) is not lost: it stays on the pane.
+    const refused = new DataTransfer();
+    refused.items.add(new globalThis.File(['<p>hi</p>'], 'page.html', { type: 'text/html' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: refused }));
+    }
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.keyboard('Publish the page{Enter}');
+    await waitFor(
+      async () =>
+        await expect(TaskSet.resolveTasks(context.taskSet).some((task) => task.title === 'Publish the page')).toBe(
+          true,
+        ),
+      { timeout: 10_000 },
+    );
+    await waitFor(
+      async () =>
+        await expect(
+          [...pane.querySelectorAll('[data-testid="taskList.edit.file.name"]')].map((chip) => chip.textContent),
+        ).toEqual(['page.html']),
+      { timeout: 10_000 },
+    );
   },
 };
 
