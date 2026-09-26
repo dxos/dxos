@@ -55,7 +55,7 @@ export interface Owner {
  * Keeps `atom` mounted until `owner` is collected. Unlike `Atom.keepAlive`, it does not outlive the
  * owner. Neither the atom nor its value may reference `owner`, or the registry keeps `owner` alive.
  */
-export const makeOwned = <A extends Atom.Atom<any>>(owner: Owner, atom: A): A => {
+export const makeOwned = <A extends Atom.Atom<unknown>>(owner: Owner, atom: A): A => {
   const { registry, finalizer } = owner[OwnerId];
   finalizer.register(owner, registry.mount(atom));
   return atom;

@@ -23614,6 +23614,9 @@ importers:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
