@@ -397,25 +397,46 @@ const NO_MARKERS: readonly GanttMarker[] = [];
 type EventStreamOptions = {
   /** How often an event arrives, in milliseconds. The stream is static without it. */
   interval?: number;
-  /** The supervisor lane: what spawns children, and what they report back to. */
+  /** The supervisor lane: what spawns the first children, and what they report back to. */
   laneId: string;
   /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
   step: number;
-  /** Open another child every so many arrivals. The supervisor keeps all of them at once. */
+  /** The supervisor opens another child every so many arrivals. */
   spawnEvery?: number;
-  /** How many events a child runs before it finishes and reports back, inclusive. */
+  /** How many events of its own a lane runs before it is finished, inclusive. */
   childEvents?: readonly [number, number];
+  /** Percent chance a direct child delegates rather than works; halved at each level below it. */
+  nestedChance?: number;
+  /**
+   * How many lanes may be opened at each depth, deepest last. This is what makes the run finite: the
+   * budget is spent, everything in flight reports back, and the chart comes to rest — a demo that
+   * grows for as long as it is left open never shows what finishing looks like.
+   */
+  maxSpawns?: readonly number[];
 };
 
-/** A child still working: how many events it has had, and how many it will stop at. */
-type ActiveChild = { laneId: string; seen: number; budget: number };
+/** A lane still in flight: what it reports to, how far through its own work it is, and whether it has any left. */
+type ActiveLane = {
+  laneId: string;
+  /** The lane that opened it, and the lane its result returns into. */
+  parentId: string;
+  depth: number;
+  seen: number;
+  budget: number;
+  /** Out of work of its own, but holding children it has to hear back from first. */
+  waiting: boolean;
+};
 
 type StreamState = {
   groups: GanttGroup[];
   lanes: GanttLane[];
   markers: GanttMarker[];
-  active: ActiveChild[];
-  /** Which active child gets the next event, so several progress at once rather than in turn. */
+  active: ActiveLane[];
+  /** Lanes opened so far at each depth, against `maxSpawns`. */
+  opened: number[];
+  /** Nothing left to hand out and nothing left in flight: the chart holds still from here. */
+  complete: boolean;
+  /** Which lane in flight gets the next event, so several progress at once rather than in turn. */
   turn: number;
   tick: number;
 };
@@ -423,11 +444,15 @@ type StreamState = {
 /**
  * The seed, plus one event every `interval` — the only moving part any of these stories has.
  *
- * With `spawnEvery` the supervisor fans out: it opens a child every so often and keeps every one it
- * has opened, so several run at once. A child lives for `childEvents` events and then finishes —
- * closing its segment, going `done`, and reporting back into a node of its own on the supervisor's
- * lane. Children that terminate are the point: a cascade where nothing ever ends says nothing about
- * what the chart does when work completes.
+ * The supervisor fans out: it opens a child every `spawnEvery` arrivals and keeps every one, so
+ * several run at once. A child spends `childEvents` events and then reports back — except that it
+ * may spend one of them delegating instead, less likely the deeper it already is, so the cascade
+ * thins out rather than running away.
+ *
+ * A lane that has delegated does not report back until its own children have: it goes `blocked`
+ * when its work runs out and finishes only once the last of them answers, which is the order the
+ * results actually arrive in. Without that a parent would close before the children it is waiting
+ * on, and its return edge would precede theirs.
  *
  * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
  * has to carry one, while the event axis makes its own room and ignores it.
@@ -436,13 +461,23 @@ const useEventStream = (
   seedGroups: readonly GanttGroup[],
   seedLanes: readonly GanttLane[],
   seedMarkers: readonly GanttMarker[],
-  { interval, laneId, step, spawnEvery, childEvents = [2, 5] }: EventStreamOptions,
+  {
+    interval,
+    laneId,
+    step,
+    spawnEvery,
+    childEvents = [2, 5],
+    nestedChance = 30,
+    maxSpawns = [4, 3, 2],
+  }: EventStreamOptions,
 ): { groups: GanttGroup[]; lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
   const seed = (): StreamState => ({
     groups: [...seedGroups],
     lanes: [...seedLanes],
     markers: [...seedMarkers],
     active: [],
+    opened: maxSpawns.map(() => 0),
+    complete: false,
     turn: 0,
     tick: 0,
   });
@@ -458,114 +493,179 @@ const useEventStream = (
     }
     const [minEvents, maxEvents] = childEvents;
     const timer = setInterval(() => {
-      setState(({ groups, lanes, markers, active, turn, tick }) => {
-        const at = (offset: number) => Math.max(T0, ...markers.map((marker) => marker.timestamp)) + offset * step;
+      setState(({ groups, lanes, markers, active, opened, complete, turn, tick }) => {
+        if (complete) {
+          return { groups, lanes, markers, active, opened, complete, turn, tick };
+        }
+        const base = Math.max(T0, ...markers.map((marker) => marker.timestamp));
+        // Every marker a tick emits gets an instant of its own: a hand-over, the first event of what
+        // it opened, and an answer are three events, and the axis counts events.
+        let slot = 0;
+        const next = (): number => base + ++slot * step;
 
-        // A spawn tick: the supervisor hands out more work while keeping what it already has.
-        if (spawnEvery && tick % spawnEvery === 0) {
-          const child = `lane:${lanes.length}`;
-          const band = `group:${lanes.length}`;
-          const parentBand = lanes.find((lane) => lane.id === laneId)?.groupId;
+        const nextGroups = [...groups];
+        const nextLanes = [...lanes];
+        const nextMarkers = [...markers];
+        let nextActive = [...active];
+        const nextOpened = [...opened];
+        /** Depth is one-based, and a depth past the budget's length is past the deepest allowed. */
+        const canOpen = (depth: number): boolean =>
+          depth <= maxSpawns.length && nextOpened[depth - 1] < maxSpawns[depth - 1];
+
+        const indexOf = (id: string): number => nextLanes.findIndex((lane) => lane.id === id);
+        const patch = (id: string, change: Partial<GanttLane>): void => {
+          const index = indexOf(id);
+          if (index >= 0) {
+            nextLanes[index] = { ...nextLanes[index], ...change };
+          }
+        };
+
+        const open = (parentLaneId: string, depth: number): void => {
+          const index = nextLanes.length;
+          const child = `lane:${index}`;
+          const band = `group:${index}`;
+          const parentBand = nextLanes[indexOf(parentLaneId)]?.groupId;
           const spawn: GanttMarker = {
-            id: `spawn:${tick}`,
-            laneId,
+            id: `spawn:${child}`,
+            laneId: parentLaneId,
             kind: 'delegation',
-            timestamp: at(1),
+            timestamp: next(),
             label: `Opened ${child}`,
           };
-          return {
-            groups: [...groups, { id: band, ...(parentBand ? { parentId: parentBand } : {}) }],
-            lanes: [
-              ...lanes,
-              {
-                id: child,
-                label: `Process ${lanes.length}`,
-                status: 'running' as const,
-                groupId: band,
-                // A step after the spawn: a child's first event is its process starting, which is
-                // never simultaneous with the node that asked for it.
-                segments: [{ start: at(2) }],
-                openedFrom: { laneId, markerId: spawn.id },
-              },
-            ],
-            markers: [
-              ...markers,
-              spawn,
-              { id: `${child}:0`, laneId: child, kind: 'operation', timestamp: at(2), label: 'Run Instructions' },
-            ],
-            active: [
-              ...active,
-              { laneId: child, seen: 1, budget: random.number.int({ min: minEvents, max: maxEvents }) },
-            ],
-            turn,
-            tick: tick + 1,
+          // A step after the spawn: a child's first event is its process starting, which is never
+          // simultaneous with the node that asked for it.
+          const start = next();
+          nextGroups.push({ id: band, ...(parentBand ? { parentId: parentBand } : {}) });
+          nextLanes.push({
+            id: child,
+            label: `Process ${index}`,
+            status: 'running',
+            groupId: band,
+            segments: [{ start }],
+            openedFrom: { laneId: parentLaneId, markerId: spawn.id },
+          });
+          nextMarkers.push(spawn, {
+            id: `${child}:0`,
+            laneId: child,
+            kind: 'operation',
+            timestamp: start,
+            label: 'Run Instructions',
+          });
+          nextOpened[depth - 1] += 1;
+          nextActive.push({
+            laneId: child,
+            parentId: parentLaneId,
+            depth,
+            seen: 1,
+            budget: random.number.int({ min: minEvents, max: maxEvents }),
+            waiting: false,
+          });
+        };
+
+        const finish = (id: string, end: number): void => {
+          const lane = nextActive.find((candidate) => candidate.laneId === id);
+          if (!lane) {
+            return;
+          }
+          const returned: GanttMarker = {
+            id: `return:${id}`,
+            laneId: lane.parentId,
+            kind: 'delegation',
+            timestamp: next(),
+            label: `Returned: ${id}`,
           };
+          nextMarkers.push(returned);
+          patch(id, {
+            status: 'done',
+            segments: [{ start: nextLanes[indexOf(id)]?.segments?.[0]?.start ?? end, end }],
+            closedInto: { laneId: lane.parentId, markerId: returned.id },
+          });
+          nextActive = nextActive.filter((candidate) => candidate.laneId !== id);
+          // The parent may have been waiting on this one alone, in which case it can answer now too —
+          // which is how a finished branch unwinds from the leaf up.
+          const parent = nextActive.find((candidate) => candidate.laneId === lane.parentId);
+          if (parent?.waiting && !nextActive.some((candidate) => candidate.parentId === parent.laneId)) {
+            finish(parent.laneId, returned.timestamp);
+          }
+        };
+
+        const settle = (done = false): StreamState => ({
+          groups: nextGroups,
+          lanes: nextLanes,
+          markers: nextMarkers,
+          active: nextActive,
+          opened: nextOpened,
+          complete: done,
+          turn,
+          tick: tick + 1,
+        });
+
+        if (spawnEvery && tick % spawnEvery === 0 && canOpen(1)) {
+          open(laneId, 1);
+          return settle();
         }
 
-        // Otherwise one of the children in flight advances — and may be the event that finishes it.
-        if (active.length === 0) {
-          const event: GanttMarker = {
+        // A lane that is only waiting has nothing to contribute; if every one of them is, the
+        // supervisor fills the tick so the chart keeps moving.
+        const working = nextActive.filter((candidate) => !candidate.waiting);
+        if (working.length === 0) {
+          // Everything handed out has reported back and there is nothing left to hand out: the
+          // supervisor closes its own span, and the run is over.
+          if (nextActive.length === 0 && !canOpen(1)) {
+            const end = next();
+            nextMarkers.push({ id: `live:${tick}`, laneId, kind: 'request', timestamp: end, label: 'Request success' });
+            patch(laneId, {
+              status: 'done',
+              segments: [{ start: nextLanes[indexOf(laneId)]?.segments?.[0]?.start ?? end, end }],
+            });
+            return settle(true);
+          }
+          nextMarkers.push({
             id: `live:${tick}`,
             laneId,
             kind: 'tool',
-            timestamp: at(1),
+            timestamp: next(),
             label: random.lorem.word(),
-          };
-          return { groups, lanes, markers: [...markers, event], active, turn, tick: tick + 1 };
+          });
+          return settle();
         }
 
-        const index = turn % active.length;
-        const child = active[index];
-        const seen = child.seen + 1;
-        const timestamp = at(1);
-        const event: GanttMarker = {
-          id: `${child.laneId}:${seen}`,
-          laneId: child.laneId,
-          kind: 'tool',
-          timestamp,
-          label: random.lorem.word(),
-        };
-        if (seen < child.budget) {
-          return {
-            groups,
-            lanes,
-            markers: [...markers, event],
-            active: active.map((candidate, at) => (at === index ? { ...candidate, seen } : candidate)),
-            turn: turn + 1,
-            tick: tick + 1,
-          };
+        const lane = working[turn % working.length];
+        const seen = lane.seen + 1;
+        // Halved at each level, so a child delegates readily and its own children rarely.
+        const chance = Math.round(nestedChance / 2 ** (lane.depth - 1));
+        const delegates = canOpen(lane.depth + 1) && random.number.int({ min: 1, max: 100 }) <= chance;
+        if (delegates) {
+          open(lane.laneId, lane.depth + 1);
+        } else {
+          nextMarkers.push({
+            id: `${lane.laneId}:${seen}`,
+            laneId: lane.laneId,
+            kind: 'tool',
+            timestamp: next(),
+            label: random.lorem.word(),
+          });
         }
 
-        // Its last event: close the segment where the work stopped, and report back a step later —
-        // the supervisor folds a result in when it next runs, never the instant the child stops.
-        const returned: GanttMarker = {
-          id: `return:${child.laneId}`,
-          laneId,
-          kind: 'delegation',
-          timestamp: at(2),
-          label: `Returned: ${child.laneId}`,
-        };
-        return {
-          groups,
-          lanes: lanes.map((lane) =>
-            lane.id === child.laneId
-              ? {
-                  ...lane,
-                  status: 'done' as const,
-                  segments: [{ start: lane.segments?.[0]?.start ?? timestamp, end: timestamp }],
-                  closedInto: { laneId, markerId: returned.id },
-                }
-              : lane,
-          ),
-          markers: [...markers, event, returned],
-          active: active.filter((_, at) => at !== index),
-          turn: turn + 1,
-          tick: tick + 1,
-        };
+        const end = nextMarkers[nextMarkers.length - 1].timestamp;
+        nextActive = nextActive.map((candidate) =>
+          candidate.laneId === lane.laneId ? { ...candidate, seen } : candidate,
+        );
+        if (seen >= lane.budget) {
+          if (nextActive.some((candidate) => candidate.parentId === lane.laneId)) {
+            nextActive = nextActive.map((candidate) =>
+              candidate.laneId === lane.laneId ? { ...candidate, waiting: true } : candidate,
+            );
+            patch(lane.laneId, { status: 'blocked' });
+          } else {
+            finish(lane.laneId, end);
+          }
+        }
+        return { ...settle(), turn: turn + 1 };
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [interval, step, spawnEvery, laneId, childEvents]);
+  }, [interval, step, spawnEvery, laneId, childEvents, nestedChance, maxSpawns]);
 
   return {
     groups: state.groups,
@@ -687,17 +787,22 @@ export const SingleLane: Story = {
 };
 
 /**
- * The supervisor fans out: every third arrival opens another child, and each child runs a handful of
- * events before finishing and reporting back into a node of its own. Several are in flight at once,
- * so the band grows sideways rather than into a chain.
+ * The supervisor fans out: every third arrival opens another child, and a child may delegate again
+ * rather than work — less likely the deeper it already is. Each lane runs a handful of events,
+ * reports back into a node of its own, and waits on anything it opened before it does.
+ *
+ * The run finishes: `maxSpawns` bounds how many lanes each depth may open, so the branches unwind
+ * from the leaves up, the supervisor closes its own span, and the chart comes to rest.
  */
 export const Delegation: Story = {
   args: {
     ...SingleLane.args,
     lanes: supervisorLanes,
-    interval: 1_200,
+    interval: 900,
     spawnEvery: 3,
     childEvents: [2, 5],
+    nestedChance: 30,
+    maxSpawns: [4, 3, 2],
   },
 };
 
