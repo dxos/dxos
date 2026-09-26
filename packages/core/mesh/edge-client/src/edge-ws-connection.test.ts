@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, onTestFinished, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -12,7 +12,9 @@ import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/m
 
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
+import { type EdgeWsConnectionCallbacks } from './edge-ws-connection.ts';
 import { WebSocketMuxer } from './edge-ws-muxer.ts';
+import { type ReconnectReason } from './reconnect-reason.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -145,6 +147,82 @@ describe('EdgeWsConnection', () => {
   }
 });
 
+//
+// On a device doing heavy local work, the watchdog restarted the connection in 34 of 34 cases with the
+// last ping under 0.9s old: the loop had been blocked for most of the 12s window, then fired both the
+// overdue ping and the watchdog, which was still within its lateness tolerance, before reading the
+// pongs that had arrived. The restart cost a re-handshake and failed the in-flight sync rounds.
+//
+describe('EdgeWsConnection keepalive watchdog', () => {
+  // Wall clock under test control, so a blocked loop can be modelled: timers fall due while it does
+  // not run, then fire late, all at once, when it frees up.
+  let now = 0;
+
+  /** The loop is blocked for `ms`, then runs every timer that fell due meanwhile. */
+  const block = async (ms: number) => {
+    now += ms;
+    await vi.advanceTimersByTimeAsync(ms);
+  };
+
+  /** The loop stays live for `ms`; timers fire within a step of their due time. */
+  const run = async (ms: number) => {
+    const step = 70;
+    for (let elapsed = 0; elapsed < ms; elapsed += step) {
+      now += step;
+      await vi.advanceTimersByTimeAsync(step);
+    }
+  };
+
+  const pingCount = (ws: { sent: unknown[] }) => ws.sent.filter((data) => data === '__ping__').length;
+
+  const openAnsweredConnection = async () => {
+    const restarts: ReconnectReason[] = [];
+    const handle = await createTestConnection(0, { onRestartRequired: (reason) => restarts.push(reason) });
+    handle.ws.readyState = 1;
+    handle.ws.onopen?.();
+    handle.ws.onmessage?.({ data: '__pong__', type: 'message' });
+    return { ...handle, restarts };
+  };
+
+  beforeEach(() => {
+    now = 1_000_000;
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  test('probes instead of restarting when the loop was blocked for most of the window', async ({ expect }) => {
+    const { ws, restarts } = await openAnsweredConnection();
+    const pingsBefore = pingCount(ws);
+
+    await block(12_600);
+
+    expect(restarts).toEqual([]);
+    expect(pingCount(ws)).toBeGreaterThan(pingsBefore);
+  });
+
+  test('still restarts a connection that stays silent after the block', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    await block(12_600);
+    await run(25_200);
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+
+  test('restarts when a live loop gets no answer for a whole window', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    await run(12_600);
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+});
+
 /**
  * A Blob whose `arrayBuffer()` resolves only when `resolve()` is called, so tests can
  * control the order in which concurrent `blob.arrayBuffer()` reads complete.
@@ -215,7 +293,10 @@ const buildSegmentedChunks = async (contents: string[]): Promise<Uint8Array[][]>
   return chunksByMessage;
 };
 
-const createTestConnection = async (expectedMessages: number) => {
+const createTestConnection = async (
+  expectedMessages: number,
+  { onRestartRequired = () => {} }: Partial<Pick<EdgeWsConnectionCallbacks, 'onRestartRequired'>> = {},
+) => {
   const received: Message[] = [];
   const allReceived = new Trigger();
   const connection = new EdgeWsConnection(
@@ -229,7 +310,7 @@ const createTestConnection = async (expectedMessages: number) => {
           allReceived.wake();
         }
       },
-      onRestartRequired: () => {},
+      onRestartRequired,
     },
   );
   await connection.open();
