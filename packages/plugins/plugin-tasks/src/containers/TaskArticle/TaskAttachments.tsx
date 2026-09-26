@@ -15,7 +15,7 @@ import React, {
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
@@ -42,15 +42,49 @@ const useCanCreateFiles = (): boolean => {
   );
 };
 
+/** A file being stored and attached, shown as a pending card until the attach settles. */
+export type PendingAttachment = { id: string; name: string };
+
+export type AttachFiles = {
+  /** Undefined when no plugin can store a file. */
+  onFiles?: (files: globalThis.File[]) => Promise<void>;
+  pending: readonly PendingAttachment[];
+};
+
 /**
  * Stores dropped or pasted browser files as `File` objects and attaches them to the task. Each file
  * goes through `FileOperation.Create`, so the storage backend, MIME allow-list and size cap are the
  * same as any other upload's, and is attached through `TaskOperation.AddAttachment`, which logs it.
- * Undefined when no plugin can store a file.
  */
-export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => Promise<void>) | undefined => {
+export const useAttachFiles = (task: Task.Task): AttachFiles => {
   const { invokePromise } = useOperationInvoker();
   const canCreateFiles = useCanCreateFiles();
+  const [pending, setPending] = useState<readonly PendingAttachment[]>([]);
+  const nextId = useRef(0);
+
+  const attachOne = useCallback(
+    async (db: Database.Database, file: globalThis.File) => {
+      const { data, error } = await invokePromise(FileOperation.Create, { db, file });
+      if (error || !data) {
+        log.warn('attachment rejected', { name: file.name, type: file.type, error });
+        return;
+      }
+
+      const object = db.add(data.object);
+      const { error: attachError } = await invokePromise(
+        TaskOperation.AddAttachment,
+        { task: Ref.make(task), file: Ref.make(object) },
+        { spaceId: db.spaceId },
+      );
+      if (attachError) {
+        // Nothing references the stored file once the attach fails, so it would linger unowned.
+        db.remove(object);
+        log.warn('attachment failed', { name: file.name, error: attachError });
+      }
+    },
+    [invokePromise, task],
+  );
+
   const attach = useCallback(
     async (files: globalThis.File[]) => {
       const db = Obj.getDatabase(task);
@@ -58,30 +92,20 @@ export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => 
         return;
       }
 
-      for (const file of files) {
-        const { data, error } = await invokePromise(FileOperation.Create, { db, file });
-        if (error || !data) {
-          log.warn('attachment rejected', { name: file.name, type: file.type, error });
-          continue;
-        }
-
-        const object = db.add(data.object);
-        const { error: attachError } = await invokePromise(
-          TaskOperation.AddAttachment,
-          { task: Ref.make(task), file: Ref.make(object) },
-          { spaceId: db.spaceId },
-        );
-        if (attachError) {
-          // Nothing references the stored file once the attach fails, so it would linger unowned.
-          db.remove(object);
-          log.warn('attachment failed', { name: file.name, error: attachError });
+      const entries = files.map((file) => ({ id: String(nextId.current++), name: file.name, file }));
+      setPending((current) => [...current, ...entries.map(({ id, name }) => ({ id, name }))]);
+      for (const { id, file } of entries) {
+        try {
+          await attachOne(db, file);
+        } finally {
+          setPending((current) => current.filter((entry) => entry.id !== id));
         }
       }
     },
-    [invokePromise, task],
+    [attachOne, task],
   );
 
-  return canCreateFiles ? attach : undefined;
+  return { onFiles: canCreateFiles ? attach : undefined, pending };
 };
 
 /** Whether a drag carries files from outside the page, rather than an element dragged within it. */
@@ -182,13 +206,18 @@ export const TaskAttachmentDropZone = ({ onFiles, children }: TaskAttachmentDrop
 
 export type TaskAttachmentsProps = {
   task: Task.Task;
+  /** Omitted when files cannot be stored: the drop area is then not offered. */
+  canAttach?: boolean;
+  pending?: readonly PendingAttachment[];
 };
 
 /**
  * The files attached to a task (`Task.attachments`), each as a card whose body is the file's own
- * `CardContent` surface — so an image previews as an image. Renders nothing when empty.
+ * `CardContent` surface — so an image previews as an image — followed by a card per file still
+ * uploading and a standing drop area. Renders nothing only when there is nothing attached and
+ * nothing could be.
  */
-export const TaskAttachments = ({ task }: TaskAttachmentsProps) => {
+export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
 
@@ -198,19 +227,54 @@ export const TaskAttachments = ({ task }: TaskAttachmentsProps) => {
     { spaceId: Obj.getDatabase(task)?.spaceId },
   );
 
-  if (!refs || refs.length === 0) {
+  const hasCards = (refs?.length ?? 0) > 0 || pending.length > 0;
+  if (!canAttach && !hasCards) {
     return null;
   }
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
     <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
-      <div className='grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'>
-        {refs.map((ref) => (
-          <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
-        ))}
-      </div>
+      {hasCards && (
+        <div className='grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'>
+          {refs?.map((ref) => (
+            <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
+          ))}
+          {pending.map((entry) => (
+            <PendingAttachmentCard key={entry.id} name={entry.name} />
+          ))}
+        </div>
+      )}
+      {canAttach && (
+        // A visible target only: the drop and paste themselves are taken by the pane-wide zone.
+        <div
+          className={mx(
+            'flex items-center justify-center gap-2 p-4',
+            'rounded-md border-2 border-dashed border-separator text-description',
+          )}
+          data-testid='tasksPlugin.attachments.dropArea'
+        >
+          <Icon icon='ph--paperclip--regular' />
+          {t('task-attachments.drop-area.label')}
+        </div>
+      )}
     </Column.Section>
+  );
+};
+
+/** A file still being stored and attached. */
+const PendingAttachmentCard = ({ name }: { name: string }) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <Card.Root fullWidth data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
+      <Card.Header>
+        <Card.Block>
+          <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
+        </Card.Block>
+        <Card.Title classNames='truncate'>{name}</Card.Title>
+      </Card.Header>
+      <Card.Text variant='description'>{t('task-attachment.uploading.label')}</Card.Text>
+    </Card.Root>
   );
 };
 

@@ -47,7 +47,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
-  const handleAttach = useAttachFiles(task);
+  const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
 
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
   const handleQuestionAnswer = useOperation(
@@ -126,7 +126,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   </Column.Section>
                 )}
 
-                <TaskAttachments task={task} />
+                <TaskAttachments task={task} canAttach={!!handleAttach} pending={pendingAttachments} />
 
                 {history && history.length > 0 && <TaskHistory entries={history} />}
 

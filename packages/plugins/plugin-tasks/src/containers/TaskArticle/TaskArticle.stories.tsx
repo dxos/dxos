@@ -241,6 +241,7 @@ export const DropAttachment: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const zone = await canvas.findByTestId('tasksPlugin.attachments.dropZone', undefined, { timeout: 10_000 });
+    await expect(canvas.findByTestId('tasksPlugin.attachments.dropArea')).resolves.toBeInTheDocument();
 
     dropFiles(zone, [pngFile()]);
     const attachment = await canvas.findByTestId('tasksPlugin.attachment', undefined, { timeout: 10_000 });
@@ -262,5 +263,6 @@ export const WithoutFilePlugin: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByDisplayValue(PLAIN_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.queryByTestId('tasksPlugin.attachments.dropZone')).toBeNull();
+    await expect(canvas.queryByTestId('tasksPlugin.attachments.dropArea')).toBeNull();
   },
 };
