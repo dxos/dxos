@@ -9,7 +9,7 @@ import * as Path from 'effect/Path';
 import type * as Command from 'effect/unstable/cli/Command';
 import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
 
-import type { XtermBridge } from './bridge.ts';
+import type { TerminalBridge } from './bridge.ts';
 import * as XtermConsole from './console.ts';
 import * as XtermStdio from './stdio.ts';
 import * as XtermTerminal from './terminal.ts';
@@ -26,7 +26,7 @@ export type Provided = Command.Environment;
 
 const UNAVAILABLE = 'Not available in the browser terminal.';
 
-export const layer = (bridge: XtermBridge): Layer.Layer<Provided> =>
+export const layer = (bridge: TerminalBridge): Layer.Layer<Provided> =>
   Layer.mergeAll(
     XtermTerminal.layer(bridge),
     XtermConsole.layer(bridge),
