@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { MAX_DEPTH, MAX_NODES, SEEN, TRUNCATED, UNSERIALIZABLE, detachData } from './trace-buffer.ts';
+import { MAX_DEPTH, MAX_ENTRIES, MAX_NODES, SEEN, TRUNCATED, UNSERIALIZABLE, detachData } from './trace-buffer.ts';
 
 describe('detachData', () => {
   test('copies plain data', ({ expect }) => {
@@ -61,6 +61,12 @@ describe('detachData', () => {
     const wide = { items: Array.from({ length: MAX_NODES + 50 }, (_, index) => ({ index })) };
     const detached = detachData(wide);
     expect(JSON.stringify(detached)).toContain(TRUNCATED);
+  });
+
+  test('cuts a long array of primitives to its head', ({ expect }) => {
+    const items = Array.from({ length: 1_000_000 }, (_, index) => index);
+    const detached = detachData({ items });
+    expect(detached).toEqual({ items: [...items.slice(0, MAX_ENTRIES), TRUNCATED] });
   });
 
   test('keeps the event when a value serializes to nothing or throws', ({ expect }) => {

@@ -110,10 +110,13 @@ export const MAX_DEPTH = 8;
 /** Objects written per value before the rest is truncated. */
 export const MAX_NODES = 1_000;
 
+/** Array entries written before the rest is truncated; primitive entries are not counted as nodes. */
+export const MAX_ENTRIES = 100;
+
 /**
  * A `JSON.stringify` replacer that writes DOM nodes as `<tag>`, a bigint as its digits, an object
- * already written as {@link SEEN} (which also breaks cycles), and anything past the depth or node
- * budget as {@link TRUNCATED}.
+ * already written as {@link SEEN} (which also breaks cycles), anything past the depth or node
+ * budget as {@link TRUNCATED}, and an array past {@link MAX_ENTRIES} as its head plus that marker.
  */
 const boundedReplacer = () => {
   const seen = new WeakSet<object>();
@@ -139,8 +142,11 @@ const boundedReplacer = () => {
     }
     nodes++;
     seen.add(value);
-    depths.set(value, depth);
-    return value;
+    // `JSON.stringify` visits every entry of what is returned, so a long array is cut before the walk.
+    const written =
+      Array.isArray(value) && value.length > MAX_ENTRIES ? [...value.slice(0, MAX_ENTRIES), TRUNCATED] : value;
+    depths.set(written, depth);
+    return written;
   };
 };
 
