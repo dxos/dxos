@@ -82,6 +82,8 @@ describe('prompt', () => {
     expect(instructions).toContain('input: { task: Ref<com.example.type.task> }');
     expect(instructions).not.toContain('"type":"string"');
     expect(instructions).toContain('Filter.id(id)');
+    // Models guessed `result.value`; the field is `success`.
+    expect(instructions).toContain("{ _tag: 'Success', success }");
   });
 
   test('a failure keeps its head and drops serialized values', () => {

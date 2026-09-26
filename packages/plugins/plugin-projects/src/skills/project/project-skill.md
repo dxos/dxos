@@ -129,7 +129,9 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   progress can never disagree with the work.
 - **Task set** — the ledger. Milestone membership is the task's `milestone` (`tasks-create` with
   `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); pass `parentTask` to
-  file a sub-task under its parent, which then lists it in its own `subtasks`.
+  file a sub-task under its parent, which then lists it in its own `subtasks`. Reorder or re-parent
+  a task with `tasks-move`; move it, with its sub-tasks, to another project with `tasks-move-to-set`
+  (the target project's `taskSet`). Never edit a task set's `tasks` array by hand.
   Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
