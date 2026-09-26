@@ -44,6 +44,12 @@ describe('console', () => {
     expect(bridge.rendered).to.contain('\x1b[36m"id"\x1b[0m: \x1b[33m1\x1b[0m');
   });
 
+  test('leaves scalars plain', async ({ expect }) => {
+    const bridge = new TestBridge();
+    await EffectEx.runPromise(Console.log(42, false, null).pipe(Effect.provide(XtermConsole.layer(bridge))));
+    expect(bridge.rendered).to.eq('42 false null\n');
+  });
+
   // A command that prints a JSON response prints it as a string, which is where most JSON arrives.
   test('highlights a string holding JSON, and leaves other strings alone', async ({ expect }) => {
     const bridge = new TestBridge();
