@@ -22,6 +22,7 @@ import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
 import type * as McpLatency from '../McpLatency.ts';
 import * as McpTarget from '../McpTarget.ts';
 import * as Scorer from '../Scorer.ts';
+import { CONTRACT_NAME, CONTRACT_SCORERS, contractTask } from './mcp-contract.ts';
 
 //
 // This repo's MCP surface, driven by a real Claude Code subprocess and graded by what reached the
@@ -511,4 +512,13 @@ evalite(`MCP server (${TARGET}) — Claude Code drives the projected surface`, {
   data: [{ input: null }],
   task: GRADED ? localTask : remoteTask,
   scorers: Scorer.toEvalite(SCORERS),
+});
+
+// Registered here rather than in a file of its own because `assistant-evals:evals` takes a single
+// positional path, and the deployed-MCP job passes this file by name: a second file would need the
+// job changed to pass a directory, which would pull in every other scenario with it.
+evalite(CONTRACT_NAME, {
+  data: [{ input: null }],
+  task: contractTask,
+  scorers: Scorer.toEvalite(CONTRACT_SCORERS),
 });
