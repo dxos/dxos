@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Field, ScrollArea } from '../../components/index.ts';
+import { Field, Icon, ScrollArea } from '../../components/index.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import { Column } from './Column.tsx';
 
@@ -159,6 +159,38 @@ export const WithScrollAreaAutoBleed: Story = {
       <Column.Center>
         <h2>Footer (Column.Center)</h2>
       </Column.Center>
+    </Column.Root>
+  ),
+};
+
+/**
+ * A section labels a run of content and keeps the tracks open beneath it: the heading and plain
+ * content land in the content track, while a `Column.Row` inside still reaches the gutters. That is
+ * the shape a detail pane is — headings, prose, and rows with a leading control.
+ */
+export const Sections: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[30rem]' })],
+  render: () => (
+    <Column.Root gutter='md' gap='lg'>
+      <Column.Center>
+        <Field.Root>
+          <Field.Input value='Finalize roast curve' readOnly />
+        </Field.Root>
+      </Column.Center>
+      <Column.Section label='Activity'>
+        <p>Everything here starts at the content track, heading included.</p>
+        <p>A second line, to show the section's own row gap.</p>
+      </Column.Section>
+      <Column.Section label='Rows'>
+        {['Charge 198°C', 'Turnaround 1:35', 'Development 2:10'].map((text) => (
+          <Column.Row key={text}>
+            <Column.Block>
+              <Icon icon='ph--circle--regular' size={4} />
+            </Column.Block>
+            <span>{text}</span>
+          </Column.Row>
+        ))}
+      </Column.Section>
     </Column.Root>
   ),
 };

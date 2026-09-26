@@ -4,15 +4,16 @@
 
 import React, { useMemo } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { Banner, Icon, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
 
 const outcomeIcon: Record<GitHubOperation.CheckOutcome, { icon: string; classNames: string }> = {
-  failure: { icon: 'ph--x-circle--fill', classNames: 'text-red-500' },
-  pending: { icon: 'ph--circle-notch--regular', classNames: 'text-amber-500 animate-spin' },
-  success: { icon: 'ph--check-circle--fill', classNames: 'text-green-500' },
+  failure: { icon: 'ph--x-circle--fill', classNames: 'text-error-text' },
+  pending: { icon: 'ph--circle-notch--regular', classNames: 'text-warning-text animate-spin' },
+  success: { icon: 'ph--check-circle--fill', classNames: 'text-success-text' },
   neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-description' },
   skipped: { icon: 'ph--prohibit--regular', classNames: 'text-description' },
 };
@@ -46,42 +47,19 @@ export type CheckRunListProps = {
   runs?: readonly GitHubOperation.CheckRun[];
 };
 
-/** Every check on the head commit: its outcome, how long it took, and a link to its logs. */
+/** Every check on the head commit: its outcome, how long it took, and its logs a click away. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const { t } = useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
-  const counts = useMemo(() => {
-    const counts: Record<GitHubOperation.CheckOutcome, number> = {
-      success: 0,
-      failure: 0,
-      pending: 0,
-      skipped: 0,
-      neutral: 0,
-    };
-    for (const run of runs ?? []) {
-      counts[run.outcome]++;
-    }
-    return counts;
-  }, [runs]);
+  const summary = useCheckSummary(runs);
 
-  if (!sorted) {
-    return <p className='text-description text-sm'>{t('checks-loading.message')}</p>;
-  }
-  if (sorted.length === 0) {
-    return <p className='text-description text-sm'>{t('no-checks.message')}</p>;
+  if (!sorted || sorted.length === 0) {
+    return <Banner.Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />;
   }
 
   return (
-    <div className='flex flex-col gap-1'>
-      <p className='text-description text-sm'>
-        {t('checks-summary.label', {
-          passed: counts.success + counts.neutral,
-          failed: counts.failure,
-          pending: counts.pending,
-          skipped: counts.skipped,
-        })}
-      </p>
-      <ul className='flex flex-col border border-separator rounded-sm divide-y divide-separator'>
+    <Listbox.Root>
+      <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
           const duration = formatDuration(run.startedAt, run.completedAt);
@@ -90,37 +68,54 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
             run.conclusion && run.conclusion !== run.outcome && run.conclusion !== 'failure'
               ? run.conclusion.replace(/_/g, ' ')
               : undefined;
-          const content = (
-            <>
-              <Icon icon={icon} size={4} classNames={['shrink-0', classNames]} />
-              <span className='grow truncate'>{run.name}</span>
-              {detail && <span className='text-description whitespace-nowrap'>{detail}</span>}
-              <span className='text-description whitespace-nowrap tabular-nums'>
-                {run.outcome === 'skipped'
-                  ? t('check-outcome.skipped.label')
-                  : (duration ?? t(`check-outcome.${run.outcome}.label`))}
-              </span>
-              {run.url && <Icon icon='ph--arrow-square-out--regular' size={3} classNames='shrink-0 text-description' />}
-            </>
-          );
+          const outcome =
+            run.outcome === 'skipped'
+              ? t('check-outcome.skipped.label')
+              : (duration ?? t(`check-outcome.${run.outcome}.label`));
+          const url = run.url;
           return (
-            <li key={`${run.name}-${run.url ?? ''}`} data-outcome={run.outcome} data-testid='pull-request.check'>
-              {run.url ? (
-                <a
-                  href={run.url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='flex items-center gap-2 px-2 py-1 text-sm hover:bg-hover-surface'
-                >
-                  {content}
-                </a>
-              ) : (
-                <div className='flex items-center gap-2 px-2 py-1 text-sm'>{content}</div>
-              )}
-            </li>
+            <Listbox.Item
+              key={`${run.name}-${url ?? ''}`}
+              id={`${run.name}-${url ?? ''}`}
+              data-outcome={run.outcome}
+              data-testid='pull-request.check'
+              onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
+            >
+              <Listbox.ItemContent
+                icon={<Icon icon={icon} size={5} classNames={classNames} />}
+                title={run.name}
+                description={[detail, outcome].filter(Boolean).join(' · ')}
+              />
+            </Listbox.Item>
           );
         })}
-      </ul>
-    </div>
+      </Listbox.Content>
+    </Listbox.Root>
   );
+};
+
+/** The label the checks section carries: the counts once there are runs to count. */
+export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
+  const { t } = useTranslation(meta.profile.key);
+  return useMemo(() => {
+    if (!runs || runs.length === 0) {
+      return t('checks.label');
+    }
+    const counts: Record<GitHubOperation.CheckOutcome, number> = {
+      success: 0,
+      failure: 0,
+      pending: 0,
+      skipped: 0,
+      neutral: 0,
+    };
+    for (const run of runs) {
+      counts[run.outcome]++;
+    }
+    return t('checks-summary.label', {
+      passed: counts.success + counts.neutral,
+      failed: counts.failure,
+      pending: counts.pending,
+      skipped: counts.skipped,
+    });
+  }, [runs, t]);
 };

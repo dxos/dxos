@@ -17,8 +17,16 @@ const tags: Tag.Map = {
   [Obj.getURI(tagLater).toString()]: tagLater,
 };
 
-const makeTask = (props: Partial<Task.Task> & { title: string }, tagged: Tag.Tag[] = []): Task.Task => {
+const makeTask = (
+  { parent, ...props }: Partial<Task.Task> & { title: string; parent?: Task.Task },
+  tagged: Tag.Tag[] = [],
+): Task.Task => {
   const task = Task.make({ status: 'todo', ...props } as Task.Task);
+  if (parent) {
+    Obj.update(parent, (parent) => {
+      parent.subtasks?.push(Ref.make(task));
+    });
+  }
   if (tagged.length > 0) {
     Obj.update(task, (task) => {
       for (const tag of tagged) {
@@ -67,7 +75,7 @@ describe('filterTasks', () => {
 
   test('a matching sub-task carries its ancestors', ({ expect }) => {
     const parent = makeTask({ title: 'Parent' });
-    const child = makeTask({ title: 'Child needle', parentTask: Ref.make(parent) });
+    const child = makeTask({ title: 'Child needle', parent: parent });
     const other = makeTask({ title: 'Unrelated' });
     const kept = filterTasks([parent, child, other], { filter: build('needle') });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Parent', 'Child needle']);
@@ -115,8 +123,8 @@ describe('filterTasks', () => {
 
   test('a hidden status takes the branch filed under it', ({ expect }) => {
     const parent = makeTask({ title: 'Parent', status: 'done' });
-    const child = makeTask({ title: 'Child', status: 'started', parentTask: Ref.make(parent) });
-    const grandchild = makeTask({ title: 'Grandchild', status: 'started', parentTask: Ref.make(child) });
+    const child = makeTask({ title: 'Child', status: 'started', parent: parent });
+    const grandchild = makeTask({ title: 'Grandchild', status: 'started', parent: child });
     const sibling = makeTask({ title: 'Sibling', status: 'started' });
     const kept = filterTasks([parent, child, grandchild, sibling], {
       statuses: new Set<Task.Status>(['started']),
@@ -126,15 +134,15 @@ describe('filterTasks', () => {
 
   test('a sub-task under a shown parent is judged on its own status', ({ expect }) => {
     const parent = makeTask({ title: 'Parent', status: 'started' });
-    const done = makeTask({ title: 'Done child', status: 'done', parentTask: Ref.make(parent) });
-    const open = makeTask({ title: 'Open child', status: 'todo', parentTask: Ref.make(parent) });
+    const done = makeTask({ title: 'Done child', status: 'done', parent: parent });
+    const open = makeTask({ title: 'Open child', status: 'todo', parent: parent });
     const kept = filterTasks([parent, done, open], { statuses: new Set<Task.Status>(['started', 'todo']) });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Parent', 'Open child']);
   });
 
   test('the query cannot bring a hidden branch back', ({ expect }) => {
     const parent = makeTask({ title: 'Parent', status: 'done' });
-    const child = makeTask({ title: 'Child needle', status: 'started', parentTask: Ref.make(parent) });
+    const child = makeTask({ title: 'Child needle', status: 'started', parent: parent });
     const kept = filterTasks([parent, child], {
       filter: build('needle'),
       statuses: new Set<Task.Status>(['started']),
@@ -144,7 +152,7 @@ describe('filterTasks', () => {
 
   test('a task whose parent is outside the set is a root', ({ expect }) => {
     const absent = makeTask({ title: 'Absent parent', status: 'done' });
-    const child = makeTask({ title: 'Child', status: 'started', parentTask: Ref.make(absent) });
+    const child = makeTask({ title: 'Child', status: 'started', parent: absent });
     const kept = filterTasks([child], { statuses: new Set<Task.Status>(['started']) });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Child']);
   });

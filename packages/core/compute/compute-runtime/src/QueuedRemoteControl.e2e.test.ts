@@ -387,7 +387,7 @@ const withHarness = (
     const kv = yield* KeyValueStore.KeyValueStore;
 
     // The "remote" runtime: an ordinary manager over its own store.
-    const hostManager = new ProcessManager.ProcessManagerImpl({
+    const hostManager = new ProcessManager.Impl({
       registry,
       kvStore: KeyValueStore.prefix(kv, 'host/'),
       traceSink,

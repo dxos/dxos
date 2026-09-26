@@ -7,11 +7,10 @@ import { Task } from '@dxos/types';
 import { type Label } from '@dxos/ui-types';
 
 /**
- * Adapts a `TaskSet`'s flat task array to the `Tree`'s model.
+ * Adapts a set's tasks to the `Tree`'s model.
  *
- * `TaskSet.tasks` is flat and `Task.parentTask` carries the hierarchy. Array order decides sibling
- * order and nothing else, which is why the forest is rebuilt from `rootTasks`/`subTasks` rather
- * than by grouping the array.
+ * The list is taken flat (every task the set holds) and the forest rebuilt from
+ * `rootTasks`/`subTasks`: parent edges place each task, `subtasks` order its siblings.
  *
  * A task has exactly one parent, so it appears at exactly one path. That is what lets collapsed
  * state stay keyed by id (as `TaskList` already keys it) while `Tree` addresses rows by path.
@@ -70,7 +69,7 @@ export const buildTaskGroups = (groups: readonly TaskGroup[], hierarchical = tru
 export const TASK_TREE_ROOT_ID = 'tasks';
 
 /**
- * Builds the task forest. Cycle-safe: a malformed `parentTask` loop is visited once and then
+ * Builds the task forest. Cycle-safe: a malformed parent loop is visited once and then
  * skipped, so a corrupt set renders short rather than hanging.
  */
 export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {

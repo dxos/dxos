@@ -15,6 +15,7 @@ export * from './chunk-array.ts';
 export * from './circular-buffer.ts';
 export * from './clear-undefined.ts';
 export * from './complex.ts';
+export * from './compress.ts';
 export * from './composite-key.ts';
 export * from './deep.ts';
 export * from './defer-function.ts';

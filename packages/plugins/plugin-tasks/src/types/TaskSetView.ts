@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ViewState } from '@dxos/react-ui-attention/types';
+import { Task } from '@dxos/types';
 
 /** The fields a task list can be ordered by; `manual` is the set's own order. */
 export const SortField = Schema.Literals(['manual', 'status', 'priority', 'estimate', 'created', 'updated', 'title']);
@@ -24,6 +25,12 @@ export const DEFAULT_SORT: Sort = { field: 'manual', direction: 'asc' };
 
 export const View = Schema.Struct({
   query: Schema.String,
+  /**
+   * Superseded by the query's `status:` terms, and read only so a choice stored before them is
+   * folded into `query` rather than dropped (see `useFilterQuery`); nothing writes it any more.
+   */
+  statuses: Schema.optional(Schema.Array(Task.Status)),
+  expanded: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
   sort: Schema.optional(Sort),
   group: Schema.optional(GroupField),
 });
@@ -35,12 +42,13 @@ export type View = Schema.Schema.Type<typeof View>;
  * of the set every member would see.
  *
  * The status menu and the text are two views over `query` — the status choice is written into it as
- * `status:` terms — so there is one value to persist and no second copy to drift. `sort` and `group`
- * are optional so a value persisted before they existed still decodes.
+ * `status:` terms — so there is one value to persist and no second copy to drift. `expanded` maps a
+ * task id to whether its branch is open; a task absent from it keeps the list's default (open).
+ * `sort` and `group` are optional so a value persisted before they existed still decodes.
  */
 export const aspect: ViewState.Aspect<View> = ViewState.define<View>({
   key: 'tasks-task-set-view',
   backend: 'local',
   schema: View,
-  defaultValue: () => ({ query: '' }),
+  defaultValue: (): View => ({ query: '' }),
 });

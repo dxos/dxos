@@ -28,19 +28,16 @@ describe('buildTaskForest', () => {
     expect(titles(root.children[0].children[0])).toEqual(['a1x']);
   });
 
-  test('a dangling parentTask reads as a root', ({ expect }) => {
-    const orphan = Task.make({ title: 'orphan', status: 'todo', parentTask: Ref.make(Task.make({ title: 'gone' })) });
+  test('a parent outside the list reads as a root', ({ expect }) => {
+    const orphan = Task.make({ title: 'orphan', status: 'todo' });
+    Task.make({ title: 'gone', subtasks: [Ref.make(orphan)] });
     expect(titles(buildTaskForest([orphan]))).toEqual(['orphan']);
   });
 
-  test('a parentTask cycle terminates rather than hanging', ({ expect }) => {
-    const one = Task.make({ title: 'one', status: 'todo' });
-    const two = Task.make({ title: 'two', status: 'todo', parentTask: Ref.make(one) });
+  test('a parent cycle terminates rather than hanging', ({ expect }) => {
+    const { one, two } = cycle();
     // A malformed set: each is the other's parent, so neither is a root,
     // which renders nothing rather than looping.
-    Obj.update(one, (one) => {
-      one.parentTask = Ref.make(two);
-    });
     expect(count(buildTaskForest([one, two]))).toEqual(0);
   });
 });
@@ -67,19 +64,15 @@ describe('flattenVisibleTasks', () => {
     ]);
   });
 
-  test('a parentTask cycle flattens short rather than hanging', ({ expect }) => {
-    const one = Task.make({ title: 'one', status: 'todo' });
-    const two = Task.make({ title: 'two', status: 'todo', parentTask: Ref.make(one) });
+  test('a parent cycle flattens short rather than hanging', ({ expect }) => {
+    const { one, two } = cycle();
     // A malformed set: each is the other's parent, so neither is a root.
-    Obj.update(one, (one) => {
-      one.parentTask = Ref.make(two);
-    });
     expect(flattenVisibleTasks(buildTaskForest([one, two]))).toEqual([]);
   });
 });
 
 describe('createTaskTreeModel', () => {
-  test('topology comes from parentTask, sibling order from the array', ({ expect }) => {
+  test('topology comes from parent edges, sibling order from subtasks', ({ expect }) => {
     const registry = Registry.make();
     const { a, a1, tasks } = fixture();
     const model = createTaskTreeModel(tasks);
@@ -215,12 +208,22 @@ describe('buildTaskGroups', () => {
 });
 
 const fixture = () => {
-  const a = Task.make({ title: 'a', status: 'todo' });
-  const a1 = Task.make({ title: 'a1', status: 'todo', parentTask: Ref.make(a) });
+  const a1x = Task.make({ title: 'a1x', status: 'todo' });
+  const a1 = Task.make({ title: 'a1', status: 'todo', subtasks: [Ref.make(a1x)] });
+  const a2 = Task.make({ title: 'a2', status: 'todo' });
+  const a = Task.make({ title: 'a', status: 'todo', subtasks: [Ref.make(a1), Ref.make(a2)] });
   const b = Task.make({ title: 'b', status: 'todo' });
-  const a2 = Task.make({ title: 'a2', status: 'todo', parentTask: Ref.make(a) });
-  const a1x = Task.make({ title: 'a1x', status: 'todo', parentTask: Ref.make(a1) });
   return { a, a1, a1x, a2, b, tasks: [a, a1, b, a2, a1x] };
+};
+
+/** Two tasks each listing the other, so each is the other's parent. */
+const cycle = () => {
+  const two = Task.make({ title: 'two', status: 'todo' });
+  const one = Task.make({ title: 'one', status: 'todo', subtasks: [Ref.make(two)] });
+  Obj.update(two, (two) => {
+    two.subtasks?.push(Ref.make(one));
+  });
+  return { one, two };
 };
 
 const titles = (node: { children: { task?: { title?: string } }[] }): (string | undefined)[] =>

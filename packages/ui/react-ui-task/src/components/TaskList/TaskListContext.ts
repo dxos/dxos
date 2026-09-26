@@ -12,6 +12,7 @@ import { type Task } from '@dxos/types';
 
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { type TaskCreateHandler } from './TaskList.tsx';
 import { type TaskSelectModifiers } from './TaskTreeNode.tsx';
 import { type TaskGroup } from './tree-model.ts';
 
@@ -34,7 +35,6 @@ export type TaskListContextValue = {
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   /** Render the questions in each task's history under its title. */
-  showQuestions: boolean;
   hierarchical: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
@@ -42,7 +42,7 @@ export type TaskListContextValue = {
   showGutter: boolean;
   /**
    * The row's column template, built once from the options so the tree's rows and the edit pane
-   * lay out on the same named tracks (`gutter`, `status`, `title`, `chips`, `estimate`, `priority`,
+   * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,
    * `actions`).
    */
   gridTemplateColumns: string;
@@ -55,7 +55,7 @@ export type TaskListContextValue = {
   /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
   dragging: ReadonlySet<string>;
   onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskCreate?: TaskCreateHandler;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
@@ -63,7 +63,6 @@ export type TaskListContextValue = {
   /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */
   onTaskCheck?: (task: Task.Task) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
 };
 
 export const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);

@@ -4,8 +4,8 @@
 
 import React, { useRef } from 'react';
 
-import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { type EntityItem } from '../types.ts';
 
@@ -46,7 +46,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-auto'>
         {entities.length === 0 ? (
-          <Empty label='No entities.' />
+          <Banner.Empty label='No entities.' />
         ) : (
           <Listbox.Root value={selected} onValueChange={onSelect}>
             <Listbox.Content aria-label='Entities'>

@@ -53,7 +53,7 @@ export const TaskFilter = ({
         onChange={onChange}
         ref={editorRef}
       />
-      <TaskStatusFilter value={statuses} onChange={onStatusesChange} />
+      <TaskStatusFilter value={statuses} active={value.trim().length > 0} onChange={onStatusesChange} />
       {/* The rest of the toolbar's view controls (order, grouping), between the filter and its clear. */}
       {children}
       <IconButton

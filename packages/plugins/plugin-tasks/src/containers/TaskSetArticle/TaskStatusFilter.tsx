@@ -17,6 +17,8 @@ export type TaskStatusFilterProps = {
   /** The statuses the list shows. Every status is the unfiltered state. */
   value: readonly Task.Status[];
   onChange: (value: readonly Task.Status[]) => void;
+  /** Whether anything narrows the list — the query too, not just the statuses this menu hides. */
+  active?: boolean;
 };
 
 /**
@@ -30,10 +32,11 @@ export type TaskStatusFilterProps = {
  * `status:` terms and writes a change back into them (see `parseEnumTerms`), so the menu and the
  * text cannot disagree about what the list is showing.
  */
-export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => {
+export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
   const selected = useMemo(() => new Set(value), [value]);
   const filtered = selected.size < ALL_STATUSES.length;
+  const narrowed = active || filtered;
 
   // The group carries no items of its own — it is the context that makes the items checkboxes rather
   // than radios, and the menu stay open while they are toggled.
@@ -88,9 +91,11 @@ export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
       <IconButton
-        // Filled while a status is hidden, so the trigger says the list is narrowed without the
-        // reader opening it — the rows that are missing are otherwise invisible.
-        icon={filtered ? 'ph--funnel--fill' : 'ph--funnel--regular'}
+        // Filled and accented while anything narrows the list, so the trigger says rows are missing
+        // without the reader opening it; the accent survives the toolbar dimming icons at rest.
+        icon={narrowed ? 'ph--funnel--fill' : 'ph--funnel--regular'}
+        iconClassNames={narrowed ? 'text-accent-text' : undefined}
+        data-filtered={narrowed ? 'true' : 'false'}
         iconOnly
         label={t('filter-status.label')}
         data-testid='tasks.filter.status'

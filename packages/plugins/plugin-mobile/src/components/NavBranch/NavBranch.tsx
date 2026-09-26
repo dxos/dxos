@@ -12,9 +12,8 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Banner, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
@@ -117,7 +116,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Empty label={t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')} />
+              <Banner.Empty label={t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')} />
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'

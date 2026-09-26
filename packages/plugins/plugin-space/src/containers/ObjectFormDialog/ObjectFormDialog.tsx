@@ -21,7 +21,8 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { CollectionItemAnnotation, FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
+import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -140,23 +141,18 @@ export const ObjectFormDialog = ({
     return set;
   }, [typeByTypename]);
 
-  // Types eligible to live inside a collection: collections themselves, plus types carrying
-  // CollectionItemAnnotation. Used to filter the create dialog when targeting a collection.
+  // Creating into a collection offers only the types made to live there; any other user type joins a
+  // collection from the object itself.
   const collectionItemTypenames = useMemo(() => {
     const set = new Set<string>();
-    const collectionTypename = Type.getTypename(Collection.Collection);
     for (const [name, type] of typeByTypename) {
-      if (
-        name === collectionTypename ||
-        CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
-      ) {
+      if (TypeOptions.hasUserTypeTag(type, Collection.ItemTag)) {
         set.add(name);
       }
     }
     return set;
   }, [typeByTypename]);
 
-  // When creating into a collection, offer only collection-eligible types (mirrors the `views` filter).
   const collectionTarget = Collection.isCollection(target);
 
   const options = useMemo<CreateObjectOption[]>(
@@ -169,6 +165,11 @@ export const ObjectFormDialog = ({
               ? collectionItemTypenames.has(entry.id)
               : true,
         )
+        // Only object types opt in; the entry that creates a new type is itself the meta-schema.
+        .filter((entry) => {
+          const type = typeByTypename.get(entry.id);
+          return type === undefined || !Type.isObject(type) || TypeOptions.isUserType(type);
+        })
         .map((entry) => {
           const type = typeByTypename.get(entry.id);
           const schema = type && Type.getSchema(type);
@@ -275,20 +276,27 @@ export const ObjectFormDialog = ({
 
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
-    void Effect.gen(function* () {
-      // The object is already persisted; this only hands it to its parent.
-      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
-      yield* navigateTo(object);
-    }).pipe(
-      Effect.provideService(Capability.Service, manager.capabilities),
-      Effect.provideService(Operation.Service, operationInvoker),
-      EffectEx.runAndForwardErrors,
+    // Detached: the dialog has already unmounted, so a teardown interrupting the hand-off is not an error.
+    EffectEx.runDetached(
+      Effect.gen(function* () {
+        // The object is already persisted; this only hands it to its parent.
+        yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
+        yield* navigateTo(object);
+      }).pipe(
+        Effect.provideService(Capability.Service, manager.capabilities),
+        Effect.provideService(Operation.Service, operationInvoker),
+      ),
     );
   }, [object, target, parent, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(bodyRef, handleConfirm, { disabled: !object });
 
   //
   // Draft mode.
   //
+
+  const handleCancel = useCallback(() => closeRef.current?.click(), []);
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
@@ -341,7 +349,7 @@ export const ObjectFormDialog = ({
           <Dialog.ActionIconButton action='close' ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body>
+      <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
           options={options}
           spaces={spaces}
@@ -354,6 +362,7 @@ export const ObjectFormDialog = ({
           initialFormValues={defaults}
           resolve={resolve}
           onCreateObject={handleCreateObject}
+          onCancel={handleCancel}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />

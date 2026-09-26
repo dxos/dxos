@@ -63,18 +63,20 @@ describe('Chess MCP template', () => {
       'title'?: string;
       'status'?: string;
       'assignee'?: unknown;
-      'parentTask'?: unknown;
+      'subtasks'?: unknown;
       'dependsOn'?: unknown;
     }> = JSON.parse(json).objects;
     const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
 
-    const roots = tasks.filter((task) => task.parentTask === undefined);
+    // Refs serialize as an envelope, so a parent's `subtasks` are matched by id within it.
+    const childrenOf = (id: string) => {
+      const listed = JSON.stringify(tasks.find((task) => task.id === id)?.subtasks ?? []);
+      return tasks.filter((task) => listed.includes(task.id));
+    };
+    const roots = tasks.filter((task) => !tasks.some((parent) => childrenOf(parent.id).includes(task)));
     expect(roots).toHaveLength(1);
     expect(roots[0].title).toBe('Ship a chess engine as an MCP server on Cloudflare Workers');
 
-    // Refs serialize as an envelope, so parentage is matched by id within it.
-    const childrenOf = (id: string) =>
-      tasks.filter((task) => task.parentTask !== undefined && JSON.stringify(task.parentTask).includes(id));
     const stages = childrenOf(roots[0].id);
     expect(stages).toHaveLength(5);
     // Every stage has steps of its own, which is the depth the tree exists to carry.

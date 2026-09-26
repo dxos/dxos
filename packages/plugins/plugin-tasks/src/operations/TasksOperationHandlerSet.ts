@@ -9,6 +9,7 @@ import { OutlineOperation, RemoteSessionOperation, TaskOperation } from '#types'
 
 export const handlers = OperationHandlerSet.lazy([
   TaskOperation.AddArtifact.pipe(Operation.lazyHandler(() => import('./add-artifact.ts'))),
+  TaskOperation.AddAttachment.pipe(Operation.lazyHandler(() => import('./add-attachment.ts'))),
   TaskOperation.AnswerQuestion.pipe(Operation.lazyHandler(() => import('./answer-question.ts'))),
   TaskOperation.AskQuestion.pipe(Operation.lazyHandler(() => import('./ask-question.ts'))),
   OutlineOperation.ConvertToTask.pipe(Operation.lazyHandler(() => import('./convert-to-task.ts'))),
@@ -22,8 +23,10 @@ export const handlers = OperationHandlerSet.lazy([
   TaskOperation.ListTasks.pipe(Operation.lazyHandler(() => import('./list-tasks.ts'))),
   TaskOperation.MoveMilestone.pipe(Operation.lazyHandler(() => import('./move-milestone.ts'))),
   TaskOperation.MoveTask.pipe(Operation.lazyHandler(() => import('./move-task.ts'))),
+  TaskOperation.MoveTaskToSet.pipe(Operation.lazyHandler(() => import('./move-task-to-set.ts'))),
   OutlineOperation.QuickJournalEntry.pipe(Operation.lazyHandler(() => import('./quick-entry.ts'))),
   RemoteSessionOperation.RecordSession.pipe(Operation.lazyHandler(() => import('./report-session.ts'))),
+  TaskOperation.RemoveAttachment.pipe(Operation.lazyHandler(() => import('./remove-attachment.ts'))),
   TaskOperation.RestoreTasks.pipe(Operation.lazyHandler(() => import('./restore-tasks.ts'))),
   OutlineOperation.UpdateOutline.pipe(Operation.lazyHandler(() => import('./update-outline.ts'))),
   TaskOperation.UpdateTask.pipe(Operation.lazyHandler(() => import('./update-task.ts'))),

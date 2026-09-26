@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -11,10 +12,13 @@ import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type }
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/echo/Key';
+import { BaseError } from '@dxos/errors';
 import { type MakeRequired } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
+import * as File from './File.ts';
 import * as Milestone from './Milestone.ts';
+import * as PullRequest from './PullRequest.ts';
 
 export type Option<T> = { id: T; title: string; color?: string; icon?: string };
 
@@ -184,7 +188,7 @@ export const HistoryEntry = Schema.Union([CreatedEntry, UpdatedEntry, QuestionEn
 });
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.5.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.6.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
@@ -193,6 +197,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         args: [{ min: 3, max: 10 }],
       }),
     ),
+
     description: Schema.optional(
       Schema.String.pipe(
         Schema.annotate({ title: 'Description' }),
@@ -204,16 +209,22 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     ),
 
     /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
-     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
+     * Sub-tasks, in display order (unbounded depth). Each one's ECHO parent is this task, so
+     * `Filter.childOf(task)` finds them and deleting a task deletes its subtree; the parent of a task
+     * is read back with {@link getParentTask}, never stored on the child. Claims only an unparented
+     * task, as `TaskSet.tasks` does, so a stale entry cannot re-parent on an unrelated write.
      */
-    parentTask: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
+    subtasks: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Annotation.SetParent.set({ override: false }),
+        Schema.annotate({ title: 'Subtasks' }),
+      ),
     ),
 
     /**
      * Execution-ordering dependencies: this task is ready to start only when every referenced
-     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     * task is `done`. Orthogonal to `subtasks` (hierarchy) and `milestone` (grouping).
      */
     dependsOn: Schema.optional(
       Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
@@ -291,8 +302,13 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * happened, so rewriting one would be rewriting the past. It lives on the task rather than in a
      * side channel because the log is worthless if it can be separated from what it describes.
      */
+    // TODO(burdon): Rename activity.
+    // TODO(burdon): This should really be a Feed object, or as comments.
     history: Schema.optional(
-      Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+      Schema.Array(HistoryEntry).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Activity' }),
+      ),
     ),
 
     /**
@@ -307,15 +323,32 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       ),
     ),
 
-    // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
-    // backref here: enumeration stays one array read and a move stays one field write.
+    /**
+     * Files a person attached to the task (a screenshot, a log). Unlike `artifacts` these exist only
+     * for the task, so the task owns them: deleting it deletes them.
+     */
+    attachments: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).pipe(
+        Annotation.SetParent.set(),
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Attachments' }),
+      ),
+    ),
+
+    // A root task is listed in `TaskSet.tasks` and a sub-task in its parent's `subtasks`; the list
+    // that holds a task is also its ECHO parent, so membership and order are one record.
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
-export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
+/**
+ * Factory wrapper around `Obj.make` for {@link Task}. `subtasks` starts as an empty list rather than
+ * absent: two peers lazily creating the list would each write a fresh one, and the merge keeps only one.
+ */
+export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, { subtasks: [], ...props });
 
 //
 // Mutations. Every edit that should be remembered goes through one of these, so the log cannot
@@ -323,7 +356,7 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
 // entry by hand can describe something that never happened. Each one is a single `Obj.update`, so
 // the change and its note reach the database together.
 //
-// Only the fields a person edits are covered. `parentTask` and `milestone` carry ownership and set
+// Only the fields a person edits are covered. The hierarchy and `milestone` carry ownership and set
 // membership, so they move through `TaskSet` rather than here.
 //
 
@@ -332,7 +365,7 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
  * `UpdateTask` operation, and the list UI, so the three cannot disagree about what an edit is.
  *
  * `null` clears an optional field, distinct from `undefined`, which means the edit does not mention
- * it at all. `parentTask` and `milestone` are absent by design: they carry ownership and set
+ * it at all. The hierarchy and `milestone` are absent by design: they carry ownership and set
  * membership, so they move through `TaskSet`.
  */
 export type Edit = {
@@ -435,6 +468,12 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
  *
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
+ *
+ * **Only a change to the WORK is logged** — its status, its priority, its size, who has it. A title
+ * or description is the task's text, and the text is edited by typing: every blur commits, so
+ * logging those filled the history with "Description updated." and buried the entries a reader
+ * opens it for. They are still written, they are simply not narrated. A caller with something to
+ * say about an edit says it through `options.description`, which is always recorded.
  */
 export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
   const changes: Edit =
@@ -442,12 +481,15 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
       ? requested
       : { ...requested, status: finishStatus(task, requested.status, options.approve ?? false) };
   const notes: string[] = [];
+  // Whether anything at all differs, which decides if the write happens; `notes` decides whether it
+  // is narrated. The two used to be the same question.
+  let changed = false;
 
   if (changes.title !== undefined && changes.title !== task.title) {
-    notes.push(`Title changed to ${quote(changes.title)}.`);
+    changed = true;
   }
   if (changes.description !== undefined && (changes.description ?? undefined) !== task.description) {
-    notes.push(changes.description === null ? 'Description cleared.' : 'Description updated.');
+    changed = true;
   }
   if (changes.status !== undefined && changes.status !== task.status) {
     notes.push(
@@ -472,17 +514,22 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
   }
 
-  if (notes.length === 0) {
+  changed ||= notes.length > 0;
+  if (!changed) {
     return undefined;
   }
 
-  const entry: UpdatedEntry = {
-    id: EntityId.random(),
-    date: options.date ?? new Date().toISOString(),
-    ...(options.actor ? { actor: options.actor } : {}),
-    event: 'updated',
-    description: options.description ?? notes.join(' '),
-  };
+  // A silent edit — a title or a description — still writes its field; it just carries no entry.
+  const narrate = notes.length > 0 || options.description !== undefined;
+  const entry: UpdatedEntry | undefined = narrate
+    ? {
+        id: EntityId.random(),
+        date: options.date ?? new Date().toISOString(),
+        ...(options.actor ? { actor: options.actor } : {}),
+        event: 'updated',
+        description: options.description ?? notes.join(' '),
+      }
+    : undefined;
 
   // One transaction: the fields and the entry that explains them are never separately observable.
   Obj.update(task, (task) => {
@@ -522,8 +569,10 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         task.assignee = changes.assignee;
       }
     }
-    task.history ??= [];
-    task.history.push(mutableEntry(entry));
+    if (entry) {
+      task.history ??= [];
+      task.history.push(mutableEntry(entry));
+    }
   });
 
   return entry;
@@ -554,6 +603,66 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
     task.artifacts ??= [];
     task.artifacts.push(Ref.make(artifact));
   });
+};
+
+/** How a file reads in a note: its name, else that it is unnamed. */
+const fileLabel = (file: File.File | undefined): string => (file?.name ? quote(file.name) : 'a file');
+
+/** An `updated` entry for an attachment change, so the log says what was attached or removed. */
+const attachmentEntry = (description: string, options: EditOptions): UpdatedEntry => ({
+  id: EntityId.random(),
+  date: options.date ?? new Date().toISOString(),
+  ...(options.actor ? { actor: { ...options.actor } } : {}),
+  event: 'updated',
+  description: options.description ?? description,
+});
+
+/**
+ * Attaches a file to the task, which takes ownership of it (see {@link Task.attachments}), and logs
+ * it. Attaching the same file twice is a no-op that records nothing, compared by entity id as for
+ * {@link addArtifact}.
+ */
+export const addAttachment = (task: Task, file: File.File, options: EditOptions = {}): UpdatedEntry | undefined => {
+  const id = file.id;
+  if ((task.attachments ?? []).some((ref) => refEntityId(ref) === id)) {
+    return undefined;
+  }
+
+  const entry = attachmentEntry(`Attached ${fileLabel(file)}.`, options);
+  Obj.update(task, (task) => {
+    task.attachments ??= [];
+    task.attachments.push(Ref.make(file));
+    task.history ??= [];
+    task.history.push(entry);
+  });
+
+  return entry;
+};
+
+/**
+ * Detaches a file from the task and logs it; a file that is not attached records nothing. The file
+ * is left in the database: deleting it is the caller's decision, and needs the database this does not.
+ */
+export const removeAttachment = (
+  task: Task,
+  file: File.File | Ref.Ref<File.File>,
+  options: EditOptions = {},
+): UpdatedEntry | undefined => {
+  const ref = Obj.isObject(file) ? Ref.make(file) : file;
+  const id = refEntityId(ref);
+  const index = (task.attachments ?? []).findIndex((attached) => refEntityId(attached) === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const entry = attachmentEntry(`Removed attachment ${fileLabel(ref.target)}.`, options);
+  Obj.update(task, (task) => {
+    task.attachments?.splice(index, 1);
+    task.history ??= [];
+    task.history.push(entry);
+  });
+
+  return entry;
 };
 
 //
@@ -652,11 +761,10 @@ export const setAssignee = (task: Task, assignee: Actor.Actor | null, options?: 
   update(task, { assignee }, options);
 
 //
-// Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and
-// progress are computed from `parentTask`/`milestone`, so they cannot disagree with the refs. They
-// take a plain task array rather than a container, so every holder of an ordered list — a
-// `TaskSet`, a `Chat` — shares them, and compare by ref URI so a React snapshot (no resolver, no
-// `.target`) works too.
+// Derived views over a task list. Nothing here is stored: milestone grouping and progress are
+// computed from the hierarchy and `milestone`, so they cannot disagree with the refs. They take a
+// plain task array rather than a container, so every holder of an ordered list — a `TaskSet`, a
+// `Chat` — shares them, and compare by ref URI so an unloaded ref still compares.
 //
 
 /**
@@ -689,8 +797,17 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
   return result;
 };
 
-/** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
-export const parentTaskId = (task: Task): string | undefined => refEntityId(task.parentTask);
+/**
+ * The task `task` is a sub-task of: its ECHO parent, when that is a task. The parent edge is the one
+ * record of the hierarchy — the parent's `subtasks` list only orders it.
+ */
+export const getParentTask = (task: Task): Task | undefined => {
+  const parent = Obj.getParent(task);
+  return Obj.instanceOf(Task, parent) ? parent : undefined;
+};
+
+/** Entity id of a task's parent task; undefined for a root. */
+export const parentTaskId = (task: Task): string | undefined => getParentTask(task)?.id;
 
 /**
  * Order query-loaded tasks by `refs` — the holder's array is canonical order; a query returns none.
@@ -709,19 +826,69 @@ export const orderTasks = (tasks: ReadonlyArray<Task>, refs: ReadonlyArray<Ref.R
   );
 };
 
-/** Tasks with no parent present in `tasks` — a dangling `parentTask` reads as a root, not a ghost. */
+/** Tasks with no parent present in `tasks` — a parent outside the list reads as a root, not a ghost. */
 export const rootTasks = (tasks: readonly Task[]): Task[] => {
   const present = new Set(tasks.map((task) => task.id));
   return tasks.filter((task) => {
-    const parent = refEntityId(task.parentTask);
+    const parent = parentTaskId(task);
     return parent === undefined || !present.has(parent);
   });
 };
 
-/** Direct sub-tasks of `task`, in the order `tasks` lists them. */
-export const subTasks = (tasks: readonly Task[], task: Task): Task[] => {
-  const parent = task.id;
-  return tasks.filter((candidate) => refEntityId(candidate.parentTask) === parent);
+/**
+ * Direct sub-tasks of `task` within `byId`, in `subtasks` order. An entry whose parent edge names
+ * another task is skipped (the edge wins, so a task shows under exactly one parent), and a child
+ * whose edge names `task` but that the list does not hold yet is appended rather than hidden.
+ */
+const childrenOf = (tasks: readonly Task[], byId: ReadonlyMap<string, Task>, task: Task): Task[] => {
+  const children: Task[] = [];
+  const seen = new Set<string>();
+  for (const ref of task.subtasks ?? []) {
+    const id = refEntityId(ref);
+    const child = id === undefined ? undefined : byId.get(id);
+    if (child && !seen.has(child.id) && parentTaskId(child) === task.id) {
+      seen.add(child.id);
+      children.push(child);
+    }
+  }
+  for (const candidate of tasks) {
+    if (!seen.has(candidate.id) && parentTaskId(candidate) === task.id) {
+      seen.add(candidate.id);
+      children.push(candidate);
+    }
+  }
+  return children;
+};
+
+/** Direct sub-tasks of `task` that `tasks` holds, in the parent's `subtasks` order. */
+export const subTasks = (tasks: readonly Task[], task: Task): Task[] =>
+  childrenOf(tasks, new Map(tasks.map((candidate) => [candidate.id, candidate])), task);
+
+/**
+ * `tasks` in tree pre-order: the roots in `refs` order (a holder's list, e.g. `TaskSet.tasks`), each
+ * followed by its subtree in `subtasks` order. A task the walk cannot reach (a malformed cycle) is
+ * appended rather than dropped.
+ */
+export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Task>>): Task[] => {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const ordered: Task[] = [];
+  const seen = new Set<string>();
+  const visit = (task: Task): void => {
+    if (seen.has(task.id)) {
+      return;
+    }
+    seen.add(task.id);
+    ordered.push(task);
+    childrenOf(tasks, byId, task).forEach(visit);
+  };
+  orderTasks(rootTasks(tasks), refs).forEach(visit);
+  for (const task of tasks) {
+    if (!seen.has(task.id)) {
+      seen.add(task.id);
+      ordered.push(task);
+    }
+  }
+  return ordered;
 };
 
 /**
@@ -749,7 +916,7 @@ export const isTaskReady = (tasks: readonly Task[], task: Task): boolean => {
 /**
  * The milestone a task is shown under: its own, else the nearest ancestor's (Linear's behavior),
  * as an entity id. Undefined for a backlog task. Walks within `tasks`, so it needs no
- * dereferencing, and is cycle-safe against a malformed `parentTask` loop.
+ * dereferencing, and is cycle-safe against a malformed parent loop.
  */
 export const effectiveMilestoneId = (tasks: readonly Task[], task: Task): string | undefined =>
   effectiveMilestoneIds(tasks).get(task.id);
@@ -766,7 +933,7 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
 
   for (const task of tasks) {
     // Walk to the nearest ancestor carrying a milestone, remembering the path so the whole chain
-    // is filled in at once; `visited` also terminates a malformed `parentTask` cycle.
+    // is filled in at once; `visited` also terminates a malformed parent cycle.
     const path: string[] = [];
     const visited = new Set<string>();
     let cursor: Task | undefined = task;
@@ -788,7 +955,7 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
         found = milestone;
         break;
       }
-      const parentId: string | undefined = refEntityId(cursor.parentTask);
+      const parentId: string | undefined = parentTaskId(cursor);
       cursor = parentId === undefined ? undefined : byId.get(parentId);
     }
 
@@ -854,9 +1021,9 @@ export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
 };
 
 /**
- * Every task transitively under `task` (via `parentTask`), including `task` itself. Children are
- * discovered through the reverse-ref index — space-wide, loading each as it is found — rather
- * than any one set's array, since a sub-task may be filed in a different set (or none). Cycle-safe.
+ * Every task transitively under `task`, including `task` itself: each level's `subtasks` loaded,
+ * plus any child whose parent edge names it that the list does not hold (the edge is what a delete
+ * cascades along, so a walk that missed it would disagree with the cascade). Cycle-safe.
  */
 export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
   Effect.gen(function* () {
@@ -870,10 +1037,86 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
       }
       seen.add(current.id);
       subtree.push(current);
-      const children = yield* Database.query(
-        Query.select(Filter.id(current.id)).referencedBy(Task, 'parentTask'),
-      ).run.pipe(Effect.orElseSucceed(() => []));
-      queue.push(...children);
+      const listed = yield* Effect.forEach(current.subtasks ?? [], loadOrUndefined, { concurrency: 16 });
+      const edged = yield* Database.query(
+        Query.select(Filter.and(Filter.type(Task), Filter.childOf(current, { transitive: false }))),
+      ).run.pipe(Effect.orElseSucceed((): Task[] => []));
+      queue.push(...dedupeById([...listed, ...edged]).filter((child) => parentTaskId(child) === current.id));
     }
     return subtree;
+  });
+
+/** How long one cold ref may take to resolve: an unresolvable ref waits out the resolver's own 30s timeout. */
+const REF_LOAD_TIMEOUT = Duration.seconds(5);
+
+/** The ref's target, or `undefined` when it is gone or does not resolve in time. */
+const loadOrUndefined = <T extends Obj.Unknown>(ref: Ref.Ref<T>): Effect.Effect<T | undefined> => {
+  const target = Database.peek(ref);
+  return target
+    ? Effect.succeed(target)
+    : Database.load(ref).pipe(
+        Effect.timeout(REF_LOAD_TIMEOUT),
+        Effect.orElseSucceed(() => undefined),
+      );
+};
+
+/**
+ * The top of `task`'s tree, walking parent edges up — the unit of work every task in the tree lands
+ * with. Synchronous with no load to time out: a parent edge is a strong dependency, materialized
+ * before its child is, so an unresolved hop means no parent task. A parent that is not a task (the
+ * set, or nothing) ends the walk. Cycle-safe.
+ */
+export const collectRoot = (task: Task): Effect.Effect<Task> =>
+  Effect.sync(() => {
+    const seen = new Set<string>([task.id]);
+    let current = task;
+    for (let parent = getParentTask(current); parent && !seen.has(parent.id); parent = getParentTask(current)) {
+      seen.add(parent.id);
+      current = parent;
+    }
+    return current;
+  });
+
+/** The whole tree `task` belongs to — its root first, then every descendant. */
+export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
+  Effect.flatMap(collectRoot(task), collectSubtree);
+
+/** A task tree already has a different open PR: every sub-task of a task lands in one PR. */
+export class PullRequestConflictError extends BaseError.extend(
+  'PullRequestConflictError',
+  'Task tree already has an open pull request.',
+) {}
+
+/**
+ * The task an artifact produced for `task` is recorded on. A pull request goes to the ROOT of the
+ * tree, since a task with sub-tasks is one unit of work that lands in one PR; anything else stays on
+ * `task`. Fails when any task in the tree already holds a DIFFERENT pull request that is still open
+ * — the root normally, but a sub-task may carry one recorded before PRs were routed to the root.
+ */
+export const artifactTarget = (
+  task: Task,
+  artifact: Obj.Unknown,
+): Effect.Effect<Task, PullRequestConflictError, Database.Service> =>
+  Effect.gen(function* () {
+    if (!PullRequest.instanceOf(artifact)) {
+      return task;
+    }
+    const [root, ...descendants] = yield* collectTree(task);
+    for (const member of [root, ...descendants]) {
+      for (const ref of member.artifacts ?? []) {
+        if (refEntityId(ref) === artifact.id) {
+          continue;
+        }
+        const existing = yield* loadOrUndefined(ref);
+        if (PullRequest.instanceOf(existing) && existing.state === 'open') {
+          const url = existing.url ?? PullRequest.reference(existing);
+          return yield* Effect.fail(
+            new PullRequestConflictError({
+              message: `Task tree "${root.title}" already has PR ${url}; all subtasks land in one PR.`,
+            }),
+          );
+        }
+      }
+    }
+    return root;
   });

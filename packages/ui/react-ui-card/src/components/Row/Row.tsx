@@ -443,7 +443,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
       <Card.Block>
         <Icon icon='ph--tag--regular' />
       </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
             key={tag.id}
@@ -525,7 +525,7 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
       <Card.Block>
         <Icon icon='ph--paperclip--regular' />
       </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
           <Tag
             key={attachment.ref.uri}

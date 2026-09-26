@@ -14,9 +14,9 @@ import { daysAgo } from './util.ts';
 //
 // The plan, authored as a tree.
 //
-// `TaskSet.tasks` is flat — the hierarchy lives on `Task.parentTask`, at unbounded depth. So the
-// seeds are nested for legibility and flattened on the way in, which keeps the shape of the work
-// visible in the source rather than reconstructable only by following refs.
+// The set lists its root tasks and each task lists its own sub-tasks (`Task.subtasks`), at unbounded
+// depth. The seeds are nested the same way, which keeps the shape of the work visible in the source
+// rather than reconstructable only by following refs.
 //
 // Everything is `todo`: this is a plan to run, not a project caught mid-flight. The one thing the
 // seeds do assert is ORDER — a stage assumes the one before it landed, so each depends on its
@@ -225,14 +225,15 @@ export type TasksResult = {
 };
 
 /**
- * Depth-first flatten, resolving each seed against its parent.
- *
- * The stages are collected on the way down rather than recovered afterwards by comparing
- * `parentTask` refs: a ref's target is not comparable until the database has flushed.
+ * Depth-first flatten, recording each task's children so they can be filed under it once stored.
+ * The stages are collected on the way down, as the root's children.
  */
-const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] } => {
+const buildTasks = (
+  seed: TaskSeed,
+): { tasks: Task.Task[]; stages: Task.Task[]; children: Map<Task.Task, Task.Task[]> } => {
   const tasks: Task.Task[] = [];
   const stages: Task.Task[] = [];
+  const children = new Map<Task.Task, Task.Task[]>();
   const visit = (seed: TaskSeed, parent: Task.Task | undefined) => {
     const task = Task.make({
       title: seed.title,
@@ -240,7 +241,6 @@ const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] }
       description: seed.description,
       estimate: seed.estimate,
       assignee: seed.assignee,
-      parentTask: parent ? Ref.make(parent) : undefined,
       // Task carries no due date; its dates are activity-log lines, so that is where they go.
       history: [
         {
@@ -252,6 +252,9 @@ const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] }
       ],
     });
     tasks.push(task);
+    if (parent) {
+      children.set(parent, [...(children.get(parent) ?? []), task]);
+    }
     if (parent === tasks[0]) {
       stages.push(task);
     }
@@ -261,7 +264,7 @@ const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] }
   };
 
   visit(seed, undefined);
-  return { tasks, stages };
+  return { tasks, stages, children };
 };
 
 /** The plan: one root task, five stages under it, and the steps under those. */
@@ -276,10 +279,15 @@ export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', 
         }),
       );
 
-      const { tasks, stages } = buildTasks(PLAN);
-      yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {
+      const { tasks, stages, children } = buildTasks(PLAN);
+      yield* SampleSpace.children(taskSet, [tasks[0]], (taskSet, refs) => {
         taskSet.tasks = refs;
       });
+      for (const [parent, subtasks] of children) {
+        yield* SampleSpace.children(parent, subtasks, (parent, refs) => {
+          parent.subtasks = refs;
+        });
+      }
 
       // Each stage depends on the one before it: the stages are sequential by construction (an MCP
       // server cannot be registered before it has a URL), and stating it is what makes a runner

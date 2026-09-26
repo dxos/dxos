@@ -44,6 +44,8 @@ type CommentRecord = {
   created_at: string;
   path: string;
   line: number | null;
+  /** Line the comment was made on, in the file at `original_commit_id`; stable once outdated. */
+  original_line: number | null;
   side: string | undefined;
   commit_id: string | undefined;
   original_commit_id: string | undefined;
@@ -220,6 +222,7 @@ const toCommentRecord = (raw: RawComment): CommentRecord => ({
   created_at: raw.created_at,
   path: raw.path,
   line: raw.line ?? raw.original_line ?? null,
+  original_line: raw.original_line ?? null,
   side: raw.side,
   commit_id: raw.commit_id,
   original_commit_id: raw.original_commit_id,

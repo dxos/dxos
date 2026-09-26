@@ -12,6 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,6 +24,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandlerSet.ts';
 import { type ObjectFormHandle, makeObjectFormHandle } from '../../util/index.ts';
@@ -105,6 +107,23 @@ const meta = {
         // Confirming files the object through `AddObject`, so the story registers the handler set
         // the space plugin would normally contribute.
         Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers),
+        // What a draft create builds from: a name is required, so a blank one holds the submit.
+        Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
+          id: typename,
+          inputSchema: Schema.Struct({
+            name: Schema.String.pipe(
+              Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Name cannot be empty.')),
+              Schema.annotate({ title: 'Name' }),
+            ),
+            url: Schema.optional(Schema.String.annotate({ title: 'Url' })),
+          }),
+          createObject: (props, options) =>
+            Operation.invoke(
+              SpaceOperation.AddObject,
+              { object: makeBookmark(props), target: options.target },
+              { spaceId: options.db.spaceId },
+            ),
+        }),
       ],
       plugins: [
         ...corePlugins(),
@@ -182,5 +201,105 @@ export const LiveConfirmed: Story = {
         timeout: 5_000,
       },
     );
+  },
+};
+
+/** Enter in a single-line field confirms a live create, as the Create button does. */
+export const LiveEnterConfirms: Story = {
+  play: async () => {
+    const body = within(document.body);
+    await waitFor(async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1'), {
+      timeout: 15_000,
+    });
+
+    await userEvent.click(await body.findByLabelText(/^url$/i, undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+  },
+};
+
+/** A draft create: nothing exists until the form is submitted. */
+export const Draft: Story = {
+  args: { mode: 'draft' },
+};
+
+/** Enter in a single-line field creates the object and closes the dialog. */
+export const DraftEnterCreates: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(await body.findByLabelText(/^url$/i, undefined, { timeout: 15_000 }));
+    await userEvent.paste('https://example.com');
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+    await waitFor(() => expect(body.queryByTestId('create-object-form')).toBeNull());
+  },
+};
+
+/** With the required name blank, Enter creates nothing and leaves the dialog open. */
+export const DraftEnterInvalid: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const name = await body.findByLabelText(/^name$/i, undefined, { timeout: 15_000 });
+    await userEvent.clear(name);
+    await userEvent.keyboard('{Enter}');
+
+    await expect(body.getByTestId('counts')).toHaveTextContent('objects:0 settled:pending');
+    await expect(body.getByTestId('create-object-form')).toBeInTheDocument();
+  },
+};
+
+/** The Create button submits the draft. */
+export const DraftCreateButton: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(within(form).getByTestId('save-button'));
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+  },
+};
+
+/** The Cancel button closes the dialog without creating anything. */
+export const DraftCancelButton: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(within(form).getByTestId('cancel-button'));
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),
+      { timeout: 5_000 },
+    );
+    await expect(body.queryByTestId('create-object-form')).toBeNull();
+  },
+};
+
+/** Escape from a field closes the dialog without creating anything. */
+export const DraftEscapeCancels: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(await body.findByLabelText(/^name$/i, undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),
+      { timeout: 5_000 },
+    );
+    await expect(body.queryByTestId('create-object-form')).toBeNull();
   },
 };

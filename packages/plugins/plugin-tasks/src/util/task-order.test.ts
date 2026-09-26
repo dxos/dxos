@@ -105,7 +105,8 @@ describe('groupTasks', () => {
     const alpha = Milestone.make({ name: 'Alpha' });
     const beta = Milestone.make({ name: 'Beta' });
     const parent = make({ title: 'Parent', milestone: Ref.make(beta) });
-    const child = make({ title: 'Child', parentTask: Ref.make(parent) });
+    const child = make({ title: 'Child' });
+    Obj.setParent(child, parent);
     const loose = make({ title: 'Loose' });
     const groups = groupTasks([parent, child, loose], 'milestone', { ns, milestones: [alpha, beta] }) ?? [];
     expect(groups.map(({ label }) => label)).to.deep.eq(['Alpha', 'Beta', ['group-no-milestone.label', { ns }]]);

@@ -54,6 +54,7 @@ export class TestCase extends Type.makeObject<TestCase>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
