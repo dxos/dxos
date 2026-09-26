@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import * as Project from '@dxos/compute/Project';
-import { Blob, Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import { Blob, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import { FileSkill } from '@dxos/plugin-file/skills';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
@@ -126,6 +126,25 @@ const BACKFILL = 'Backfill the sync telemetry dashboard';
 
 const DESCRIPTION = 'picked up by the eval agent';
 
+/**
+ * The question stages' tasks, filed into the ledger only once the earlier stages are done: stage 4
+ * addresses "the remaining todo task", which a third todo task would make ambiguous.
+ */
+const RETENTION = 'Set the audit log retention period';
+const RENAME = 'Rename the sync telemetry dashboard';
+const RENAME_TO = 'Sync Health';
+
+/**
+ * Said identically in both question stages, so the one that must NOT ask is graded on judgment —
+ * whether the decision was already made — rather than on which prompt mentioned asking.
+ */
+const ASK_POLICY =
+  'If finishing it needs a decision only the user can make, put the question to the user on that task ' +
+  'instead of deciding it yourself, and stop there. Otherwise just do the work.';
+
+/** The operation the question stage exists to exercise. */
+const ASK_QUESTION = 'org.dxos.operation.tasks.askQuestion';
+
 /** Filename the upload stage plants and then asks for back, distinctive enough not to collide. */
 const UPLOAD_NAME = 'eval-capture.png';
 
@@ -213,6 +232,33 @@ const toolUses = (turn: Turn): { name: string; input: Record<string, unknown> }[
 const invokedOperation = (turn: Turn, key: string): boolean =>
   toolUses(turn).some((use) => use.name === tool('invokeOperation') && use.input.key === key);
 
+/** Files the question stages' tasks into the seeded ledger, as `tasks-create` would. */
+const seedQuestionTasks = Effect.gen(function* () {
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+  if (!taskSet) {
+    return false;
+  }
+  for (const title of [RETENTION, RENAME]) {
+    const task = yield* Database.add(Task.make({ title, status: 'todo', [Obj.Parent]: taskSet }));
+    TaskSet.addTaskToSet(taskSet, task);
+  }
+  yield* Database.flush();
+  return true;
+});
+
+/** Every question in the ledger, from its task's history, read outside the agent. */
+const readQuestions = Effect.gen(function* () {
+  const tasks = yield* Database.query(Filter.type(Task.Task)).run;
+  return tasks.flatMap((task) =>
+    Task.getQuestions(task.history).map(({ question, answer }) => ({
+      taskId: task.id,
+      options: question.options?.length ?? 0,
+      answered: answer !== undefined,
+    })),
+  );
+});
+
 type TaskRow = { title?: string; status?: string; description?: string };
 
 /** Every task in the ledger, read outside the agent. */
@@ -245,6 +291,10 @@ type Staged = {
   uploaded?: boolean;
   /** `undefined` when the upload stage did not run. */
   attached?: boolean;
+  /** A decision already made in the prompt was acted on, with no question filed. */
+  answeredFromContext: boolean;
+  /** A decision only the user can make was asked on its task, and the agent chose no answer. */
+  asked: boolean;
 };
 
 const NOTHING_STAGED: Staged = {
@@ -253,6 +303,8 @@ const NOTHING_STAGED: Staged = {
   readOnly: false,
   completed: false,
   started: false,
+  answeredFromContext: false,
+  asked: false,
 };
 
 /**
@@ -318,13 +370,27 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
           score: Effect.succeed(staged.attached === true),
         }),
       ]),
+  Scorer.make({
+    name: 'no-question-when-decided',
+    description:
+      'Given a decision the prompt had already made, the agent did the work and filed no question — ' +
+      'asking is for what it cannot decide, not a reflex.',
+    score: Effect.succeed(staged.answeredFromContext),
+  }),
+  Scorer.make({
+    name: 'question-asked',
+    description:
+      'Given a decision only the user can make, the agent called `tasks.askQuestion`: exactly one ' +
+      "question, in its task's history, with options offered and no answer recorded, and the task blocked.",
+    score: Effect.succeed(staged.asked),
+  }),
   Scorer.database({
     name: 'ledger-intact',
     // The ledger's own length, not a filter: the natural failure of an agent that cannot find a task
     // is to create a new one and report success, which every title-keyed check would pass.
-    description: 'Still exactly two tasks — the agent updated the ledger rather than adding to it.',
+    description: 'Still exactly the four seeded tasks — the agent updated the ledger rather than adding to it.',
     query: Query.select(Filter.type(Task.Task)),
-    score: (tasks) => tasks.length === 2,
+    score: (tasks) => tasks.length === 4,
   }),
   latencyScorer(report),
 ];
@@ -486,6 +552,46 @@ const localTask = () =>
         attached = file != null && onRotate.includes(file.id) && !onBackfill.includes(file.id);
       }
 
+      // Stage 6 — the counter-case: the decision is in the prompt, so any question is a reflex. Run
+      // first so the stage after it can demand exactly one question in the ledger.
+      const questionTasksSeeded = await query(seedQuestionTasks);
+      const decided = await send(
+        `In space ${spaceId}, pick up the task "${RENAME}" in project "${PROJECT_NAME}". The user has ` +
+          `already chosen the new name: "${RENAME_TO}". Set the task's description to the new name and ` +
+          `its status to "started". ${ASK_POLICY}`,
+      );
+      const afterDecided = await query(readQuestions);
+      const renameTask = find(await query(readTasks), RENAME);
+      const answeredFromContext =
+        questionTasksSeeded &&
+        !decided.isError &&
+        afterDecided.length === 0 &&
+        !invokedOperation(decided, ASK_QUESTION) &&
+        renameTask?.status === 'started' &&
+        (renameTask?.description ?? '').includes(RENAME_TO);
+
+      // Stage 7 — a decision nothing the agent can reach settles; no answer entry in the history is
+      // what proves it did not answer on the user's behalf.
+      const ask = await send(
+        `In space ${spaceId}, pick up the task "${RETENTION}" in project "${PROJECT_NAME}". It needs an ` +
+          'audit log retention period. That is a compliance decision the user owns and has not made yet; ' +
+          'the plausible choices are 30 days, 1 year and 7 years, and nothing in the space settles it. ' +
+          ASK_POLICY,
+      );
+      const questions = await query(readQuestions);
+      const retentionTask = await query(findObject(Task.Task, (candidate) => candidate.title === RETENTION));
+      const [question] = questions;
+      const asked =
+        !ask.isError &&
+        invokedOperation(ask, ASK_QUESTION) &&
+        retentionTask !== undefined &&
+        questions.length === 1 &&
+        question !== undefined &&
+        question.taskId === retentionTask.id &&
+        question.options >= 2 &&
+        !question.answered &&
+        retentionTask.status === 'blocked';
+
       // After the turns, so the probe's own connection is not competing with the agent's for the
       // listener — and so a latency figure is never what a scenario's writes waited behind. The
       // ledger is at its fullest here too, which is the state worth timing a read against.
@@ -493,16 +599,17 @@ const localTask = () =>
       const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
 
       const scores = await score(
-        scorers({ scaffolded, listed, readOnly, completed, started, uploaded, attached }, report),
+        scorers(
+          { scaffolded, listed, readOnly, completed, started, uploaded, attached, answeredFromContext, asked },
+          report,
+        ),
       );
       return {
         scores,
         latency: report,
-        turns: [read, complete, start, ...(uploadTurn ? [uploadTurn] : [])].map(({ isError, toolCalls, result }) => ({
-          isError,
-          toolCalls,
-          result,
-        })),
+        turns: [read, complete, start, ...(uploadTurn ? [uploadTurn] : []), decided, ask].map(
+          ({ isError, toolCalls, result }) => ({ isError, toolCalls, result }),
+        ),
       };
     },
   );

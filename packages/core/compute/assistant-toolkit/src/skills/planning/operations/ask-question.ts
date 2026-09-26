@@ -73,6 +73,11 @@ export default AskQuestion.pipe(
         `;
       }
 
+      // A result, not a failure, as every refusal here: the model rewrites the question and asks again.
+      if (text.trim() === '') {
+        return 'The question is empty, so nothing was filed. Ask again with the question written out.';
+      }
+
       const question = Task.ask(task, {
         text,
         ...(context ? { context } : {}),
