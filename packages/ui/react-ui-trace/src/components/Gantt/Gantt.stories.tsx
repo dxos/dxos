@@ -389,6 +389,10 @@ const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   </div>
 );
 
+/** How many events a lane runs, and how many lanes each depth may open, when a story says neither. */
+const CHILD_EVENTS: readonly [number, number] = [2, 5];
+const MAX_SPAWNS: readonly number[] = [4, 3, 2];
+
 /** Stable empty seeds: a fresh `[]` each render would retrigger the effect that adopts them. */
 const NO_GROUPS: readonly GanttGroup[] = [];
 const NO_LANES: readonly GanttLane[] = [];
@@ -683,6 +687,9 @@ type StoryArgs = GanttData &
     inspect?: boolean;
   };
 
+// Every stream option is destructured, not just the ones in use: what stays in `...data` is spread
+// onto `Gantt.Root` and forwarded to a DOM element, so a missed one both fails to reach the stream
+// and shows up as an unknown attribute.
 const DefaultStory = ({
   chartOnly,
   inspect,
@@ -690,6 +697,9 @@ const DefaultStory = ({
   laneId = 'c',
   step = 0.5 * MINUTE,
   spawnEvery,
+  childEvents,
+  nestedChance,
+  maxSpawns,
   ...data
 }: StoryArgs) => {
   const stream = useEventStream(data.groups ?? NO_GROUPS, data.lanes ?? NO_LANES, data.markers ?? NO_MARKERS, {
@@ -697,6 +707,9 @@ const DefaultStory = ({
     laneId,
     step,
     spawnEvery,
+    childEvents,
+    nestedChance,
+    maxSpawns,
   });
   // A live chart on the time axis has to be given room ahead of its newest event, and the range it
   // was handed ends before that event ever arrives; the event axis makes its own room.
