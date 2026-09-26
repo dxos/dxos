@@ -1014,9 +1014,6 @@ export const collectRoot = (task: Task): Effect.Effect<Task, never, Database.Ser
 export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
   Effect.flatMap(collectRoot(task), collectSubtree);
 
-/** Statuses a task does not leave on its own: closing a tree leaves these as they are. */
-export const TerminalStatuses: ReadonlySet<Status> = new Set(['done', 'duplicate', 'cancelled', 'failed']);
-
 /** A task tree already has a different open PR: every sub-task of a task lands in one PR. */
 export class PullRequestConflictError extends BaseError.extend(
   'PullRequestConflictError',

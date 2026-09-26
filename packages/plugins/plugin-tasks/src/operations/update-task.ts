@@ -81,9 +81,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       // After any re-parent, so the cascade reaches the tree the task now belongs to.
       yield* cascadeClaim(task, { assignee: sessionAssignee ?? assignee ?? undefined, started: status === 'started' });
-      if (status === 'done' && task.status === 'done') {
-        yield* cascadeDone(task);
-      }
 
       return { task: task };
     }),
@@ -115,23 +112,6 @@ const cascadeClaim = Effect.fnUntraced(function* (
       ...(assignee ? { assignee: { ...assignee } } : {}),
       ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
     });
-  }
-});
-
-/**
- * Finishing a root finishes its tree: the sub-tasks shipped in the root's PR, so leaving them open
- * would report work outstanding that already landed. Only a root cascades — a sub-task finishing
- * says nothing about its siblings.
- */
-const cascadeDone = Effect.fnUntraced(function* (task: Task.Task) {
-  const root = yield* Task.collectRoot(task);
-  if (root.id !== task.id) {
-    return;
-  }
-  for (const member of yield* Task.collectSubtree(task)) {
-    if (member.id !== task.id && !Task.TerminalStatuses.has(member.status ?? 'todo')) {
-      Task.setStatus(member, 'done');
-    }
   }
 });
 

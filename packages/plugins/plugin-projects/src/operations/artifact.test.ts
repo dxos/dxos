@@ -76,6 +76,36 @@ describe('project skill operations', () => {
     ),
   );
 
+  it.effect('artifact-add leaves the project unchanged when the task tree already has another open PR', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Voyage' }));
+      const root = yield* Database.add(Task.make({ title: 'Root' }));
+      const child = yield* Database.add(Task.make({ title: 'Child', parentTask: Ref.make(root) }));
+      const first = yield* Database.add(
+        PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'First', state: 'open' }),
+      );
+      const second = yield* Database.add(
+        PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 2, title: 'Second', state: 'open' }),
+      );
+      yield* Database.flush();
+
+      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(first), task: Ref.make(root) });
+      const error = yield* Effect.flip(
+        artifactAdd.handler({ project: Ref.make(project), object: Ref.make(second), task: Ref.make(child) }),
+      );
+
+      expect(error).toBeInstanceOf(Task.PullRequestConflictError);
+      expect(project.artifacts.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
+      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
+    }).pipe(
+      Effect.provide(
+        TestDatabaseLayer({
+          types: [Project.Project, Instructions.Instructions, Text.Text, Task.Task, PullRequest.PullRequest],
+        }),
+      ),
+    ),
+  );
+
   it.effect('artifact-list returns dxn, typename, and label per artifact', () =>
     Effect.gen(function* () {
       const doc = yield* Database.add(Text.make({ content: 'notes' }));

@@ -326,19 +326,16 @@ describe('update-task subtree', () => {
     }).pipe(Effect.provide(layer)),
   );
 
-  it.effect('finishing a root finishes its open sub-tasks; finishing a sub-task does not', () =>
+  it.effect('finishing a root finishes only the root', () =>
     Effect.gen(function* () {
       const { root, child, grandchild } = yield* makeTree();
-      yield* updateTask.handler({ task: Ref.make(grandchild), status: 'cancelled' });
-
-      yield* updateTask.handler({ task: Ref.make(child), status: 'done' });
-      expect(root.status).toBe('todo');
-
       yield* updateTask.handler({ task: Ref.make(child), status: 'started' });
+
       yield* updateTask.handler({ task: Ref.make(root), status: 'done' });
+
       expect(root.status).toBe('done');
-      expect(child.status).toBe('done');
-      expect(grandchild.status).toBe('cancelled');
+      expect(child.status).toBe('started');
+      expect(grandchild.status).toBe('started');
     }).pipe(Effect.provide(layer)),
   );
 });

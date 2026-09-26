@@ -262,6 +262,47 @@ describe('TaskSet concurrent membership', () => {
     expect([...ids].sort()).toEqual([first.id, second.id, pushed.id].sort());
   });
 
+  test('two peers re-listing the same dropped task converge on one entry', async () => {
+    const { db } = await builder.createDatabase({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+    const taskSet = db.add(TaskSet.make({ name: 'Sprint' }));
+    const listed = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'listed', status: 'todo' }));
+    // In the set by its parent edge only, as a dropped entry leaves it.
+    const dropped = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'dropped', status: 'todo' }));
+    TaskSet.addTaskToSet(taskSet, listed);
+    await db.flush();
+
+    await createBranch(taskSet, 'peer');
+    await switchBranch(taskSet, 'peer');
+    expect(TaskSet.ensureMember(taskSet, dropped)).toBe(true);
+    await db.flush();
+    await switchBranch(taskSet, 'main');
+    expect(TaskSet.ensureMember(taskSet, dropped)).toBe(true);
+    await db.flush();
+    await mergeBranch(taskSet, 'peer');
+    await db.flush();
+
+    const count = () => taskSet.tasks.filter((ref) => Task.refEntityId(ref) === dropped.id).length;
+    expect(count()).toBeGreaterThanOrEqual(1);
+    expect(TaskSet.ensureMember(taskSet, dropped)).toBe(true);
+    expect(count()).toBe(1);
+    expect(TaskSet.resolveTasks(taskSet).map((task) => task.id)).toEqual([listed.id, dropped.id]);
+  });
+
+  test('a reorder collapses duplicate entries of the task it moves', async () => {
+    const { db } = await builder.createDatabase({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+    const taskSet = db.add(TaskSet.make({ name: 'Sprint' }));
+    const first = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'first', status: 'todo' }));
+    const second = db.add(Task.make({ [Obj.Parent]: taskSet, title: 'second', status: 'todo' }));
+    TaskSet.addTaskToSet(taskSet, first);
+    TaskSet.addTaskToSet(taskSet, second);
+    TaskSet.addTaskToSet(taskSet, first);
+    await db.flush();
+
+    TaskSet.moveTask(taskSet, first, {});
+
+    expect(taskSet.tasks.map((ref) => Task.refEntityId(ref))).toEqual([second.id, first.id]);
+  });
+
   test('control: a whole-array write drops it', async () => {
     const { ids, pushed } = await mergeConcurrentPush((taskSet) =>
       Obj.update(taskSet, (taskSet) => {

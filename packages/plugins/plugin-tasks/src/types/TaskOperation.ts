@@ -73,8 +73,7 @@ export const UpdateTask = Operation.make({
       'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
       'creating the session record in the space if it is not there yet. ' +
       'A task with sub-tasks is one unit of work landing in one PR: assigning or starting any task in a tree ' +
-      'assigns (and starts, if not yet started) its root and every sub-task too; marking a root done marks ' +
-      'its open sub-tasks done.',
+      'assigns (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service, Trace.TraceService],

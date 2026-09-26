@@ -137,6 +137,12 @@ export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined,
  */
 export const ensureMember = (taskSet: TaskSet, task: Task.Task): boolean => {
   if (taskSet.tasks.some((ref) => Task.refEntityId(ref) === task.id)) {
+    // Two peers healing the same drop each append one entry, and both survive the merge.
+    if (taskSet.tasks.filter((ref) => Task.refEntityId(ref) === task.id).length > 1) {
+      Obj.update(taskSet, (taskSet) => {
+        collapseDuplicatesInPlace(taskSet.tasks, task.id);
+      });
+    }
     return true;
   }
   if (Obj.getParent(task)?.id !== taskSet.id) {
@@ -255,6 +261,16 @@ export const removeRefsInPlace = <T extends Obj.Unknown>(refs: Ref.Ref<T>[], ids
   }
 };
 
+/** Keep the first ref for `id` and splice out any later copy. */
+export const collapseDuplicatesInPlace = <T extends Obj.Unknown>(refs: Ref.Ref<T>[], id: string): void => {
+  const first = refs.findIndex((ref) => Task.refEntityId(ref) === id);
+  for (let index = refs.length - 1; index > first; index--) {
+    if (Task.refEntityId(refs[index]) === id) {
+      refs.splice(index, 1);
+    }
+  }
+};
+
 /**
  * Move the ref keyed `id` to sit immediately before `beforeId` (or to the end when unanchored),
  * splicing in place. The same contract as {@link reorderItems}, which the UI uses to predict it.
@@ -273,7 +289,8 @@ export const reorderInPlace = <T extends Obj.Unknown>(
   }
   // Read before the splice: the removed elements it returns are the stored encoding, not refs.
   const moved = refs[index];
-  refs.splice(index, 1);
+  // Every copy goes, so a duplicate left by concurrent heals collapses to the one being placed.
+  removeRefsInPlace(refs, new Set([id]));
   const anchor = beforeId === undefined ? -1 : refs.findIndex((ref) => Task.refEntityId(ref) === beforeId);
   refs.splice(anchor === -1 ? refs.length : anchor, 0, moved);
 };
