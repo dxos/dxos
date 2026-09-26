@@ -10,7 +10,7 @@ import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from '
 import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { QueryBuilder, parseEnumTerms, writeEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
@@ -31,14 +31,7 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import {
-  ALL_STATUSES,
-  filterTasks,
-  groupTasks,
-  parseStatusTerms,
-  sortTasks,
-  writeStatusTerms,
-} from '../../util/index.ts';
+import { ALL_STATUSES, STATUS_TERMS, filterTasks, groupTasks, sortTasks } from '../../util/index.ts';
 import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
@@ -70,7 +63,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted
   // per device and per set (see {@link TaskSetView.aspect}).
   const [filterText, setFilterText] = useFilterQuery(taskSet.id, filterEditorRef);
-  const { statuses, rest } = useMemo(() => parseStatusTerms(filterText), [filterText]);
+  const { values: statuses, rest } = useMemo(() => parseEnumTerms(filterText, STATUS_TERMS), [filterText]);
   const tags = useTagMap(db);
   // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
   // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
@@ -106,7 +99,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
-    (next: readonly Task.Status[]) => setFilterText(writeStatusTerms(filterText, next)),
+    (next: readonly Task.Status[]) => setFilterText(writeEnumTerms(filterText, STATUS_TERMS, next)),
     [filterText, setFilterText],
   );
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
