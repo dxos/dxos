@@ -41,6 +41,13 @@ const entryText = (entry: Task.HistoryEntry): string => {
 /** Falls back to the unset glyph: an entry written by an older schema still renders as a row. */
 const eventIcon = (event: Task.Event): EventIcon => EVENT_ICONS[event] ?? { icon: UNSET_ICON, hue: 'neutral' };
 
+/**
+ * The latest `limit` entries, oldest first.
+ * Sorted by date because pushes merged from other peers can land out of order in the array.
+ */
+export const latestEntries = (entries: readonly Task.HistoryEntry[], limit: number): Task.HistoryEntry[] =>
+  limit > 0 ? [...entries].sort((left, right) => Date.parse(left.date) - Date.parse(right.date)).slice(-limit) : [];
+
 export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
   /** The most recent entries to show; older ones are left to a surface with room for them. */
@@ -55,11 +62,9 @@ export type TaskHistoryProps = ThemedClassName<{
  */
 export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
   const { t } = useTranslation(translationKey);
-  // The latest `limit` entries, read top to bottom as they happened (the task's array is append-only).
   const visible = useMemo(
     () =>
-      // `slice(-0)` would return everything.
-      (limit > 0 ? entries.slice(-limit) : []).map((entry) => {
+      latestEntries(entries, limit).map((entry) => {
         const { icon, hue } = eventIcon(entry.event);
         return { entry, icon, hue: getStyles(hue).text };
       }),
