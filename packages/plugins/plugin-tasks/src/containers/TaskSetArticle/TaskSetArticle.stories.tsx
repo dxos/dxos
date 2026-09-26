@@ -252,6 +252,8 @@ export const StatusFilter: Story = {
     const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
     const item = (status: string) =>
       document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
+    // The trigger reads as inactive until something narrows the list.
+    await expect(trigger()).toHaveAttribute('data-filtered', 'false');
     await userEvent.click(trigger()!);
     await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
 
@@ -261,6 +263,7 @@ export const StatusFilter: Story = {
 
     await userEvent.click(item('done')!);
     await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(trigger()).toHaveAttribute('data-filtered', 'true'), { timeout: 10_000 });
 
     // Still open, so the second status is one click away.
     await expect(item('cancelled')).toBeTruthy();
@@ -303,6 +306,7 @@ export const StatusFilter: Story = {
     await userEvent.click(clear);
     await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(trigger()).toHaveAttribute('data-filtered', 'false'), { timeout: 10_000 });
   },
 };
 
