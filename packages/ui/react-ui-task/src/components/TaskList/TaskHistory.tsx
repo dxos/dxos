@@ -43,28 +43,26 @@ const eventIcon = (event: Task.Event): EventIcon => EVENT_ICONS[event] ?? { icon
 
 export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
-  /** Entries to show, newest first; the rest are left to a surface with room for them. */
+  /** The most recent entries to show; older ones are left to a surface with room for them. */
   limit?: number;
 }>;
 
 /**
- * A task's activity log, newest first.
+ * A task's activity log, in chronological order.
  *
  * Each entry already carries the human-readable record of what happened, so a line is that sentence
  * plus when it happened and who did it — the pane adds no interpretation of its own.
  */
 export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
   const { t } = useTranslation(translationKey);
-  // Newest first, without mutating the task's own array (append-only, oldest first).
+  // The latest `limit` entries, read top to bottom as they happened (the task's array is append-only).
   const visible = useMemo(
     () =>
-      [...entries]
-        .reverse()
-        .slice(0, limit)
-        .map((entry) => {
-          const { icon, hue } = eventIcon(entry.event);
-          return { entry, icon, hue: getStyles(hue).text };
-        }),
+      // `slice(-0)` would return everything.
+      (limit > 0 ? entries.slice(-limit) : []).map((entry) => {
+        const { icon, hue } = eventIcon(entry.event);
+        return { entry, icon, hue: getStyles(hue).text };
+      }),
     [entries, limit],
   );
 
