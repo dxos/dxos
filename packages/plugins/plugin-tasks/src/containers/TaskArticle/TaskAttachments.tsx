@@ -66,11 +66,16 @@ export const useAttachFiles = (task: Task.Task): ((files: globalThis.File[]) => 
         }
 
         const object = db.add(data.object);
-        await invokePromise(
+        const { error: attachError } = await invokePromise(
           TaskOperation.AddAttachment,
           { task: Ref.make(task), file: Ref.make(object) },
           { spaceId: db.spaceId },
         );
+        if (attachError) {
+          // Nothing references the stored file once the attach fails, so it would linger unowned.
+          db.remove(object);
+          log.warn('attachment failed', { name: file.name, error: attachError });
+        }
       }
     },
     [invokePromise, task],

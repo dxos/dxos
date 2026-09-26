@@ -237,7 +237,8 @@ export const AddAttachment = Operation.make({
     name: 'Add Task Attachment',
     description:
       'Attach an existing File (e.g. one created by file.createFromUpload) to a task. The task takes ' +
-      'ownership, so deleting the task deletes the file. Attaching the same file twice is a no-op.',
+      'ownership, so deleting the task deletes the file. Attaching the same file twice is a no-op; a ' +
+      'file already owned by another object is rejected.',
     icon: 'ph--paperclip--regular',
   },
   services: [Database.Service],
