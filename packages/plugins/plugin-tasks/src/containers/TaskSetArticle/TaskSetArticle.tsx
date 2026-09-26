@@ -7,7 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -21,19 +21,23 @@ import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
+  useManagerOptional,
   useSelection,
   useSelectionActions,
+  useViewState,
+  useViewStateActions,
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
+import { type TaskCreateHandler, TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation, TasksCapabilities } from '#types';
+import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
 import { filterTasks } from '../../util/index.ts';
+import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 import { ALL_STATUSES } from './TaskStatusFilter.tsx';
 
@@ -60,12 +64,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   const db = Obj.getDatabase(taskSet);
   const allTasks = useTasks(taskSet);
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
-  // reader edits, its parse is what the list is narrowed by. Held per mount — a filter is a glance,
-  // not a property of the set.
-  const [filterText, setFilterText] = useState('');
-  // Which statuses the ledger shows. Held beside the text for the same reason — a glance, not a
-  // property of the set — and starting at every status, so the list opens unfiltered.
-  const [statuses, setStatuses] = useState<readonly Task.Status[]>(ALL_STATUSES);
+  // reader edits, its parse is what the list is narrowed by. The text and the statuses the ledger
+  // shows are persisted per device and per set (see {@link TaskSetView.aspect}).
+  const { filterText, setFilterText, statuses, setStatuses } = useTaskSetFilter(taskSet.id, filterEditorRef);
   const tags = useTagMap(db);
   // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
   // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
@@ -81,16 +82,43 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // Clears both terms: a reader who hid a status and typed a query asked one question of the list,
   // and clearing half of it leaves rows missing with nothing in the toolbar saying why.
   const handleClearFilter = useCallback(() => {
-    filterEditorRef.current?.setText('');
     setFilterText('');
     setStatuses(ALL_STATUSES);
-  }, []);
+  }, [setFilterText, setStatuses]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const handleCreate = useOperation(
-    TaskOperation.CreateTask,
-    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
-    { spaceId },
+  const { invokePromise } = useOperationInvoker();
+  // Files dropped on the create pane attach once the task exists: the create answers with the new
+  // task's id, and the live object is in the working set by then, since this client wrote it.
+  const attachFile = useAttachFile();
+  // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
+  // pane keeps rather than dropping.
+  const handleCreate = useCallback<TaskCreateHandler>(
+    async (props, files = []) => {
+      const { data, error } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), ...props },
+        { spaceId },
+      );
+      if (error || !data) {
+        return { error: error ?? new Error('Task was not created.') };
+      }
+      if (files.length === 0) {
+        return;
+      }
+      const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (!task || !attachFile) {
+        return { rejectedFiles: files };
+      }
+      const rejectedFiles: globalThis.File[] = [];
+      for (const file of files) {
+        if (!(await attachFile(task, file))) {
+          rejectedFiles.push(file);
+        }
+      }
+      return { rejectedFiles };
+    },
+    [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
   const handleUpdate = useOperation(
@@ -103,11 +131,57 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     spaceId,
   });
 
+  // A row opens its task through the shared reading gesture: the companion beside the list where the
+  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
+  // the host's node — the project's inside its Tasks tab.
+  const currentId = useSelection(attendableId, 'single');
+  const openDetail = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: detail === 'companion' ? 'task' : undefined,
+  });
+  const handleOpen = useCallback(
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
+    [openDetail],
+  );
+
+  // Held here rather than left to the list, so adding a sub-task can open the branch it lands in, and
+  // persisted per device and per set so a collapsed branch stays collapsed across navigation.
+  const { collapsed, setCollapsed } = useTaskSetExpanded(taskSet.id);
+
+  // Created untitled and opened at once, so the reader names it in the detail, whose title field
+  // takes focus for an untitled task: the list's own create pane has no notion of a parent, and a
+  // sub-task created there would land at the root.
+  const handleAddSubTask = useCallback(
+    async (parent: Task.Task) => {
+      if (collapsed.has(parent.id)) {
+        const next = new Set(collapsed);
+        next.delete(parent.id);
+        setCollapsed(next);
+      }
+      const { data } = await invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), title: '', parentTask: Ref.make(parent) },
+        { spaceId },
+      );
+      if (data) {
+        openDetail(data.task.id);
+      }
+    },
+    [collapsed, setCollapsed, invokePromise, taskSet, spaceId, openDetail],
+  );
+
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
+        label: t('add-sub-task.label'),
+        icon: 'ph--plus--regular',
+        testId: 'tasks.task.addSubTask',
+      }),
       ...contributed(task),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
@@ -115,7 +189,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         testId: 'tasks.task.delete',
       }),
     ],
-    [contributed, handleDelete, t],
+    [contributed, handleAddSubTask, handleDelete, t],
   );
 
   // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
@@ -131,7 +205,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       ...(before ? { before: Ref.make(before) } : {}),
     }),
   );
-  const { invokePromise } = useOperationInvoker();
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
       // A rejected drop (e.g. a parent outside this set) must not throw out of the gesture handler:
@@ -151,21 +224,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       }
     },
     [move, invokePromise],
-  );
-
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
-  const currentId = useSelection(attendableId, 'single');
-  const openDetail = useDetailNavigation({
-    contextId: attendableId,
-    getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
-  });
-  const handleOpen = useCallback(
-    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
-    [openDetail],
   );
 
   useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });
@@ -190,6 +248,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     <TaskList.Root
       tasks={tasks}
       hierarchical
+      collapsed={collapsed}
+      onCollapsedChange={setCollapsed}
       selectable
       showDescription
       descriptionComponents={descriptionComponents}
@@ -209,17 +269,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
-      <TaskList.Editor
-        createOnly
-        showDescription
-        descriptionExtensions={descriptionExtensions}
-        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-        // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
-        // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
-        // existing `p-2`'s horizontal component and silently dropped.
-        classNames='mx-trim-md bg-input-surface border-x border-t border-separator rounded-t-md p-2'
-        placeholder={t('task-create.placeholder')}
-      />
+      <div className='px-trim-md'>
+        <TaskList.Editor
+          createOnly
+          showDescription
+          // Only where a plugin can store the file, as the task's own article decides.
+          acceptFiles={!!attachFile}
+          descriptionExtensions={descriptionExtensions}
+          // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
+          // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
+          // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
+          // existing `p-2`'s horizontal component and silently dropped.
+          classNames='bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+          placeholder={t('task-create.placeholder')}
+        />
+      </div>
     </TaskList.Root>
   );
 
@@ -249,6 +313,85 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+/**
+ * Which branches are open, held in {@link TaskSetView.aspect} as task id → open. The list speaks in
+ * collapsed ids, so a change is written as the ids that entered (closed) or left (opened) the set,
+ * and every other entry is kept as it was.
+ */
+const useTaskSetExpanded = (contextId: string) => {
+  const { expanded } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  const collapsed = useMemo<ReadonlySet<string>>(
+    () =>
+      new Set(
+        Object.entries(expanded ?? {})
+          .filter(([, open]) => !open)
+          .map(([id]) => id),
+      ),
+    [expanded],
+  );
+  const setCollapsed = useCallback(
+    (next: ReadonlySet<string>) =>
+      update((view) => {
+        const map = { ...view.expanded };
+        for (const id of next) {
+          map[id] = false;
+        }
+        // Read from the stored map rather than the render's set, so two changes before a render compose.
+        for (const [id, open] of Object.entries(view.expanded ?? {})) {
+          if (!open && !next.has(id)) {
+            map[id] = true;
+          }
+        }
+        return { ...view, expanded: map };
+      }),
+    [update],
+  );
+
+  return { collapsed, setCollapsed };
+};
+
+/**
+ * The set's filter, held in {@link TaskSetView.aspect} and mirrored into the query editor.
+ *
+ * The editor takes its text once, on mount, so a write that did not come from typing — clear,
+ * another view of the same set, another tab — is pushed into it here. Pushed from the subscription
+ * rather than from a render effect: the subscription fires as the value is written, when the editor
+ * already holds whatever was just typed, whereas an effect can run for a render that trails fast
+ * typing and rewrite the document back to older text.
+ */
+const useTaskSetFilter = (contextId: string, editorRef: RefObject<EditorController | null>) => {
+  const manager = useManagerOptional();
+  const { query, statuses } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  useEffect(
+    () =>
+      manager?.subscribe(TaskSetView.aspect, contextId, ({ query }) => {
+        const editor = editorRef.current;
+        if (editor && editor.getText() !== query) {
+          editor.setText(query);
+        }
+      }),
+    [manager, contextId, editorRef],
+  );
+
+  // Unchanged text keeps the same value, so the editor echoing a pushed text back is not a write.
+  const setFilterText = useCallback(
+    (query: string) => update((view) => (view.query === query ? view : { ...view, query })),
+    [update],
+  );
+  // Every status is stored as none, so the unfiltered list holds nothing a new status would miss.
+  const setStatuses = useCallback(
+    (next: readonly Task.Status[]) =>
+      update(({ statuses: _statuses, ...view }) =>
+        next.length === ALL_STATUSES.length ? view : { ...view, statuses: [...next] },
+      ),
+    [update],
+  );
+
+  return { filterText: query, setFilterText, statuses: statuses ?? ALL_STATUSES, setStatuses };
+};
 
 /**
  * The checked rows, as the multi-selection `react-ui-attention` holds for this set.

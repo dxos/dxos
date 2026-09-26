@@ -112,7 +112,6 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
                 iconOnly
                 density='sm'
                 variant='ghost'
-                size={4}
                 value={contact.did ?? identityKey.toHex()}
                 label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
               />

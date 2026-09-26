@@ -2,10 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  type ClipboardEvent,
+  type CSSProperties,
+  type DragEvent,
+  type KeyboardEvent,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Field, Icon, Toolbar, composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import {
+  Field,
+  Icon,
+  IconButton,
+  Tag,
+  Toolbar,
+  composable,
+  composableProps,
+  useDynamicRef,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -13,6 +33,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
@@ -52,7 +73,15 @@ export type TaskListEditorProps = ComposableProps<{
    * rest of the host's content does.
    */
   showControls?: boolean;
+  /**
+   * Take files dropped or pasted on the pane while creating, held as chips until the task is created
+   * and then handed to `onTaskCreate` with it. A host sets this only when it can store a file.
+   */
+  acceptFiles?: boolean;
 }>;
+
+/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
+const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 /**
  * The detail half of the list: it edits whichever task is selected, and creates one when none is.
@@ -74,6 +103,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
       grid,
       createOnly = false,
       showControls = true,
+      acceptFiles = false,
       ...props
     },
     forwardedRef,
@@ -97,10 +127,17 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
+    // Held by the pane, not the host: there is no task to attach them to until the create lands.
+    const [files, setFiles] = useState<readonly File[]>([]);
+    const [dragOver, setDragOver] = useState(false);
+    // Counted because `dragleave` fires on every child the pointer crosses, not only on leaving.
+    const dragDepth = useRef(0);
 
     // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
     // creating (there is no task to read from), so clearing it means remounting it.
     const [createEpoch, setCreateEpoch] = useState(0);
+    // Set while a create is in flight, so a second Enter on the still-shown draft does not file it twice.
+    const creating = useRef(false);
 
     // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
     // holds rather than carrying the previous one's across. The description ref is cleared here too:
@@ -124,17 +161,50 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         if (title.length > 0 && title !== current.title) {
           onTaskUpdate?.(task, { title });
         }
-      } else if (title.length > 0) {
+      } else if (title.length > 0 && !creating.current) {
         // Nothing has committed the description yet — it is held open and the reader is in the
         // title — so commit it here, before assembling the draft it belongs to.
         descriptionRef.current?.commit();
-        const description = draftDescription.current.trim();
-        onTaskCreate?.({ title, ...(description.length > 0 && { description }) });
-        setDraft('');
-        draftDescription.current = '';
-        setCreateEpoch((epoch) => epoch + 1);
+        const sentDescription = draftDescription.current;
+        const description = sentDescription.trim();
+        const sentTitle = draft;
+        const sent = files;
+        // The draft is cleared only once the host reports the task created: a refused create keeps
+        // what was typed, and each field is cleared only if it still holds what was sent, so a create
+        // that lands late does not wipe text typed while it was pending.
+        const settle = (result: TaskCreateResult | void) => {
+          creating.current = false;
+          if (result?.error) {
+            log.warn('task create failed', { error: result.error });
+            return;
+          }
+          const kept = new Set(result?.rejectedFiles ?? []);
+          setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
+          setDraft((draft) => (draft === sentTitle ? '' : draft));
+          if (draftDescription.current === sentDescription) {
+            draftDescription.current = '';
+            setCreateEpoch((epoch) => epoch + 1);
+          }
+        };
+        let result: ReturnType<TaskCreateHandler> | undefined;
+        creating.current = true;
+        try {
+          result = onTaskCreate?.(
+            { title, ...(description.length > 0 && { description }) },
+            sent.length > 0 ? sent : undefined,
+          );
+        } catch (error) {
+          // Keeps the whole draft and every file, as a reported failure does.
+          creating.current = false;
+          log.catch(error);
+          return;
+        }
+        void Promise.resolve(result).then(settle, (error) => {
+          creating.current = false;
+          log.catch(error);
+        });
       }
-    }, [draft, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -195,8 +265,58 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         setCreateEpoch((epoch) => epoch + 1);
       }
       setDraft('');
+      setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, onTaskSelect]);
+
+    // Only while creating: an existing task's attachments are its article's to manage. Captured, so
+    // the description editor does not take a dropped file and insert its bytes as text.
+    const takesFiles = acceptFiles && !!onTaskCreate && !(task && current);
+    const handleFiles = useCallback((added: File[]) => setFiles((files) => [...files, ...added]), []);
+    const handleDragEnter = useCallback((event: DragEvent) => {
+      if (isFileDrag(event)) {
+        dragDepth.current++;
+        setDragOver(true);
+      }
+    }, []);
+    const handleDragLeave = useCallback((event: DragEvent) => {
+      if (isFileDrag(event) && --dragDepth.current <= 0) {
+        dragDepth.current = 0;
+        setDragOver(false);
+      }
+    }, []);
+    const handleDragOver = useCallback((event: DragEvent) => {
+      if (isFileDrag(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    }, []);
+    const handleDrop = useCallback(
+      (event: DragEvent) => {
+        dragDepth.current = 0;
+        setDragOver(false);
+        const dropped = Array.from(event.dataTransfer.files);
+        if (dropped.length > 0) {
+          event.preventDefault();
+          event.stopPropagation();
+          handleFiles(dropped);
+        }
+      },
+      [handleFiles],
+    );
+    // Only a paste that is nothing but files: a paste carrying text as well belongs to the field.
+    const handlePaste = useCallback(
+      (event: ClipboardEvent) => {
+        const pasted = Array.from(event.clipboardData.files);
+        if (pasted.length > 0 && !event.clipboardData.types.includes('text/plain')) {
+          event.preventDefault();
+          event.stopPropagation();
+          handleFiles(pasted);
+        }
+      },
+      [handleFiles],
+    );
 
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
@@ -219,6 +339,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
           // repeated on every cell that might start a row, and is missed by whichever one is added next.
           'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto] gap-y-2',
+          // The drop target is the pane itself, marked while files are held over it.
+          dragOver && 'ring-2 ring-inset ring-accent-bg',
           // No leading control means no icon track: the title then starts where the host's own
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
@@ -233,6 +355,13 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         // in THIS grid names a different column, and put the title in the controls' track.
         style={{ ...(grid ? { gridTemplateColumns } : {}), '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
+        {...(takesFiles && {
+          onDragEnterCapture: handleDragEnter,
+          onDragLeaveCapture: handleDragLeave,
+          onDragOverCapture: handleDragOver,
+          onDropCapture: handleDrop,
+          onPasteCapture: handlePaste,
+        })}
         ref={forwardedRef}
       >
         {/* Placed explicitly: with a gutter the pane leaves that track empty, and implicit placement
@@ -317,6 +446,39 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             />
           </div>
         )}
+
+        {takesFiles &&
+          files.length > 0 && (
+            // The third row, under the description: what the task will be created with.
+            <div
+              className={mx(
+                'flex flex-wrap items-center gap-1 min-w-0 row-start-3 -col-end-1',
+                grid ? 'col-start-[title]' : showControls ? 'col-start-2' : 'col-start-1',
+              )}
+            >
+              {files.map((file, index) => (
+                <Tag
+                  key={`${file.name}-${index}`}
+                  hue='neutral'
+                  classNames='inline-flex items-center gap-1'
+                  data-testid='taskList.edit.file'
+                >
+                  <Icon icon='ph--paperclip--regular' size={3} />
+                  <span data-testid='taskList.edit.file.name'>{file.name}</span>
+                  <IconButton
+                    variant='ghost'
+                    density='sm'
+                    iconOnly
+                    icon='ph--x--regular'
+                    size={3}
+                    label={t('remove-file.label', { name: file.name })}
+                    classNames='p-0 min-h-0 h-auto'
+                    onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
+                  />
+                </Tag>
+              ))}
+            </div>
+          )}
 
         {/* Save and Cancel belong to creating: the held-open description has no blur to commit it, so
             the add row needs both. Editing, the fields commit themselves — and a host carrying the

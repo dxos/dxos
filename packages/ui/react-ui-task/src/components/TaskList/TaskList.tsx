@@ -120,9 +120,10 @@ type TaskListRootProps = PropsWithChildren<{
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /**
-   * Enables `Create`; called with a draft carrying at least the trimmed title.
+   * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
+   * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
    */
-  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskCreate?: TaskCreateHandler;
   /**
    * Enables the row's edit controls. Every mutation is delegated.
    */
@@ -148,6 +149,19 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
 }>;
+
+/**
+ * What a create came to. `error` means no task was created, so the pane keeps the whole draft;
+ * `rejectedFiles` are files the task was created without, which the pane keeps to retry. Nothing
+ * (or neither field) means the task and every file were taken.
+ */
+export type TaskCreateResult = { error?: unknown; rejectedFiles?: readonly File[] };
+
+/** Creates a task from the pane's draft; see {@link TaskCreateResult} for what it may report back. */
+export type TaskCreateHandler = (
+  task: Task.Draft,
+  files?: readonly File[],
+) => void | TaskCreateResult | Promise<void | TaskCreateResult>;
 
 const TaskListRoot = ({
   children,
@@ -317,9 +331,8 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    // Capped at half the row: `min-content` let one long artifact tag push the title to nothing;
-    // the cell scrolls what does not fit and the title truncates instead.
-    ['chips', 'fit-content(50%)', 'chips-end'],
+    // Capped so a long session name truncates rather than squeezing the title to nothing.
+    ['assignee', 'fit-content(40%)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -458,16 +471,23 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's subgrid, flowing into the `chips`, `estimate`, `priority` and
-          `actions` tracks in this order — `buildGridTemplate` declares a track only when its option
-          is on, and the matching cell is omitted on the same condition, so the two never drift.
-          Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
-          a column; every control after it is one rail-item square and needs no wrapper. */}
-      {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
-          reach overflow on its end side, and `justify-end` spills the excess off the start. */}
-      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
-        <TaskTags task={task} />
+      {/* Direct children of the row's grid. The tags and artifacts take a line of their own under the
+          title and above the description: on the title line they competed with it for width, and a
+          long artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps
+          a row with no chips from holding an empty line. The assignee stays on the title line, where
+          "who has it" is read with the title. */}
+      <div
+        data-testid='taskList.item.chips'
+        className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
+      >
+        <TaskTags task={task} assignee={false} />
       </div>
+      <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
+        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+      </div>
+      {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
+          `buildGridTemplate` declares a track only when its option is on, and the matching cell is
+          omitted on the same condition, so the two never drift. */}
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
@@ -580,7 +600,14 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * same set in both is the point: a reader who learned the row's chips reads the pane's without
  * learning anything new.
  */
-export const TaskTags = ({ task }: { task: Task.Task }) => {
+export const TaskTags = ({
+  task,
+  assignee = true,
+}: {
+  task: Task.Task;
+  /** Off where the host places the assignee itself — the list row keeps it on the title line. */
+  assignee?: boolean;
+}) => {
   // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
   // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
   const [snapshot] = useObject(task);
@@ -589,7 +616,7 @@ export const TaskTags = ({ task }: { task: Task.Task }) => {
     <>
       <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
       <TaskListItemArtifacts task={task} />
-      {current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+      {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
     </>
   );
 };

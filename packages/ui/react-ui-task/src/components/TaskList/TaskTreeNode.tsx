@@ -180,8 +180,9 @@ export const TaskTreeNode = ({
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
   // handled here rather than per row. `Shift` moves the row where an unmodified arrow navigates:
-  // up/down reorder among siblings, left/right change depth. The focused row names its task through
-  // `data-object-id`, which is what lets one container-level handler serve every depth.
+  // up/down reorder among siblings, left/right change depth. `Tab`/`Shift+Tab` change depth too, as
+  // in an outliner. The focused row names its task through `data-object-id`, which is what lets one
+  // container-level handler serve every depth.
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       // A reader needs a way back out of a selection, and `Escape` is where they look for it.
@@ -191,18 +192,26 @@ export const TaskTreeNode = ({
         return;
       }
 
-      if (!onTaskMove || !event.shiftKey) {
+      const tab = event.key === 'Tab';
+      if (!onTaskMove || !(event.shiftKey || tab)) {
         return;
       }
-      const id = (event.target as HTMLElement | null)
-        ?.closest<HTMLElement>('[data-object-id]')
-        ?.getAttribute('data-object-id');
+      const target = event.target instanceof HTMLElement ? event.target : undefined;
+      const row = target?.closest<HTMLElement>('[data-object-id]');
+      // `Tab` only from the row itself: from a control inside it, `Tab` is how focus reaches the
+      // next control, and taking it there would strand the reader in the row.
+      if (!row || (tab && row !== target)) {
+        return;
+      }
+      const id = row.getAttribute('data-object-id');
       const task = id ? tasks.find((task) => task.id === id) : undefined;
       if (!task) {
         return;
       }
       const placement = (() => {
         switch (event.key) {
+          case 'Tab':
+            return event.shiftKey ? resolveOutdent(tasks, task) : resolveIndent(tasks, task);
           case 'ArrowRight':
             return resolveIndent(tasks, task);
           case 'ArrowLeft':
@@ -215,6 +224,8 @@ export const TaskTreeNode = ({
             return undefined;
         }
       })();
+      // A key that moves nothing is left alone — for `Tab`, so focus can still leave the list
+      // rather than being trapped on a row that cannot indent.
       if (placement) {
         event.preventDefault();
         event.stopPropagation();
@@ -342,6 +353,7 @@ const TaskTreeHeading = ({
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
+  const { t } = useTranslation(translationKey);
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
   // does not change, so a rename made anywhere else would leave the row showing its old title.
@@ -377,19 +389,25 @@ const TaskTreeHeading = ({
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
-        <TaskMnemonic task={current} />
-        <span data-testid='taskList.item.title' className='truncate'>
+        {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
+        <TaskMnemonic task={task} />
+        {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
+        <span
+          data-testid='taskList.item.title'
+          data-placeholder={t('task-title.placeholder')}
+          className='truncate empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]'
+        >
           {current.title}
         </span>
       </div>
-      {/* The row's second line, running under the title and its chips only: it has to clear the
-          ordinal and the status control, or it reads as belonging to the row above, and it must stop
-          short of the trailing controls so it does not run beneath the estimate, priority and menu.
-          What the task says, and nothing the log recorded — an exchange replayed here grew the row
-          by a line per question and pushed the next task off the screen; the detail pane a click
-          opens has the room for it. */}
+      {/* Under the title and the chips line (row 2, which collapses when the task has no chips): it
+          has to clear the ordinal and the status control, or it reads as belonging to the row above,
+          and it must stop short of the trailing controls so it does not run beneath the estimate,
+          priority and menu. What the task says, and nothing the log recorded — an exchange replayed
+          here grew the row by a line per question and pushed the next task off the screen; the
+          detail pane a click opens has the room for it. */}
       {description && (
-        <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
+        <div className='col-[title] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
           <TaskDescription content={description} components={descriptionComponents} />
         </div>
       )}

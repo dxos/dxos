@@ -61,7 +61,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
   // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
 
-  // Open questions only: an answered one is already a line in the history below it.
+  // Open questions only: an answered one is a line in the activity below.
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
 
   return (
@@ -114,7 +114,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Column.Section label={t('task-questions.label')}>
+                  <Column.Section label={t('task-questions.label')} data-testid='tasksPlugin.questions'>
                     {openQuestions.map((thread) => (
                       <TaskQuestion
                         key={thread.question.id}

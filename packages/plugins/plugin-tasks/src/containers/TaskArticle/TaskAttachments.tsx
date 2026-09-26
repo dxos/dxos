@@ -17,7 +17,7 @@ import React, {
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
@@ -55,23 +55,30 @@ export type AttachFiles = {
   pending: readonly PendingAttachment[];
 };
 
+/** Stores one browser file and attaches it to a task; resolves to whether it is now attached. */
+export type AttachFile = (task: Task.Task, file: globalThis.File) => Promise<boolean>;
+
 /**
- * Stores dropped or pasted browser files as `File` objects and attaches them to the task. Each file
- * goes through `FileOperation.Create`, so the storage backend, MIME allow-list and size cap are the
- * same as any other upload's, and is attached through `TaskOperation.AddAttachment`, which logs it.
+ * Stores a browser file as a `File` object and attaches it to a task. The file goes through
+ * `FileOperation.Create`, so the storage backend, MIME allow-list and size cap are the same as any
+ * other upload's, and is attached through `TaskOperation.AddAttachment`, which logs it. Undefined
+ * when no plugin can store a file.
  */
-export const useAttachFiles = (task: Task.Task): AttachFiles => {
+export const useAttachFile = (): AttachFile | undefined => {
   const { invokePromise } = useOperationInvoker();
   const canCreateFiles = useCanCreateFiles();
-  const [pending, setPending] = useState<readonly PendingAttachment[]>([]);
-  const nextId = useRef(0);
 
-  const attachOne = useCallback(
-    async (db: Database.Database, file: globalThis.File) => {
+  const attachOne = useCallback<AttachFile>(
+    async (task, file) => {
+      const db = Obj.getDatabase(task);
+      if (!db) {
+        return false;
+      }
+
       const { data, error } = await invokePromise(FileOperation.Create, { db, file });
       if (error || !data) {
         log.warn('attachment rejected', { name: file.name, type: file.type, error });
-        return;
+        return false;
       }
 
       const object = db.add(data.object);
@@ -87,15 +94,28 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
           db.remove(object);
         }
         log.warn('attachment failed', { name: file.name, error: attachError });
+        return false;
       }
+      return true;
     },
-    [invokePromise, task],
+    [invokePromise],
   );
+
+  return canCreateFiles ? attachOne : undefined;
+};
+
+/**
+ * Stores dropped or pasted browser files and attaches them to the task (see {@link useAttachFile}),
+ * tracking each as pending until it settles.
+ */
+export const useAttachFiles = (task: Task.Task): AttachFiles => {
+  const attachOne = useAttachFile();
+  const [pending, setPending] = useState<readonly PendingAttachment[]>([]);
+  const nextId = useRef(0);
 
   const attach = useCallback(
     async (files: globalThis.File[]) => {
-      const db = Obj.getDatabase(task);
-      if (!db) {
+      if (!attachOne) {
         return;
       }
 
@@ -103,7 +123,7 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
       setPending((current) => [...current, ...entries.map(({ id, name }) => ({ id, name }))]);
       for (const { id, file } of entries) {
         try {
-          await attachOne(db, file);
+          await attachOne(task, file);
         } finally {
           setPending((current) => current.filter((entry) => entry.id !== id));
         }
@@ -112,7 +132,7 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
     [attachOne, task],
   );
 
-  return { onFiles: canCreateFiles ? attach : undefined, pending };
+  return { onFiles: attachOne ? attach : undefined, pending };
 };
 
 /** Whether files are being dragged over the pane, so the attachments section can mark its target. */

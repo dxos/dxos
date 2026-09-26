@@ -314,7 +314,9 @@ export type TreeProps<T extends { id: string } = any> = {
   /**
    * Keydown on the tree container. The escape hatch for gestures the machine does not own — zag
    * ignores modified arrows, so a consumer can bind e.g. `Alt+Arrow` restructuring here rather
-   * than wrapping the tree in an element that would only exist to carry the handler.
+   * than wrapping the tree in an element that would only exist to carry the handler. A key the
+   * consumer takes (`preventDefault`) on the focused row returns focus to that row once the tree
+   * re-renders, found by id — a restructuring key moves the row to a new path and remounts it.
    */
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 };
@@ -633,7 +635,20 @@ export const Tree = <T extends { id: string } = any>({
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
-      if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
+      if (event.defaultPrevented) {
+        // The same hand-off a drop makes: a consumer's restructuring key remounts the row under its
+        // new parent, and the unmount drops DOM focus, leaving the next key with no row to reach.
+        // Read off the row the key was pressed on, not the machine's focused value: a row focused
+        // programmatically never reports focus to the machine.
+        const row = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-object-id]') : null;
+        const value = row === event.target ? row.getAttribute('data-value') : null;
+        const entry = value ? byValue.get(value) : undefined;
+        if (entry) {
+          focusNode(entry.id, entry.value);
+        }
+        return;
+      }
+      if (event.key !== 'Enter' && event.key !== ' ') {
         return;
       }
       // The row is a div with role=button, so a real inner control (chevron, status, rename input)
@@ -660,7 +675,7 @@ export const Tree = <T extends { id: string } = any>({
         onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect],
+    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect, focusNode],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted

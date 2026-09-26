@@ -86,8 +86,10 @@ const seedTasks = (space: Space) => {
   }
 
   const plain = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: PLAIN_TASK, status: 'todo' }));
+  // Untitled, as a sub-task added from a row's menu starts.
+  const untitled = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: '', status: 'todo' }));
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [Ref.make(worked), Ref.make(plain)];
+    taskSet.tasks = [Ref.make(worked), Ref.make(plain), Ref.make(untitled)];
   });
 
   seeded = { space, worked };
@@ -222,6 +224,80 @@ export const Default: Story = {
       throw new Error('The story did not seed a task.');
     }
     await expect(context.worked.artifacts).toHaveLength(3);
+  },
+};
+
+/**
+ * An open question waits in the Questions section, answerable there; answered, it leaves the section
+ * and becomes one entry in the activity, the question with its answer.
+ */
+export const QuestionAnswered: Story = {
+  decorators: [withPlugins({ files: false })],
+  args: { title: WORKED_TASK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByDisplayValue(WORKED_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task.');
+    }
+    const { worked } = context;
+    Task.ask(worked, {
+      text: 'Which lot should anchor the blend?',
+      options: [{ title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' }, { title: 'Colombian Huila' }],
+      actor: { name: 'Scout', role: 'assistant' },
+    });
+
+    const section = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.questions"]');
+    const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
+    await waitFor(() => expect(section()).toBeTruthy(), { timeout: 10_000 });
+    // Open, it is in the section and not in the log.
+    await expect(history()?.textContent ?? '').not.toContain('Which lot should anchor the blend?');
+
+    const options = within(section() ?? canvasElement).getAllByTestId('task-question.option');
+    await expect(options).toHaveLength(2);
+    await userEvent.click(options[1]);
+
+    // Answered, the section goes and the exchange is one entry in the log.
+    await waitFor(() => expect(section()).toBeNull(), { timeout: 10_000 });
+    const answer = () => history()?.querySelector('[data-testid="taskList.history.answer"]');
+    await waitFor(() => expect(answer()).toHaveTextContent('Colombian Huila'), { timeout: 10_000 });
+    await expect(answer()?.closest('[role="listitem"]')?.textContent).toContain('Which lot should anchor the blend?');
+  },
+};
+
+/**
+ * A task with no title opens with its title field focused, so a sub-task added from a row's menu is
+ * named where it is read — a titled task leaves focus where it was.
+ */
+export const UntitledTaskFocus: Story = {
+  decorators: [withPlugins({ files: false })],
+  args: { title: '' },
+  play: async ({ canvasElement }) => {
+    const title = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskEditor.title"]');
+        if (!found) {
+          throw new Error('Title field not rendered.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(document.activeElement).toBe(title), { timeout: 10_000 });
+    await userEvent.keyboard('Cup the samples{Enter}');
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task.');
+    }
+    const { space } = context;
+    await waitFor(
+      async () =>
+        await expect(
+          (await space.db.query(Filter.type(Task.Task)).run()).some((task) => task.title === 'Cup the samples'),
+        ).toBe(true),
+      { timeout: 10_000 },
+    );
   },
 };
 

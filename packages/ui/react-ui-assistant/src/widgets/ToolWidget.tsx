@@ -371,7 +371,6 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
         variant='ghost'
         density='sm'
         iconOnly
-        size={4}
         classNames='-me-1'
         onCopy={() => JSON.stringify(data)}
       />
