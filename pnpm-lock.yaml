@@ -10011,6 +10011,9 @@ importers:
       '@dxos/plugin-sandbox':
         specifier: workspace:*
         version: link:../plugin-sandbox
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/plugin-tasks':
         specifier: workspace:*
         version: link:../plugin-tasks
