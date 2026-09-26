@@ -570,6 +570,7 @@ export const buildSessionTimeline = ({
   // Markers and token totals, attributed to the lane owning the event's pid or its parent pid.
   const tokens = new Map<string, { usage: TokenUsage; toolCalls: number }>();
   const spawnMarkerByPid = new Map<string, string>();
+  const returnMarkerByPid = new Map<string, string>();
   for (const event of events) {
     const laneId =
       (event.meta.pid && laneByPid.get(event.meta.pid)) ??
@@ -589,10 +590,16 @@ export const buildSessionTimeline = ({
       : toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
-      if (marker.kind === 'delegation') {
+      if (event.type === Trace.DelegationSpawned.key) {
         const data = decode(Trace.DelegationSpawned.schema, event.data);
         if (data) {
           spawnMarkerByPid.set(data.pid, marker.id);
+        }
+      }
+      if (event.type === Trace.DelegationCompleted.key) {
+        const data = decode(Trace.DelegationCompleted.schema, event.data);
+        if (data) {
+          returnMarkerByPid.set(data.pid, marker.id);
         }
       }
     }
@@ -629,6 +636,13 @@ export const buildSessionTimeline = ({
       markers.filter((marker) => marker.laneId === sessionLaneId && marker.timestamp <= (lane.start ?? 0)).at(-1)?.id;
     if (markerId !== undefined) {
       lane.delegatedFrom = { laneId: sessionLaneId, markerId };
+    }
+    // The return connector has no such fallback: only the completion event says the child reported
+    // back, and guessing from the supervisor's next node would invent a causal edge that may not
+    // exist — a child can end without ever answering.
+    const returnMarkerId = lane.pid && returnMarkerByPid.get(lane.pid);
+    if (returnMarkerId !== undefined) {
+      lane.returnedTo = { laneId: sessionLaneId, markerId: returnMarkerId };
     }
   }
 
@@ -716,6 +730,16 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
     case Trace.DelegationSpawned.key: {
       const data = decode(Trace.DelegationSpawned.schema, event.data);
       return { ...base, kind: 'delegation', label: 'Delegated', detail: data };
+    }
+    case Trace.DelegationCompleted.key: {
+      const data = decode(Trace.DelegationCompleted.schema, event.data);
+      return {
+        ...base,
+        kind: 'delegation',
+        label: data?.status === 'failure' ? 'Sub-agent failed' : `Returned${data?.result ? `: ${data.result}` : ''}`,
+        level: data?.status === 'failure' ? 'error' : undefined,
+        detail: data,
+      };
     }
     case Trace.OperationStart.key: {
       const data = decode(Trace.OperationStart.schema, event.data);

@@ -75,6 +75,7 @@ const lanes: GanttLane[] = [
     groupId: 'g:b',
     segments: [{ start: T0 + 4.1 * MINUTE, end: T0 + 7.2 * MINUTE }],
     openedFrom: { laneId: 'a', markerId: 'm:a-spawn-b' },
+    closedInto: { laneId: 'a', markerId: 'm:a-return-b' },
     meta: [{ label: '49.1k', title: '40200 in / 8900 out' }, { label: '4 tools' }],
   },
   {
@@ -108,6 +109,13 @@ const markers: GanttMarker[] = [
   { id: 'm:a-spawn-b', laneId: 'a', kind: 'delegation', timestamp: T0 + 4 * MINUTE, label: 'Spawned process B' },
   { id: 'm:a-spawn-c', laneId: 'a', kind: 'delegation', timestamp: T0 + 5 * MINUTE, label: 'Spawned process C' },
   { id: 'm:a-end', laneId: 'a', kind: 'request', timestamp: T0 + 5.4 * MINUTE, label: 'Request success' },
+  {
+    id: 'm:a-return-b',
+    laneId: 'a',
+    kind: 'delegation',
+    timestamp: T0 + 7.4 * MINUTE,
+    label: 'Returned: changelog drafted',
+  },
 
   { id: 'm:triage-start', laneId: 'a:triage', kind: 'operation', timestamp: T0 + 0.5 * MINUTE, label: 'Started' },
   { id: 'm:triage-tool', laneId: 'a:triage', kind: 'tool', timestamp: T0 + 1.1 * MINUTE, label: 'list-issues' },
@@ -218,6 +226,7 @@ const branchingLanes: GanttLane[] = [
     parentId: 'root',
     segments: [{ start: T0 + 2.5 * MINUTE, end: T0 + 5 * MINUTE }],
     openedFrom: { laneId: 'root', markerId: 'root:1' },
+    closedInto: { laneId: 'root', markerId: 'root:2' },
   },
   {
     id: 'second',
@@ -249,6 +258,9 @@ const branchingMarkers: GanttMarker[] = [
  * Four bands: two nested under the first — each opening out of a node on its parent's lane — and one
  * unrelated band of its own. Nesting a band and opening a lane are separate statements, so the fourth
  * band sits beside the others without claiming any relation to them.
+ *
+ * The nested band that finished also answers back (`closedInto`, dashed); the one still running has
+ * not, which is the point of keeping the two edges separate — a lane can be opened and never report.
  */
 const manyGroupGroups: GanttGroup[] = [
   { id: 'one' },
@@ -272,6 +284,7 @@ const manyGroupLanes: GanttLane[] = [
     groupId: 'one:a',
     segments: [{ start: T0 + 3.2 * MINUTE, end: T0 + 6 * MINUTE }],
     openedFrom: { laneId: 'p1', markerId: 'p1:1' },
+    closedInto: { laneId: 'p1', markerId: 'p1:2' },
   },
   {
     id: 'p2:task',

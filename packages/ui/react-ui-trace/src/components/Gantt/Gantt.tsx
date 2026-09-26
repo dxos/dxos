@@ -60,6 +60,11 @@ export type GanttLane = {
   segments?: readonly GanttSegment[];
   /** The node this lane opened out of, on another lane. */
   openedFrom?: { laneId: string; markerId: string };
+  /**
+   * The node this lane's result came back into, on another lane — the mirror of `openedFrom`, and a
+   * separate fact: a lane can open out of another and end without ever reporting back.
+   */
+  closedInto?: { laneId: string; markerId: string };
   /** Lanes this one waits on. */
   blockedOn?: readonly string[];
   meta?: readonly GanttMeta[];
@@ -662,6 +667,40 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                 strokeDasharray={1}
                 strokeDashoffset={isOpening(lane) ? 1 : 0}
                 className={mx(animate && mx('transition-[stroke-dashoffset]', ENTER_TRANSITION), CONNECTOR_CLASSNAME)}
+              />,
+            ];
+          })}
+
+          {/* Back out of the lane's last stretch and up into the node its result answered. Dashed, and
+              the spawn is not: one is the moment work was handed over, the other the moment an answer
+              arrived, and a reader following a cascade needs to tell the two directions apart. */}
+          {rows.flatMap(({ lane, index }) => {
+            const target = lane.closedInto && markerById.get(lane.closedInto.markerId);
+            const targetRow = lane.closedInto && rowById.get(lane.closedInto.laneId);
+            const stretches = stretchesOf(lane);
+            const last = stretches[stretches.length - 1];
+            if (!target || !targetRow || !last) {
+              return [];
+            }
+            const targetX = x(target.timestamp);
+            const y = rowY(index);
+            const targetY = rowY(targetRow.index);
+            // Which way the bend turns depends on whether the answer went up the chart or down it;
+            // a lane is normally below the one it reports to, but nothing in the model requires it.
+            const rise = Math.sign(targetY - y) * BEND_RADIUS;
+            // Forward only, for the same reason the spawn connector is: a run doubling back reads as
+            // a line to somewhere else. With nowhere to run, the rise happens at the answer's own node.
+            const path =
+              targetX > last.to + BEND_RADIUS
+                ? `M ${last.to} ${y} H ${targetX - BEND_RADIUS} Q ${targetX} ${y} ${targetX} ${y + rise} V ${targetY}`
+                : `M ${targetX} ${y} V ${targetY}`;
+            return [
+              <path
+                key={`closed:${lane.id}`}
+                d={path}
+                fill='none'
+                strokeDasharray='3 2'
+                className={CONNECTOR_CLASSNAME}
               />,
             ];
           })}

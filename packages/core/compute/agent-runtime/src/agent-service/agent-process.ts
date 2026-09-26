@@ -557,6 +557,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
+                // Written beside `DelegationSpawned`, and for the same reason: the return is only
+                // observable here. The child's own trace ends with its operation and says nothing
+                // about reporting back, so this is what pairs an exit with the task it answers.
+                yield* Trace.write(Trace.DelegationCompleted, {
+                  taskId: delegation.id,
+                  pid: String(event.pid),
+                  status: Exit.isSuccess(exit) ? 'success' : 'failure',
+                  ...(Exit.isSuccess(exit) && exit.value !== undefined
+                    ? { result: typeof exit.value === 'string' ? exit.value : JSON.stringify(exit.value) }
+                    : {}),
+                });
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)

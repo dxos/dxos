@@ -86,6 +86,7 @@ export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttDat
       ...(lane.kind === 'task' && parent?.kind === 'task' ? { parentId: parent.id } : {}),
       ...(segmentsOf(lane) ? { segments: segmentsOf(lane) } : {}),
       ...(lane.delegatedFrom ? { openedFrom: lane.delegatedFrom } : {}),
+      ...(lane.returnedTo ? { closedInto: lane.returnedTo } : {}),
       ...(lane.blockedOn ? { blockedOn: lane.blockedOn } : {}),
       ...(meta.length > 0 ? { meta } : {}),
     });
