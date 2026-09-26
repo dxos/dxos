@@ -4,14 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
-import { Time } from '../Time/index.ts';
 import { UNSET_ICON } from './status-icons.ts';
 
 /**
@@ -103,7 +102,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
             <span className='grow min-w-0'>{entryText(entry)}</span>
             {/* Compact and live, because the log is read as "what has been happening" rather than as
                 a record to cite — and the record is a hover away, in the tooltip. */}
-            <Time date={entry.date} classNames='shrink-0 text-right' />
+            <Timestamp date={entry.date} classNames='shrink-0 text-right' />
           </div>
         </div>
       ))}
