@@ -46,6 +46,7 @@
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",

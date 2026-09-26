@@ -1289,6 +1289,74 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 };
 
 /**
+ * Cmd/Ctrl-Enter in the description saves, as the Save button does: for an edit it writes the
+ * pending text and leaves, and for a create it adds the task — without CodeMirror inserting a line
+ * first. With no title to create from, the key does nothing.
+ */
+export const TestSaveDescriptionWithModEnter: Story = {
+  args: {
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    const found = <T extends Element>(element: T | null | undefined, name: string): T => {
+      if (!element) {
+        throw new Error(`${name} not found.`);
+      }
+      return element;
+    };
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Edit pane');
+    const title = () => found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]'), 'Title');
+    const content = () =>
+      found(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"] .cm-content'), 'Description');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0));
+
+    // Editing: Cmd-Enter writes the description and drops the pane back to creating.
+    const first = rows()[0];
+    first.click();
+    await waitFor(async () => expect(first.getAttribute('aria-selected')).toEqual('true'));
+    const lines = () => content().querySelectorAll('.cm-line').length;
+    await userEvent.click(content());
+    const linesBefore = lines();
+    await userEvent.keyboard(' SAVED{Meta>}{Enter}{/Meta}');
+    await waitFor(async () => expect(title().value).toEqual(''));
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    first.click();
+    await waitFor(async () => expect(content().textContent).toContain('SAVED'));
+    // No line was inserted: the save binding outranks the markdown keymap's own Mod-Enter.
+    await expect(lines()).toEqual(linesBefore);
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(title().value).toEqual(''));
+
+    // Creating: Ctrl-Enter (the binding off macOS) adds the task with its description.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Keyed task');
+    await userEvent.click(content());
+    await userEvent.keyboard('From the keyboard{Control>}{Enter}{/Control}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    const created = found(
+      rows().find((row) => row.textContent?.includes('Keyed task')),
+      'Created row',
+    );
+    await expect(created.textContent).toContain('From the keyboard');
+    await expect(title().value).toEqual('');
+
+    // With no title there is nothing to create: the key does nothing, but still inserts no line.
+    const count = rows().length;
+    await userEvent.click(content());
+    const untitledLines = lines();
+    await userEvent.keyboard('Untitled{Control>}{Enter}{/Control}{Meta>}{Enter}{/Meta}');
+    await expect(rows()).toHaveLength(count);
+    await expect(content().textContent).toContain('Untitled');
+    await expect(lines()).toEqual(untitledLines);
+  },
+};
+
+/**
  * With `showDescription` off the pane is title-only, even for a selected task the list can update —
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
