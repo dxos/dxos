@@ -25,6 +25,15 @@
       "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
+    "#local-backend": {
+      "source": {
+        "node": "./src/local/index.ts",
+        "default": "./src/local/unsupported.ts"
+      },
+      "types": "./dist/types/src/local/index.d.ts",
+      "node": "./dist/lib/local-backend.node.mjs",
+      "default": "./dist/lib/local-backend.browser.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -96,6 +105,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",

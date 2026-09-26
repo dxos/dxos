@@ -3,17 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
-import { encodeExecCommand } from '../../services/exec-command.ts';
+import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
 import { mergeExecEnv } from '../../services/sandbox-env.ts';
-import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 /**
  * How long a command may run when the caller sets no limit. The service's own default is two
@@ -25,12 +22,10 @@ export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT }) {
       const { db } = yield* Database.Service;
-      const client = yield* ClientService;
 
       const loaded = yield* Database.load(sandbox);
       const sandboxId = loaded.id;
       const spaceId = db.spaceId;
-      const sandboxClient = createSandboxClient(client);
       const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
 
       // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
@@ -41,22 +36,17 @@ export default SandboxOperation.Exec.pipe(
       // error channel, so a typed failure escaping here is not part of the operation's contract and
       // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
       // A non-zero exit carrying the reason is also what the model can actually act on.
-      return yield* sandboxClient
-        .exec(spaceId, sandboxId, { command: encodeExecCommand(command), cwd, env: mergedEnv, timeout })
-        .pipe(
-          Effect.catch((error) =>
-            Effect.succeed({
-              stdout: '',
-              stderr: `sandbox exec failed: ${describeError(error)}`,
-              exitCode: -1,
-              success: false,
-            }),
-          ),
-        );
-    }, Effect.provide(FetchHttpClient.layer)),
+      return yield* resolveSandboxBackend.pipe(
+        Effect.flatMap((backend) => backend.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout })),
+        Effect.catch((error) =>
+          Effect.succeed({
+            stdout: '',
+            stderr: `sandbox exec failed: ${error.message}`,
+            exitCode: -1,
+            success: false,
+          }),
+        ),
+      );
+    }),
   ),
 );
-
-/** Message for a failed request, kept short enough to be useful in a tool result. */
-const describeError = (error: unknown): string =>
-  error instanceof Error ? `${error.name}: ${error.message}` : String(error);

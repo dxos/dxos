@@ -3,30 +3,27 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { Sandbox, SandboxOperation } from '#types';
 
-import { createSandboxClient } from '../../services/sandbox-url.ts';
+import { resolveSandboxBackend } from '../../services/resolve-backend.ts';
 
 export default SandboxOperation.CreateSandbox.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, baseImage }) {
       const { db } = yield* Database.Service;
-      const client = yield* ClientService;
 
       const sandbox = Sandbox.make({ name, baseImage });
       yield* Database.add(sandbox);
 
       const sandboxId = sandbox.id;
       const spaceId = db.spaceId;
-      const sandboxClient = createSandboxClient(client);
+      const backend = yield* resolveSandboxBackend.pipe(Effect.orDie);
 
-      const record = yield* sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
+      const record = yield* backend.create(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;
@@ -37,6 +34,6 @@ export default SandboxOperation.CreateSandbox.pipe(
       });
 
       return { sandboxId: Obj.getURI(sandbox) };
-    }, Effect.provide(FetchHttpClient.layer)),
+    }),
   ),
 );
