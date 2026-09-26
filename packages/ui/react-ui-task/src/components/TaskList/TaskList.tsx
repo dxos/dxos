@@ -20,7 +20,7 @@ import {
 import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
-import { type Actor, PullRequest, RemoteSession, Task } from '@dxos/types';
+import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
 
@@ -34,8 +34,7 @@ import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
-
-const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
+import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
@@ -699,30 +698,16 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
 };
 
 //
-// Assignee — actor-aware chip: a Person ref resolves to the contact's name; otherwise fall back to
-// name, email, or a shortened DID; agents (`role: 'assistant'`) are marked with a sparkle.
+// Assignee — actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
+// properties row.
 //
 
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
   const tagRef = useRef<HTMLSpanElement>(null);
-  const [contact] = useObject(assignee.contact);
-  // An agent's actor stands for its session rather than a person, so the pill names the harness the
-  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
-  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
-  const sessionLabel = harness && RemoteSession.harnessName(harness);
-  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
-  // the sparkle stays the generic "an assistant owns this" fallback.
-  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
-  const label =
-    contact?.fullName ??
-    sessionLabel ??
-    assignee.name ??
-    assignee.email ??
-    (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
-  const agent = assignee.role === 'assistant';
 
   // Hover, not click, because the session is context for the row rather than a place to navigate to:
   // the reader wants to know which run owns the task while their eye is already on it. The grace
@@ -755,6 +740,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     <Tag
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
+      data-testid='taskList.item.assignee'
       // Focus as well as hover: the card is the only place the row says which run owns the task, so
       // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
       tabIndex={session ? 0 : undefined}
@@ -765,7 +751,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       classNames={session && 'cursor-help'}
     >
       {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
-      {label ?? 'agent'}
+      {label}
     </Tag>
   );
 });
