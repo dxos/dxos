@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// What one realm holds for a corpus: tab documents (the model, no Automerge) or Automerge replicas.
+// What one realm holds for a corpus: tab documents (the model, no Automerge), Automerge replicas, or the
+// worker's check index, which the worker holds beside Automerge in place of a model.
 // Each mode runs in its own worker thread, so the figures are that realm's alone: its V8 heap plus its
 // external memory (array buffers, typed arrays and wasm memory).
 // Usage: node --expose-gc --conditions=source src/bench/memory.ts <corpus.json>
@@ -32,13 +33,13 @@ if (isMainThread) {
   const A = await import('@automerge/automerge');
   // The worker would send the tab uncompressed bytes; the corpus holds compressed saves.
   const { saveNoCompress } = await import('../save.ts');
-  const { packHashes } = await import('../changes.ts');
+  const { hashesByActor } = await import('../changes.ts');
   const corpus: Corpus = JSON.parse(readFileSync(process.argv[2], 'utf8'));
   const docs = corpus.docs.map((entry) => A.load(Uint8Array.from(Buffer.from(entry.bytes, 'base64'))));
   const payload = {
     compressed: corpus.docs.map((entry) => Buffer.from(entry.bytes, 'base64')),
     plain: docs.map(saveNoCompress),
-    hashes: docs.map((doc) => packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash))),
+    hashes: docs.map((doc) => hashesByActor(A.getChangesMetaSince(doc, []))),
   };
   const run = (mode: string) =>
     new Promise<Result>((resolve, reject) => {
@@ -56,7 +57,7 @@ if (isMainThread) {
       worker.on('error', reject);
     });
   const mb = (bytes: number) => (bytes / 1048576).toFixed(2);
-  for (const mode of ['empty', 'replica', 'tab', 'tab-hashed', 'replica', 'tab', 'tab-hashed']) {
+  for (const mode of ['empty', 'replica', 'tab', 'tab-hashed', 'index', 'replica', 'tab', 'tab-hashed', 'index']) {
     const result = await run(mode);
     console.log(
       mode.padEnd(11),
@@ -90,10 +91,13 @@ if (isMainThread) {
       const tab = workerData.mode === 'tab' || workerData.mode === 'tab-hashed';
       const A = workerData.mode === 'replica' ? await import('@automerge/automerge') : undefined;
       const Model = tab ? (await import('../model.ts')).Model : undefined;
+      const CheckIndex = workerData.mode === 'index' ? (await import('../check-index.ts')).CheckIndex : undefined;
       const start = performance.now();
       let ops = 0;
       if (A) {
         held = payload.compressed.map((bytes) => A.load(bytes));
+      } else if (CheckIndex) {
+        held = payload.plain.map((bytes, index) => CheckIndex.fromSaved(bytes, payload.hashes[index]));
       } else if (Model) {
         // `tab` computes each change's hash from the bytes; `tab-hashed` is told them, as the worker can.
         held = payload.plain.map((bytes, index) =>

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ChangeTable, room, writeHash } from './changes.ts';
+import { ChangeTable, room, savedOrderHashes, writeHash } from './changes.ts';
 import { encodeChange } from './encode.ts';
+import { IdIndex, bisect, savedStartOps } from './id-index.ts';
 import { type Change, type Clock, type DecodedOp, parseId } from './ids.ts';
 import { immutableString } from './immutable-string.ts';
 import { type SavedChanges, readSavedColumns } from './reader.ts';
@@ -135,21 +136,6 @@ const singleCodePoint = (bytes: Uint8Array, offset: number, length: number): num
   return -1;
 };
 
-/** The first position in `counters[0, length)` whose counter is at least `counter`. */
-const bisect = (counters: Uint32Array, length: number, counter: number): number => {
-  let low = 0;
-  let high = length;
-  while (low < high) {
-    const middle = (low + high) >>> 1;
-    if (counters[middle] < counter) {
-      low = middle + 1;
-    } else {
-      high = middle;
-    }
-  }
-  return low;
-};
-
 /**
  * A whole Automerge document as plain JS: every op with the ops that overwrote it, so the state at any
  * version, cursors, conflicts and diffs come out of one structure. Ops live in typed-array columns,
@@ -182,10 +168,7 @@ export class Model {
   readonly #objects = new Map<number, ObjectInfo>([[ROOT, { type: 'map', keys: new Map() }]]);
   /** An element's values written after its insert. */
   readonly #later = new Map<number, number[]>();
-  /** Per actor, its op counters in order and the op at each. */
-  readonly #idCtr: Uint32Array[] = [];
-  readonly #idOp: Int32Array[] = [];
-  readonly #idLength: number[] = [];
+  readonly #ids = new IdIndex();
   readonly #changes = new ChangeTable();
   #maxOp = 0;
 
@@ -200,9 +183,7 @@ export class Model {
       index = this.#actors.length;
       this.#actors.push(actor);
       this.#actorIndex.set(actor, index);
-      this.#idCtr.push(new Uint32Array(16));
-      this.#idOp.push(new Int32Array(16));
-      this.#idLength.push(0);
+      this.#ids.addActor();
       const order = this.#actors
         .map((_actor, position) => position)
         .sort((left, right) => {
@@ -262,83 +243,20 @@ export class Model {
     return op;
   }
 
+  /** Adds an op's id to the index; a load appends out of order and sorts once at the end. */
   #indexId(op: number, sorted: boolean): void {
-    const actor = this.#act[op];
     const counter = this.#ctr[op];
-    let counters = this.#idCtr[actor];
-    let ops = this.#idOp[actor];
-    const length = this.#idLength[actor];
-    if (length === counters.length) {
-      counters = this.#idCtr[actor] = resize(counters, room(length + 1), (size) => new Uint32Array(size));
-      ops = this.#idOp[actor] = resize(ops, room(length + 1), (size) => new Int32Array(size));
-    }
-    if (!sorted || length === 0 || counters[length - 1] < counter) {
-      counters[length] = counter;
-      ops[length] = op;
+    if (sorted) {
+      this.#ids.insert(this.#act[op], counter, op);
     } else {
-      const at = bisect(counters, length, counter);
-      counters.copyWithin(at + 1, at, length);
-      ops.copyWithin(at + 1, at, length);
-      counters[at] = counter;
-      ops[at] = op;
+      this.#ids.append(this.#act[op], counter, op);
     }
-    this.#idLength[actor] = length + 1;
     this.#maxOp = Math.max(this.#maxOp, counter);
-  }
-
-  /**
-   * Sorts each actor's ids by counter after a load appended them out of order. Only the part after the
-   * sorted prefix is sorted, then merged in, so appending a few ids to sorted ones costs a linear pass.
-   */
-  #sortIds(): void {
-    this.#idCtr.forEach((counters, actor) => {
-      const length = this.#idLength[actor];
-      let prefix = 1;
-      while (prefix < length && counters[prefix - 1] <= counters[prefix]) {
-        prefix++;
-      }
-      if (prefix >= length) {
-        return;
-      }
-      if (length - prefix >= 2_097_152) {
-        throw new RangeError('An actor has too many ops to sort');
-      }
-      const ops = this.#idOp[actor];
-      // Counters fit 32 bits and positions 21, so both pack into one exact double, which sorts natively.
-      const rest = new Float64Array(length - prefix);
-      for (let i = prefix; i < length; i++) {
-        rest[i - prefix] = counters[i] * 2_097_152 + (i - prefix);
-      }
-      rest.sort();
-      const nextCounters = new Uint32Array(counters.length);
-      const nextOps = new Int32Array(ops.length);
-      let left = 0;
-      let right = 0;
-      for (let out = 0; out < length; out++) {
-        const position = right < rest.length ? prefix + (rest[right] % 2_097_152) : -1;
-        if (position < 0 || (left < prefix && counters[left] <= counters[position])) {
-          nextCounters[out] = counters[left];
-          nextOps[out] = ops[left++];
-        } else {
-          nextCounters[out] = counters[position];
-          nextOps[out] = ops[position];
-          right++;
-        }
-      }
-      this.#idCtr[actor] = nextCounters;
-      this.#idOp[actor] = nextOps;
-    });
   }
 
   /** The op of `actor` with `counter`, or -1. */
   #lookup(actor: number, counter: number): number {
-    const counters = this.#idCtr[actor];
-    if (!counters) {
-      return -1;
-    }
-    const length = this.#idLength[actor];
-    const at = bisect(counters, length, counter);
-    return at < length && counters[at] === counter ? this.#idOp[actor][at] : -1;
+    return this.#ids.lookup(actor, counter);
   }
 
   #find(id: string): number {
@@ -527,8 +445,8 @@ export class Model {
   //
 
   /**
-   * A document read from Automerge's saved bytes, column by column. `hashes` holds each change's hash as
-   * 32 bytes, back to back in the saved order; given none, it computes each by encoding the change again.
+   * A document read from Automerge's saved bytes, column by column. `hashes` holds each change's hash in
+   * the snapshot layout (see `hashesByActor`); given none, it computes each by encoding the change again.
    * Either way it checks them against the saved heads, as Automerge's own load does.
    */
   static fromSaved(bytes: Uint8Array, hashes?: Uint8Array): Model {
@@ -544,7 +462,7 @@ export class Model {
       model.#newOp(ops.idCounter[i], actorIndex[ops.idActor[i]], ROOT, ops.action[i], ops.insert[i] === 1);
       model.#indexId(i, false);
     }
-    model.#sortIds();
+    model.#ids.sort();
     const resolve = (actor: number, counter: number): number => {
       if (actor < 0) {
         return ROOT;
@@ -618,47 +536,17 @@ export class Model {
     for (const op of deletes.values()) {
       model.#indexId(op, false);
     }
-    model.#sortIds();
+    model.#ids.sort();
 
-    // A change's ops are its actor's ops above the previous change's highest op, so one pass per actor
-    // over the sorted ids finds each change's first op. Saved changes come in causal order, which takes
-    // each actor's changes in seq order; the sort is for a document that breaks that.
-    let inSeqOrder = true;
-    const lastSeq = new Uint32Array(actors.length);
-    for (let index = 0; index < changes.count; index++) {
-      const actor = changes.actor[index];
-      if (actor < 0 || actor >= actors.length) {
-        throw new Error('A saved change names no actor');
-      }
-      inSeqOrder &&= changes.seq[index] > lastSeq[actor];
-      lastSeq[actor] = changes.seq[index];
-    }
-    const order = inSeqOrder
-      ? undefined
-      : Array.from({ length: changes.count }, (_value, index) => index).sort(
-          (left, right) => changes.actor[left] - changes.actor[right] || changes.seq[left] - changes.seq[right],
-        );
-    const startOps = new Uint32Array(changes.count);
-    const nextId = new Uint32Array(actors.length);
-    for (let position = 0; position < changes.count; position++) {
-      const index = order ? order[position] : position;
-      const actor = actorIndex[changes.actor[index]];
-      const counters = model.#idCtr[actor];
-      const length = model.#idLength[actor];
-      const maxOp = changes.maxOp[index];
-      let next = nextId[actor];
-      const first = next < length ? counters[next] : maxOp + 1;
-      while (next < length && counters[next] <= maxOp) {
-        next++;
-      }
-      nextId[actor] = next;
-      startOps[index] = first <= maxOp ? first : maxOp + 1;
-    }
+    const startOps = savedStartOps(
+      changes,
+      actorIndex.map((actor) => model.#ids.countersOf(actor)),
+    );
     model.#changes.load(
       changes,
       actorIndex,
       startOps,
-      hashes ?? model.#hashSaved(actors, actorIndex, changes, startOps),
+      hashes ? savedOrderHashes(changes, actors, hashes) : model.#hashSaved(actors, actorIndex, changes, startOps),
     );
     if (model.#changes.heads().join() !== [...heads].sort().join()) {
       throw new Error('The saved heads do not match the changes read');
@@ -709,11 +597,7 @@ export class Model {
    */
   #trim(): void {
     this.#resizeOps(this.#count);
-    this.#idCtr.forEach((counters, actor) => {
-      const length = this.#idLength[actor];
-      this.#idCtr[actor] = resize(counters, length, (size) => new Uint32Array(size));
-      this.#idOp[actor] = resize(this.#idOp[actor], length, (size) => new Int32Array(size));
-    });
+    this.#ids.trim();
     for (const object of this.#objects.values()) {
       if (object.type !== 'map') {
         object.elems = resize(object.elems, object.length, (size) => new Int32Array(size));
@@ -950,12 +834,7 @@ export class Model {
       }
       this.#objects.delete(op);
       this.#flags[op] |= REMOVED;
-      const actor = this.#act[op];
-      const length = this.#idLength[actor];
-      const at = bisect(this.#idCtr[actor], length, this.#ctr[op]);
-      this.#idCtr[actor].copyWithin(at, at + 1, length);
-      this.#idOp[actor].copyWithin(at, at + 1, length);
-      this.#idLength[actor] = length - 1;
+      this.#ids.remove(this.#act[op], this.#ctr[op]);
     }
     for (const sequence of sequences) {
       let kept = 0;
@@ -967,11 +846,7 @@ export class Model {
       sequence.length = kept;
     }
     this.#changes.remove(changes.map((change) => this.#changes.find(change.hash)).filter((index) => index >= 0));
-    this.#maxOp = 0;
-    this.#idCtr.forEach((counters, actor) => {
-      const length = this.#idLength[actor];
-      this.#maxOp = Math.max(this.#maxOp, length > 0 ? counters[length - 1] : 0);
-    });
+    this.#maxOp = this.#ids.maxCounter();
   }
 
   #unlinkSucc(op: number, succ: number): void {
@@ -1049,12 +924,21 @@ export class Model {
     return best;
   }
 
+  /** What a text element reads as: its string, or U+FFFC for any other value, as Automerge renders it. */
+  #textOf(winner: number): string {
+    if (this.#kind(winner) === CHAR) {
+      return String.fromCodePoint(this.#val[winner]);
+    }
+    const value = this.#rawValue(winner);
+    return typeof value === 'string' ? value : '\ufffc';
+  }
+
   /** The UTF-16 length of an element's winning value, which a text position counts in. */
   #width(winner: number): number {
     if (this.#kind(winner) === CHAR) {
       return this.#val[winner] > 0xffff ? 2 : 1;
     }
-    return String(this.#rawValue(winner)).length;
+    return this.#textOf(winner).length;
   }
 
   #value(op: number, limits: Uint32Array, inText: boolean): unknown {
@@ -1118,7 +1002,7 @@ export class Model {
           units[length++] = point;
         }
       } else {
-        const text = String(this.#rawValue(winner));
+        const text = this.#textOf(winner);
         if (length + text.length > units.length) {
           units = resize(units, (length + text.length) * 2, (size) => new Uint16Array(size));
         }
@@ -1333,25 +1217,26 @@ export class Model {
    */
   #touched(before: Uint32Array, after: Uint32Array): Set<number> {
     const touched = new Set<number>();
-    this.#idCtr.forEach((counters, actor) => {
+    for (let actor = 0; actor < this.#ids.actors; actor++) {
       const low = Math.min(before[actor], after[actor]);
       const high = Math.max(before[actor], after[actor]);
       if (low === high) {
-        return;
+        continue;
       }
-      const length = this.#idLength[actor];
-      for (let position = bisect(counters, length, low + 1); position < length; position++) {
+      const counters = this.#ids.countersOf(actor);
+      const ops = this.#ids.opsOf(actor);
+      for (let position = bisect(counters, counters.length, low + 1); position < counters.length; position++) {
         if (counters[position] > high) {
           break;
         }
-        for (let owner = this.#obj[this.#idOp[actor][position]]; !touched.has(owner); owner = this.#obj[owner]) {
+        for (let owner = this.#obj[ops[position]]; !touched.has(owner); owner = this.#obj[owner]) {
           touched.add(owner);
           if (owner === ROOT) {
             break;
           }
         }
       }
-    });
+    }
     return touched;
   }
 
@@ -1462,7 +1347,7 @@ export class Model {
                 flush();
                 pending = { action: 'splice', path: [...path, index], value: '' };
               }
-              const value = String(this.#rawValue(is));
+              const value = this.#textOf(is);
               pending.value += value;
               index += value.length;
             } else {

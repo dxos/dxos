@@ -19,7 +19,7 @@ type Space = { objects: Record<string, { data: { content: string } }> };
 
 let held: TabDoc<Space>[] = [];
 const { request } = connect();
-Reflect.set(globalThis, 'loadWorker', (docs: string[]) => request({ type: 'load', docs }));
+Reflect.set(globalThis, 'loadWorker', (docs: string[]) => request({ type: 'load', docs, check: true }));
 Reflect.set(globalThis, 'workerMemory', () => request({ type: 'memory' }));
 const acks = new Map<string, Promise<{ workerMs: number; error?: string }>>();
 

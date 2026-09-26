@@ -51,10 +51,64 @@ export const writeHash = (hash: string, out: Uint8Array, offset: number): void =
   }
 };
 
-/** Hex hashes as 32 bytes each, back to back: how the worker sends a snapshot's hashes. */
-export const packHashes = (hashes: readonly string[]): Uint8Array => {
-  const out = new Uint8Array(hashes.length * 32);
-  hashes.forEach((hash, index) => writeHash(hash, out, index * 32));
+/** Actor positions in the order of their ids as strings, which both ends of a snapshot can compute. */
+const sortedActors = (actors: readonly string[]): number[] =>
+  actors.map((_actor, index) => index).sort((left, right) => (actors[left] < actors[right] ? -1 : 1));
+
+// A snapshot lays its hashes out by actor: actors sorted by id, each actor's hashes in seq order. An
+// actor and seq name one change, so the worker writes them from its own table and the tab places them
+// from the saved columns; neither depends on the order in which a save lists changes.
+
+/** Hashes in the snapshot layout, from each change's actor, seq and hex hash. */
+export const hashesByActor = (changes: readonly { actor: string; seq: number; hash: string }[]): Uint8Array => {
+  const actors = [...new Set(changes.map((change) => change.actor))];
+  const actorIndex = new Map(actors.map((actor, index) => [actor, index]));
+  const counts = new Array<number>(actors.length).fill(0);
+  changes.forEach((change) => counts[actorIndex.get(change.actor) ?? 0]++);
+  const offsets = new Array<number>(actors.length).fill(0);
+  let offset = 0;
+  for (const actor of sortedActors(actors)) {
+    offsets[actor] = offset;
+    offset += counts[actor];
+  }
+  const out = new Uint8Array(changes.length * 32);
+  for (const change of changes) {
+    const actor = actorIndex.get(change.actor) ?? 0;
+    if (!(change.seq >= 1 && change.seq <= counts[actor])) {
+      throw new RangeError(`Actor ${change.actor} has no seqs 1 to ${counts[actor]}`);
+    }
+    writeHash(change.hash, out, (offsets[actor] + change.seq - 1) * 32);
+  }
+  return out;
+};
+
+/** Hashes in the snapshot layout reordered as a save lists the changes, with each change's place checked. */
+export const savedOrderHashes = (saved: SavedChanges, actors: readonly string[], byActor: Uint8Array): Uint8Array => {
+  if (byActor.length !== saved.count * 32) {
+    throw new RangeError(`Expected ${saved.count} hashes of 32 bytes, got ${byActor.length} bytes`);
+  }
+  const counts = new Array<number>(actors.length).fill(0);
+  for (let index = 0; index < saved.count; index++) {
+    counts[saved.actor[index]]++;
+  }
+  const offsets = new Array<number>(actors.length).fill(0);
+  let offset = 0;
+  for (const actor of sortedActors(actors)) {
+    offsets[actor] = offset;
+    offset += counts[actor];
+  }
+  const out = new Uint8Array(byActor.length);
+  const placed = new Uint8Array(saved.count);
+  for (let index = 0; index < saved.count; index++) {
+    const actor = saved.actor[index];
+    const seq = saved.seq[index];
+    const from = offsets[actor] + seq - 1;
+    if (!(seq >= 1 && seq <= counts[actor]) || placed[from]) {
+      throw new RangeError(`Actor ${actors[actor]} has no seqs 1 to ${counts[actor]}`);
+    }
+    placed[from] = 1;
+    out.set(byActor.subarray(from * 32, from * 32 + 32), index * 32);
+  }
   return out;
 };
 
@@ -351,6 +405,37 @@ export class ChangeTable {
   /** The frontier's hashes, sorted as Automerge sorts heads. */
   heads(): string[] {
     return [...this.#frontier].map((index) => this.hashOf(index)).sort();
+  }
+
+  /** Every live change's hash in the snapshot layout; `actors` names the table's actor indexes. */
+  hashesByActor(actors: readonly string[]): Uint8Array {
+    const counts = new Array<number>(actors.length).fill(0);
+    let total = 0;
+    for (const index of this.live()) {
+      counts[this.#actor[index]]++;
+      total++;
+    }
+    const offsets = new Array<number>(actors.length).fill(0);
+    let offset = 0;
+    for (const actor of sortedActors(actors)) {
+      offsets[actor] = offset;
+      offset += counts[actor];
+    }
+    const out = new Uint8Array(total * 32);
+    for (const index of this.live()) {
+      const actor = this.#actor[index];
+      const seq = this.#seq[index];
+      if (!(seq >= 1 && seq <= counts[actor])) {
+        throw new RangeError(`Actor ${actors[actor]} has no seqs 1 to ${counts[actor]}`);
+      }
+      out.set(this.#hashes.subarray(index * 32, index * 32 + 32), (offsets[actor] + seq - 1) * 32);
+    }
+    return out;
+  }
+
+  /** The indexes nothing depends on. */
+  frontier(): number[] {
+    return [...this.#frontier];
   }
 
   isFrontier(indexes: readonly number[]): boolean {

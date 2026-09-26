@@ -18,6 +18,10 @@ class Writer {
   }
 
   uleb(value: number): void {
+    // A value that is not an integer never reaches zero, and the loop would fill memory.
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new RangeError(`Cannot encode ${value} as an unsigned integer`);
+    }
     let rest = value;
     do {
       let byte = rest % 128;
@@ -30,6 +34,9 @@ class Writer {
   }
 
   leb(value: number): void {
+    if (!Number.isSafeInteger(value)) {
+      throw new RangeError(`Cannot encode ${value} as an integer`);
+    }
     let rest = value;
     for (;;) {
       const byte = rest & 0x7f;

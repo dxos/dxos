@@ -4,10 +4,10 @@
 
 import * as A from '@automerge/automerge';
 
-import { packHashes } from './changes.ts';
+import { hashesByActor } from './changes.ts';
+import { CheckIndex } from './check-index.ts';
 import { encodeChange } from './encode.ts';
-import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
-import { Model } from './model.ts';
+import { type Change } from './ids.ts';
 import { saveNoCompress } from './save.ts';
 import { type HostMessage, type Snapshot } from './tab.ts';
 
@@ -18,7 +18,7 @@ type Queued = { change: Change; bytes: Uint8Array; from: Set<string> };
 
 type HostDoc = {
   doc: A.Doc<unknown>;
-  model: Model;
+  index: CheckIndex;
   subscribers: Map<string, Subscriber>;
   nextSeq: Map<string, number>;
   queue: Queued[];
@@ -52,16 +52,15 @@ export const decodeChange = (bytes: Uint8Array): Change => {
   };
 };
 
-/** Every change's hash in the order a save stores them, packed as a snapshot carries them. */
-const hashesOf = (doc: A.Doc<unknown>): Uint8Array =>
-  packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash));
+/** Every change's hash in the snapshot layout, from Automerge; only a document's first load needs this. */
+const hashesOf = (doc: A.Doc<unknown>): Uint8Array => hashesByActor(A.getChangesMetaSince(doc, []));
 
 const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length && left.every((byte, index) => byte === right[index]);
 
 /**
- * The worker: holds each document in Automerge and in the model, which serves as the index for checking
- * a tab's references. A tab's change is written under the tab's own actor and ids.
+ * The worker: holds each document in Automerge, plus a check index of each op's object, key or element
+ * and kind, for checking a tab's references. A tab's change is written under the tab's own actor and ids.
  */
 export class SpikeHost {
   readonly #docs = new Map<string, HostDoc>();
@@ -75,11 +74,9 @@ export class SpikeHost {
   }
 
   adopt<T>(docId: string, doc: A.Doc<T>): A.Doc<T> {
-    const bytes = saveNoCompress(doc);
-    const model = Model.fromSaved(bytes, hashesOf(doc));
     this.#docs.set(docId, {
       doc,
-      model,
+      index: CheckIndex.fromSaved(saveNoCompress(doc), hashesOf(doc)),
       subscribers: new Map(),
       nextSeq: seqsOf(doc),
       queue: [],
@@ -93,11 +90,6 @@ export class SpikeHost {
   doc<T>(docId: string): A.Doc<T> {
     // The host holds documents of every shape, so only the caller can name this one's.
     return this.#get(docId).doc as A.Doc<T>;
-  }
-
-  /** The host's model of a document, for comparing with Automerge's. */
-  model(docId: string): Model {
-    return this.#get(docId).model;
   }
 
   #get(docId: string): HostDoc {
@@ -115,7 +107,7 @@ export class SpikeHost {
     hostDoc.subscribers.set(tabId, deliver);
     return {
       bytes: saveNoCompress(hostDoc.doc),
-      hashes: hashesOf(hostDoc.doc),
+      hashes: hostDoc.index.snapshotHashes(),
       heads: A.getHeads(hostDoc.doc),
     };
   }
@@ -125,7 +117,7 @@ export class SpikeHost {
     const doc = A.init({ actor: HOST_ACTOR });
     this.#docs.set(docId, {
       doc,
-      model: new Model(),
+      index: new CheckIndex(),
       subscribers: new Map([[tabId, deliver]]),
       nextSeq: new Map(),
       queue: [],
@@ -146,7 +138,7 @@ export class SpikeHost {
     if (change.hash !== claimed.hash) {
       return refuse(`hash ${change.hash} does not match the claimed ${claimed.hash}`);
     }
-    if (hostDoc.model.hasChange(change.hash)) {
+    if (hostDoc.index.hasChange(change.hash)) {
       // A change the host already has, resent or relayed by another tab. It is acknowledged now if
       // already saved, or with the save that covers it.
       const waiting = [...hostDoc.queue, ...hostDoc.unacked].find((entry) => entry.change.hash === change.hash);
@@ -162,34 +154,18 @@ export class SpikeHost {
     if (!sameBytes(encodeChange(change).bytes, bytes)) {
       return refuse('not canonically encoded');
     }
-    if (change.deps.some((dep) => !hostDoc.model.hasChange(dep))) {
+    if (change.deps.some((dep) => !hostDoc.index.hasChange(dep))) {
       return refuse('unknown dependency');
     }
     const expected = hostDoc.nextSeq.get(change.actor) ?? 1;
     if (change.seq !== expected) {
       return refuse(`seq ${change.seq}, expected ${expected}`);
     }
-    const baseClock = hostDoc.model.clockOf(change.deps);
-    const baseMax = Math.max(0, ...baseClock.values());
-    if (change.startOp <= baseMax) {
-      return refuse(`start op ${change.startOp} is not above ${baseMax}`);
+    // Each op is checked against the version the tab edited plus the ops before it.
+    const reason = hostDoc.index.accept(change, hostDoc.index.clockOf(change.deps));
+    if (reason !== undefined) {
+      return refuse(reason);
     }
-
-    // Check each op against the version the tab edited plus the ops before it, applying as it goes.
-    const clock = new Map(baseClock);
-    let applied = 0;
-    try {
-      change.ops.forEach((op, index) => {
-        check(hostDoc.model, op, clock);
-        hostDoc.model.applyOp(formatId([change.startOp + index, change.actor]), op);
-        clock.set(change.actor, change.startOp + index);
-        applied++;
-      });
-    } catch (err) {
-      hostDoc.model.remove([{ ...change, ops: change.ops.slice(0, applied) }]);
-      return refuse(err instanceof Error ? err.message : String(err));
-    }
-    hostDoc.model.registerChange(change);
     hostDoc.nextSeq.set(change.actor, change.seq + 1);
     hostDoc.queue.push({ change, bytes, from: new Set([tabId]) });
   }
@@ -238,9 +214,9 @@ export class SpikeHost {
   applyRemote(docId: string, changes: Uint8Array[]): void {
     const hostDoc = this.#get(docId);
     const fresh = changes.map((bytes) => ({ bytes, change: decodeChange(bytes) }));
-    const unknown = fresh.filter((entry) => !hostDoc.model.hasChange(entry.change.hash));
+    const unknown = fresh.filter((entry) => !hostDoc.index.hasChange(entry.change.hash));
     for (const entry of unknown) {
-      hostDoc.model.applyChange(entry.change);
+      hostDoc.index.applyChange(entry.change);
       hostDoc.nextSeq.set(entry.change.actor, entry.change.seq + 1);
     }
     [hostDoc.doc] = A.applyChanges(
@@ -293,43 +269,4 @@ const seqsOf = (doc: A.Doc<unknown>): Map<string, number> => {
     seqs.set(actor, Math.max(seqs.get(actor) ?? 1, seq + 1));
   }
   return seqs;
-};
-
-/** Refuses an op whose object, element or overwritten values do not match the version it names. */
-const check = (model: Model, op: DecodedOp, clock: Clock): void => {
-  if (!model.hasObject(op.obj, clock)) {
-    throw new Error(`unknown object ${op.obj}`);
-  }
-  const type = model.typeOf(op.obj);
-  const same = (left: string[], right: string[]) =>
-    left.length === right.length && [...left].sort().every((value, index) => value === [...right].sort()[index]);
-  if (type === 'map') {
-    if (op.key === undefined) {
-      throw new Error('map op without a key');
-    }
-    const current = model.currentValueIds(op.obj, op.key, clock);
-    if (!same(current, op.pred)) {
-      throw new Error(`pred ${op.pred} does not match ${current}`);
-    }
-    return;
-  }
-  if (op.elemId === undefined) {
-    throw new Error('sequence op without an element');
-  }
-  if (op.insert) {
-    if (op.elemId !== '_head' && model.elementValueIdsOf(op.obj, op.elemId, clock) === undefined) {
-      throw new Error(`unknown element ${op.elemId}`);
-    }
-    if (op.pred.length > 0) {
-      throw new Error('insert with a pred');
-    }
-    return;
-  }
-  const current = model.elementValueIdsOf(op.obj, op.elemId, clock);
-  if (current === undefined || current.length === 0) {
-    throw new Error(`element ${op.elemId} is not visible`);
-  }
-  if (!same(current, op.pred)) {
-    throw new Error(`pred ${op.pred} does not match ${current}`);
-  }
 };

@@ -3,7 +3,8 @@
 //
 
 // The worker: holds the space in Automerge and takes writes from tabs. A tab document's change is
-// checked to be canonically encoded before Automerge applies it; a replica's change is applied as is.
+// checked to be canonically encoded and against the check index before Automerge applies it; a
+// replica's change is applied as is.
 
 // The probe records wasm memories, so it loads before anything that could instantiate one.
 // eslint-disable-next-line import/order
@@ -11,23 +12,32 @@ import './probe.ts';
 
 import * as A from '@automerge/automerge';
 
+import { hashesByActor } from '../../changes.ts';
+import { CheckIndex } from '../../check-index.ts';
 import { encodeChange } from '../../encode.ts';
 import { decodeChange } from '../../host.ts';
+import { saveNoCompress } from '../../save.ts';
 import { fromBase64 } from './common.ts';
 
 type Request =
-  | { id: number; type: 'load'; docs: string[] }
+  | { id: number; type: 'load'; docs: string[]; check?: boolean }
   | { id: number; type: 'submit'; doc: number; bytes: Uint8Array }
   | { id: number; type: 'apply'; doc: number; bytes: Uint8Array }
   | { id: number; type: 'memory' };
 
 let docs: A.Doc<unknown>[] | undefined;
+let indexes: CheckIndex[] = [];
 
 const handle = (request: Request): { workerMs: number; error?: string; wasm?: number } => {
   const start = performance.now();
   try {
     if (request.type === 'load') {
       docs ??= request.docs.map((bytes) => A.load(fromBase64(bytes)));
+      if (request.check) {
+        indexes = docs.map((doc) =>
+          CheckIndex.fromSaved(saveNoCompress(doc), hashesByActor(A.getChangesMetaSince(doc, []))),
+        );
+      }
     } else if (request.type === 'memory') {
       const wasmBytes: unknown = Reflect.get(globalThis, '__wasmBytes');
       return {
@@ -43,6 +53,11 @@ const handle = (request: Request): { workerMs: number; error?: string; wasm?: nu
           canonical.some((byte, index) => byte !== request.bytes[index])
         ) {
           return { workerMs: performance.now() - start, error: 'not canonically encoded' };
+        }
+        const index = indexes[request.doc];
+        const reason = index?.accept(change, index.clockOf(change.deps));
+        if (reason !== undefined) {
+          return { workerMs: performance.now() - start, error: reason };
         }
       }
       [docs[request.doc]] = A.applyChanges(docs[request.doc], [request.bytes]);

@@ -14,7 +14,7 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
-import { packHashes } from '../../changes.ts';
+import { hashesByActor } from '../../changes.ts';
 import { saveNoCompress } from '../../save.ts';
 import { type DocInput, type Latency, type Measure, median } from './common.ts';
 
@@ -31,7 +31,7 @@ const docs = corpus.docs.map((entry) => A.load(Buffer.from(entry.bytes, 'base64'
 const replicaInput: DocInput[] = corpus.docs.map((entry) => ({ bytes: entry.bytes, hashes: '', heads: [] }));
 const tabInput: DocInput[] = docs.map((doc) => ({
   bytes: Buffer.from(saveNoCompress(doc)).toString('base64'),
-  hashes: Buffer.from(packHashes(A.getAllChanges(doc).map((change) => A.decodeChange(change).hash))).toString('base64'),
+  hashes: Buffer.from(hashesByActor(A.getChangesMetaSince(doc, []))).toString('base64'),
   heads: A.getHeads(doc),
 }));
 const textDoc = corpus.docs.findIndex((entry) => entry.kind === 'document');

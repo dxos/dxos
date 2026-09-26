@@ -30,8 +30,8 @@ export type HostMessage =
   | { type: 'refuse'; hash: string; reason: string };
 
 /**
- * What a tab opens a document from. `hashes` holds each change's hash as 32 bytes, back to back in the
- * saved order; without it, the tab computes them from the bytes.
+ * What a tab opens a document from. `hashes` holds each change's hash in the snapshot layout (see
+ * `hashesByActor`); without it, the tab computes them from the bytes.
  */
 export type Snapshot = { bytes: Uint8Array; hashes?: Uint8Array; heads: string[] };
 
