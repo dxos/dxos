@@ -234,7 +234,12 @@ const ModelsPanel = ({
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
         <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.Item
+              key={id}
+              id={id}
+              classNames='px-2 py-1 dx-focus-ring rounded-xs'
+              data-testid={`assistant.models.${id}`}
+            >
               <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
               <Listbox.Indicator />
             </Listbox.Item>

@@ -57,6 +57,21 @@ export class Assistant {
   }
 
   /**
+   * Selects the chat's model through the options popover's model tab, then closes the popover so the
+   * prompt is reachable again. `model` is the model's full DXN (`dxn:…`), which is the id of its picker row.
+   */
+  async selectModel(model: string): Promise<void> {
+    const page = this.#locator.page();
+    await this.#locator.getByTestId('assistant.options').click();
+    await page.getByTestId('assistant.options.model').click();
+    const option = page.getByTestId(`assistant.models.${model}`);
+    await option.click();
+    await expect(option).toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('assistant.models')).toBeHidden();
+  }
+
+  /**
    * Types a prompt and submits it. `fill` can resolve before CodeMirror's state holds the text, and
    * submission reads that state — so the text is confirmed in the editor before Enter is sent.
    */
