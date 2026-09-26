@@ -8,7 +8,7 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { isNode } from '@dxos/util';
+import { gzip, isNode } from '@dxos/util';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { DXOS_VERSION } from '../../version.ts';
@@ -83,13 +83,13 @@ export type NodeOptions = {
 /** Same-origin route of the web deployment, which proxies the upload to object storage. */
 const DEFAULT_FEEDBACK_LOGS_ENDPOINT = '/api/feedback-logs';
 
-/** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
-const uploadLogs = async (endpoint: string, body: string): Promise<string | undefined> => {
+/** Upload serialized logs, gzipped, to the feedback-logs endpoint. Returns the R2 key on success. */
+const uploadLogs = async (endpoint: string, ndjson: string): Promise<string | undefined> => {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-ndjson' },
-      body,
+      headers: { 'Content-Type': 'application/gzip' },
+      body: await gzip(ndjson),
     });
     if (!response.ok) {
       log.warn('feedback log upload failed', { endpoint, status: response.status });

@@ -59,3 +59,44 @@ describe('asset misses', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
 });
+
+describe('feedback logs', () => {
+  const upload = async (body: string, contentType: string) => {
+    const puts: { key: string; contentType?: string }[] = [];
+    const bucket = {
+      put: async (key: string, _body: ReadableStream, options?: { httpMetadata?: { contentType?: string } }) => {
+        puts.push({ key, contentType: options?.httpMetadata?.contentType });
+      },
+    };
+    const response = await fetch(
+      new Request('https://composer.test/api/feedback-logs', {
+        method: 'POST',
+        headers: {
+          'Origin': 'https://composer.test',
+          'Content-Type': contentType,
+          'Content-Length': String(new TextEncoder().encode(body).byteLength),
+        },
+        body,
+      }),
+      { ...env, FEEDBACK_LOGS: bucket } as unknown as Parameters<typeof fetch>[1],
+      {} as never,
+    );
+    return { response, puts };
+  };
+
+  test('a gzipped upload is stored as .ndjson.gz', async () => {
+    const { response, puts } = await upload('gz', 'application/gzip');
+    expect(response.status).toBe(200);
+    const { key } = await response.json();
+    expect(key).toMatch(/^logs\/\d{4}-\d{2}-\d{2}\/[\w-]+\.ndjson\.gz$/);
+    expect(puts).toEqual([{ key, contentType: 'application/gzip' }]);
+  });
+
+  test('a plain NDJSON upload from an older client is stored as .ndjson', async () => {
+    const { response, puts } = await upload('{}\n', 'application/x-ndjson');
+    expect(response.status).toBe(200);
+    const { key } = await response.json();
+    expect(key).toMatch(/\.ndjson$/);
+    expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
+  });
+});

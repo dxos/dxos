@@ -39,8 +39,13 @@ env | grep -c R2_ACCESS_KEY_ID   # 1 = already available
 curl -sS --aws-sigv4 'aws:amz:auto:s3' \
   --user "$R2_ACCESS_KEY_ID:$R2_SECRET_ACCESS_KEY" \
   "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com/<path-from-issue>" \
-  -o feedback-logs.ndjson
+  -o feedback-logs.ndjson.gz
+gunzip feedback-logs.ndjson.gz
 ```
+
+Current clients upload gzipped NDJSON, so the path ends in `.ndjson.gz`; an older
+native build still uploads plain `.ndjson` — save that one under its own name and
+skip the `gunzip`. `scripts/query-logs.mjs` reads either form directly.
 
 Locally, the credential is `op://Shared/Composer survey logs R2 read-only
 token` — the access key id is the token's id, the secret is the **sha256 of the
