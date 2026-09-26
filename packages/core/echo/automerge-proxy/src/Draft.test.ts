@@ -10,7 +10,7 @@ import * as Draft from './Draft.ts';
 import * as Op from './Op.ts';
 import { type Random, createRandom, initialDocument, randomValue } from './testing/index.ts';
 
-// The same callbacks drive Automerge proxies and mirror drafts with arbitrary shapes, including writes
+// The same callbacks drive Automerge proxies and tab-document drafts with arbitrary shapes, including writes
 // both refuse, which no static type admits.
 type AnyDraft = any;
 

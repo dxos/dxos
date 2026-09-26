@@ -25,7 +25,7 @@ const options = { rawString: (text: string) => new TestRawString(text) };
 /** What the worker transport does to a value: encode as JSON, parse on the other side. */
 const acrossTheWire = (value: unknown) => Wire.decode(JSON.parse(JSON.stringify(Wire.encode(value))), options);
 
-describe('mirror values on the wire', () => {
+describe('copy values on the wire', () => {
   test('plain JSON goes as it is', () => {
     const value = { title: 'a', list: [1, 'two', { three: true, four: null }] };
     expect(Wire.encode(value)).toBe(value);
@@ -97,13 +97,11 @@ describe('mirror values on the wire', () => {
     );
   });
 
-  test('an event crosses the JSON codec the worker transport encodes with', () => {
+  test('a copy crosses the JSON codec the worker transport encodes with', () => {
     const codec = Schema.toCodecJson(Contract.DocumentEvent);
     const event: Contract.DocumentEvent = {
-      type: 'snapshot',
+      type: 'copy',
       documentId: 'document',
-      epoch: 'epoch',
-      version: 1,
       heads: ['head'],
       value: { long: new TestRawString('text'), bytes: new Uint8Array([1, 2]), when: new Date(5) },
     };

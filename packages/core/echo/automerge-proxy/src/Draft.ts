@@ -231,7 +231,7 @@ const compareKeys = (left: string, right: string): number => {
 };
 
 /**
- * Records the edits a change callback makes to a mirrored document as ops.
+ * Records the edits a change callback makes to a tab document as ops.
  *
  * The callback receives a draft that behaves as the draft of `A.change` does: writes Automerge refuses
  * throw synchronously, reads return what Automerge's proxies return, and drafts keep their container
@@ -401,7 +401,7 @@ export class Recorder<T = unknown> {
   }
 
   /**
-   * The mirror form of a value written through a draft, by Automerge's rules: `undefined` anywhere,
+   * The stored form of a value written through a draft, by Automerge's rules: `undefined` anywhere,
    * holes, functions, symbols and values already in this document are refused, class instances become
    * maps of their own fields, and numbers are stored as Automerge reads them back. Objects Automerge
    * would store as lossy maps (a nested Map or function, its number wrappers) are refused too.
@@ -445,7 +445,9 @@ export class Recorder<T = unknown> {
       return value;
     }
     if (isAutomergeWrapper(value)) {
-      throw new TypeError(`Cannot assign an Automerge counter or number wrapper at ${pointer(path)} through a mirror`);
+      throw new TypeError(
+        `Cannot assign an Automerge counter or number wrapper at ${pointer(path)} through a tab document`,
+      );
     }
     if (Array.isArray(value)) {
       const entries: unknown[] = [];
@@ -818,7 +820,7 @@ export class Recorder<T = unknown> {
 /**
  * Records a text edit through a draft. `path` is relative to the draft, which is how ECHO passes the
  * root draft and a full path to `A.splice`.
- * @returns false when `draft` is not a mirror draft, so the caller can use `A.splice`.
+ * @returns false when `draft` is not a tab document's draft, so the caller can use `A.splice`.
  */
 export const splice = (
   draft: unknown,
@@ -831,7 +833,7 @@ export const splice = (
 /**
  * Records the smallest splice turning the text at `path` into `text`. Like `A.updateText`, it throws
  * when `path` does not lead to text, including a RawString.
- * @returns false when `draft` is not a mirror draft, so the caller can use `A.updateText`.
+ * @returns false when `draft` is not a tab document's draft, so the caller can use `A.updateText`.
  */
 export const updateText = (draft: unknown, path: readonly (string | number)[], text: string): boolean =>
   draftState(draft)?.recorder.updateText(draft, path, text) ?? false;

@@ -8,11 +8,11 @@
 
 import { readFileSync } from 'node:fs';
 
+import * as Automerge from '../Automerge.ts';
 import { encodeChange } from './encode.ts';
-import { TabImmutableString } from './immutable-string.ts';
-import { asTab, spikeOverrides } from './namespace.ts';
 import { readChange } from './reader.ts';
 import { TabDoc } from './tab-doc.ts';
+import { TabImmutableString } from './values.ts';
 
 type Input = { saved: string; changes: string[] };
 
@@ -39,26 +39,22 @@ if (!isInput(parsed)) {
   throw new Error('Unexpected input');
 }
 
-// Nothing behind the namespace: a call the model does not answer throws.
-const A = spikeOverrides((name) => {
-  throw new Error(`The tab reached Automerge: ${name}`);
-});
-
-const output = asTab(() => {
+// Nothing is registered behind the namespace, so a call the model does not answer throws.
+const output = (() => {
   const tab = TabDoc.load<Shape>(fromBase64(parsed.saved), {});
   const loadedHeads = tab.heads();
   tab.applyChanges(parsed.changes.map((text) => readChange(fromBase64(text))));
   const before = tab.heads();
   const known = new Set(tab.changesIn(before).map((change) => change.hash));
   tab.change((draft) => {
-    A.splice(draft, ['content'], 0, 0, 'Tab: ');
+    Automerge.splice(draft, ['content'], 0, 0, 'Tab: ');
     draft.title = new TabImmutableString('from the tab');
     draft.items.push({ name: new TabImmutableString('x'), n: 1 });
     draft.blob = new Uint8Array([1, 2, 3]);
     draft.meta = { keys: [new TabImmutableString('k')], at: new Date(5_000) };
   });
   const doc = tab.doc();
-  const saved = A.save(doc);
+  const saved = Automerge.save(doc);
   if (!(saved instanceof Uint8Array)) {
     throw new Error('save gave no bytes');
   }
@@ -71,10 +67,10 @@ const output = asTab(() => {
       .changesIn(tab.heads())
       .filter((change) => !known.has(change.hash))
       .map((change) => toBase64(encodeChange(change).bytes)),
-    cursor: A.getCursor(doc, ['content'], 3),
-    diff: A.diff(doc, before, tab.heads()),
+    cursor: Automerge.getCursor(doc, ['content'], 3),
+    diff: Automerge.diff(doc, before, tab.heads()),
     saved: toBase64(saved),
   };
-});
+})();
 
 process.stdout.write(JSON.stringify(output));

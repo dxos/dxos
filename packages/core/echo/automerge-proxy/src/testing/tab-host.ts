@@ -102,9 +102,6 @@ export class MemoryTabHost {
   submit(docId: string, tabId: string, claimed: Change, bytes: Uint8Array): void {
     const hostDoc = this.#get(docId);
     const refuse = (reason: string) => hostDoc.subscribers.get(tabId)?.({ type: 'refuse', hash: claimed.hash, reason });
-    if (this.refuseWhen?.(claimed)) {
-      return refuse('refused by the test');
-    }
     // Validate what the bytes say, not what the tab claims about them.
     const change = decodeChange(bytes);
     if (change.hash !== claimed.hash) {
@@ -120,6 +117,10 @@ export class MemoryTabHost {
         hostDoc.subscribers.get(tabId)?.({ type: 'ack', hash: change.hash });
       }
       return;
+    }
+    // A change the host holds is never refused, as the real host checks only what it lacks.
+    if (this.refuseWhen?.(claimed)) {
+      return refuse('refused by the test');
     }
     // Automerge indexes a change under the hash of the bytes it was given but exports it re-encoded,
     // so bytes that are not canonical would leave heads no other peer can ever reach.

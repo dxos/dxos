@@ -7,19 +7,19 @@
 import { InvalidOpError } from './errors.ts';
 
 /**
- * Path to a value inside a mirrored document: map keys are strings, list positions are numbers.
+ * Path to a value inside a document's JSON value: map keys are strings, list positions are numbers.
  */
 export type Path = readonly (string | number)[];
 
 /**
- * An edit to a mirrored document, expressed against the exact state it applies to.
+ * An edit to a document's JSON value, expressed against the exact state it applies to.
  *
- * Tabs record these instead of Automerge changes; the worker applies them to the Automerge document
- * and converts the patches of changes it merges from elsewhere back into them.
+ * A draft records these as a change callback writes; the tab document encodes them as one Automerge
+ * change and applies them to its cached value.
  */
 export type Any = Put | Del | Insert | Remove | Splice;
 
-/** The ops of one `change()` call: the unit the worker writes whole or refuses. */
+/** The ops of one `change()` call, which the tab document encodes as one Automerge change. */
 export type Change = readonly Any[];
 
 /** Sets a map key or replaces a list element. A string value becomes a new text object. */
@@ -45,7 +45,7 @@ export type Splice = {
 
 /**
  * Change notification in Automerge's patch format, so consumers written against Automerge patches
- * (document-change routing, store adapters) read mirror changes unchanged.
+ * (document-change routing, store adapters) read a tab document's changes unchanged.
  */
 export type Patch =
   | { action: 'put'; path: (string | number)[]; value: unknown }
@@ -385,7 +385,7 @@ export const is = (value: unknown): value is Any => {
   }
 };
 
-/** Structural equality of two mirror values; leaves such as RawString compare by class and text. */
+/** Structural equality of two JSON values; leaves such as RawString compare by class and text. */
 export const equals = (left: unknown, right: unknown): boolean => {
   if (left === right || Object.is(left, right)) {
     return true;

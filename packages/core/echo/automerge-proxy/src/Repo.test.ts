@@ -3,481 +3,300 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import * as fc from 'fast-check';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 
-import { invariant } from '@dxos/invariant';
+import { waitForCondition } from '@dxos/async';
 
-import * as AutomergeOps from './AutomergeOps.ts';
+import * as Automerge from './Automerge.ts';
 import type * as Contract from './Contract.ts';
-import * as Draft from './Draft.ts';
 import * as Handle from './Handle.ts';
 import * as Host from './Host.ts';
-import * as Op from './Op.ts';
+import { encodeChange } from './internal/encode.ts';
 import * as Repo from './Repo.ts';
-import { MemoryStore, type Random, Transport, createRandom, initialDocument, randomOp } from './testing/index.ts';
+import { MemoryStore, Transport, canon, createRandom, seeded } from './testing/index.ts';
 
-type Doc = Record<string, unknown>;
+type Shape = { title: string; content: string; items: { name: string }[] };
 
-/**
- * Clients with repos over their own transports to one host, which a test can restart over the same
- * store as a worker restart would.
- */
-const setup = async (clients: number, random: Random) => {
-  const store = new MemoryStore();
-  let host = await new Host.DocumentHost({ store }).open();
-  /** While set, a quarter of the host's responses are lost, so clients resend what the host already applied. */
-  const network = { lossy: false };
-  const transports = Array.from(
-    { length: clients },
-    () => new Transport({ host: () => host, random: random.next, lose: () => network.lossy && random.chance(0.25) }),
-  );
-  const repos = transports.map(
-    (transport) =>
-      new Repo.ProxyRepo({
-        host: transport,
-        createHandle: (options) => new Handle.DocHandle(options),
-        // Many small batches rather than a few large ones, and quick resubscribing, so races happen often.
-        maxSubmitRate: 1_000,
-        resubscribeDelay: 5,
-      }),
-  );
-  await Promise.all(repos.map((repo) => repo.open()));
-  const refused: Repo.EditsRejectedEvent[] = [];
-  repos.forEach((repo) => repo.editsRejected.on((event) => void refused.push(event)));
-  const close = async () => {
-    await Promise.all(repos.map((repo) => repo.close()));
-    await host.close();
-  };
+const initial = (): Shape => ({ title: 'doc', content: 'hello', items: [] });
 
-  /** A new host over the same store; every client resubscribes from what it holds. */
-  const restart = async () => {
-    await host.close();
-    host = await new Host.DocumentHost({ store }).open();
-    transports.forEach((transport) => transport.drop());
-    await Promise.all(repos.map((repo) => repo.reconnect()));
-  };
+/** Every document in these tests has one shape, so the harness's repos hand out handles typed with it. */
+type ShapeRepo = Repo.TabRepo<string, Handle.DocHandle<Shape>>;
 
-  /** Waits until every client's edits are confirmed and every client holds what the host holds. */
-  const settle = async (documentId: string) => {
-    network.lossy = false;
-    for (let attempt = 0; ; attempt++) {
-      try {
-        await Promise.all(repos.map((repo) => repo.flush()));
-        break;
-      } catch (err) {
-        // A call that raced a restart or lost its response fails the flush waiting on it; the repo sends it again.
-        if (attempt >= 5) {
-          throw err;
-        }
+/** JSON with object keys sorted: Automerge orders a map's keys, and a tab's own writes keep theirs. */
+const withoutMeta = (value: unknown): string => canon(value);
+
+/** A host over a memory store, and tabs that reach it through transports it can drop, as a restart does. */
+class Harness {
+  readonly store = new MemoryStore();
+  readonly transports: Transport[] = [];
+  readonly repos: ShapeRepo[] = [];
+  readonly pageEvents: EventTarget[] = [];
+  host: Host.DocumentHost;
+  readonly #random = createRandom(7);
+
+  constructor() {
+    this.host = new Host.DocumentHost({ store: this.store });
+  }
+
+  async open(): Promise<void> {
+    await this.host.open();
+  }
+
+  async tab(): Promise<ShapeRepo> {
+    const transport = new Transport({ host: () => this.host, random: () => this.#random.next(), maxDelay: 2 });
+    const pageEvents = new EventTarget();
+    const repo = new Repo.TabRepo({
+      host: transport,
+      createHandle: (options) => new Handle.DocHandle<Shape>(options),
+      pageEvents,
+      resubscribeDelay: 5,
+    });
+    await repo.open();
+    this.transports.push(transport);
+    this.repos.push(repo);
+    this.pageEvents.push(pageEvents);
+    return repo;
+  }
+
+  /** Replaces the host with a new one over what the store saved, and drops every stream. */
+  async restart(): Promise<void> {
+    await this.host.close();
+    this.store.restart();
+    this.host = new Host.DocumentHost({ store: this.store });
+    await this.host.open();
+    this.transports.forEach((transport) => transport.drop());
+  }
+
+  async close(): Promise<void> {
+    await Promise.all(this.repos.map((repo) => repo.close()));
+    await this.host.close();
+  }
+}
+
+let harness: Harness | undefined;
+
+afterEach(async () => {
+  await harness?.close();
+  harness = undefined;
+});
+
+const setup = async (): Promise<Harness> => {
+  harness = new Harness();
+  await harness.open();
+  return harness;
+};
+
+describe('tab documents over the host', () => {
+  test('a tab opens a stored document, writes, and the host holds the same history once it acknowledges', async () => {
+    const harness = await setup();
+    const { store } = harness;
+    store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab();
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    expect(withoutMeta(handle.doc())).toBe(withoutMeta(A.toJS(store.get('doc'))));
+    expect(handle.heads).toEqual(A.getHeads(store.get('doc')));
+
+    handle.change((doc: Shape) => {
+      doc.title = 'changed';
+      Automerge.splice(doc, ['content'], 5, 0, ' world');
+    });
+    // Heads are final the moment the tab writes.
+    const heads = handle.heads;
+    expect(handle.hasPending).toBe(true);
+    await repo.flush();
+    expect(handle.hasPending).toBe(false);
+    expect(A.getHeads(store.get('doc'))).toEqual(heads);
+    expect(withoutMeta(A.toJS(store.get('doc')))).toBe(withoutMeta(handle.doc()));
+  });
+
+  test("another tab receives a tab's changes and both end with the host's heads", async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const [first, second] = [await harness.tab(), await harness.tab()];
+    const left = first.find('doc');
+    const right = second.find('doc');
+    await Promise.all([left.whenReady(), right.whenReady()]);
+
+    for (let i = 0; i < 20; i++) {
+      const writer = i % 2 === 0 ? left : right;
+      writer.change((doc: Shape) => {
+        doc.items.push({ name: `item ${i}` });
+      });
+    }
+    await Promise.all([first.flush(), second.flush()]);
+    await waitForCondition({
+      condition: () => left.heads.join() === right.heads.join(),
+      timeout: 5_000,
+    });
+    expect(left.heads).toEqual(A.getHeads(harness.store.get('doc')));
+    expect(withoutMeta(left.doc())).toBe(withoutMeta(right.doc()));
+    expect(left.doc().items).toHaveLength(20);
+  });
+
+  test('a tab creates a document from its own first change, which the host holds unaltered', async () => {
+    const harness = await setup();
+    const repo = await harness.tab();
+    const handle = repo.create(initial());
+    // Readable and writable before the host names it.
+    expect(handle.doc().title).toBe('doc');
+    handle.change((doc: Shape) => {
+      doc.items.push({ name: 'early' });
+    });
+    await repo.flushCreations();
+    await repo.flush();
+    const documentId = handle.documentId;
+    expect(documentId).toBeDefined();
+    if (!documentId) {
+      return;
+    }
+    const stored = harness.store.get<Shape>(documentId);
+    expect(A.getHeads(stored)).toEqual(handle.heads);
+    // One history, so the early write is not hidden behind a concurrent initial change.
+    expect(A.getAllChanges(stored)).toHaveLength(2);
+    expect(A.toJS(stored).items).toEqual([{ name: 'early' }]);
+
+    const other = await harness.tab();
+    const opened = other.find(documentId);
+    await opened.whenReady();
+    expect(withoutMeta(opened.doc())).toBe(withoutMeta(handle.doc()));
+  });
+
+  test("a peer's change that reaches the host's store reaches every follower", async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab();
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    let peer = A.clone(harness.store.get<Shape>('doc'));
+    peer = A.change(peer, (doc: Shape) => {
+      doc.title = 'from a peer';
+    });
+    harness.store.merge('doc', peer);
+    await waitForCondition({ condition: () => handle.doc().title === 'from a peer', timeout: 5_000 });
+    expect(handle.heads).toEqual(A.getHeads(harness.store.get('doc')));
+  });
+
+  test('the host refuses a change whose bytes do not match its claimed hash, and a flush fails on it', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const subscriptionId = 'subscription';
+    const events: Contract.DocumentEvent[] = [];
+    harness.host.subscribe({ subscriptionId, clientId: 'client' }, { onEvents: (batch) => events.push(...batch) });
+    await harness.host.updateSubscription({ subscriptionId, add: [{ documentId: 'doc' }] });
+    await waitForCondition({ condition: () => events.some((event) => event.type === 'snapshot') });
+    const tab = A.clone(harness.store.get<Shape>('doc'));
+    const changed = A.change(tab, (doc: Shape) => {
+      doc.title = 'x';
+    });
+    const bytes = A.getLastLocalChange(changed);
+    expect(bytes).toBeDefined();
+    if (!bytes) {
+      return;
+    }
+    const [result] = await harness.host.submit({
+      subscriptionId,
+      batches: [{ documentId: 'doc', changes: [{ hash: '00'.repeat(32), bytes }] }],
+    });
+    expect(result.status).toBe('accepted');
+    expect(events).toContainEqual(expect.objectContaining({ type: 'refuse', hash: '00'.repeat(32) }));
+  });
+
+  test('a restarted host loses nothing a tab holds: every tab sends back what the host lacks', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const [first, second] = [await harness.tab(), await harness.tab()];
+    const left = first.find('doc');
+    const right = second.find('doc');
+    await Promise.all([left.whenReady(), right.whenReady()]);
+    left.change((doc: Shape) => {
+      doc.items.push({ name: 'saved' });
+    });
+    await first.flush();
+    await waitForCondition({ condition: () => right.heads.join() === left.heads.join(), timeout: 5_000 });
+
+    // The next save fails, so the host restarts without this change; both tabs hold it.
+    harness.store.failSaves = 1;
+    left.change((doc: Shape) => {
+      doc.items.push({ name: 'unsaved' });
+    });
+    await waitForCondition({ condition: () => right.heads.join() === left.heads.join(), timeout: 5_000 });
+    await harness.restart();
+    right.change((doc: Shape) => {
+      doc.title = 'after the restart';
+    });
+    await Promise.all([first.flush(), second.flush()]);
+    await waitForCondition({
+      condition: () =>
+        left.heads.join() === right.heads.join() && A.getHeads(harness.store.get('doc')).join() === left.heads.join(),
+      timeout: 5_000,
+    });
+    const stored = A.toJS(harness.store.get<Shape>('doc'));
+    expect(stored.items.map(({ name }) => name)).toEqual(['saved', 'unsaved']);
+    expect(stored.title).toBe('after the restart');
+  });
+
+  test('pagehide sends what is queued without waiting for the next send slot', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab();
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    for (let i = 0; i < 5; i++) {
+      handle.change((doc: Shape) => {
+        doc.title = `write ${i}`;
+      });
+    }
+    harness.pageEvents[0].dispatchEvent(new Event('pagehide'));
+    await waitForCondition({
+      condition: () => A.getHeads(harness.store.get('doc')).join() === handle.heads.join(),
+      timeout: 5_000,
+    });
+  });
+
+  test('changes written with random interleavings from several tabs converge with the host', async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repos = [await harness.tab(), await harness.tab(), await harness.tab()];
+    const handles = repos.map((repo) => repo.find('doc'));
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+    const { pick } = seeded(3);
+    for (let step = 0; step < 60; step++) {
+      const handle = handles[pick(handles.length)];
+      handle.change((doc: Shape) => {
+        const text = doc.content;
+        Automerge.splice(doc, ['content'], pick(text.length + 1), 0, String(step % 10));
+      });
+      if (step % 7 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, pick(5)));
       }
     }
-    await Promise.all(repos.map((repo) => repo.catchUp(documentId)));
-  };
-
-  return { store, repos, network, refused, restart, settle, close };
-};
-
-/** Writes an op through a change callback's draft, as application code would. */
-const applyToDraft = (draft: Doc, op: Op.Any): void => {
-  if (op.type === 'splice') {
-    Draft.splice(draft, op.path, op.index, op.remove, op.insert);
-    return;
-  }
-  const parent = Op.getAt(draft, op.path.slice(0, -1));
-  const key = op.path[op.path.length - 1];
-  if (Array.isArray(parent)) {
-    const index = Number(key);
-    switch (op.type) {
-      case 'put':
-        parent[index] = op.value;
-        return;
-      case 'insert':
-        parent.splice(index, 0, ...op.values);
-        return;
-      case 'remove':
-        parent.splice(index, op.count);
-        return;
-    }
-  }
-  invariant(Op.isContainer(parent) && !Array.isArray(parent), `No map at ${JSON.stringify(op.path)}`);
-  switch (op.type) {
-    case 'put':
-      parent[String(key)] = op.value;
-      return;
-    case 'del':
-      delete parent[String(key)];
-      return;
-  }
-  throw new Error(`Cannot apply ${op.type} to a map`);
-};
-
-/** Copies from a map, standing in for an index. */
-const copySourceOf = (index: ReadonlyMap<string, Contract.Copy>): Host.CopySource => ({
-  read: async (documentIds) =>
-    new Map(
-      documentIds.flatMap((documentId): [string, Contract.Copy][] => {
-        const copy = index.get(documentId);
-        return copy ? [[documentId, copy]] : [];
-      }),
-    ),
-});
-
-/** A transport's calls as a plain host, so a test can replace one of them. */
-const methodsOf = (transport: Transport): Repo.Host => ({
-  subscribe: (request, handlers) => transport.subscribe(request, handlers),
-  updateSubscription: (request) => transport.updateSubscription(request),
-  submit: (request) => transport.submit(request),
-  createDocument: (initialValue) => transport.createDocument(initialValue),
-  flush: (documentIds) => transport.flush(documentIds),
-  resolveCursors: (request) => transport.resolveCursors(request),
-  createCursors: (request) => transport.createCursors(request),
-});
-
-/** Opens the same document in every repo once the first has created it. */
-const share = async (repos: Repo.ProxyRepo[], value: Doc) => {
-  const created = repos[0].create(value);
-  await created.whenReady();
-  const { documentId } = created;
-  invariant(documentId, 'a ready handle names its document');
-  const handles = [created, ...repos.slice(1).map((repo) => repo.find(documentId))];
-  await Promise.all(handles.map((handle) => handle.whenReady()));
-  return { documentId, handles };
-};
-
-describe('Repo.ProxyRepo with Host.DocumentHost', () => {
-  test('a document one client creates reaches another with its edits', async () => {
-    const { close, repos } = await setup(2, createRandom(1));
-    onTestFinished(close);
-    const { handles } = await share(repos, { title: 'draft', items: [] });
-    handles[0].change((doc) => {
-      doc.title = 'final';
-      doc.items.push('one');
-    });
-    await repos[0].flush();
-    await expect.poll(() => handles[1].doc()).toEqual({ title: 'final', items: ['one'] });
-  });
-
-  test('concurrent text edits from two clients converge with the host', async () => {
-    const { close, repos, store, settle, refused } = await setup(2, createRandom(2));
-    onTestFinished(close);
-    const { documentId, handles } = await share(repos, { text: 'hello world' });
-    handles[0].change((doc) => Draft.splice(doc, ['text'], 5, 0, ' there'));
-    handles[1].change((doc) => Draft.splice(doc, ['text'], 11, 0, '!'));
-    await settle(documentId);
-    const expected = AutomergeOps.toValue(store.get(documentId));
-    expect(expected).toEqual({ text: 'hello there world!' });
-    handles.forEach((handle) => expect(handle.doc()).toEqual(expected));
-    expect(refused).toEqual([]);
-  });
-
-  test('a restart in the middle of editing loses and doubles nothing', async () => {
-    const { close, repos, store, restart, settle, refused } = await setup(2, createRandom(3));
-    onTestFinished(close);
-    const { documentId, handles } = await share(repos, { list: [] });
-    for (let index = 0; index < 5; index++) {
-      handles[index % 2].change((doc) => doc.list.push(`item ${index}`));
-    }
-    await restart();
-    for (let index = 5; index < 10; index++) {
-      handles[index % 2].change((doc) => doc.list.push(`item ${index}`));
-    }
-    await settle(documentId);
-    const list = AutomergeOps.toValue(store.get(documentId));
-    handles.forEach((handle) => expect(handle.doc()).toEqual(list));
-    expect(Op.getAt(list, ['list'])).toHaveLength(10);
-    expect(refused).toEqual([]);
-  });
-
-  test('cursors made on one client resolve on another', async () => {
-    const { close, repos, settle } = await setup(2, createRandom(4));
-    onTestFinished(close);
-    const { documentId, handles } = await share(repos, { text: 'abcdef' });
-    const [cursor] = await repos[0].cursors(documentId, ['text']).create([3]);
-    invariant(cursor, 'no cursor');
-    handles[0].change((doc) => Draft.splice(doc, ['text'], 0, 0, 'XY'));
-    await settle(documentId);
-    const tracker = repos[1].cursors(documentId, ['text']);
-    await tracker.track([cursor]);
-    expect(tracker.position(cursor)).toBe(5);
-  });
-
-  test('a subscription request held past a reconnect is not answered on the new stream', async () => {
-    const store = new MemoryStore();
-    const host = await new Host.DocumentHost({ store }).open();
-    const transport = new Transport({ host: () => host, random: createRandom(5).next });
-    // Holds `updateSubscription` calls while armed, releasing them in whatever order the test picks.
-    const held: { armed: boolean; releases: (() => void)[] } = { armed: false, releases: [] };
-    const gated: Repo.Host = {
-      subscribe: (request, handlers) => transport.subscribe(request, handlers),
-      updateSubscription: async (request) => {
-        if (held.armed) {
-          await new Promise<void>((resolve) => held.releases.push(resolve));
-        }
-        await transport.updateSubscription(request);
+    await Promise.all(repos.map((repo) => repo.flush()));
+    await waitForCondition({
+      condition: () => {
+        const heads = A.getHeads(harness.store.get('doc')).join();
+        return handles.every((handle) => handle.heads.join() === heads);
       },
-      submit: (request) => transport.submit(request),
-      createDocument: (initialValue) => transport.createDocument(initialValue),
-      flush: (documentIds) => transport.flush(documentIds),
-      resolveCursors: (request) => transport.resolveCursors(request),
-      createCursors: (request) => transport.createCursors(request),
-    };
-    const repo = await new Repo.ProxyRepo({
-      host: gated,
-      createHandle: (options) => new Handle.DocHandle(options),
-    }).open();
-    onTestFinished(async () => {
-      await repo.close();
-      await host.close();
+      timeout: 10_000,
     });
-    const { documentId, handles } = await share([repo], { list: [] });
-
-    // A catch-up whose request, made before the remote insert, is still on its way.
-    held.armed = true;
-    void repo.catchUp(documentId).catch(() => {});
-    await expect.poll(() => held.releases.length).toBe(1);
-    store.merge(
-      documentId,
-      A.change(A.clone(store.get(documentId)), (draft) => {
-        AutomergeOps.applyOps(draft, [{ type: 'insert', path: ['list', 0], values: ['r'] }]);
-      }),
-    );
-    await expect.poll(() => handles[0].doc()).toEqual({ list: ['r'] });
-
-    // The new stream's own request waits too, so the old one reaches the host first.
-    void repo.reconnect();
-    await expect.poll(() => held.releases.length).toBe(2);
-    held.armed = false;
-    const [stale, fresh] = held.releases;
-    stale();
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    fresh();
-    await repo.catchUp(documentId);
-    expect(handles[0].doc()).toEqual({ list: ['r'] });
-    expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ list: ['r'] });
+    const content = A.toJS(harness.store.get<Shape>('doc')).content;
+    expect(handles.every((handle) => handle.doc().content === content)).toBe(true);
+    expect(content).toHaveLength('hello'.length + 60);
   });
 
-  test('a document found with a copy the caller holds shows it before the host answers, then follows the host', async () => {
-    const store = new MemoryStore();
-    /** The copies the host serves, standing in for an index. */
-    const index = new Map<string, Contract.Copy>();
-    const indexDocument = (documentId: string) =>
-      index.set(documentId, {
-        heads: A.getHeads(store.get(documentId)),
-        value: AutomergeOps.toValue(store.get(documentId)),
-      });
-    const host = await new Host.DocumentHost({
-      store,
-      copies: copySourceOf(index),
-    }).open();
-    const random = createRandom(7);
-    const writer = await new Repo.ProxyRepo({
-      host: new Transport({ host: () => host, random: random.next }),
-      createHandle: (options) => new Handle.DocHandle(options),
-    }).open();
-    const transport = new Transport({ host: () => host, random: random.next });
-    // Holds the reader's follow requests until the test opens the gate.
-    const gate = { open: false, held: [] as (() => void)[] };
-    const reader = await new Repo.ProxyRepo({
-      host: {
-        ...methodsOf(transport),
-        updateSubscription: async (request) => {
-          if (!gate.open) {
-            await new Promise<void>((resolve) => gate.held.push(resolve));
-          }
-          await transport.updateSubscription(request);
-        },
-      },
-      createHandle: (options) => new Handle.DocHandle(options),
-    }).open();
-    onTestFinished(async () => {
-      await Promise.all([writer.close(), reader.close()]);
-      await host.close();
+  test("a tab's change encodes to the bytes Automerge stores under its hash", async () => {
+    const harness = await setup();
+    harness.store.put('doc', A.from<Shape>(initial()));
+    const repo = await harness.tab();
+    const handle = repo.find('doc');
+    await handle.whenReady();
+    handle.change((doc: Shape) => {
+      doc.title = 'bytes';
     });
-    const { documentId } = await share([writer], { list: ['a'] });
-    await writer.flush({ storage: true });
-    indexDocument(documentId);
-    const copy = index.get(documentId);
-    invariant(copy, 'indexed');
-
-    const handle = reader.find(documentId, { followCopy: true, copy });
-    expect(handle.isReady()).toBe(true);
-    expect(handle.isCopy).toBe(true);
-    expect(handle.doc()).toEqual({ list: ['a'] });
-
-    // The host answers the follow with the copy the handle already shows, which changes nothing.
-    let changes = 0;
-    handle.on('change', () => changes++);
-    await expect.poll(() => gate.held.length).toBe(1);
-    gate.open = true;
-    gate.held.splice(0).forEach((release) => release());
-    await reader.catchUp(documentId);
-    expect(changes).toBe(0);
-
-    // A newer copy reaches it, as after an index pass.
-    const written = writer.find(documentId);
-    written.change((doc: Doc) => {
-      (doc.list as string[]).push('b');
-    });
-    await writer.flush({ storage: true });
-    indexDocument(documentId);
-    host.copiesChanged(new Set([documentId]));
-    await expect.poll(() => handle.doc()).toEqual({ list: ['a', 'b'] });
-
-    // Its first write follows the live document, and the host applies it once.
-    handle.change((doc: Doc) => {
-      (doc.list as string[]).push('c');
-    });
-    await reader.flush();
-    expect(AutomergeOps.toValue(store.get(documentId))).toEqual({ list: ['a', 'b', 'c'] });
-    expect(handle.isCopy).toBe(false);
+    await repo.flush();
+    const [hash] = handle.heads;
+    const change = handle.tab.model.changeOf(hash);
+    const stored = A.getAllChanges(harness.store.get('doc')).find((bytes) => A.decodeChange(bytes).hash === hash);
+    expect(stored).toEqual(encodeChange(change).bytes);
   });
-
-  const Step = fc.oneof(
-    fc.record({ kind: fc.constant('edit' as const), client: fc.nat(), seed: fc.nat() }),
-    fc.record({ kind: fc.constant('remote' as const), seed: fc.nat(), sync: fc.boolean() }),
-    fc.record({ kind: fc.constant('pause' as const), ms: fc.integer({ min: 0, max: 5 }) }),
-    fc.record({ kind: fc.constant('restart' as const) }),
-  );
-
-  // The timeout leaves room for fast-check to shrink a failure, which replays many runs.
-  test('clients, a remote peer, lost responses and host restarts converge with the host', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 3 }),
-        fc.array(Step, { minLength: 10, maxLength: 60 }),
-        fc.nat(),
-        fc.boolean(),
-        async (clients, steps, seed, lossy) => {
-          const { repos, store, network, restart, settle, refused, close } = await setup(clients, createRandom(seed));
-          try {
-            const { documentId, handles } = await share(repos, initialDocument());
-            network.lossy = lossy;
-            // A peer with its own replica, merged into the host's store as network sync would.
-            let remote = A.clone(store.get(documentId));
-            for (const step of steps) {
-              switch (step.kind) {
-                case 'edit': {
-                  const handle = handles[step.client % clients];
-                  const op = randomOp(createRandom(step.seed), handle.doc(), `c${step.client % clients}:`);
-                  if (op) {
-                    handle.change((doc) => applyToDraft(doc, op));
-                  }
-                  break;
-                }
-                case 'remote': {
-                  if (step.sync) {
-                    remote = A.merge(remote, store.get(documentId));
-                  }
-                  const op = randomOp(createRandom(step.seed), AutomergeOps.toValue(remote), 'r:');
-                  if (op) {
-                    remote = A.change(remote, (draft) => {
-                      AutomergeOps.applyOps(draft, [op]);
-                    });
-                    store.merge(documentId, remote);
-                  }
-                  break;
-                }
-                case 'pause':
-                  await new Promise((resolve) => setTimeout(resolve, step.ms));
-                  break;
-                case 'restart':
-                  await restart();
-                  break;
-              }
-            }
-            await settle(documentId);
-            const expected = AutomergeOps.toValue(store.get(documentId));
-            handles.forEach((handle) => expect(handle.doc()).toEqual(expected));
-            expect(refused).toEqual([]);
-          } finally {
-            await close();
-          }
-        },
-      ),
-      { numRuns: 25 },
-    );
-  }, 120_000);
-
-  const AppendStep = fc.oneof(
-    fc.record({ kind: fc.constant('push' as const), client: fc.nat() }),
-    fc.record({ kind: fc.constant('type' as const), client: fc.nat(), at: fc.nat() }),
-    fc.record({ kind: fc.constant('remote' as const), sync: fc.boolean() }),
-    fc.record({ kind: fc.constant('pause' as const), ms: fc.integer({ min: 0, max: 5 }) }),
-    fc.record({ kind: fc.constant('restart' as const) }),
-  );
-
-  test('every edit lands exactly once through lost responses and host restarts', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 3 }),
-        fc.array(AppendStep, { minLength: 10, maxLength: 60 }),
-        fc.nat(),
-        async (clients, steps, seed) => {
-          const { repos, store, network, restart, settle, refused, close } = await setup(clients, createRandom(seed));
-          try {
-            const { documentId, handles } = await share(repos, { list: [], text: '' });
-            network.lossy = true;
-            let remote = A.clone(store.get(documentId));
-            // Every token is unique, and edits only add, so each must appear exactly once at the end.
-            const tokens: string[] = [];
-            const texts: string[] = [];
-            for (const step of steps) {
-              switch (step.kind) {
-                case 'push': {
-                  const token = `c${step.client % clients}-${tokens.length}`;
-                  tokens.push(token);
-                  handles[step.client % clients].change((doc) => doc.list.push(token));
-                  break;
-                }
-                case 'type': {
-                  const handle = handles[step.client % clients];
-                  const token = `<${step.client % clients}.${texts.length}>`;
-                  texts.push(token);
-                  // Between tokens, so a later insertion cannot split an earlier token.
-                  const boundaries = [
-                    0,
-                    ...[...handle.doc().text.matchAll(/>/g)].map((match) => (match.index ?? 0) + 1),
-                  ];
-                  const at = boundaries[step.at % boundaries.length];
-                  handle.change((doc) => Draft.splice(doc, ['text'], at, 0, token));
-                  break;
-                }
-                case 'remote': {
-                  if (step.sync) {
-                    remote = A.merge(remote, store.get(documentId));
-                  }
-                  const token = `r-${tokens.length}`;
-                  tokens.push(token);
-                  remote = A.change(remote, (draft) => {
-                    AutomergeOps.applyOps(draft, [{ type: 'insert', path: ['list', 0], values: [token] }]);
-                  });
-                  store.merge(documentId, remote);
-                  break;
-                }
-                case 'pause':
-                  await new Promise((resolve) => setTimeout(resolve, step.ms));
-                  break;
-                case 'restart':
-                  await restart();
-                  break;
-              }
-            }
-            await settle(documentId);
-            const expected = AutomergeOps.toValue(store.get(documentId));
-            handles.forEach((handle) => expect(handle.doc()).toEqual(expected));
-            const list = Op.getAt(expected, ['list']);
-            const text = Op.getAt(expected, ['text']);
-            invariant(Array.isArray(list) && typeof text === 'string', 'the document lost its shape');
-            expect([...list].sort()).toEqual([...tokens].sort());
-            expect(text.match(/<[^>]*>/g)?.sort() ?? []).toEqual([...texts].sort());
-            expect(refused).toEqual([]);
-          } finally {
-            await close();
-          }
-        },
-      ),
-      { numRuns: 25 },
-    );
-  }, 120_000);
 });

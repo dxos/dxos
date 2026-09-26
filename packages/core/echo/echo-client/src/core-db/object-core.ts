@@ -777,8 +777,7 @@ export class ObjectCore {
    */
   getUpdatedAt(): number | undefined {
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
-    // A mirror has no change metadata; the worker would have to send the time with each entry.
-    if (!doc || A.isProxy(doc)) {
+    if (!doc) {
       return undefined;
     }
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as A from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import {
   type AutomergeUrl,
   type DocHandle,
@@ -123,6 +123,11 @@ export class DocumentLease<T = any> implements Disposable {
   /** Mutates the document; the change is saved and synced by the repo's own listeners. */
   change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
     this.#handle.change(callback, options);
+  }
+
+  /** Applies change chunks, as `A.applyChanges` does; the repo saves and syncs them like any change. */
+  applyChanges(changes: readonly Uint8Array[]): void {
+    this.#handle.update((doc) => A.applyChanges(doc, [...changes])[0]);
   }
 
   /** Mutates the document as of `heads`, returning the resulting heads, or undefined if none applied. */

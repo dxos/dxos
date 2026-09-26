@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A, type Doc, type Heads } from '@automerge/automerge';
+import { type Doc, type Heads } from '@automerge/automerge';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { EncodedReference, EntityStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';

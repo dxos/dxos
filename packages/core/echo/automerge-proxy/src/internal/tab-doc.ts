@@ -6,9 +6,9 @@ import * as Draft from '../Draft.ts';
 import * as Op from '../Op.ts';
 import { encodeChange, sortedPreds } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
-import { isImmutableString } from './immutable-string.ts';
 import { Model, type Patch } from './model.ts';
 import { readChange } from './reader.ts';
+import { isCounter, isImmutableString, numberType } from './values.ts';
 
 /** The tag of every container a tab document hands out, so the spike namespace can answer for it. */
 const TAGS = new WeakMap<object, Tag>();
@@ -42,13 +42,13 @@ const randomActor = (): string =>
 
 type ChangeOptions = { time?: number; message?: string };
 
-/** A tab document of any shape, as Automerge's namespace sees one: its drafts and values are unknown. */
-export interface TabDocument {
+/** A tab document as Automerge's namespace sees one; `T` is the shape its callers claim, as with `A.Doc<T>`. */
+export interface TabDocument<T = unknown> {
   readonly actor: string;
   readonly model: Model;
   heads(): string[];
-  doc(): unknown;
-  view(heads: readonly string[]): unknown;
+  doc(): T;
+  view(heads: readonly string[]): T;
   cursor(
     heads: readonly string[],
     path: readonly (string | number)[],
@@ -62,9 +62,12 @@ export interface TabDocument {
     path: readonly (string | number)[],
     prop: string | number,
   ): Record<string, unknown> | undefined;
-  change(fn: (draft: unknown) => void, options?: ChangeOptions): string[] | undefined;
-  changeAt(heads: readonly string[], fn: (draft: unknown) => void, options?: ChangeOptions): string[] | undefined;
+  change(fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined;
+  changeAt(heads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined;
   applyChanges(changes: readonly Change[]): void;
+  hasHeads(heads: readonly string[]): boolean;
+  copy(heads: readonly string[], path: readonly (string | number)[]): unknown;
+  objectId(heads: readonly string[], path: readonly (string | number)[]): string | undefined;
   lastLocalChange(): Change | undefined;
   changesIn(heads: readonly string[]): Change[];
   receive(message: HostMessage): void;
@@ -82,8 +85,8 @@ type Options = {
  * mints ids for its own ops, and the worker writes each change under exactly those ids. `T` is the
  * document's shape as its callers name it, as with `A.Doc<T>`.
  */
-export class TabDoc<T = unknown> implements TabDocument {
-  readonly #model: Model;
+export class TabDoc<T = unknown> implements TabDocument<T> {
+  #model: Model;
   readonly #send?: (change: Change, bytes: Uint8Array) => void;
   readonly #bytes = new Map<string, Uint8Array>();
   readonly #now: () => number;
@@ -135,8 +138,11 @@ export class TabDoc<T = unknown> implements TabDocument {
     return TabDoc.fromChanges<T>(changes, options);
   }
 
-  /** A document that exists only in this tab until a host takes its first change. */
-  static create<T extends object>(initial: T, options: Options): TabDoc<T> {
+  /**
+   * A document that exists only in this tab until a host takes its first change, which writes
+   * `initial` at the root; `T` is the shape its callers claim, as with `A.from<T>`.
+   */
+  static create<T>(initial: object, options: Options): TabDoc<T> {
     const tab = new TabDoc<T>(new Model(), [], options);
     tab.change((draft) => Object.assign(draft, initial));
     return tab;
@@ -232,6 +238,18 @@ export class TabDoc<T = unknown> implements TabDocument {
     return objId ? this.#model.conflicts(objId, prop, clock) : undefined;
   }
 
+  /** The value at `path` in the version at `heads` as a fresh, unfrozen copy, as `A.toJS` gives it. */
+  copy(heads: readonly string[], path: readonly (string | number)[]): unknown {
+    const clock = this.clockOf(heads);
+    const objId = this.#model.objectAt(path, clock);
+    return objId === undefined ? undefined : this.#model.materialize(objId, clock);
+  }
+
+  /** The Automerge object id of the container at `path` in the version at `heads`. */
+  objectId(heads: readonly string[], path: readonly (string | number)[]): string | undefined {
+    return this.#model.objectAt(path, this.clockOf(heads));
+  }
+
   /** Whether every head is in the current version's history. */
   hasHeads(heads: readonly string[]): boolean {
     return heads.every((head) => this.#model.hasChange(head) && this.#model.reaches(this.#heads, head));
@@ -278,23 +296,27 @@ export class TabDoc<T = unknown> implements TabDocument {
   }
 
   /** `handle.change`: records the callback's edits as one change on the current version. */
-  change(fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
+  change(fn: (draft: T & object) => void, options?: ChangeOptions): string[] | undefined {
     return this.#record(this.#heads, fn, options);
   }
 
   /** `handle.changeAt`: a change based on `heads`; returns the heads of that version plus the change. */
-  changeAt(heads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
+  changeAt(heads: readonly string[], fn: (draft: T & object) => void, options?: ChangeOptions): string[] | undefined {
     return this.#record(heads, fn, options);
   }
 
-  #record(baseHeads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
+  #record(
+    baseHeads: readonly string[],
+    fn: (draft: T & object) => void,
+    options?: ChangeOptions,
+  ): string[] | undefined {
     const baseClock = this.clockOf(baseHeads);
     const current = baseHeads.join(',') === this.#heads.join(',');
     const before = current ? this.#root : undefined;
     const clockBefore = current ? baseClock : this.#model.clockOf(this.#heads);
     const recorder = new Draft.Recorder(before ?? freezeDeep(this.#model.materialize('_root', baseClock)));
     // A draft stands in for the document, so it has the document's claimed shape.
-    fn(recorder.draft() as T);
+    fn(recorder.draft() as T & object);
     if (recorder.ops.length === 0) {
       return undefined;
     }
@@ -326,12 +348,12 @@ export class TabDoc<T = unknown> implements TabDocument {
     if (this.#send) {
       this.#pending.push(change);
       this.#bytes.set(hash, bytes);
-      this.#send(structuredClone(change), bytes);
+      this.#send(change, bytes);
     }
     if (before !== undefined) {
       // On the current version the draft's ops are the patch: the document moves without a diff.
       const { root, patches } = Op.apply(before, recorder.ops);
-      this.#advance(root, patches, 'change');
+      this.#advance(root, toPatches(patches), 'change');
     } else {
       const patches = this.#model.diff(clockBefore, this.#model.clockOf(this.#model.heads()));
       this.#advance(applyPatches(this.#root, patches), patches, 'change');
@@ -402,7 +424,7 @@ export class TabDoc<T = unknown> implements TabDocument {
     for (const change of this.#pending) {
       const bytes = this.#bytes.get(change.hash);
       if (bytes) {
-        this.#send?.(structuredClone(change), bytes);
+        this.#send?.(change, bytes);
       }
     }
   }
@@ -416,7 +438,13 @@ export class TabDoc<T = unknown> implements TabDocument {
     this.#advanceBy(() => {
       for (const change of fresh) {
         this.#model.applyChange(change);
-        this.#send?.(structuredClone(change), encodeChange(change).bytes);
+        if (this.#send) {
+          // Relayed changes wait for the host's ack like the tab's own, so a flush covers them.
+          const bytes = encodeChange(change).bytes;
+          this.#pending.push(change);
+          this.#bytes.set(change.hash, bytes);
+          this.#send(change, bytes);
+        }
       }
     });
   }
@@ -430,6 +458,29 @@ export class TabDoc<T = unknown> implements TabDocument {
   /** Every change `heads` reach, in causal order. */
   changesIn(heads: readonly string[]): Change[] {
     return this.#model.changesIn(heads).map((hash) => this.#model.changeOf(hash));
+  }
+
+  /**
+   * Opens the host's snapshot. A tab that holds no change yet takes the snapshot's model whole, which
+   * loads a long document as fast as a replica; one that wrote already catches up as after a restart.
+   */
+  open(snapshot: Snapshot): void {
+    if (this.#model.changeHashes().length > 0) {
+      this.reconnect(snapshot);
+      return;
+    }
+    const before = this.#model.clockOf(this.#heads);
+    this.#model = Model.fromSaved(snapshot.bytes, snapshot.hashes);
+    const patches = this.#model.diff(before, this.#model.clockOf(this.#model.heads()));
+    this.#advance(this.view(this.#model.heads()), patches, 'host');
+  }
+
+  /** Changes the host delivered, applied in one step with one set of patches. */
+  receiveChanges(changes: readonly Change[]): void {
+    const fresh = changes.filter((change) => !this.#model.hasChange(change.hash));
+    if (fresh.length > 0) {
+      this.#advanceBy(() => fresh.forEach((change) => this.#model.applyChange(change)));
+    }
   }
 
   /**
@@ -458,6 +509,65 @@ export class TabDoc<T = unknown> implements TabDocument {
     }
   }
 }
+
+type PatchValue = Extract<Patch, { action: 'put' }>['value'];
+
+const toPatchValue = (value: unknown): PatchValue => (value === undefined ? null : value);
+
+/** An empty container of the same kind, as Automerge reports a new object before filling it. */
+const emptyOf = (value: unknown): PatchValue =>
+  Array.isArray(value) ? [] : Op.isContainer(value) ? {} : toPatchValue(value);
+
+/**
+ * Appends patches creating `value` at `path` the way Automerge reports it: an empty container, then
+ * one patch per nested key or element, so listeners that look for `['objects', id, ...]` see an object
+ * that arrived as part of a larger write.
+ */
+const expandPut = (path: (string | number)[], value: unknown, out: Patch[]): void => {
+  out.push({ action: 'put', path, value: emptyOf(value) });
+  expandChildren(path, value, out);
+};
+
+const expandChildren = (path: (string | number)[], value: unknown, out: Patch[]): void => {
+  if (Array.isArray(value)) {
+    if (value.length > 0) {
+      expandInsert([...path, 0], value, out);
+    }
+  } else if (Op.isContainer(value)) {
+    for (const [key, child] of Object.entries(value)) {
+      if (Op.isContainer(child)) {
+        expandPut([...path, key], child, out);
+      } else {
+        out.push({ action: 'put', path: [...path, key], value: toPatchValue(child) });
+      }
+    }
+  }
+};
+
+const expandInsert = (path: (string | number)[], values: readonly unknown[], out: Patch[]): void => {
+  out.push({ action: 'insert', path, values: values.map(emptyOf) });
+  const listPath = path.slice(0, -1);
+  const start = Number(path[path.length - 1]);
+  values.forEach((value, offset) => expandChildren([...listPath, start + offset], value, out));
+};
+
+/** A draft's patches in Automerge's patch type and shape, for listeners written against Automerge. */
+const toPatches = (patches: readonly Op.Patch[]): Patch[] => {
+  const out: Patch[] = [];
+  for (const patch of patches) {
+    switch (patch.action) {
+      case 'put':
+        expandPut(patch.path, patch.value, out);
+        break;
+      case 'insert':
+        expandInsert(patch.path, patch.values, out);
+        break;
+      default:
+        out.push(patch);
+    }
+  }
+  return out;
+};
 
 /** A new root object with the same entries, frozen. */
 const copyRoot = <T>(root: T): T => {
@@ -628,6 +738,14 @@ export const translate = (
     }
     if (isImmutableString(value)) {
       return emit({ action: 'set', ...at, value: value.toString() });
+    }
+    if (isCounter(value)) {
+      // An increment needs the counter's history, which the worker refuses from a tab.
+      throw new TypeError('A tab document does not write counters');
+    }
+    const typed = numberType(value);
+    if (typed) {
+      return emit({ action: 'set', ...at, value: typed.value, datatype: typed.datatype });
     }
     if (value instanceof Date) {
       return emit({ action: 'set', ...at, value: value.getTime(), datatype: 'timestamp' });

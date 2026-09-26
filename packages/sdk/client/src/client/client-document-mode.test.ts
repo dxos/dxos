@@ -6,7 +6,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
-import { MirrorRepo, RepoProxy } from '@dxos/echo-client';
+import { RepoProxy, TabClientRepo } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import { Runtime_Client_DocumentMode } from '@dxos/protocols/buf/dxos/config_pb';
 
@@ -40,7 +40,7 @@ describe('Client document mode', () => {
       const { space, names } = await openSpace(
         new Config({ runtime: { client: { documentMode: Runtime_Client_DocumentMode.PROXY } } }),
       );
-      expect(space.db._repo).toBeInstanceOf(MirrorRepo);
+      expect(space.db._repo).toBeInstanceOf(TabClientRepo);
       expect(names).toContain('written');
     },
   );
@@ -50,7 +50,7 @@ describe('Client document mode', () => {
     { timeout: 30_000 },
     async ({ expect }) => {
       const { space } = await openSpace(new Config({ runtime: { app: { env: { DX_ECHO_DOCUMENT_MODE: 'proxy' } } } }));
-      expect(space.db._repo).toBeInstanceOf(MirrorRepo);
+      expect(space.db._repo).toBeInstanceOf(TabClientRepo);
     },
   );
 });

@@ -109,31 +109,10 @@ const toBase64 = (bytes: Uint8Array): string => {
 
 const fromBase64 = (text: string): Uint8Array => Uint8Array.from(atob(text), (char) => char.charCodeAt(0));
 
-/** Tags the values of an event bound for a tab; only its value-typed fields can hold Automerge leaves. */
-export const encodeEvent = (event: Contract.DocumentEvent): Contract.DocumentEvent => mapEventValues(event, encode);
+/** Tags the values of an event bound for a tab: only a copy carries Automerge values; changes travel as bytes. */
+export const encodeEvent = (event: Contract.DocumentEvent): Contract.DocumentEvent =>
+  event.type === 'copy' ? { ...event, value: encode(event.value) } : event;
 
 /** Restores the values of an event the worker sent. */
 export const decodeEvent = (event: Contract.DocumentEvent, options: DecodeOptions): Contract.DocumentEvent =>
-  mapEventValues(event, (value) => decode(value, options));
-
-/** Tags the ops of a batch's changes bound for the worker. */
-export const encodeChanges = (changes: readonly (readonly unknown[])[]): unknown[][] =>
-  changes.map((ops) => ops.map(encode));
-
-/** Restores the ops of a batch's changes a tab sent. */
-export const decodeChanges = (changes: readonly (readonly unknown[])[], options: DecodeOptions): unknown[][] =>
-  changes.map((ops) => ops.map((op) => decode(op, options)));
-
-const mapEventValues = (event: Contract.DocumentEvent, map: (value: unknown) => unknown): Contract.DocumentEvent => {
-  switch (event.type) {
-    case 'snapshot':
-    case 'copy':
-      return { ...event, value: map(event.value) };
-    case 'entry':
-      return { ...event, entry: { ...event.entry, ops: event.entry.ops.map(map) } };
-    case 'recovered':
-      return { ...event, entries: event.entries.map((entry) => ({ ...entry, ops: entry.ops.map(map) })) };
-    default:
-      return event;
-  }
-};
+  event.type === 'copy' ? { ...event, value: decode(event.value, options) } : event;

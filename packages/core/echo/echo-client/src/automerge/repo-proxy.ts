@@ -14,7 +14,12 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, type ClientRepo, type SaveStateChangedEvent } from './client-handle.ts';
+import {
+  type ChangeEvent,
+  type ClientRepo,
+  type EditsRejectedEvent,
+  type SaveStateChangedEvent,
+} from './client-handle.ts';
 import { DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
@@ -139,6 +144,9 @@ export class RepoProxy extends Resource implements ClientRepo {
   #draining = false;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
+  /** A replica applies its edits locally, so the host never refuses one. */
+  readonly editsRejected = new Event<EditsRejectedEvent>();
   private _lastSaveStateKey = '';
 
   constructor(
@@ -205,6 +213,14 @@ export class RepoProxy extends Resource implements ClientRepo {
     const documentId = toDocumentId(id);
     return this._getOrLoadHandle<T>({ documentId });
   }
+
+  /** A replica loads every document it reads, so there is no index copy to show. */
+  findIndexed<T>(id: AnyDocumentId): DocHandleProxy<T> {
+    return this.find(id);
+  }
+
+  /** A replica has no use for index copies. */
+  primeCopy(): void {}
 
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>();

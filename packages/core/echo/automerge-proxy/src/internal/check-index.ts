@@ -58,6 +58,8 @@ export class CheckIndex {
   /** Every op but deletes, which nothing can name: a pred names a value and an element an insert. */
   readonly #ids = new IdIndex();
   readonly #changes = new ChangeTable();
+  /** Each actor's highest seq, by actor index; an actor's seqs run from 1 without gaps. */
+  readonly #seqs: number[] = [];
 
   #actorOf(actor: string): number {
     let index = this.#actorIndex.get(actor);
@@ -66,6 +68,7 @@ export class CheckIndex {
       this.#actors.push(actor);
       this.#actorIndex.set(actor, index);
       this.#ids.addActor();
+      this.#seqs.push(0);
     }
     return index;
   }
@@ -170,6 +173,10 @@ export class CheckIndex {
       savedStartOps(changes, counters),
       savedOrderHashes(changes, actors, hashes),
     );
+    for (let i = 0; i < changes.count; i++) {
+      const actor = actorIndex[changes.actor[i]];
+      index.#seqs[actor] = Math.max(index.#seqs[actor], changes.seq[i]);
+    }
     if (index.#changes.heads().join() !== [...heads].sort().join()) {
       throw new Error('The saved heads do not match the hashes given');
     }
@@ -183,6 +190,12 @@ export class CheckIndex {
 
   hasChange(hash: string): boolean {
     return this.#changes.find(hash) >= 0;
+  }
+
+  /** The seq `actor`'s next change must carry. */
+  nextSeqOf(actor: string): number {
+    const index = this.#actorIndex.get(actor);
+    return (index === undefined ? 0 : this.#seqs[index]) + 1;
   }
 
   /** Every change's hash in the snapshot layout, for a tab opening the document. */
@@ -356,9 +369,11 @@ export class CheckIndex {
   }
 
   #register(change: Change): void {
+    const actor = this.#actorOf(change.actor);
+    this.#seqs[actor] = Math.max(this.#seqs[actor], change.seq);
     this.#changes.add({
       hash: change.hash,
-      actor: this.#actorOf(change.actor),
+      actor,
       seq: change.seq,
       startOp: change.startOp,
       maxOp: change.startOp + change.ops.length - 1,

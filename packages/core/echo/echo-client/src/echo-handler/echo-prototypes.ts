@@ -115,7 +115,6 @@ import { deepMapValues, defaultMap } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc.ts';
 import { type ObjectCore } from '../core-db/index.ts';
-import { MirrorDocHandle } from '../mirror/mirror-doc-handle.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { getBody, getHeader } from './devtools-formatter.ts';
 import {
@@ -347,16 +346,10 @@ const getVersion = (target: ProxyTarget): Obj.Version => {
   const core = target[symbolInternals];
   const doc = core.getDocAccessor().handle.doc();
   invariant(doc);
-  const heads = A.getHeads(doc);
-  // A mirror's heads are the last confirmed ones, so they do not describe an object with unconfirmed edits.
-  const versioned =
-    core.docHandle instanceof MirrorDocHandle
-      ? heads.length > 0 && !core.docHandle.hasPendingAt(core.mountPath)
-      : !A.isProxy(doc) || heads.length > 0;
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
-    versioned,
-    automergeHeads: heads,
+    versioned: true,
+    automergeHeads: A.getHeads(doc),
   };
 };
 

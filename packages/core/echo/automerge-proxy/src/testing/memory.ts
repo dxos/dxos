@@ -9,21 +9,30 @@ import { invariant } from '@dxos/invariant';
 
 import * as Contract from '../Contract.ts';
 import type * as Host from '../Host.ts';
-import * as Op from '../Op.ts';
 import type * as Repo from '../Repo.ts';
-import * as Wire from '../Wire.ts';
 
 /** Automerge documents in memory, as a host's store. */
 export class MemoryStore implements Host.Store {
   readonly #docs = new Map<string, A.Doc<unknown>>();
+  /** What each document held at its last save, which is all a restart keeps. */
+  readonly #saved = new Map<string, Uint8Array>();
   readonly #listeners = new Set<(documentId: string) => void>();
   #created = 0;
+  /** Fails the next saves, as a storage error would. */
+  failSaves = 0;
 
-  /** The document as Automerge holds it. */
-  get(documentId: string): A.Doc<unknown> {
+  /** The document as Automerge holds it; `T` is the caller's claim about its shape, as in `A.load<T>`. */
+  get<T = unknown>(documentId: string): A.Doc<T> {
     const doc = this.#docs.get(documentId);
     invariant(doc, `No document ${documentId}`);
-    return doc;
+    // The store holds documents of every shape, so only the caller can name this one's.
+    return doc as A.Doc<T>;
+  }
+
+  /** Adds a document, as one already in storage. */
+  put(documentId: string, doc: A.Doc<unknown>): void {
+    this.#docs.set(documentId, doc);
+    this.#saved.set(documentId, A.save(doc));
   }
 
   /**
@@ -35,14 +44,21 @@ export class MemoryStore implements Host.Store {
     this.#notify(documentId);
   }
 
+  /** Loses every change not saved, as a crash does. */
+  restart(): void {
+    for (const [documentId, saved] of this.#saved) {
+      this.#docs.set(documentId, A.load(saved));
+    }
+  }
+
   async withDocument<T>(documentId: string, fn: (document: Host.StoredDocument) => T): Promise<T | undefined> {
     if (!this.#docs.has(documentId)) {
       return undefined;
     }
     return fn({
       doc: () => this.get(documentId),
-      change: (callback, options) => {
-        this.#docs.set(documentId, A.change(this.get(documentId), options, callback));
+      applyChanges: (changes) => {
+        this.#docs.set(documentId, A.applyChanges(this.get(documentId), [...changes])[0]);
         this.#notify(documentId);
       },
     });
@@ -52,20 +68,29 @@ export class MemoryStore implements Host.Store {
     return this.#docs.has(documentId);
   }
 
-  async save(): Promise<void> {}
+  async save(documentIds: string[]): Promise<void> {
+    if (this.failSaves > 0) {
+      this.failSaves--;
+      throw new Error('Save failed');
+    }
+    for (const documentId of documentIds) {
+      const doc = this.#docs.get(documentId);
+      if (doc) {
+        this.#saved.set(documentId, A.save(doc));
+      }
+    }
+  }
 
   onChanged(listener: (documentId: string) => void): () => void {
     this.#listeners.add(listener);
     return () => this.#listeners.delete(listener);
   }
 
-  async create(initialValue: unknown): Promise<string> {
-    invariant(
-      initialValue === undefined || (Op.isContainer(initialValue) && !Array.isArray(initialValue)),
-      'A document is a map at its root',
-    );
+  async create(changes: readonly Uint8Array[]): Promise<string> {
     const documentId = `doc-${this.#created++}`;
-    this.#docs.set(documentId, A.from(initialValue ?? {}));
+    const doc = A.applyChanges(A.init<unknown>(), [...changes])[0];
+    this.#docs.set(documentId, doc);
+    this.#saved.set(documentId, A.save(doc));
     return documentId;
   }
 
@@ -86,11 +111,9 @@ export type TransportOptions = {
   random: () => number;
   /** Longest delay in milliseconds before a call or delivery. */
   maxDelay?: number;
-  /** Asked after each call the host ran; true loses the response, so the client sees a failure. */
+  /** Asked after each call the host ran; true loses the response, so the tab sees a failure. */
   lose?: () => boolean;
 };
-
-const WIRE: Wire.DecodeOptions = { rawString: (text) => new A.RawString(text) };
 
 const mutableArray = <Value extends Schema.Top>(value: Value) => Schema.mutable(Schema.Array(value));
 
@@ -103,15 +126,16 @@ const UpdateSubscriptionRequest = Schema.Struct({
 });
 const SubmitRequest = Schema.Struct({ subscriptionId: Schema.String, batches: mutableArray(Contract.SubmitBatch) });
 const Events = mutableArray(Contract.DocumentEvent);
+const Changes = mutableArray(Schema.Uint8Array);
 
-/** A JSON round trip, decoded with `schema`. */
+/** A structured clone, as a MessagePort carries it, decoded with `schema`. */
 const across = <S extends Schema.Top & { readonly DecodingServices: never }>(schema: S, value: unknown): S['Type'] =>
-  Schema.decodeUnknownSync(schema)(JSON.parse(JSON.stringify(value)));
+  Schema.decodeUnknownSync(schema)(structuredClone(value));
 
 /**
- * One client's connection to a host, over JSON as ECHO's worker transport carries it: every value is
- * tagged with `Wire`, serialized and restored, so no object is shared between client and host. Calls
- * and deliveries wait a random delay; events stay in order, as on a stream.
+ * One tab's connection to a host, as ECHO's worker transport carries it: every value is cloned, so no
+ * object is shared between tab and host. Calls and deliveries wait a random delay; events stay in
+ * order, as on a stream.
  */
 export class Transport implements Repo.Host {
   readonly #options: TransportOptions;
@@ -121,7 +145,7 @@ export class Transport implements Repo.Host {
     this.#options = options;
   }
 
-  /** Ends every open stream, as a restarting host does; each client resubscribes. */
+  /** Ends every open stream, as a restarting host does; each tab resubscribes. */
   drop(): void {
     for (const subscription of [...this.#subscriptions]) {
       subscription.close();
@@ -142,12 +166,12 @@ export class Transport implements Repo.Host {
     let open = true;
     const close = this.#options.host().subscribe(across(SubscribeRequest, request), {
       onEvents: (events) => {
-        const sent = events.map(Wire.encodeEvent);
+        const sent = [...events];
         delivery = delivery
           .then(() => this.#delay())
           .then(() => {
             if (open) {
-              handlers.onEvents(across(Events, sent).map((event) => Wire.decodeEvent(event, WIRE)));
+              handlers.onEvents(across(Events, sent));
             }
           });
       },
@@ -173,34 +197,15 @@ export class Transport implements Repo.Host {
   }
 
   async submit(request: Parameters<Repo.Host['submit']>[0]): Promise<Contract.SubmitResult[]> {
-    const sent = {
-      ...request,
-      batches: request.batches.map((batch) => ({ ...batch, changes: Wire.encodeChanges(batch.changes) })),
-    };
-    return this.#call(() => {
-      const { subscriptionId, batches } = across(SubmitRequest, sent);
-      return this.#options.host().submit({
-        subscriptionId,
-        batches: batches.map((batch) => ({ ...batch, changes: Wire.decodeChanges(batch.changes, WIRE) })),
-      });
-    });
+    return this.#call(() => this.#options.host().submit(across(SubmitRequest, request)));
   }
 
-  async createDocument(initialValue: unknown): Promise<string> {
-    const sent = Wire.encode(initialValue);
-    return this.#call(() => this.#options.host().createDocument(Wire.decode(across(Schema.Unknown, sent), WIRE)));
+  async createDocument(changes: readonly Uint8Array[]): Promise<string> {
+    return this.#call(() => this.#options.host().createDocument(across(Changes, changes)));
   }
 
   async flush(documentIds: string[]): Promise<void> {
     await this.#call(() => this.#options.host().flush([...documentIds]));
-  }
-
-  async resolveCursors(request: Contract.ResolveCursors): Promise<(number | null)[]> {
-    return this.#call(() => this.#options.host().resolveCursors(across(Contract.ResolveCursors, request)));
-  }
-
-  async createCursors(request: Contract.CreateCursors): Promise<(string | null)[]> {
-    return this.#call(() => this.#options.host().createCursors(across(Contract.CreateCursors, request)));
   }
 
   async #call<T>(call: () => Promise<T>): Promise<T> {
@@ -219,7 +224,7 @@ export class Transport implements Repo.Host {
   }
 }
 
-/** The host ran the call, but its response did not reach the client. */
+/** The host ran the call, but its response did not reach the tab. */
 export class LostResponseError extends Error {
   constructor() {
     super('Response lost');

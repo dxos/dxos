@@ -27,7 +27,7 @@ describe('Op.freeze', () => {
 
 describe('Op.invert', () => {
   test('undoes random op lists on nested documents', () => {
-    const seeds = Number(process.env.MIRROR_FUZZ_SEEDS ?? 3000);
+    const seeds = Number(process.env.OP_FUZZ_SEEDS ?? 3000);
     for (let seed = 1; seed <= seeds; seed++) {
       const random = createRandom(seed);
       let root: unknown = Op.freeze(initialDocument());

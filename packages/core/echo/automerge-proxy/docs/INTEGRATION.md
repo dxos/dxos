@@ -255,6 +255,39 @@ Phase 8 departs from OP-IDS.md's "Objects read from the index", which has the wo
 positions against the copy and the copy carry the highest op counter. A tab holds the document by the
 time it sends, so it resolves the positions itself, and a copy needs nothing it does not carry today.
 
+## As built
+
+Phases 1, 2 and 3 have landed, and phase 5's removals with them. The code departs from the plan
+above in these places:
+
+1. **Phases 2, 3 and 5 are one commit.** The new `Contract` replaced the mirror's events and
+   requests, and `Host` and `Repo` were rewritten over it, so the mirror's tab side had nothing left
+   to talk to. Keeping it for a commit would have meant two contracts in one package.
+2. **The check index and `saveNoCompress` stay inside the package**, under `src/internal/` beside the
+   host that uses them, instead of a `Check` subpath and an echo-host function. Nothing else calls
+   them.
+3. **`createDocument` carries the tab's first changes.** The host stores exactly those bytes, so the
+   document's heads are the tab's from its first write. An initial change the worker wrote itself
+   would be concurrent with the tab's early writes, and it hid them in 15 of 20 runs of a test.
+4. **A follow answered with changes ends with `caughtUp`.** The tab holds back a document's changes
+   while its follow is open, and sends them in causal order once `snapshot` or `caughtUp` arrives.
+5. **`submit` answers each document `accepted` or `unfollowed`.** The acks and refusals come on the
+   stream. `unfollowed` makes the tab follow the document and send again.
+6. **The namespace follows registration, not the client's mode.** `from`, `init`, `load` and
+   `decodeChange` use the registered Automerge whenever the realm registered one, and make tab
+   documents otherwise; `EchoClient` sets nothing. A Node test that makes a document from nothing
+   gets an Automerge document in either mode, and a proxy-mode tab in a browser gets a tab document.
+7. **`A.isProxy` is gone already**, a phase 4 item. Its last caller, `ObjectCore.getUpdatedAt`, reads
+   change times through the namespace's `getBackend`, which answers `getChangeMetaByHash` for a tab
+   document.
+
+echo-client's suite passes in replica mode, 629 tests. In proxy mode 23 tests fail, and phase 7
+covers all of them: 20 branching and branch-binding tests, a branch-binding identity test, and two
+migration tests that call `repo.import`. Over the real adapter, `tab-repo.test.ts` covers writes
+across tabs, final heads, concurrent text, anchors, history and update time; restarts are covered at
+the package level in `Repo.test.ts`. The spike's editor and store-adapter tests move with phase 4,
+when ui-editor and echo-doc switch to the namespace.
+
 ## Tests that move
 
 | Spike test                                                                                                                                | Destination                                                               |
@@ -290,9 +323,9 @@ Settled on 2026-09-26.
 
 ## Risks and open questions
 
-1. **`saveNoCompress` is not public.** The spike reaches it through the wasm handle behind a
-   document. The integration should keep that access in one echo-host function with a test that fails
-   loudly on an Automerge upgrade, or teach the tab's reader DEFLATE.
+1. **`saveNoCompress` is not public.** The package reaches it through the wasm handle behind a
+   document, in `internal/automerge.ts`, and the codec, model and check-index tests fail if an
+   Automerge upgrade changes it. Teaching the tab's reader DEFLATE would remove the dependency.
 2. **A document's first load in the worker costs its hashes**: 0.8 s through `A.getChangesMetaSince`
    for the keystroke space, or 0.35 s through `A.topoHistoryTraversal`, whose order matches the save
    in every document measured but is not documented.

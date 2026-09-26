@@ -36,6 +36,8 @@ describe('a tab with no WebAssembly', () => {
         '--import',
         'data:text/javascript,delete globalThis.WebAssembly',
         '--conditions=source',
+        // A browser realm, which registers no Automerge behind the namespace.
+        '--conditions=browser',
         '--import',
         'tsx',
         'src/internal/tab-child.ts',

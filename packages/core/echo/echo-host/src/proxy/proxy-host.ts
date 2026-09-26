@@ -21,8 +21,8 @@ export type ProxyHostProps = {
 };
 
 /**
- * `@dxos/automerge-proxy`'s host over the worker's Automerge host, serving clients that keep proxies
- * of documents; the index supplies the documents' copies.
+ * `@dxos/automerge-proxy`'s host over the worker's Automerge host, serving clients that keep tab
+ * documents; the index supplies the documents' copies.
  */
 export const createProxyHost = ({ automergeHost, readIndexed }: ProxyHostProps): Host.DocumentHost =>
   new Host.DocumentHost({
@@ -36,9 +36,27 @@ export const createProxyHost = ({ automergeHost, readIndexed }: ProxyHostProps):
       isStored: (documentId) => automergeHost.hasDocOnDisk(asDocumentId(documentId)),
       save: (documentIds) => automergeHost.flush(Context.default(), { documentIds }),
       onChanged: (listener) => automergeHost.documentHeadsChanged.on(({ documentId }) => listener(documentId)),
+      create: async (changes) => {
+        // Imported as the exact change chunks, so the host's history is the tab's.
+        using lease =
+          changes.length > 0
+            ? await automergeHost.createDoc(concat(changes), { preserveHistory: true })
+            : await automergeHost.createDoc();
+        return lease.documentId;
+      },
     },
     copies: readIndexed && { read: async (documentIds) => documentsFromIndex(await readIndexed(documentIds)) },
   });
+
+const concat = (chunks: readonly Uint8Array[]): Uint8Array => {
+  const out = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+};
 
 /** Document ids reach the host as the plain strings the contract carries. */
 const asDocumentId = (documentId: string): DocumentId => documentId as DocumentId;

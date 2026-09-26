@@ -52,6 +52,11 @@ export const CreateDocumentRequest = Schema.Struct({
    * Optional - if not provided, an empty document will be created.
    */
   initialValue: Schema.optional(protoStruct),
+  /**
+   * A tab document's first changes, as change chunks: the host checks them and creates the document
+   * holding exactly them, so the tab's history and the host's are one. Takes the place of `initialValue`.
+   */
+  changes: Schema.optional(mutableArray(Schema.Uint8Array)),
 });
 export interface CreateDocumentRequest extends Schema.Schema.Type<typeof CreateDocumentRequest> {}
 
@@ -279,13 +284,13 @@ export const GarbageCollectionReport = Schema.Struct({
 export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
 
 //
-// Proxy protocol, for clients that keep `@dxos/automerge-proxy` proxies of documents instead of
+// Tab document protocol, for clients that keep `@dxos/automerge-proxy` tab documents instead of
 // Automerge replicas. The payloads are the package's contract; these add the subscription and space.
 //
 
 export const SubscribeProxyRequest = Schema.Struct({
   subscriptionId: Schema.String,
-  /** Random per client session; tags the client's batches in the log and in Automerge change messages. */
+  /** Random per client session; names the client in the host's logs. */
   clientId: Schema.String,
   spaceId: Schema.String,
 });
@@ -293,13 +298,13 @@ export interface SubscribeProxyRequest extends Schema.Schema.Type<typeof Subscri
 
 export const UpdateProxySubscriptionRequest = Schema.Struct({
   subscriptionId: Schema.String,
-  /** Documents to follow, with what the client already holds when it is resubscribing. */
+  /** Documents to follow, with the heads the client holds when it holds any. */
   add: Schema.optional(mutableArray(Contract.Follow)),
   remove: Schema.optional(mutableArray(Schema.String)),
 });
 export interface UpdateProxySubscriptionRequest extends Schema.Schema.Type<typeof UpdateProxySubscriptionRequest> {}
 
-/** Events for the documents a proxy subscription follows. */
+/** Events for the documents a tab subscription follows. */
 export const ProxyEventBatch = Contract.EventBatch;
 export interface ProxyEventBatch extends Schema.Schema.Type<typeof ProxyEventBatch> {}
 
@@ -311,18 +316,6 @@ export interface SubmitRequest extends Schema.Schema.Type<typeof SubmitRequest> 
 
 export const SubmitResponse = Schema.Struct({ results: mutableArray(Contract.SubmitResult) });
 export interface SubmitResponse extends Schema.Schema.Type<typeof SubmitResponse> {}
-
-export const ResolveCursorsRequest = Contract.ResolveCursors;
-export interface ResolveCursorsRequest extends Schema.Schema.Type<typeof ResolveCursorsRequest> {}
-
-export const ResolveCursorsResponse = Schema.Struct({ positions: mutableArray(Schema.NullOr(Schema.Number)) });
-export interface ResolveCursorsResponse extends Schema.Schema.Type<typeof ResolveCursorsResponse> {}
-
-export const CreateCursorsRequest = Contract.CreateCursors;
-export interface CreateCursorsRequest extends Schema.Schema.Type<typeof CreateCursorsRequest> {}
-
-export const CreateCursorsResponse = Schema.Struct({ cursors: mutableArray(Schema.NullOr(Schema.String)) });
-export interface CreateCursorsResponse extends Schema.Schema.Type<typeof CreateCursorsResponse> {}
 
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
@@ -420,7 +413,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   /**
-   * Stream of events for the documents a proxy subscription follows; `subscribe` is the same for
+   * Stream of events for the documents a tab subscription follows; `subscribe` is the same for
    * Automerge replicas.
    */
   Rpc.make('subscribeProxy', {
@@ -433,22 +426,10 @@ export class Rpcs extends RpcGroup.make(
     payload: UpdateProxySubscriptionRequest,
     error: serviceError,
   }),
-  /** Applies a proxy client's batches; resolves once they are saved and their entries are on the stream. */
+  /** Checks a tab client's changes; each is answered with an `ack` or a `refuse` on the stream. */
   Rpc.make('submit', {
     payload: SubmitRequest,
     success: SubmitResponse,
-    error: serviceError,
-  }),
-  /** Positions of Automerge cursors (comments, remote presence) in a text a proxy client holds. */
-  Rpc.make('resolveCursors', {
-    payload: ResolveCursorsRequest,
-    success: ResolveCursorsResponse,
-    error: serviceError,
-  }),
-  /** Automerge cursors for positions a proxy client saw (new anchors, the local selection). */
-  Rpc.make('createCursors', {
-    payload: CreateCursorsRequest,
-    success: CreateCursorsResponse,
     error: serviceError,
   }),
 ).prefix('DataService.') {}

@@ -11,8 +11,24 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/internal/register-node.ts",
+    "./dist/lib/internal/register-node.mjs"
+  ],
   "type": "module",
+  "imports": {
+    "#automerge-realm": {
+      "source": {
+        "browser": "./src/internal/register-none.ts",
+        "workerd": "./src/internal/register-none.ts",
+        "default": "./src/internal/register-node.ts"
+      },
+      "types": "./dist/types/src/internal/register-node.d.ts",
+      "browser": "./dist/lib/internal/register-none.mjs",
+      "workerd": "./dist/lib/internal/register-none.mjs",
+      "default": "./dist/lib/internal/register-node.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -24,20 +40,10 @@
       "types": "./dist/types/src/Automerge.d.ts",
       "import": "./dist/lib/Automerge.mjs"
     },
-    "./AutomergeOps": {
-      "source": "./src/AutomergeOps.ts",
-      "types": "./dist/types/src/AutomergeOps.d.ts",
-      "import": "./dist/lib/AutomergeOps.mjs"
-    },
     "./Contract": {
       "source": "./src/Contract.ts",
       "types": "./dist/types/src/Contract.d.ts",
       "import": "./dist/lib/Contract.mjs"
-    },
-    "./Cursors": {
-      "source": "./src/Cursors.ts",
-      "types": "./dist/types/src/Cursors.d.ts",
-      "import": "./dist/lib/Cursors.mjs"
     },
     "./Draft": {
       "source": "./src/Draft.ts",
@@ -63,21 +69,6 @@
       "source": "./src/Repo.ts",
       "types": "./dist/types/src/Repo.d.ts",
       "import": "./dist/lib/Repo.mjs"
-    },
-    "./Sequencing": {
-      "source": "./src/Sequencing.ts",
-      "types": "./dist/types/src/Sequencing.d.ts",
-      "import": "./dist/lib/Sequencing.mjs"
-    },
-    "./Sync": {
-      "source": "./src/Sync.ts",
-      "types": "./dist/types/src/Sync.d.ts",
-      "import": "./dist/lib/Sync.mjs"
-    },
-    "./Transform": {
-      "source": "./src/Transform.ts",
-      "types": "./dist/types/src/Transform.d.ts",
-      "import": "./dist/lib/Transform.mjs"
     },
     "./Wire": {
       "source": "./src/Wire.ts",

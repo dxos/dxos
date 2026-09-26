@@ -4,8 +4,8 @@
 
 /**
  * How a client holds the documents it opens: `replica` keeps an Automerge replica of each, synced
- * over the byte protocol (`RepoProxy`); `proxy` keeps a proxy from `@dxos/automerge-proxy` that the
- * services' Automerge serves (`MirrorRepo`).
+ * over the byte protocol (`RepoProxy`); `proxy` keeps a tab document from `@dxos/automerge-proxy`,
+ * which loads no Automerge and which the services' Automerge serves (`TabClientRepo`).
  */
 export type DocumentMode = 'replica' | 'proxy';
 

@@ -2,19 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { Patch as AutomergePatch } from '@automerge/automerge';
+
 import { ChangeTable, room, savedOrderHashes, writeHash } from './changes.ts';
 import { encodeChange } from './encode.ts';
 import { IdIndex, bisect, savedStartOps } from './id-index.ts';
 import { type Change, type Clock, type DecodedOp, parseId } from './ids.ts';
-import { immutableString } from './immutable-string.ts';
 import { type SavedChanges, readSavedColumns } from './reader.ts';
+import { TabImmutableString } from './values.ts';
 
-export type Patch =
-  | { action: 'put'; path: (string | number)[]; value: unknown; conflict?: boolean }
-  | { action: 'conflict'; path: (string | number)[] }
-  | { action: 'del'; path: (string | number)[]; length?: number }
-  | { action: 'insert'; path: (string | number)[]; values: unknown[] }
-  | { action: 'splice'; path: (string | number)[]; value: string };
+/** The patches the model emits, in Automerge's own patch type. */
+export type Patch = Extract<AutomergePatch, { action: 'put' | 'conflict' | 'del' | 'insert' | 'splice' }>;
+
+type PatchValue = Extract<AutomergePatch, { action: 'put' }>['value'];
 
 /** An element as the model hands it out: its id and the op that inserted it. */
 export type Elem = { readonly key: string; readonly op: number };
@@ -951,7 +951,7 @@ export class Model {
       return new Date(Number(value));
     }
     if (typeof value === 'string' && !inText) {
-      return immutableString(value);
+      return new TabImmutableString(value);
     }
     // A copy, so a reader cannot change the model's own bytes.
     if (value instanceof Uint8Array) {
@@ -1253,15 +1253,19 @@ export class Model {
       return [];
     }
     const buckets = new Map<number, Patch[]>();
-    const empty = (op: number, inText: boolean): unknown => {
+    const empty = (op: number, inText: boolean): PatchValue => {
       const action = this.#flags[op] & ACTION_MASK;
-      return action === MAKE_MAP || action === MAKE_TABLE
-        ? {}
-        : action === MAKE_LIST
-          ? []
-          : action === MAKE_TEXT
-            ? ''
-            : this.#value(op, after, inText);
+      if (action === MAKE_MAP || action === MAKE_TABLE) {
+        return {};
+      }
+      if (action === MAKE_LIST) {
+        return [];
+      }
+      if (action === MAKE_TEXT) {
+        return '';
+      }
+      const value = this.#value(op, after, inText);
+      return value === undefined ? null : value;
     };
     const walk = (owner: number, container: ObjectInfo, path: (string | number)[], existed: boolean): void => {
       const patches: Patch[] = [];

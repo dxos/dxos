@@ -7,7 +7,7 @@ import { type AnyDocumentId, type AutomergeUrl, type DocumentId } from '@automer
 import type { EventEmitter } from 'eventemitter3';
 
 import type { Event } from '@dxos/async';
-import * as Op from '@dxos/automerge-proxy/Op';
+import type * as Contract from '@dxos/automerge-proxy/Contract';
 import type { Context } from '@dxos/context';
 import type { DataService } from '@dxos/protocols/rpc';
 
@@ -15,7 +15,7 @@ import type * as Doc from './Doc.ts';
 
 //
 // What the database layer needs from a client-side document handle and repo, so it can run on an
-// Automerge replica (`RepoProxy`) or a JSON mirror (`MirrorRepo`) without knowing which.
+// Automerge replica (`RepoProxy`) or a tab document (`TabClientRepo`) without knowing which.
 //
 
 export type ChangeEvent<T> = {
@@ -69,19 +69,26 @@ export type SaveStateChangedEvent = {
 };
 
 /**
- * Edits of one document the host refused: they are no longer visible and will never be saved. Only
- * a JSON mirror can see this, when its view and the host's document disagree, which is a bug.
+ * Changes of one document the host refused: they are no longer visible and will never be saved. Only
+ * a tab document can see this, when the host's check of a change fails, which is a bug; a replica
+ * never fires it.
  */
 export type EditsRejectedEvent = {
   documentId: DocumentId;
-  /** The ops of each refused `change()` call, kept for diagnostics. */
-  changes: readonly Op.Change[];
+  /** The refused changes, with every change built on them. */
+  hashes: readonly string[];
+  reason: string;
 };
 
 export interface ClientRepo {
   readonly handles: Record<string, ClientDocHandle<unknown>>;
   readonly saveStateChanged: Event<SaveStateChangedEvent>;
+  readonly editsRejected: Event<EditsRejectedEvent>;
   find<T>(id: AnyDocumentId): ClientDocHandle<T>;
+  /** Finds a document of objects, which a repo that takes index copies shows from the copy while it is only read. */
+  findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T>;
+  /** Keeps a document copy a query carried for its first {@link findIndexed}; a repo that takes none ignores it. */
+  primeCopy(documentId: string, copy: Contract.Copy): void;
   create<T>(initialValue?: T): ClientDocHandle<T>;
   import<T>(dump: Uint8Array): ClientDocHandle<T>;
   release(documentId: DocumentId): boolean;
@@ -89,7 +96,7 @@ export interface ClientRepo {
   flushCreations(): Promise<void>;
   open(ctx?: Context): Promise<unknown>;
   close(ctx?: Context): Promise<unknown>;
-  /** Replaces service clients after the worker changed; a mirror repo also takes the new mirror service. */
+  /** Replaces service clients after the worker changed. */
   _updateServices(services: { dataService: DataService.Client }): void;
   _onReconnect(): Promise<void>;
 }

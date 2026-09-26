@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { RepoProxy } from '../automerge/index.ts';
-import { MirrorRepo } from '../mirror/index.ts';
+import { RepoProxy, TabClientRepo } from '../automerge/index.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 
 describe('EchoClient document mode', () => {
@@ -41,13 +40,13 @@ describe('EchoClient document mode', () => {
   test('clients of one host can differ, as tabs of one worker do', async () => {
     const proxy = await repoOf({ documentMode: 'proxy' });
     const replica = await repoOf({ documentMode: 'replica' });
-    expect(proxy.repo).toBeInstanceOf(MirrorRepo);
+    expect(proxy.repo).toBeInstanceOf(TabClientRepo);
     expect(replica.repo).toBeInstanceOf(RepoProxy);
   });
 
   test('DX_ECHO_DOCUMENT_MODE applies when the client names no mode, and an explicit mode wins', async () => {
     vi.stubEnv('DX_ECHO_DOCUMENT_MODE', 'proxy');
-    expect((await repoOf({})).repo).toBeInstanceOf(MirrorRepo);
+    expect((await repoOf({})).repo).toBeInstanceOf(TabClientRepo);
     expect((await repoOf({ documentMode: 'replica' })).repo).toBeInstanceOf(RepoProxy);
   });
 

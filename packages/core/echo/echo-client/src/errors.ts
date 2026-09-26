@@ -22,9 +22,9 @@ export class DocumentUnavailableError extends BaseError.extend(
 }
 
 /**
- * The worker refused edits this tab made: they did not fit its copy of the document or held a value
- * Automerge refuses, so they will never be saved. A refusal means the mirror and the document
- * disagree, which is a bug.
+ * The worker refused changes this tab made, and with them every later change built on them, so none
+ * will be saved. A tab encodes each change as Automerge would, so a refusal means the tab's document
+ * and the worker's disagree, which is a bug.
  */
 export class EditsRejectedError extends BaseError.extend(
   'EditsRejectedError',

@@ -48,11 +48,11 @@ import {
   type EditsRejectedEvent,
   RepoProxy,
   type SaveStateChangedEvent,
+  TabClientRepo,
   toDocumentId,
 } from '../automerge/index.ts';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
-import { MirrorRepo } from '../mirror/mirror-repo.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
@@ -177,7 +177,7 @@ export class EntityManager implements IDatabaseBinding {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  /** Edits the host refused, which only a JSON mirror sees; a replica applies its edits locally. */
+  /** Edits the host refused, which only a tab document sees; a replica applies its edits locally. */
   readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
 
   /** Fires when the database has finished loading its initial space root document. */
@@ -251,19 +251,12 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
-    if (options.documentMode === 'proxy') {
-      this._repoProxy = new MirrorRepo({
-        dataService: this._dataService,
-        runtime: this._runtime,
-        spaceId: this._spaceId,
-        indexReads: options.proxyIndexReads,
-      });
-    } else {
-      this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
-    }
+    this._repoProxy =
+      options.documentMode === 'proxy'
+        ? new TabClientRepo({ dataService: this._dataService, runtime: this._runtime, spaceId: this._spaceId })
+        : new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
-    this.editsRejected =
-      this._repoProxy instanceof MirrorRepo ? this._repoProxy.editsRejected : new Event<EditsRejectedEvent>();
+    this.editsRejected = this._repoProxy.editsRejected;
   }
 
   get spaceId(): SpaceId {
@@ -964,16 +957,6 @@ export class EntityManager implements IDatabaseBinding {
     if (!rootHeads?.length) {
       return;
     }
-    if (this._repoProxy instanceof MirrorRepo) {
-      // A mirror cannot test ancestry; the worker holds the heads by now, so catching up with it covers them.
-      await asyncTimeout(
-        this._repoProxy.catchUp(rootDocumentId),
-        RPC_TIMEOUT,
-        'waiting for the space root document to replicate to the client',
-      );
-      return;
-    }
-
     await asyncTimeout(
       Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
         const doc = rootHandle.doc();
@@ -1110,9 +1093,7 @@ export class EntityManager implements IDatabaseBinding {
    * document from the index; a database holding replicas has no use for it.
    */
   _primeDocumentCopy(copy: QueryService.DocumentCopy): void {
-    if (this._repoProxy instanceof MirrorRepo) {
-      this._repoProxy.primeCopy(copy.documentId, { heads: copy.heads, value: JSON.parse(copy.json) });
-    }
+    this._repoProxy.primeCopy(copy.documentId, { heads: copy.heads, value: JSON.parse(copy.json) });
   }
 
   _updateServices({
@@ -1759,10 +1740,7 @@ export class EntityManager implements IDatabaseBinding {
       }
       let handle: ClientDocHandle<DatabaseDirectory>;
       try {
-        handle =
-          this._repoProxy instanceof MirrorRepo
-            ? this._repoProxy.findIndexed<DatabaseDirectory>(automergeUrl as DocumentId)
-            : this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
+        handle = this._repoProxy.findIndexed<DatabaseDirectory>(automergeUrl as DocumentId);
       } catch (err) {
         if (!RepoClosedError.is(err)) {
           throw err;

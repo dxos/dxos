@@ -959,6 +959,7 @@ const carriesWrite = (key: string | symbol, request: unknown): boolean => {
   switch (key) {
     case 'DataService.createDocument':
     case 'DataService.update':
+    case 'DataService.submit':
       return true;
     case 'DataService.updateSubscription':
       return (['addIds', 'removeIds'] as const).some(

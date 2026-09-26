@@ -6,31 +6,36 @@
 
 import { next as A } from '@automerge/automerge';
 
+import { scheduleTask } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import * as AutomergeOps from './AutomergeOps.ts';
 import type * as Contract from './Contract.ts';
-import { randomId } from './internal/index.ts';
+import { decodeChange, hashesOf, saveNoCompress } from './internal/automerge.ts';
+import { CheckIndex } from './internal/check-index.ts';
+import { encodeChange } from './internal/encode.ts';
+import { type Change } from './internal/ids.ts';
 import type * as Repo from './Repo.ts';
-import * as Sequencing from './Sequencing.ts';
-import type * as Sync from './Sync.ts';
 
-/** A document the store has loaded: its current state and a way to write it. */
-export type StoredDocument = Sequencing.SequencedDocument;
+/** A document the store has loaded: its current state and a way to apply changes the host checked. */
+export interface StoredDocument {
+  doc(): A.Doc<unknown>;
+  /** Applies change chunks as `A.applyChanges` does. */
+  applyChanges(changes: readonly Uint8Array[]): void;
+}
 
 /** Where the host keeps its Automerge documents. */
 export interface Store {
   /** Runs `fn` on the loaded document, fetching it if the store has to; undefined when it cannot be produced. */
   withDocument<T>(documentId: string, fn: (document: StoredDocument) => T): Promise<T | undefined>;
-  /** Whether the document is stored already; subscribers to one that is not are told it is being fetched. */
+  /** Whether the document is stored already; followers of one that is not are told it is being fetched. */
   isStored(documentId: string): Promise<boolean>;
-  /** Writes the documents' changes to storage; the host sends entries only once this resolves. */
+  /** Writes the documents' changes to storage; the host acknowledges a tab's changes only once this resolves. */
   save(documentIds: string[]): Promise<void>;
   /** Calls `listener` after any change to a document, whoever made it; returns its removal. */
   onChanged(listener: (documentId: string) => void): () => void;
-  /** Creates a document; a store without it leaves creation to another path. */
-  create?(initialValue: unknown): Promise<string>;
+  /** Creates a document holding exactly `changes`, which the host checked; an empty document when there are none. */
+  create?(changes: readonly Uint8Array[]): Promise<string>;
 }
 
 /** Copies of documents kept outside Automerge, such as an index; see {@link Contract.CopyEvent}. */
@@ -42,10 +47,12 @@ export interface CopySource {
 export type Options = {
   store: Store;
   copies?: CopySource;
+  /** Most times a second the host applies a document's queued changes; the first after a pause goes at once. */
+  maxFlushRate?: number;
 };
 
-/** Entries kept per document for batches based on older versions. */
-const ENTRY_WINDOW = 1_000;
+/** RepoProxy's rate, so a tab document's changes reach Automerge when a replica's would. */
+const MAX_FLUSH_RATE = 10;
 
 type Subscription = {
   readonly id: string;
@@ -59,49 +66,55 @@ type Subscription = {
 /** Subscriptions following a document through its copy, and the heads they were last sent. */
 type CopyWatch = { readonly documentId: string; readonly subscriptions: Set<Subscription>; heads: string };
 
+/** A change a tab sent, with every subscription that sent it, so each gets the ack. */
+type Queued = { readonly hash: string; readonly bytes: Uint8Array; readonly from: Set<Subscription> };
+
 type HostedDocument = {
   readonly documentId: string;
-  /**
-   * Names the sequencer's numbering. A new one each time the host starts following the document,
-   * including after its last subscriber left, so a client never reads versions from another numbering.
-   */
-  readonly epoch: string;
-  readonly sequencer: Sequencing.DocumentSequencer;
+  /** Each op's object, key or element and kind, for checking what a tab's change names. */
+  readonly index: CheckIndex;
   readonly subscribers: Set<Subscription>;
-  /** Batches already applied, so a batch resent after a lost response is not applied twice. */
-  readonly applied: Set<string>;
-  /** Entries whose changes may not be saved yet; sent in order once a save succeeds. */
-  readonly unsent: Sync.Entry[];
-  /** Serializes work on the document, so entries reach clients in the order they reached Automerge. */
-  queue: Promise<unknown>;
+  /** Checked and in the index, waiting for the next flush to apply them. */
+  queue: Queued[];
+  /** Applied, or already held when a tab sent them again, waiting for a save to acknowledge them. */
+  unacked: Queued[];
+  /** The Automerge heads the index and every subscriber have seen. */
+  heads: string[];
+  lastFlush: number;
+  flushScheduled: boolean;
+  /** Serializes work on the document, so tabs see changes in the order Automerge took them. */
+  work: Promise<unknown>;
 };
 
 /**
- * Serves documents to clients that keep proxies instead of Automerge replicas. Each followed document
- * gets a {@link Sequencing.DocumentSequencer}; client batches are applied as Automerge changes, saved,
- * and only then broadcast, so no client ever confirms a change a restart could lose.
+ * Serves tab documents. For each followed document it keeps a check index beside Automerge's document:
+ * a tab's change is checked against it, applied as the exact bytes the tab encoded, forwarded to the
+ * other followers and acknowledged once saved. Changes that reach Automerge any other way, through sync
+ * or another client, are added to the index and forwarded.
  */
 export class DocumentHost extends Resource implements Repo.Host {
   readonly #store: Store;
   readonly #copies?: CopySource;
+  readonly #flushInterval: number;
   readonly #documents = new Map<string, HostedDocument>();
+  readonly #loading = new Map<string, Promise<HostedDocument | undefined>>();
   readonly #subscriptions = new Map<string, Subscription>();
   readonly #copyWatches = new Map<string, CopyWatch>();
   #copyPushes: Promise<void> = Promise.resolve();
   #offChanged?: () => void = undefined;
 
-  constructor({ store, copies }: Options) {
+  constructor({ store, copies, maxFlushRate = MAX_FLUSH_RATE }: Options) {
     super();
     this.#store = store;
     this.#copies = copies;
+    this.#flushInterval = 1000 / maxFlushRate;
   }
 
   protected override async _open(): Promise<void> {
-    // Fires after every save, whoever wrote: absorbs network merges and writes from other clients.
     this.#offChanged = this.#store.onChanged((documentId) => {
       const hosted = this.#documents.get(documentId);
       if (hosted) {
-        void this.#enqueue(hosted, () => this.#absorb(hosted));
+        void this.#enqueue(hosted, () => this.#withDocument(hosted, (document) => this.#absorb(hosted, document)));
       }
     });
   }
@@ -111,6 +124,7 @@ export class DocumentHost extends Resource implements Repo.Host {
     this.#offChanged = undefined;
     // Work still queued stops at its next step.
     this.#documents.clear();
+    this.#loading.clear();
     this.#subscriptions.clear();
     this.#copyWatches.clear();
   }
@@ -133,10 +147,10 @@ export class DocumentHost extends Resource implements Repo.Host {
       if (this.#subscriptions.get(subscriptionId) === subscription) {
         this.#subscriptions.delete(subscriptionId);
       }
-      for (const documentId of subscription.documents) {
+      for (const documentId of [...subscription.documents]) {
         this.#detach(subscription, documentId);
       }
-      for (const documentId of subscription.copies) {
+      for (const documentId of [...subscription.copies]) {
         this.#unwatchCopy(subscription, documentId);
       }
     };
@@ -162,11 +176,11 @@ export class DocumentHost extends Resource implements Repo.Host {
       documentIds.forEach((documentId) => subscription.copies.add(documentId));
       void this.#deliverCopies(subscription, documentIds).catch((err) => this.#reportBackgroundError(err));
     }
-    await Promise.all(
-      add
-        .filter((entry) => !copied.includes(entry))
-        .map(({ documentId, known }) => this.#attach(subscription, documentId, known)),
-    );
+    for (const follow of add) {
+      if (!copied.includes(follow)) {
+        this.#attach(subscription, follow);
+      }
+    }
   }
 
   async submit({
@@ -178,85 +192,40 @@ export class DocumentHost extends Resource implements Repo.Host {
   }): Promise<Contract.SubmitResult[]> {
     const subscription = this.#requireSubscription(subscriptionId);
     return Promise.all(
-      batches.map(async ({ documentId, epoch, batchId, baseVersion, changes }) => {
-        const hosted = this.#documents.get(documentId);
-        if (!hosted || epoch !== hosted.epoch || !hosted.subscribers.has(subscription)) {
-          return { documentId, batchId, status: 'stale' as const };
+      batches.map(async ({ documentId, changes }): Promise<Contract.SubmitResult> => {
+        const hosted = subscription.documents.has(documentId) ? await this.#hosted(documentId) : undefined;
+        if (!hosted || !subscription.documents.has(documentId)) {
+          return { documentId, status: 'unfollowed' };
         }
-        const status = await this.#enqueue(hosted, async () => {
-          if (this.#documents.get(documentId) !== hosted) {
-            // Dropped while queued: its numbering is gone, and the client's catch-up settles the batch.
-            return 'stale' as const;
+        await this.#enqueue(hosted, async () => {
+          for (const change of changes) {
+            this.#take(hosted, subscription, change);
           }
-          if (hosted.applied.has(batchId)) {
-            // A resend after a lost response; its entry may still wait for a save.
-            await this.#publish(hosted);
-            return 'applied' as const;
-          }
-          const result = await this.#store.withDocument(documentId, (document) =>
-            hosted.sequencer.submit(document, subscription.clientId, { batchId, baseVersion, changes }),
-          );
-          if (!result) {
-            throw new Error(`Document ${documentId} could not be loaded`);
-          }
-          hosted.unsent.push(...result.entries);
-          if (result.type === 'applied') {
-            rememberBatch(hosted.applied, batchId);
-          }
-          if (result.type === 'applied' && result.refused) {
-            // A refusal means the client's proxy and the document disagree, which is a bug to fix.
-            log.error('proxy change refused', {
-              documentId,
-              batchId,
-              change: result.refused.index,
-              error: result.refused.error,
-            });
-          }
-          await this.#publish(hosted);
-          return result.type;
         });
-        return { documentId, batchId, status };
+        this.#scheduleFlush(hosted);
+        return { documentId, status: 'accepted' };
       }),
     );
   }
 
-  async createDocument(initialValue: unknown): Promise<string> {
+  /** Creates a document from a tab's first changes, checked as any tab's change is, so it holds exactly those. */
+  async createDocument(changes: readonly Uint8Array[]): Promise<string> {
     if (!this.#store.create) {
       throw new Error('This host does not create documents');
     }
-    return this.#store.create(initialValue);
+    const index = new CheckIndex();
+    for (const bytes of changes) {
+      const change = decodeChange(bytes);
+      const reason = refusal(index, change, bytes) ?? index.accept(change, index.clockOf(change.deps));
+      if (reason !== undefined) {
+        throw new Error(`A new document's change was refused: ${reason}`);
+      }
+    }
+    return this.#store.create(changes);
   }
 
   async flush(documentIds: string[]): Promise<void> {
     await this.#store.save(documentIds);
-  }
-
-  async resolveCursors({ documentId, path, heads, cursors }: Contract.ResolveCursors): Promise<(number | null)[]> {
-    const positions = await this.#store.withDocument(documentId, (document) => {
-      const view = A.view(document.doc(), heads);
-      return cursors.map((cursor) => {
-        try {
-          return A.getCursorPosition(view, [...path], cursor);
-        } catch {
-          return null;
-        }
-      });
-    });
-    return positions ?? cursors.map(() => null);
-  }
-
-  async createCursors({ documentId, path, heads, positions }: Contract.CreateCursors): Promise<(string | null)[]> {
-    const cursors = await this.#store.withDocument(documentId, (document) => {
-      const view = A.view(document.doc(), heads);
-      return positions.map((position) => {
-        try {
-          return A.getCursor(view, [...path], position);
-        } catch {
-          return null;
-        }
-      });
-    });
-    return cursors ?? positions.map(() => null);
   }
 
   /** Sends the copies that changed to the documents' followers; one with no exact copy any more goes live. */
@@ -276,7 +245,7 @@ export class DocumentHost extends Resource implements Repo.Host {
           const copy = copies.get(documentId);
           if (!copy) {
             for (const subscription of [...watch.subscriptions]) {
-              await this.#attach(subscription, watch.documentId);
+              this.#attach(subscription, { documentId: watch.documentId });
             }
             continue;
           }
@@ -308,20 +277,20 @@ export class DocumentHost extends Resource implements Repo.Host {
   }
 
   /**
-   * Starts following a document for a subscription. Returns at once: the snapshot or recovery
-   * arrives on the stream once the document is loaded, after a `requesting` event when the store has
-   * to fetch it.
+   * Starts following a document for a subscription. Returns at once: the answer arrives on the stream
+   * once the document is loaded, after a `requesting` event when the store has to fetch it.
    */
-  async #attach(subscription: Subscription, documentId: string, known?: Contract.Known): Promise<void> {
+  #attach(subscription: Subscription, follow: Contract.Follow): void {
+    const { documentId } = follow;
     this.#unwatchCopy(subscription, documentId);
     subscription.documents.add(documentId);
     void this.#probeStorage(subscription, documentId).catch((err) => this.#reportBackgroundError(err));
-    void this.#deliver(subscription, documentId, known).catch((err) => {
+    void this.#deliver(subscription, follow).catch((err) => {
       if (!this.isOpen) {
-        log('proxy delivery stopped by close', { documentId, err });
+        log('tab document delivery stopped by close', { documentId, err });
         return;
       }
-      log.warn('proxy document could not be delivered', { documentId, err });
+      log.warn('tab document could not be delivered', { documentId, err });
       if (subscription.documents.has(documentId)) {
         subscription.send([{ type: 'unavailable', documentId }]);
       }
@@ -337,111 +306,108 @@ export class DocumentHost extends Resource implements Repo.Host {
     }
   }
 
-  async #deliver(subscription: Subscription, documentId: string, known?: Contract.Known): Promise<void> {
-    let hosted = this.#documents.get(documentId);
+  /**
+   * Answers a follow: the changes since the tab's heads when the host holds them all, and a snapshot
+   * otherwise. The subscription receives every later change from then on.
+   */
+  async #deliver(subscription: Subscription, follow: Contract.Follow): Promise<void> {
+    const { documentId } = follow;
+    const hosted = await this.#hosted(documentId);
     if (!hosted) {
-      const heads = await this.#store.withDocument(documentId, (document) => A.getHeads(document.doc()));
-      if (!heads) {
-        throw new Error('document not found');
+      if (subscription.documents.has(documentId)) {
+        subscription.send([{ type: 'unavailable', documentId }]);
       }
-      hosted = this.#documents.get(documentId) ?? {
-        documentId,
-        epoch: randomId(),
-        sequencer: new Sequencing.DocumentSequencer(heads),
-        subscribers: new Set(),
-        applied: new Set(),
-        unsent: [],
-        queue: Promise.resolve(),
-      };
-      this.#documents.set(documentId, hosted);
-    }
-    const target = hosted;
-    if (!subscription.documents.has(documentId)) {
-      this.#dropIfUnfollowed(target);
       return;
     }
-    await this.#enqueue(target, async () => {
-      const current = this.#documents.get(documentId);
-      if (current !== target) {
-        // The last subscriber left while this delivery waited, which dropped the document.
-        if (current) {
-          await this.#deliver(subscription, documentId, known);
-          return;
-        }
-        this.#documents.set(documentId, target);
-      }
-      if (!subscription.documents.has(documentId)) {
-        this.#dropIfUnfollowed(target);
+    await this.#enqueue(hosted, async () => {
+      if (!subscription.documents.has(documentId) || this.#documents.get(documentId) !== hosted) {
+        // Unfollowed while the document loaded, or dropped and loaded again for a later follow.
+        this.#dropIfUnfollowed(hosted);
         return;
       }
-      const events = await this.#store.withDocument(documentId, (document): Contract.DocumentEvent[] => {
-        this.#absorbLoaded(target, document);
-        const { sequencer, epoch } = target;
-        if (known?.epoch === epoch) {
-          const entries = sequencer.since(known.version);
-          if (entries) {
-            return [
-              ...entries.map((entry): Contract.DocumentEvent => ({
-                type: 'entry',
-                documentId,
-                epoch,
-                entry: toContract(entry),
-              })),
-              { type: 'caughtUp', documentId, epoch, version: sequencer.version },
-            ];
-          }
-        } else if (known) {
-          const recovered = Sequencing.DocumentSequencer.recover(document.doc(), known.heads);
-          if (recovered) {
-            return [
-              {
-                type: 'recovered',
-                documentId,
-                epoch,
-                version: sequencer.version,
-                heads: [...sequencer.heads],
-                entries: recovered.map((entry) => ({
-                  ops: [...entry.ops],
-                  heads: [...entry.heads],
-                  ...(entry.origin ? { origin: entry.origin } : {}),
-                })),
-              },
-            ];
-          }
-          log.warn('client confirmed history this host does not hold; sending a snapshot', { documentId });
+      const events = await this.#withDocument(hosted, (document): Contract.DocumentEvent[] => {
+        // The answer holds every change the index does, so its hashes match its bytes.
+        this.#apply(hosted, document);
+        this.#absorb(hosted, document);
+        const heads = follow.heads ?? [];
+        if (heads.length > 0 && heads.every((head) => hosted.index.hasChange(head))) {
+          const changes = A.getChangesSince(document.doc(), heads);
+          return [
+            ...(changes.length > 0 ? [{ type: 'changes' as const, documentId, changes }] : []),
+            { type: 'caughtUp', documentId },
+          ];
         }
-        const inflight = known?.inflight
-          ? Sequencing.DocumentSequencer.findBatch(document.doc(), known.inflight)
-          : undefined;
+        const doc = document.doc();
         return [
           {
             type: 'snapshot',
             documentId,
-            epoch,
-            version: sequencer.version,
-            heads: [...sequencer.heads],
-            value: AutomergeOps.toValue(document.doc()),
-            ...(known?.inflight ? { applied: inflight !== undefined } : {}),
-            ...(inflight?.refusedAt === undefined ? {} : { refusedAt: inflight.refusedAt }),
+            bytes: saveNoCompress(doc),
+            hashes: hosted.index.snapshotHashes(),
+            heads: A.getHeads(doc),
           },
         ];
       });
-      // Current subscribers get what was absorbed; the answer goes out only once its changes are saved.
-      await this.#publish(target);
       if (!subscription.documents.has(documentId)) {
-        this.#dropIfUnfollowed(target);
+        this.#dropIfUnfollowed(hosted);
         return;
       }
-      target.subscribers.add(subscription);
-      subscription.send(events ?? [{ type: 'unavailable', documentId }]);
+      hosted.subscribers.add(subscription);
+      subscription.send(events);
+      // What the answer applied is saved and acknowledged on the usual schedule.
+      this.#scheduleFlush(hosted);
     });
   }
 
-  /** Forgets a document nobody follows, unless another numbering already replaced it. */
-  #dropIfUnfollowed(hosted: HostedDocument): void {
-    if (hosted.subscribers.size === 0 && this.#documents.get(hosted.documentId) === hosted) {
-      this.#documents.delete(hosted.documentId);
+  /** The hosted state of a document, loaded on first use; undefined when the store cannot produce it. */
+  async #hosted(documentId: string): Promise<HostedDocument | undefined> {
+    const existing = this.#documents.get(documentId);
+    if (existing) {
+      return existing;
     }
+    let loading = this.#loading.get(documentId);
+    if (!loading) {
+      loading = this.#store
+        .withDocument(documentId, (document): HostedDocument => {
+          const doc = document.doc();
+          return {
+            documentId,
+            index: CheckIndex.fromSaved(saveNoCompress(doc), hashesOf(doc)),
+            subscribers: new Set(),
+            queue: [],
+            unacked: [],
+            heads: A.getHeads(doc),
+            lastFlush: 0,
+            flushScheduled: false,
+            work: Promise.resolve(),
+          };
+        })
+        .then((hosted) => {
+          if (hosted && this.isOpen) {
+            // A load that raced another keeps the first.
+            const current = this.#documents.get(documentId) ?? hosted;
+            this.#documents.set(documentId, current);
+            return current;
+          }
+          return hosted;
+        })
+        .finally(() => this.#loading.delete(documentId));
+      this.#loading.set(documentId, loading);
+    }
+    return loading;
+  }
+
+  /** Forgets a document nobody follows once its changes are saved, unless another load already replaced it. */
+  #dropIfUnfollowed(hosted: HostedDocument): void {
+    if (hosted.subscribers.size > 0 || this.#documents.get(hosted.documentId) !== hosted) {
+      return;
+    }
+    if (hosted.queue.length > 0 || hosted.unacked.length > 0) {
+      // Saved and acknowledged first; the flush drops it once nobody follows it.
+      this.#scheduleFlush(hosted);
+      return;
+    }
+    this.#documents.delete(hosted.documentId);
   }
 
   #detach(subscription: Subscription, documentId: string): void {
@@ -452,9 +418,144 @@ export class DocumentHost extends Resource implements Repo.Host {
       return;
     }
     hosted.subscribers.delete(subscription);
-    if (hosted.subscribers.size === 0) {
-      this.#documents.delete(documentId);
+    this.#dropIfUnfollowed(hosted);
+  }
+
+  /**
+   * Checks one of a tab's changes and queues it, or answers it: a change the host holds is acknowledged
+   * with the next save, and one that fails a check is refused.
+   */
+  #take(hosted: HostedDocument, subscription: Subscription, { hash, bytes }: Contract.Change): void {
+    const waiting = [...hosted.queue, ...hosted.unacked].find((entry) => entry.hash === hash);
+    if (waiting) {
+      waiting.from.add(subscription);
+      return;
     }
+    if (hosted.index.hasChange(hash)) {
+      // Sent again, as after a reconnect, or relayed by another tab; the next save covers it.
+      hosted.unacked.push({ hash, bytes, from: new Set([subscription]) });
+      return;
+    }
+    let change: Change;
+    try {
+      // What the bytes say is checked, not what the tab claims about them.
+      change = decodeChange(bytes);
+    } catch (err) {
+      return this.#refuse(hosted, subscription, hash, `undecodable: ${String(err)}`);
+    }
+    const reason =
+      (change.hash !== hash ? `hash ${change.hash} does not match the claimed ${hash}` : undefined) ??
+      refusal(hosted.index, change, bytes) ??
+      hosted.index.accept(change, hosted.index.clockOf(change.deps));
+    if (reason !== undefined) {
+      return this.#refuse(hosted, subscription, hash, reason);
+    }
+    hosted.queue.push({ hash, bytes, from: new Set([subscription]) });
+  }
+
+  #refuse(hosted: HostedDocument, subscription: Subscription, hash: string, reason: string): void {
+    // A correct tab never sends a change the index refuses, so each one is a bug to fix.
+    log.error('tab change refused', { documentId: hosted.documentId, hash, reason });
+    subscription.send([{ type: 'refuse', documentId: hosted.documentId, hash, reason }]);
+  }
+
+  /** Flushes a document soon: at once after a pause, then at most `maxFlushRate` times a second. */
+  #scheduleFlush(hosted: HostedDocument): void {
+    if (hosted.flushScheduled || !this.isOpen) {
+      return;
+    }
+    hosted.flushScheduled = true;
+    const delay = Math.max(0, hosted.lastFlush + this.#flushInterval - Date.now());
+    scheduleTask(
+      this._ctx,
+      async () => {
+        hosted.flushScheduled = false;
+        hosted.lastFlush = Date.now();
+        await this.#enqueue(hosted, () => this.#flush(hosted)).catch((err) => this.#reportBackgroundError(err));
+      },
+      delay,
+    );
+  }
+
+  /** Applies the queue in one Automerge call, then saves and acknowledges what the save covers. */
+  async #flush(hosted: HostedDocument): Promise<void> {
+    if (hosted.queue.length > 0) {
+      await this.#withDocument(hosted, (document) => this.#apply(hosted, document));
+    }
+    if (hosted.unacked.length > 0) {
+      const saved = hosted.unacked.splice(0);
+      try {
+        await this.#store.save([hosted.documentId]);
+      } catch (err) {
+        // Acknowledged with a later save instead.
+        hosted.unacked.unshift(...saved);
+        throw err;
+      }
+      const bySubscription = new Map<Subscription, string[]>();
+      for (const { hash, from } of saved) {
+        for (const subscription of from) {
+          bySubscription.set(subscription, [...(bySubscription.get(subscription) ?? []), hash]);
+        }
+      }
+      for (const [subscription, hashes] of bySubscription) {
+        if (subscription.documents.has(hosted.documentId)) {
+          subscription.send([{ type: 'ack', documentId: hosted.documentId, hashes }]);
+        }
+      }
+    }
+    this.#dropIfUnfollowed(hosted);
+  }
+
+  /** Applies the queued changes to Automerge and forwards them to every follower that did not send them. */
+  #apply(hosted: HostedDocument, document: StoredDocument): void {
+    if (hosted.queue.length === 0) {
+      return;
+    }
+    // Changes Automerge took from elsewhere reach the followers first, in the order Automerge took them.
+    this.#absorb(hosted, document);
+    const queued = hosted.queue.splice(0);
+    document.applyChanges(queued.map(({ bytes }) => bytes));
+    hosted.heads = A.getHeads(document.doc());
+    for (const subscriber of hosted.subscribers) {
+      const changes = queued.filter(({ from }) => !from.has(subscriber)).map(({ bytes }) => bytes);
+      if (changes.length > 0) {
+        subscriber.send([{ type: 'changes', documentId: hosted.documentId, changes }]);
+      }
+    }
+    hosted.unacked.push(...queued);
+  }
+
+  /** Adds the changes Automerge took from elsewhere, since the heads the host last saw, and forwards them. */
+  #absorb(hosted: HostedDocument, document: StoredDocument): void {
+    const doc = document.doc();
+    const heads = A.getHeads(doc);
+    if (heads.join() === hosted.heads.join()) {
+      return;
+    }
+    const changes = A.getChangesSince(doc, hosted.heads);
+    const fresh: Uint8Array[] = [];
+    for (const bytes of changes) {
+      const change = decodeChange(bytes);
+      if (!hosted.index.hasChange(change.hash)) {
+        hosted.index.applyChange(change);
+        fresh.push(bytes);
+      }
+    }
+    hosted.heads = heads;
+    if (fresh.length > 0) {
+      for (const subscriber of hosted.subscribers) {
+        subscriber.send([{ type: 'changes', documentId: hosted.documentId, changes: fresh }]);
+      }
+    }
+  }
+
+  async #withDocument<T>(hosted: HostedDocument, fn: (document: StoredDocument) => T): Promise<T> {
+    // Wrapped, so a function that returns nothing is told apart from a document the store lacks.
+    const result = await this.#store.withDocument(hosted.documentId, (document) => ({ value: fn(document) }));
+    if (!result) {
+      throw new Error(`Document ${hosted.documentId} could not be loaded`);
+    }
+    return result.value;
   }
 
   /**
@@ -471,7 +572,7 @@ export class DocumentHost extends Resource implements Repo.Host {
       }
       const copy = copies.get(documentId);
       if (!copy) {
-        await this.#attach(subscription, documentId);
+        this.#attach(subscription, { documentId });
         continue;
       }
       const watch = this.#copyWatches.get(documentId) ?? { documentId, subscriptions: new Set(), heads: '' };
@@ -498,55 +599,14 @@ export class DocumentHost extends Resource implements Repo.Host {
     }
   }
 
-  async #absorb(hosted: HostedDocument): Promise<void> {
-    await this.#store.withDocument(hosted.documentId, (document) => this.#absorbLoaded(hosted, document));
-    await this.#publish(hosted);
-  }
-
-  /** Turns changes that reached the document outside the sequencer into an entry to send. */
-  #absorbLoaded(hosted: HostedDocument, document: StoredDocument): void {
-    const entry = hosted.sequencer.absorb(document.doc());
-    if (entry) {
-      hosted.unsent.push(entry);
-    }
-  }
-
-  /**
-   * Saves the document, then sends every entry not sent yet, so no client confirms a change a restart
-   * could lose. Runs on the document's queue; a failed save keeps the entries for the next attempt.
-   */
-  async #publish(hosted: HostedDocument): Promise<void> {
-    if (hosted.unsent.length === 0) {
-      return;
-    }
-    await this.#store.save([hosted.documentId]);
-    this.#broadcast(hosted, hosted.unsent.splice(0));
-  }
-
-  #broadcast(hosted: HostedDocument, entries: readonly Sync.Entry[]): void {
-    if (entries.length === 0) {
-      return;
-    }
-    const events: Contract.DocumentEvent[] = entries.map((entry) => ({
-      type: 'entry',
-      documentId: hosted.documentId,
-      epoch: hosted.epoch,
-      entry: toContract(entry),
-    }));
-    for (const subscriber of hosted.subscribers) {
-      subscriber.send(events);
-    }
-    hosted.sequencer.trim(hosted.sequencer.version - ENTRY_WINDOW);
-  }
-
   /** Runs `task` after the document's earlier work; the caller gets its failure too. */
   #enqueue<T>(hosted: HostedDocument, task: () => Promise<T>): Promise<T> {
     const guarded = async () => {
       this.#requireOpen();
       return task();
     };
-    const run = hosted.queue.then(guarded, guarded);
-    hosted.queue = run.catch((err) => this.#reportBackgroundError(err));
+    const run = hosted.work.then(guarded, guarded);
+    hosted.work = run.catch((err) => this.#reportBackgroundError(err));
     return run;
   }
 
@@ -555,22 +615,30 @@ export class DocumentHost extends Resource implements Repo.Host {
     if (this.isOpen) {
       log.catch(err);
     } else {
-      log('proxy work stopped by close', { err });
+      log('tab document work stopped by close', { err });
     }
   }
 }
 
-const rememberBatch = (applied: Set<string>, batchId: string) => {
-  applied.add(batchId);
-  if (applied.size > ENTRY_WINDOW) {
-    const [oldest] = applied;
-    applied.delete(oldest);
+/**
+ * Why a change cannot be added to `index`, before its ops are checked: bytes that are not canonical,
+ * a dependency the index lacks, or a seq out of order.
+ */
+const refusal = (index: CheckIndex, change: Change, bytes: Uint8Array): string | undefined => {
+  // Automerge indexes a change under the hash of the bytes it was given but exports it re-encoded, so
+  // bytes that are not canonical would leave heads no other peer can ever reach.
+  if (!sameBytes(encodeChange(change).bytes, bytes)) {
+    return 'not canonically encoded';
   }
+  if (change.deps.some((dep) => !index.hasChange(dep))) {
+    return 'unknown dependency';
+  }
+  const expected = index.nextSeqOf(change.actor);
+  if (change.seq !== expected) {
+    return `seq ${change.seq}, expected ${expected}`;
+  }
+  return undefined;
 };
 
-const toContract = (entry: Sync.Entry): Contract.Entry => ({
-  version: entry.version,
-  ops: [...entry.ops],
-  heads: [...entry.heads],
-  ...(entry.origin ? { origin: entry.origin } : {}),
-});
+const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
+  left.length === right.length && left.every((byte, index) => byte === right[index]);

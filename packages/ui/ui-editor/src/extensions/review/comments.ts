@@ -107,7 +107,6 @@ export const comments = (options: CommentsOptions): Extension => {
     optionsFacet.of(options),
     options.id ? documentId.of(options.id) : undefined,
     commentsState,
-    pendingComments,
     commentsDecorations,
     commentsHighlightLayer,
     handleCommentClick,
@@ -560,36 +559,6 @@ const restoreCommentEffect = StateEffect.define<TrackedComment>({
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
 
-/** A new comment whose anchor waits for the cursor converter to place its range exactly. */
-type PendingComment = { id: number; from: number; to: number };
-
-const addPendingComment = StateEffect.define<PendingComment>();
-const removePendingComment = StateEffect.define<number>();
-
-/** Ranges of comments awaiting their anchor, moved through the edits made meanwhile. */
-const pendingComments = StateField.define<PendingComment[]>({
-  create: () => [],
-  update: (value, tr) => {
-    let pending = tr.docChanged
-      ? value.map((comment) => ({
-          ...comment,
-          from: tr.changes.mapPos(comment.from, 1),
-          to: tr.changes.mapPos(comment.to, -1),
-        }))
-      : value;
-    for (const effect of tr.effects) {
-      if (effect.is(addPendingComment)) {
-        pending = [...pending, effect.value];
-      } else if (effect.is(removePendingComment)) {
-        pending = pending.filter((comment) => comment.id !== effect.value);
-      }
-    }
-    return pending;
-  },
-});
-
-let lastPendingComment = 0;
-
 /**
  * Create comment thread action.
  */
@@ -628,29 +597,6 @@ export const createComment: Command = (view) => {
 
   if (from === to) {
     return false;
-  }
-
-  const { whenExact } = view.state.facet(Cursor.converter);
-  if (whenExact) {
-    // Text this tab just typed may have no cursor yet, so the range follows edits until it can be anchored.
-    const id = ++lastPendingComment;
-    view.dispatch({ selection: { anchor: from }, effects: addPendingComment.of({ id, from, to }) });
-    void whenExact().then(() => {
-      const pending = view.state.field(pendingComments, false)?.find((comment) => comment.id === id);
-      if (!pending) {
-        return;
-      }
-      view.dispatch({ effects: removePendingComment.of(id) });
-      if (pending.from < pending.to) {
-        options.onCreate?.({
-          cursor: Cursor.getCursorFromRange(view.state, pending),
-          from: pending.from,
-          location: view.coordsAtPos(pending.from),
-          branch: options.reviewBranch,
-        });
-      }
-    });
-    return true;
   }
 
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });

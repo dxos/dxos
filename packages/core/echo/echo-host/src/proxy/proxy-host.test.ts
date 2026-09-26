@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import * as Handle from '@dxos/automerge-proxy/Handle';
@@ -35,7 +37,7 @@ describe('createProxyHost', () => {
     onTestFinished(async () => {
       await host.close();
     });
-    const repo = await new Repo.ProxyRepo({
+    const repo = await new Repo.TabRepo({
       host: new Transport({ host: () => host, random: createRandom(1).next }),
       createHandle: (options) => new Handle.DocHandle(options),
     }).open();
@@ -59,5 +61,43 @@ describe('createProxyHost', () => {
     expect(automergeHost.loadedDocumentIds).toContain(documentId);
     using lease = await automergeHost.loadDoc<Doc>(Context.default(), documentId);
     expect(lease?.doc()?.title).toBe('again');
+  });
+
+  test("creates a tab's document from the tab's own changes, with the tab's heads", async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const automergeHost = new AutomergeHost({ runtime });
+    await automergeHost.open();
+    onTestFinished(async () => {
+      await automergeHost.close();
+    });
+    const host = await createProxyHost({ automergeHost }).open();
+    onTestFinished(async () => {
+      await host.close();
+    });
+    const repo = await new Repo.TabRepo({
+      host: new Transport({ host: () => host, random: createRandom(2).next }),
+      createHandle: (options) => new Handle.DocHandle(options),
+    }).open();
+    onTestFinished(async () => {
+      await repo.close();
+    });
+
+    const handle = repo.create({ title: 'new' });
+    handle.change((doc: Doc) => {
+      doc.title = 'edited before the host named it';
+    });
+    await repo.flushCreations();
+    await repo.flush();
+    const { documentId } = handle;
+    expect(documentId).toBeDefined();
+    if (!documentId) {
+      return;
+    }
+    // The contract carries the id the host minted as a plain string.
+    using lease = await automergeHost.loadDoc<Doc>(Context.default(), documentId as DocumentId);
+    const doc = lease?.doc();
+    expect(doc && A.getHeads(doc)).toEqual(handle.heads);
+    expect(lease?.doc()?.title).toBe('edited before the host named it');
   });
 });

@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
+import { type Doc as AutomergeDoc } from '@automerge/automerge';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
