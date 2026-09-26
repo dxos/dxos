@@ -1,5 +1,291 @@
 # @dxos/react-ui-card
 
+## 0.12.0
+
+### Minor Changes
+
+- 9c86066: `Row.Person` now always renders the actor's avatar, with the contact affordance built in: hovering an avatar whose contact resolves opens that Person's card, and an unresolved one offers to create the contact. The variant is chosen by the presence of `db` (or the new list-friendly `getContact` lookup) rather than an `avatar` flag, which is removed; `ContactAvatar` is exported for surfaces that lay out their own rows, and `size` selects between the dense (6) and message-header (9) avatar.
+
+  Also: a virtual list whose first page fits its viewport now extends instead of waiting for a scroll it can never receive; the shared contact extractor refuses machine senders (`no-reply@`, `mailer-daemon@`, qualified role addresses like `invoice+statements+acct_…@stripe.com`); and mailbox summarization summarizes whole conversations rather than individual messages.
+
+- 306f50d: Mail and calendar providers now own their own operations. `GoogleMailSync`, `GmailSend`,
+  `MaterializeGmailTarget`, `GetGoogleCalendars`, `GoogleCalendarSync`, `MaterializeGoogleCalendarTarget`
+  (was `MaterializeCalendarTarget`), `CreateGoogleCalendarEvent`, `GetGoogleContactGroups` and
+  `GoogleContactsSync` move from `@dxos/plugin-inbox/InboxOperation` to
+  `@dxos/plugin-google/GoogleOperation`; `JmapSync`, `MaterializeJmapTarget` and `JmapSend` move to
+  `@dxos/plugin-jmap/JmapOperation`. Their operation DXNs change accordingly.
+
+  The Inbox, Inbox (Send) and Calendar skills no longer name a provider: their tools are resolved from
+  the connectors and send providers a deployment actually installs. A JMAP-only deployment previously
+  advertised Gmail tools it could not run and had no sync tool of its own.
+
+  A draft calendar event is now one carrying no foreign key from any provider, rather than none from
+  Google — events synced by any other calendar connector were reported as perpetual drafts.
+
+  `ScanMailbox` is now `AnalyzeMailbox`, and its progress meters name their phase as well as their
+  mailbox ("Syncing Inbox", "Analyzing Inbox") — two meters run over one mailbox, so the bare name left
+  the user unable to tell which was moving.
+
+  A card header's leading depiction is now contributable per type via the `AppSurface.CardIcon` role.
+  Hosts wrap their existing default in `CardIconSlot`, which renders a contributed surface when one
+  matches and the default otherwise — `Surface`'s own `fallback` is the error boundary, and unlike
+  `CardContent` a miss here cannot render nothing. Scoped to cards deliberately: a 6-unit card block
+  affords initials or a photograph where a 16px navtree row does not, so non-card surfaces keep
+  resolving `IconAnnotation` through `Obj.getIcon`. `ObjectAvatar` now derives its initials' hue from the
+  object's label rather than its type, since a type declaring a single hue put every instance on the same
+  disc; it is no longer a card's default depiction, only what a type opts into.
+
+  **`@dxos/react-ui` breaking:** `Message` is renamed to `Banner` — `Message.Root`/`Content`/`Title` are
+  now `Banner.*`, the `message.*` theme keys are `banner.*`, and the `Callout` alias is removed. A new
+  `Deferred` holds a fallback back until a pending state has lasted `delay`, then keeps it for at least
+  `minDuration`, so a momentary empty state is never rendered as the answer.
+
+### Patch Changes
+
+- 098a0bb: Inbox surface: virtual folders, archive, and sender enrichment.
+
+  **Inbox and Starred folders** join All Mail / Sent / Drafts / Subscriptions as mailbox child nodes, reusing the existing `properties.filter` + `systemTag` path — no new query machinery.
+
+  **Archive** is available from both the conversation menu and the mailbox tile menu, grouped with Delete since both take a message out of the reading flow. Archiving from a dedicated message view closes the plank; restoring does not.
+
+  Archive is modelled as the `inbox` system tag coming **off**, never a separate `archived` tag: Gmail models INBOX as a label and JMAP as a mailbox role, both already mapped by the providers, so one toggle serves both directions and no filter-complement operator is needed. Note that tag changes are not yet pushed back to the provider, so **a Gmail sync will restore an archived message** — pushing them is tracked separately.
+
+  **Conversation menu** gains "Create Project" (the `CreateProjectFromMessage` operation previously had no UI) and sender enrichment. The latter arrives through a new `InboxCapabilities.SenderAction` capability rather than a direct import, because plugin-crm already depends on plugin-inbox; `createInvocations` returns a list so a contributor can express a composite (research, then image) without fusing it into one operation.
+
+  **Pipeline actions are hidden until a connection is configured** — previously Enrich was offered on a mailbox with nothing to enrich.
+
+  **`RecordArticle` gains a toolbar** sourced from the subject's own app-graph node, so any plugin can contribute type-specific actions to it; plugin-crm contributes Enrich for `Person` and `Organization`. `Card.Action` gains a `leading` slot so a row standing for a person can show their avatar instead of a generic glyph.
+
+  **Removed:** `InboxOperation.ProcessMailbox` and its routine template. Its cursor helpers were shared with `ClassifyMailbox` and survive at `operations/cursor.ts` with a now-required consumer id; `ResetProcessCursor` becomes the generic `ResetFeedCursor`, also with a required `cursorId`. `CrmOperation.ProcessMailbox` is unrelated and unaffected.
+
+- 631df48: A task's ID chip copies the task's full `echo://<space>/<id>` URI rather than `@mnemonic`, so the copied reference resolves wherever it is pasted; in the task list it reads the space from the live task rather than the row's snapshot.
+
+  The terminal prints JSON — an object, or a string holding a JSON object or array — indented and highlighted, with keys, strings, numbers, booleans and null colored through the theme's ANSI palette.
+
+  The terminal leaves a blank line after a command's output, and selected text is readable: the selection took a color token that does not exist, which resolved to the text color.
+
+  The task list's filter button is filled and accented whenever anything narrows the list — a typed query as well as hidden statuses — so a filtered list is recognisable at a glance.
+
+  In the task list a task's tags and artifacts sit on a line of their own under the title and above the description, instead of sharing the title line; the assignee stays right-aligned on the title line. `TaskTags` takes `assignee={false}` for a host that places the assignee itself.
+
+  A task row's menu offers **Add sub-task**, which files an untitled task under that row, expands the row if it was collapsed, and opens the new task. A task editor focuses its title when the task has none, so the new task is named where it opens; an untitled row shows an "Untitled" placeholder.
+
+  An answered question appears in the task's activity as one entry, the question with its answer, dated when it was answered; open questions stay in the article's Questions section, where each option is an item of its own. `TaskHistory` no longer takes `onAnswer`, and `TaskQuestion` no longer takes `date`.
+
+  The task list's create pane takes files dropped or pasted on it (`TaskList.Editor` `acceptFiles`), holding them as chips until the task is created and then handing them to `onTaskCreate` with the draft. `onTaskCreate` may report a `TaskCreateResult`: `error` keeps the whole draft (a refused create no longer clears what was typed), `rejectedFiles` stay on the pane to retry, and a create that lands late clears only fields still holding what was sent; the task set article offers it only where a plugin can store files, and attaches them to the new task.
+
+  In a hierarchical task list `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its parent, alongside the existing `Shift+Arrow` moves; `Tab` is left to move focus when there is nothing to indent under or focus is on a control inside the row.
+
+  The task set's filter — the query text and the statuses shown — is kept per device and per set (`TaskSetView.aspect`, the view-state `local` backend), so it survives navigating away and reloading.
+
+  A tree row keeps focus after a key the consumer handles on it (e.g. a restructuring `Shift+Arrow` or `Tab` in the task list), so consecutive moves work without refocusing the row.
+
+  `.dx-tag` no longer carries a margin, so chips are spaced only by their container's `gap` and tags and tag-styled buttons line up evenly; containers that relied on the margin (select cells in the grid, chat references, plugin list tags, devtools tree, card rows) now own a gap, and tags inline in CodeMirror text and the transcript gutter keep a local `mx-0.5`.
+
+  Which branches of a task set's list are open is kept per device and per set, as a task id → open map on `TaskSetView.aspect`, so a collapsed branch stays collapsed across navigation; a task absent from the map is open, as before.
+
+- Updated dependencies [a92ea18]
+- Updated dependencies [0c6c186]
+- Updated dependencies [af1c007]
+- Updated dependencies [4862c8e]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6186edc]
+- Updated dependencies [e3ceced]
+- Updated dependencies [6a457ac]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [4ececc6]
+- Updated dependencies [96f94c2]
+- Updated dependencies [c95def4]
+- Updated dependencies [3c7b013]
+- Updated dependencies [b1dc20c]
+- Updated dependencies [ac71815]
+- Updated dependencies [7c87626]
+- Updated dependencies [c020513]
+- Updated dependencies [f82c78f]
+- Updated dependencies [9714c75]
+- Updated dependencies [63fc847]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [f3f55a8]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [d194929]
+- Updated dependencies [6ef35a6]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [9c86066]
+- Updated dependencies [b2caee6]
+- Updated dependencies [9baf25f]
+- Updated dependencies [dcf911b]
+- Updated dependencies [b83b831]
+- Updated dependencies [6af89f4]
+- Updated dependencies [d770fe7]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [6f4a887]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [d0beedc]
+- Updated dependencies [731b264]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [6409948]
+- Updated dependencies [792c756]
+- Updated dependencies [1cf6347]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [9ab38fa]
+- Updated dependencies [b3673ee]
+- Updated dependencies [915db6a]
+- Updated dependencies [2e4c299]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [252ca39]
+- Updated dependencies [8fb29b3]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [0264069]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [872f391]
+- Updated dependencies [51820a1]
+- Updated dependencies [9ae0e5f]
+- Updated dependencies [7d000b9]
+- Updated dependencies [66e9264]
+- Updated dependencies [813069c]
+- Updated dependencies [84362af]
+- Updated dependencies [76d6fca]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [eeff74c]
+- Updated dependencies [967b130]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [72f7584]
+- Updated dependencies [e94ed89]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [851791f]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [12b6618]
+- Updated dependencies [818a096]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [9426389]
+- Updated dependencies [2e5e188]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [9d2466a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [9f2557b]
+- Updated dependencies [29543ca]
+- Updated dependencies [08cddf6]
+- Updated dependencies [a283607]
+- Updated dependencies [24fcadc]
+- Updated dependencies [b00ee72]
+- Updated dependencies [4804da0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [cd4da46]
+- Updated dependencies [5662dfc]
+- Updated dependencies [19f19a2]
+- Updated dependencies [2a41efd]
+- Updated dependencies [142ba02]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [690dcaa]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [a574300]
+- Updated dependencies [2513a52]
+- Updated dependencies [17ed864]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [f962a7d]
+- Updated dependencies [f4c2702]
+- Updated dependencies [7407d65]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [178bc6d]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [6fed038]
+- Updated dependencies [ea11703]
+- Updated dependencies [fa82aef]
+- Updated dependencies [18597fc]
+- Updated dependencies [9205bd3]
+- Updated dependencies [fce2060]
+- Updated dependencies [bda45ac]
+- Updated dependencies [5885380]
+- Updated dependencies [881f900]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [d8e9de1]
+- Updated dependencies [72b2984]
+- Updated dependencies [693d1b4]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [3ea8217]
+- Updated dependencies [559acfa]
+- Updated dependencies [1862edc]
+- Updated dependencies [631df48]
+- Updated dependencies [97efbaa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [5d816a6]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [40b50c2]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [c209b42]
+- Updated dependencies [eda8b55]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/react-ui-mosaic@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/lit-ui@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,502 @@
 # @dxos/plugin-debug
 
+## 0.12.0
+
+### Minor Changes
+
+- 4521dec: Every new chat now carries the planning skill, so a conversation can read and update the durable task checklist it already holds rather than answering task questions from nothing. `SetSessionCredentials` and `RevokeSessionCredentials` are replaced by a single `UpdateSessionCredentials` operation whose `refresh` mode re-reads every credential a running session already holds, so a rotated OAuth token no longer needs the session restarted — the two removed operations were also invisible to the model, since a `Schema.NonEmptyArray` input serialized to a JSON-schema keyword the tool resolver could not project. In the thread, a system-generated turn renders in its own framed panel again instead of as the model's own prose, and status and reasoning blocks fold into the tool run they narrate — including a run that never reaches a call — so a turn spent only narrating reads as one row rather than a widget per block.
+- 0524d38: The runnable space template now builds a chess engine exposed as an MCP server on one Cloudflare Worker, so the run it describes ends inside Composer — a chat in the same space asking the deployed Worker for a move — and nothing in the middle of it needs an account: DeepSeek through the edge rather than an Anthropic key, the assistant coding in a remote sandbox rather than delegating to a managed agent, `wrangler deploy --temporary` rather than a Cloudflare login, and GitHub last. **Breaking:** `@dxos/plugin-debug/sample` no longer exports `ChatroomSpace`; the replacement is `StockfishSpace`, with no compatibility re-export.
+- 3ace04d: A fifth sample space, Hello Worker: five sequential tasks that take a chat from an empty sandbox to a Cloudflare Worker returning a greeting and the time, deployed with wrangler's unauthenticated mode so the run needs no Cloudflare account until the last step. It is the short path through the ground the Chess MCP sample covers at length — there the engine is the work and deploying is one stage of five, here deploying is the whole project, so it ships no brief, no bound skill and nothing for the run to point at.
+
+  The sample's own directory is renamed from `projects` to `tidepool`, matching the name its definition already used.
+
+- b72c1a2: Every `LayoutOperation.Open` caller now passes the qualified id of a node the app graph builds, so these opens land on their plank instead of doing nothing: trace-panel links, clipped pages, the routines settings panel (from mailbox, calendar and feed properties and from trigger templates), a newly opened folder (now a workspace switch), messages and events opened from a mailbox or calendar rendered without an `attendableId`, and anything opened from the spotlight window, whose forwarder now passes the whole `Open` input through. The generic database path plugin-space resolves for an object of a stored schema uses the schema's entity id, which is how the database section keys it, and `SpaceOperation.Create` returns the new space's Home path as its `subject`.
+
+  Debug pages have no URL, so `Open` cannot reach them. The debug panel now passes `DebugSurface.PageData`, article data with an `onNavigate(nodeId)` that shows another page, and every page under `root/debug`, in plugin-debug and devtools, registers on the `DebugSurface.Page` role (`org.dxos.plugin.debug.surface.page`) instead of the article role. A plugin that adds a page to the debug panel must register it on that role.
+
+  Breaking: `SettingsPath.getPluginRegistrySectionPath` is removed, along with plugin-settings' `OpenPluginRegistry` handler, which opened a path nothing builds. To open the registry, invoke `SettingsOperation.OpenPluginRegistry` (from `@dxos/app-toolkit/SettingsOperation`, no input); plugin-registry's handler switches to the registry workspace. A build without plugin-registry has no handler for it, so `SettingsOperation.isPluginRegistryAvailable(enabled)` says whether to offer it; the plugin-failure toast drops its registry action when it returns false. The waiting-for-object toast is removed with `SpaceOperation.WaitForObject` and the space plugin's `awaiting` state: the deck already shows a plank that is still loading and fills it in when the object arrives.
+
+### Patch Changes
+
+- b83b831: Add a "Composer — Review queue" space template: a project whose tasks carry real dxos pull requests, their screenshots and their demo recordings. `Video` is now a shared type in `@dxos/types`, and a task's pull-request artifacts resolve without the GitHub plugin enabled.
+- ab56cfe: Devtools panels are article containers (`*Article`, exported from `containers/panels`) and the stats panel is a stack of `StatCard` cards, each contributed as a surface on `AppSurface.DevtoolsOverview`; the `Panel` accordion and `*Panel` exports are gone, and the duplicate `logs` deck companion is removed in favour of the debug panel's Logs page.
+
+  `Button` gains a `tag` variant with a `hue` (the `dx-tag` look on a button), `Field.Switch` takes a `density` and shrinks at `sm`, and `Card.Root`'s `density` now applies to its contents. `Surface.getMounted()` lists the surfaces currently mounted and `Surface.useProfilerSnapshot()` reads the profiler's cumulative per-surface stats without subscribing.
+
+  `JsonHighlighter` and `SyntaxHighlighter` scroll inside the family's themed `ScrollArea` (`scroll` picks the axes; `scroll={false}` gives the bare leaf that `Syntax.Code` uses), so the shorthand replaces a hand-built `Syntax.Root/Content/Viewport/Code` wherever no filter or depth control is needed.
+
+- 32827ee: The Hello Worker sample space names the sandbox's Node constraint in its first task, the way the chess template's Development skill already does: `wrangler deploy --temporary` needs wrangler 4.102 or later and that wrangler needs Node 22, but the sandbox runs Node 20, so a plain install resolves to the newest release Node 20 allows — which predates the flag. An agent working the list discovered that only at deploy time.
+- c50f666: A fourth sample space, "Incident 0516 retrospective": a status log, four people's notes about an outage, and the four tasks that turn them into a filed retro with owned action items and a customer notice. The log states the technical cause; the notes carry the process failures and two claims the log contradicts, so a chat delegated the tasks is tested on grounding what people remember in the record. The sample definitions are now exported from `@dxos/plugin-debug/sample` so a test or eval can apply one to a space directly.
+- 1160094: Object core pinning no longer installs a timer per registry touch — a single sweep timer expires pins by monotonic last-touch timestamp, removing the dominant timer churn of a bulk object load. The debug plugin's schema table now owns the generator promise it starts: the row shows the work in flight, refuses a concurrent click, and reports a failure instead of leaving it unhandled.
+- 72b7606: The planning skill's `update-tasks` tool now addresses tasks by ref and takes a batch of `changes` that can create, edit, assign or unassign a task, replacing `assign-tasks`; starting or assigning a task puts it on the chat's checklist and makes the conversation's agent its assignee. A new Weather MCP space template exercises this end to end: its task text spells out everything the browser MCP client needs from the Worker it asks for, and the sample exports the `FORECAST_URL` the tool wraps. MCP tools with parameters no longer crash the assistant's turn: each is built as a dynamic tool carrying the server's own JSON Schema, and a connection failure reports the transport's own error. Breaking: the `tasks` input and the `AssignTasks` operation are removed.
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- 4bac701: **Breaking:** `createCodecEncoding` now takes a structural `ValueCodec<T>` (`encode`/`decode`) and no longer accepts a second `EncodingOptions` argument, which only ever carried protobuf.js's `preserveAny`. Pass any object with `encode`/`decode`; no caller passed the options argument. `@dxos/hypercore`, `@dxos/feed-store` and `@dxos/client-services` no longer depend on `@dxos/codec-protobuf`.
+
+  Devtools and mesh presence move further onto buf: `PeerState` is now produced as a buf message by the gossip extension, `SignalResponse`, `SubscribeToSpacesResponse`, `LogEntry` and `QueryLogsRequest` are exposed as buf types, and the last top-level protobuf enum imports (`EdgeReplicationSetting`, `ConnectionState`) move with them. Wire formats are unchanged.
+
+- 77d0026: Fixed the space generator's type table showing blank names and dead create buttons for class-based type entities, which carry no `typename` property.
+- a7f4329: The chess template's Development skill says how to get a wrangler with `--temporary` in the sandbox: the sandbox runs Node 20, a plain install resolves to a wrangler that predates the flag, and a session that met that gave up on the deploy for want of a credential.
+- Updated dependencies [a92ea18]
+- Updated dependencies [0280a6a]
+- Updated dependencies [0c6c186]
+- Updated dependencies [86d1482]
+- Updated dependencies [af1c007]
+- Updated dependencies [4862c8e]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6186edc]
+- Updated dependencies [e3ceced]
+- Updated dependencies [6a457ac]
+- Updated dependencies [098a0bb]
+- Updated dependencies [098a0bb]
+- Updated dependencies [098a0bb]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [4ececc6]
+- Updated dependencies [96f94c2]
+- Updated dependencies [c95def4]
+- Updated dependencies [9477170]
+- Updated dependencies [b47fd84]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [f4e481a]
+- Updated dependencies [b1dc20c]
+- Updated dependencies [ac71815]
+- Updated dependencies [7c87626]
+- Updated dependencies [c020513]
+- Updated dependencies [6388838]
+- Updated dependencies [592b00e]
+- Updated dependencies [f82c78f]
+- Updated dependencies [1a8043c]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [28b7621]
+- Updated dependencies [9714c75]
+- Updated dependencies [d79aaf4]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [63fc847]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [28ad891]
+- Updated dependencies [b8762ef]
+- Updated dependencies [f3f55a8]
+- Updated dependencies [51c7e91]
+- Updated dependencies [3aa3d63]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [ea4093c]
+- Updated dependencies [069e8ed]
+- Updated dependencies [7becabf]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [b4c7782]
+- Updated dependencies [fee7666]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [d194929]
+- Updated dependencies [6ef35a6]
+- Updated dependencies [557e243]
+- Updated dependencies [864cd0d]
+- Updated dependencies [49aee6c]
+- Updated dependencies [ea11703]
+- Updated dependencies [cff33b7]
+- Updated dependencies [5305365]
+- Updated dependencies [c01fef6]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [9c86066]
+- Updated dependencies [b2caee6]
+- Updated dependencies [9baf25f]
+- Updated dependencies [5dc2419]
+- Updated dependencies [a09e18e]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [938bd20]
+- Updated dependencies [8a77160]
+- Updated dependencies [dcf911b]
+- Updated dependencies [b83b831]
+- Updated dependencies [dd17e57]
+- Updated dependencies [6d28380]
+- Updated dependencies [6af89f4]
+- Updated dependencies [329faa0]
+- Updated dependencies [d770fe7]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [6f4a887]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [119f317]
+- Updated dependencies [18758f9]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [d0beedc]
+- Updated dependencies [731b264]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [2643a00]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [6409948]
+- Updated dependencies [792c756]
+- Updated dependencies [1cf6347]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [9ab38fa]
+- Updated dependencies [b3673ee]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [915db6a]
+- Updated dependencies [6c6987e]
+- Updated dependencies [3e02201]
+- Updated dependencies [ed43a8d]
+- Updated dependencies [2e4c299]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [782a442]
+- Updated dependencies [b02fe16]
+- Updated dependencies [f0d3620]
+- Updated dependencies [472ca95]
+- Updated dependencies [5b99c47]
+- Updated dependencies [181f374]
+- Updated dependencies [252ca39]
+- Updated dependencies [8fb29b3]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [0264069]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [872f391]
+- Updated dependencies [bd792a6]
+- Updated dependencies [8608f03]
+- Updated dependencies [51820a1]
+- Updated dependencies [9ae0e5f]
+- Updated dependencies [7d000b9]
+- Updated dependencies [e56276b]
+- Updated dependencies [66e9264]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [84362af]
+- Updated dependencies [5bb340f]
+- Updated dependencies [76d6fca]
+- Updated dependencies [4c107a2]
+- Updated dependencies [26e31c1]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9477170]
+- Updated dependencies [eeff74c]
+- Updated dependencies [279f87b]
+- Updated dependencies [84568a0]
+- Updated dependencies [251f586]
+- Updated dependencies [3c85350]
+- Updated dependencies [967b130]
+- Updated dependencies [0ef896f]
+- Updated dependencies [d2f3d87]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [d90fe83]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [0f0acca]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [72f7584]
+- Updated dependencies [e94ed89]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [851791f]
+- Updated dependencies [9c86066]
+- Updated dependencies [608a172]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [1556525]
+- Updated dependencies [617b125]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [5913020]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [1e2a300]
+- Updated dependencies [6328de3]
+- Updated dependencies [12b6618]
+- Updated dependencies [24cbdff]
+- Updated dependencies [fa36e26]
+- Updated dependencies [098a0bb]
+- Updated dependencies [df0ab57]
+- Updated dependencies [ce194c0]
+- Updated dependencies [41e2750]
+- Updated dependencies [818a096]
+- Updated dependencies [043c792]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [9426389]
+- Updated dependencies [2e5e188]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [4f760ce]
+- Updated dependencies [9d2466a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [9f2557b]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [08cddf6]
+- Updated dependencies [c0e5651]
+- Updated dependencies [3214dcf]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [a283607]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [b00ee72]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [770c73d]
+- Updated dependencies [63e500b]
+- Updated dependencies [9684ee8]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [7c426d4]
+- Updated dependencies [064a184]
+- Updated dependencies [cd4da46]
+- Updated dependencies [ec4f4ca]
+- Updated dependencies [78e5596]
+- Updated dependencies [5662dfc]
+- Updated dependencies [d1a69fb]
+- Updated dependencies [b1bb838]
+- Updated dependencies [19f19a2]
+- Updated dependencies [2a41efd]
+- Updated dependencies [72b7606]
+- Updated dependencies [1b6e258]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [93c7523]
+- Updated dependencies [4a71ef2]
+- Updated dependencies [987f7e1]
+- Updated dependencies [e7fc023]
+- Updated dependencies [142ba02]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [22c7a70]
+- Updated dependencies [08c82f9]
+- Updated dependencies [256f286]
+- Updated dependencies [4689d66]
+- Updated dependencies [306f50d]
+- Updated dependencies [881f900]
+- Updated dependencies [8f372ce]
+- Updated dependencies [6c881a2]
+- Updated dependencies [f048062]
+- Updated dependencies [690dcaa]
+- Updated dependencies [3b09a05]
+- Updated dependencies [e207c68]
+- Updated dependencies [b7822a7]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [5b504b4]
+- Updated dependencies [eb95cd7]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [098a0bb]
+- Updated dependencies [20e86ba]
+- Updated dependencies [1482a3f]
+- Updated dependencies [a574300]
+- Updated dependencies [983fe1d]
+- Updated dependencies [af1ff99]
+- Updated dependencies [4663f24]
+- Updated dependencies [2513a52]
+- Updated dependencies [2896a58]
+- Updated dependencies [fa79a0e]
+- Updated dependencies [d7bec53]
+- Updated dependencies [17ed864]
+- Updated dependencies [098a0bb]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [f962a7d]
+- Updated dependencies [0280a6a]
+- Updated dependencies [9e91762]
+- Updated dependencies [f4c2702]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [dea5df9]
+- Updated dependencies [098a0bb]
+- Updated dependencies [098a0bb]
+- Updated dependencies [ca04eca]
+- Updated dependencies [7407d65]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [178bc6d]
+- Updated dependencies [58b59d7]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [66e5008]
+- Updated dependencies [ff45e97]
+- Updated dependencies [dd039d2]
+- Updated dependencies [6fed038]
+- Updated dependencies [77d0026]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [97b247c]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [fa82aef]
+- Updated dependencies [886453b]
+- Updated dependencies [baa40a1]
+- Updated dependencies [18597fc]
+- Updated dependencies [9205bd3]
+- Updated dependencies [fce2060]
+- Updated dependencies [582fc22]
+- Updated dependencies [892b718]
+- Updated dependencies [bda45ac]
+- Updated dependencies [63629c5]
+- Updated dependencies [5885380]
+- Updated dependencies [881f900]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [1957b39]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [d8e9de1]
+- Updated dependencies [0c92b44]
+- Updated dependencies [72b2984]
+- Updated dependencies [5dedae9]
+- Updated dependencies [693d1b4]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [3ea8217]
+- Updated dependencies [559acfa]
+- Updated dependencies [1862edc]
+- Updated dependencies [631df48]
+- Updated dependencies [97efbaa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [06cbe76]
+- Updated dependencies [40b50c2]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+- Updated dependencies [4ae2005]
+- Updated dependencies [605455c]
+- Updated dependencies [ff93962]
+- Updated dependencies [9d8fcbd]
+- Updated dependencies [85bdad2]
+- Updated dependencies [b2a44d6]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [d094b1e]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [c209b42]
+- Updated dependencies [78433b0]
+- Updated dependencies [77976e4]
+- Updated dependencies [e0a9adb]
+- Updated dependencies [f99a6e9]
+- Updated dependencies [eda8b55]
+- Updated dependencies [11de244]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+- Updated dependencies [6dadb41]
+  - @dxos/echo@0.12.0
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/plugin-inbox@0.12.0
+  - @dxos/schema@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/assistant-toolkit@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/plugin-google@0.12.0
+  - @dxos/link@0.12.0
+  - @dxos/react-ui-terminal@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-connector@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/devtools@0.12.0
+  - @dxos/react-ui-syntax-highlighter@0.12.0
+  - @dxos/plugin-illustrator@0.12.0
+  - @dxos/errors@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/log-store-idb@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/plugin-chess@0.12.0
+  - @dxos/plugin-sheet@0.12.0
+  - @dxos/compute-hyperformula@0.12.0
+  - @dxos/conductor@0.12.0
+  - @dxos/operation@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/plugin-game@0.12.0
+  - @dxos/plugin-tldraw@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/react-ui-canvas-compute@0.12.0
+  - @dxos/react-ui-canvas-editor@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/plugin-status-bar@0.12.0
+  - @dxos/react-ui-debug@0.12.0
+  - @dxos/random@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

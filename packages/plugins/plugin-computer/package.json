@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-computer",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Dev-only coding harness: a bash tool and a multi-string-replace tool backed by a vite dev-server route.",
   "homepage": "https://dxos.org",

@@ -1,5 +1,62 @@
 # @dxos/assistant-evals
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [9477170]
+- Updated dependencies [86d1482]
+- Updated dependencies [cd205fb]
+- Updated dependencies [4ececc6]
+- Updated dependencies [b83d607]
+- Updated dependencies [ab734ba]
+- Updated dependencies [28b7621]
+- Updated dependencies [2d4107f]
+- Updated dependencies [dd17e57]
+- Updated dependencies [6d28380]
+- Updated dependencies [329faa0]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [020af54]
+- Updated dependencies [3e02201]
+- Updated dependencies [dde6714]
+- Updated dependencies [9d4dec3]
+- Updated dependencies [b02fe16]
+- Updated dependencies [4c52ca6]
+- Updated dependencies [cafa240]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [cc45381]
+- Updated dependencies [9d2466a]
+- Updated dependencies [ab79741]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [63e500b]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [32468c3]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [8f372ce]
+- Updated dependencies [10defed]
+- Updated dependencies [dea5df9]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [63629c5]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [5dedae9]
+- Updated dependencies [bb94124]
+- Updated dependencies [1a3de22]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [11de244]
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/agent-runtime@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

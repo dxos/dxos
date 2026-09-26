@@ -1,5 +1,80 @@
 # @dxos/shell
 
+## 0.12.0
+
+### Minor Changes
+
+- d2f3d87: Logging out, recovering an identity and joining another identity as a new device now delete the current identity with `client.halo.deleteIdentity()` and continue in the same page, instead of resetting the client storage and reloading. After an in-place deletion, a joined or recovered identity now receives its spaces, including spaces that come back under the ids they had before. Breaking: the `onReset` option of `ClientPlugin` is removed; contribute `ClientCapabilities.OnIdentityDeleted` to react when an identity is deleted in place.
+
+### Patch Changes
+
+- Updated dependencies [6388838]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [5df602e]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [73daef4]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [7d04444]
+- Updated dependencies [194b1d3]
+- Updated dependencies [864cd0d]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [8cb5553]
+- Updated dependencies [967b130]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [ce194c0]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [9d2466a]
+- Updated dependencies [29543ca]
+- Updated dependencies [c0e5651]
+- Updated dependencies [07531e0]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [0c92b44]
+- Updated dependencies [5dedae9]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [85e6347]
+- Updated dependencies [f112c37]
+- Updated dependencies [520c34f]
+- Updated dependencies [4ae2005]
+- Updated dependencies [605455c]
+- Updated dependencies [ff93962]
+- Updated dependencies [9d8fcbd]
+- Updated dependencies [77d0026]
+  - @dxos/protocols@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/react-ui-pickers@0.12.0
+  - @dxos/rpc-tunnel@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/display-name@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

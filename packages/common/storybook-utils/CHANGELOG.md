@@ -1,5 +1,60 @@
 # @dxos/storybook-utils
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [c020513]
+- Updated dependencies [9714c75]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [6af89f4]
+- Updated dependencies [d770fe7]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [2e4c299]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [818a096]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [08cddf6]
+- Updated dependencies [d4b4919]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [178bc6d]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [6fed038]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [928e0b2]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
