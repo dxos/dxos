@@ -3,13 +3,20 @@
 //
 
 import * as Duration from 'effect/Duration';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
+import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { type Task } from '@dxos/types';
 
-import { type Session, type SessionTimeline, buildSessionTimeline } from '../session-timeline/index.ts';
+import {
+  type Session,
+  type SessionTimeline,
+  type TaskStatusChange,
+  buildSessionTimeline,
+  readTaskStatusChanges,
+} from '../session-timeline/index.ts';
 import { useTraceMessages } from './useTraceMessages.ts';
 
 /** How often `now` advances while a session is open, so a running lane's range keeps growing. */
@@ -20,6 +27,23 @@ const TICK_MS = 5_000;
 const TRACE_DEBOUNCE = Duration.millis(500);
 
 const NO_PROCESSES: readonly Process.Info[] = [];
+
+type StatusChangeCache = Map<string, { heads: string; changes: TaskStatusChange[] }>;
+
+/**
+ * A task's status moves, re-read only when its document has moved on: reading them diffs every change
+ * in the document, and the timeline rebuilds on every trace emission and tick.
+ */
+const cachedStatusChanges = (cache: StatusChangeCache, task: Task.Task): TaskStatusChange[] => {
+  const heads = (Obj.version(task).automergeHeads ?? []).join(',');
+  const cached = cache.get(task.id);
+  if (cached?.heads === heads) {
+    return cached.changes;
+  }
+  const changes = readTaskStatusChanges(task);
+  cache.set(task.id, { heads, changes });
+  return changes;
+};
 
 export type UseSessionTimelineOptions = {
   /** The sessions shown; each contributes a session lane and its checklist's task lanes. */
@@ -45,8 +69,11 @@ export const useSessionTimeline = (
     return () => clearInterval(interval);
   }, []);
 
-  return useMemo(
-    () => buildSessionTimeline({ traceMessages, processes, sessions, tasks, now }),
-    [traceMessages, processes, sessions, tasks, now],
-  );
+  const statusChangeCache = useRef<StatusChangeCache>(new Map());
+  return useMemo(() => {
+    const taskStatusChanges = new Map(
+      (tasks ?? []).map((task) => [task.id, cachedStatusChanges(statusChangeCache.current, task)]),
+    );
+    return buildSessionTimeline({ traceMessages, processes, sessions, tasks, taskStatusChanges, now });
+  }, [traceMessages, processes, sessions, tasks, now]);
 };
