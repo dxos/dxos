@@ -63,5 +63,14 @@ export default handler;
 const describedType = ({ typename, jsonSchema }: { typename?: string; jsonSchema?: Record<string, any> }) => {
   invariant(typename, 'Pass a `typename` with `jsonSchema`.');
   invariant(jsonSchema, 'Pass a `jsonSchema`.');
-  return Type.makeObjectFromJsonSchema({ typename, version: '0.1.0', jsonSchema });
+  return Type.makeObjectFromJsonSchema({ typename, version: '0.1.0', jsonSchema: withIdProperty(jsonSchema) });
 };
+
+/**
+ * Declares `id` on a closed schema that leaves it out, since every stored object carries one and a
+ * closed schema without it rejects every draft with `Unknown property: id`.
+ */
+const withIdProperty = (jsonSchema: Record<string, any>): Record<string, any> =>
+  jsonSchema.additionalProperties === false && !('id' in (jsonSchema.properties ?? {}))
+    ? { ...jsonSchema, properties: { id: { type: 'string' }, ...jsonSchema.properties } }
+    : jsonSchema;

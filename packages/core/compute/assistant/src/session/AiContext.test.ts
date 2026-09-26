@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { RuntimeProvider } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 
 import * as AiContext from './AiContext.ts';
@@ -75,6 +76,37 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => reader.close());
 
       expect(objects.map((obj) => Obj.getURI(obj)).sort()).toEqual([Obj.getURI(a), Obj.getURI(b)].sort());
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  // Run between agent turns: a rejected re-read used to fail the whole agent process.
+  test('a sync whose query fails keeps the current bindings', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ objects: [Ref.make(a)] }));
+
+      // The binder's query is private; any query result shares its prototype, which is where `run` lives.
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const run = vi
+        .spyOn(Object.getPrototypeOf(probe), 'run')
+        .mockRejectedValueOnce(new Error('Timeout [20,000ms]: index query'));
+      yield* Effect.promise(() => binder.sync());
+      const failedReads = run.mock.calls.length;
+      run.mockRestore();
+      const objects = binder.getObjects();
+      yield* Effect.promise(() => binder.close());
+
+      expect(failedReads).toBe(1);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
     })
       .pipe(Effect.provide(TestLayer))
       .pipe(Effect.runPromise);
