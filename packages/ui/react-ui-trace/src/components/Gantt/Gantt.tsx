@@ -91,6 +91,11 @@ const ENTER_TRANSITION = 'duration-500 ease-out';
 
 /** Within this of the live edge the chart keeps following it; past it the reader is reading history. */
 const FOLLOW_SLACK = 4;
+/**
+ * How long the chart takes to drift to the live edge. Longer than the enter transition on purpose:
+ * the arriving event settles into place first, and the window follows it rather than racing it.
+ */
+const FOLLOW_DURATION = 600;
 
 const NODE_RADIUS = 6;
 const BAR_HEIGHT = 15;
@@ -402,6 +407,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const followRef = useRef(true);
   const glideRef = useRef(false);
+  const frameRef = useRef<number | undefined>(undefined);
   const drawnRef = useRef<number | undefined>(undefined);
   const [width, setWidth] = useState(600);
   useEffect(() => {
@@ -536,18 +542,47 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     const element = viewportRef.current;
     const grown = drawnRef.current !== undefined && scale.width > drawnRef.current;
     drawnRef.current = scale.width;
-    if (element && grown && followRef.current) {
-      // Glided rather than jumped: the drawing is unchanged to the left of the new event, and a jump
-      // asks the reader to re-find their place in it every time one arrives. Honour a reader who has
-      // asked for less motion, and fall back where `scrollTo` options are not understood.
-      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-      glideRef.current = !reduced;
-      if (reduced || typeof element.scrollTo !== 'function') {
-        element.scrollLeft = element.scrollWidth;
-      } else {
-        element.scrollTo({ left: element.scrollWidth, behavior: 'smooth' });
-      }
+    if (!element || !grown || !followRef.current) {
+      return;
     }
+
+    // Glided rather than jumped: the drawing is unchanged to the left of the new event, and a jump
+    // asks the reader to re-find their place in it every time one arrives. A reader who asked for
+    // less motion gets none.
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      element.scrollLeft = element.scrollWidth;
+      return;
+    }
+
+    // Animated here rather than by `scrollTo({ behavior: 'smooth' })`, whose curve is the browser's
+    // own and fixed: it arrives in a fraction of the time the event that caused it takes to settle,
+    // so the window lurches ahead of the drawing it is following.
+    const from = element.scrollLeft;
+    const to = element.scrollWidth - element.clientWidth;
+    if (to <= from) {
+      return;
+    }
+    const started = performance.now();
+    glideRef.current = true;
+    const step = (now: number): void => {
+      const progress = Math.min((now - started) / FOLLOW_DURATION, 1);
+      // Eased out, the shape everything else in the drawing travels on, so the two agree.
+      element.scrollLeft = from + (to - from) * (1 - (1 - progress) ** 3);
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(step);
+      } else {
+        glideRef.current = false;
+      }
+    };
+    frameRef.current = requestAnimationFrame(step);
+    // A glide still running when the next event arrives is abandoned where it got to; the glide that
+    // replaces it starts from there, so the drift retargets rather than restarting.
+    return () => {
+      if (frameRef.current !== undefined) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      glideRef.current = false;
+    };
   }, [scale.width]);
 
   return (
