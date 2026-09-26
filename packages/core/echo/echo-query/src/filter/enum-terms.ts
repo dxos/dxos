@@ -31,7 +31,7 @@ const NOT_KEYWORDS = new Set(['NOT', '!']);
  */
 export const parseEnumTerms = <T extends string>(text: string, { property, values }: EnumProperty<T>): EnumTerms<T> => {
   const tokens = tokenize(text);
-  if (tokens.some((token) => token.toUpperCase() === 'OR')) {
+  if (hasTopLevelOr(tokens)) {
     return { rest: text.trim() };
   }
 
@@ -107,7 +107,9 @@ export const parseEnumTerms = <T extends string>(text: string, { property, value
  *
  * Written in whichever of the two forms is shorter — the values kept (`prop:a`, `(prop:a OR prop:b)`)
  * or the values hidden (`NOT prop:x NOT prop:y`) — so hiding two of nine reads as that, not as a list
- * of the seven left. Every value selected writes no term.
+ * of the seven left. Every value selected writes no term. A query with a top-level `OR` comes back
+ * unchanged: no term on the property describes it, so a written term could not be read back, and
+ * each write would stack another term in front of the last.
  */
 export const writeEnumTerms = <T extends string>(
   text: string,
@@ -115,6 +117,9 @@ export const writeEnumTerms = <T extends string>(
   selected: readonly T[],
 ): string => {
   const { property, values } = spec;
+  if (hasTopLevelOr(tokenize(text))) {
+    return text;
+  }
   const { rest } = parseEnumTerms(text, spec);
   const kept = values.filter((value) => selected.includes(value));
   const hidden = values.filter((value) => !selected.includes(value));
@@ -129,6 +134,8 @@ export const writeEnumTerms = <T extends string>(
 
   return [term, rest].filter((part) => part.length > 0).join(' ');
 };
+
+const hasTopLevelOr = (tokens: readonly string[]): boolean => tokens.some((token) => token.toUpperCase() === 'OR');
 
 /** `prop:value`, the value optionally quoted; the property name matched literally, in any case. */
 const termPattern = (property: string): RegExp =>

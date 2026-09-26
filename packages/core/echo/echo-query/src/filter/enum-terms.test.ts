@@ -123,6 +123,16 @@ describe('writeEnumTerms', () => {
     expect(writeEnumTerms('status:done #urgent roast', status, ['todo'])).to.eq('status:todo #urgent roast');
   });
 
+  test('a query with a top-level OR is left unchanged', ({ expect }) => {
+    const query = 'status:done OR roast';
+    expect(writeEnumTerms(query, status, without('todo'))).to.eq(query);
+    expect(writeEnumTerms(writeEnumTerms(query, status, ['todo']), status, ['started'])).to.eq(query);
+  });
+
+  test('an OR inside a group does not count as top-level', ({ expect }) => {
+    expect(writeEnumTerms('(status:todo OR status:done) roast', status, ['started'])).to.eq('status:started roast');
+  });
+
   test('round-trips every subset through the text', ({ expect }) => {
     for (let mask = 0; mask < 1 << STATUSES.length; mask++) {
       const selected = STATUSES.filter((_, index) => mask & (1 << index));
