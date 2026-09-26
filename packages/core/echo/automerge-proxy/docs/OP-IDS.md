@@ -135,7 +135,8 @@ still mints ids for what it creates, which needs only the document's highest op 
 has to carry that number. What the write refers to, the element an insert follows or the values a
 put overwrites, the tab names by position in the copy, and the worker resolves it against the version
 the copy came from with Automerge (`view` at those heads). Cursors need the object's ids, which arrive
-once the tab subscribes to the document.
+once the tab subscribes to the document. [INTEGRATION.md](./INTEGRATION.md) resolves the positions in
+the tab instead, once the snapshot arrives, so the copy needs no op counter.
 
 ### Remote changes
 

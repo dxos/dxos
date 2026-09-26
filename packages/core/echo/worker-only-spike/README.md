@@ -6,7 +6,8 @@ holds as plain JS, and its benches measure those documents in Chromium.
 
 The design under test is in [OP-IDS.md](../automerge-proxy/docs/OP-IDS.md) and
 [HISTORY.md](../automerge-proxy/docs/HISTORY.md). The blockers are the table in
-[WORKER-ONLY.md](../echo-client/docs/WORKER-ONLY.md#blockers).
+[WORKER-ONLY.md](../echo-client/docs/WORKER-ONLY.md#blockers). How the spike's code and fixes move
+into ECHO is [INTEGRATION.md](../automerge-proxy/docs/INTEGRATION.md).
 
 ## Short answer
 

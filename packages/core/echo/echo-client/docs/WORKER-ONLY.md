@@ -786,6 +786,9 @@ document. The transforms held under 40 targeted cases, 20,000 random pairs of up
 
 ## Migration
 
+The tab-document design replaces the mirror; its integration, package by package and fix by fix, is
+[INTEGRATION.md](../../automerge-proxy/docs/INTEGRATION.md). The steps below record the mirror's path.
+
 1. Land the interfaces: `ClientRepo`, `ClientDocHandle` and the `Automerge` namespace. Behavior-neutral: the replica
    suite passes unchanged.
 2. Land the shared protocol and the worker's proxy RPCs behind a flag, with the fuzz and regression
