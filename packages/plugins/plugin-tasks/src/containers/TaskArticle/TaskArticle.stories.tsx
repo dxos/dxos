@@ -263,6 +263,55 @@ export const DropAttachment: Story = {
   },
 };
 
+/** A landscape image that is not 16:9, so a card that letterboxed it would show bars. */
+const diagramFile = async (): Promise<globalThis.File> => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 400;
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    for (const [x, y, color] of [
+      [60, 160, '#c0624a'],
+      [250, 160, '#8fd3b0'],
+      [440, 160, '#4b3a8a'],
+    ] as const) {
+      context.fillStyle = color;
+      context.fillRect(x, y, 140, 60);
+    }
+  }
+  const blob = await new Promise<globalThis.Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  return new globalThis.File(blob ? [blob] : [], 'diagram.png', { type: 'image/png' });
+};
+
+/**
+ * A task carrying an image and a text file, left in place to see the cards: the image spans its
+ * card, the text file shows its type and size.
+ */
+export const WithAttachments: Story = {
+  decorators: [withPlugins({ files: true })],
+  args: { title: PLAIN_TASK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const zone = await canvas.findByTestId('tasksPlugin.attachments.dropZone', undefined, { timeout: 10_000 });
+    dropFiles(zone, [
+      await diagramFile(),
+      new globalThis.File(['Sweetness 7, acidity 8, body 6.'], 'cupping-notes.txt', { type: 'text/plain' }),
+    ]);
+
+    await waitFor(() => expect(canvas.getAllByTestId('tasksPlugin.attachment')).toHaveLength(2), { timeout: 10_000 });
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-testid="tasksPlugin.attachment"] img')).not.toBeNull(),
+      {
+        timeout: 10_000,
+      },
+    );
+    // The stored file's card can render a moment before its attach settles and clears the pending card.
+    await waitFor(() => expect(canvas.queryByTestId('tasksPlugin.attachment.pending')).toBeNull(), { timeout: 10_000 });
+  },
+};
+
 /** Without plugin-file nothing can store a file, so the pane offers no drop at all. */
 export const WithoutFilePlugin: Story = {
   decorators: [withPlugins({ files: false })],

@@ -24,7 +24,7 @@ import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { Card, Column, Icon, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type File, Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { cardMaxInlineSize, cardMinInlineSize, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
@@ -208,6 +208,8 @@ export type TaskAttachmentsProps = {
   pending?: readonly PendingAttachment[];
 };
 
+const ATTACHMENT_SCALE = 0.75;
+
 type AttachmentTileData = { kind: 'file'; ref: Ref.Ref<File.File> } | { kind: 'pending'; entry: PendingAttachment };
 
 /**
@@ -258,14 +260,21 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
       >
         {hasCards ? (
           <RemoveAttachmentContext.Provider value={handleRemove}>
-            <Masonry.Root Tile={AttachmentTile} centered={false}>
+            <Masonry.Root
+              Tile={AttachmentTile}
+              centered={false}
+              // Three quarters of a standard card: attachments are smaller than the artifacts' cards.
+              minColumnWidth={cardMinInlineSize * ATTACHMENT_SCALE}
+              maxColumnWidth={cardMaxInlineSize * ATTACHMENT_SCALE}
+            >
               {/* The pane already scrolls, so the grid is a plain block rather than a nested, padded scroller. */}
               <Masonry.Viewport
                 items={items}
                 getId={getAttachmentTileId}
                 cacheKey={Obj.getURI(task).toString()}
                 scroll={false}
-                // The masonry pads its top and bottom by the gap, which the section's own spacing already gives.
+                // The masonry pads its top and bottom by the gap, which the section's own spacing already gives;
+                // three quarters of the width keeps attachment cards smaller than the artifacts'.
                 classNames='-my-3'
               />
             </Masonry.Root>
@@ -287,18 +296,17 @@ const getAttachmentTileId = (item: AttachmentTileData): string =>
 const AttachmentTile = ({ data }: { data: AttachmentTileData }) =>
   data.kind === 'file' ? <AttachmentCard attachment={data.ref} /> : <PendingAttachmentCard name={data.entry.name} />;
 
-/** A file still being stored and attached. */
+/** A file still being stored and attached: its header alone, the title saying so. */
 const PendingAttachmentCard = ({ name }: { name: string }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Card.Root data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
+    <Card.Root fullWidth data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
       <Card.Header>
         <Card.Block>
           <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
         </Card.Block>
-        <Card.Title classNames='truncate'>{name}</Card.Title>
+        <Card.Title classNames='truncate text-description'>{t('task-attachment.uploading.label', { name })}</Card.Title>
       </Card.Header>
-      <Card.Text variant='description'>{t('task-attachment.uploading.label')}</Card.Text>
     </Card.Root>
   );
 };
@@ -315,7 +323,7 @@ const AttachmentCard = ({ attachment }: { attachment: Ref.Ref<File.File> }) => {
 
   const icon = Obj.getIcon(file)?.icon ?? 'ph--file--regular';
   return (
-    <Card.Root data-testid='tasksPlugin.attachment'>
+    <Card.Root fullWidth data-testid='tasksPlugin.attachment'>
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={file}>
