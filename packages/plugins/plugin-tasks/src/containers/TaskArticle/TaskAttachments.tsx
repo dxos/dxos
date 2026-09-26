@@ -22,10 +22,10 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { Card, Column, Icon, useTranslation } from '@dxos/react-ui';
-import { Masonry } from '@dxos/react-ui-masonry';
 import { type File, Task } from '@dxos/types';
-import { cardMaxInlineSize, cardMinInlineSize, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
+import { TaskMasonry } from '#components';
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
@@ -208,8 +208,6 @@ export type TaskAttachmentsProps = {
   pending?: readonly PendingAttachment[];
 };
 
-const ATTACHMENT_SCALE = 0.75;
-
 type AttachmentTileData = { kind: 'file'; ref: Ref.Ref<File.File> } | { kind: 'pending'; entry: PendingAttachment };
 
 /**
@@ -249,35 +247,23 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
     <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
       <div
         className={mx(
-          'rounded-md border-2 border-dashed',
+          'rounded-md border border-dashed',
           dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
           hasCards
             ? // Outset by the border and padding so the cards sit on the column's content track.
               '-m-1.5 p-1'
-            : 'flex items-center justify-center gap-2 p-4 text-description',
+            : 'flex items-center justify-center gap-2 p-trim-sm text-description',
         )}
         {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
       >
         {hasCards ? (
           <RemoveAttachmentContext.Provider value={handleRemove}>
-            <Masonry.Root
+            <TaskMasonry
+              items={items}
+              getId={getAttachmentTileId}
               Tile={AttachmentTile}
-              centered={false}
-              // Three quarters of a standard card: attachments are smaller than the artifacts' cards.
-              minColumnWidth={cardMinInlineSize * ATTACHMENT_SCALE}
-              maxColumnWidth={cardMaxInlineSize * ATTACHMENT_SCALE}
-            >
-              {/* The pane already scrolls, so the grid is a plain block rather than a nested, padded scroller. */}
-              <Masonry.Viewport
-                items={items}
-                getId={getAttachmentTileId}
-                cacheKey={Obj.getURI(task).toString()}
-                scroll={false}
-                // The masonry pads its top and bottom by the gap, which the section's own spacing already gives;
-                // three quarters of the width keeps attachment cards smaller than the artifacts'.
-                classNames='-my-3'
-              />
-            </Masonry.Root>
+              cacheKey={`${Obj.getURI(task).toString()}/attachments`}
+            />
           </RemoveAttachmentContext.Provider>
         ) : (
           <>

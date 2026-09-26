@@ -140,8 +140,7 @@ const withPlugins = ({ files }: { files: boolean }) =>
     plugins: [
       ...corePlugins(),
       TasksPlugin.make(),
-      // The card grid under the editor: `cardMasonry` is plugin-space's surface, so without this
-      // plugin the artifacts resolve to nothing and the pane renders the editor alone.
+      // Contributes the object menus the artifact cards show.
       SpacePlugin.make({}),
       // Fills each card's body: a card with no `CardContent` surface is its header alone.
       PreviewPlugin.make(),
@@ -190,9 +189,9 @@ export const Default: Story = {
       canvas.findByText('Status changed from todo to started.', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
 
-    // The cards under the editor are `plugin-space`'s `cardMasonry` surface, which never mounts in
-    // this package's storybook (see the tracked item in plugin-projects' TASKS.md) — so assert what
-    // the article owns, and leave the cards to the companion story where they do render.
+    // The artifacts render as cards in the pane's own masonry, one per artifact.
+    await waitFor(() => expect(canvas.getAllByTestId('tasksPlugin.artifact')).toHaveLength(3), { timeout: 10_000 });
+
     // The properties read as a list, each row naming the value its glyph stands for — including the
     // assignee, which is a person in the space rather than a literal on the task.
     const properties = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.properties"]');
@@ -223,11 +222,8 @@ export const Plain: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByDisplayValue(PLAIN_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // Nothing produced yet, so nothing is passed to the grid — and nothing renders under the editor
-    // whether or not the surface mounts.
-    await waitFor(() => expect(canvasElement.querySelector('[data-testid="cardMasonry"]')).toBeNull(), {
-      timeout: 10_000,
-    });
+    // Nothing produced yet, so the artifacts section is absent rather than empty.
+    await expect(canvas.queryByTestId('tasksPlugin.artifacts')).toBeNull();
   },
 };
 

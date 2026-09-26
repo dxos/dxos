@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useOperation } from '@dxos/app-framework/ui';
+import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -17,6 +17,7 @@ import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
 import { useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import { TaskArtifacts } from './TaskArtifacts.tsx';
 import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
 
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
@@ -56,10 +57,8 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
     { spaceId },
   );
 
-  // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
-  // on the open task would otherwise not reach the stack until the reader selected away and back.
-  // Subscribing to the object itself would hand the article a snapshot in place of the live task.
-  const [artifacts] = useObject(task, 'artifacts');
+  // The property, not the whole task: subscribing to the object itself would hand the article a
+  // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
 
   // Open questions only: an answered one is already a line in the history below it.
@@ -130,17 +129,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
 
                 {history && history.length > 0 && <TaskHistory entries={history} />}
 
-                {/* What the task produced, as cards. `plugin-space` renders the grid; nothing shows
-                  for a task with no artifacts, so the section is absent rather than empty. */}
-                {artifacts && artifacts.length > 0 && (
-                  <Column.Section label={t('task-artifacts.label')} classNames='gap-y-0'>
-                    <Surface.Surface
-                      type={AppSurface.CardMasonry}
-                      data={{ objects: artifacts, attendableId }}
-                      limit={1}
-                    />
-                  </Column.Section>
-                )}
+                <TaskArtifacts task={task} />
               </Column.Root>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>

@@ -4,3 +4,4 @@
 
 export * from './Journal/index.ts';
 export * from './Outline/index.ts';
+export * from './TaskMasonry/index.ts';
