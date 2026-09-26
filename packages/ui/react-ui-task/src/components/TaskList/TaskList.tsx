@@ -332,13 +332,14 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    // Capped so a long session name truncates rather than squeezing the title to nothing.
-    ['assignee', 'fit-content(40%)'],
+    ['assignee', 'var(--dx-control)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
   ];
+
   const tracks = candidates.filter((track): track is GridTrack => !!track);
+
   // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
   // is invalid and silently drops the whole declaration, which is what happens the moment the
   // toggle track is omitted — so the first track's name joins the row's own.
@@ -472,28 +473,17 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's grid. The tags and artifacts take a line of their own under the
-          title and above the description: on the title line they competed with it for width, and a
-          long artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps
-          a row with no chips from holding an empty line. The assignee stays on the title line, where
-          "who has it" is read with the title. */}
-      <div
-        data-testid='taskList.item.chips'
-        className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
-      >
-        {/* Only pull requests among the artifacts: the row is scanned for its titles, and a line of file
-            names under each one outweighed the task it described; the detail pane lists them all. */}
-        <TaskTags task={task} assignee={false} artifacts='pull-requests' />
-      </div>
-      <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
+      <div className='col-[assignee] row-start-1 grid place-items-center'>
         {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
-      {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
-          `buildGridTemplate` declares a track only when its option is on, and the matching cell is
-          omitted on the same condition, so the two never drift. */}
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
+
+      {/* TODO(burdon): Update TaskTreeNode to render second line. */}
+      <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
+        <TaskTags task={task} />
+      </div>
     </>
   );
 };
@@ -569,7 +559,7 @@ TaskListItemActions.displayName = 'TaskList.ItemActions';
  * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
  * targets are not in memory yet, and a sync read would leave the row permanently empty.
  */
-const TaskListItemArtifacts = ({ task, pullRequestsOnly }: { task: Task.Task; pullRequestsOnly?: boolean }) => {
+const TaskListItemArtifacts = ({ task, filter }: { task: Task.Task; filter?: (obj: Obj.Unknown) => boolean }) => {
   const db = Obj.getDatabase(task);
   const ids = useMemo(
     () =>
@@ -580,10 +570,10 @@ const TaskListItemArtifacts = ({ task, pullRequestsOnly }: { task: Task.Task; pu
     [task.artifacts],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  // Without a database — a story, a preview — the refs were made from objects already in hand, so
-  // their targets resolve synchronously and the row still shows what the task produced.
+  // Without a database — a story, a preview — the refs were made from objects already in hand,
+  // so their targets resolve synchronously and the row still shows what the task produced.
   const resolved = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
-  const artifacts = pullRequestsOnly ? resolved.filter((artifact) => PullRequest.instanceOf(artifact)) : resolved;
+  const artifacts = filter ? resolved.filter(filter) : resolved;
 
   return (
     <>
@@ -598,32 +588,12 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 /**
  * Everything a task carries as a chip: its tags, what it produced, and who has it.
- *
- * Bare chips with no layout of their own, so a host decides how they run — the row scrolls them on
- * one line inside its chip cell, a detail pane wraps them into a flow under the title. Rendering the
- * same set in both is the point: a reader who learned the row's chips reads the pane's without
- * learning anything new.
  */
-export const TaskTags = ({
-  task,
-  assignee = true,
-  artifacts = 'all',
-}: {
-  task: Task.Task;
-  /** Off where the host places the assignee itself — the list row keeps it on the title line. */
-  assignee?: boolean;
-  /** Which artifacts to show as chips. */
-  artifacts?: 'all' | 'pull-requests';
-}) => {
-  // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
-  // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
-  const [snapshot] = useObject(task);
-  const current = snapshot ?? task;
+export const TaskTags = ({ task }: { task: Task.Task }) => {
   return (
     <>
       <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      <TaskListItemArtifacts task={task} pullRequestsOnly={artifacts === 'pull-requests'} />
-      {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+      <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
     </>
   );
 };
