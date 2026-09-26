@@ -174,11 +174,13 @@ CloseIconButton.displayName = 'SystemIconButton.Close';
 //
 
 /** Copy a fixed `value`, or text produced on click by `onCopy` when it is costly or changes. */
-type ClipboardIconButtonProps = StaticPresetProps &
-  ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
+type ClipboardIconButtonProps = StaticPresetProps & {
+  /** The glyph shown until a copy lands, for a chip naming what it copies; the clipboard otherwise. */
+  icon?: string;
+} & ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, value, onCopy, classNames, ...props }, forwardedRef) => {
+  ({ label, value, onCopy, icon = 'ph--clipboard--regular', classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
@@ -210,7 +212,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
         {...props}
         classNames={classNames}
         iconClassNames={copied && 'text-green-500'}
-        icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
+        icon={copied ? 'ph--check--regular' : icon}
         label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
         onClick={handleCopy}
         ref={forwardedRef}
