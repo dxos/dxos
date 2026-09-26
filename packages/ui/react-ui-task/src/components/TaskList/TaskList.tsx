@@ -33,7 +33,14 @@ import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
-import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
+import {
+  type TaskGroup,
+  type TaskNode,
+  buildTaskForest,
+  buildTaskGroups,
+  flattenVisibleTasks,
+  taskGroupNodeId,
+} from './tree-model.ts';
 import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
@@ -57,6 +64,14 @@ type TaskListRootProps = PropsWithChildren<{
    * Group rows into status sections (Linear order); flat list otherwise.
    */
   groupByStatus?: boolean;
+  /**
+   * Partition the rows under collapsible group headers, each with its count — the host decides the
+   * partition (by status, priority, assignee, milestone…) and the order, of groups and within each.
+   * Supersedes `groupByStatus`. With `hierarchical`, sub-tasks still nest under a parent in the same
+   * group. A group's collapsed state lives in `collapsed` beside the branches', under the group's
+   * node id (`taskGroupNodeId`).
+   */
+  groups?: readonly TaskGroup[];
   /**
    * Render the set as the tree it stores (`Task.subtasks`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
@@ -167,6 +182,7 @@ const TaskListRoot = ({
   children,
   tasks,
   groupByStatus = true,
+  groups,
   debug = false,
   showGroupLabels = true,
   showOrdinals = false,
@@ -235,8 +251,14 @@ const TaskListRoot = ({
   // for a handle that no longer exists only pushed every title one square right.
   const showGutter = showOrdinals || !!onTaskCheck;
   const gridTemplateColumns = useMemo(
-    () => buildGridTemplate({ toggle: hierarchical, showGutter, showEstimates, hasActions: !!getTaskActions }),
-    [hierarchical, showGutter, showEstimates, getTaskActions],
+    () =>
+      buildGridTemplate({
+        toggle: hierarchical || !!groups,
+        showGutter,
+        showEstimates,
+        hasActions: !!getTaskActions,
+      }),
+    [hierarchical, groups, showGutter, showEstimates, getTaskActions],
   );
 
   return (
@@ -246,6 +268,7 @@ const TaskListRoot = ({
       // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
       // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
       groupByStatus={groupByStatus}
+      groups={groups}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
@@ -363,6 +386,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
   const {
     tasks,
     groupByStatus,
+    groups,
     hierarchical,
     selected,
     checked,
@@ -382,26 +406,35 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     onTaskMove,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
-  const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
+  // A group's header collapses like a branch, so its node id joins the tasks' in the same set.
+  const collapsed = useMemo(
+    () =>
+      new Set(
+        [...tasks.map((task) => task.id), ...(groups ?? []).map((group) => taskGroupNodeId(group))].filter(isCollapsed),
+      ),
+    [tasks, groups, isCollapsed],
+  );
 
   // Grouping and hierarchy are alternatives: a status group holds its tasks flat, because a
   // sub-task's status need not match its parent's.
-  const grouping = !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
+  const grouping = !groups && !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
 
   // Numbered down the list as rendered, 1..N. Flat either way: an ordinal names a task ("run 3"),
   // where a `1.2.1` path would renumber a whole branch.
   const ordinals = useMemo(() => {
-    const ordered = grouping
-      ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
-      : hierarchical
-        ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
-        : tasks;
+    const ordered = groups
+      ? flattenVisibleTasks(buildTaskGroups(groups, hierarchical), collapsed)
+      : grouping
+        ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
+        : hierarchical
+          ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
+          : tasks;
     // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
     // `ordered` — numbering them would leave gaps in the column the reader can actually see.
     const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
     // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk.
     return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
-  }, [tasks, collapsed, grouping, hierarchical, dragging]);
+  }, [tasks, collapsed, groups, grouping, hierarchical, dragging]);
 
   // One path: every mode renders through `Tree`. A flat list is a tree of depth one, and a status
   // group is a `group` node the machine splices out of its own topology.
@@ -411,6 +444,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
+      groups={groups}
       tasks={tasks}
       collapsed={collapsed}
       showGutter={showGutter}

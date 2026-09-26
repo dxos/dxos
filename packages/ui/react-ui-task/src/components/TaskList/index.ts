@@ -10,4 +10,4 @@ export { TaskMnemonic } from './TaskRowCells.tsx';
 export * from './TaskList.tsx';
 export * from './TaskProperties.tsx';
 export { type TaskSelectModifiers } from './TaskTreeNode.tsx';
-export { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
+export { type TaskGroup, type TaskNode, buildTaskForest, flattenVisibleTasks, taskGroupNodeId } from './tree-model.ts';

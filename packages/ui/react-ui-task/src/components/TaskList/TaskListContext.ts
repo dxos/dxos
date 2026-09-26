@@ -14,6 +14,7 @@ import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { type TaskCreateHandler } from './TaskList.tsx';
 import { type TaskSelectModifiers } from './TaskTreeNode.tsx';
+import { type TaskGroup } from './tree-model.ts';
 
 //
 // Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
@@ -24,6 +25,8 @@ const TASK_LIST_NAME = 'TaskList.Root';
 export type TaskListContextValue = {
   tasks: readonly Task.Task[];
   groupByStatus: boolean;
+  /** Host-defined groups, rendered as collapsible headers; supersedes `groupByStatus`. */
+  groups?: readonly TaskGroup[];
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;

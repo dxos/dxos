@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type Ref } from 'react';
+import React, { type PropsWithChildren, type Ref } from 'react';
 
 import { type Database, type Tag } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ import { meta } from '#meta';
 
 import { TaskStatusFilter } from './TaskStatusFilter.tsx';
 
-export type TaskFilterProps = {
+export type TaskFilterProps = PropsWithChildren<{
   db?: Database.Database;
   tags: Tag.Map;
   value: string;
@@ -24,7 +24,7 @@ export type TaskFilterProps = {
   onStatusesChange: (statuses: readonly Task.Status[]) => void;
   onClear: () => void;
   editorRef?: Ref<EditorController>;
-};
+}>;
 
 /**
  * Filter row for a task list's toolbar — the query editor, the status selector over the same query,
@@ -40,6 +40,7 @@ export const TaskFilter = ({
   onStatusesChange,
   onClear,
   editorRef,
+  children,
 }: TaskFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
@@ -53,6 +54,8 @@ export const TaskFilter = ({
         ref={editorRef}
       />
       <TaskStatusFilter value={statuses} active={value.trim().length > 0} onChange={onStatusesChange} />
+      {/* The rest of the toolbar's view controls (order, grouping), between the filter and its clear. */}
+      {children}
       <IconButton
         icon='ph--x--regular'
         iconOnly
