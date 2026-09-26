@@ -56,7 +56,11 @@ export const withColumn = {
    * (ScrollArea.Root), which spans the full width so its scrollbar sits in the gutter.
    */
   propagate: () =>
-    '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-scroll-boundary)]:[grid-column:var(--dx-col,auto)]',
+    // The marker is what keeps an enclosing `Column.Section` (or `Column.Row`) from ALSO placing
+    // this element in the content track: it already spans all three, and a `col-start-2` on top of
+    // `col-span-full` starts the span at track 2, so the subgrid it re-exposes is the content track
+    // and the trailing gutter — which put every child in a 16px column.
+    'dx-column-span [.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-scroll-boundary)]:[grid-column:var(--dx-col,auto)]',
 
   /**
    * Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport.

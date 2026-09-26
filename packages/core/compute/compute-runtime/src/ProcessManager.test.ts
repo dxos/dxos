@@ -1783,7 +1783,7 @@ describe('durability', () => {
     handlerSet: OperationHandlerSet.OperationHandlerSet;
     traceSink: Trace.Sink;
   }) =>
-    new ProcessManager.ProcessManagerImpl({
+    new ProcessManager.Impl({
       registry: deps.registry,
       kvStore: deps.kv,
       traceSink: deps.traceSink,

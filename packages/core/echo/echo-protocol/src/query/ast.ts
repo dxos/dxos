@@ -128,6 +128,19 @@ export interface FilterTag extends Schema.Schema.Type<typeof FilterTag_> {}
 export const FilterTag: Schema.Codec<FilterTag> = FilterTag_;
 
 /**
+ * Filters entities by an annotation in their meta (`meta.annotations[key]`).
+ * Without a value it matches entities that carry the annotation; with one, entities whose value equals it.
+ */
+const FilterAnnotation_ = Schema.Struct({
+  type: Schema.Literal('annotation'),
+  key: Schema.String,
+  value: Schema.optional(Schema.Union([Schema.String, Schema.Number, Schema.Boolean])),
+});
+
+export interface FilterAnnotation extends Schema.Schema.Type<typeof FilterAnnotation_> {}
+export const FilterAnnotation: Schema.Codec<FilterAnnotation> = FilterAnnotation_;
+
+/**
  * Range.
  */
 const FilterRange_ = Schema.Struct({
@@ -282,6 +295,7 @@ export const Filter = Schema.Union([
   FilterInQuery,
   FilterContains,
   FilterTag,
+  FilterAnnotation,
   FilterRange,
   FilterTimestamp,
   FilterFeedCursor,

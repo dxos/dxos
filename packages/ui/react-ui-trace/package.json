@@ -56,6 +56,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

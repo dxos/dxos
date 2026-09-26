@@ -95,13 +95,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     { spaceId },
   );
 
-  // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
-    TaskOperation.AnswerQuestion,
-    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
-    { spaceId },
-  );
-
   const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
@@ -190,7 +183,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskUpdate={handleUpdate}
       onTaskMove={handleMove}
       onTaskSelect={handleOpen}
-      onQuestionAnswer={handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -198,17 +190,17 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
-      <div className='px-trim-md'>
-        <TaskList.Edit
-          createOnly
-          showDescription
-          descriptionExtensions={descriptionExtensions}
-          // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-          // and a fourth line would double it.
-          classNames='bg-input-surface border-x border-t border-separator rounded-t-md p-2'
-          placeholder={t('task-create.placeholder')}
-        />
-      </div>
+      <TaskList.Editor
+        createOnly
+        showDescription
+        descriptionExtensions={descriptionExtensions}
+        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
+        // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
+        // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
+        // existing `p-2`'s horizontal component and silently dropped.
+        classNames='mx-trim-md bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+        placeholder={t('task-create.placeholder')}
+      />
     </TaskList.Root>
   );
 

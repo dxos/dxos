@@ -3,13 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
+import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Field, Flex, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -34,27 +34,51 @@ const getHueValue = (identity?: Identity.Info): string => identity?.data?.hue ||
 const getDefaultEmojiValue = (identity?: Identity.Info): string => hexToEmoji(identity?.identityKey ?? '0');
 const getEmojiValue = (identity?: Identity.Info): string => identity?.data?.emoji || getDefaultEmojiValue(identity);
 
+/**
+ * `useControlledState`, frozen while `pending` — so a resync from the live identity (a change from
+ * another device/session) can't clobber an edit whose debounced write hasn't reached the server yet.
+ */
+const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetStateAction<T>>] => {
+  const lastRef = useRef(value);
+  if (!pending) {
+    lastRef.current = value;
+  }
+  return useControlledState(lastRef.current);
+};
+
 export const ProfileContainer = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
-  const [displayName, setDisplayNameDirectly] = useState(identity?.displayName ?? '');
-  const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
-  const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
+  const pendingRef = useRef(false);
+  // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind
+  // it — a debounced call in flight when another edit lands is still the stale one once it settles.
+  const editIdRef = useRef(0);
+  const [displayName, setDisplayNameDirectly] = usePendingGatedState(identity?.displayName ?? '', pendingRef.current);
+  const [emoji, setEmojiDirectly] = usePendingGatedState(getEmojiValue(identity), pendingRef.current);
+  const [hue, setHueDirectly] = usePendingGatedState(getHueValue(identity), pendingRef.current);
 
   const updateProfile = useMemo(
     () =>
       debounce(
         // Merge onto the current profile data so unrelated metadata is preserved.
-        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) =>
-          invokePromise(ClientOperation.UpdateProfile, {
+        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) => {
+          const editId = editIdRef.current;
+          void invokePromise(ClientOperation.UpdateProfile, {
             displayName: profile.displayName,
             data: {
               ...currentData,
               emoji: profile.emoji,
               hue: profile.hue,
             },
-          }),
+          }).finally(() => {
+            // Only clear the gate for the edit that's actually settling — otherwise a write that
+            // started before a newer edit landed would prematurely reopen the resync over it.
+            if (editIdRef.current === editId) {
+              pendingRef.current = false;
+            }
+          });
+        },
         2_000,
       ),
     [invokePromise],
@@ -62,6 +86,8 @@ export const ProfileContainer = () => {
 
   const handleChange = useCallback(
     (profile: Partial<UserProfile>, meta: FormUpdateMeta<UserProfile>) => {
+      pendingRef.current = true;
+      editIdRef.current += 1;
       for (const [path, changed] of Object.entries(meta.changed)) {
         if (changed) {
           switch (path) {

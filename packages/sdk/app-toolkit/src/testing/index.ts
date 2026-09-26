@@ -11,7 +11,7 @@ import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
 /**
  * Seeds a root collection and `SpaceProperties` with the `RootCollectionAnnotation` before running
- * the effect, so operations that resolve the space root (e.g. `ContainerModel.add`) work in tests.
+ * the effect, so operations that resolve the space root work in tests.
  */
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
   Effect.andThen(
@@ -20,8 +20,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
       const properties = Obj.make(SpaceProperties, {});
       yield* Database.add(collection);
       yield* Database.add(properties);
-      // Both entities are in the DB before setting the annotation so Database.load
-      // works in ContainerModel.add (which uses the Effect DB context, not Ref.load).
+      // Both entities are in the DB before setting the annotation so Database.load resolves it.
       Obj.update(properties, (properties) => {
         const meta = Obj.getMeta(properties);
         if (!meta.annotations) {

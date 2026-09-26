@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Replace with @dxos/echo/testing TestSchema.
 
@@ -13,14 +13,14 @@ export class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type
   Schema.Struct({
     name: Schema.String.annotate({ description: 'The name of the person.' }),
     email: Schema.optional(Schema.String).annotate({ description: 'Email address.' }),
-  }).pipe(Schema.annotate({ description: 'Contact information.' })),
+  }).pipe(Schema.annotate({ description: 'Contact information.' }), Annotation.UserType.set()),
 ) {}
 /** @deprecated */
 export class Project extends Type.makeObject<Project>(DXN.make('com.example.type.project', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.annotate({ description: 'The name of the project.' }),
     description: Schema.optional(Schema.String).annotate({ description: 'The description of the project.' }),
-  }).pipe(Schema.annotate({ description: 'Project information.' })),
+  }).pipe(Schema.annotate({ description: 'Project information.' }), Annotation.UserType.set()),
 ) {}
 export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({
@@ -28,7 +28,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task'
     description: Schema.optional(Schema.String).annotate({ description: 'The description of the task.' }),
     project: Ref.Ref(Project),
     assignee: Ref.Ref(Contact),
-  }).pipe(Schema.annotate({ description: 'Task information.' })),
+  }).pipe(Schema.annotate({ description: 'Task information.' }), Annotation.UserType.set()),
 ) {}
 /** @deprecated */
 export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
@@ -36,5 +36,5 @@ export class Organization extends Type.makeObject<Organization>(DXN.make('com.ex
     name: Schema.String.annotate({ description: 'The name of the organization.' }),
     projects: Schema.Array(Ref.Ref(Project)),
     employees: Schema.Array(Ref.Ref(Contact)),
-  }).pipe(Schema.annotate({ description: 'Organization information.' })),
+  }).pipe(Schema.annotate({ description: 'Organization information.' }), Annotation.UserType.set()),
 ) {}

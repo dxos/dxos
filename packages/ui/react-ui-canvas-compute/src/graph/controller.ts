@@ -397,7 +397,7 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createTraceWriter(): Trace.TraceWriter {
+  private _createTraceWriter(): Trace.Writer {
     return {
       write: (eventType, payload) => {
         const event = traceEventToComputeEvent(eventType.key, payload);

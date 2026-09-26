@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
@@ -59,15 +59,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
-    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    // Longer than the pane shows, and all of it about the work: a text edit writes no entry, so a
+    // seeded "Description updated" would be history this app never produces.
     history: seedHistory(
       3,
       'Created this task',
-      'Description updated',
+      'Assigned to Scout',
       'Priority changed from medium to high',
       'Status changed from todo to started',
       'Estimate set to m',
-      'Description updated',
+      'Unassigned',
     ),
   }),
   Task.make({
@@ -580,12 +581,6 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
-  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
-  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
-    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
-    setTasks((tasks) => [...tasks]);
-  }, []);
-
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -625,22 +620,68 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
-      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit
+          <TaskList.Editor
             showDescription={showDescription}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
         </div>
       ) : (
-        <TaskList.Edit grid showDescription={showDescription} />
+        <TaskList.Editor grid showDescription={showDescription} />
       )}
     </TaskList.Root>
+  );
+};
+
+/**
+ * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
+ * carry each question as one line, and the detail — its own root holding just the selected task, as
+ * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ */
+const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
+  const [tasks] = useState<Task.Task[]>(seed);
+  const [selected, setSelected] = useState<string | undefined>(() => tasks[0]?.id);
+  const task = tasks.find(({ id }) => id === selected);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+  }, []);
+
+  // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
+
+  return (
+    <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
+      <div className='flex flex-col min-w-0 min-h-0' data-testid='story.list'>
+        <TaskList.Root
+          tasks={tasks}
+          selected={selected}
+          selectable
+          showGroupLabels={false}
+          onTaskUpdate={handleUpdate}
+          onTaskSelect={(task) => setSelected(task?.id)}
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </TaskList.Root>
+      </div>
+      <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
+        {task ? (
+          <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+            <TaskList.Editor showDescription classNames='p-2' />
+          </TaskList.Root>
+        ) : (
+          <p className='p-4 text-subdued'>No task selected.</p>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -713,38 +754,60 @@ export const WithQuestions: Story = {
   },
 };
 
-/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
-export const TestAnswerQuestion: Story = {
+/**
+ * A task's questions live on the detail surface, not in the list: a row carries its title and its
+ * description, and the strip below carries the fields. Answering is `TaskArticle`'s, and is covered
+ * where it happens — plugin-projects' `ProjectArticle` › Task Detail story.
+ */
+export const TestNoQuestionsInList: Story = {
   args: {
     seed: seedQuestions,
     showGroupLabels: false,
   },
   play: async ({ canvasElement }) => {
-    const answers = () =>
-      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const canvas = within(canvasElement);
+    // The seeded tasks all carry questions, answered and open alike.
+    await expect(canvas.findByText('Draft the refund reply', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Pick the house roast', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    await waitFor(async () => {
-      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
-    });
-    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
-    if (!option) {
-      throw new Error('the open question has no options');
-    }
-    await userEvent.click(option);
-    await waitFor(async () => {
-      await expect(answers()).toContain('30 days');
-    });
+    // None of it reaches the rows: no question line, no answer line, and nothing to answer with.
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question.answer"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+    // Nor does the log: the strip below the rows is the fields.
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
 
-    // Typing in the free-form field must not reach the row: its keys would move the selection.
-    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
-    if (!input) {
-      throw new Error('the open question has no answer field');
-    }
-    await userEvent.type(input, 'Tuesday{Enter}');
+    // Selecting a row opens it for editing, and still shows neither.
+    await userEvent.click(canvas.getByText('Draft the refund reply'));
     await waitFor(async () => {
-      await expect(answers()).toContain('Tuesday');
+      await expect(canvasElement.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
+  },
+};
+
+export const TestListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+  play: async ({ canvasElement }) => {
+    const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
+    const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
+
+    // The detail pane edits the selected task: its title is a field, not a line of text.
+    await waitFor(async () => {
+      await expect(detail()?.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
+    });
+    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')?.value).toEqual(
+      'Draft the refund reply',
+    );
+
+    // Neither side carries the task's questions or its log — both belong to the article surface,
+    // which is what a host mounts in place of this strip when it has the room for them.
+    for (const pane of [list(), detail()]) {
+      await expect(pane?.querySelector('[data-testid="task-question"]')).toBeNull();
+      await expect(pane?.querySelector('[data-testid="taskList.history"]')).toBeNull();
+    }
   },
 };
 
@@ -1369,14 +1432,14 @@ export const TestHierarchy: Story = {
   play: async ({ canvasElement }) => {
     const rows = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'))
-        // A collapsed branch HIDES its descendants rather than unmounting them, so presence in the
-        // DOM is not visibility — the flat list dropped them from the walk instead.
+        // Unwindowed, a collapsed branch HIDES its descendants rather than unmounting them, so
+        // presence in the DOM is not visibility.
         .filter((row) => !row.closest('[hidden]'))
         .map((row) => ({
           row,
           title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
-          // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
-          // around the focusable row — so the level is read from whichever of the two carries it.
+          // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
+          // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
           ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
         }));
@@ -1476,9 +1539,6 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    // Each row is findable by task id. In the tree the attribute is `data-object-id`, stamped by
-    // `Tree` itself — the flat row's own `data-task-id` is what its drag preview reads to collect a
-    // subtree to clone, and that path is unchanged.
     await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it

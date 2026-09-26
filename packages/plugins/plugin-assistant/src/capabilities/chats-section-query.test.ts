@@ -7,8 +7,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
-import { Feed, Ref } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { ArchivedAnnotation } from '@dxos/schema';
 
 describe('chats section query', () => {
   let builder: EchoTestBuilder;
@@ -44,5 +45,24 @@ describe('chats section query', () => {
     expect(results.map((chat) => chat.id)).toEqual([standalone.id]);
     expect(results.map((chat) => chat.id)).not.toContain(companion.id);
     expect(results.map((chat) => chat.id)).not.toContain(projectChat.id);
+  });
+
+  test('excludes archived chats', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed] });
+    const makeChat = (name: string) => db.add(Chat.make({ name, feed: Ref.make(db.add(Feed.make())) }));
+
+    const active = makeChat('Active');
+    const archived = makeChat('Archived');
+    Obj.update(archived, (archived) => Annotation.set(archived, ArchivedAnnotation, true));
+    await db.flush({ indexes: true });
+
+    const results = await db.query(TypeSection.sectionQuery(Chat.Chat)).run();
+    expect(results.map((chat) => chat.id)).toEqual([active.id]);
+
+    Obj.update(archived, (archived) => Annotation.set(archived, ArchivedAnnotation, false));
+    await db.flush({ indexes: true });
+
+    const restored = await db.query(TypeSection.sectionQuery(Chat.Chat)).run();
+    expect(restored.map((chat) => chat.id).sort()).toEqual([active.id, archived.id].sort());
   });
 });

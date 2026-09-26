@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
+import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
         );
       }
 
-      yield* ContainerModel.add({ object, target });
+      yield* DefaultParent.add({ object, target });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',

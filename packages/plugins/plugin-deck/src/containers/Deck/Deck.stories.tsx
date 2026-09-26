@@ -32,6 +32,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import {
   createBasicExtensions,
@@ -151,19 +152,20 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 
   return (
-    <div className='grid content-start gap-1 p-2' data-testid='story.launcher'>
-      {LAUNCHER_MESSAGES.map((message) => (
-        <button
-          key={message.id}
-          className='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
-          data-testid='story.launcher.row'
-          data-selected={selected === message.id}
-          onClick={() => handleOpen(message.id)}
-        >
-          {message.title}
-        </button>
-      ))}
-    </div>
+    <Listbox.Root value={selected} onValueChange={handleOpen}>
+      <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
+        {LAUNCHER_MESSAGES.map((message) => (
+          <Listbox.Item
+            key={message.id}
+            id={message.id}
+            classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
+            data-testid='story.launcher.row'
+          >
+            {message.title}
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 

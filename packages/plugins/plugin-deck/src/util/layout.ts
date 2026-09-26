@@ -222,3 +222,44 @@ export const pushSubjectsToStack = (active: readonly string[], subjects: readonl
   next.push(...subjects);
   return next;
 };
+
+/**
+ * Matches each subject to the plank already showing its entity under another graph path. A re-homing
+ * open moves that plank onto the subject's path (`moved` maps its old id to the new one); otherwise the
+ * subject is redirected to the open plank.
+ */
+export const matchOpenEntities = ({
+  active,
+  subjects,
+  entityOf,
+  rehome,
+}: {
+  active: readonly string[];
+  subjects: readonly string[];
+  entityOf: (id: string) => string | undefined;
+  rehome: boolean;
+}): { active: string[]; subjects: string[]; moved: ReadonlyMap<string, string> } => {
+  const openByEntity = new Map<string, string>();
+  for (const id of active) {
+    const entity = entityOf(id);
+    if (entity) {
+      openByEntity.set(entity, id);
+    }
+  }
+
+  const moves = new Map<string, string>();
+  const matched = subjects.map((subject) => {
+    const entity = entityOf(subject);
+    const open = entity ? openByEntity.get(entity) : undefined;
+    if (!open || open === subject || active.includes(subject)) {
+      return subject;
+    }
+    if (rehome) {
+      moves.set(open, subject);
+      return subject;
+    }
+    return open;
+  });
+
+  return { active: active.map((id) => moves.get(id) ?? id), subjects: matched, moved: moves };
+};
