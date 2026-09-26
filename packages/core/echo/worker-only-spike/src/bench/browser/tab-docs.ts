@@ -11,6 +11,7 @@ import './probe.ts';
 import * as Draft from '@dxos/automerge-proxy/Draft';
 
 import { Model } from '../../model.ts';
+import { readChange } from '../../reader.ts';
 import { TabDoc } from '../../tab.ts';
 import { type Latency, connect, fetchInput, fromBase64, measure } from './common.ts';
 
@@ -41,6 +42,20 @@ Reflect.set(globalThis, 'release', async () => {
   acks.clear();
   const { heap: after } = await measure(0);
   return { freed: before - after, after };
+});
+
+/** Another peer's changes arriving one at a time, as the worker forwards them: each decoded, applied, then read. */
+Reflect.set(globalThis, 'receive', (docIndex: number, changes: string[]): number[] => {
+  const tab = held[docIndex];
+  const objectId = Object.keys(tab.doc().objects)[0];
+  return changes.map((text) => {
+    const bytes = fromBase64(text);
+    const start = performance.now();
+    const { end: _end, ...change } = readChange(bytes);
+    tab.receive({ type: 'change', change });
+    void tab.doc().objects[objectId].data.content.length;
+    return performance.now() - start;
+  });
 });
 
 Reflect.set(globalThis, 'write', async (docIndex: number, count: number): Promise<Latency> => {

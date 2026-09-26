@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { SpikeHandle } from './handle.ts';
 import { type SpikeHost } from './host.ts';
 import { type Change } from './ids.ts';
-import { type HostMessage, TabDoc } from './tab.ts';
+import { type HostMessage, TabDoc, type TabDocument } from './tab.ts';
 
 /**
  * Carries messages between tabs and the host asynchronously and in order per direction, cloning
@@ -49,7 +49,7 @@ export class Network {
   }
 
   /** Queues a host message for a tab that exists by the time the queue runs. */
-  #deliverTo(tabId: string, tab: () => TabDoc<unknown> | undefined, message: HostMessage): void {
+  #deliverTo(tabId: string, tab: () => TabDocument | undefined, message: HostMessage): void {
     this.#post(tabId, () => {
       const target = tab();
       invariant(target, 'A message reached a tab before it opened');

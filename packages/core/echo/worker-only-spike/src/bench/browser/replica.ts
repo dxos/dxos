@@ -38,6 +38,18 @@ Reflect.set(globalThis, 'release', async () => {
   return { freed: before - after, after };
 });
 
+/** Another peer's changes arriving one at a time, as the worker forwards them: each applied, then read. */
+Reflect.set(globalThis, 'receive', (docIndex: number, changes: string[]): number[] => {
+  const objectId = Object.keys(held[docIndex].objects)[0];
+  return changes.map((text) => {
+    const bytes = fromBase64(text);
+    const start = performance.now();
+    [held[docIndex]] = A.applyChanges(held[docIndex], [bytes]);
+    void held[docIndex].objects[objectId].data.content.length;
+    return performance.now() - start;
+  });
+});
+
 Reflect.set(globalThis, 'write', async (docIndex: number, count: number): Promise<Latency> => {
   const latency: Latency = { tabMs: [], roundTripMs: [], workerMs: [] };
   const objectId = Object.keys(held[docIndex].objects)[0];

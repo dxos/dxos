@@ -8,7 +8,7 @@ import { encodeChange } from './encode.ts';
 import { type Change } from './ids.ts';
 import { Model } from './model.ts';
 import { readChange } from './reader.ts';
-import { TabDoc, type Tag, tagOf } from './tab.ts';
+import { TabDoc, type TabDocument, type Tag, tagOf } from './tab.ts';
 
 type Heads = string[];
 type Path = (string | number)[];
@@ -88,7 +88,7 @@ const changeArgs = (
 };
 
 /** A tab document's root at the tab's current version: Automerge refuses to change any other. */
-const current = (tag: Tag): TabDoc => {
+const current = (tag: Tag): TabDocument => {
   if (tag.path.length > 0 || tag.heads.join() !== tag.tab.heads().join()) {
     throw new RangeError(
       'Attempting to change an outdated document.  Use Automerge.clone() if you wish to make a writable copy.',
@@ -339,7 +339,7 @@ export const watchLeaks = (actual: Record<string, unknown>, overridden: object):
 
 /** `A.getHistory` for a tab document: each change with the document after the changes up to it. */
 export const historyOf = (
-  tab: TabDoc,
+  tab: TabDocument,
   heads: readonly string[],
 ): {
   change: { hash: string; actor: string; seq: number; time: number; message: string | null; deps: string[] };

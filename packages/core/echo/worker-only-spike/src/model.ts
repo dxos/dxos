@@ -778,10 +778,44 @@ export class Model {
     return 0;
   }
 
-  /** Automerge-shaped patches that turn the document at `before` into the document at `after`. */
+  /**
+   * The objects whose state can differ between two versions, with their ancestors: an op's visibility
+   * changes only when it or one of its successors lies between the versions, and both are in its object.
+   * `undefined` stands for the root.
+   */
+  #touched(before: number[], after: number[]): Set<Rec | undefined> {
+    const touched = new Set<Rec | undefined>();
+    this.#ops.forEach((ops, actor) => {
+      const low = Math.min(before[actor] ?? 0, after[actor] ?? 0);
+      const high = Math.max(before[actor] ?? 0, after[actor] ?? 0);
+      for (let position = this.#position(ops, low + 1); position < ops.length; position++) {
+        const rec = ops[position];
+        if (rec.counter > high) {
+          break;
+        }
+        for (let owner = rec.obj; !touched.has(owner); owner = owner?.obj) {
+          touched.add(owner);
+          if (owner === undefined) {
+            break;
+          }
+        }
+      }
+    });
+    return touched;
+  }
+
+  /**
+   * Automerge-shaped patches that turn the document at `before` into the document at `after`. Only the
+   * objects ops between the two versions touch are walked, so nearby versions diff in time proportional
+   * to the objects they changed.
+   */
   diff(beforeClock: Clock, afterClock: Clock): Patch[] {
     const before = this.#limits(beforeClock);
     const after = this.#limits(afterClock);
+    const touched = this.#touched(before, after);
+    if (touched.size === 0) {
+      return [];
+    }
     const buckets = new Map<Rec | undefined, Patch[]>();
     const empty = (rec: Rec, inText: boolean): unknown => {
       const type = OBJECT_TYPES[rec.action];
@@ -894,7 +928,8 @@ export class Model {
         flush();
       }
       for (const [child, childPath, childExisted] of children) {
-        if (child.contents) {
+        // An object that existed at both versions changed only if an op between them touched it.
+        if (child.contents && (!childExisted || touched.has(child))) {
           walk(child, child.contents, childPath, childExisted);
         }
       }

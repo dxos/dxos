@@ -35,6 +35,24 @@ const tabInput: DocInput[] = docs.map((doc) => ({
 }));
 const textDoc = corpus.docs.findIndex((entry) => entry.kind === 'document');
 
+type Space = { objects: Record<string, { data: { content: string } }> };
+
+// Keystrokes from another peer into the long text, as the worker would forward them to a tab.
+const peerChanges: string[] = [];
+{
+  let peer = A.clone(A.load<Space>(Buffer.from(corpus.docs[textDoc].bytes, 'base64')), {
+    actor: 'eeee0000eeee0000eeee0000eeee0000',
+  });
+  const objectId = Object.keys(peer.objects)[0];
+  for (let i = 0; i < 100; i++) {
+    peer = A.change(peer, (draft) => A.splice(draft, ['objects', objectId, 'data', 'content'], 10, 0, 'y'));
+    const change = A.getLastLocalChange(peer);
+    if (change) {
+      peerChanges.push(Buffer.from(change).toString('base64'));
+    }
+  }
+}
+
 const options: BuildOptions = {
   bundle: true,
   format: 'esm',
@@ -91,6 +109,7 @@ const mb = (bytes: number) => (bytes / 1048576).toFixed(1);
 type Row = { mode: string; tabs: number; perTab: Measure[]; workerWasm: number };
 const rows: Row[] = [];
 const latencies: Record<string, Latency> = {};
+const receives: Record<string, number[]> = {};
 
 for (const mode of ['empty', 'replica', 'tab-docs']) {
   for (const tabs of tabCounts) {
@@ -142,6 +161,10 @@ for (const mode of ['empty', 'replica', 'tab-docs']) {
         ([doc, count]) => Reflect.get(globalThis, 'write')(doc, count),
         [textDoc, 200],
       );
+      receives[mode] = await pages[0].evaluate(([doc, changes]) => Reflect.get(globalThis, 'receive')(doc, changes), [
+        textDoc,
+        peerChanges,
+      ] as const);
     }
     if (mode !== 'empty') {
       const released: { freed: number; after: number } = await pages[0].evaluate(() =>
@@ -190,5 +213,16 @@ for (const [mode, latency] of Object.entries(latencies)) {
     '), worker',
     median(latency.workerMs).toFixed(2),
     'ms',
+  );
+}
+for (const [mode, times] of Object.entries(receives)) {
+  const sorted = [...times].sort((left, right) => left - right);
+  console.log(
+    mode.padEnd(10),
+    "receive another peer's keystroke and read the text:",
+    median(times).toFixed(2),
+    'ms (p95',
+    sorted[Math.floor(sorted.length * 0.95)].toFixed(2),
+    ')',
   );
 }

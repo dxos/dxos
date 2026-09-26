@@ -17,20 +17,16 @@ export class SpikeClientHandle<T> extends EventEmitter<ClientDocHandleEvents<T>>
   readonly documentId = undefined;
   readonly state = 'ready';
   readonly _internalId = `spike-${nextId++}`;
-  #heads: string[];
-  #doc: A.Doc<T>;
-  /** Set while this handle's own change runs, which emits once afterwards with source `change`. */
-  #local = false;
 
   readonly tab: TabDoc<T>;
 
   constructor(tab: TabDoc<T>) {
     super();
     this.tab = tab;
-    this.#heads = tab.heads();
-    this.#doc = tab.doc();
-    // Changes the worker delivers; local changes emit from `change` below with their own source.
-    tab.on(() => this.#emitChange('host'));
+    // The tab document reports each version with its patches, whether this tab or the worker made it.
+    tab.on(({ before, after, patches, source }) =>
+      this.emit('change', { handle: this, doc: after, patches, patchInfo: { before, after, source } }),
+    );
   }
 
   doc(): A.Doc<T> {
@@ -38,38 +34,11 @@ export class SpikeClientHandle<T> extends EventEmitter<ClientDocHandleEvents<T>>
   }
 
   change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
-    this.#local = true;
-    try {
-      this.tab.change(callback, options);
-    } finally {
-      this.#local = false;
-    }
-    this.#emitChange('change');
+    this.tab.change(callback, options);
   }
 
   changeAt(heads: A.Heads, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): A.Heads | undefined {
-    this.#local = true;
-    try {
-      return this.tab.changeAt(heads, callback, options);
-    } finally {
-      this.#local = false;
-      this.#emitChange('change');
-    }
-  }
-
-  #emitChange(source: 'change' | 'host'): void {
-    if (this.#local) {
-      return;
-    }
-    const heads = this.tab.heads();
-    if (heads.join(',') === this.#heads.join(',')) {
-      return;
-    }
-    const before = this.#doc;
-    const patches = this.tab.diff(this.#heads, heads);
-    this.#heads = heads;
-    this.#doc = this.tab.doc();
-    this.emit('change', { handle: this, doc: this.#doc, patches, patchInfo: { before, after: this.#doc, source } });
+    return this.tab.changeAt(heads, callback, options);
   }
 
   whenReady(): Promise<void> {

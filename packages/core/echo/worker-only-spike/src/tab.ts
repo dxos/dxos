@@ -3,7 +3,7 @@
 //
 
 import * as Draft from '@dxos/automerge-proxy/Draft';
-import type * as Op from '@dxos/automerge-proxy/Op';
+import * as Op from '@dxos/automerge-proxy/Op';
 
 import { encodeChange, sortedPreds } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
@@ -11,21 +11,17 @@ import { isImmutableString } from './immutable-string.ts';
 import { Model, type Patch } from './model.ts';
 import { readChange } from './reader.ts';
 
-/** Marks every container a tab document hands out, so the spike namespace can answer for it. */
-export const TAG = Symbol.for('dxos.worker-only-spike.tag');
+/** The tag of every container a tab document hands out, so the spike namespace can answer for it. */
+const TAGS = new WeakMap<object, Tag>();
 
-export type Tag = { readonly tab: TabDoc; readonly heads: string[]; readonly path: readonly (string | number)[] };
+/**
+ * Where a container sits: the document, the version it belongs to, and its path there. A container a
+ * later version shares keeps its tag, which still names it at its own version.
+ */
+export type Tag = { readonly tab: TabDocument; readonly heads: string[]; readonly path: readonly (string | number)[] };
 
-const isTag = (value: unknown): value is Tag =>
-  typeof value === 'object' && value !== null && 'tab' in value && value.tab instanceof TabDoc;
-
-export const tagOf = (value: unknown): Tag | undefined => {
-  if (value === null || typeof value !== 'object') {
-    return undefined;
-  }
-  const tag: unknown = Reflect.get(value, TAG);
-  return isTag(tag) ? tag : undefined;
-};
+export const tagOf = (value: unknown): Tag | undefined =>
+  typeof value === 'object' && value !== null ? TAGS.get(value) : undefined;
 
 /** Messages the host sends a tab. A tab names its changes by their real hashes, so acks and refusals do too. */
 export type HostMessage =
@@ -36,10 +32,41 @@ export type HostMessage =
 /** What a tab opens a document from. Without `hashes`, the tab computes them from the bytes. */
 export type Snapshot = { bytes: Uint8Array; hashes?: string[]; heads: string[] };
 
+/** A new version of a tab document, with Automerge-shaped patches from the one before. */
+export type TabChange<T> = { before: T; after: T; patches: Patch[]; source: 'change' | 'host' };
+
 const randomActor = (): string =>
   Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 type ChangeOptions = { time?: number; message?: string };
+
+/** A tab document of any shape, as Automerge's namespace sees one: its drafts and values are unknown. */
+export interface TabDocument {
+  readonly actor: string;
+  readonly model: Model;
+  heads(): string[];
+  doc(): unknown;
+  view(heads: readonly string[]): unknown;
+  cursor(
+    heads: readonly string[],
+    path: readonly (string | number)[],
+    position: number,
+    move?: 'before' | 'after',
+  ): string;
+  cursorPosition(heads: readonly string[], path: readonly (string | number)[], cursor: string): number;
+  diff(before: readonly string[], after: readonly string[]): Patch[];
+  conflicts(
+    heads: readonly string[],
+    path: readonly (string | number)[],
+    prop: string | number,
+  ): Record<string, unknown> | undefined;
+  change(fn: (draft: unknown) => void, options?: ChangeOptions): string[] | undefined;
+  changeAt(heads: readonly string[], fn: (draft: unknown) => void, options?: ChangeOptions): string[] | undefined;
+  applyChanges(changes: readonly Change[]): void;
+  lastLocalChange(): Change | undefined;
+  changesIn(heads: readonly string[]): Change[];
+  receive(message: HostMessage): void;
+}
 
 type Options = {
   /** Where changes go; a document with none exists only in this tab, as `A.from` makes one. */
@@ -53,19 +80,20 @@ type Options = {
  * mints ids for its own ops, and the worker writes each change under exactly those ids. `T` is the
  * document's shape as its callers name it, as with `A.Doc<T>`.
  */
-export class TabDoc<T = unknown> {
+export class TabDoc<T = unknown> implements TabDocument {
   readonly #model: Model;
   readonly #send?: (change: Change, bytes: Uint8Array) => void;
   readonly #bytes = new Map<string, Uint8Array>();
   readonly #now: () => number;
-  readonly #listeners = new Set<() => void>();
+  readonly #listeners = new Set<(change: TabChange<T>) => void>();
   readonly #rejectedListeners = new Set<(changes: Change[], reason: string) => void>();
   readonly #pending: Change[] = [];
   #actor: string;
   /** This actor's changes by seq, confirmed or not: the next change's seq and base check come from it. */
   #own: string[] = [];
   #heads: string[];
-  #cache?: { key: string; root: T };
+  /** The document at `#heads`, kept current by each change instead of read again from the model. */
+  #root: T;
 
   constructor(model: Model, heads: string[], options: Options) {
     this.#model = model;
@@ -73,6 +101,7 @@ export class TabDoc<T = unknown> {
     this.#send = options.send;
     this.#actor = options.actor ?? randomActor();
     this.#now = options.now ?? (() => Math.floor(Date.now() / 1000));
+    this.#root = this.view(heads);
   }
 
   /** A document read from the host's snapshot: saved bytes, change hashes and heads. */
@@ -133,36 +162,29 @@ export class TabDoc<T = unknown> {
 
   /** The document at the current version, as Automerge would materialize it. */
   doc(): T {
-    const key = this.#heads.join(',');
-    if (this.#cache?.key !== key) {
-      this.#cache = { key, root: this.view(this.#heads) };
-    }
-    return this.#cache.root;
+    return this.#root;
   }
 
   /** The document at `heads`, read-only, as `A.view` gives it. */
   view(heads: readonly string[]): T {
     const at = [...heads];
     const value = this.#model.materialize('_root', this.clockOf(at));
-    const mark = (node: unknown, path: (string | number)[]): void => {
-      if (
-        node === null ||
-        typeof node !== 'object' ||
-        node instanceof Date ||
-        isImmutableString(node) ||
-        node instanceof Uint8Array
-      ) {
-        return;
-      }
-      Object.defineProperty(node, TAG, { value: { tab: this, heads: at, path } satisfies Tag });
-      for (const [key, child] of Object.entries(node)) {
-        mark(child, [...path, Array.isArray(node) ? Number(key) : key]);
-      }
-      Object.freeze(node);
-    };
-    mark(value, []);
+    this.#tagNew(value, at, []);
     // The model holds whatever its writers wrote; `T` is the caller's claim about it, as in `A.load<T>`.
     return value as T;
+  }
+
+  /** Tags and freezes the containers of `node` that no earlier version of this document shares. */
+  #tagNew(node: unknown, heads: string[], path: readonly (string | number)[]): void {
+    if (!Op.isContainer(node) || TAGS.get(node)?.tab === this) {
+      return;
+    }
+    TAGS.set(node, { tab: this, heads, path });
+    const list = Array.isArray(node);
+    for (const [key, child] of Object.entries(node)) {
+      this.#tagNew(child, heads, [...path, list ? Number(key) : key]);
+    }
+    Object.freeze(node);
   }
 
   clockOf(heads: readonly string[]): Clock {
@@ -217,7 +239,8 @@ export class TabDoc<T = unknown> {
   // Writes.
   //
 
-  on(listener: () => void): () => void {
+  /** Called with each new version, whether this tab or the host made it. */
+  on(listener: (change: TabChange<T>) => void): () => void {
     this.#listeners.add(listener);
     return () => this.#listeners.delete(listener);
   }
@@ -227,10 +250,29 @@ export class TabDoc<T = unknown> {
     return () => this.#rejectedListeners.delete(listener);
   }
 
-  #emit(): void {
+  /** Moves to the model's heads with `root` as the document there, and tells the listeners. */
+  #advance(root: T, patches: Patch[], source: TabChange<T>['source']): void {
+    const before = this.#root;
+    this.#heads = this.#model.heads();
+    // The root carries the version in its tag, so every version gets its own root object.
+    const after = root === before ? copyRoot(root) : root;
+    this.#tagNew(after, [...this.#heads], []);
+    this.#root = after;
     for (const listener of [...this.#listeners]) {
-      listener();
+      listener({ before, after, patches, source });
     }
+  }
+
+  /** Runs `apply` on the model, then patches the document with what changed; costs what the change touched. */
+  #advanceBy(apply: () => void): void {
+    const before = this.#model.clockOf(this.#heads);
+    apply();
+    const heads = this.#model.heads();
+    if (heads.join(',') === this.#heads.join(',')) {
+      return;
+    }
+    const patches = this.#model.diff(before, this.#model.clockOf(heads));
+    this.#advance(applyPatches(this.#root, patches), patches, 'host');
   }
 
   /** `handle.change`: records the callback's edits as one change on the current version. */
@@ -246,7 +288,9 @@ export class TabDoc<T = unknown> {
   #record(baseHeads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
     const baseClock = this.clockOf(baseHeads);
     const current = baseHeads.join(',') === this.#heads.join(',');
-    const recorder = new Draft.Recorder(current ? this.doc() : freezeDeep(this.#model.materialize('_root', baseClock)));
+    const before = current ? this.#root : undefined;
+    const clockBefore = current ? baseClock : this.#model.clockOf(this.#heads);
+    const recorder = new Draft.Recorder(before ?? freezeDeep(this.#model.materialize('_root', baseClock)));
     // A draft stands in for the document, so it has the document's claimed shape.
     fn(recorder.draft() as T);
     if (recorder.ops.length === 0) {
@@ -277,13 +321,19 @@ export class TabDoc<T = unknown> {
     change.hash = hash;
     this.#model.registerChange(change);
     this.#own.push(hash);
-    this.#heads = this.#model.heads();
     if (this.#send) {
       this.#pending.push(change);
       this.#bytes.set(hash, bytes);
       this.#send(structuredClone(change), bytes);
     }
-    this.#emit();
+    if (before !== undefined) {
+      // On the current version the draft's ops are the patch: the document moves without a diff.
+      const { root, patches } = Op.apply(before, recorder.ops);
+      this.#advance(root, patches, 'change');
+    } else {
+      const patches = this.#model.diff(clockBefore, this.#model.clockOf(this.#model.heads()));
+      this.#advance(applyPatches(this.#root, patches), patches, 'change');
+    }
     return [hash];
   }
 
@@ -295,12 +345,9 @@ export class TabDoc<T = unknown> {
     switch (message.type) {
       case 'change': {
         const { change } = message;
-        if (this.#model.hasChange(change.hash)) {
-          return;
+        if (!this.#model.hasChange(change.hash)) {
+          this.#advanceBy(() => this.#model.applyChange(change));
         }
-        this.#model.applyChange(change);
-        this.#heads = this.#model.heads();
-        this.#emit();
         return;
       }
       case 'ack': {
@@ -325,17 +372,25 @@ export class TabDoc<T = unknown> {
         const dropped = this.#pending.filter((change) => removed.has(change.hash));
         this.#pending.splice(0, this.#pending.length, ...this.#pending.filter((change) => !removed.has(change.hash)));
         dropped.forEach((change) => this.#bytes.delete(change.hash));
+        // The dropped changes end their actors' chains, so the version without them caps those actors below them.
+        const clock = this.#model.clockOf(this.#heads);
+        const without = new Map(clock);
+        for (const change of dropped) {
+          without.set(change.actor, Math.min(without.get(change.actor) ?? Infinity, change.startOp - 1));
+        }
+        const patches = this.#model.diff(clock, without);
         this.#model.remove(dropped);
-        this.#heads = this.#model.heads();
         // This actor's dropped changes are a suffix of its chain, so their seqs are free again.
         const cut = this.#own.findIndex((hash) => removed.has(hash));
         if (cut >= 0) {
           this.#own.length = cut;
         }
+        // Containers other changes made carry heads that name the dropped changes, so the document is read
+        // again in full; only a bug in the tab produces a refusal.
+        this.#advance(this.view(this.#model.heads()), patches, 'host');
         for (const listener of [...this.#rejectedListeners]) {
           listener(dropped, message.reason);
         }
-        this.#emit();
       }
     }
   }
@@ -356,14 +411,12 @@ export class TabDoc<T = unknown> {
    */
   applyChanges(changes: readonly Change[]): void {
     const fresh = changes.filter((change) => !this.#model.hasChange(change.hash));
-    for (const change of fresh) {
-      this.#model.applyChange(change);
-      this.#send?.(structuredClone(change), encodeChange(change).bytes);
-    }
-    if (fresh.length > 0) {
-      this.#heads = this.#model.heads();
-      this.#emit();
-    }
+    this.#advanceBy(() => {
+      for (const change of fresh) {
+        this.#model.applyChange(change);
+        this.#send?.(structuredClone(change), encodeChange(change).bytes);
+      }
+    });
   }
 
   /** The last change this tab wrote under its current actor, as `A.getLastLocalChange` gives it. */
@@ -386,7 +439,7 @@ export class TabDoc<T = unknown> {
     const fresh = Model.fromSaved(snapshot.bytes, snapshot.hashes);
     const theirs = new Set(fresh.changeHashes());
     const missing = fresh.changeHashes().filter((hash) => !this.#model.hasChange(hash));
-    missing.forEach((hash) => this.#model.applyChange(fresh.changeOf(hash)));
+    this.#advanceBy(() => missing.forEach((hash) => this.#model.applyChange(fresh.changeOf(hash))));
     // A pending change the worker saved before its ack was lost is confirmed.
     for (const change of [...this.#pending]) {
       if (theirs.has(change.hash)) {
@@ -401,12 +454,59 @@ export class TabDoc<T = unknown> {
         this.#send?.(change, this.#bytes.get(hash) ?? encodeChange(change).bytes);
       }
     }
-    this.#heads = this.#model.heads();
-    if (missing.length > 0) {
-      this.#emit();
-    }
   }
 }
+
+/** A new root object with the same entries, frozen. */
+const copyRoot = <T>(root: T): T => {
+  if (!Op.isContainer(root)) {
+    return root;
+  }
+  const copy = Array.isArray(root) ? [...root] : { ...root };
+  // The copy has the root's own shape.
+  return Object.freeze(copy) as T;
+};
+
+/**
+ * Applies model patches to a frozen document, copying only the containers on their paths. A patch on
+ * a numeric index edits the text or list there, so the container's kind decides the op.
+ */
+const applyPatches = <T>(root: T, patches: readonly Patch[]): T => {
+  let current: unknown = root;
+  for (const patch of patches) {
+    const op = toOp(current, patch);
+    if (op) {
+      current = Op.apply(current, [op], { strict: true }).root;
+    }
+  }
+  // Patches keep the document's shape.
+  return current as T;
+};
+
+const toOp = (root: unknown, patch: Patch): Op.Any | undefined => {
+  const parentPath = patch.path.slice(0, -1);
+  const last = patch.path[patch.path.length - 1];
+  const inText = typeof Op.getAt(root, parentPath) === 'string';
+  switch (patch.action) {
+    case 'conflict':
+      return undefined;
+    case 'put':
+      return inText
+        ? { type: 'splice', path: parentPath, index: Number(last), remove: 1, insert: String(patch.value) }
+        : { type: 'put', path: patch.path, value: patch.value };
+    case 'insert':
+      return { type: 'insert', path: patch.path, values: patch.values };
+    case 'splice':
+      return { type: 'splice', path: parentPath, index: Number(last), remove: 0, insert: patch.value };
+    case 'del':
+      if (typeof last === 'string') {
+        return { type: 'del', path: patch.path };
+      }
+      return inText
+        ? { type: 'splice', path: parentPath, index: last, remove: patch.length ?? 1, insert: '' }
+        : { type: 'remove', path: patch.path, count: patch.length ?? 1 };
+  }
+};
 
 /** The changes no other change names as a dependency, sorted as Automerge sorts heads. */
 const headsOf = (changes: readonly Change[]): string[] => {
