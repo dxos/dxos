@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,8 +20,6 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 export type TaskQuestionProps = ThemedClassName<{
   thread: Task.QuestionThread;
-  /** When it was asked, beside the question — for a host that shows it among dated entries. */
-  date?: string;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
@@ -49,7 +47,6 @@ export type TaskQuestionProps = ThemedClassName<{
 export const TaskQuestion = ({
   classNames,
   thread: { question, answer },
-  date,
   busy,
   message,
   compact,
@@ -129,11 +126,7 @@ export const TaskQuestion = ({
       <div className={TASK_GRID_ICON}>
         <Icon icon='ph--question--regular' classNames='text-warning-text' />
       </div>
-      {/* The time rides with the text, flush right, as it does on the history's other entries. */}
-      <div className='flex gap-2 min-w-0'>
-        <span className='grow font-medium wrap-break-word min-w-0'>{question.text}</span>
-        {date && <Timestamp date={date} classNames='shrink-0 text-right text-description' />}
-      </div>
+      <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
       {question.context && !answer && (
         <p className={mx(TASK_GRID_CONTENT, 'text-description wrap-break-word line-clamp-3 min-w-0')}>

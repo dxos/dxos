@@ -25,7 +25,7 @@ In the task list a task's tags and artifacts sit on a line of their own under th
 
 A task row's menu offers **Add sub-task**, which files an untitled task under that row, expands the row if it was collapsed, and opens the new task. A task editor focuses its title when the task has none, so the new task is named where it opens; an untitled row shows an "Untitled" placeholder.
 
-A task's questions appear in its activity log where they were asked, with their answers, and an open one is answered there; the article's separate Questions section is gone. Each option of a question is an item of its own in a list.
+An answered question appears in the task's activity as one entry, the question with its answer, dated when it was answered; open questions stay in the article's Questions section, where each option is an item of its own. `TaskHistory` no longer takes `onAnswer`, and `TaskQuestion` no longer takes `date`.
 
 The task list's create pane takes files dropped or pasted on it (`TaskList.Editor` `acceptFiles`), holding them as chips until the task is created and then handing them to `onTaskCreate` with the draft (which may resolve to the files it could not attach — those stay on the pane rather than being lost); the task set article offers it only where a plugin can store files, and attaches them to the new task.
 

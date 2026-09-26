@@ -3,8 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import React, { useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { useObject } from '@dxos/echo-react';
 import { Column } from '@dxos/react-ui';
@@ -23,8 +23,7 @@ const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).
 
 /**
  * A task whose log interleaves changes with two questions: one answered, one still open with
- * options. The open one is asked first, so it is not the newest entry — it has to be found where it
- * happened rather than at the top.
+ * options — which the log leaves to the task's open questions.
  */
 const seedTask = (): Task.Task => {
   const task = Task.make({ title: 'Draft the refund reply', status: 'started', assignee: agent });
@@ -51,20 +50,13 @@ const seedTask = (): Task.Task => {
   return task;
 };
 
-const DefaultStory = ({ seed = seedTask, answerable = true }: { seed?: () => Task.Task; answerable?: boolean }) => {
+const DefaultStory = ({ seed = seedTask }: { seed?: () => Task.Task }) => {
   const [task] = useState(seed);
   const [history] = useObject(task, 'history');
-  // Stands in for the `AnswerQuestion` operation: the answer lands in the log.
-  const handleAnswer = useCallback(
-    (questionId: string, answer: string) => {
-      Task.answer(task, questionId, answer, { actor: user });
-    },
-    [task],
-  );
 
   return (
     <Column.Root gutter='md' classNames='w-[32rem] py-2'>
-      <TaskHistory entries={history ?? []} limit={10} onAnswer={answerable ? handleAnswer : undefined} />
+      <TaskHistory entries={history ?? []} limit={10} />
     </Column.Root>
   );
 };
@@ -83,53 +75,27 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Questions sit in the log where they were asked — not in a section of their own — each one an entry
- * of its own with its options as separate items, and the open one is answered in place.
+ * An answered question is one entry — the question with its answer under it — dated when it was
+ * answered; an open question is not in the log, since it is waiting on the reader rather than a
+ * record of what happened.
  */
-export const TestQuestionsInline: Story = {
+export const TestQuestionsInActivity: Story = {
   play: async ({ canvasElement }) => {
-    const items = () =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.history"] > [role="listitem"]')].map(
-        (item) =>
-          item.querySelector('[data-testid="task-question"]')?.getAttribute('aria-label') ??
-          item.textContent?.trim() ??
-          '',
-      );
+    const items = () => [
+      ...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.history"] > [role="listitem"]'),
+    ];
 
     await waitFor(() => expect(items().length).toBeGreaterThan(0), { timeout: 10_000 });
-    // Newest first, with each question at its own position and its answer inside it rather than as
-    // an entry of its own.
-    const order = items();
-    const toneIndex = order.indexOf('Formal or friendly tone?');
-    const refundIndex = order.indexOf('What is our refund window for annual plans?');
-    await expect(toneIndex).toBeGreaterThan(0);
-    await expect(refundIndex).toBeGreaterThan(toneIndex);
-    await expect(order).toHaveLength(4);
+    const texts = items().map((item) => item.textContent ?? '');
 
-    const refund = () =>
-      canvasElement.querySelector<HTMLElement>('[data-testid="task-question"][aria-label^="What is our refund"]');
-    const tone = canvasElement.querySelector<HTMLElement>('[data-testid="task-question"][aria-label^="Formal"]');
-    await expect(tone?.querySelector('[data-testid="task-question.answer"]')).toHaveTextContent('Friendly');
-    await expect(tone?.querySelector('[data-testid="task-question.option"]')).toBeNull();
-
-    // One item per option, each on its own.
-    const options = refund()?.querySelectorAll<HTMLElement>('[role="list"] > [role="listitem"]') ?? [];
-    await expect(options).toHaveLength(3);
-    for (const option of options) {
-      await expect(option.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(1);
-    }
-
-    await userEvent.click(options[1].querySelector<HTMLElement>('[data-testid="task-question.option"]')!);
-    await waitFor(
-      () => expect(refund()?.querySelector('[data-testid="task-question.answer"]')).toHaveTextContent('60 days'),
-      { timeout: 10_000 },
+    // The exchange is one item, at the time it was answered: after the priority change, before the block.
+    const exchange = texts.findIndex((text) => text.includes('Formal or friendly tone?'));
+    await expect(exchange).toBe(1);
+    await expect(items()[exchange].querySelector('[data-testid="taskList.history.answer"]')).toHaveTextContent(
+      'Friendly',
     );
-    // Answered, it stays where it was asked; the answer does not become an entry of its own.
-    await expect(items()).toHaveLength(4);
+    // The answer is not repeated as an entry of its own, and the open question is not in the log.
+    await expect(texts.filter((text) => text.includes('Friendly'))).toHaveLength(1);
+    await expect(texts.some((text) => text.includes('refund window'))).toBe(false);
   },
-};
-
-/** Without an answer handler the open question is shown, but offers nothing to click. */
-export const Readonly: Story = {
-  args: { answerable: false },
 };

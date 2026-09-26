@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskTags } from '@dxos/react-ui-task';
+import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,8 +26,8 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * Article surface for a single {@link Task} — the detail a row opens, reusing the task plank as the
  * reader moves down a list (see `plugin-projects/docs/TASK-DETAIL.md`).
  *
- * The pane is one column: a toolbar carrying what acts on the task, then the fields, the history
- * (with its questions, answerable in place) and the artifacts, each starting at the same edge with its glyphs in the
+ * The pane is one column: a toolbar carrying what acts on the task, then the fields, the open
+ * questions, the history and the artifacts, each starting at the same edge with its glyphs in the
  * gutter beside it (see `react-ui-task/docs/DETAIL-LAYOUT.md`).
  *
  * The fields are `TaskEditor` — the same title field and markdown description the list's strip
@@ -39,6 +39,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticleProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -56,14 +57,12 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
     { spaceId },
   );
 
-  const handleAnswer = useCallback(
-    (questionId: string, answer: string) => handleQuestionAnswer(task, questionId, answer),
-    [handleQuestionAnswer, task],
-  );
-
   // The property, not the whole task: subscribing to the object itself would hand the article a
   // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
+
+  // Open questions only: an answered one is a line in the activity below.
+  const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
 
   return (
     <Panel.Root role={role}>
@@ -111,11 +110,24 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   room a pane has, each says what its glyph means. */}
                 <TaskProperties task={task} onTaskUpdate={handleUpdate} />
 
+                {/* Headed like the sections around it, and only when something is waiting: a
+                  standing "Questions" label over nothing says the pane expects them, when what a
+                  task with none has is nothing to answer. */}
+                {openQuestions.length > 0 && (
+                  <Column.Section label={t('task-questions.label')} data-testid='tasksPlugin.questions'>
+                    {openQuestions.map((thread) => (
+                      <TaskQuestion
+                        key={thread.question.id}
+                        thread={thread}
+                        onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
+                      />
+                    ))}
+                  </Column.Section>
+                )}
+
                 <TaskAttachments task={task} canAttach={!!handleAttach} pending={pendingAttachments} />
 
-                {/* Questions are answered here, in the log where they were asked, rather than in a
-                  section of their own that split the exchange from the record of it. */}
-                {history && history.length > 0 && <TaskHistory entries={history} onAnswer={handleAnswer} />}
+                {history && history.length > 0 && <TaskHistory entries={history} />}
 
                 <TaskArtifacts task={task} />
               </Column.Root>

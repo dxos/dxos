@@ -228,11 +228,10 @@ export const Default: Story = {
 };
 
 /**
- * A question asked on the task shows in its activity log, where it was asked, with each option an
- * item of its own; picking one records the answer on the task, and the question stays in place with
- * its answer under it.
+ * An open question waits in the Questions section, answerable there; answered, it leaves the section
+ * and becomes one entry in the activity, the question with its answer.
  */
-export const QuestionInActivity: Story = {
+export const QuestionAnswered: Story = {
   decorators: [withPlugins({ files: false })],
   args: { title: WORKED_TASK },
   play: async ({ canvasElement }) => {
@@ -243,36 +242,27 @@ export const QuestionInActivity: Story = {
       throw new Error('The story did not seed a task.');
     }
     const { worked } = context;
-    const question = Task.ask(worked, {
+    Task.ask(worked, {
       text: 'Which lot should anchor the blend?',
       options: [{ title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' }, { title: 'Colombian Huila' }],
       actor: { name: 'Scout', role: 'assistant' },
     });
 
-    const inHistory = () =>
-      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"] [data-testid="task-question"]');
-    await waitFor(() => expect(inHistory()).toBeTruthy(), { timeout: 10_000 });
-    // No section of its own: the log is the only place it appears.
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question"]')).toHaveLength(1);
+    const section = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.questions"]');
+    const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
+    await waitFor(() => expect(section()).toBeTruthy(), { timeout: 10_000 });
+    // Open, it is in the section and not in the log.
+    await expect(history()?.textContent ?? '').not.toContain('Which lot should anchor the blend?');
 
-    const options = inHistory()!.querySelectorAll<HTMLElement>(
-      '[role="listitem"] [data-testid="task-question.option"]',
-    );
+    const options = within(section() ?? canvasElement).getAllByTestId('task-question.option');
     await expect(options).toHaveLength(2);
     await userEvent.click(options[1]);
 
-    await waitFor(
-      () =>
-        expect(
-          Task.getQuestions(worked.history).find((thread) => thread.question.id === question.id)?.answer?.answer,
-        ).toEqual('Colombian Huila'),
-      { timeout: 10_000 },
-    );
-    await waitFor(
-      () =>
-        expect(inHistory()?.querySelector('[data-testid="task-question.answer"]')).toHaveTextContent('Colombian Huila'),
-      { timeout: 10_000 },
-    );
+    // Answered, the section goes and the exchange is one entry in the log.
+    await waitFor(() => expect(section()).toBeNull(), { timeout: 10_000 });
+    const answer = () => history()?.querySelector('[data-testid="taskList.history.answer"]');
+    await waitFor(() => expect(answer()).toHaveTextContent('Colombian Huila'), { timeout: 10_000 });
+    await expect(answer()?.closest('[role="listitem"]')?.textContent).toContain('Which lot should anchor the blend?');
   },
 };
 
