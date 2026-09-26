@@ -21,7 +21,7 @@ Two properties define it and outrank simplicity:
 
 Tests map to the acceptance scenarios: `src/memory.test.ts` (T-1, T-2), `src/differential.test.ts`
 (T-3), `src/sql/explain.test.ts` (T-4, T-5), `src/database.test.ts` (T-6 to T-9). Benchmarks are in
-`src/database.bench.ts` and `src/memory.report.test.ts`; results are recorded in `BENCHMARKS.md`.
+`src/testing/database.bench.ts` and `src/memory.report.test.ts`; results are recorded in `BENCHMARKS.md`.
 
 ## Extensions
 

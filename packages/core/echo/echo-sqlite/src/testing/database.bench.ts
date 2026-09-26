@@ -18,7 +18,7 @@ import { Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { SqliteDatabase } from './database.ts';
+import { SqliteDatabase } from '../database.ts';
 
 // Run with: DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run (from this package).
 const OBJECTS = Number(process.env.ECHO_SQLITE_BENCH_OBJECTS ?? 10_000);

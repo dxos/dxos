@@ -1,6 +1,6 @@
 # echo-sqlite — benchmark results
 
-Recorded runs of `src/database.bench.ts` (throughput) and `src/memory.report.test.ts` (heap), one section
+Recorded runs of `src/testing/database.bench.ts` (throughput) and `src/memory.report.test.ts` (heap), one section
 per commit. Run from this package:
 
 ```bash
