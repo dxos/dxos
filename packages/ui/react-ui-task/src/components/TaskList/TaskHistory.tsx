@@ -4,14 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { Icon, IconBlock, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { formatRelative } from '../../util/index.ts';
+import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 import { UNSET_ICON } from './status-icons.ts';
 
 /**
@@ -46,14 +46,6 @@ export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
   /** Entries to show, newest first; the rest are left to a surface with room for them. */
   limit?: number;
-  /**
-   * Lay the log out on the host's own columns (`grid-cols-subgrid`), so an entry's glyph sits under
-   * the host's leading icon and its text under the host's text. The host must place this across the
-   * tracks it wants inherited. Off by default: a log rendered away from a grid has none to inherit.
-   */
-  subgrid?: boolean;
-  /** Cell placement per entry, when `subgrid` — the host names its own tracks. */
-  cells?: { icon?: string; description?: string; date?: string };
 }>;
 
 /**
@@ -62,7 +54,7 @@ export type TaskHistoryProps = ThemedClassName<{
  * Each entry already carries the human-readable record of what happened, so a line is that sentence
  * plus when it happened and who did it — the pane adds no interpretation of its own.
  */
-export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: TaskHistoryProps) => {
+export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
   const { t } = useTranslation(translationKey);
   // Newest first, without mutating the task's own array (append-only, oldest first).
   const visible = useMemo(
@@ -76,57 +68,46 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
         }),
     [entries, limit],
   );
+
   if (visible.length === 0) {
     return null;
   }
 
   return (
-    // Non-selectable (no `value`/`onValueChange` on `Root`): a plain `role=list` of `role=listitem`
-    // rows, laid out as one grid for the whole log rather than a stack of rows each laying itself
-    // out — the glyph column and the time column are then the same width down every entry, so the
-    // times line up as a column instead of trailing each description wherever it happens to end.
-    <Listbox.Root>
-      <Listbox.Content
-        aria-label={t('task-history.label')}
-        data-testid='taskList.history'
-        classNames={mx(
-          'grid items-baseline gap-y-1 text-sm text-description',
-          // The host's tracks, so the log's columns are the host's columns rather than a second set
-          // that happens to look similar.
-          subgrid ? 'grid-cols-subgrid' : 'grid-cols-[min-content_1fr_min-content]',
-          classNames,
-        )}
-      >
-        {visible.map(({ entry, icon, hue }, index) => (
-          // A subgrid spanning the log's three tracks: the entry keeps its `listitem` semantics while
-          // its cells sit on the shared columns rather than on tracks of its own.
-          // `items-start`, since a wrapped description makes the row taller than one line: centring
-          // would then float the glyph and the time against the middle of the paragraph.
-          <Listbox.Item
-            key={`${entry.date}-${index}`}
-            id={`${entry.date}-${index}`}
-            classNames={mx('grid grid-cols-subgrid items-start min-h-0 px-0', subgrid ? 'col-span-full' : 'col-span-3')}
-          >
-            {/* An `IconBlock`, so the glyph holds the same square an `IconButton iconOnly` occupies and
-                lines up with the controls in the column above it. One line box tall and top-aligned:
-                a wrapped description would otherwise float the glyph down the paragraph rather than
-                leaving it on the first line. The hue comes from the event table, through the same
-                palette the status and priority glyphs read. */}
-            <IconBlock square classNames={mx('h-[1lh] self-start', cells?.icon)}>
-              <Icon icon={icon} classNames={hue} size={4} />
-            </IconBlock>
-            {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
-                time column is fixed, so the description takes the height it needs. */}
-            <span className={mx('min-w-0 pe-2', cells?.description)}>{entryText(entry)}</span>
-            {/* Relative, because the log is read as "what has been happening" rather than as a record
-                to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-            <span className={mx('whitespace-nowrap tabular-nums text-right', cells?.date)}>
-              {formatRelative(entry.date)}
-            </span>
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
-    </Listbox.Root>
+    // The log spans the host Column's tracks and re-exposes them, so each entry's glyph sits in the
+    // gutter with the pane's other glyphs and its text in the content track with the pane's text —
+    // rather than in a second set of columns that happens to look similar.
+    <Column.Section
+      role='list'
+      label={t('task-history.label')}
+      aria-label={t('task-history.label')}
+      data-testid='taskList.history'
+      gap='sm'
+      classNames={mx('text-sm text-description', classNames)}
+    >
+      {visible.map(({ entry, icon, hue }, index) => (
+        // The section's geometry, a grid rather than a flex row: the glyph column is a fixed 24px,
+        // so a history glyph sits on the same axis as a property's and a question's however wide
+        // each section's own text runs.
+        <div key={`${entry.date}-${index}`} role='listitem' className={mx(TASK_GRID, 'min-w-0')}>
+          {/* The hue comes from the event table, through the same palette the status and priority
+              glyphs read. */}
+          <div className={TASK_GRID_ICON}>
+            <Icon icon={icon} classNames={hue} size={4} />
+          </div>
+          {/* The time rides with the description rather than in a column of its own: flush right
+              against the content's edge is where the eye reads it, and a third track would make the
+              log a different shape from the sections above it. */}
+          <div className='flex gap-2 min-w-0'>
+            {/* Wraps: an entry is a sentence, and truncating it hides what actually happened. */}
+            <span className='grow min-w-0'>{entryText(entry)}</span>
+            {/* Relative, because the log is read as "what has been happening" rather than as a
+                record to cite; the exact timestamp stays on the entry for a surface that needs it. */}
+            <span className='shrink-0 whitespace-nowrap tabular-nums text-right'>{formatRelative(entry.date)}</span>
+          </div>
+        </div>
+      ))}
+    </Column.Section>
   );
 };
 

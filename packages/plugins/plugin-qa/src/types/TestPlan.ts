@@ -25,6 +25,7 @@ export class TestPlan extends Type.makeObject<TestPlan>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

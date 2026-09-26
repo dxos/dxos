@@ -30,6 +30,7 @@ export class Notebook extends Type.makeObject<Notebook>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

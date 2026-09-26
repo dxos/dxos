@@ -63,6 +63,7 @@
     "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "catalog:",
     "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
     "@changesets/parse": "catalog:",

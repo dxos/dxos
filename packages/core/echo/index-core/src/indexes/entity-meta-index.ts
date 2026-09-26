@@ -114,6 +114,8 @@ export const EntityMeta = Schema.Struct({
   parent: Schema.NullOr(EID.Schema),
   /** Caller-supplied domain identity from `meta.convergenceKey` (nullable); duplicates sharing one merge. */
   convergenceKey: Schema.NullOr(Schema.String),
+  /** JSON of `meta.annotations`, or null when the entity carries none. */
+  annotations: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -442,14 +444,15 @@ export class EntityMetaIndex implements Index {
               sourceId: string | null;
               targetId: string | null;
               convergenceKey: string | null;
+              annotations: string | null;
             };
             let existing: readonly ExistingRow[];
             if (documentId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
             } else if (queueId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
             } else {
               // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
               existing = [];
@@ -511,6 +514,13 @@ export class EntityMetaIndex implements Index {
                 ? rawConvergenceKey
                 : null;
 
+            const rawAnnotations = (castData[ATTR_META] as { annotations?: unknown } | undefined)?.annotations;
+            const annotations = preserveBody
+              ? priorRow.annotations
+              : rawAnnotations !== null && typeof rawAnnotations === 'object' && Object.keys(rawAnnotations).length > 0
+                ? JSON.stringify(rawAnnotations)
+                : null;
+
             const updatedAtTimestamp = object.updatedAt;
             // Prefer the creation timestamp stored in the document (survives compaction/migrations).
             // Fall back to the automerge-derived updatedAt for legacy objects that predate this field.
@@ -535,6 +545,7 @@ export class EntityMetaIndex implements Index {
                     sourceId = ${sourceId},
                     targetId = ${targetId},
                     convergenceKey = ${convergenceKey},
+                    annotations = ${annotations},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null}
                   WHERE recordId = ${existing[0].recordId}
@@ -544,12 +555,12 @@ export class EntityMetaIndex implements Index {
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
-                    convergenceKey, version, createdAt, updatedAt, queuePosition
+                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
-                    ${convergenceKey}, ${version},
+                    ${convergenceKey}, ${annotations}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;

@@ -115,6 +115,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
     FeedAnnotation.set({ property: 'feed' }),
     FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -170,6 +171,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.subscrip
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -200,7 +202,7 @@ export class PostContent extends Type.makeObject<PostContent>(
     imageUrl: Schema.optional(Schema.String),
     /** ISO 8601 timestamp when the content was fetched. */
     fetchedAt: Schema.String,
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 //

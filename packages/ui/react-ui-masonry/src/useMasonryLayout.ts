@@ -38,6 +38,7 @@ const rememberHeight = (scope: string | undefined, id: string, width: number, he
   if (scope === undefined) {
     return;
   }
+
   const key = scopedKey(scope, id);
   // Re-insert so recently-seen tiles move to the end and survive eviction.
   heightCache.delete(key);
