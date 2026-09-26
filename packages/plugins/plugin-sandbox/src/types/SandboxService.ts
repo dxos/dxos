@@ -5,8 +5,9 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
-import * as Data from 'effect/Data';
 import type * as Effect from 'effect/Effect';
+
+import { BaseError } from '@dxos/errors';
 
 import type { ExecRequest, ExecResult, FileEntry, SandboxRecord } from '../services/SandboxClient.ts';
 
@@ -14,7 +15,7 @@ import type { ExecRequest, ExecResult, FileEntry, SandboxRecord } from '../servi
  * A sandbox request that could not be carried out — the backend failed, not the command: a command
  * exiting non-zero is an {@link ExecResult}, never this.
  */
-export class SandboxError extends Data.TaggedError('SandboxError')<{ message: string; cause?: unknown }> {}
+export class SandboxError extends BaseError.extend('SandboxError', 'Sandbox request failed.') {}
 
 export type CreateOptions = { name?: string; baseImage?: string; expiresIn?: number };
 

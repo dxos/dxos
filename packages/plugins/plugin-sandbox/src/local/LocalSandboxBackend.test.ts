@@ -30,14 +30,13 @@ describe.skipIf(unavailable)('LocalSandboxBackend', { timeout: 60_000 }, () => {
   const backends: LocalSandboxBackend[] = [];
   const cleanup: string[] = [];
 
-  const makeBackend = (options: Omit<LocalSandboxOptions, 'root'> = {}) =>
-    Effect.gen(function* () {
-      const root = yield* Effect.promise(() => mkdtemp(join(tmpdir(), 'dx-sandbox-test-')));
-      cleanup.push(root);
-      const backend = new LocalSandboxBackend({ root, ...options });
-      backends.push(backend);
-      return backend;
-    });
+  const makeBackend = Effect.fnUntraced(function* (options: Omit<LocalSandboxOptions, 'root'> = {}) {
+    const root = yield* Effect.promise(() => mkdtemp(join(tmpdir(), 'dx-sandbox-test-')));
+    cleanup.push(root);
+    const backend = new LocalSandboxBackend({ root, path: process.env.PATH, ...options });
+    backends.push(backend);
+    return backend;
+  });
 
   let counter = 0;
   const nextId = () => `sbx${Date.now()}x${counter++}`;

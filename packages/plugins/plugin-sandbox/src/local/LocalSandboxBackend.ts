@@ -20,8 +20,10 @@ import { type ResourceLimits, limitsPrelude } from './limits.ts';
 import { resolveSandboxPath } from './paths.ts';
 
 export type LocalSandboxOptions = {
-  /** Directory holding every sandbox; defaults to `$DX_SANDBOX_ROOT`, else `~/.local/state/dxos/sandboxes`. */
+  /** Directory holding every sandbox; defaults to `~/.local/state/dxos/sandboxes`. */
   root?: string;
+  /** `PATH` for the host shell and the commands it confines; defaults to the system directories. */
+  path?: string;
   /** Limits applied to every command; see {@link DEFAULT_LIMITS}. */
   limits?: ResourceLimits;
   /** Hosts a command may reach (`*.example.com` wildcards allowed); everything else is refused. */
@@ -50,6 +52,7 @@ export const DEFAULT_ALLOWED_DOMAINS: readonly string[] = [
 const DEFAULT_EXEC_TIMEOUT = 120_000;
 const DEFAULT_EXPIRY = 3 * 60 * 60 * 1_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024;
+const DEFAULT_PATH = '/usr/local/bin:/usr/bin:/bin';
 const MAX_TRANSFER_BYTES = 64 * 1024 * 1024;
 const TRANSFER_TIMEOUT = 60_000;
 const LOCAL_BASE_IMAGE = 'local';
@@ -94,10 +97,17 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   readonly #options: LocalSandboxOptions;
   readonly #entries = new Map<string, SandboxEntry>();
   readonly #openLock = Semaphore.makeUnsafe(1);
+  /**
+   * The whole environment of the host shell that starts the confinement. The host's own is never
+   * inherited: anything a caller or the sandbox controls (`BASH_ENV`, `HOME`, `LD_PRELOAD`) would
+   * run code before the sandbox exists, and it carries tokens the sandbox keeps from the command.
+   */
+  readonly #hostEnv: Record<string, string>;
 
   constructor(options: LocalSandboxOptions = {}) {
     this.#options = options;
-    this.#root = options.root ?? process.env.DX_SANDBOX_ROOT ?? join(homedir(), '.local', 'state', 'dxos', 'sandboxes');
+    this.#root = options.root ?? join(homedir(), '.local', 'state', 'dxos', 'sandboxes');
+    this.#hostEnv = { PATH: options.path ?? DEFAULT_PATH, LANG: 'C.UTF-8' };
   }
 
   get root(): string {
@@ -303,7 +313,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
           allowRead: [
             workspaceDir,
             tmpDir,
-            ...toolchainDirs(home, (process.env.PATH ?? '').split(':')),
+            ...toolchainDirs(home, this.#hostEnv.PATH.split(':')),
             ...(this.#options.allowRead ?? []),
           ],
           allowWrite: [workspaceDir, tmpDir],
@@ -424,13 +434,14 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       input,
     }: { cwd: string; timeout: number; maxOutputBytes: number; input?: Uint8Array },
   ): Effect.Effect<SpawnResult, SandboxService.SandboxError> {
+    const hostEnv = this.#hostEnv;
     return Effect.gen(function* () {
       const wrapped = yield* attempt('wrap command', () => manager.wrapWithSandbox(command));
       return yield* Effect.callback<SpawnResult, SandboxService.SandboxError>((resume) => {
         // Its own process group, so a timeout kills everything the command started, not just the shell.
         const child = spawn('bash', ['-c', wrapped], {
           cwd,
-          env: HOST_ENV,
+          env: hostEnv,
           detached: true,
           stdio: ['pipe', 'pipe', 'pipe'],
         });
@@ -547,15 +558,6 @@ class OutputBuffer {
     return this.#dropped > 0 ? `${text}\n[${this.#dropped} bytes of output truncated]` : text;
   }
 }
-
-/**
- * The whole environment of the host shell that starts the confinement. The host's own environment
- * is never inherited, since it carries tokens and keys the sandbox exists to keep from the command.
- */
-const HOST_ENV: Record<string, string> = {
-  PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
-  LANG: 'C.UTF-8',
-};
 
 /** Environment set inside the sandbox, where it can only affect the confined command. */
 const sandboxExports = ({ workspaceDir, tmpDir }: SandboxEntry): string[] => [
