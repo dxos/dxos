@@ -79,6 +79,9 @@ describe('move-task', () => {
       expect(titles(tasks)).toEqual(['a', 'c', 'b']);
       expect(titles(Task.rootTasks(tasks))).toEqual(['a', 'b']);
       expect(titles(Task.subTasks(tasks, tasks[0]))).toEqual(['c']);
+      // The stored lists, not only the tree read off the parent edge: the set lists roots, `a` its child.
+      expect(taskSet.tasks.map(Task.refEntityId)).toEqual([first.id, second.id]);
+      expect((first.subtasks ?? []).map(Task.refEntityId)).toEqual([third.id]);
 
       // `null` promotes back to a root, still repositioning in the same call.
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), parentTask: null });
