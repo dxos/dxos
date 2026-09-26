@@ -99,8 +99,8 @@ if (isMainThread) {
       }
       const ms = performance.now() - start;
       if (workerData.mode === 'tab' || workerData.mode === 'tab-hashed') {
-        const { readSaved } = await import('../reader.ts');
-        ops = payload.plain.reduce((sum, bytes) => sum + readSaved(bytes).ops.length, 0);
+        const { readSavedColumns } = await import('../reader.ts');
+        ops = payload.plain.reduce((sum, bytes) => sum + readSavedColumns(bytes).ops.count, 0);
       }
       // Only what the mode built stays: the input goes before the heap is read.
       payload.compressed.length = 0;

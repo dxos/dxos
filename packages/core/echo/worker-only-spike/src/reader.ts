@@ -171,28 +171,6 @@ const must = <T>(value: T | null, column: string): T => {
   return value;
 };
 
-export type SavedOp = {
-  obj: readonly [number, number] | null;
-  key: string | readonly [number, number] | null;
-  id: readonly [number, number];
-  insert: boolean;
-  action: string;
-  value: unknown;
-  datatype?: string;
-  succ: (readonly [number, number])[];
-};
-
-export type SavedChange = {
-  actor: number;
-  seq: number;
-  maxOp: number;
-  time: number;
-  message: string | null;
-  deps: number[];
-};
-
-export type Saved = { actors: string[]; heads: string[]; changes: SavedChange[]; ops: SavedOp[] };
-
 const hex = (bytes: Uint8Array): string => [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 
 /** The datatypes `A.decodeChange` names; a string, bytes, a boolean or null carries none. */
@@ -240,8 +218,184 @@ const openChunk = (cursor: Cursor): { type: number; hash: Uint8Array; end: numbe
   return { type, hash, end };
 };
 
-/** Every op of a saved document in stored order, with actor indexes, plus the change metadata. */
-export const readSaved = (bytes: Uint8Array): Saved => {
+/** A saved document's ops, column by column: op `i`'s fields are entry `i` of each array; a null actor is -1. */
+export type SavedOps = {
+  count: number;
+  idActor: Int32Array;
+  idCounter: Uint32Array;
+  objActor: Int32Array;
+  objCounter: Uint32Array;
+  keyActor: Int32Array;
+  keyCounter: Uint32Array;
+  /** An index into `strings`, or -1 for an op that names an element. */
+  keyString: Int32Array;
+  insert: Uint8Array;
+  action: Uint8Array;
+  /** Each value's length times 16 plus its type code; the values follow one another in `raw`. */
+  valueMeta: Uint32Array;
+  raw: Uint8Array;
+  succCount: Uint32Array;
+  /** Every op's successors back to back, `succCount[i]` of them for op `i`. */
+  succActor: Int32Array;
+  succCounter: Uint32Array;
+};
+
+/** A saved document's change metadata, column by column. */
+export type SavedChanges = {
+  count: number;
+  actor: Int32Array;
+  seq: Uint32Array;
+  maxOp: Uint32Array;
+  time: Float64Array;
+  message: (string | null)[];
+  depCount: Uint32Array;
+  /** Every change's dependencies back to back, as indexes of earlier changes. */
+  deps: Int32Array;
+};
+
+export type SavedColumns = {
+  actors: string[];
+  heads: string[];
+  strings: string[];
+  ops: SavedOps;
+  changes: SavedChanges;
+};
+
+/** A run-length column of unsigned integers, nulls as -1. */
+const rleValues = (bytes: Uint8Array | undefined): number[] => {
+  const out: number[] = [];
+  if (!bytes) {
+    return out;
+  }
+  const cursor = new Cursor(bytes);
+  while (!cursor.done()) {
+    const length = cursor.leb();
+    if (length > 0) {
+      const value = cursor.uleb();
+      for (let i = 0; i < length; i++) {
+        out.push(value);
+      }
+    } else if (length === 0) {
+      for (let nulls = cursor.uleb(); nulls > 0; nulls--) {
+        out.push(-1);
+      }
+    } else {
+      for (let i = 0; i < -length; i++) {
+        out.push(cursor.uleb());
+      }
+    }
+  }
+  return out;
+};
+
+/** Fills `out` from a run-length column of unsigned integers; nulls, and entries past the column's end, become `none`. */
+const fillRle = (bytes: Uint8Array | undefined, out: Int32Array | Uint32Array | Uint8Array, none: number): void => {
+  let index = 0;
+  if (bytes) {
+    const cursor = new Cursor(bytes);
+    while (!cursor.done()) {
+      const length = cursor.leb();
+      if (length > 0) {
+        out.fill(cursor.uleb(), index, index + length);
+        index += length;
+      } else if (length === 0) {
+        const nulls = cursor.uleb();
+        out.fill(none, index, index + nulls);
+        index += nulls;
+      } else {
+        for (let i = 0; i < -length; i++) {
+          out[index++] = cursor.uleb();
+        }
+      }
+    }
+  }
+  out.fill(none, index);
+};
+
+/** Fills `out` from a delta column; a null leaves the running sum alone and reads as `none`. */
+const fillDelta = (bytes: Uint8Array | undefined, out: Uint32Array | Float64Array, none: number): void => {
+  let index = 0;
+  let sum = 0;
+  if (bytes) {
+    const cursor = new Cursor(bytes);
+    while (!cursor.done()) {
+      const length = cursor.leb();
+      if (length > 0) {
+        const step = cursor.leb();
+        for (let i = 0; i < length; i++) {
+          sum += step;
+          out[index++] = sum;
+        }
+      } else if (length === 0) {
+        const nulls = cursor.uleb();
+        out.fill(none, index, index + nulls);
+        index += nulls;
+      } else {
+        for (let i = 0; i < -length; i++) {
+          sum += cursor.leb();
+          out[index++] = sum;
+        }
+      }
+    }
+  }
+  out.fill(none, index);
+};
+
+/** Fills `out` from a boolean column: alternating runs, starting with false. */
+const fillBooleans = (bytes: Uint8Array | undefined, out: Uint8Array): void => {
+  let index = 0;
+  let value = 0;
+  if (bytes) {
+    const cursor = new Cursor(bytes);
+    while (!cursor.done()) {
+      const count = cursor.uleb();
+      out.fill(value, index, index + count);
+      index += count;
+      value = 1 - value;
+    }
+  }
+  out.fill(0, index);
+};
+
+/** Reads a run-length column of strings through `each`, which gets the string or null. */
+const readStrings = (
+  bytes: Uint8Array | undefined,
+  count: number,
+  each: (index: number, value: string | null) => void,
+): void => {
+  let index = 0;
+  if (bytes) {
+    const cursor = new Cursor(bytes);
+    while (!cursor.done()) {
+      const length = cursor.leb();
+      if (length > 0) {
+        const value = decoder.decode(cursor.take(cursor.uleb()));
+        for (let i = 0; i < length; i++) {
+          each(index++, value);
+        }
+      } else if (length === 0) {
+        for (let nulls = cursor.uleb(); nulls > 0; nulls--) {
+          each(index++, null);
+        }
+      } else {
+        for (let i = 0; i < -length; i++) {
+          each(index++, decoder.decode(cursor.take(cursor.uleb())));
+        }
+      }
+    }
+  }
+  while (index < count) {
+    each(index++, null);
+  }
+};
+
+const sum = (values: Uint32Array): number => values.reduce((total, value) => total + value, 0);
+
+/**
+ * A saved document (a document chunk) decoded column by column into typed arrays: no object per op,
+ * which is what makes loading a long history quick.
+ */
+export const readSavedColumns = (bytes: Uint8Array): SavedColumns => {
   const cursor = new Cursor(bytes);
   const { type } = openChunk(cursor);
   if (type !== 0) {
@@ -259,78 +413,80 @@ export const readSaved = (bytes: Uint8Array): Saved => {
   const opSpecs = readColumns(cursor);
   const changeColumns = sliceColumns(cursor, changeSpecs);
   const opColumns = sliceColumns(cursor, opSpecs);
+  const column = (columns: Columns, id: number, kind: number) => columns.get((id << 4) | kind);
 
-  const change = opener(changeColumns);
-  const cActor = change.integers(0, 1);
-  const cSeq = change.integers(0, 3);
-  const cMaxOp = change.integers(1, 3);
-  const cTime = change.integers(2, 3);
-  const cMessage = change.strings(3);
-  const cDepCount = change.integers(4, 0);
-  const cDepIndex = change.integers(4, 3);
-  const changes: SavedChange[] = [];
-  for (;;) {
-    const actor = next(cActor);
-    if (actor === null) {
-      break;
-    }
-    const saved: SavedChange = {
-      actor,
-      seq: must(next(cSeq), 'seq'),
-      maxOp: must(next(cMaxOp), 'max op'),
-      time: next(cTime) ?? 0,
-      message: next(cMessage),
-      deps: [],
-    };
-    for (let count = next(cDepCount) ?? 0; count > 0; count--) {
-      saved.deps.push(must(next(cDepIndex), 'dependency'));
-    }
-    changes.push(saved);
-  }
+  const changeActor = rleValues(column(changeColumns, 0, 1));
+  const changeCount = changeActor.length;
+  const changes: SavedChanges = {
+    count: changeCount,
+    actor: Int32Array.from(changeActor),
+    seq: new Uint32Array(changeCount),
+    maxOp: new Uint32Array(changeCount),
+    time: new Float64Array(changeCount),
+    message: new Array<string | null>(changeCount).fill(null),
+    depCount: new Uint32Array(changeCount),
+    deps: new Int32Array(0),
+  };
+  fillDelta(column(changeColumns, 0, 3), changes.seq, 0);
+  fillDelta(column(changeColumns, 1, 3), changes.maxOp, 0);
+  fillDelta(column(changeColumns, 2, 3), changes.time, 0);
+  readStrings(column(changeColumns, 3, 5), changeCount, (index, value) => {
+    changes.message[index] = value;
+  });
+  fillRle(column(changeColumns, 4, 0), changes.depCount, 0);
+  const depIndexes = new Uint32Array(sum(changes.depCount));
+  fillDelta(column(changeColumns, 4, 3), depIndexes, 0);
+  changes.deps = Int32Array.from(depIndexes);
 
-  const op = opener(opColumns);
-  const objActor = op.integers(0, 1);
-  const objCounter = op.integers(0, 2);
-  const keyActor = op.integers(1, 1);
-  const keyCounter = op.integers(1, 3);
-  const keyString = op.strings(1);
-  const idActor = op.integers(2, 1);
-  const idCounter = op.integers(2, 3);
-  const insert = op.booleans(3);
-  const action = op.integers(4, 2);
-  const valueMeta = op.integers(5, 6);
-  const rawBytes = opColumns.get((5 << 4) | 7);
-  const raw = rawBytes ? new Cursor(rawBytes) : undefined;
-  const succCount = op.integers(8, 0);
-  const succActor = op.integers(8, 1);
-  const succCounter = op.integers(8, 3);
-  const ops: SavedOp[] = [];
-  for (;;) {
-    const actor = next(idActor);
-    if (actor === null) {
-      break;
+  const idActor = rleValues(column(opColumns, 2, 1));
+  const count = idActor.length;
+  const strings: string[] = [];
+  const stringIndex = new Map<string, number>();
+  const ops: SavedOps = {
+    count,
+    idActor: Int32Array.from(idActor),
+    idCounter: new Uint32Array(count),
+    objActor: new Int32Array(count),
+    objCounter: new Uint32Array(count),
+    keyActor: new Int32Array(count),
+    keyCounter: new Uint32Array(count),
+    keyString: new Int32Array(count),
+    insert: new Uint8Array(count),
+    action: new Uint8Array(count),
+    valueMeta: new Uint32Array(count),
+    raw: column(opColumns, 5, 7) ?? new Uint8Array(0),
+    succCount: new Uint32Array(count),
+    succActor: new Int32Array(0),
+    succCounter: new Uint32Array(0),
+  };
+  fillDelta(column(opColumns, 2, 3), ops.idCounter, 0);
+  fillRle(column(opColumns, 0, 1), ops.objActor, -1);
+  fillRle(column(opColumns, 0, 2), ops.objCounter, 0);
+  fillRle(column(opColumns, 1, 1), ops.keyActor, -1);
+  fillDelta(column(opColumns, 1, 3), ops.keyCounter, 0);
+  readStrings(column(opColumns, 1, 5), count, (index, value) => {
+    if (value === null) {
+      ops.keyString[index] = -1;
+      return;
     }
-    const oActor = next(objActor);
-    const oCounter = next(objCounter);
-    const kActor = next(keyActor);
-    const kCounter = next(keyCounter);
-    const kString = next(keyString);
-    const saved: SavedOp = {
-      obj: oActor === null ? null : [oActor, must(oCounter, 'object counter')],
-      key: kString !== null ? kString : kActor === null ? null : [kActor, must(kCounter, 'key counter')],
-      id: [actor, must(next(idCounter), 'op counter')],
-      insert: next(insert) ?? false,
-      action: ACTIONS[must(next(action), 'action')],
-      value: undefined,
-      succ: [],
-    };
-    Object.assign(saved, readValue(next(valueMeta) ?? 0, raw));
-    for (let count = next(succCount) ?? 0; count > 0; count--) {
-      saved.succ.push([must(next(succActor), 'successor actor'), must(next(succCounter), 'successor counter')]);
+    let interned = stringIndex.get(value);
+    if (interned === undefined) {
+      interned = strings.length;
+      strings.push(value);
+      stringIndex.set(value, interned);
     }
-    ops.push(saved);
-  }
-  return { actors, heads, changes, ops };
+    ops.keyString[index] = interned;
+  });
+  fillBooleans(column(opColumns, 3, 4), ops.insert);
+  fillRle(column(opColumns, 4, 2), ops.action, 0);
+  fillRle(column(opColumns, 5, 6), ops.valueMeta, 0);
+  fillRle(column(opColumns, 8, 0), ops.succCount, 0);
+  const succTotal = sum(ops.succCount);
+  ops.succActor = new Int32Array(succTotal);
+  ops.succCounter = new Uint32Array(succTotal);
+  fillRle(column(opColumns, 8, 1), ops.succActor, -1);
+  fillDelta(column(opColumns, 8, 3), ops.succCounter, 0);
+  return { actors, heads, strings, ops, changes };
 };
 
 export type ReadChange = {
