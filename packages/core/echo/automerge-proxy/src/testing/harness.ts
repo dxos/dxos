@@ -5,7 +5,7 @@
 import * as Handle from '../Handle.ts';
 import * as Host from '../Host.ts';
 import * as Repo from '../Repo.ts';
-import { MemoryStore, Transport } from './memory.ts';
+import { MemoryCopies, MemoryStore, Transport } from './memory.ts';
 import { createRandom } from './random.ts';
 
 export type TabHarnessOptions = {
@@ -21,6 +21,8 @@ export type TabHarnessOptions = {
  */
 export class TabHarness<T = unknown> {
   readonly store = new MemoryStore();
+  /** Index copies the host serves to tabs that read documents through them. */
+  readonly copies = new MemoryCopies();
   readonly transports: Transport[] = [];
   readonly repos: Repo.TabRepo<string, Handle.DocHandle<T>>[] = [];
   readonly pageEvents: EventTarget[] = [];
@@ -31,7 +33,7 @@ export class TabHarness<T = unknown> {
   constructor({ seed = 7, maxDelay = 2 }: TabHarnessOptions = {}) {
     this.#random = createRandom(seed);
     this.#maxDelay = maxDelay;
-    this.host = new Host.DocumentHost({ store: this.store });
+    this.host = new Host.DocumentHost({ store: this.store, copies: this.copies });
   }
 
   async open(): Promise<void> {
@@ -67,7 +69,7 @@ export class TabHarness<T = unknown> {
   async restart(): Promise<void> {
     await this.host.close();
     this.store.restart();
-    this.host = new Host.DocumentHost({ store: this.store });
+    this.host = new Host.DocumentHost({ store: this.store, copies: this.copies });
     await this.host.open();
     this.transports.forEach((transport) => transport.drop());
   }

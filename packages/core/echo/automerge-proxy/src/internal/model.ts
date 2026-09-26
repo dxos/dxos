@@ -794,11 +794,17 @@ export class Model {
 
   /** Takes the ops of these changes back out, as if they had never been applied. */
   remove(changes: readonly Change[]): void {
+    this.removeOps(changes);
+    this.#changes.remove(changes.map((change) => this.#changes.find(change.hash)).filter((index) => index >= 0));
+  }
+
+  /** Takes back out the ops each run applied from its `startOp` under its actor, whether or not a change holds them. */
+  removeOps(runs: readonly Pick<Change, 'actor' | 'startOp' | 'ops'>[]): void {
     const removed = new Set<number>();
-    for (const change of changes) {
-      const actor = this.#actorIndex.get(change.actor);
-      change.ops.forEach((_op, index) => {
-        const op = actor === undefined ? -1 : this.#lookup(actor, change.startOp + index);
+    for (const run of runs) {
+      const actor = this.#actorIndex.get(run.actor);
+      run.ops.forEach((_op, index) => {
+        const op = actor === undefined ? -1 : this.#lookup(actor, run.startOp + index);
         if (op >= 0) {
           removed.add(op);
         }
@@ -845,7 +851,6 @@ export class Model {
       }
       sequence.length = kept;
     }
-    this.#changes.remove(changes.map((change) => this.#changes.find(change.hash)).filter((index) => index >= 0));
     this.#maxOp = this.#ids.maxCounter();
   }
 

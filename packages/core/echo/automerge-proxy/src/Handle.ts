@@ -17,7 +17,14 @@ import { randomId } from './internal/index.ts';
 import { readChange } from './internal/reader.ts';
 import { TabDoc } from './internal/tab-doc.ts';
 
-export { type Snapshot, type TabChange, TabDoc, type TabDocument, tagOf } from './internal/tab-doc.ts';
+export {
+  type Snapshot,
+  type TabChange,
+  TabDoc,
+  type TabDocument,
+  TabDocumentCopyError,
+  tagOf,
+} from './internal/tab-doc.ts';
 
 /**
  * `pending` until the host answers, `requesting` while it fetches a document its storage lacks,
@@ -49,12 +56,22 @@ export type Options<T, Id extends string> = {
   initialValue?: T;
   /** Changes of a document this tab is creating from another's history, as `repo.import` brings them. */
   initialChanges?: readonly Uint8Array[];
+  /**
+   * `copy` reads the document from the host's index copy until the tab writes to it, so the host need
+   * not load it; `live` follows the document itself.
+   */
+  reads?: 'live' | 'copy';
+  /** An index copy the tab already has, as a query brings one; the handle is ready with it at once. */
+  copy?: Contract.Copy;
   onDelete?: () => void;
   /** The error {@link DocHandle.whenReady} rejects with when the host cannot produce the document. */
   unavailableError?: (documentId: string) => Error;
 };
 
-/** The host refused one of this tab's changes; it is gone, with every pending change built on it. */
+/**
+ * The host refused one of this tab's changes; it is gone, with every pending change built on it. Writes on an
+ * index copy that do not apply to the document are named by the placeholder heads they had.
+ */
 export type Refusal = { hashes: string[]; reason: string };
 
 /**
@@ -74,7 +91,13 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
   /** Fires with this tab's changes the host refused. */
   readonly refused = new Event<Refusal>();
 
+  /** Fires when the handle needs the document behind its index copy, which the repo then follows. */
+  readonly liveNeeded = new Event<void>();
+
   readonly #tab: TabDoc<T>;
+  readonly #reads: 'live' | 'copy';
+  /** Set once a write or a read needed the document behind the copy. */
+  #needsDocument = false;
   readonly #onDelete?: () => void;
   readonly #unavailableError: (documentId: string) => Error;
   readonly #ready = new Trigger();
@@ -89,9 +112,18 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
   /** The next answer to a follow is the first this handle has, so it is a bulk delivery. */
   #loaded = false;
 
-  constructor({ documentId, initialValue, initialChanges, onDelete, unavailableError }: Options<T, Id>) {
+  constructor({
+    documentId,
+    initialValue,
+    initialChanges,
+    reads = 'live',
+    copy,
+    onDelete,
+    unavailableError,
+  }: Options<T, Id>) {
     super();
     this.#documentId = documentId;
+    this.#reads = reads;
     this.#onDelete = onDelete;
     this.#unavailableError = unavailableError ?? ((documentId) => new DocumentUnavailableError(documentId));
     this.#created = documentId === undefined;
@@ -99,7 +131,15 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
       this.#outgoing.set(change.hash, bytes);
       this.outgoing.emit();
     };
-    if (this.#created && initialChanges) {
+    const onNeedsDocument = () => {
+      if (!this.#needsDocument) {
+        this.#needsDocument = true;
+        this.liveNeeded.emit();
+      }
+    };
+    if (!this.#created && copy) {
+      this.#tab = TabDoc.fromCopy<T>(copy, { send, onNeedsDocument });
+    } else if (this.#created && initialChanges) {
       // Relayed like changes `A.merge` brings, so the creation carries the whole history.
       this.#tab = TabDoc.fromChanges<T>([], { send });
       this.#tab.applyChanges(initialChanges.map(changeOf));
@@ -108,7 +148,7 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
       invariant(typeof root === 'object' && root !== null && !Array.isArray(root), 'A document is a map at its root');
       this.#tab = TabDoc.create<T>(root, { send });
     } else {
-      this.#tab = TabDoc.fromChanges<T>([], { send });
+      this.#tab = TabDoc.fromChanges<T>([], { send, onNeedsDocument });
     }
     this.#tab.on(({ before, after, patches, source }) => {
       const bulk = source === 'host' && !this.#loaded && this.#state !== 'ready';
@@ -119,12 +159,17 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
         patchInfo: { before, after, source: bulk ? 'bulk' : source },
       });
     });
-    this.#tab.onRejected((changes, reason) => {
-      this.refused.emit({ hashes: changes.map((change) => change.hash), reason });
+    this.#tab.onRejected((hashes, reason) => {
+      this.refused.emit({ hashes, reason });
     });
     if (this.#created) {
       // Readable and writable at once; the host names it later.
       this.#loaded = true;
+    } else if (copy) {
+      this.#state = 'ready';
+      this.#ready.wake();
+      // The index copies only stored documents.
+      this.#stored.wake(true);
     }
   }
 
@@ -146,9 +191,14 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
     return this.#tab.heads();
   }
 
-  /** Whether changes this tab wrote or relayed await the host's acknowledgment. */
+  /** Whether changes this tab wrote or relayed await the host's acknowledgment, writes on an index copy included. */
   get hasPending(): boolean {
-    return this.#tab.pending.length > 0 || this.#outgoing.size > 0;
+    return this.#tab.pending.length > 0 || this.#outgoing.size > 0 || this.#tab.hasCopyWrites;
+  }
+
+  /** Whether the handle shows the host's index copy rather than the document. */
+  get isCopy(): boolean {
+    return this.#tab.isCopy;
   }
 
   /** A document this tab created that the host has not named yet. */
@@ -196,10 +246,16 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
     this.#deleted = true;
   }
 
-  /** The heads to follow the document from, when this tab holds any of it. */
+  /** The heads to follow the document from, when this tab holds any of it; an index copy holds none. */
   _followHeads(): string[] | undefined {
     const heads = this.#tab.heads();
-    return heads.length > 0 ? heads : undefined;
+    return heads.length > 0 && !this.#tab.isCopy ? heads : undefined;
+  }
+
+  /** `copy` while the handle reads the index copy and nothing has needed the document; `live` otherwise. */
+  _followMode(): 'live' | 'copy' {
+    const holdsNothing = !this.#tab.isCopy && this.#tab.model.changeHashes().length === 0;
+    return this.#reads === 'copy' && !this.#needsDocument && (this.#tab.isCopy || holdsNothing) ? 'copy' : 'live';
   }
 
   /** The changes this tab's first changes a creation carries, in the order the tab wrote them. */
@@ -278,7 +334,11 @@ export class DocHandle<T, Id extends string = string> extends EventEmitter<Event
         this.acknowledged.emit();
         return;
       case 'copy':
-        // Copies serve index reads, which a tab document does not take yet.
+        if (this.#reads !== 'copy') {
+          return;
+        }
+        this.#tab.receiveCopy({ heads: event.heads, value: event.value });
+        this.#answered();
         return;
       case 'requesting':
         return this.#markRequesting();

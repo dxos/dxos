@@ -140,7 +140,7 @@ describe('heads read right after a write', () => {
     const network = new TabNetwork(host);
     const tab = network.open<Shape>('doc');
     const rejected: string[][] = [];
-    tab.tab.onRejected((changes) => rejected.push(changes.map((change) => change.hash)));
+    tab.tab.onRejected((hashes) => rejected.push(hashes));
     let refuseNext = true;
     host.refuseWhen = () => {
       const refuse = refuseNext;

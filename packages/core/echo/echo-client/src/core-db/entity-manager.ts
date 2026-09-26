@@ -125,6 +125,8 @@ export class EntityManager implements IDatabaseBinding {
   private _dataService: DataService.Client;
   private _queryService: QueryService.Client;
   private readonly _runtime: EffectContext.Context<never>;
+  /** Objects linked from the space root are read through the services' index copies. */
+  private readonly _indexReads: boolean;
   readonly _repoProxy: ClientRepo;
 
   // ── Object storage ──────────────────────────────────────────────────────
@@ -249,6 +251,7 @@ export class EntityManager implements IDatabaseBinding {
     this._dataService = options.dataService;
     this._queryService = options.queryService;
     this._runtime = options.runtime;
+    this._indexReads = options.proxyIndexReads ?? false;
     this._branchStore = options.branchStore;
     this._repoProxy = options.createRepo({
       dataService: this._dataService,
@@ -1738,9 +1741,12 @@ export class EntityManager implements IDatabaseBinding {
         log.warn('object document was already loaded', logMeta);
         continue;
       }
+      const documentId = automergeUrl as DocumentId;
       let handle: ClientDocHandle<DatabaseDirectory>;
       try {
-        handle = this._repoProxy.findIndexed<DatabaseDirectory>(automergeUrl as DocumentId);
+        handle = this._indexReads
+          ? this._repoProxy.findIndexed<DatabaseDirectory>(documentId)
+          : this._repoProxy.find<DatabaseDirectory>(documentId);
       } catch (err) {
         if (!RepoClosedError.is(err)) {
           throw err;

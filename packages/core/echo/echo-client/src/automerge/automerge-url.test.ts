@@ -5,7 +5,12 @@
 import * as Repo from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { interpretAsDocumentId, isValidAutomergeUrl, stringifyAutomergeUrl } from './automerge-url.ts';
+import {
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+  isValidDocumentId,
+  stringifyAutomergeUrl,
+} from './automerge-url.ts';
 import { toDocumentId } from './document-id.ts';
 
 /** What `read` makes of `value`, or 'throws'. */
@@ -40,6 +45,7 @@ describe('document ids and urls', () => {
   test('read every url and id as automerge-repo reads them', () => {
     for (const value of [...urls, ...withHeads, ...invalid, `${urls[0]}/path/to`, `${urls[0]}#`]) {
       expect(isValidAutomergeUrl(value), value).toBe(Repo.isValidAutomergeUrl(value));
+      expect(isValidDocumentId(value), value).toBe(Repo.isValidDocumentId(value));
       expect(attempt(interpretAsDocumentId, value), value).toBe(attempt(Repo.interpretAsDocumentId, value));
     }
   });
@@ -53,6 +59,7 @@ describe('document ids and urls', () => {
       if (binary) {
         expect(interpretAsDocumentId(binary)).toBe(documentId);
       }
+      expect(isValidDocumentId(documentId)).toBe(Repo.isValidDocumentId(documentId));
       expect(toDocumentId(url)).toBe(documentId);
       expect(toDocumentId(documentId)).toBe(documentId);
     }

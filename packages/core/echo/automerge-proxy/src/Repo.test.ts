@@ -5,13 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { Trigger, sleep, waitForCondition } from '@dxos/async';
 
 import * as Automerge from './Automerge.ts';
 import type * as Contract from './Contract.ts';
+import * as Handle from './Handle.ts';
 import { decodeChange } from './internal/automerge.ts';
 import { encodeChange } from './internal/encode.ts';
-import { TabHarness, canon, seeded } from './testing/index.ts';
+import { TabHarness, applyPatches, canon, seeded } from './testing/index.ts';
 
 type Shape = { title: string; content: string; items: { name: string }[] };
 
@@ -406,5 +407,304 @@ describe('tab documents over the host', () => {
     const change = handle.tab.model.changeOf(hash);
     const stored = A.getAllChanges(harness.store.get('doc')).find((bytes) => A.decodeChange(bytes).hash === hash);
     expect(stored).toEqual(encodeChange(change).bytes);
+  });
+});
+
+describe('tab documents read through index copies', () => {
+  type Items = Shape & { items: { name: string }[] };
+
+  /** Every change the handle reports whose patches do not turn the document it had into the one it has. */
+  const patchMismatches = (handle: Handle.DocHandle<Shape>): string[] => {
+    const mismatches: string[] = [];
+    handle.on('change', ({ patches, patchInfo }) => {
+      const applied = withoutMeta(applyPatches(patchInfo.before, patches));
+      if (applied !== withoutMeta(patchInfo.after)) {
+        mismatches.push(`${patchInfo.source}: ${applied} instead of ${withoutMeta(patchInfo.after)}`);
+      }
+    });
+    return mismatches;
+  };
+
+  /** A stored document with three items, and an index copy of it at its current heads. */
+  const indexed = async () => {
+    const harness = await setup();
+    const doc = A.change(A.from<Shape>(initial()), (draft) => {
+      draft.items.push({ name: 'a' }, { name: 'b' }, { name: 'c' });
+    });
+    harness.store.put('doc', doc);
+    harness.copies.set('doc', { heads: A.getHeads(doc), value: A.toJS(doc) });
+    return harness;
+  };
+
+  test('a tab reads a document through its copy, and the host does not load it', async () => {
+    const harness = await indexed();
+    const loads = vi.spyOn(harness.store, 'withDocument');
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await handle.whenReady();
+    expect(handle.isCopy).toBe(true);
+    expect(withoutMeta(handle.doc())).toBe(withoutMeta(A.toJS(harness.store.get('doc'))));
+    expect(handle.heads).toEqual(A.getHeads(harness.store.get('doc')));
+    expect(loads).not.toHaveBeenCalled();
+  });
+
+  test('a read the copy cannot answer fails, and makes the tab follow the document so the next one succeeds', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await handle.whenReady();
+    // A copy carries no op ids, so a cursor needs the document.
+    expect(() => Automerge.getCursor(handle.doc(), ['content'], 1)).toThrow(Handle.TabDocumentCopyError);
+    await waitForCondition({ condition: () => !handle.isCopy, timeout: 5_000 });
+    const cursor = Automerge.getCursor(handle.doc(), ['content'], 1);
+    expect(A.getCursorPosition(harness.store.get('doc'), ['content'], cursor)).toBe(1);
+  });
+
+  test("a write on a copy goes live and lands at the copy's heads, among changes the copy lacked", async () => {
+    const harness = await indexed();
+    // A peer inserts before the items after the index copied the document.
+    let peer = A.clone(harness.store.get<Items>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    peer = A.change(peer, (draft) => {
+      draft.items.unshift({ name: 'new' });
+    });
+    harness.store.merge('doc', peer);
+
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    const mismatches = patchMismatches(handle);
+    await handle.whenReady();
+    expect(handle.doc().items.map(({ name }) => name)).toEqual(['a', 'b', 'c']);
+    // The tab means item `c`, which is at index 3 once the insert it has not seen is applied.
+    handle.change((doc: Shape) => {
+      doc.items[2].name = 'C';
+    });
+    expect(handle.doc().items.map(({ name }) => name)).toEqual(['a', 'b', 'C']);
+    expect(handle.heads[0]).toMatch(/^copy:/);
+    expect(handle.hasPending).toBe(true);
+
+    await repo.flush();
+    const expected = ['new', 'a', 'b', 'C'];
+    expect(handle.isCopy).toBe(false);
+    expect(A.toJS(harness.store.get<Items>('doc')).items.map(({ name }) => name)).toEqual(expected);
+    expect(handle.doc().items.map(({ name }) => name)).toEqual(expected);
+    expect(handle.heads).toEqual(A.getHeads(harness.store.get('doc')));
+    expect(mismatches).toEqual([]);
+  });
+
+  test('a copy that changes reaches the tab, and one that stops being exact makes the tab follow the document', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    const mismatches = patchMismatches(handle);
+    await handle.whenReady();
+
+    let peer = A.clone(harness.store.get<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    peer = A.change(peer, (draft) => {
+      draft.title = 'renamed';
+    });
+    harness.store.merge('doc', peer);
+    const before = handle.heads;
+    const after = A.getHeads(harness.store.get('doc'));
+    harness.copies.set('doc', { heads: after, value: A.toJS(harness.store.get('doc')) });
+    harness.host.copiesChanged(new Set(['doc']));
+    await waitForCondition({ condition: () => handle.doc().title === 'renamed', timeout: 5_000 });
+    expect(handle.isCopy).toBe(true);
+    // An editor diffs the version it saw last against the new one; strings are text, spliced.
+    expect(Automerge.diff(handle.doc(), before, after)).toEqual([
+      { action: 'del', path: ['title', 0], length: 3 },
+      { action: 'splice', path: ['title', 0], value: 'renamed' },
+    ]);
+
+    harness.copies.delete('doc');
+    harness.host.copiesChanged(new Set(['doc']));
+    await waitForCondition({ condition: () => !handle.isCopy, timeout: 5_000 });
+    expect(handle.heads).toEqual(A.getHeads(harness.store.get('doc')));
+    expect(withoutMeta(handle.doc())).toBe(withoutMeta(A.toJS(harness.store.get('doc'))));
+    expect(mismatches).toEqual([]);
+  });
+
+  test('a write on a copy older than the one shown fails, and makes the tab follow the document so it can be retried', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await handle.whenReady();
+    const before = handle.heads;
+    let peer = A.clone(harness.store.get<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    peer = A.change(peer, (draft) => {
+      draft.title = 'renamed';
+    });
+    harness.store.merge('doc', peer);
+    harness.copies.set('doc', { heads: A.getHeads(harness.store.get('doc')), value: A.toJS(harness.store.get('doc')) });
+    harness.host.copiesChanged(new Set(['doc']));
+    await waitForCondition({ condition: () => handle.doc().title === 'renamed', timeout: 5_000 });
+
+    const write = () => handle.changeAt(before, (doc: Shape) => Automerge.splice(doc, ['content'], 0, 0, '>'));
+    expect(write).toThrow(Handle.TabDocumentCopyError);
+    await waitForCondition({ condition: () => !handle.isCopy, timeout: 5_000 });
+    write();
+    await repo.flush();
+    expect(A.toJS(harness.store.get<Shape>('doc'))).toMatchObject({ title: 'renamed', content: '>hello' });
+  });
+
+  test('a nested value from an early copy still reads after many newer copies', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await handle.whenReady();
+    const [first] = handle.doc().items;
+    let peer = A.clone(harness.store.get<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    // More copies than the tab keeps versions of, none touching the items.
+    for (let round = 0; round < 10; round++) {
+      peer = A.change(peer, (draft) => {
+        draft.title = `round ${round}`;
+      });
+      harness.store.merge('doc', peer);
+      const stored = harness.store.get('doc');
+      harness.copies.set('doc', { heads: A.getHeads(stored), value: A.toJS(stored) });
+      harness.host.copiesChanged(new Set(['doc']));
+      await waitForCondition({ condition: () => handle.doc().title === `round ${round}`, timeout: 5_000 });
+    }
+    expect(handle.isCopy).toBe(true);
+    expect(handle.doc().items[0]).toBe(first);
+    expect(Automerge.toJS(first)).toEqual({ name: 'a' });
+  });
+
+  test('a write made as the copy arrives still reaches the host', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    // Writes as soon as the document arrives, as a migration run on load would.
+    handle.once('change', () => {
+      handle.change((doc: Shape) => {
+        doc.title = 'written on arrival';
+      });
+    });
+    await handle.whenReady();
+    await repo.flush();
+    expect(handle.isCopy).toBe(false);
+    expect(A.toJS(harness.store.get<Shape>('doc')).title).toBe('written on arrival');
+  });
+
+  test('a write made before the copy arrives makes the tab follow the document, and reaches the host', async () => {
+    const harness = await indexed();
+    // Holds the copy back until the tab has written, so the copy reaches a tab holding its own change.
+    const written = new Trigger();
+    const read = harness.copies.read.bind(harness.copies);
+    const reads = vi.spyOn(harness.copies, 'read').mockImplementation(async (documentIds) => {
+      await written.wait();
+      return read(documentIds);
+    });
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await waitForCondition({ condition: () => reads.mock.calls.length > 0, timeout: 5_000 });
+    // The tab holds nothing yet, so the write is concurrent with the whole document.
+    handle.change((doc: Shape) => {
+      doc.title = 'early';
+    });
+    const early = handle.heads;
+    written.wake();
+
+    await repo.flush();
+    expect(handle.isCopy).toBe(false);
+    const stored = harness.store.get('doc');
+    expect(A.hasHeads(stored, early)).toBe(true);
+    expect(handle.heads).toEqual(A.getHeads(stored));
+  });
+
+  test('a copy a query brought makes the handle ready at once', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const doc = harness.store.get<Shape>('doc');
+    repo.primeCopy('doc', { heads: A.getHeads(doc), value: A.toJS(doc) });
+    const handle = repo.find('doc', { copy: true });
+    expect(handle.isReady()).toBe(true);
+    expect(handle.isCopy).toBe(true);
+    expect(handle.doc().items).toHaveLength(3);
+  });
+
+  test('an editor writes on a copy through changeAt, and the heads it holds resolve once the document arrives', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    const mismatches = patchMismatches(handle);
+    await handle.whenReady();
+    const start = handle.heads;
+    const first = handle.changeAt(start, (doc: Shape) => Automerge.splice(doc, ['content'], 5, 0, ' world'));
+    expect(first?.[0]).toMatch(/^copy:/);
+    if (!first) {
+      return;
+    }
+    expect(Automerge.diff(handle.doc(), start, first)).toEqual([
+      { action: 'splice', path: ['content', 5], value: ' world' },
+    ]);
+    const second = handle.changeAt(first, (doc: Shape) => Automerge.splice(doc, ['content'], 11, 0, '!'));
+    if (!second) {
+      return;
+    }
+    expect(handle.doc().content).toBe('hello world!');
+
+    await repo.flush();
+    expect(handle.isCopy).toBe(false);
+    expect(A.toJS(harness.store.get<Shape>('doc')).content).toBe('hello world!');
+    // The heads an editor kept name the changes its writes became.
+    expect(Automerge.diff(handle.doc(), second, handle.heads)).toEqual([]);
+    expect(Automerge.diff(handle.doc(), start, second)).toEqual(
+      A.diff(harness.store.get('doc'), start, A.getHeads(harness.store.get('doc'))),
+    );
+    expect(mismatches).toEqual([]);
+  });
+
+  test('writes on a copy of a version the host no longer has are refused together, and leave nothing in the tab', async () => {
+    const harness = await indexed();
+    // The index copied a fourth item the host has lost since, as a restart loses a change it had not saved.
+    const lost = A.change(A.clone(harness.store.get<Items>('doc')), (draft) => {
+      draft.items.push({ name: 'd' });
+    });
+    harness.copies.set('doc', { heads: A.getHeads(lost), value: A.toJS(lost) });
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    const mismatches = patchMismatches(handle);
+    await handle.whenReady();
+    const refused = new Promise<Handle.Refusal>((resolve) => handle.refused.once(resolve));
+    // The title's ops apply before the missing item fails the write, so the tab must take them back.
+    handle.change((doc: Items) => {
+      doc.title = 'lost';
+      doc.items[3].name = 'D';
+    });
+    const [first] = handle.heads;
+    handle.change((doc: Items) => {
+      doc.items[0].name = 'A';
+    });
+    const [second] = handle.heads;
+    const { hashes, reason } = await refused;
+    expect(hashes).toEqual([first, second]);
+    expect(reason).toMatch(/^2 writes/);
+    expect(handle.isCopy).toBe(false);
+
+    handle.change((doc: Items) => {
+      doc.items[1].name = 'B';
+    });
+    await repo.flush();
+    const stored = harness.store.get<Items>('doc');
+    expect(A.toJS(stored).title).toBe('doc');
+    expect(withoutMeta(handle.doc())).toBe(withoutMeta(A.toJS(stored)));
+    // Read afresh from the model, where ops a failed write left behind would show.
+    expect(withoutMeta(Automerge.view(handle.doc(), handle.heads))).toBe(withoutMeta(A.toJS(stored)));
+    expect(handle.heads).toEqual(A.getHeads(stored));
+    expect(mismatches).toEqual([]);
+  });
+
+  test('a write on a copy survives the host restarting before it lands', async () => {
+    const harness = await indexed();
+    const repo = await harness.tab();
+    const handle = repo.find('doc', { copy: true });
+    await handle.whenReady();
+    handle.change((doc: Shape) => {
+      doc.title = 'edited';
+    });
+    await harness.restart();
+    await repo.flush();
+    expect(handle.isCopy).toBe(false);
+    expect(A.toJS(harness.store.get<Shape>('doc')).title).toBe('edited');
   });
 });

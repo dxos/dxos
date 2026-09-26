@@ -402,6 +402,11 @@ value, symbols and meta included, and keep the identity of unchanged items; `Obj
 
 ## Reading objects from the index
 
+Tab documents replaced the mirror tabs this section was built on. Items 19 to 23 of
+[INTEGRATION.md](../../automerge-proxy/docs/INTEGRATION.md#as-built) record how index reads work
+over them: a write on a copy becomes a change once the document arrives, not a rebase. The index
+side below still holds, except where noted.
+
 The worker's SQLite index already holds every object's JSON. A mirror tab can ask for an object's
 document in `copy` mode, and the worker answers from the index without loading the Automerge
 document. The tab's first write to the document switches it to live. The tab resubscribes from the
@@ -421,8 +426,10 @@ snapshot store keeps two columns for that beside each object's JSON:
   reshapes these. It drops `createdAt`, `kind` and empty meta containers and re-parses references,
   and a test comparing every document both ways found each of those differences.
 
-A tracker migration re-presents every document to the snapshot store once, so existing rows gain
-both columns. The worker serves a document live instead when its objects were read at different
+The index fills both columns only while index reads are on. A row written before then has neither,
+and its document is served live until it next changes; a tracker migration that re-read every
+document at upgrade to fill them went with phase 8. The worker serves a document live instead when
+its objects were read at different
 heads (so the space root and inline objects stay live), or when one holds a value JSON cannot carry:
 bytes, a date, or a string over 300,000 characters, which ECHO stores as `RawString`. It reads every
 document a subscription asks for with one query, and after an index pass it pushes only the followed
@@ -454,8 +461,7 @@ Limits on what it saves:
 4. **Index lag.** An edit in another tab reaches a tab reading from the index in 51 ms median and
    84 ms at most, in Node, and in 200 to 460 ms in the Tasks runs below. Pushing from the worker's
    copy while it is loaded would remove most of that.
-5. **Upgrading re-reads every document once.** The reindex migration loads each document the first
-   time a worker opens an existing database.
+5. **Rows from before index reads were on serve live** until their document next changes.
 
 ## Index reads in the browser
 

@@ -9,6 +9,7 @@ import '#automerge-realm';
 import type * as Automerge from '@automerge/automerge';
 
 import * as Draft from './Draft.ts';
+import { copyValue } from './internal/copy.ts';
 import { encodeChange as encodeTabChange } from './internal/encode.ts';
 import { type Change } from './internal/ids.ts';
 import { Model } from './internal/model.ts';
@@ -252,8 +253,12 @@ export const diff: AutomergeModule['diff'] = (doc, before, after) => {
 
 export const toJS: AutomergeModule['toJS'] = <T>(doc: Doc<T>): T => {
   const tag = tabOf(doc);
+  if (!tag) {
+    return requireRegistered('toJS').toJS(doc);
+  }
+  // A value of an index copy is the document at its version, and that version may have left the tab since.
   // The copy has the shape the caller claims for the value, as Automerge's does.
-  return tag ? (tag.tab.copy(tag.heads, tag.path) as T) : requireRegistered('toJS').toJS(doc);
+  return (tag.tab.isCopy ? copyValue(doc) : tag.tab.copy(tag.heads, tag.path)) as T;
 };
 
 export const getObjectId: AutomergeModule['getObjectId'] = (doc, prop) => {

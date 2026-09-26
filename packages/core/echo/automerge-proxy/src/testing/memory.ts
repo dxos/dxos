@@ -107,6 +107,31 @@ export class MemoryStore implements Host.Store {
   }
 }
 
+/** Index copies of documents, as a test sets them; see {@link Host.CopySource}. */
+export class MemoryCopies implements Host.CopySource {
+  readonly #copies = new Map<string, Contract.Copy>();
+
+  set(documentId: string, copy: Contract.Copy): void {
+    this.#copies.set(documentId, copy);
+  }
+
+  /** The document has no exact copy any more, so its followers go live. */
+  delete(documentId: string): void {
+    this.#copies.delete(documentId);
+  }
+
+  async read(documentIds: readonly string[]): Promise<ReadonlyMap<string, Contract.Copy>> {
+    const found = new Map<string, Contract.Copy>();
+    for (const documentId of documentIds) {
+      const copy = this.#copies.get(documentId);
+      if (copy) {
+        found.set(documentId, structuredClone(copy));
+      }
+    }
+    return found;
+  }
+}
+
 export type TransportOptions = {
   /** Where each call goes; a function, so a test can replace the host as a restart would. */
   host: () => Repo.Host;

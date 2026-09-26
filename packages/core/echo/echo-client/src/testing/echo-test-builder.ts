@@ -46,6 +46,8 @@ type PeerOptions = {
   storagePath?: string;
   /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `sql`. */
   queryExecutor?: QueryExecutorMode;
+  /** The host keeps the index copies proxy clients read; defaults to `DX_ECHO_PROXY_INDEX_READS`. */
+  indexCopies?: boolean;
 } & PeerClientOptions;
 
 type PeerClientOptions = {
@@ -97,6 +99,7 @@ export class EchoTestPeer extends Resource {
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
+  private readonly _indexCopies?: boolean;
   private readonly _clientOptions: PeerClientOptions;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
@@ -139,11 +142,13 @@ export class EchoTestPeer extends Resource {
     assignQueuePositions,
     storagePath,
     queryExecutor,
+    indexCopies,
     documentMode,
     proxyIndexReads,
   }: PeerOptions = {}) {
     super();
     this._queryExecutor = queryExecutor;
+    this._indexCopies = indexCopies;
     this._clientOptions = { documentMode, proxyIndexReads };
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
@@ -182,6 +187,7 @@ export class EchoTestPeer extends Resource {
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
       queryExecutor: this._queryExecutor,
+      indexCopies: this._indexCopies,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();
@@ -244,6 +250,7 @@ export class EchoTestPeer extends Resource {
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
       queryExecutor: this._queryExecutor,
+      indexCopies: this._indexCopies,
     });
     this._serviceScope = Effect.runSync(Scope.make());
     await this._echoHost.open(this._ctx);

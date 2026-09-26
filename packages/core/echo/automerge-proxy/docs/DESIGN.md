@@ -43,7 +43,9 @@ it.
 A `change()` callback writes through a `Draft`, which behaves as Automerge's draft does and records
 ops. The tab gives the ops their ids, encodes the change canonically and hashes it with
 `@noble/hashes`. Heads read right after a write are final, because the host stores the same bytes
-under the same hash. `changeAt(heads, fn)` writes on an older version, as Automerge's does.
+under the same hash; a write on an index copy is the one exception (see
+[Index copies](#index-copies)). `changeAt(heads, fn)` writes on an older version, as Automerge's
+does.
 
 A snapshot (`open`) and changes from the host (`receiveChanges`) enter the same model. Patches have
 Automerge's shape: a local write that creates a container reports it empty and then its contents,
@@ -51,6 +53,25 @@ as Automerge does.
 
 `Handle.DocHandle` wraps a `TabDoc` with the handle a repo hands out: `doc()`, `change`, `changeAt`,
 `'change'` events, `whenReady` and the states the host reports.
+
+## Index copies
+
+A host with a `CopySource`, such as ECHO's index, can answer a follow with a copy of the document:
+a plain value at real Automerge heads. `Repo.find(documentId, { copy: true })` follows that way, and
+`primeCopy` hands the repo a copy that came another way, such as with a query result, so the handle
+is ready at once. The tab shows the copy, and each newer copy the host pushes moves it on, with
+patches from a diff of the two values (`internal/copy.ts`).
+
+A copy has no op ids, so a write on one waits for the document. The tab applies the write to the
+value it shows, keeps the draft's positional ops, gives the version placeholder heads `copy:<id>` and
+follows the document. When the snapshot arrives, each write becomes a change on the version it was
+made on, as `changeAt` makes one, and each placeholder resolves to that change's hash wherever heads
+are taken. A write whose positions do not exist in the snapshot is dropped with every write after
+it, and the handle's `refused` names them by their placeholder heads.
+
+Reads that need op ids or history (cursors, `getAllChanges`, merges, `changeAt` on an older copy)
+throw `TabDocumentCopyError` on a copy and make the handle follow the document, so the next call
+succeeds. `getConflicts` answers `undefined`, since a copy keeps one value per key.
 
 ## The namespace
 
@@ -163,15 +184,18 @@ event after a random delay and can drop a stream as a restart does, and seeded r
 | Heads read right after a write are final and a version the host ends with; refusals name changes by hash; tabs resend exactly what a restart lost    | `internal/tab-doc.test.ts`     | seeded, over an in-memory host                |
 | Tab documents read a merged document right where Automerge's own cached view drifts                                                                  | `internal/drift.test.ts`       | seeded, 300 rounds                            |
 | With no Automerge registered, the namespace makes tab documents from nothing, and Automerge loads what they save                                     | `Automerge.test.ts`            | cases                                         |
-| Tabs converge with the host across creation, imports, peers, refusals, restarts, send cadence, `pagehide` and random interleavings                   | `Repo.test.ts`                 | cases, and seeded interleavings               |
+| Tabs converge with the host across creation, imports, peers, refusals, restarts, send cadence, `pagehide`, index copies and random interleavings     | `Repo.test.ts`                 | cases, and seeded interleavings               |
+| The patches between two copies turn one into the other, and a new copy keeps the objects of the old one that did not change                          | `internal/copy.test.ts`        | fast-check, 500 and 200 runs                  |
 | The draft against `A.change`: the same calls give the same document or the same refusal                                                              | `Draft.test.ts`                | seeded, and 67 cases                          |
 | The copy codec round-trips any value Automerge stores, including objects that look like its tags                                                     | `Wire.test.ts`                 | fast-check, 500 runs                          |
 
 ECHO's `tab-repo.test.ts` in echo-client runs tabs over the real `DataService` and worker: writes
 across tabs, final heads, concurrent text, anchors, history, and objects made before they join a
-database. ui-editor's editor binding and shared text operations, and echo-doc's store adapter and
-`AddOnlySet`, have their own tests over `TabHarness`. `withoutAutomerge` from `/testing` runs code as
-a realm that registered no Automerge, as a proxy-mode tab in a browser is.
+database. Its `index-reads.test.ts` does the same with index reads on: objects and query results
+shown without the worker loading their documents, a write that loads only its own, and copies that
+match the worker's. ui-editor's editor binding and shared text operations, and echo-doc's store
+adapter and `AddOnlySet`, have their own tests over `TabHarness`. `withoutAutomerge` from `/testing`
+runs code as a realm that registered no Automerge, as a proxy-mode tab in a browser is.
 
 [MEASUREMENTS.md](./MEASUREMENTS.md) gives memory and latency against replicas, from the benches in
 `scripts/bench`. [INTEGRATION.md](./INTEGRATION.md) is the plan that brought tab documents into ECHO,

@@ -258,8 +258,8 @@ time it sends, so it resolves the positions itself, and a copy needs nothing it 
 
 ## As built
 
-Phases 1 to 7 have landed, phase 5's removals together with phases 2 and 3. The code departs from
-the plan above in these places:
+All eight phases have landed, phase 5's removals together with phases 2 and 3. The code departs
+from the plan above in these places:
 
 1. **Phases 2, 3 and 5 are one commit.** The new `Contract` replaced the mirror's events and
    requests, and `Host` and `Repo` were rewritten over it, so the mirror's tab side had nothing left
@@ -343,12 +343,40 @@ the plan above in these places:
     sodium's wasm and evaluated Automerge's JS, which made it about 150 ms slower than replica mode's.
     `@dxos/client-services/storage` exports `createStorageObjects` alone, and the build check now
     walks it instead of stopping at it.
+19. **A tab shows an index copy as the document until something needs the document itself.**
+    `Repo.find(documentId, { copy: true })` follows a document through its copy, and echo-client's
+    `findIndexed` asks for that. The copy is a plain value at real Automerge heads, and the tab moves
+    to each newer copy the host pushes, with patches from a diff of the two values. A copy that came
+    with a query result primes the repo (`primeCopy`), so the handle is ready at once. The host side
+    predates the integration: it answers with the live document when it has no exact copy.
+20. **A write on a copy gets placeholder heads until the document arrives.** A change needs op ids,
+    which a copy lacks. The tab applies the write to the value it shows, keeps the draft's positional
+    ops and asks for the document. Until the snapshot comes, `getHeads` returns `copy:<id>` for each
+    write, and `view` and `diff` answer between the versions the tab has shown. The snapshot turns
+    each write into a change on the version it was made on, as `changeAt` does, and every
+    placeholder then resolves to that change wherever the namespace takes heads. A write whose
+    positions do not exist in what the host sent, as when the copy showed changes the host lost in a
+    restart, is dropped with every write after it, and `refused` names them by their placeholder
+    heads.
+21. **A read the copy cannot answer makes the handle follow the document.** Cursors, history,
+    `A.merge` into the document and `changeAt` on an older copy throw `TabDocumentCopyError` once,
+    and the next call succeeds on the document itself. `getConflicts` and `getLastLocalChange`
+    answer `undefined`, since a copy keeps one value per key and holds no changes.
+22. **`EntityManager` reads through copies only when index reads are on.** It called `findIndexed`
+    in every mode, which changed nothing while `findIndexed` was `find`.
+23. **The index keeps copies only when proxy clients read them** (risk 5). `AutomergeDataSource`
+    computes each object's document heads and stored fields only with its `documentCopies` option.
+    `EchoHost` sets it from its `indexCopies` prop, which client-services takes from
+    `runtime.client.proxyIndexReads` and which falls back to `DX_ECHO_PROXY_INDEX_READS` in Node. A
+    tab asking for a copy the index does not keep gets the live document.
 
-echo-client's suite passes in both modes, 633 tests each. automerge-proxy passes 113 tests,
-ui-editor 461, echo-doc 22 and `@dxos/client` 47 under CI's filter. Over the real adapter,
-`tab-repo.test.ts` covers writes across tabs, final heads, concurrent text, anchors, history, update
-time and objects made before they join a database, and `Repo.test.ts` covers restarts at the
-package level.
+echo-client's suite passes in both modes, 643 tests each. With index reads forced on everywhere
+(`DX_ECHO_PROXY_INDEX_READS=true`), 641 pass, and the two failures are risk 7's first two limits.
+automerge-proxy passes 127 tests, echo-host 454, ui-editor 461, echo-doc 22 and `@dxos/client` 47
+under CI's filter. Over the real adapter, `tab-repo.test.ts` covers writes across tabs, final heads,
+concurrent text, anchors, history, update time and objects made before they join a database;
+`index-reads.test.ts` covers reads through the index and writes that load one object; and
+`Repo.test.ts` covers restarts and index copies at the package level.
 
 Composer in proxy mode fetches no Automerge module and instantiates no wasm at all, on a fresh
 profile's first boot or on reload, and edits persist across a reload in both modes. Composer's e2e
@@ -407,8 +435,17 @@ Settled on 2026-09-26.
 3. **Counters.** The model reads an increment as a new value, so a peer's counter reads wrong in a
    tab. No ECHO code writes counters.
 4. **Changes from peers reach Automerge unchecked**, in both modes, as today.
-5. **Costs the branch added to replica mode.** Index-core migration 0008 re-indexes every document
-   once; `automerge-data-source` computes heads and stored fields for every indexed object; echo-host
-   builds the proxy host whatever the mode. Phase 8 should gate them on index reads being on.
+5. **Costs the branch added to replica mode.** Phase 8 removed two of the three. The index computes
+   document copies only when index reads are on (item 23), and the tracker migration that re-indexed
+   every document so old rows gained copies is gone, since with copies off it bought nothing. With
+   index reads on, a document whose rows predate copies is read live until it next changes. echo-host
+   still builds the proxy host in every mode, which costs an object and its empty maps until a tab
+   follows a document.
 6. **EDGE keeps replica mode and real Automerge.** Shared code there calls the namespace, which
    forwards to the Automerge the functions runtime registers.
+7. **Index reads stay opt-in.** A copy is only as fresh as the index, so a tab can show an object
+   the document no longer holds until the index catches up. Code that needs history on a document
+   read from the index, such as comment anchors, branches and migrations, sees one
+   `TabDocumentCopyError` before the retry succeeds. A placeholder head means nothing outside the tab
+   that made it, so heads stored before the document arrives do not resolve after a reload.
+   echo-client's suite shows the first two with index reads forced on everywhere.

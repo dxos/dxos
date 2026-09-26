@@ -76,7 +76,7 @@ describe('the worker check index', () => {
       const network = new TabNetwork(host);
       const tabs: Tab<Shape>[] = [network.open<Shape>('doc'), network.open<Shape>('doc')];
       const refused: string[] = [];
-      tabs.forEach((tab) => tab.tab.onRejected((changes) => refused.push(...changes.map((change) => change.hash))));
+      tabs.forEach((tab) => tab.tab.onRejected((hashes) => refused.push(...hashes)));
       for (let step = 0; step < 150; step++) {
         const tab = tabs[pick(tabs.length)];
         if (random.rand() < 0.1 && tab.tab.heads().length > 0) {

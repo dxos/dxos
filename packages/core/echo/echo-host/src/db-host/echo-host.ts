@@ -116,9 +116,22 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
   return fromEnv === 'memory' ? 'memory' : 'sql';
 };
 
+/**
+ * Whether the index keeps document copies: the explicit option, which a browser takes from config,
+ * else `DX_ECHO_PROXY_INDEX_READS` in Node.
+ */
+const resolveIndexCopies = (explicit?: boolean): boolean =>
+  explicit ?? (typeof process === 'undefined' ? undefined : process.env.DX_ECHO_PROXY_INDEX_READS) === 'true';
+
 export type EchoHostProps = {
   /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
+
+  /**
+   * Keep in the index the copies proxy tabs read objects from until they write, at a cost to every
+   * index update; defaults to `DX_ECHO_PROXY_INDEX_READS`, else off.
+   */
+  indexCopies?: boolean;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -224,6 +237,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     queryExecutor,
+    indexCopies,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -242,6 +256,7 @@ export class EchoHost extends Resource {
     this._spaceStateManager = new SpaceStateManager({ runtime });
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
       isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+      documentCopies: resolveIndexCopies(indexCopies),
     });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
@@ -1514,7 +1529,12 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'useSubduction'
+  | 'queryExecutor'
+  | 'indexCopies'
 >;
 
 /**

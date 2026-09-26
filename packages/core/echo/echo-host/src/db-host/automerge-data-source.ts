@@ -68,6 +68,8 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
 
 export type AutomergeDataSourceOptions = {
   isBranchDocument?: (documentId: DocumentId) => boolean;
+  /** Index each object with its document's heads and stored fields, which a proxy tab's index read shows. */
+  documentCopies?: boolean;
 };
 
 /**
@@ -79,6 +81,7 @@ export class AutomergeDataSource implements IndexDataSource {
 
   readonly #automergeHost: AutomergeHost;
   readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;
+  readonly #documentCopies: boolean;
 
   /**
    * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
@@ -99,6 +102,7 @@ export class AutomergeDataSource implements IndexDataSource {
   constructor(automergeHost: AutomergeHost, options?: AutomergeDataSourceOptions) {
     this.#automergeHost = automergeHost;
     this.#isBranchDocument = options?.isBranchDocument;
+    this.#documentCopies = options?.documentCopies ?? false;
   }
 
   beginPass(): void {
@@ -217,12 +221,16 @@ export class AutomergeDataSource implements IndexDataSource {
               queuePosition: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
-              documentCopy: {
-                heads: readHeads,
-                ...(isJsonValue(doc.access ?? null) && isJsonValue(structure)
-                  ? { stored: { access: doc.access, structure: stored } }
-                  : {}),
-              },
+              ...(this.#documentCopies
+                ? {
+                    documentCopy: {
+                      heads: readHeads,
+                      ...(isJsonValue(doc.access ?? null) && isJsonValue(structure)
+                        ? { stored: { access: doc.access, structure: stored } }
+                        : {}),
+                    },
+                  }
+                : {}),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
             });

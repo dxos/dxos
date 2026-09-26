@@ -2,15 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import * as Draft from '../Draft.ts';
 import * as Op from '../Op.ts';
+import { copyValue, diffValues, reuseEqual } from './copy.ts';
 import { encodeChange, sortedPreds } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
 import { Model, type Patch } from './model.ts';
 import { readChange } from './reader.ts';
 import { isCounter, isImmutableString, numberType } from './values.ts';
 
-/** The tag of every container a tab document hands out, so the spike namespace can answer for it. */
+/** The tag of every container a tab document hands out, so the namespace can answer for it. */
 const TAGS = new WeakMap<object, Tag>();
 
 /**
@@ -42,10 +45,36 @@ const randomActor = (): string =>
 
 type ChangeOptions = { time?: number; message?: string };
 
+/** Heads of a version a write on an index copy made, before the write becomes a change. */
+const COPY_HEAD = 'copy:';
+
+/** The versions of an index copy a tab keeps, so a listener can diff the version it saw last. */
+const MAX_COPY_VERSIONS = 8;
+
+/** An index copy of the document, or a write this tab made on one, with the patches from the version before. */
+type CopyVersion<T> = { readonly heads: string[]; readonly value: T; readonly patches: Patch[] };
+
+/** A write made on an index copy: positional ops, replayed as a change at `base` once the document arrives. */
+type CopyWrite = {
+  readonly base: string[];
+  readonly ops: readonly Op.Any[];
+  readonly options?: ChangeOptions;
+  readonly head: string;
+};
+
+/** Thrown by a read that needs the document's history, which an index copy does not carry. */
+export class TabDocumentCopyError extends Error {
+  constructor(name: string) {
+    super(`Automerge.${name} needs the document itself, and this tab holds only an index copy of it`);
+  }
+}
+
 /** A tab document as Automerge's namespace sees one; `T` is the shape its callers claim, as with `A.Doc<T>`. */
 export interface TabDocument<T = unknown> {
   readonly actor: string;
   readonly model: Model;
+  /** Whether the tab shows an index copy rather than the document. */
+  readonly isCopy: boolean;
   heads(): string[];
   doc(): T;
   view(heads: readonly string[]): T;
@@ -76,6 +105,8 @@ export interface TabDocument<T = unknown> {
 type Options = {
   /** Where changes go; a document with none exists only in this tab, as `A.from` makes one. */
   send?: (change: Change, bytes: Uint8Array) => void;
+  /** Called when the tab needs the document behind an index copy: to take a write, or to answer a read. */
+  onNeedsDocument?: () => void;
   actor?: string;
   now?: () => number;
 };
@@ -91,7 +122,7 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
   readonly #bytes = new Map<string, Uint8Array>();
   readonly #now: () => number;
   readonly #listeners = new Set<(change: TabChange<T>) => void>();
-  readonly #rejectedListeners = new Set<(changes: Change[], reason: string) => void>();
+  readonly #rejectedListeners = new Set<(hashes: string[], reason: string) => void>();
   readonly #pending: Change[] = [];
   #actor: string;
   /** This actor's changes by seq, confirmed or not: the next change's seq and base check come from it. */
@@ -99,11 +130,17 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
   #heads: string[];
   /** The document at `#heads`, kept current by each change instead of read again from the model. */
   #root: T;
+  /** Set while the tab shows an index copy and records writes, until the document itself arrives. */
+  #copy?: { versions: CopyVersion<T>[]; writes: CopyWrite[] } = undefined;
+  /** Heads of the versions writes on an index copy made, to the heads of the changes they became. */
+  readonly #copyHeads = new Map<string, string[]>();
+  readonly #onNeedsDocument?: () => void;
 
   constructor(model: Model, heads: string[], options: Options) {
     this.#model = model;
     this.#heads = heads;
     this.#send = options.send;
+    this.#onNeedsDocument = options.onNeedsDocument;
     this.#actor = options.actor ?? randomActor();
     this.#now = options.now ?? (() => Math.floor(Date.now() / 1000));
     this.#root = this.view(heads);
@@ -148,6 +185,26 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     return tab;
   }
 
+  /** A document shown from an index copy until the host sends the document itself. */
+  static fromCopy<T>(
+    copy: { readonly heads: readonly string[]; readonly value: unknown },
+    options: Options,
+  ): TabDoc<T> {
+    const tab = new TabDoc<T>(new Model(), [], options);
+    tab.receiveCopy(copy);
+    return tab;
+  }
+
+  /** Whether the tab shows an index copy rather than the document. */
+  get isCopy(): boolean {
+    return this.#copy !== undefined;
+  }
+
+  /** Whether writes made on an index copy wait for the document, to become changes. */
+  get hasCopyWrites(): boolean {
+    return (this.#copy?.writes.length ?? 0) > 0;
+  }
+
   get actor(): string {
     return this.#actor;
   }
@@ -175,7 +232,11 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
 
   /** The document at `heads`, read-only, as `A.view` gives it. */
   view(heads: readonly string[]): T {
-    const at = [...heads];
+    if (this.#copy) {
+      // The versions of a copy are tagged when they are made.
+      return this.#copyVersion(heads).value;
+    }
+    const at = this.#resolveHeads(heads);
     const value = this.#model.materialize('_root', this.clockOf(at));
     this.#tagNew(value, at, []);
     // The model holds whatever its writers wrote; `T` is the caller's claim about it, as in `A.load<T>`.
@@ -196,7 +257,7 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
   }
 
   clockOf(heads: readonly string[]): Clock {
-    return this.#model.clockOf(heads);
+    return this.#model.clockOf(this.#resolveHeads(heads));
   }
 
   #textAt(path: readonly (string | number)[], clock: Clock): string {
@@ -214,17 +275,22 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     position: number,
     move?: 'before' | 'after',
   ): string {
+    this.#requireDocument('getCursor');
     const clock = this.clockOf(heads);
     return this.#model.cursorAt(this.#textAt(path, clock), position, clock, move);
   }
 
   /** `A.getCursorPosition` on a text of this document at `heads`. */
   cursorPosition(heads: readonly string[], path: readonly (string | number)[], cursor: string): number {
+    this.#requireDocument('getCursorPosition');
     const clock = this.clockOf(heads);
     return this.#model.cursorPosition(this.#textAt(path, clock), cursor, clock);
   }
 
   diff(before: readonly string[], after: readonly string[]): Patch[] {
+    if (this.#copy) {
+      return this.#copyDiff(before, after);
+    }
     return this.#model.diff(this.clockOf(before), this.clockOf(after));
   }
 
@@ -233,6 +299,10 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     path: readonly (string | number)[],
     prop: string | number,
   ): Record<string, unknown> | undefined {
+    if (this.#copy) {
+      // An index copy keeps one value per key.
+      return undefined;
+    }
     const clock = this.clockOf(heads);
     const objId = this.#model.objectAt(path, clock);
     return objId ? this.#model.conflicts(objId, prop, clock) : undefined;
@@ -240,6 +310,9 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
 
   /** The value at `path` in the version at `heads` as a fresh, unfrozen copy, as `A.toJS` gives it. */
   copy(heads: readonly string[], path: readonly (string | number)[]): unknown {
+    if (this.#copy) {
+      return copyValue(Op.getAt(this.#copyVersion(heads).value, path));
+    }
     const clock = this.clockOf(heads);
     const objId = this.#model.objectAt(path, clock);
     return objId === undefined ? undefined : this.#model.materialize(objId, clock);
@@ -247,12 +320,20 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
 
   /** The Automerge object id of the container at `path` in the version at `heads`. */
   objectId(heads: readonly string[], path: readonly (string | number)[]): string | undefined {
+    if (this.#copy) {
+      return undefined;
+    }
     return this.#model.objectAt(path, this.clockOf(heads));
   }
 
   /** Whether every head is in the current version's history. */
   hasHeads(heads: readonly string[]): boolean {
-    return heads.every((head) => this.#model.hasChange(head) && this.#model.reaches(this.#heads, head));
+    if (this.#copy) {
+      return this.#copy.versions.some((version) => sameHeads(version.heads, heads));
+    }
+    return this.#resolveHeads(heads).every(
+      (head) => this.#model.hasChange(head) && this.#model.reaches(this.#heads, head),
+    );
   }
 
   //
@@ -265,15 +346,16 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     return () => this.#listeners.delete(listener);
   }
 
-  onRejected(listener: (changes: Change[], reason: string) => void): () => void {
+  /** Tells `listener` the changes the host refused, or the placeholder heads of writes on a copy that were lost. */
+  onRejected(listener: (hashes: string[], reason: string) => void): () => void {
     this.#rejectedListeners.add(listener);
     return () => this.#rejectedListeners.delete(listener);
   }
 
-  /** Moves to the model's heads with `root` as the document there, and tells the listeners. */
-  #advance(root: T, patches: Patch[], source: TabChange<T>['source']): void {
+  /** Moves to `heads`, the model's unless given, with `root` as the document there, and tells the listeners. */
+  #advance(root: T, patches: Patch[], source: TabChange<T>['source'], heads = this.#model.heads()): void {
     const before = this.#root;
-    this.#heads = this.#model.heads();
+    this.#heads = heads;
     // The root carries the version in its tag, so every version gets its own root object.
     const after = root === before ? copyRoot(root) : root;
     this.#tagNew(after, [...this.#heads], []);
@@ -310,8 +392,12 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     fn: (draft: T & object) => void,
     options?: ChangeOptions,
   ): string[] | undefined {
-    const baseClock = this.clockOf(baseHeads);
-    const current = baseHeads.join(',') === this.#heads.join(',');
+    if (this.#copy) {
+      return this.#recordOnCopy(baseHeads, fn, options);
+    }
+    const base = this.#resolveHeads(baseHeads);
+    const baseClock = this.#model.clockOf(base);
+    const current = base.join(',') === this.#heads.join(',');
     const before = current ? this.#root : undefined;
     const clockBefore = current ? baseClock : this.#model.clockOf(this.#heads);
     const recorder = new Draft.Recorder(before ?? freezeDeep(this.#model.materialize('_root', baseClock)));
@@ -320,6 +406,24 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     if (recorder.ops.length === 0) {
       return undefined;
     }
+    const hash = this.#writeChange(base, recorder.ops, options);
+    if (before !== undefined) {
+      // On the current version the draft's ops are the patch: the document moves without a diff.
+      const { root, patches } = Op.apply(before, recorder.ops);
+      this.#advance(root, toPatches(patches), 'change');
+    } else {
+      const patches = this.#model.diff(clockBefore, this.#model.clockOf(this.#model.heads()));
+      this.#advance(applyPatches(this.#root, patches), patches, 'change');
+    }
+    return [hash];
+  }
+
+  /**
+   * Writes `ops`, recorded against the version at `base`, as a change with Automerge's ids, registers it
+   * and sends it; the caller moves the document.
+   */
+  #writeChange(base: readonly string[], recorded: readonly Op.Any[], options?: ChangeOptions): string {
+    const baseClock = this.#model.clockOf(base);
     // Automerge writes under a fresh actor when the base leaves out this actor's own last change.
     const ownLast = this.#own.length > 0 ? (this.#model.changeMeta(this.#own[this.#own.length - 1])?.maxOp ?? 0) : 0;
     if (ownLast > 0 && (baseClock.get(this.#actor) ?? 0) < ownLast) {
@@ -329,14 +433,14 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
     const actor = this.#actor;
     const seq = this.#own.length + 1;
     const startOp = this.#model.maxOp + 1;
-    const ops = translate(this.#model, recorder.ops, baseClock, actor, startOp);
+    const ops = translate(this.#model, recorded, baseClock, actor, startOp);
     const change: Change = {
       actor,
       seq,
       startOp,
       time: options?.time ?? this.#now(),
       message: options?.message ?? null,
-      deps: [...baseHeads].sort(),
+      deps: [...base].sort(),
       hash: '',
       ops,
     };
@@ -350,15 +454,156 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
       this.#bytes.set(hash, bytes);
       this.#send(change, bytes);
     }
-    if (before !== undefined) {
-      // On the current version the draft's ops are the patch: the document moves without a diff.
-      const { root, patches } = Op.apply(before, recorder.ops);
-      this.#advance(root, toPatches(patches), 'change');
-    } else {
-      const patches = this.#model.diff(clockBefore, this.#model.clockOf(this.#model.heads()));
-      this.#advance(applyPatches(this.#root, patches), patches, 'change');
+    return hash;
+  }
+
+  //
+  // Index copies.
+  //
+
+  /**
+   * Shows an index copy of the document: the first when the tab holds none of the document yet, and
+   * later ones until the tab writes, since a write goes to the document itself.
+   */
+  receiveCopy(copy: { readonly heads: readonly string[]; readonly value: unknown }): void {
+    const live = !this.#copy && this.#model.changeHashes().length > 0;
+    if (live || this.hasCopyWrites || (this.#copy && sameHeads(this.#heads, copy.heads))) {
+      return;
     }
-    return [hash];
+    const heads = [...copy.heads];
+    // The index holds whatever the document's writers wrote; `T` is the caller's claim about it, as in `A.load<T>`.
+    const value = reuseEqual(this.#root, copyValue(copy.value)) as T;
+    const patches = toPatches(diffValues(this.#root, value));
+    this.#copy ??= { versions: [], writes: [] };
+    this.#pushCopyVersion({ heads, value, patches });
+    this.#advance(value, patches, 'host', heads);
+  }
+
+  /** A write on the copy: applied to the value shown, and kept as positional ops until the document arrives. */
+  #recordOnCopy(
+    baseHeads: readonly string[],
+    fn: (draft: T & object) => void,
+    options?: ChangeOptions,
+  ): string[] | undefined {
+    const copy = this.#copy;
+    invariant(copy, 'Not an index copy');
+    if (!sameHeads(baseHeads, this.#heads)) {
+      // Positions recorded on an older copy land where they were meant only in the document's history.
+      this.#onNeedsDocument?.();
+      throw new TabDocumentCopyError('changeAt');
+    }
+    const recorder = new Draft.Recorder(this.#root);
+    // A draft stands in for the document, so it has the document's claimed shape.
+    fn(recorder.draft() as T & object);
+    if (recorder.ops.length === 0) {
+      return undefined;
+    }
+    const { root, patches } = Op.apply(this.#root, recorder.ops);
+    const head = `${COPY_HEAD}${randomActor()}`;
+    copy.writes.push({ base: [...this.#heads], ops: [...recorder.ops], options, head });
+    const expanded = toPatches(patches);
+    this.#pushCopyVersion({ heads: [head], value: root, patches: expanded });
+    this.#advance(root, expanded, 'change', [head]);
+    if (copy.writes.length === 1) {
+      this.#onNeedsDocument?.();
+    }
+    return [head];
+  }
+
+  #pushCopyVersion(version: CopyVersion<T>): void {
+    const versions = this.#copy?.versions;
+    invariant(versions, 'Not an index copy');
+    versions.push(version);
+    if (versions.length > MAX_COPY_VERSIONS) {
+      versions.shift();
+    }
+  }
+
+  #copyVersion(heads: readonly string[]): CopyVersion<T> {
+    const version = this.#copy?.versions.find((candidate) => sameHeads(candidate.heads, heads));
+    if (!version) {
+      throw new TabDocumentCopyError('view');
+    }
+    return version;
+  }
+
+  /** Patches between two versions of the copy, the later second: the ones each version after the first made. */
+  #copyDiff(before: readonly string[], after: readonly string[]): Patch[] {
+    const versions = this.#copy?.versions ?? [];
+    const from = versions.findIndex((version) => sameHeads(version.heads, before));
+    const to = versions.findIndex((version) => sameHeads(version.heads, after));
+    if (from < 0 || to < from) {
+      throw new TabDocumentCopyError('diff');
+    }
+    return versions.slice(from + 1, to + 1).flatMap((version) => version.patches);
+  }
+
+  /**
+   * Leaves the copy for the document the host sent. Each write made on the copy becomes a change on the
+   * version it was made on, as `changeAt` makes one, so it lands among the changes the copy lacked.
+   */
+  #openFromCopy(snapshot: Snapshot): void {
+    const copy = this.#copy;
+    invariant(copy, 'Not an index copy');
+    const shown = this.#root;
+    const shownHeads = [...this.#heads];
+    this.#copy = undefined;
+    this.#model = Model.fromSaved(snapshot.bytes, snapshot.hashes);
+    const lost: string[] = [];
+    for (const write of copy.writes) {
+      const base = this.#resolveHeads(write.base);
+      // A copy of a version the host lost since, as after a restart: the write goes on what it has.
+      const known = base.every((head) => this.#model.hasChange(head)) ? base : this.#model.heads();
+      if (lost.length === 0) {
+        try {
+          this.#copyHeads.set(write.head, [this.#writeChange(known, write.ops, write.options)]);
+          continue;
+        } catch {
+          // Its positions do not exist in what the host has.
+        }
+      }
+      // Each write on a copy builds on the one before, so the writes after a lost one go too.
+      this.#copyHeads.set(write.head, known);
+      lost.push(write.head);
+    }
+    const heads = this.#model.heads();
+    const root = this.view(heads);
+    // What the tab showed is a version of the document only when every write on it became a change.
+    const from = lost.length === 0 ? this.#resolveHeads(shownHeads) : [];
+    const patches =
+      from.length > 0 && from.every((head) => this.#model.hasChange(head))
+        ? this.#model.diff(this.#model.clockOf(from), this.#model.clockOf(heads))
+        : toPatches(diffValues(shown, root));
+    this.#advance(root, patches, 'host');
+    if (lost.length > 0) {
+      for (const listener of [...this.#rejectedListeners]) {
+        listener(lost, `${lost.length} writes made on an index copy do not apply to the document the host has`);
+      }
+    }
+  }
+
+  /** Heads with each version a write on the copy made replaced by the heads of the change it became. */
+  #resolveHeads(heads: readonly string[]): string[] {
+    if (!heads.some((head) => head.startsWith(COPY_HEAD))) {
+      return [...heads];
+    }
+    const resolved = new Set<string>();
+    for (const head of heads) {
+      const mapped = head.startsWith(COPY_HEAD) ? this.#copyHeads.get(head) : [head];
+      if (!mapped) {
+        throw new TabDocumentCopyError('getHeads');
+      }
+      mapped.forEach((each) => resolved.add(each));
+    }
+    return [...resolved].sort();
+  }
+
+  /** A read the copy cannot answer fails now, and the document is asked for so the next one succeeds. */
+  #requireDocument(name: string): void {
+    if (this.#copy) {
+      this.#onNeedsDocument?.();
+      throw new TabDocumentCopyError(name);
+    }
   }
 
   //
@@ -366,6 +611,9 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
   //
 
   receive(message: HostMessage): void {
+    if (this.#copy) {
+      return;
+    }
     switch (message.type) {
       case 'change': {
         const { change } = message;
@@ -413,7 +661,10 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
         // again in full; only a bug in the tab produces a refusal.
         this.#advance(this.view(this.#model.heads()), patches, 'host');
         for (const listener of [...this.#rejectedListeners]) {
-          listener(dropped, message.reason);
+          listener(
+            dropped.map((change) => change.hash),
+            message.reason,
+          );
         }
       }
     }
@@ -434,6 +685,7 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
    * the worker when there is one, which checks them like any change a tab sends.
    */
   applyChanges(changes: readonly Change[]): void {
+    this.#requireDocument('applyChanges');
     const fresh = changes.filter((change) => !this.#model.hasChange(change.hash));
     this.#advanceBy(() => {
       for (const change of fresh) {
@@ -451,13 +703,17 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
 
   /** The last change this tab wrote under its current actor, as `A.getLastLocalChange` gives it. */
   lastLocalChange(): Change | undefined {
+    if (this.#copy) {
+      return undefined;
+    }
     const hash = this.#own[this.#own.length - 1];
     return hash === undefined ? undefined : this.#model.changeOf(hash);
   }
 
   /** Every change `heads` reach, in causal order. */
   changesIn(heads: readonly string[]): Change[] {
-    return this.#model.changesIn(heads).map((hash) => this.#model.changeOf(hash));
+    this.#requireDocument('getAllChanges');
+    return this.#model.changesIn(this.#resolveHeads(heads)).map((hash) => this.#model.changeOf(hash));
   }
 
   /**
@@ -465,6 +721,10 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
    * loads a long document as fast as a replica; one that wrote already catches up as after a restart.
    */
   open(snapshot: Snapshot): void {
+    if (this.#copy) {
+      this.#openFromCopy(snapshot);
+      return;
+    }
     if (this.#model.changeHashes().length > 0) {
       this.reconnect(snapshot);
       return;
@@ -489,6 +749,10 @@ export class TabDoc<T = unknown> implements TabDocument<T> {
    * its own or not, since any change rebuilt from the model encodes to the bytes of its hash.
    */
   reconnect(snapshot: Snapshot): void {
+    if (this.#copy) {
+      this.#openFromCopy(snapshot);
+      return;
+    }
     const fresh = Model.fromSaved(snapshot.bytes, snapshot.hashes);
     const theirs = new Set(fresh.changeHashes());
     const missing = fresh.changeHashes().filter((hash) => !this.#model.hasChange(hash));
@@ -619,6 +883,9 @@ const toOp = (root: unknown, patch: Patch): Op.Any | undefined => {
         : { type: 'remove', path: patch.path, count: patch.length ?? 1 };
   }
 };
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && [...left].sort().join(',') === [...right].sort().join(',');
 
 /** The changes no other change names as a dependency, sorted as Automerge sorts heads. */
 const headsOf = (changes: readonly Change[]): string[] => {
@@ -771,85 +1038,91 @@ export const translate = (
     throw new TypeError(`Unsupported value ${String(value)}`);
   };
 
-  for (const op of ops) {
-    const parentPath = op.path.slice(0, -1);
-    const last = op.path[op.path.length - 1];
-    switch (op.type) {
-      case 'put': {
-        const parentId = containerOf(parentPath);
-        if (model.typeOf(parentId) === 'map') {
-          emitValue(
-            parentId,
-            { key: String(last) },
-            op.value,
-            model.currentValueIds(parentId, String(last), clock),
-            false,
+  try {
+    for (const op of ops) {
+      const parentPath = op.path.slice(0, -1);
+      const last = op.path[op.path.length - 1];
+      switch (op.type) {
+        case 'put': {
+          const parentId = containerOf(parentPath);
+          if (model.typeOf(parentId) === 'map') {
+            emitValue(
+              parentId,
+              { key: String(last) },
+              op.value,
+              model.currentValueIds(parentId, String(last), clock),
+              false,
+            );
+          } else {
+            const elem = model.visibleElements(parentId, clock)[Number(last)];
+            emitValue(parentId, { elemId: elem.key }, op.value, model.elementValueIds(elem, clock), false);
+          }
+          break;
+        }
+        case 'del': {
+          const parentId = containerOf(parentPath);
+          emit({
+            action: 'del',
+            obj: parentId,
+            key: String(last),
+            pred: model.currentValueIds(parentId, String(last), clock),
+          });
+          break;
+        }
+        case 'insert': {
+          const parentId = containerOf(parentPath);
+          const index = Number(last);
+          let ref = index === 0 ? '_head' : model.visibleElements(parentId, clock)[index - 1].key;
+          for (const value of op.values) {
+            ref = emitValue(parentId, { elemId: ref }, value, [], true);
+          }
+          break;
+        }
+        case 'remove': {
+          const parentId = containerOf(parentPath);
+          const index = Number(last);
+          const targets = model.visibleElements(parentId, clock).slice(index, index + op.count);
+          const preds = targets.map((elem) => model.elementValueIds(elem, clock));
+          targets.forEach((elem, position) =>
+            emit({ action: 'del', obj: parentId, elemId: elem.key, pred: preds[position] }),
           );
-        } else {
-          const elem = model.visibleElements(parentId, clock)[Number(last)];
-          emitValue(parentId, { elemId: elem.key }, op.value, model.elementValueIds(elem, clock), false);
+          break;
         }
-        break;
-      }
-      case 'del': {
-        const parentId = containerOf(parentPath);
-        emit({
-          action: 'del',
-          obj: parentId,
-          key: String(last),
-          pred: model.currentValueIds(parentId, String(last), clock),
-        });
-        break;
-      }
-      case 'insert': {
-        const parentId = containerOf(parentPath);
-        const index = Number(last);
-        let ref = index === 0 ? '_head' : model.visibleElements(parentId, clock)[index - 1].key;
-        for (const value of op.values) {
-          ref = emitValue(parentId, { elemId: ref }, value, [], true);
-        }
-        break;
-      }
-      case 'remove': {
-        const parentId = containerOf(parentPath);
-        const index = Number(last);
-        const targets = model.visibleElements(parentId, clock).slice(index, index + op.count);
-        const preds = targets.map((elem) => model.elementValueIds(elem, clock));
-        targets.forEach((elem, position) =>
-          emit({ action: 'del', obj: parentId, elemId: elem.key, pred: preds[position] }),
-        );
-        break;
-      }
-      case 'splice': {
-        const textId = containerOf(op.path);
-        // Collect the characters to delete before inserting, as Automerge numbers inserts first.
-        const targets: { key: string; pred: string[] }[] = [];
-        let position = op.index;
-        while (position < op.index + op.remove) {
-          const found = model.textElementAt(textId, position, clock);
-          if (!found) {
-            break;
+        case 'splice': {
+          const textId = containerOf(op.path);
+          // Collect the characters to delete before inserting, as Automerge numbers inserts first.
+          const targets: { key: string; pred: string[] }[] = [];
+          let position = op.index;
+          while (position < op.index + op.remove) {
+            const found = model.textElementAt(textId, position, clock);
+            if (!found) {
+              break;
+            }
+            targets.push({ key: found.elem.key, pred: model.elementValueIds(found.elem, clock) });
+            position = found.start + found.width;
           }
-          targets.push({ key: found.elem.key, pred: model.elementValueIds(found.elem, clock) });
-          position = found.start + found.width;
-        }
-        let ref = '_head';
-        if (op.index > 0) {
-          const previous = model.textElementAt(textId, op.index - 1, clock);
-          if (!previous) {
-            throw new RangeError(`No character at ${op.index - 1}`);
+          let ref = '_head';
+          if (op.index > 0) {
+            const previous = model.textElementAt(textId, op.index - 1, clock);
+            if (!previous) {
+              throw new RangeError(`No character at ${op.index - 1}`);
+            }
+            ref = previous.elem.key;
           }
-          ref = previous.elem.key;
+          for (const char of op.insert) {
+            ref = emit({ action: 'set', obj: textId, elemId: ref, insert: true, value: char, pred: [] });
+          }
+          for (const target of targets) {
+            emit({ action: 'del', obj: textId, elemId: target.key, pred: target.pred });
+          }
+          break;
         }
-        for (const char of op.insert) {
-          ref = emit({ action: 'set', obj: textId, elemId: ref, insert: true, value: char, pred: [] });
-        }
-        for (const target of targets) {
-          emit({ action: 'del', obj: textId, elemId: target.key, pred: target.pred });
-        }
-        break;
       }
     }
+  } catch (error) {
+    // The ops applied so far belong to no change, so the model must not keep them.
+    model.removeOps([{ actor, startOp, ops: out }]);
+    throw error;
   }
   return out;
 };

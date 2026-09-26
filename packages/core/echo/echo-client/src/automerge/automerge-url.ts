@@ -35,6 +35,10 @@ const documentIdOfUrl = (url: string): DocumentId | undefined => {
   return documentId as DocumentId;
 };
 
+/** Whether `value` is a document id, as automerge-repo's `isValidDocumentId` decides. */
+export const isValidDocumentId = (value: unknown): value is DocumentId =>
+  typeof value === 'string' && isDocumentId(value);
+
 /** Whether `value` is an Automerge url, as automerge-repo's `isValidAutomergeUrl` decides. */
 export const isValidAutomergeUrl = (value: unknown): value is AutomergeUrl =>
   typeof value === 'string' && documentIdOfUrl(value) !== undefined;

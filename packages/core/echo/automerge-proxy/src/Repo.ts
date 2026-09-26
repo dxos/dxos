@@ -81,8 +81,11 @@ const RESUBSCRIBE_DELAY_MS = 250;
 /** Cap on the resubscribe backoff, so a host that stays down is still retried. */
 const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
-/** Events that answer a follow. */
+/** Events that answer a follow; a copy also answers one that asked for the index copy. */
 const ANSWERS = new Set<Contract.DocumentEvent['type']>(['snapshot', 'caughtUp', 'unavailable']);
+
+/** Index copies a query brought that no handle has taken yet; the oldest go first past this many. */
+const MAX_PRIMED_COPIES = 1_000;
 
 const defaultPageEvents = (): EventTarget | undefined =>
   typeof globalThis.addEventListener === 'function' ? globalThis : undefined;
@@ -113,8 +116,12 @@ export class TabRepo<
   readonly #failedCreations = new Map<string, { handle: H; error: Error; retry: () => void }>();
   readonly #pendingAdd = new Set<string>();
   readonly #pendingRemove = new Set<string>();
+  /** Index copies a query brought, each kept until a handle reads the document through its copy. */
+  readonly #primedCopies = new Map<string, Contract.Copy>();
   /** Documents whose follow the host has not answered yet; their changes wait for the answer. */
   readonly #catchingUp = new Set<string>();
+  /** Documents whose unanswered follow asked for the index copy, so a copy answers it. */
+  readonly #copyFollows = new Set<string>();
   #subscriptionReady = new Trigger();
   /** Send failures and refusals, so a flush can tell that changes it waits for may never land. */
   readonly #failed = new Event<Error>();
@@ -156,18 +163,38 @@ export class TabRepo<
     return this.#handles;
   }
 
-  /** The handle of a document, created on first use; ready once the host's answer arrives. */
-  find(documentId: Id): H {
+  /**
+   * The handle of a document, created on first use; ready once the host's answer arrives. With `copy`, a
+   * new handle reads the host's index copy, so the host need not load the document until the tab writes.
+   */
+  find(documentId: Id, { copy = false }: { copy?: boolean } = {}): H {
     const existing = this.#handles[documentId];
     if (existing) {
       return existing;
     }
     this.#requireOpen(documentId);
-    const handle = this.#newHandle({ documentId });
+    const primed = copy ? this.#primedCopies.get(documentId) : undefined;
+    this.#primedCopies.delete(documentId);
+    const handle = this.#newHandle({ documentId, reads: copy ? 'copy' : 'live', copy: primed });
     this.#handles[documentId] = handle;
     this.#pendingRemove.delete(documentId);
     this.#follow(documentId);
     return handle;
+  }
+
+  /** Keeps an index copy a query brought, for the first {@link find} that reads the document through its copy. */
+  primeCopy(documentId: Id, copy: Contract.Copy): void {
+    if (this.#handles[documentId]) {
+      return;
+    }
+    this.#primedCopies.delete(documentId);
+    this.#primedCopies.set(documentId, copy);
+    if (this.#primedCopies.size > MAX_PRIMED_COPIES) {
+      const oldest = this.#primedCopies.keys().next().value;
+      if (oldest !== undefined) {
+        this.#primedCopies.delete(oldest);
+      }
+    }
   }
 
   /** A new document, readable and writable at once; its first change creates it on the host. */
@@ -234,6 +261,7 @@ export class TabRepo<
     delete this.#handles[documentId];
     this.#pendingAdd.delete(documentId);
     this.#catchingUp.delete(documentId);
+    this.#copyFollows.delete(documentId);
     this.#pendingRemove.add(documentId);
     this.#sendJob?.trigger();
     return true;
@@ -291,6 +319,7 @@ export class TabRepo<
     this.#sendJob = this.#createSendJob();
     // Answers owed on the old stream are lost with it.
     this.#catchingUp.clear();
+    this.#copyFollows.clear();
     for (const documentId of Object.keys(this.#handles)) {
       this.#follow(documentId);
     }
@@ -332,7 +361,13 @@ export class TabRepo<
     }
   }
 
-  #newHandle(options: { documentId?: Id; initialValue?: unknown; initialChanges?: readonly Uint8Array[] }): H {
+  #newHandle(options: {
+    documentId?: Id;
+    initialValue?: unknown;
+    initialChanges?: readonly Uint8Array[];
+    reads?: 'live' | 'copy';
+    copy?: Contract.Copy;
+  }): H {
     const handle: H = this.#createHandle({
       ...options,
       onDelete: () => {
@@ -342,6 +377,7 @@ export class TabRepo<
           delete this.#handles[handle.documentId];
           this.#pendingAdd.delete(handle.documentId);
           this.#catchingUp.delete(handle.documentId);
+          this.#copyFollows.delete(handle.documentId);
           this.#pendingRemove.add(handle.documentId);
           this.#sendJob?.trigger();
         }
@@ -349,6 +385,13 @@ export class TabRepo<
     });
     handle.outgoing.on(() => {
       this.#sendJob?.trigger();
+      this.#emitSaveState();
+    });
+    handle.liveNeeded.on(() => {
+      // A follow still open is followed again once it is answered, as the copy it brings is no use.
+      if (handle.documentId && !this.#catchingUp.has(handle.documentId)) {
+        this.#follow(handle.documentId);
+      }
       this.#emitSaveState();
     });
     handle.acknowledged.on(() => {
@@ -386,9 +429,18 @@ export class TabRepo<
           for (const event of events) {
             const handle = this.#handles[event.documentId];
             handle?._receive(event);
-            if (ANSWERS.has(event.type) && this.#catchingUp.delete(event.documentId)) {
+            const answersCopy = event.type === 'copy' && this.#copyFollows.has(event.documentId);
+            if (!ANSWERS.has(event.type) && !answersCopy) {
+              continue;
+            }
+            this.#copyFollows.delete(event.documentId);
+            if (this.#catchingUp.delete(event.documentId)) {
               this.#progress.emit();
               this.#sendJob?.trigger();
+            }
+            if (answersCopy && handle?._followMode() === 'live') {
+              // The tab needs the document itself: it wrote before the copy came, or a read needed more.
+              this.#follow(event.documentId);
             }
           }
         },
@@ -466,8 +518,15 @@ export class TabRepo<
     if (this.#pendingAdd.size > 0 || this.#pendingRemove.size > 0) {
       // Read now, not when the follow was requested, so the answer is relative to what the tab holds.
       const add = [...this.#pendingAdd].map((documentId): Contract.Follow => {
-        const heads = this.#handles[documentId]?._followHeads();
-        return { documentId, ...(heads ? { heads } : {}) };
+        const handle = this.#handles[documentId];
+        const heads = handle?._followHeads();
+        const mode = handle?._followMode();
+        if (mode === 'copy') {
+          this.#copyFollows.add(documentId);
+        } else {
+          this.#copyFollows.delete(documentId);
+        }
+        return { documentId, ...(heads ? { heads } : {}), ...(mode === 'copy' ? { mode } : {}) };
       });
       const remove = [...this.#pendingRemove];
       this.#pendingAdd.clear();

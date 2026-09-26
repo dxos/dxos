@@ -20,7 +20,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { DocumentUnavailableError, EditsRejectedError, RepoClosedError } from '../errors.ts';
-import { stringifyAutomergeUrl } from './automerge-url.ts';
+import { isValidDocumentId, stringifyAutomergeUrl } from './automerge-url.ts';
 import {
   type ClientDocHandle,
   type ClientRepo,
@@ -108,6 +108,21 @@ export class TabClientRepo extends Resource implements ClientRepo {
   }
 
   find<T>(id: AnyDocumentId): ClientDocHandle<T> {
+    return this.#find(id, false);
+  }
+
+  /** A document read from the worker's index copy until the tab writes to it, so the worker need not load it. */
+  findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
+    return this.#find(id, true);
+  }
+
+  primeCopy(documentId: string, copy: Contract.Copy): void {
+    if (isValidDocumentId(documentId)) {
+      this.#repo.primeCopy(documentId, copy);
+    }
+  }
+
+  #find<T>(id: AnyDocumentId, copy: boolean): ClientDocHandle<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
@@ -117,14 +132,8 @@ export class TabClientRepo extends Resource implements ClientRepo {
       return existing;
     }
     this.#requireOpen(documentId);
-    return this.#repo.find(documentId);
+    return this.#repo.find(documentId, { copy });
   }
-
-  findIndexed<T>(id: AnyDocumentId): ClientDocHandle<T> {
-    return this.find(id);
-  }
-
-  primeCopy(_documentId: string, _copy: Contract.Copy): void {}
 
   create<T>(initialValue?: T): ClientDocHandle<T> {
     this.#requireOpen();
