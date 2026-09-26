@@ -470,9 +470,9 @@ const useEventStream = (
     laneId,
     step,
     spawnEvery,
-    childEvents = [2, 5],
+    childEvents = CHILD_EVENTS,
     nestedChance = 30,
-    maxSpawns = [4, 3, 2],
+    maxSpawns = MAX_SPAWNS,
   }: EventStreamOptions,
 ): { groups: GanttGroup[]; lanes: GanttLane[]; markers: GanttMarker[]; now: number } => {
   const seed = (): StreamState => ({
