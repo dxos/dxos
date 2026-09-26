@@ -16,6 +16,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -175,7 +176,8 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations],
+    // plugin-space's too: the attachment and artifact cards are its `ObjectCard`s.
+    translations: [...translations, ...spaceTranslations, ...reactUiTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -264,7 +266,11 @@ export const DropAttachment: Story = {
     await waitFor(() => expect(attachment.querySelector('img')).not.toBeNull(), { timeout: 10_000 });
     await expect(canvas.findByText('Attached "screenshot.png".')).resolves.toBeInTheDocument();
 
-    await userEvent.click(within(attachment).getByRole('button', { name: 'Remove' }));
+    // Removing is the pane's item in the card's one menu, beside the file's own actions.
+    await userEvent.click(await within(attachment).findByRole('button', { name: 'More actions' }));
+    await userEvent.click(
+      await within(canvasElement.ownerDocument.body).findByRole('menuitem', { name: 'Remove attachment' }),
+    );
     await waitFor(() => expect(sectionCards(canvasElement, 'tasksPlugin.attachments')).toHaveLength(0));
     await expect(canvas.findByText('Removed attachment "screenshot.png".')).resolves.toBeInTheDocument();
   },

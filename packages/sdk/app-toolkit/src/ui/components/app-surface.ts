@@ -3,7 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type ReactNode } from 'react';
+import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
@@ -522,8 +522,13 @@ export type CardMasonryData = {
    * as a section of an article, where a nested scroller would also pad and centre the grid.
    */
   inline?: boolean;
-  /** Offered on each card when present: removes the object from the host's list, not the space. */
-  onRemove?: (object: Ref.Ref<Obj.Unknown>) => void;
+  /**
+   * The host's items for each card's menu, alongside the object's own: rendered once per card, it
+   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` — the
+   * same contract as a type's {@link CardMenu} surface, so a host adds actions such as removing the
+   * object from its list without the card knowing what they mean.
+   */
+  CardMenu?: ComponentType<CardMenuData<Obj.Unknown>>;
   /** Placeholder cards, after the resolved ones, for objects the host is still adding. */
   pending?: ReadonlyArray<CardMasonryPending>;
 };

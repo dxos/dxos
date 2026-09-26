@@ -2,24 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type ComponentType, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, CardMenuSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
 export type ObjectCardProps = {
   data: Entity.Unknown;
   classNames?: string;
-  /** Makes the title a button that opens the object. */
-  onOpen?: (subject: Entity.Unknown) => void;
-  /** Adds a remove button to the header; what removing means is the host's. */
-  onRemove?: (subject: Entity.Unknown) => void;
+  /** The host's contribution to this card's menu (see `AppSurface.CardMasonryData.CardMenu`). */
+  CardMenu?: ComponentType<AppSurface.CardMenuData<Obj.Unknown>>;
 };
 
 /**
@@ -29,7 +27,7 @@ export type ObjectCardProps = {
  * Nothing here is type-specific, and the props are the masonry tile signature, so the same card
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
-export const ObjectCard = ({ data: subject, classNames, onOpen, onRemove }: ObjectCardProps) => {
+export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
@@ -37,7 +35,11 @@ export const ObjectCard = ({ data: subject, classNames, onOpen, onRemove }: Obje
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
-  const menuItems = useObjectMenuItems(subject, pivotId);
+  const objectMenuItems = useObjectMenuItems(subject, pivotId);
+  // The card owns its menu: the object's own items are its actions, and the type's and the host's
+  // register theirs as contributions.
+  const menu = useMenuActions();
+  const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
     <Card.Root ref={cardRef} classNames={classNames}>
@@ -47,22 +49,11 @@ export const ObjectCard = ({ data: subject, classNames, onOpen, onRemove }: Obje
             <Icon icon={icon} />
           </CardIconSlot>
         </Card.Block>
-        {onOpen ? (
-          <Card.Title asChild>
-            <button
-              type='button'
-              className='text-start truncate cursor-pointer hover:underline'
-              data-testid='objectCard.open'
-              onClick={() => onOpen(subject)}
-            >
-              {Entity.getLabel(subject, { fallback: 'typename' })}
-            </button>
-          </Card.Title>
-        ) : (
-          <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-        )}
+        <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
         <Card.Block end>
-          <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+          <CardMenuSlot subject={subject} menu={menu} />
+          {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
+          <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
             <IconButton
               iconOnly
               variant='ghost'
@@ -71,13 +62,6 @@ export const ObjectCard = ({ data: subject, classNames, onOpen, onRemove }: Obje
             />
           </ActionMenu>
         </Card.Block>
-        {onRemove && (
-          <Card.ActionIconButton
-            action='delete'
-            label={t('object-card.remove.label')}
-            onClick={() => onRemove(subject)}
-          />
-        )}
       </Card.Header>
       <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />

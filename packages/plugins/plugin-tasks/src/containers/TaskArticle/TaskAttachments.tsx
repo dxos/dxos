@@ -16,12 +16,14 @@ import React, {
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/components';
 import { Column, Icon, useTranslation } from '@dxos/react-ui';
+import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -222,10 +224,10 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
     (file: Ref.Ref<File.File>) => ({ task: Ref.make(task), file }),
     { spaceId: Obj.getDatabase(task)?.spaceId },
   );
-  // The grid hands back the ref it was given, as an untyped object ref; the task's own ref is the typed one.
+  // A card's menu names the object it shows; the task's own ref to it is the typed one the operation takes.
   const handleRemove = useCallback(
-    (object: Ref.Ref<Obj.Unknown>) => {
-      const attachment = refs?.find((ref) => ref.uri === object.uri);
+    (object: Obj.Unknown) => {
+      const attachment = refs?.find((ref) => ref.target?.id === object.id);
       if (attachment) {
         removeAttachment(attachment);
       }
@@ -258,7 +260,15 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
         {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
       >
         {hasCards ? (
-          <CardMasonry objects={refs ?? []} size='compact' inline onRemove={handleRemove} pending={placeholders} />
+          <RemoveAttachmentContext.Provider value={handleRemove}>
+            <CardMasonry
+              objects={refs ?? []}
+              size='compact'
+              inline
+              CardMenu={AttachmentCardMenu}
+              pending={placeholders}
+            />
+          </RemoveAttachmentContext.Provider>
         ) : (
           <>
             <Icon icon='ph--paperclip--regular' />
@@ -268,4 +278,27 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
       </div>
     </Column.Section>
   );
+};
+
+/** The section's remove, for the card menus it hands the grid: a menu contributor is a component type. */
+const RemoveAttachmentContext = createContext<((object: Obj.Unknown) => void) | undefined>(undefined);
+
+/** Adds "Remove attachment" to each attachment card's menu, beside the file's own actions. */
+const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
+  const { t } = useTranslation(meta.profile.key);
+  const onRemove = useContext(RemoveAttachmentContext);
+  const items = useMemo(
+    () =>
+      onRemove
+        ? [
+            createMenuAction('removeAttachment', () => onRemove(subject), {
+              label: t('task-attachment.remove.label'),
+              icon: 'ph--trash--regular',
+            }),
+          ]
+        : [],
+    [onRemove, subject, t],
+  );
+  useMenuContribution(menu, { id: `${meta.profile.key}.attachment`, mode: 'additive', items });
+  return null;
 };

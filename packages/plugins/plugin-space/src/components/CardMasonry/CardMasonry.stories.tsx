@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -20,6 +20,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
+import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person, Task } from '@dxos/types';
 
@@ -145,6 +146,16 @@ export const ViaSurface: Story = {
 
 const onRemove = fn();
 
+/** The host's item for each card's menu, registered alongside the object's own. */
+const RemoveMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
+  const items = useMemo(
+    () => [createMenuAction('remove', () => onRemove(subject.id), { label: 'Remove', icon: 'ph--trash--regular' })],
+    [subject],
+  );
+  useMenuContribution(menu, { id: 'story.remove', mode: 'additive', items });
+  return null;
+};
+
 /**
  * A companion at its default 30rem: compact cards in two columns, each removable and opening from
  * its title, with a placeholder for an object still being added.
@@ -164,7 +175,7 @@ const CompactStory = () => {
         objects={owner.artifacts ?? []}
         size='compact'
         inline
-        onRemove={onRemove}
+        CardMenu={RemoveMenu}
         pending={[{ id: 'upload', label: 'Uploading diagram.png…' }]}
       />
     </div>
@@ -189,8 +200,12 @@ export const Compact: Story = {
       expect(offsets.size).toBe(2);
     });
 
-    const [remove] = await canvas.findAllByRole('button', { name: 'Remove' });
-    await userEvent.click(remove);
+    // The host's item joins the object's own in the card's one menu, not a second row of actions.
+    const [trigger] = await canvas.findAllByRole('button', { name: 'More actions' });
+    await userEvent.click(trigger);
+    const body = within(canvasElement.ownerDocument.body);
+    await expect(body.findByRole('menuitem', { name: 'Open' })).resolves.toBeTruthy();
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Remove' }));
     await expect(onRemove).toHaveBeenCalledTimes(1);
   },
 };

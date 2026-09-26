@@ -194,7 +194,6 @@ export const translations = [
         'persistence-pending.label': 'Saving…',
         'persistence-error.label': 'Error saving changes.',
         'more-actions.label': 'More actions',
-        'object-card.remove.label': 'Remove',
         'invitations.heading': 'Invitations',
         'keyshortcuts.label': 'Keyboard shortcuts',
         'menu-footer.label': 'Details',

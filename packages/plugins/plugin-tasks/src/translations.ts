@@ -50,6 +50,7 @@ export const translations = [
         'plugin.name': 'Tasks',
         'task-artifacts.label': 'Artifacts',
         'task-attachments.label': 'Attachments',
+        'task-attachment.remove.label': 'Remove attachment',
         'task-attachments.drop-area.label': 'Drop or paste files to attach',
         'task-attachment.uploading.label': 'Uploading {{name}}…',
         'task-questions.label': 'Questions',
