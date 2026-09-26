@@ -179,7 +179,7 @@ export type GanttData = {
   range?: { start: number; end: number };
   now?: number;
   showNow?: boolean;
-  /** What the horizontal axis measures; real time by default. */
+  /** What the horizontal axis measures; one step per event by default. */
   axis?: GanttAxis;
   /** Pixels per event on the `event` axis. */
   eventStep?: number;
@@ -226,7 +226,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
       range: rangeProp,
       now,
       showNow,
-      axis,
+      axis = 'event',
       eventStep,
       animate,
       onLaneSelect,
@@ -397,7 +397,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     range,
     now,
     showNow,
-    axis = 'time',
+    axis = 'event',
     eventStep = EVENT_STEP,
     animate,
     onLaneSelect,

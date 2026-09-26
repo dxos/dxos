@@ -758,14 +758,15 @@ export const ChartOnly: Story = {
 /** The time axis under a stream: every arrival widens the range, so the whole history shifts left. */
 export const Live: Story = {
   args: {
+    axis: 'time',
     interval: 1_000,
   },
 };
 
-/** The same run measured in events rather than seconds: every gap is one step, whatever it lasted. */
-export const EventAxis: Story = {
+/** The same run on the fitted axis, for contrast with {@link Live}: gaps argue for space by duration. */
+export const TimeAxis: Story = {
   args: {
-    axis: 'event',
+    axis: 'time',
   },
 };
 
