@@ -29,7 +29,7 @@ export const serve = ({ beforeStart }: ServeOptions = {}): void => {
     (event: MessageEvent) => {
       const [port] = event.ports;
       if (!WorkerSandboxBrowser.isBrowserWorkerStart(event.data) || port === undefined) {
-        report({ type: 'fatal', reason: 'The worker was started without an init message and port.' });
+        self.postMessage({ type: 'fatal', reason: 'The worker was started without an init message and port.' });
         return;
       }
       const { init } = event.data;
@@ -39,7 +39,7 @@ export const serve = ({ beforeStart }: ServeOptions = {}): void => {
           Effect.tapCause((cause) =>
             // Nothing can reach the host over the channel, so the failure goes to the worker itself,
             // which is what the host watches from before the channel opens.
-            Effect.sync(() => report({ type: 'fatal', reason: Cause.pretty(cause) })),
+            Effect.sync(() => self.postMessage({ type: 'fatal', reason: Cause.pretty(cause) })),
           ),
         ),
       );
@@ -47,5 +47,3 @@ export const serve = ({ beforeStart }: ServeOptions = {}): void => {
     { once: true },
   );
 };
-
-const report = (message: WorkerSandboxBrowser.BrowserWorkerMessage) => self.postMessage(message);

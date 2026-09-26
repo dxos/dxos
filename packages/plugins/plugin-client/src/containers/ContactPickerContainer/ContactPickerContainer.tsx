@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Field, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -72,8 +72,8 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <div role='group' className='flex flex-col gap-2'>
-      <div className='flex items-center gap-2'>
+    <Flex column gap='sm' role='group'>
+      <Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
           excludeKeys={memberKeys}
@@ -110,16 +110,16 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           onClick={handleAdd}
           data-testid='contactPicker.add'
         />
-      </div>
+      </Flex>
       {joinUrl && (
-        <div className='flex gap-2'>
+        <Flex gap='sm'>
           <Field.Root readOnly>
             <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
           <SystemIconButton.Clipboard value={joinUrl} />
-        </div>
+        </Flex>
       )}
-    </div>
+    </Flex>
   );
 };
 

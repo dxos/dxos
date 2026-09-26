@@ -692,7 +692,8 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
-  const hasTasks = chat?.tasks != null;
+  const [tasks] = useObject(chat, 'tasks');
+  const hasTasks = tasks != null;
 
   // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
   // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
