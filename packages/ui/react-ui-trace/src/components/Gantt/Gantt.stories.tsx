@@ -215,9 +215,11 @@ const manyLaneMarkers: GanttMarker[] = [
  * node its result landed on, and the segment says when it was actually worked. The sub-branch is
  * still working, so it has no return edge — which is the case that makes the separation earn itself.
  *
- * Each branch begins exactly at the node that opened it, because a lane cannot start before its own
- * cause; and each returns at a *later* node than its own end, because the supervisor folds a result
- * in when it next runs, not the instant the child stops.
+ * Handing work over and hearing back are separate events at separate instants, so no node does both:
+ * a result gets a step of the axis to itself. A branch begins shortly *after* the node that opened it
+ * and returns shortly after its own last event — a child's first event is its process starting, and a
+ * supervisor folds a result in when it next runs, so neither is ever simultaneous with the node it
+ * answers. That gap is also what gives every connector the same bent shape.
  */
 const branchingGroups: GanttGroup[] = [{ id: 'g' }];
 const branchingLanes: GanttLane[] = [
@@ -228,9 +230,9 @@ const branchingLanes: GanttLane[] = [
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 2 * MINUTE, end: T0 + 3.5 * MINUTE }],
-    openedFrom: { laneId: 'root', markerId: 'root:1' },
-    closedInto: { laneId: 'root', markerId: 'root:2' },
+    segments: [{ start: T0 + 2.2 * MINUTE, end: T0 + 3.5 * MINUTE }],
+    openedFrom: { laneId: 'root', markerId: 'root:open-first' },
+    closedInto: { laneId: 'root', markerId: 'root:return-first' },
   },
   {
     id: 'second',
@@ -238,9 +240,9 @@ const branchingLanes: GanttLane[] = [
     status: 'done',
     groupId: 'g',
     parentId: 'root',
-    segments: [{ start: T0 + 4 * MINUTE, end: T0 + 7 * MINUTE }],
-    openedFrom: { laneId: 'root', markerId: 'root:2' },
-    closedInto: { laneId: 'root', markerId: 'root:4' },
+    segments: [{ start: T0 + 5.2 * MINUTE, end: T0 + 8 * MINUTE }],
+    openedFrom: { laneId: 'root', markerId: 'root:open-second' },
+    closedInto: { laneId: 'root', markerId: 'root:return-second' },
   },
   {
     id: 'sub',
@@ -248,15 +250,47 @@ const branchingLanes: GanttLane[] = [
     status: 'running',
     groupId: 'g',
     parentId: 'second',
-    segments: [{ start: T0 + 5.5 * MINUTE }],
+    segments: [{ start: T0 + 6.8 * MINUTE }],
     openedFrom: { laneId: 'second', markerId: 'second:1' },
   },
 ];
+
+/** Written out rather than spread evenly: which node is a hand-over and which an answer is the point. */
 const branchingMarkers: GanttMarker[] = [
-  ...events('root', 6, T0, T0 + 10 * MINUTE),
-  ...events('first', 3, T0 + 2 * MINUTE, T0 + 3.5 * MINUTE),
-  ...events('second', 3, T0 + 4 * MINUTE, T0 + 7 * MINUTE),
-  ...events('sub', 3, T0 + 5.5 * MINUTE, T0 + 9.5 * MINUTE),
+  { id: 'root:0', laneId: 'root', kind: 'request', timestamp: T0, label: 'Request started' },
+  {
+    id: 'root:open-first',
+    laneId: 'root',
+    kind: 'delegation',
+    timestamp: T0 + 2 * MINUTE,
+    label: 'Opened first branch',
+  },
+  {
+    id: 'root:return-first',
+    laneId: 'root',
+    kind: 'delegation',
+    timestamp: T0 + 4 * MINUTE,
+    label: 'Returned: first result',
+  },
+  {
+    id: 'root:open-second',
+    laneId: 'root',
+    kind: 'delegation',
+    timestamp: T0 + 5 * MINUTE,
+    label: 'Opened second branch',
+  },
+  {
+    id: 'root:return-second',
+    laneId: 'root',
+    kind: 'delegation',
+    timestamp: T0 + 8.5 * MINUTE,
+    label: 'Returned: second result',
+  },
+  { id: 'root:5', laneId: 'root', kind: 'request', timestamp: T0 + 10 * MINUTE, label: 'Request success' },
+
+  ...events('first', 3, T0 + 2.2 * MINUTE, T0 + 3.5 * MINUTE),
+  ...events('second', 3, T0 + 5.2 * MINUTE, T0 + 8 * MINUTE),
+  ...events('sub', 3, T0 + 6.8 * MINUTE, T0 + 9.5 * MINUTE),
 ];
 
 /**
@@ -287,9 +321,9 @@ const manyGroupLanes: GanttLane[] = [
     label: 'Nested band A',
     status: 'done',
     groupId: 'one:a',
-    segments: [{ start: T0 + 3.2 * MINUTE, end: T0 + 6 * MINUTE }],
-    openedFrom: { laneId: 'p1', markerId: 'p1:1' },
-    closedInto: { laneId: 'p1', markerId: 'p1:2' },
+    segments: [{ start: T0 + 3.2 * MINUTE, end: T0 + 5.6 * MINUTE }],
+    openedFrom: { laneId: 'p1', markerId: 'p1:open-a' },
+    closedInto: { laneId: 'p1', markerId: 'p1:return-a' },
   },
   {
     id: 'p2:task',
@@ -304,7 +338,7 @@ const manyGroupLanes: GanttLane[] = [
     status: 'running',
     groupId: 'one:b',
     segments: [{ start: T0 + 6.2 * MINUTE }],
-    openedFrom: { laneId: 'p1', markerId: 'p1:2' },
+    openedFrom: { laneId: 'p1', markerId: 'p1:open-b' },
   },
   {
     id: 'p4',
@@ -315,9 +349,13 @@ const manyGroupLanes: GanttLane[] = [
   },
 ];
 const manyGroupMarkers: GanttMarker[] = [
-  ...events('p1', 4, T0, T0 + 9 * MINUTE),
+  { id: 'p1:0', laneId: 'p1', kind: 'request', timestamp: T0, label: 'Request started' },
+  { id: 'p1:open-a', laneId: 'p1', kind: 'delegation', timestamp: T0 + 3 * MINUTE, label: 'Opened band A' },
+  { id: 'p1:open-b', laneId: 'p1', kind: 'delegation', timestamp: T0 + 6 * MINUTE, label: 'Opened band B' },
+  { id: 'p1:return-a', laneId: 'p1', kind: 'delegation', timestamp: T0 + 7.2 * MINUTE, label: 'Returned: band A' },
+  { id: 'p1:4', laneId: 'p1', kind: 'request', timestamp: T0 + 9 * MINUTE, label: 'Request success' },
   ...events('p1:task', 3, T0 + 0.6 * MINUTE, T0 + 2.5 * MINUTE),
-  ...events('p2', 4, T0 + 3.2 * MINUTE, T0 + 6 * MINUTE),
+  ...events('p2', 4, T0 + 3.2 * MINUTE, T0 + 5.6 * MINUTE),
   ...events('p2:task', 3, T0 + 3.8 * MINUTE, T0 + 5.4 * MINUTE),
   ...events('p3', 4, T0 + 6.2 * MINUTE, T0 + 10 * MINUTE),
   ...events('p4', 5, T0 + 1.5 * MINUTE, T0 + 7.5 * MINUTE),
