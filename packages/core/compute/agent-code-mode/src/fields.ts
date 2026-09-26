@@ -33,10 +33,14 @@ export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
  */
 export const describeInput = (schema: Schema.Top): string => {
   const ast = schema.ast;
+  // The three spellings of "takes no input", as `createStructFieldsFromSchema` reads them.
+  if (ast._tag === 'Void' || ast._tag === 'Null' || ast._tag === 'Unknown') {
+    return 'none';
+  }
   if (SchemaAST.isObjects(ast) && ast.propertySignatures.length === 0 && ast.indexSignatures.length === 0) {
     return '{}';
   }
-  return SchemaAST.isObjects(ast) ? labelOf(ast, 0) : 'none';
+  return labelOf(ast, 0);
 };
 
 /**

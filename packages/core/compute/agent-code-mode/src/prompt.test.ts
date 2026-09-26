@@ -58,6 +58,9 @@ describe('prompt', () => {
     );
     expect(describeInput(Schema.Struct({}))).toEqual('{}');
     expect(describeInput(Schema.Void)).toEqual('none');
+    // `Operation.make` does not require a struct, so any other input is labelled as it is.
+    expect(describeInput(Schema.String)).toEqual('string');
+    expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
   });
 
   test('the effect dialect documents an operation by the schema Operation.invoke decodes against', ({ expect }) => {
