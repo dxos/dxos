@@ -14,6 +14,7 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
+import { saveNoCompress } from '../../save.ts';
 import { type DocInput, type Latency, type Measure, median } from './common.ts';
 
 const here = import.meta.dirname;
@@ -24,16 +25,6 @@ const corpus: { docs: { kind: string; bytes: string }[] } = JSON.parse(readFileS
 const tabCounts = (process.argv.includes('--tabs') ? process.argv[process.argv.indexOf('--tabs') + 1] : '1,2,3')
   .split(',')
   .map(Number);
-
-const saveNoCompress = (doc: object): Uint8Array => {
-  const meta: unknown = Reflect.get(doc, Symbol.for('_am_meta'));
-  const handle: unknown = meta && Reflect.get(meta, 'handle');
-  const save: unknown = handle && Reflect.get(handle, 'saveNoCompress');
-  if (typeof save !== 'function') {
-    throw new Error('No saveNoCompress');
-  }
-  return Reflect.apply(save, handle, []);
-};
 
 const docs = corpus.docs.map((entry) => A.load(Buffer.from(entry.bytes, 'base64')));
 const replicaInput: DocInput[] = corpus.docs.map((entry) => ({ bytes: entry.bytes, hash: [], heads: [] }));

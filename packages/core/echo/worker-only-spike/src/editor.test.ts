@@ -32,7 +32,9 @@ afterEach(() => {
   views.splice(0).forEach((view) => view.destroy());
 });
 
-const openEditor = (tab: Tab): EditorView => {
+type Text = { content: string };
+
+const openEditor = (tab: Tab<Text>): EditorView => {
   const accessor = { handle: tab.handle, path: ['content'] as const };
   const view = new EditorView({
     state: EditorState.create({ doc: tab.handle.doc().content, extensions: [automerge(accessor)] }),
@@ -52,10 +54,10 @@ describe("the editor's Automerge binding over tab documents", () => {
       const host = new SpikeHost();
       host.create('doc', { content: 'The quick brown fox.' });
       const network = new Network(host);
-      const tabs = [network.open('doc'), network.open('doc')];
+      const tabs = [network.open<Text>('doc'), network.open<Text>('doc')];
       const editors = tabs.map(openEditor);
       await tick();
-      let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+      let peer = A.clone(host.doc<Text>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
       const anchors: { anchor: string; editor: number }[] = [];
 
       for (let step = 0; step < 60; step++) {
@@ -77,12 +79,12 @@ describe("the editor's Automerge binding over tab documents", () => {
             });
           }
         } else if (r < 0.65) {
-          peer = A.change(peer, (d: any) => A.splice(d, ['content'], pick(d.content.length + 1), 0, 'P'));
+          peer = A.change(peer, (doc) => A.splice(doc, ['content'], pick(doc.content.length + 1), 0, 'P'));
         } else if (r < 0.75) {
           host.applyRemote('doc', unknownTo(host.doc('doc'), peer));
         } else if (r < 0.8) {
           host.flush();
-          peer = A.merge(peer, A.clone(host.doc('doc')));
+          peer = A.merge(peer, A.clone(host.doc<Text>('doc')));
         } else {
           network.deliver(1 + pick(network.pending + 1));
         }
@@ -93,7 +95,7 @@ describe("the editor's Automerge binding over tab documents", () => {
       network.settle();
       await tick();
 
-      const hostDoc = A.load<{ content: string }>(A.save(host.doc('doc')));
+      const hostDoc = A.load<Text>(A.save(host.doc('doc')));
       for (const [index, view] of editors.entries()) {
         expect(view.state.doc.toString()).toBe(hostDoc.content);
         expect(tabs[index].handle.doc().content).toBe(hostDoc.content);

@@ -16,16 +16,16 @@ describe('tab documents over a worker', () => {
     const host = new SpikeHost();
     host.create('doc', initialShape());
     const network = new Network(host);
-    const left = network.open('doc');
-    const right = network.open('doc');
+    const left = network.open<Shape>('doc');
+    const right = network.open<Shape>('doc');
 
-    left.handle.change((draft: Shape) => Draft.splice(draft, ['content'], 5, 0, ', dear'));
+    left.handle.change((draft) => Draft.splice(draft, ['content'], 5, 0, ', dear'));
     // Nothing has been delivered: the worker has not seen the text the cursor points into.
     const cursor = left.tab.cursor(left.tab.heads(), ['content'], 7);
     expect(left.handle.doc().content[7]).toBe('d');
 
     network.settle();
-    const hostDoc = host.doc('doc');
+    const hostDoc = host.doc<Shape>('doc');
     expect(hostDoc.content).toBe('hello, dear world');
     expect(A.getCursorPosition(hostDoc, ['content'], cursor)).toBe(7);
     expect(right.tab.cursorPosition(right.tab.heads(), ['content'], cursor)).toBe(7);
@@ -39,9 +39,9 @@ describe('tab documents over a worker', () => {
       const host = new SpikeHost();
       host.create('doc', initialShape());
       const network = new Network(host);
-      const tabs: Tab[] = [network.open('doc'), network.open('doc'), network.open('doc')];
-      let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
-      const minted: { cursor: string; tab: Tab }[] = [];
+      const tabs: Tab<Shape>[] = [network.open<Shape>('doc'), network.open<Shape>('doc'), network.open<Shape>('doc')];
+      let peer = A.clone(host.doc<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+      const minted: { cursor: string; tab: Tab<Shape> }[] = [];
       const initialHeads = A.getHeads(host.doc('doc'));
       let midHeads = initialHeads;
 
@@ -50,12 +50,12 @@ describe('tab documents over a worker', () => {
         if (r < 0.6) {
           const tab = tabs[pick(tabs.length)];
           tab.handle.change(randomEdit(random));
-          const text = tab.handle.doc().content as string;
+          const text = tab.handle.doc().content;
           if (text.length > 0) {
             minted.push({ cursor: tab.tab.cursor(tab.tab.heads(), ['content'], pick(text.length)), tab });
           }
         } else if (r < 0.7) {
-          peer = A.change(peer, (draft: Shape) => {
+          peer = A.change(peer, (draft) => {
             A.splice(draft, ['content'], boundary(draft.content, pick(draft.content.length + 1)), 0, 'P');
             draft.title = new A.ImmutableString('peer');
           });
@@ -63,7 +63,7 @@ describe('tab documents over a worker', () => {
           host.applyRemote('doc', unknownTo(host.doc('doc'), peer));
         } else if (r < 0.85) {
           host.flush();
-          peer = A.merge(peer, A.clone(host.doc('doc')));
+          peer = A.merge(peer, A.clone(host.doc<Shape>('doc')));
           if (step < 40) {
             midHeads = A.getHeads(host.doc('doc'));
           }
@@ -114,13 +114,13 @@ describe('tab documents over a worker', () => {
     const host = new SpikeHost();
     host.create('doc', initialShape());
     const network = new Network(host);
-    const tab = network.open('doc');
+    const tab = network.open<Shape>('doc');
     for (let i = 0; i < 50; i++) {
-      tab.handle.change((draft: Shape) => Draft.splice(draft, ['content'], draft.content.length, 0, 'x'));
+      tab.handle.change((draft) => Draft.splice(draft, ['content'], draft.content.length, 0, 'x'));
     }
     const before = host.applyCalls;
     network.settle();
     expect(host.applyCalls - before).toBe(1);
-    expect(host.doc('doc').content).toBe(`hello world${'x'.repeat(50)}`);
+    expect(host.doc<Shape>('doc').content).toBe(`hello world${'x'.repeat(50)}`);
   });
 });

@@ -16,8 +16,16 @@ export const TAG = Symbol.for('dxos.worker-only-spike.tag');
 
 export type Tag = { readonly tab: TabDoc; readonly heads: string[]; readonly path: readonly (string | number)[] };
 
-export const tagOf = (value: unknown): Tag | undefined =>
-  value !== null && typeof value === 'object' ? (value as { [TAG]?: Tag })[TAG] : undefined;
+const isTag = (value: unknown): value is Tag =>
+  typeof value === 'object' && value !== null && 'tab' in value && value.tab instanceof TabDoc;
+
+export const tagOf = (value: unknown): Tag | undefined => {
+  if (value === null || typeof value !== 'object') {
+    return undefined;
+  }
+  const tag: unknown = Reflect.get(value, TAG);
+  return isTag(tag) ? tag : undefined;
+};
 
 /** Messages the host sends a tab. A tab names its changes by their real hashes, so acks and refusals do too. */
 export type HostMessage =
@@ -31,6 +39,8 @@ export type Snapshot = { bytes: Uint8Array; hashes?: string[]; heads: string[] }
 const randomActor = (): string =>
   Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
+type ChangeOptions = { time?: number; message?: string };
+
 type Options = {
   /** Where changes go; a document with none exists only in this tab, as `A.from` makes one. */
   send?: (change: Change, bytes: Uint8Array) => void;
@@ -40,9 +50,10 @@ type Options = {
 
 /**
  * A document in a tab with no Automerge: the model holds every op with its Automerge id, the tab
- * mints ids for its own ops, and the worker writes each change under exactly those ids.
+ * mints ids for its own ops, and the worker writes each change under exactly those ids. `T` is the
+ * document's shape as its callers name it, as with `A.Doc<T>`.
  */
-export class TabDoc {
+export class TabDoc<T = unknown> {
   readonly #model: Model;
   readonly #send?: (change: Change, bytes: Uint8Array) => void;
   readonly #bytes = new Map<string, Uint8Array>();
@@ -54,7 +65,7 @@ export class TabDoc {
   /** This actor's changes by seq, confirmed or not: the next change's seq and base check come from it. */
   #own: string[] = [];
   #heads: string[];
-  #cache?: { key: string; root: object; tag: Tag };
+  #cache?: { key: string; root: T };
 
   constructor(model: Model, heads: string[], options: Options) {
     this.#model = model;
@@ -65,24 +76,24 @@ export class TabDoc {
   }
 
   /** A document read from the host's snapshot: saved bytes, change hashes and heads. */
-  static fromSnapshot(snapshot: Snapshot, options: Options): TabDoc {
-    return new TabDoc(Model.fromSaved(snapshot.bytes, snapshot.hashes), [...snapshot.heads], options);
+  static fromSnapshot<T>(snapshot: Snapshot, options: Options): TabDoc<T> {
+    return new TabDoc<T>(Model.fromSaved(snapshot.bytes, snapshot.hashes), [...snapshot.heads], options);
   }
 
   /** A document built from changes, as `A.load` of change chunks or `A.clone` builds one. */
-  static fromChanges(changes: readonly Change[], options: Options): TabDoc {
+  static fromChanges<T>(changes: readonly Change[], options: Options): TabDoc<T> {
     const model = new Model();
     const ordered = causalOrder(changes);
     ordered.forEach((change) => model.applyChange(change));
-    return new TabDoc(model, headsOf(ordered), options);
+    return new TabDoc<T>(model, headsOf(ordered), options);
   }
 
   /** `A.load`: a saved document (uncompressed) or change chunks back to back, in any order. */
-  static load(bytes: Uint8Array, options: Options): TabDoc {
+  static load<T>(bytes: Uint8Array, options: Options): TabDoc<T> {
     // The chunk type follows the magic bytes and the checksum.
     if (bytes[8] === 0) {
       const model = Model.fromSaved(bytes);
-      return new TabDoc(model, headsOf(model.changeHashes().map((hash) => model.changeOf(hash))), options);
+      return new TabDoc<T>(model, headsOf(model.changeHashes().map((hash) => model.changeOf(hash))), options);
     }
     const changes: Change[] = [];
     for (let offset = 0; offset < bytes.length;) {
@@ -90,12 +101,12 @@ export class TabDoc {
       changes.push(change);
       offset = end;
     }
-    return TabDoc.fromChanges(changes, options);
+    return TabDoc.fromChanges<T>(changes, options);
   }
 
   /** A document that exists only in this tab until a host takes its first change. */
-  static create(initial: Record<string, unknown>, options: Options): TabDoc {
-    const tab = new TabDoc(new Model(), [], options);
+  static create<T extends object>(initial: T, options: Options): TabDoc<T> {
+    const tab = new TabDoc<T>(new Model(), [], options);
     tab.change((draft) => Object.assign(draft, initial));
     return tab;
   }
@@ -121,23 +132,18 @@ export class TabDoc {
   //
 
   /** The document at the current version, as Automerge would materialize it. */
-  doc(): any {
+  doc(): T {
     const key = this.#heads.join(',');
     if (this.#cache?.key !== key) {
-      const tag: Tag = { tab: this, heads: [...this.#heads], path: [] };
-      this.#cache = { key, root: this.#materialize(tag), tag };
+      this.#cache = { key, root: this.view(this.#heads) };
     }
     return this.#cache.root;
   }
 
   /** The document at `heads`, read-only, as `A.view` gives it. */
-  view(heads: readonly string[]): any {
-    return this.#materialize({ tab: this, heads: [...heads], path: [] });
-  }
-
-  #materialize(tag: Tag): object {
-    const clock = this.clockOf(tag.heads);
-    const value = this.#model.materialize('_root', clock);
+  view(heads: readonly string[]): T {
+    const at = [...heads];
+    const value = this.#model.materialize('_root', this.clockOf(at));
     const mark = (node: unknown, path: (string | number)[]): void => {
       if (
         node === null ||
@@ -148,14 +154,15 @@ export class TabDoc {
       ) {
         return;
       }
-      Object.defineProperty(node, TAG, { value: { tab: this, heads: tag.heads, path } satisfies Tag });
+      Object.defineProperty(node, TAG, { value: { tab: this, heads: at, path } satisfies Tag });
       for (const [key, child] of Object.entries(node)) {
         mark(child, [...path, Array.isArray(node) ? Number(key) : key]);
       }
       Object.freeze(node);
     };
     mark(value, []);
-    return value as object;
+    // The model holds whatever its writers wrote; `T` is the caller's claim about it, as in `A.load<T>`.
+    return value as T;
   }
 
   clockOf(heads: readonly string[]): Clock {
@@ -227,28 +234,21 @@ export class TabDoc {
   }
 
   /** `handle.change`: records the callback's edits as one change on the current version. */
-  change(fn: (draft: any) => void, options?: { time?: number; message?: string }): string[] | undefined {
+  change(fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
     return this.#record(this.#heads, fn, options);
   }
 
   /** `handle.changeAt`: a change based on `heads`; returns the heads of that version plus the change. */
-  changeAt(
-    heads: readonly string[],
-    fn: (draft: any) => void,
-    options?: { time?: number; message?: string },
-  ): string[] | undefined {
+  changeAt(heads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
     return this.#record(heads, fn, options);
   }
 
-  #record(
-    baseHeads: readonly string[],
-    fn: (draft: any) => void,
-    options?: { time?: number; message?: string },
-  ): string[] | undefined {
+  #record(baseHeads: readonly string[], fn: (draft: T) => void, options?: ChangeOptions): string[] | undefined {
     const baseClock = this.clockOf(baseHeads);
     const current = baseHeads.join(',') === this.#heads.join(',');
     const recorder = new Draft.Recorder(current ? this.doc() : freezeDeep(this.#model.materialize('_root', baseClock)));
-    fn(recorder.draft());
+    // A draft stands in for the document, so it has the document's claimed shape.
+    fn(recorder.draft() as T);
     if (recorder.ops.length === 0) {
       return undefined;
     }
@@ -613,7 +613,14 @@ export const translate = (
           targets.push({ key: found.elem.key, pred: model.elementValueIds(found.elem, clock) });
           position = found.start + found.width;
         }
-        let ref = op.index === 0 ? '_head' : model.textElementAt(textId, op.index - 1, clock)!.elem.key;
+        let ref = '_head';
+        if (op.index > 0) {
+          const previous = model.textElementAt(textId, op.index - 1, clock);
+          if (!previous) {
+            throw new RangeError(`No character at ${op.index - 1}`);
+          }
+          ref = previous.elem.key;
+        }
         for (const char of op.insert) {
           ref = emit({ action: 'set', obj: textId, elemId: ref, insert: true, value: char, pred: [] });
         }

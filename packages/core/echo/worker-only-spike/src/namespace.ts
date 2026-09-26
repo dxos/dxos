@@ -12,8 +12,8 @@ import { TabDoc, type Tag, tagOf } from './tab.ts';
 
 type Heads = string[];
 type Path = (string | number)[];
-/** Automerge's own callback type: a draft of a document whose shape the namespace cannot know. */
-type ChangeFn = (draft: any) => void;
+/** Automerge's callback, whose draft has a shape only the caller knows. */
+type ChangeFn = (draft: unknown) => void;
 type ChangeOptions = string | { message?: string; time?: number };
 type InitOptions = string | { actor?: string };
 

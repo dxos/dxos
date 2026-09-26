@@ -25,6 +25,9 @@
     },
     {
       "path": "../echo-doc"
+    },
+    {
+      "path": "../echo-protocol"
     }
   ]
 }

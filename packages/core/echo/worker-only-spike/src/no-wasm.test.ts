@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, test } from 'vitest';
 
 import { SpikeHost } from './host.ts';
-import { canon, initialShape, unknownTo } from './testing.ts';
+import { type Shape, canon, initialShape, unknownTo } from './testing.ts';
 
 const toBase64 = (bytes: Uint8Array): string => Buffer.from(bytes).toString('base64');
 const fromBase64 = (text: string): Uint8Array => Uint8Array.from(Buffer.from(text, 'base64'));
@@ -16,7 +16,7 @@ describe('a tab with no WebAssembly', () => {
   test('loads, applies, writes, encodes and saves in a process where WebAssembly does not exist', () => {
     const host = new SpikeHost();
     host.create('doc', initialShape());
-    let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    let peer = A.clone(host.doc<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
     peer = A.change(peer, (doc) => {
       A.splice(doc, ['content'], 0, 0, 'Peer ');
       doc.tags.push(new A.ImmutableString('p'));

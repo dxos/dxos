@@ -4,7 +4,7 @@
 
 export type DocInput = { bytes: string; hash: string[]; heads: string[] };
 
-export type Measure = { heap: number; wasm: number; loadMs: number; uasm?: number };
+export type Measure = { heap: number; wasm: number; loadMs: number };
 
 export type Latency = { tabMs: number[]; roundTripMs: number[]; workerMs: number[] };
 

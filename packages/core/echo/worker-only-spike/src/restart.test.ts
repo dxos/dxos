@@ -18,7 +18,7 @@ const PEER = 'eeee0000eeee0000eeee0000eeee0000';
 const churn = (
   host: SpikeHost,
   network: Network,
-  tabs: Tab[],
+  tabs: Tab<Shape>[],
   peer: A.Doc<Shape>,
   random: ReturnType<typeof seeded>,
   steps: number,
@@ -37,7 +37,7 @@ const churn = (
       host.applyRemote('doc', unknownTo(host.doc('doc'), current));
     } else if (roll < 0.84) {
       host.flush();
-      current = A.merge(current, A.clone(host.doc('doc')));
+      current = A.merge(current, A.clone(host.doc<Shape>('doc')));
     } else {
       network.deliver(1 + pick(network.pending + 1));
     }
@@ -55,14 +55,14 @@ describe('recovery after the worker restarts', () => {
       const host = new SpikeHost();
       host.create('doc', initialShape());
       const network = new Network(host);
-      const tabs = [network.open('doc'), network.open('doc')];
-      let peer = A.clone(host.doc('doc'), { actor: PEER });
+      const tabs = [network.open<Shape>('doc'), network.open<Shape>('doc')];
+      let peer = A.clone(host.doc<Shape>('doc'), { actor: PEER });
       peer = churn(host, network, tabs, peer, random, 80);
       network.settle();
       host.applyRemote('doc', unknownTo(host.doc('doc'), peer));
       network.settle();
       // A tab opened now reads every earlier change from saved bytes, deletes included.
-      tabs.push(network.open('doc'));
+      tabs.push(network.open<Shape>('doc'));
       churn(host, network, tabs, peer, random, 40);
       network.settle();
 
@@ -86,10 +86,10 @@ describe('recovery after the worker restarts', () => {
       host.create('doc', initialShape());
       host.persistOnFlush = false;
       const network = new Network(host);
-      const left = network.open('doc');
-      const right = network.open('doc');
-      const closing = network.open('doc');
-      let peer = A.clone(host.doc('doc'), { actor: PEER });
+      const left = network.open<Shape>('doc');
+      const right = network.open<Shape>('doc');
+      const closing = network.open<Shape>('doc');
+      let peer = A.clone(host.doc<Shape>('doc'), { actor: PEER });
 
       // Saved work, acknowledged.
       peer = churn(host, network, [left, right, closing], peer, random, 40);
@@ -99,7 +99,7 @@ describe('recovery after the worker restarts', () => {
 
       // Unsaved work: flushed to other tabs but not saved, including a tab that then closes and a peer.
       peer = churn(host, network, [left, right, closing], peer, random, 60);
-      closing.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 0, 0, 'from a closed tab '));
+      closing.tab.change((draft) => Draft.splice(draft, ['content'], 0, 0, 'from a closed tab '));
       network.deliver(network.pending);
       host.flush();
       network.deliver(network.pending);
@@ -116,7 +116,7 @@ describe('recovery after the worker restarts', () => {
       network.reconnect(right);
       network.settle();
 
-      const doc = host.doc('doc');
+      const doc = host.doc<Shape>('doc');
       expect([...held].filter((hash) => !A.hasHeads(doc, [hash]))).toEqual([]);
       for (const tab of [left, right]) {
         expect(tab.tab.pending).toHaveLength(0);
@@ -134,7 +134,7 @@ describe('recovery after the worker restarts', () => {
       const toWorker = unknownTo(doc, peer);
       expect(toWorker.map((bytes) => A.decodeChange(bytes).hash).filter((hash) => held.has(hash))).toEqual([]);
       host.applyRemote('doc', toWorker);
-      left.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 0, 0, 'later '));
+      left.tab.change((draft) => Draft.splice(draft, ['content'], 0, 0, 'later '));
       network.settle();
       const final = canon(A.toJS(A.load(A.save(host.doc('doc')))));
       expect(canon(left.handle.doc())).toBe(final);
@@ -147,9 +147,9 @@ describe('recovery after the worker restarts', () => {
     const host = new SpikeHost();
     host.create('doc', { content: 'abc' });
     const network = new Network(host);
-    const left = network.open('doc');
-    const right = network.open('doc');
-    const [hash] = left.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 3, 0, 'd')) ?? [];
+    const left = network.open<Shape>('doc');
+    const right = network.open<Shape>('doc');
+    const [hash] = left.tab.change((draft) => Draft.splice(draft, ['content'], 3, 0, 'd')) ?? [];
     network.deliver(network.pending);
     host.flush(); // Applies, broadcasts to `right`, saves, and queues the ack to `left`.
     network.drop(); // The worker dies before either message leaves.

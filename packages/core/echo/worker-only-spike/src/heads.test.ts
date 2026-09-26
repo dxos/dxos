@@ -22,6 +22,8 @@ import { checkoutVersion, createObject, getObjectCore, initEchoReactiveObjectRoo
 // eslint-disable-next-line import/first
 import { ObjectCore } from '@dxos/echo-client/internal';
 // eslint-disable-next-line import/first
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
+// eslint-disable-next-line import/first
 import { invariant } from '@dxos/invariant';
 
 // eslint-disable-next-line import/first
@@ -51,10 +53,10 @@ describe('heads read right after a write', () => {
     const host = new SpikeHost();
     host.create('doc', { content: 'hello', title: new A.ImmutableString('t') });
     const network = new Network(host);
-    const left = network.open('doc');
-    const right = network.open('doc');
+    const left = network.open<Shape>('doc');
+    const right = network.open<Shape>('doc');
 
-    left.handle.change((draft: Shape) => Draft.splice(draft, ['content'], 5, 0, ' world'));
+    left.handle.change((draft) => Draft.splice(draft, ['content'], 5, 0, ' world'));
     const heads = A.getHeads(left.handle.doc());
     expect(heads).toEqual([left.tab.pending[0].hash]);
     expect(heads[0]).toMatch(/^[0-9a-f]{64}$/);
@@ -81,7 +83,7 @@ describe('heads read right after a write', () => {
     const host = new SpikeHost();
     host.create('db', { objects: { [id]: A.toJS(getObjectCore(source).getDoc()) } });
     const network = new Network(host);
-    const tab = network.open('db');
+    const tab = network.open<DatabaseDirectory>('db');
     const core = new ObjectCore();
     core.id = id;
     core.bind({
@@ -105,9 +107,9 @@ describe('heads read right after a write', () => {
 
     network.settle();
     expect(A.getHeads(host.doc('db'))).toEqual(heads);
-    expect(A.view(host.doc('db'), heads).objects[id].data.status).toBe('done');
-    const later = network.open('db');
-    expect(later.tab.view(heads).objects[id].data.status).toBe('done');
+    expect(A.view(host.doc<DatabaseDirectory>('db'), heads).objects?.[id].data.status).toBe('done');
+    const later = network.open<DatabaseDirectory>('db');
+    expect(later.tab.view(heads).objects?.[id].data.status).toBe('done');
     expect(leaks).toEqual([]);
   });
 
@@ -118,8 +120,8 @@ describe('heads read right after a write', () => {
       const host = new SpikeHost();
       host.create('doc', initialShape());
       const network = new Network(host);
-      const tabs: Tab[] = [network.open('doc'), network.open('doc'), network.open('doc')];
-      let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+      const tabs: Tab<Shape>[] = [network.open<Shape>('doc'), network.open<Shape>('doc'), network.open<Shape>('doc')];
+      let peer = A.clone(host.doc<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
       const versions: { heads: string[]; state: string }[] = [];
       const written = new Set<string>();
 
@@ -133,14 +135,14 @@ describe('heads read right after a write', () => {
             versions.push({ heads: A.getHeads(tab.handle.doc()), state: canon(tab.handle.doc()) });
           }
         } else if (roll < 0.7) {
-          peer = A.change(peer, (draft: Shape) => {
+          peer = A.change(peer, (draft) => {
             draft.title = new A.ImmutableString(`peer ${step}`);
           });
         } else if (roll < 0.8) {
           host.applyRemote('doc', unknownTo(host.doc('doc'), peer));
         } else if (roll < 0.85) {
           host.flush();
-          peer = A.merge(peer, A.clone(host.doc('doc')));
+          peer = A.merge(peer, A.clone(host.doc<Shape>('doc')));
         } else {
           network.deliver(1 + pick(network.pending + 1));
         }
@@ -168,18 +170,18 @@ describe('the protocol behind real heads', () => {
     const host = new SpikeHost();
     host.create('doc', { title: new A.ImmutableString('t') });
     const network = new Network(host);
-    const left = network.open('doc');
-    const right = network.open('doc');
-    left.handle.change((draft: Shape) => {
+    const left = network.open<Shape>('doc');
+    const right = network.open<Shape>('doc');
+    left.handle.change((draft) => {
       draft.title = new A.ImmutableString('left');
     });
-    right.handle.change((draft: Shape) => {
+    right.handle.change((draft) => {
       draft.title = new A.ImmutableString('right');
     });
     network.settle();
 
     // Overwriting both conflicting values gives an op with two preds.
-    left.handle.change((draft: Shape) => {
+    left.handle.change((draft) => {
       draft.title = new A.ImmutableString('merged');
     });
     const change = left.tab.pending[0];
@@ -209,7 +211,7 @@ describe('the protocol behind real heads', () => {
     const host = new SpikeHost();
     host.create('doc', { content: 'abc' });
     const network = new Network(host);
-    const tab = network.open('doc');
+    const tab = network.open<Shape>('doc');
     const rejected: string[][] = [];
     tab.tab.onRejected((changes) => rejected.push(changes.map((change) => change.hash)));
     let refuseNext = true;
@@ -219,23 +221,23 @@ describe('the protocol behind real heads', () => {
       return refuse;
     };
 
-    const [first] = tab.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 3, 0, '1')) ?? [];
-    const [second] = tab.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 4, 0, '2')) ?? [];
+    const [first] = tab.tab.change((draft) => Draft.splice(draft, ['content'], 3, 0, '1')) ?? [];
+    const [second] = tab.tab.change((draft) => Draft.splice(draft, ['content'], 4, 0, '2')) ?? [];
     network.deliver(2); // The worker refuses the first, then the second for depending on it.
     network.deliver(1); // The tab takes the first refusal and drops both.
     expect(rejected).toEqual([[first, second]]);
     expect(tab.handle.doc().content).toBe('abc');
 
     // Two new changes reuse seqs 1 and 2 before the second refusal arrives.
-    const [third] = tab.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 0, 0, 'x')) ?? [];
-    const [fourth] = tab.tab.change((draft: Shape) => Draft.splice(draft, ['content'], 0, 0, 'y')) ?? [];
+    const [third] = tab.tab.change((draft) => Draft.splice(draft, ['content'], 0, 0, 'x')) ?? [];
+    const [fourth] = tab.tab.change((draft) => Draft.splice(draft, ['content'], 0, 0, 'y')) ?? [];
     expect(tab.tab.pending.map((change) => change.seq)).toEqual([1, 2]);
     network.deliver(1); // The late refusal of `second` (seq 2) matches nothing.
     expect(tab.tab.pending.map((change) => change.hash)).toEqual([third, fourth]);
 
     network.settle();
     expect(tab.tab.pending).toHaveLength(0);
-    expect(host.doc('doc').content).toBe('yxabc');
+    expect(host.doc<Shape>('doc').content).toBe('yxabc');
     expect(tab.handle.doc().content).toBe('yxabc');
     expect(A.getHeads(host.doc('doc'))).toEqual([fourth]);
     expect(rejected).toHaveLength(1);

@@ -20,12 +20,12 @@ const openTab = (host: SpikeHost, tabId: string, target: EventTarget) => {
     (batch) => batch.forEach(({ change, bytes }) => host.submit('doc', tabId, change, bytes)),
     { target },
   );
-  return { tab: TabDoc.fromSnapshot(snapshot, { send: sender.send }), sender };
+  return { tab: TabDoc.fromSnapshot<Text>(snapshot, { send: sender.send }), sender };
 };
 
-const type = (tab: TabDoc, text: string) => {
+const type = (tab: TabDoc<Text>, text: string) => {
   for (const char of text) {
-    tab.change((draft: Text) => Draft.splice(draft, ['content'], draft.content.length, 0, char));
+    tab.change((draft) => Draft.splice(draft, ['content'], draft.content.length, 0, char));
   }
 };
 
@@ -48,7 +48,7 @@ describe('edits pending when a tab closes', () => {
     const calls = host.applyCalls;
     host.flush();
     expect(host.applyCalls - calls).toBe(1);
-    expect(host.doc('doc').content).toBe('hello');
+    expect(host.doc<Text>('doc').content).toBe('hello');
 
     // The page hides before the next batch is due; what is queued still reaches the worker.
     type(tab, ' world');
@@ -56,7 +56,7 @@ describe('edits pending when a tab closes', () => {
     page.dispatchEvent(new Event('pagehide'));
     expect(sender.queued).toBe(0);
     host.flush();
-    expect(host.doc('doc').content).toBe('hello world');
+    expect(host.doc<Text>('doc').content).toBe('hello world');
     expect(A.getHeads(host.doc('doc'))).toEqual(tab.heads());
   });
 
@@ -68,6 +68,6 @@ describe('edits pending when a tab closes', () => {
     type(tab, 'lost');
     // The tab goes away without a pagehide event reaching the sender.
     host.flush();
-    expect(host.doc('doc').content).toBe('');
+    expect(host.doc<Text>('doc').content).toBe('');
   });
 });

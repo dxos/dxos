@@ -16,7 +16,7 @@ import { type Latency, connect, fetchInput, fromBase64, measure } from './common
 
 type Space = { objects: Record<string, { data: { content: string } }> };
 
-let held: TabDoc[] = [];
+let held: TabDoc<Space>[] = [];
 const { request } = connect();
 Reflect.set(globalThis, 'loadWorker', (docs: string[]) => request({ type: 'load', docs }));
 Reflect.set(globalThis, 'workerMemory', () => request({ type: 'memory' }));
@@ -27,7 +27,7 @@ Reflect.set(globalThis, 'load', async () => {
   const start = performance.now();
   held = docs.map(
     (doc, index) =>
-      new TabDoc(Model.fromSaved(fromBase64(doc.bytes), doc.hash), doc.heads, {
+      new TabDoc<Space>(Model.fromSaved(fromBase64(doc.bytes), doc.hash), doc.heads, {
         send: (change, bytes) => acks.set(change.hash, request({ type: 'submit', doc: index, bytes })),
       }),
   );

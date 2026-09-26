@@ -5,38 +5,45 @@
 import * as A from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
+
 import { encodeChange } from './encode.ts';
 import { SpikeHost, decodeChange } from './host.ts';
 import { Model } from './model.ts';
 import { Network } from './network.ts';
 import { readChange } from './reader.ts';
+import { saveNoCompress } from './save.ts';
 import { TabDoc } from './tab.ts';
-import { initialShape, randomEdit, seeded, unknownTo } from './testing.ts';
-
-const saveNoCompress = (doc: A.Doc<unknown>): Uint8Array => {
-  const meta: unknown = Reflect.get(doc, Symbol.for('_am_meta'));
-  const handle: unknown = meta && Reflect.get(meta, 'handle');
-  const save: unknown = handle && Reflect.get(handle, 'saveNoCompress');
-  if (typeof save !== 'function') {
-    throw new Error('No saveNoCompress');
-  }
-  const bytes: unknown = Reflect.apply(save, handle, []);
-  if (!(bytes instanceof Uint8Array)) {
-    throw new Error('saveNoCompress returned no bytes');
-  }
-  return bytes;
-};
+import { type Shape, initialShape, randomEdit, seeded, unknownTo } from './testing.ts';
 
 /** Byte values compare as arrays: `A.decodeChange` returns them as plain arrays. */
 const plain = (value: unknown): unknown =>
   JSON.parse(JSON.stringify(value, (_key, inner) => (inner instanceof Uint8Array ? [...inner] : inner)));
 
+/** A document with every value type Automerge has. */
+type Values = {
+  text: string;
+  list: number[];
+  float?: number;
+  negative?: number;
+  big?: number;
+  uint?: A.Uint;
+  int?: A.Int;
+  float64?: A.Float64;
+  when?: Date;
+  nothing?: null;
+  yes?: boolean;
+  no?: boolean;
+  bytes?: Uint8Array;
+  counter?: A.Counter;
+  empty?: string;
+  scalar?: A.ImmutableString;
+  nested?: { deeper: { list: (A.ImmutableString | { y: number })[] } };
+};
+
 /** Changes that write every value type Automerge has, from several actors, with conflicts. */
-const everyValue = (): A.Doc<Record<string, unknown>> => {
-  let left = A.from<Record<string, unknown>>(
-    { text: 'hello 😀 world', list: [1, 2, 3] },
-    { actor: 'aaaa0000aaaa0000aaaa0000aaaa0000' },
-  );
+const everyValue = (): A.Doc<Values> => {
+  let left = A.from<Values>({ text: 'hello 😀 world', list: [1, 2, 3] }, { actor: 'aaaa0000aaaa0000aaaa0000aaaa0000' });
   let right = A.clone(left, { actor: 'bbbb0000bbbb0000bbbb0000bbbb0000' });
   left = A.change(left, { message: 'types', time: 1_700_000_000 }, (doc) => {
     doc.float = 1.5;
@@ -58,15 +65,16 @@ const everyValue = (): A.Doc<Record<string, unknown>> => {
   right = A.change(right, (doc) => {
     doc.float = 2.5;
     A.splice(doc, ['text'], 0, 5, 'HELLO');
-    (doc.list as number[]).splice(1, 1);
+    doc.list.splice(1, 1);
   });
   left = A.merge(left, right);
   left = A.change(left, (doc) => {
     // Overwrites both conflicting values, and increments the counter.
     doc.float = 3.5;
-    (doc.counter as A.Counter).increment(5);
+    invariant(doc.counter);
+    doc.counter.increment(5);
     delete doc.nothing;
-    (doc.list as number[]).splice(0, 1, 9);
+    doc.list.splice(0, 1, 9);
   });
   return left;
 };
@@ -79,8 +87,8 @@ describe('Automerge formats read and written in JS', () => {
     const host = new SpikeHost();
     host.create('doc', initialShape());
     const network = new Network(host);
-    const tabs = [network.open('doc'), network.open('doc')];
-    let peer = A.clone(host.doc('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    const tabs = [network.open<Shape>('doc'), network.open<Shape>('doc')];
+    let peer = A.clone(host.doc<Shape>('doc'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
     for (let step = 0; step < 60; step++) {
       tabs[random.pick(2)].tab.change(randomEdit(random));
       if (step % 10 === 0) {
@@ -112,8 +120,8 @@ describe('Automerge formats read and written in JS', () => {
   });
 
   test("a tab document's save is change chunks that Automerge loads to the same document and heads", () => {
-    const tab = TabDoc.create({ title: 'hostless', items: [] }, {});
-    tab.change((draft: { items: string[]; count?: number }) => {
+    const tab = TabDoc.create<{ title: string; items: string[]; count?: number }>({ title: 'hostless', items: [] }, {});
+    tab.change((draft) => {
       draft.items.push('a', 'b');
       draft.count = 1;
     });

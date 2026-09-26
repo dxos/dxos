@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import { SpikeHandle } from './handle.ts';
 import { type SpikeHost } from './host.ts';
 import { type Change } from './ids.ts';
@@ -22,13 +24,11 @@ export class Network {
   }
 
   /** Opens `docId` in a new tab. */
-  open(docId: string, options?: { actor?: string }): Tab {
+  open<T>(docId: string, options?: { actor?: string }): Tab<T> {
     const tabId = `tab-${this.#nextTab++}`;
-    let tab!: TabDoc;
-    const snapshot = this.host.subscribe(docId, tabId, (message) =>
-      this.#post(tabId, () => tab.receive(structuredClone(message))),
-    );
-    tab = TabDoc.fromSnapshot(structuredClone(snapshot), {
+    let tab: TabDoc<T> | undefined;
+    const snapshot = this.host.subscribe(docId, tabId, (message) => this.#deliverTo(tabId, () => tab, message));
+    tab = TabDoc.fromSnapshot<T>(structuredClone(snapshot), {
       actor: options?.actor,
       send: (change: Change, bytes: Uint8Array) =>
         this.#post(tabId, () => this.host.submit(docId, tabId, change, bytes)),
@@ -37,17 +37,24 @@ export class Network {
   }
 
   /** Creates a document in a tab; the host learns of it with the tab's first change. */
-  create(docId: string, initial: Record<string, unknown>): Tab {
+  create<T extends object>(docId: string, initial: T): Tab<T> {
     const tabId = `tab-${this.#nextTab++}`;
-    let tab!: TabDoc;
-    this.host.createFromTab(docId, tabId, (message: HostMessage) =>
-      this.#post(tabId, () => tab.receive(structuredClone(message))),
-    );
+    let tab: TabDoc<T> | undefined;
+    this.host.createFromTab(docId, tabId, (message) => this.#deliverTo(tabId, () => tab, message));
     tab = TabDoc.create(initial, {
       send: (change: Change, bytes: Uint8Array) =>
         this.#post(tabId, () => this.host.submit(docId, tabId, change, bytes)),
     });
     return { id: tabId, docId, tab, handle: new SpikeHandle(tab) };
+  }
+
+  /** Queues a host message for a tab that exists by the time the queue runs. */
+  #deliverTo(tabId: string, tab: () => TabDoc<unknown> | undefined, message: HostMessage): void {
+    this.#post(tabId, () => {
+      const target = tab();
+      invariant(target, 'A message reached a tab before it opened');
+      target.receive(structuredClone(message));
+    });
   }
 
   #post(tab: string, run: () => void): void {
@@ -60,8 +67,12 @@ export class Network {
 
   /** Delivers up to `count` queued messages, the oldest first. */
   deliver(count = 1): void {
-    for (let i = 0; i < count && this.#queue.length > 0; i++) {
-      this.#queue.shift()!.run();
+    for (let i = 0; i < count; i++) {
+      const next = this.#queue.shift();
+      if (!next) {
+        return;
+      }
+      next.run();
     }
   }
 
@@ -85,12 +96,12 @@ export class Network {
   }
 
   /** A tab follows its document again after the worker restarted. */
-  reconnect(tab: Tab): void {
+  reconnect<T>(tab: Tab<T>): void {
     const snapshot = this.host.subscribe(tab.docId, tab.id, (message) =>
-      this.#post(tab.id, () => tab.tab.receive(structuredClone(message))),
+      this.#deliverTo(tab.id, () => tab.tab, message),
     );
     tab.tab.reconnect(structuredClone(snapshot));
   }
 }
 
-export type Tab = { id: string; docId: string; tab: TabDoc; handle: SpikeHandle };
+export type Tab<T> = { id: string; docId: string; tab: TabDoc<T>; handle: SpikeHandle<T> };

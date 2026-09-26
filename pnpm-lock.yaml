@@ -6148,6 +6148,9 @@ importers:
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../echo-doc
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

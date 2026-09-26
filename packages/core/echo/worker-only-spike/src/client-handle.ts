@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as A from '@automerge/automerge';
 import { EventEmitter } from 'eventemitter3';
 
 import { type ClientDocHandle, type ClientDocHandleEvents } from '@dxos/echo-client';
@@ -11,17 +12,19 @@ import { type TabDoc } from './tab.ts';
 let nextId = 0;
 
 /** The database layer's document handle over a tab document, so `ObjectCore` binds to it unmodified. */
-export class SpikeClientHandle extends EventEmitter<ClientDocHandleEvents<any>> implements ClientDocHandle<any> {
+export class SpikeClientHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> implements ClientDocHandle<T> {
   readonly url = undefined;
   readonly documentId = undefined;
   readonly state = 'ready';
   readonly _internalId = `spike-${nextId++}`;
   #heads: string[];
-  #doc: any;
+  #doc: A.Doc<T>;
+  /** Set while this handle's own change runs, which emits once afterwards with source `change`. */
+  #local = false;
 
-  readonly tab: TabDoc;
+  readonly tab: TabDoc<T>;
 
-  constructor(tab: TabDoc) {
+  constructor(tab: TabDoc<T>) {
     super();
     this.tab = tab;
     this.#heads = tab.heads();
@@ -30,11 +33,11 @@ export class SpikeClientHandle extends EventEmitter<ClientDocHandleEvents<any>> 
     tab.on(() => this.#emitChange('host'));
   }
 
-  doc(): any {
+  doc(): A.Doc<T> {
     return this.tab.doc();
   }
 
-  change(callback: (doc: any) => void, options?: { time?: number; message?: string }): void {
+  change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
     this.#local = true;
     try {
       this.tab.change(callback, options);
@@ -44,11 +47,7 @@ export class SpikeClientHandle extends EventEmitter<ClientDocHandleEvents<any>> 
     this.#emitChange('change');
   }
 
-  changeAt(
-    heads: string[],
-    callback: (doc: any) => void,
-    options?: { time?: number; message?: string },
-  ): string[] | undefined {
+  changeAt(heads: A.Heads, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): A.Heads | undefined {
     this.#local = true;
     try {
       return this.tab.changeAt(heads, callback, options);
@@ -57,8 +56,6 @@ export class SpikeClientHandle extends EventEmitter<ClientDocHandleEvents<any>> 
       this.#emitChange('change');
     }
   }
-
-  #local = false;
 
   #emitChange(source: 'change' | 'host'): void {
     if (this.#local) {

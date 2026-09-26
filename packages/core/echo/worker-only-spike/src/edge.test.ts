@@ -79,8 +79,8 @@ describe('shared operation code in both realms', () => {
       content: 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
     });
     const network = new Network(host);
-    const tab = network.open('doc');
-    const edge = new ReplicaHandle(A.clone(host.doc('doc'), { actor: 'edee0000edee0000edee0000edee0000' }));
+    const tab = network.open<Text>('doc');
+    const edge = new ReplicaHandle(A.clone(host.doc<Text>('doc'), { actor: 'edee0000edee0000edee0000edee0000' }));
     const accessors: Doc.Accessor<Text>[] = [
       { handle: edge, path: ['content'] },
       { handle: tab.handle, path: ['content'] },

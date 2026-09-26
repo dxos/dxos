@@ -25,6 +25,8 @@ import {
   getEditHistoryWithDiffs,
   getObjectCore,
 } from '@dxos/echo-client';
+// eslint-disable-next-line import/first
+import { type EntityStructure } from '@dxos/echo-protocol';
 
 // eslint-disable-next-line import/first
 import { SpikeHost } from './host.ts';
@@ -39,6 +41,8 @@ const Task = Schema.Struct({ title: Schema.String, status: Schema.String, tags: 
   Type.makeObject(DXN.make('com.example.test.task', '0.1.0')),
 );
 
+type Text = { content: string; title: A.ImmutableString };
+
 describe('full history in the tab', () => {
   test("ECHO's history functions read a tab document the way they read Automerge", () => {
     leaks.length = 0;
@@ -52,18 +56,18 @@ describe('full history in the tab', () => {
       obj.title = 'Write the spike';
     });
     const host = new SpikeHost();
-    host.adopt('task', A.clone(getObjectCore(obj).getDoc() as A.Doc<any>));
+    host.adopt('task', A.clone(getObjectCore(obj).getDoc()));
     const network = new Network(host);
-    const tab = network.open('task');
-    tab.handle.change((doc: any) => {
+    const tab = network.open<EntityStructure>('task');
+    tab.handle.change((doc) => {
       doc.data.status = 'done';
     });
-    tab.handle.change((doc: any) => {
+    tab.handle.change((doc) => {
       doc.data.tags.push('c');
     });
     network.settle();
-    let peer = A.clone(host.doc('task'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
-    peer = A.change(peer, (doc: any) => {
+    let peer = A.clone(host.doc<EntityStructure>('task'), { actor: 'eeee0000eeee0000eeee0000eeee0000' });
+    peer = A.change(peer, (doc) => {
       doc.data.title = 'Peer title';
     });
     host.applyRemote('task', unknownTo(host.doc('task'), peer));
@@ -72,7 +76,7 @@ describe('full history in the tab', () => {
     // One ECHO object over the worker's Automerge document, one over the tab's.
     const real = createObject(Obj.make(Task, { title: '', status: '', tags: [] }));
     const spike = createObject(Obj.make(Task, { title: '', status: '', tags: [] }));
-    getObjectCore(real).doc = host.doc('task');
+    getObjectCore(real).doc = host.doc<EntityStructure>('task');
     getObjectCore(spike).doc = tab.handle.doc();
     getObjectCore(spike).id = getObjectCore(real).id;
 
@@ -80,7 +84,7 @@ describe('full history in the tab', () => {
     const spikeHistory = getEditHistory(spike);
     expect(realHistory.length).toBeGreaterThan(5);
     expect(
-      spikeHistory.map((state: any) => [state.change.hash, state.change.actor, state.change.seq, state.change.time]),
+      spikeHistory.map((state) => [state.change.hash, state.change.actor, state.change.seq, state.change.time]),
     ).toEqual(realHistory.map((state) => [state.change.hash, state.change.actor, state.change.seq, state.change.time]));
     realHistory.forEach((state, index) => {
       expect(canon(spikeHistory[index].snapshot)).toBe(canon(A.toJS(state.snapshot)));
@@ -94,7 +98,7 @@ describe('full history in the tab', () => {
     }
 
     // Obj.getChanges walks A.getChangesMetaSince, then views and diffs (both checked above).
-    const pick = ({ hash, actor, seq, startOp, maxOp, time, message, deps }: any) => ({
+    const pick = ({ hash, actor, seq, startOp, maxOp, time, message, deps }: A.ChangeMetadata) => ({
       hash,
       actor,
       seq,
@@ -118,20 +122,20 @@ describe('full history in the tab', () => {
     const host = new SpikeHost();
     host.create('main', { content: 'base text', title: new A.ImmutableString('main') });
     const network = new Network(host);
-    const main = network.open('main');
-    main.handle.change((doc: any) => Draft.splice(doc, ['content'], 4, 0, 'X'));
+    const main = network.open<Text>('main');
+    main.handle.change((doc) => Draft.splice(doc, ['content'], 4, 0, 'X'));
     network.settle();
 
     // createBranch: the worker forks at the tab's version; the tab opens the branch like any document.
     host.fork('main', 'branch', main.tab.heads());
-    const branch = network.open('branch');
+    const branch = network.open<Text>('branch');
     expect(branch.handle.doc().content).toBe('baseX text');
-    branch.handle.change((doc: any) => Draft.splice(doc, ['content'], 0, 0, 'B:'));
-    main.handle.change((doc: any) => Draft.splice(doc, ['content'], doc.content.length, 0, '!'));
+    branch.handle.change((doc) => Draft.splice(doc, ['content'], 0, 0, 'B:'));
+    main.handle.change((doc) => Draft.splice(doc, ['content'], doc.content.length, 0, '!'));
     network.settle();
 
     // mergeBranch: the worker merges; the tab's main document receives the branch's changes.
-    const reference = A.merge(A.clone(host.doc('main')), A.clone(host.doc('branch')));
+    const reference = A.merge(A.clone(host.doc<Text>('main')), A.clone(host.doc<Text>('branch')));
     host.merge('main', 'branch');
     network.settle();
     expect(main.handle.doc().content).toBe(reference.content);
@@ -143,7 +147,7 @@ describe('full history in the tab', () => {
     const host = new SpikeHost();
     host.create('old', { data: { title: 'Old title', legacyName: new A.ImmutableString('legacy') } });
     const network = new Network(host);
-    const tab = network.open('old');
+    const tab = network.open<{ data: { title: string; legacyName: A.ImmutableString } }>('old');
 
     // A.save then repo.import: the worker copies; the tab opens the copy.
     host.copy('old', 'copy');

@@ -2,33 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as A from '@automerge/automerge';
+
 import type { Doc } from '@dxos/echo-client';
 
 import { type TabDoc } from './tab.ts';
 
 /** ECHO's `Doc.Handle` over a tab document. */
-export class SpikeHandle implements Doc.Handle {
+export class SpikeHandle<T> implements Doc.Handle<T> {
   readonly #unsubscribe = new Map<() => void, () => void>();
 
-  readonly tab: TabDoc;
+  readonly tab: TabDoc<T>;
 
-  constructor(tab: TabDoc) {
+  constructor(tab: TabDoc<T>) {
     this.tab = tab;
   }
 
-  doc(): any {
+  doc(): A.Doc<T> {
     return this.tab.doc();
   }
 
-  change(callback: (doc: any) => void, options?: { time?: number; message?: string }): void {
+  change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
     this.tab.change(callback, options);
   }
 
-  changeAt(
-    heads: string[],
-    callback: (doc: any) => void,
-    options?: { time?: number; message?: string },
-  ): string[] | undefined {
+  changeAt(heads: A.Heads, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): A.Heads | undefined {
     return this.tab.changeAt(heads, callback, options);
   }
 

@@ -7,20 +7,11 @@ import { describe, expect, test } from 'vitest';
 
 import { decodeChange } from './host.ts';
 import { Model } from './model.ts';
+import { saveNoCompress } from './save.ts';
 import { TabDoc } from './tab.ts';
 import { seeded } from './testing.ts';
 
 type Registers = { m: Record<string, number> };
-
-const saveNoCompress = (doc: A.Doc<unknown>): Uint8Array => {
-  const meta: unknown = Reflect.get(doc, Symbol.for('_am_meta'));
-  const handle: unknown = meta && Reflect.get(meta, 'handle');
-  const save: unknown = handle && Reflect.get(handle, 'saveNoCompress');
-  if (typeof save !== 'function') {
-    throw new Error('No saveNoCompress');
-  }
-  return Reflect.apply(save, handle, []);
-};
 
 const keys = ['a', 'b', 'c'];
 
@@ -57,7 +48,7 @@ describe("Automerge's cached view after a merge", () => {
       const heads = A.getHeads(merged);
       // What a tab holds: the model from the worker's saved bytes, and a document built from the changes.
       const fromBytes = Model.fromSaved(saveNoCompress(merged));
-      const fromChanges = TabDoc.fromChanges(A.getAllChanges(merged).map(decodeChange), {});
+      const fromChanges = TabDoc.fromChanges<Registers>(A.getAllChanges(merged).map(decodeChange), {});
       const clock = fromBytes.clockOf(heads);
       const mapId = fromBytes.objectAt(['m'], clock);
       for (const key of keys) {

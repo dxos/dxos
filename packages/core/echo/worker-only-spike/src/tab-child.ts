@@ -45,12 +45,12 @@ const A = spikeOverrides((name) => {
 });
 
 const output = asTab(() => {
-  const tab = TabDoc.load(fromBase64(parsed.saved), {});
+  const tab = TabDoc.load<Shape>(fromBase64(parsed.saved), {});
   const loadedHeads = tab.heads();
   tab.applyChanges(parsed.changes.map((text) => readChange(fromBase64(text))));
   const before = tab.heads();
   const known = new Set(tab.changesIn(before).map((change) => change.hash));
-  tab.change((draft: Shape) => {
+  tab.change((draft) => {
     A.splice(draft, ['content'], 0, 0, 'Tab: ');
     draft.title = new TabImmutableString('from the tab');
     draft.items.push({ name: new TabImmutableString('x'), n: 1 });

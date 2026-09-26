@@ -60,7 +60,8 @@ type RunState<T> =
 class RunLength<T> {
   readonly #writer = new Writer();
   #state: RunState<T> = { kind: 'empty' };
-  #any = false;
+  /** Whether any value other than null was appended. */
+  #hasValue = false;
 
   readonly write: (writer: Writer, value: T) => void;
 
@@ -98,7 +99,7 @@ class RunLength<T> {
       }
       return;
     }
-    this.#any = true;
+    this.#hasValue = true;
     if (state.kind === 'empty') {
       this.#state = { kind: 'lone', value };
     } else if (state.kind === 'nulls') {
@@ -125,7 +126,7 @@ class RunLength<T> {
 
   finish(): number[] {
     // A column of nothing but nulls is left out.
-    if (!this.#any) {
+    if (!this.#hasValue) {
       return [];
     }
     this.#flush();
@@ -186,6 +187,14 @@ const hexToBytes = (hex: string): Uint8Array => Uint8Array.from(hex.match(/../g)
 const bytesToHex = (bytes: Uint8Array): string =>
   Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
+/** A value whose datatype says it is a number. */
+const numeric = (value: unknown, datatype: string): number => {
+  if (typeof value !== 'number') {
+    throw new TypeError(`A ${datatype} value must be a number, not ${typeof value}`);
+  }
+  return value;
+};
+
 /** The value metadata type code and raw bytes Automerge stores for an op's value. */
 const valueOf = (op: DecodedOp): [number, number[]] => {
   if (op.action !== 'set' && op.action !== 'inc') {
@@ -195,25 +204,25 @@ const valueOf = (op: DecodedOp): [number, number[]] => {
   const writer = new Writer();
   switch (op.datatype) {
     case 'int':
-      writer.leb(value as number);
+      writer.leb(numeric(value, 'int'));
       return [4, writer.bytes];
     case 'uint':
-      writer.uleb(value as number);
+      writer.uleb(numeric(value, 'uint'));
       return [3, writer.bytes];
     case 'float64': {
       const bytes = new Uint8Array(8);
-      new DataView(bytes.buffer).setFloat64(0, value as number, true);
+      new DataView(bytes.buffer).setFloat64(0, numeric(value, 'float64'), true);
       return [5, [...bytes]];
     }
     case 'counter':
-      writer.leb(value as number);
+      writer.leb(numeric(value, 'counter'));
       return [8, writer.bytes];
     case 'timestamp':
-      writer.leb(value as number);
+      writer.leb(numeric(value, 'timestamp'));
       return [9, writer.bytes];
   }
   if (op.action === 'inc') {
-    writer.leb(value as number);
+    writer.leb(numeric(value, 'inc'));
     return [4, writer.bytes];
   }
   if (value === null || value === undefined) {
@@ -232,7 +241,10 @@ const valueOf = (op: DecodedOp): [number, number[]] => {
     writer.leb(value);
     return [4, writer.bytes];
   }
-  return [7, [...(value as Uint8Array)]];
+  if (value instanceof Uint8Array) {
+    return [7, [...value]];
+  }
+  throw new TypeError(`Unsupported value ${String(value)}`);
 };
 
 /** Preds in Lamport order, as Automerge stores them. */
@@ -303,12 +315,14 @@ export const encodeChange = (
       keyActor.append(null);
       keyCounter.append(null);
       keyString.append(op.key);
+    } else if (op.elemId === undefined) {
+      throw new Error('An op needs a key or an element');
     } else if (op.elemId === '_head') {
       keyActor.append(null);
       keyCounter.append(0);
       keyString.append(null);
     } else {
-      const [counter, actor] = parseId(op.elemId!);
+      const [counter, actor] = parseId(op.elemId);
       keyActor.append(actorIndex(actor));
       keyCounter.append(counter);
       keyString.append(null);
@@ -324,22 +338,21 @@ export const encodeChange = (
       predCounter.append(counter);
     }
   }
-  const columns: [number, number[]][] = (
-    [
-      [1, objActor.finish()],
-      [2, objCounter.finish()],
-      [17, keyActor.finish()],
-      [19, keyCounter.finish()],
-      [21, keyString.finish()],
-      [52, insert.finish()],
-      [66, action.finish()],
-      [86, valueMeta.finish()],
-      [87, valueRaw.bytes],
-      [112, predCount.finish()],
-      [113, predActor.finish()],
-      [115, predCounter.finish()],
-    ] as [number, number[]][]
-  ).filter(([, bytes]) => bytes.length > 0);
+  const specs: [number, number[]][] = [
+    [1, objActor.finish()],
+    [2, objCounter.finish()],
+    [17, keyActor.finish()],
+    [19, keyCounter.finish()],
+    [21, keyString.finish()],
+    [52, insert.finish()],
+    [66, action.finish()],
+    [86, valueMeta.finish()],
+    [87, valueRaw.bytes],
+    [112, predCount.finish()],
+    [113, predActor.finish()],
+    [115, predCounter.finish()],
+  ];
+  const columns = specs.filter(([, bytes]) => bytes.length > 0);
 
   const data = new Writer();
   const deps = [...change.deps].sort();

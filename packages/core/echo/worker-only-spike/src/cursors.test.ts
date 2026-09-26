@@ -16,6 +16,8 @@ vi.mock('@dxos/automerge-proxy/Automerge', async (importOriginal) =>
 import * as Draft from '@dxos/automerge-proxy/Draft';
 // eslint-disable-next-line import/first
 import { getRangeFromCursor, getTextInAnchorRange, toCursorRange } from '@dxos/echo-client';
+// eslint-disable-next-line import/first
+import { invariant } from '@dxos/invariant';
 
 // eslint-disable-next-line import/first
 import { SpikeHost } from './host.ts';
@@ -24,19 +26,21 @@ import { leaks } from './namespace.ts';
 // eslint-disable-next-line import/first
 import { Network } from './network.ts';
 
+type Text = { content: string };
+
 describe('cursor consumers with no editor open', () => {
   test('anchors minted as text is written resolve in another tab, sort, and survive deletion as in Automerge', () => {
     leaks.length = 0;
     const host = new SpikeHost();
     host.create('doc', { content: 'Intro. Body text here. Outro.' });
     const network = new Network(host);
-    const writer = network.open('doc');
-    const reader = network.open('doc');
+    const writer = network.open<Text>('doc');
+    const reader = network.open<Text>('doc');
     const writerText = { handle: writer.handle, path: ['content'] as const };
     const readerText = { handle: reader.handle, path: ['content'] as const };
 
     // An AI edit inserts text and anchors a proposal on it at once, before the worker has seen it.
-    writer.handle.change((doc: any) => Draft.splice(doc, ['content'], 7, 0, 'NEW PARAGRAPH. '));
+    writer.handle.change((doc) => Draft.splice(doc, ['content'], 7, 0, 'NEW PARAGRAPH. '));
     const anchors = [
       toCursorRange(writerText, 7, 20),
       toCursorRange(writerText, 0, 6),
@@ -48,7 +52,7 @@ describe('cursor consumers with no editor open', () => {
 
     // The reader has no editor and no replica; it resolves after the worker relays the edit.
     network.settle();
-    const hostDoc = A.load<{ content: string }>(A.save(host.doc('doc')));
+    const hostDoc = A.load<Text>(A.save(host.doc('doc')));
     const automergeRange = (anchor: string) => {
       const [from, to] = anchor.split(':');
       return {
@@ -62,17 +66,20 @@ describe('cursor consumers with no editor open', () => {
     });
 
     // Anchor sort (plugin-markdown) orders by position, which needs every anchor resolved.
-    const sorted = [...anchors].sort(
-      (left, right) => getRangeFromCursor(readerText, left)!.start - getRangeFromCursor(readerText, right)!.start,
-    );
+    const start = (anchor: string): number => {
+      const range = getRangeFromCursor(readerText, anchor);
+      invariant(range, `Anchor ${anchor} does not resolve`);
+      return range.start;
+    };
+    const sorted = [...anchors].sort((left, right) => start(left) - start(right));
     expect(sorted).toEqual(
       [...anchors].sort((left, right) => automergeRange(left).start - automergeRange(right).start),
     );
 
     // Deleting anchored text: the anchor collapses where Automerge collapses it, in both tabs.
-    reader.handle.change((doc: any) => Draft.splice(doc, ['content'], 5, 17, ''));
+    reader.handle.change((doc) => Draft.splice(doc, ['content'], 5, 17, ''));
     network.settle();
-    const afterDelete = A.load<{ content: string }>(A.save(host.doc('doc')));
+    const afterDelete = A.load<Text>(A.save(host.doc('doc')));
     for (const anchor of anchors) {
       const [from, to] = anchor.split(':');
       const want = {

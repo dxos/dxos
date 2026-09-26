@@ -14,6 +14,8 @@ vi.mock('@dxos/automerge-proxy/Automerge', async (importOriginal) =>
 
 // eslint-disable-next-line import/first
 import { AbstractStoreAdapter, type Batch } from '@dxos/echo-doc';
+// eslint-disable-next-line import/first
+import { invariant } from '@dxos/invariant';
 
 // eslint-disable-next-line import/first
 import { SpikeHost } from './host.ts';
@@ -25,6 +27,8 @@ import { Network } from './network.ts';
 import { canon, seeded } from './testing.ts';
 
 type Shape = { id: string; x: number; label: string; points?: number[] };
+
+type Board = { elements: Record<string, Shape> };
 
 /** A store like tldraw's or excalidraw's: records keyed by id, notified of document changes. */
 class Store extends AbstractStoreAdapter<Shape> {
@@ -58,7 +62,7 @@ describe('store adapters over tab documents', () => {
       const host = new SpikeHost();
       host.create('board', { elements: {} });
       const network = new Network(host);
-      const tabs = [network.open('board'), network.open('board')];
+      const tabs = [network.open<Board>('board'), network.open<Board>('board')];
       const stores = tabs.map((tab) => {
         const store = new Store();
         store.open({ handle: tab.handle, path: ['elements'] });
@@ -73,7 +77,8 @@ describe('store adapters over tab documents', () => {
           const id = `shape-${seed}-${step}`;
           store.write({ added: [{ id, x: pick(100), label: `s${step}`, points: [pick(9), pick(9)] }] });
         } else if (r < 0.8) {
-          const shape = store.shapes.get(ids[pick(ids.length)])!;
+          const shape = store.shapes.get(ids[pick(ids.length)]);
+          invariant(shape);
           store.write({ updated: [{ ...shape, x: pick(100), label: `${shape.label}'` }] });
         } else {
           store.write({ deleted: [ids[pick(ids.length)]] });
@@ -84,7 +89,7 @@ describe('store adapters over tab documents', () => {
       }
       network.settle();
 
-      const expected = canon(A.toJS(A.load<{ elements: Record<string, unknown> }>(A.save(host.doc('board')))).elements);
+      const expected = canon(A.toJS(A.load<Board>(A.save(host.doc('board')))).elements);
       for (const store of stores) {
         expect(canon(Object.fromEntries([...store.shapes].sort()))).toBe(expected);
       }

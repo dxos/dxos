@@ -22,6 +22,8 @@ import { ObjectCore, migrateDocument } from '@dxos/echo-client/internal';
 // eslint-disable-next-line import/first
 import { AddOnlySet } from '@dxos/echo-doc';
 // eslint-disable-next-line import/first
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
+// eslint-disable-next-line import/first
 import { invariant } from '@dxos/invariant';
 
 // eslint-disable-next-line import/first
@@ -99,7 +101,7 @@ describe('documents a tab makes with no worker behind them', () => {
     const host = new SpikeHost();
     host.create('db', { objects: {} });
     const network = new Network(host);
-    const tab = network.open('db');
+    const tab = network.open<DatabaseDirectory>('db');
     core.bind({
       db: binding,
       docHandle: new SpikeClientHandle(tab.tab),
@@ -110,8 +112,8 @@ describe('documents a tab makes with no worker behind them', () => {
       task.title = 'Final';
     });
     network.settle();
-    const stored = A.toJS(host.doc('db')).objects[core.id];
-    expect(stored.data).toEqual({ title: 'Final', status: 'doing' });
+    const stored = A.toJS(host.doc<DatabaseDirectory>('db')).objects?.[core.id];
+    expect(stored?.data).toEqual({ title: 'Final', status: 'doing' });
     expect(Obj.version(task).automergeHeads).toEqual(A.getHeads(host.doc('db')));
     expect(leaks).toEqual([]);
   });
@@ -123,9 +125,10 @@ describe('ECHO functions that needed a replica, unmodified over tab documents', 
     const host = new SpikeHost();
     host.create('doc', { objects: { one: { data: { title: 'x' }, meta: { keys: [] }, system: {} } } });
     const network = new Network(host);
-    const tab = network.open('doc');
+    const tab = network.open<DatabaseDirectory>('doc');
     tab.tab.change(
-      (draft: { objects: { one: { data: { title: string } } } }) => {
+      (draft) => {
+        invariant(draft.objects);
         draft.objects.one.data.title = 'y';
       },
       { time: 1_800_000_000 },
@@ -146,18 +149,18 @@ describe('ECHO functions that needed a replica, unmodified over tab documents', 
     const host = new SpikeHost();
     host.create('doc', { set: {} });
     const network = new Network(host);
-    const left = network.open('doc');
-    const right = network.open('doc');
+    const left = network.open<{ set: AddOnlySet.Entries }>('doc');
+    const right = network.open<{ set: AddOnlySet.Entries }>('doc');
     const bytes = (text: string) => new TextEncoder().encode(text);
-    left.tab.change((draft: { set: AddOnlySet.Entries }) => {
+    left.tab.change((draft) => {
       AddOnlySet.add(draft.set, 'k1', bytes('one'));
       AddOnlySet.add(draft.set, 'k2', bytes('two'));
     });
-    right.tab.change((draft: { set: AddOnlySet.Entries }) => {
+    right.tab.change((draft) => {
       AddOnlySet.add(draft.set, 'k3', bytes('three'));
     });
     network.settle();
-    left.tab.change((draft: { set: Partial<AddOnlySet.Entries> }) => {
+    left.tab.change((draft) => {
       delete draft.set.k1;
     });
     network.settle();
@@ -173,7 +176,7 @@ describe('ECHO functions that needed a replica, unmodified over tab documents', 
     const host = new SpikeHost();
     host.create('doc', { title: 'Old', legacy: { name: 'x' }, keep: [1, 2] });
     const network = new Network(host);
-    const tab = network.open('doc');
+    const tab = network.open<unknown>('doc');
     const target = { title: 'New', renamed: { name: 'x' }, keep: [1, 2, 3] };
     const migrated = asTab(() => migrateDocument(tab.handle.doc(), target));
     const reference = migrateDocument(host.doc('doc'), target);

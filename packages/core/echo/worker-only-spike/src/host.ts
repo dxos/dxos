@@ -7,6 +7,7 @@ import * as A from '@automerge/automerge';
 import { encodeChange } from './encode.ts';
 import { type Change, type Clock, type DecodedOp, formatId } from './ids.ts';
 import { Model } from './model.ts';
+import { saveNoCompress } from './save.ts';
 import { type HostMessage, type Snapshot } from './tab.ts';
 
 type Subscriber = (message: HostMessage) => void;
@@ -15,20 +16,14 @@ type Subscriber = (message: HostMessage) => void;
 type Queued = { change: Change; bytes: Uint8Array; from: Set<string> };
 
 type HostDoc = {
-  doc: A.Doc<any>;
+  doc: A.Doc<unknown>;
   model: Model;
   subscribers: Map<string, Subscriber>;
   nextSeq: Map<string, number>;
-  tokens: Map<string, string>;
   queue: Queued[];
   unacked: Queued[];
   persisted: Uint8Array;
 };
-
-const saveNoCompress = (doc: A.Doc<any>): Uint8Array =>
-  (doc as { [key: symbol]: { handle: { saveNoCompress(): Uint8Array } } })[
-    Symbol.for('_am_meta')
-  ].handle.saveNoCompress();
 
 const HOST_ACTOR = 'f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0';
 
@@ -70,11 +65,11 @@ export class SpikeHost {
   /** Acknowledge only after a save, so a restart never loses an acknowledged change. */
   persistOnFlush = true;
 
-  create(docId: string, initial: Record<string, unknown>): A.Doc<any> {
+  create<T extends Record<string, unknown>>(docId: string, initial: T): A.Doc<T> {
     return this.adopt(docId, A.from(initial, { actor: HOST_ACTOR }));
   }
 
-  adopt(docId: string, doc: A.Doc<any>): A.Doc<any> {
+  adopt<T>(docId: string, doc: A.Doc<T>): A.Doc<T> {
     const bytes = saveNoCompress(doc);
     const model = Model.fromSaved(
       bytes,
@@ -85,7 +80,6 @@ export class SpikeHost {
       model,
       subscribers: new Map(),
       nextSeq: seqsOf(doc),
-      tokens: new Map(),
       queue: [],
       unacked: [],
       persisted: A.save(doc),
@@ -93,8 +87,10 @@ export class SpikeHost {
     return doc;
   }
 
-  doc(docId: string): A.Doc<any> {
-    return this.#get(docId).doc;
+  /** The worker's Automerge document; `T` is the caller's claim about its shape, as in `A.load<T>`. */
+  doc<T>(docId: string): A.Doc<T> {
+    // The host holds documents of every shape, so only the caller can name this one's.
+    return this.#get(docId).doc as A.Doc<T>;
   }
 
   /** The host's model of a document, for comparing with Automerge's. */
@@ -124,13 +120,12 @@ export class SpikeHost {
 
   /** A document the tab created: its first change creates the document here. */
   createFromTab(docId: string, tabId: string, deliver: Subscriber): void {
-    const doc = A.init<any>({ actor: HOST_ACTOR });
+    const doc = A.init({ actor: HOST_ACTOR });
     this.#docs.set(docId, {
       doc,
       model: new Model(),
       subscribers: new Map([[tabId, deliver]]),
       nextSeq: new Map(),
-      tokens: new Map(),
       queue: [],
       unacked: [],
       persisted: A.save(doc),
@@ -289,7 +284,7 @@ export class SpikeHost {
 }
 
 /** The next expected seq of each actor in a document. */
-const seqsOf = (doc: A.Doc<any>): Map<string, number> => {
+const seqsOf = (doc: A.Doc<unknown>): Map<string, number> => {
   const seqs = new Map<string, number>();
   for (const change of A.getAllChanges(doc)) {
     const { actor, seq } = A.decodeChange(change);
