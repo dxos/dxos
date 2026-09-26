@@ -58,9 +58,14 @@ script that uses them runs unchanged in both places. Everything else is a local-
 Two traps in that table, both of which cost time before being pinned down:
 
 - **The `.env` comment above the `R2_*` pair calls the token "read-only" and scoped to
-  `composer-feedback-logs`. That comment is wrong** — the same key writes and deletes in
-  `agent-artifacts` (and in `composer-feedback-logs`). Trust a measurement over the comment, and treat
+  `composer-feedback-logs`. That comment is wrong** — and so is the 1Password item's own name,
+  `Composer survey logs R2 read-only token`. The same key writes and deletes in `agent-artifacts`, in
+  `composer-feedback-logs`, and in the `composer-assets*` buckets the deploy pipeline writes on every
+  deploy (`.github/workflows/scripts/upload-assets.mjs`). Trust a measurement over the name, and treat
   the key as write-capable on every bucket: do not point a `--delete` at a path you have not checked.
+  The name is load-bearing in `survey-to-linear.mjs`, so correcting it means updating that script
+  first; until then the name stays wrong on purpose. Rotating this token breaks four consumers at
+  once, so coordinate it rather than treating it as a per-skill credential.
 - **`rclone` reports `403 AccessDenied` with these keys** — from its bucket preflight, not from the
   data operation. `rclone --s3-no-check-bucket …` (or `no_check_bucket = true` in the remote) works
   fine. A `403` from a tool here is far more often a preflight than a permission.

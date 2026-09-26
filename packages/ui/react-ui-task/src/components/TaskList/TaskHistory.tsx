@@ -11,6 +11,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
+import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 import { UNSET_ICON } from './status-icons.ts';
 
 /**

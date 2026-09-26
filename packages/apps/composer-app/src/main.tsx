@@ -61,6 +61,7 @@ import {
   isFalse,
   isTrue,
   readBootAssetFailure,
+  registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
   runStorageResetMigration,
@@ -226,6 +227,10 @@ const main = async () => {
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   startupMark('main:start');
   const profiler = profilerEnabled ? startupProfiler() : undefined;
+
+  // Registered before any lazy route can be reached, since a chunk missing after a deploy fails
+  // the moment the route is opened.
+  registerPreloadErrorHandler();
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {

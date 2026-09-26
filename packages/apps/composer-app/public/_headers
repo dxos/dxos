@@ -1,6 +1,11 @@
+# Applied to every live asset, which the asset server serves without the Worker. Misses go to the
+# Worker, whose responses these rules do not reach, so the archive fallback sets its own.
+
+# Vite's output is content-hashed, so a URL names the same bytes forever.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Copied from `public/assets/plugin-tldraw/` with stable filenames: an update must reach existing clients.
 /assets/plugin-tldraw/*
   ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate

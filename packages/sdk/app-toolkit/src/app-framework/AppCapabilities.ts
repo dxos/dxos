@@ -30,6 +30,8 @@ import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as AppUpdate$ from '../app/AppUpdate.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -493,6 +495,16 @@ export type ProgressRegistry = Readonly<{
  */
 export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
   'org.dxos.app-toolkit.capability.progressRegistry',
+);
+
+/**
+ * The app's update channel, contributed by whichever plugin owns updates on this platform —
+ * `plugin-native` for the desktop OTA updater, `plugin-pwa` for the service worker. Exactly one
+ * contributes at a time, so a settings surface can render either without knowing which it got.
+ * @category Capability
+ */
+export const UpdateManager = Capability$.makeSingleton<AppUpdate$.Manager>()(
+  'org.dxos.app-toolkit.capability.updateManager',
 );
 
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
