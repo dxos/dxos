@@ -126,7 +126,9 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
  * sync runs repeatedly and must never append a second ref for a task already in the set.
  */
 const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
-  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+  const listed = container.tasks.some(Ref.hasEntityId(task.id));
+  // A stale entry for a task now parented elsewhere is not membership; it still needs re-rooting.
+  if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
   // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
@@ -148,9 +150,11 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
       TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
     });
   }
-  Obj.update(container, (container) => {
-    container.tasks.push(Ref.make(task));
-  });
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
   Obj.setParent(task, container);
 });
 

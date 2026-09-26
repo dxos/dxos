@@ -153,7 +153,9 @@ const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined
  * ref for a task already in the set.
  */
 export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
-  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+  const listed = container.tasks.some(Ref.hasEntityId(task.id));
+  // A stale entry for a task now parented elsewhere is not membership; it still needs re-rooting.
+  if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
   // The reverse-ref index, not `Obj.getParent`: legacy sets may hold refs to tasks whose parent
@@ -176,9 +178,11 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
       TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
     });
   }
-  Obj.update(container, (container) => {
-    container.tasks.push(Ref.make(task));
-  });
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
   // `tasks` claims only an unparented task, so a move between sets moves the edge itself.
   Obj.setParent(task, container);
 });

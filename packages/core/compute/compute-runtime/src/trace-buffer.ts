@@ -86,8 +86,17 @@ export const detachData = (data: unknown): unknown => {
   if (data === null || typeof data !== 'object') {
     return data;
   }
-  return JSON.parse(JSON.stringify(data, boundedReplacer()));
+  try {
+    // `undefined` when a `toJSON` yields nothing; the placeholder keeps the event rather than dropping it.
+    const json = JSON.stringify(data, boundedReplacer());
+    return json === undefined ? null : JSON.parse(json);
+  } catch {
+    return UNSERIALIZABLE;
+  }
 };
+
+/** The placeholder for a value whose serialization threw (e.g. a throwing `toJSON` or getter). */
+export const UNSERIALIZABLE = '[Unserializable]';
 
 /** The marker an object already written elsewhere in the same value is replaced by. */
 export const SEEN = '[Seen]';
