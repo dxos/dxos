@@ -74,26 +74,42 @@ export class EphemeralTraceBuffer {
  * trying to re-define them. The value is therefore always copied through JSON,
  * never passed through by reference: a DOM node (e.g. a popover `anchor`) carries
  * framework expandos that reference back to it, and handing that graph to
- * `Obj.make` recursed until the stack overflowed. DOM nodes are replaced by a
- * short description and a repeated ancestor by a marker, so the copy is total.
+ * `Obj.make` recursed until the stack overflowed.
+ *
+ * The copy runs synchronously on every traced operation, so it is bounded: each
+ * object is written once (a repeat becomes {@link SEEN}), and past
+ * {@link MAX_DEPTH} levels or {@link MAX_NODES} objects the rest is
+ * {@link TRUNCATED}. An unbounded walk of a large shared graph stalled the main
+ * thread long enough to delay app work.
  */
 export const detachData = (data: unknown): unknown => {
   if (data === null || typeof data !== 'object') {
     return data;
   }
-  return JSON.parse(JSON.stringify(data, cycleSafeReplacer()));
+  return JSON.parse(JSON.stringify(data, boundedReplacer()));
 };
 
-/** The marker a reference back to one of its own ancestors is written as. */
-export const CIRCULAR = '[Circular]';
+/** The marker an object already written elsewhere in the same value is replaced by. */
+export const SEEN = '[Seen]';
+
+/** The marker a value beyond the depth or size budget is replaced by. */
+export const TRUNCATED = '[Truncated]';
+
+/** Nesting deeper than this is truncated; trace payloads are for reading, not replay. */
+export const MAX_DEPTH = 8;
+
+/** Objects written per value before the rest is truncated. */
+export const MAX_NODES = 1_000;
 
 /**
- * A `JSON.stringify` replacer that writes DOM nodes as `<tag>`, a bigint as its digits, and a reference to an ancestor on
- * the current path as {@link CIRCULAR}. Tracks the path rather than every object seen, so a value
- * shared by two siblings is still written twice, as plain JSON would.
+ * A `JSON.stringify` replacer that writes DOM nodes as `<tag>`, a bigint as its digits, an object
+ * already written as {@link SEEN} (which also breaks cycles), and anything past the depth or node
+ * budget as {@link TRUNCATED}.
  */
-const cycleSafeReplacer = () => {
-  const ancestors: object[] = [];
+const boundedReplacer = () => {
+  const seen = new WeakSet<object>();
+  const depths = new WeakMap<object, number>();
+  let nodes = 0;
   return function (this: unknown, _key: string, value: unknown): unknown {
     // `JSON.stringify` throws on a bigint, which would otherwise fail the whole trace write.
     if (typeof value === 'bigint') {
@@ -105,14 +121,16 @@ const cycleSafeReplacer = () => {
     if (isDomNode(value)) {
       return `<${value.nodeName.toLowerCase()}>`;
     }
-    // `this` is the holder of `value`; unwind the path to it before checking for a cycle.
-    while (ancestors.length > 0 && ancestors[ancestors.length - 1] !== this) {
-      ancestors.pop();
+    if (seen.has(value)) {
+      return SEEN;
     }
-    if (ancestors.includes(value)) {
-      return CIRCULAR;
+    const depth = (typeof this === 'object' && this !== null ? (depths.get(this) ?? 0) : 0) + 1;
+    if (depth > MAX_DEPTH || nodes >= MAX_NODES) {
+      return TRUNCATED;
     }
-    ancestors.push(value);
+    nodes++;
+    seen.add(value);
+    depths.set(value, depth);
     return value;
   };
 };
