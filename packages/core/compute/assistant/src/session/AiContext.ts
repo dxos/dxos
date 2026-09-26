@@ -153,7 +153,16 @@ export class Binder extends Resource {
    */
   async sync(): Promise<void> {
     if (this.#bindingsQuery) {
-      const results = await this.#bindingsQuery.run();
+      let results: Binding[];
+      try {
+        results = await this.#bindingsQuery.run();
+      } catch (error) {
+        // The query's live subscription already keeps the bindings current, so a re-read that fails
+        // (an index query timing out under load) costs freshness, not correctness — and a caller
+        // running this between agent turns would otherwise fail the whole agent process on it.
+        log.warn('bindings sync failed; keeping the current bindings', { error });
+        return;
+      }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
       log('sync complete', {
