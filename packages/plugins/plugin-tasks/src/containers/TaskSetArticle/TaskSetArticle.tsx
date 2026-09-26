@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
@@ -140,22 +140,20 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     [openDetail],
   );
 
-  // Held here rather than left to the list, so adding a sub-task can open the branch it lands in.
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  // Held here rather than left to the list, so adding a sub-task can open the branch it lands in, and
+  // persisted per device and per set so a collapsed branch stays collapsed across navigation.
+  const { collapsed, setCollapsed } = useTaskSetExpanded(taskSet.id);
 
   // Created untitled and opened at once, so the reader names it in the detail, whose title field
   // takes focus for an untitled task: the list's own create pane has no notion of a parent, and a
   // sub-task created there would land at the root.
   const handleAddSubTask = useCallback(
     async (parent: Task.Task) => {
-      setCollapsed((collapsed) => {
-        if (!collapsed.has(parent.id)) {
-          return collapsed;
-        }
+      if (collapsed.has(parent.id)) {
         const next = new Set(collapsed);
         next.delete(parent.id);
-        return next;
-      });
+        setCollapsed(next);
+      }
       const { data } = await invokePromise(
         TaskOperation.CreateTask,
         { taskSet: Ref.make(taskSet), title: '', parentTask: Ref.make(parent) },
@@ -165,7 +163,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         openDetail(data.task.id);
       }
     },
-    [invokePromise, taskSet, spaceId, openDetail],
+    [collapsed, setCollapsed, invokePromise, taskSet, spaceId, openDetail],
   );
 
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
@@ -295,6 +293,44 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+/**
+ * Which branches are open, held in {@link TaskSetView.aspect} as task id → open. The list speaks in
+ * collapsed ids, so a change is written as the ids that entered (closed) or left (opened) the set,
+ * and every other entry is kept as it was.
+ */
+const useTaskSetExpanded = (contextId: string) => {
+  const { expanded } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  const collapsed = useMemo<ReadonlySet<string>>(
+    () =>
+      new Set(
+        Object.entries(expanded ?? {})
+          .filter(([, open]) => !open)
+          .map(([id]) => id),
+      ),
+    [expanded],
+  );
+  const setCollapsed = useCallback(
+    (next: ReadonlySet<string>) =>
+      update((view) => {
+        const map = { ...view.expanded };
+        for (const id of next) {
+          map[id] = false;
+        }
+        // Read from the stored map rather than the render's set, so two changes before a render compose.
+        for (const [id, open] of Object.entries(view.expanded ?? {})) {
+          if (!open && !next.has(id)) {
+            map[id] = true;
+          }
+        }
+        return { ...view, expanded: map };
+      }),
+    [update],
+  );
+
+  return { collapsed, setCollapsed };
+};
 
 /**
  * The set's filter, held in {@link TaskSetView.aspect} and mirrored into the query editor.

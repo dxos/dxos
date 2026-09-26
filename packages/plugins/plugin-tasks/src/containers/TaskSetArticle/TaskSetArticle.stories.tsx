@@ -605,6 +605,59 @@ export const FilterPersists: Story = {
   },
 };
 
+/**
+ * Which branches are open is kept per device and per set: a collapsed branch stays collapsed, and an
+ * open one open, across the article unmounting and mounting again.
+ */
+export const CollapsePersists: Story = {
+  render: RemountStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    const { space, taskSet } = context;
+    const addChild = (parentTitle: string, title: string) => {
+      const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === parentTitle)!;
+      const child = space.db.add(Task.make({ title, status: 'todo', parentTask: Ref.make(parent) }));
+      Obj.update(taskSet, (taskSet) => {
+        taskSet.tasks.push(Ref.make(child));
+      });
+    };
+    addChild('Design label', 'Pick the typeface');
+    addChild('Source green coffee', 'Order the samples');
+
+    const visible = (title: string) => {
+      const row = canvas.queryByText(title)?.closest<HTMLElement>('[data-testid="taskList.item"]');
+      return !!row && !row.closest('[hidden]');
+    };
+    const toggle = (title: string) =>
+      canvas
+        .getByText(title)
+        .closest<HTMLElement>('[data-testid="taskList.item"]')!
+        .querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
+    await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
+
+    await userEvent.click(toggle('Design label'));
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(false), { timeout: 10_000 });
+
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
+    await expect(visible('Pick the typeface')).toBe(false);
+
+    // Reopening is remembered too.
+    await userEvent.click(toggle('Design label'));
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
+    await userEvent.click(canvas.getByTestId('story.remount'));
+    await expect(canvas.findByText('Design label', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
+  },
+};
+
 /** Frames enough for React to flush a subscription, far short of an index round trip. */
 const flushRender = (): Promise<void> =>
   new Promise((resolve) => {
