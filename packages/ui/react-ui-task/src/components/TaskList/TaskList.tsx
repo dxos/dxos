@@ -12,6 +12,7 @@ import {
   IconBlock,
   IconButton,
   Tag,
+  Tooltip,
   composable,
   composableProps,
   toLocalizedString,
@@ -480,10 +481,12 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
         data-testid='taskList.item.chips'
         className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
       >
-        <TaskTags task={task} assignee={false} />
+        {/* Only pull requests among the artifacts: the row is scanned for its titles, and a line of file
+            names under each one outweighed the task it described; the detail pane lists them all. */}
+        <TaskTags task={task} assignee={false} artifacts='pull-requests' />
       </div>
       <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
-        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+        {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
       {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
           `buildGridTemplate` declares a track only when its option is on, and the matching cell is
@@ -566,7 +569,7 @@ TaskListItemActions.displayName = 'TaskList.ItemActions';
  * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
  * targets are not in memory yet, and a sync read would leave the row permanently empty.
  */
-const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
+const TaskListItemArtifacts = ({ task, pullRequestsOnly }: { task: Task.Task; pullRequestsOnly?: boolean }) => {
   const db = Obj.getDatabase(task);
   const ids = useMemo(
     () =>
@@ -579,7 +582,8 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
   // Without a database — a story, a preview — the refs were made from objects already in hand, so
   // their targets resolve synchronously and the row still shows what the task produced.
-  const artifacts = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  const resolved = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  const artifacts = pullRequestsOnly ? resolved.filter((artifact) => PullRequest.instanceOf(artifact)) : resolved;
 
   return (
     <>
@@ -603,10 +607,13 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 export const TaskTags = ({
   task,
   assignee = true,
+  artifacts = 'all',
 }: {
   task: Task.Task;
   /** Off where the host places the assignee itself — the list row keeps it on the title line. */
   assignee?: boolean;
+  /** Which artifacts to show as chips. */
+  artifacts?: 'all' | 'pull-requests';
 }) => {
   // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
   // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
@@ -615,7 +622,7 @@ export const TaskTags = ({
   return (
     <>
       <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      <TaskListItemArtifacts task={task} />
+      <TaskListItemArtifacts task={task} pullRequestsOnly={artifacts === 'pull-requests'} />
       {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
     </>
   );
@@ -729,9 +736,13 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
 // properties row.
 //
 
-type TaskListAssigneeProps = { assignee: Actor.Actor };
+type TaskListAssigneeProps = {
+  assignee: Actor.Actor;
+  /** Shows the glyph alone, naming the assignee on hover — for a row where the name crowds the title. */
+  iconOnly?: boolean;
+};
 
-const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee, iconOnly }, _forwardedRef) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
@@ -763,7 +774,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     return null;
   }
 
-  return (
+  const tag = (
     <Tag
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
@@ -777,9 +788,18 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       onBlur={cancelHover}
       classNames={session && 'cursor-help'}
     >
-      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
-      {label}
+      {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {iconOnly ? <span className='sr-only'>{label}</span> : label}
     </Tag>
+  );
+
+  // A session opens its card on hover, which already names the run; a tooltip would stack on it.
+  return iconOnly && !session && label ? (
+    <Tooltip.Trigger asChild content={label}>
+      {tag}
+    </Tooltip.Trigger>
+  ) : (
+    tag
   );
 });
 

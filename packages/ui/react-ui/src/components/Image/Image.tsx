@@ -7,6 +7,7 @@ import React, { type SyntheticEvent, useCallback, useRef, useState } from 'react
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Factor out.
 const cache = new Map<string, string>();
 
 export type ImageProps = ThemedClassName<
@@ -21,6 +22,7 @@ export type ImageProps = ThemedClassName<
      * image host sends CORS headers and you want the dominant-color gradient.
      */
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
+    onClick?: () => void;
   } & ColorOptions
 >;
 
@@ -32,6 +34,7 @@ export const Image = ({
   crossOrigin,
   sampleSize = 64,
   contrast = 0.9,
+  onClick,
 }: ImageProps) => {
   const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
   const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
@@ -82,7 +85,7 @@ export const Image = ({
       // `dx-ring-pseudo` `::after`) painted on ancestors — most visibly,
       // the focus ring on a Card containing a Card.Poster.
       className={mx(
-        `relative shrink-0 flex w-full justify-center overflow-hidden transition-all duration-700 isolate`,
+        `isolate relative shrink-0 flex w-full justify-center overflow-hidden transition-all duration-700`,
         classNames,
       )}
       style={{
@@ -108,8 +111,6 @@ export const Image = ({
         src={src}
         alt={alt}
         crossOrigin={crossOriginState}
-        onError={handleImageError}
-        onLoad={handleImageLoad}
         className={mx(
           'z-10 transition-opacity duration-500',
           fit === 'cover' ? 'dx-fill object-cover' : 'object-contain',
@@ -117,6 +118,9 @@ export const Image = ({
         style={{
           opacity: imageLoaded ? 1 : 0,
         }}
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+        onClick={onClick}
       />
     </div>
   );

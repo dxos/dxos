@@ -1021,10 +1021,10 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
- * A long artifact tag cannot squeeze the title: the chips run on their own line under it, and the
- * title keeps the row's width.
+ * A row shows no artifact other than a pull request: a task whose only artifact is a document holds
+ * no chips line, and its title keeps the row's width.
  */
-export const TestLongArtifactTag: Story = {
+export const TestArtifactsHiddenInRow: Story = {
   args: {
     showGroupLabels: false,
     seed: () => [
@@ -1046,11 +1046,8 @@ export const TestLongArtifactTag: Story = {
       { timeout: 10_000 },
     );
     const title = row.querySelector<HTMLElement>('span.truncate')!;
-    const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]')!;
     await waitFor(async () => {
-      await expect(chips.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-        title.getBoundingClientRect().bottom - 0.5,
-      );
+      await expect(row.querySelector('[data-testid="taskList.item.chips"] > *')).toBeNull();
       await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
     });
   },
@@ -1058,8 +1055,8 @@ export const TestLongArtifactTag: Story = {
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
- * artifact it names.
+ * `Blob`), beside a task blocked on a question in its history. The row shows only the pull request,
+ * whose pill opens its preview.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -1137,7 +1134,7 @@ export const WithTags: Story = {
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
+/** A pull request, the one artifact a row shows, opens its summary from the row. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -1174,8 +1171,7 @@ export const TestArtifactPreviews: Story = {
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
     await open('#12752', 'artifact-preview.pullRequest');
-    await open('label-v2.png', 'artifact-preview.image');
-    await open('roast-timelapse.webm', 'artifact-preview.video');
+    await expect(findTag('label-v2.png')).toBeUndefined();
   },
 };
 
