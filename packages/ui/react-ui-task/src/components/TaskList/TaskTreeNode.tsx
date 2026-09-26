@@ -180,8 +180,9 @@ export const TaskTreeNode = ({
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
   // handled here rather than per row. `Shift` moves the row where an unmodified arrow navigates:
-  // up/down reorder among siblings, left/right change depth. The focused row names its task through
-  // `data-object-id`, which is what lets one container-level handler serve every depth.
+  // up/down reorder among siblings, left/right change depth. `Tab`/`Shift+Tab` change depth too, as
+  // in an outliner. The focused row names its task through `data-object-id`, which is what lets one
+  // container-level handler serve every depth.
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       // A reader needs a way back out of a selection, and `Escape` is where they look for it.
@@ -191,18 +192,26 @@ export const TaskTreeNode = ({
         return;
       }
 
-      if (!onTaskMove || !event.shiftKey) {
+      const tab = event.key === 'Tab';
+      if (!onTaskMove || !(event.shiftKey || tab)) {
         return;
       }
-      const id = (event.target as HTMLElement | null)
-        ?.closest<HTMLElement>('[data-object-id]')
-        ?.getAttribute('data-object-id');
+      const target = event.target instanceof HTMLElement ? event.target : undefined;
+      const row = target?.closest<HTMLElement>('[data-object-id]');
+      // `Tab` only from the row itself: from a control inside it, `Tab` is how focus reaches the
+      // next control, and taking it there would strand the reader in the row.
+      if (!row || (tab && row !== target)) {
+        return;
+      }
+      const id = row.getAttribute('data-object-id');
       const task = id ? tasks.find((task) => task.id === id) : undefined;
       if (!task) {
         return;
       }
       const placement = (() => {
         switch (event.key) {
+          case 'Tab':
+            return event.shiftKey ? resolveOutdent(tasks, task) : resolveIndent(tasks, task);
           case 'ArrowRight':
             return resolveIndent(tasks, task);
           case 'ArrowLeft':
@@ -215,6 +224,8 @@ export const TaskTreeNode = ({
             return undefined;
         }
       })();
+      // A key that moves nothing is left alone — for `Tab`, so focus can still leave the list
+      // rather than being trapped on a row that cannot indent.
       if (placement) {
         event.preventDefault();
         event.stopPropagation();

@@ -1557,6 +1557,93 @@ export const TestEditWithoutDescription: Story = {
 };
 
 /**
+ * `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its
+ * parent — the outliner keys — and `Shift+ArrowUp`/`Down` move it among its siblings. `Tab` from a
+ * control inside the row still moves focus, and a `Tab` that cannot indent leaves focus to travel.
+ */
+export const TestTabIndent: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    framed: false,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map((row) => ({
+        row,
+        title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
+        level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
+      }));
+    const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
+    const row = (title: string): HTMLElement => {
+      const found = rows().find((entry) => entry.title === title)?.row;
+      if (!found) {
+        throw new Error(`Row not found: ${title}`);
+      }
+      return found;
+    };
+    const press = (target: HTMLElement, key: string, shiftKey = false) => {
+      target.focus();
+      const event = new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    await waitFor(async () =>
+      expect(shape()).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+        'Dial in the roast:1',
+        'Sample the Ethiopian lots:2',
+        'Log every profile:2',
+      ]),
+    );
+
+    // Tab: under the previous sibling, carrying its own sub-task along.
+    await expect(press(row('Approve the label art'), 'Tab')).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:3',
+        'Proofread the back label:4',
+      ]),
+    );
+
+    // Shift+Tab: back out, as the peer that follows its parent.
+    await expect(press(row('Approve the label art'), 'Tab', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+      ]),
+    );
+
+    // Shift+ArrowUp: ahead of its previous sibling.
+    await expect(press(row('Approve the label art'), 'ArrowUp', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(1, 3)).toEqual(['Approve the label art:2', 'Proofread the back label:3']),
+    );
+
+    // Nothing to indent under, so the key is not taken and focus is free to leave the list.
+    await expect(press(row('Ship the spring release'), 'Tab')).toBe(false);
+
+    // From a control inside the row, Tab is the control's, not a move.
+    const status = row('Log every profile').querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
+    if (!status) {
+      throw new Error('Status control not found.');
+    }
+    await expect(press(status, 'Tab')).toBe(false);
+    await expect(shape().at(-1)).toEqual('Log every profile:2');
+  },
+};
+
+/**
  * Status grouping reorders rows against the set's array, so the gutter has to number what is on
  * screen: 1..N from the top, with no gaps and nothing out of sequence.
  */

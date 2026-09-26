@@ -4,10 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent, resolveTaskPlacement } from './hierarchy.ts';
+import { buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 describe('resolveTaskPlacement', () => {
   test('above a task takes its parent and anchors on it', ({ expect }) => {
@@ -103,6 +104,69 @@ describe('keyboard placements', () => {
     expect(resolveNudge(tasks, b, 'down')).to.be.undefined;
   });
 });
+
+describe('keyboard moves applied', () => {
+  test('Tab indents under the previous sibling, and Shift+Tab makes it the following peer of its parent', ({
+    expect,
+  }) => {
+    const { tasks, a2 } = fixture();
+    const indented = move(tasks, a2, resolveIndent(tasks, a2));
+    expect(outline(indented)).to.eq('a .a1 ..a1x ..a2 b');
+
+    const outdented = move(indented, a2, resolveOutdent(indented, a2));
+    expect(outline(outdented)).to.eq('a .a1 ..a1x .a2 b');
+  });
+
+  test("Shift+Tab on a middle child lands it directly after its parent, ahead of the parent's next peer", ({
+    expect,
+  }) => {
+    const { tasks, a1 } = fixture();
+    const outdented = move(tasks, a1, resolveOutdent(tasks, a1));
+    // `a1` keeps its own child, and lands between `a` and `b`.
+    expect(outline(outdented)).to.eq('a .a2 a1 .a1x b');
+  });
+
+  test('a subtree moves with its root', ({ expect }) => {
+    const { tasks, a1, b } = fixture();
+    const nudged = move(tasks, a1, resolveNudge(tasks, a1, 'down'));
+    expect(outline(nudged)).to.eq('a .a2 .a1 ..a1x b');
+    const indented = move(tasks, b, resolveIndent(tasks, b));
+    expect(outline(indented)).to.eq('a .a1 ..a1x .a2 .b');
+  });
+});
+
+/**
+ * Applies a placement the way `MoveTask` does — re-parent, then reposition in the flat array before
+ * the anchor or at the end — so a test reads the tree the move produces rather than its two terms.
+ */
+const move = (tasks: readonly Task.Task[], task: Task.Task, placement: TaskPlacement | undefined): Task.Task[] => {
+  if (!placement) {
+    throw new Error(`No placement for ${task.title}.`);
+  }
+  const { parentTask, before } = placement;
+  Obj.update(task, (task) => {
+    if (parentTask) {
+      task.parentTask = Ref.make(parentTask);
+    } else {
+      delete task.parentTask;
+    }
+  });
+  const rest = tasks.filter((candidate) => candidate.id !== task.id);
+  const anchor = before ? rest.findIndex((candidate) => candidate.id === before.id) : -1;
+  return anchor === -1 ? [...rest, task] : [...rest.slice(0, anchor), task, ...rest.slice(anchor)];
+};
+
+/** The rendered walk, one title per row with a dot per level of depth. */
+const outline = (tasks: readonly Task.Task[]): string => {
+  const depth = (task: Task.Task): number => {
+    const parentId = Task.parentTaskId(task);
+    const parent = parentId === undefined ? undefined : tasks.find((candidate) => candidate.id === parentId);
+    return parent ? depth(parent) + 1 : 0;
+  };
+  return flattenVisibleTasks(buildTaskForest(tasks))
+    .map((task) => `${'.'.repeat(depth(task))}${task.title}`)
+    .join(' ');
+};
 
 /**
  * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. Array order is
