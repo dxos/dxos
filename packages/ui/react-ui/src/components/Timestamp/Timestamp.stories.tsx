@@ -122,6 +122,29 @@ export const Live: Story = {
   },
 };
 
+/**
+ * The component's own timer, with nothing else moving: the instant is fixed at half a second short
+ * of a minute old, so the only thing that can turn `now` into `1m` is the timeout `Timestamp`
+ * scheduled for itself.
+ *
+ * `Live` above cannot prove that — it moves the date, which re-runs the effect, so it would pass
+ * even if no timer ever fired.
+ */
+export const Ticks: Story = {
+  render: () => {
+    // Held in state so the identity never changes: a date built during render would give the effect
+    // a new dependency every time, which is the very thing this story exists to rule out.
+    const [date] = useState(() => new Date(Date.now() - 59_500));
+    return <Timestamp date={date} />;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('now')).resolves.toBeTruthy();
+    // ~500ms later by the component's own reckoning; the budget is generous for a loaded runner.
+    await waitFor(async () => await expect(canvas.queryByText('1m')).not.toBeNull(), { timeout: 5_000 });
+  },
+};
+
 /** Pinned to a fixed instant, which is how a test or a fixture keeps the value still. */
 export const Pinned: Story = {
   render: () => {
