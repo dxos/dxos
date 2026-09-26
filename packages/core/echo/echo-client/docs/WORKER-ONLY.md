@@ -141,17 +141,22 @@ documents. Chrome counts wasm memory in its heap figure; the wasm share is in br
 
 | Tabs | Bursts, replicas | Bursts, tab documents | Keystrokes, replicas | Keystrokes, tab documents |
 | ---- | ---------------- | --------------------- | -------------------- | ------------------------- |
-| 1    | 14.3 MB (11.7)   | 20.1 MB               | 69.8 MB (67.2)       | 32.4 MB                   |
-| 3    | 41.9 MB total    | 59.3 MB total         | 208.4 MB total       | 96.1 MB total             |
+| 1    | 14.3 MB (11.7)   | 12.8 MB               | 69.8 MB (67.2)       | 20.9 MB                   |
+| 3    | 41.9 MB total    | 37.2 MB total         | 208.4 MB total       | 61.8 MB total             |
 
 - **Each replica tab holds a second copy.** Its wasm memory equals the worker's, 11.7 and 67.2 MB, and
-  it keeps that memory after dropping every document. A tab-document tab keeps 2.0 to 2.3 MB.
+  it keeps that memory after dropping every document. A tab-document tab keeps 2.6 to 2.7 MB.
 - **Tab documents carry the full history**, which ECHO's synchronous history APIs read, so they cost
-  far more than the mirror's 0.4 MB. The model keeps a JS record per op; the space's 201,989 ops would
-  take 5.7 MB at the 28 bytes per op a typed-array prototype used ([HISTORY.md](../../automerge-proxy/docs/HISTORY.md)).
-- **Writes cost more in the tab.** A write takes 2.0 to 2.2 ms in a tab-document tab against 0.3 to
-  0.6 ms in a replica tab. The worker spends 18.6 to 19.2 ms applying each change to a
-  45,000-character text in both modes, so it applies each document's queued changes in one call.
+  far more than the mirror's 0.4 MB. The model keeps ops and changes in typed-array columns, and a
+  loaded document's arrays fit exactly.
+- **A tab document is no slower than a replica anywhere the user waits.** A write takes 0.34 to 0.36 ms
+  against 0.38 to 0.45 ms. Receiving another peer's keystroke and reading the text takes 1.8 to 2.0 ms
+  against 12.8 to 13.2 ms. Loading the space takes 172 and 237 ms against 316 and 574 ms. The worker
+  spends 13 to 14 ms applying each change to a 45,000-character text in both modes, so it applies each
+  document's queued changes in one call.
+- The spike's README describes the five fixes behind these figures: the tab's cached value moves
+  change by change, loads take hashes as bytes, tabs send on RepoProxy's schedule, ops live in typed
+  arrays, and the worker checks against a compact index instead of a second model.
 - The JSON mirror's memory has not been measured in Chromium.
 
 ### Wasm in the tab
@@ -172,15 +177,20 @@ ECHO in the dedicated worker, the tab instantiates one wasm module at boot: Auto
 SQLite runs in the worker. esbuild, Excalidraw's font subsetting and pdf.js run in their own workers,
 and pdf.js falls back to its JS decoders because Composer passes it no wasm URL.
 
-The spike checked two of these. Its `bench/wasm/analyze.ts` bundles the storage probe's import of
+Only Automerge is in scope for now. Sodium and panproto, with its core extension, are follow-ups;
+manifold, wnfs and pica belong to plugins. The spike checked two of these. Its `bench/wasm/analyze.ts`
+bundles the storage probe's import of
 `@dxos/client-services`: 1,853 modules, carrying sodium, Automerge's `.wasm` and Subduction's base64
 wasm. Importing the storage module directly bundles 924 modules and no wasm. Its `run-manifold.ts`
 runs one manifold job in the page, which keeps 208.4 MB of wasm memory for good, and the same job in a
 worker the page terminates when idle, which frees all but 1.0 MB.
 
-The worker's own cost is unmeasured. The sequencer keeps no copy of the document, so the worker
-evicts it 30 s after its last call on it. It keeps up to 1,000 recent entries and 1,000 applied batch
-ids per followed document, about 0.7 MB at the full window.
+The worker's own cost is unmeasured for the mirror. The sequencer keeps no copy of the document, so
+the worker evicts it 30 s after its last call on it. It keeps up to 1,000 recent entries and 1,000
+applied batch ids per followed document, about 0.7 MB at the full window. With tab documents the
+worker keeps a check index beside Automerge: each op's object, key or element and kind, plus the
+change table. In Node it takes 5.9 and 14.1 MB for the two spaces, against 11.7 and 67.2 MB of
+Automerge wasm.
 
 ## Drop-in compatibility
 
@@ -742,12 +752,12 @@ the fix; the spike's README gives the evidence for each.
 | `meta.updatedAt`                                                                                                                            | Change times from the tab's model, which the saved bytes and every change carry                                                                                                                                                                                                                     | S    | `hostless.test.ts`                                     |
 | Edits pending when a tab closes                                                                                                             | Send on `pagehide`, as `RepoProxy` does                                                                                                                                                                                                                                                             | S    | `pagehide.test.ts`                                     |
 | Publishing: `@dxos/automerge-proxy` is private, but echo-client, echo-doc, echo-host, plugin-markdown, protocols and ui-editor depend on it | A trusted publisher, then drop `private`; until then `check-public-dependencies` fails on this branch                                                                                                                                                                                               | S    | `bench/publish/pack.ts`                                |
-| Other wasm in the tab                                                                                                                       | Import the storage module directly instead of the root of `@dxos/client-services`; run plugin wasm in a worker that ends when idle (see [Wasm in the tab](#wasm-in-the-tab))                                                                                                                        | S    | `bench/wasm/`                                          |
+| Other wasm in the tab                                                                                                                       | Follow-up, after the core SDK: sodium (import the storage module directly instead of the root of `@dxos/client-services`) and panproto; plugin wasm is out of scope (see [Wasm in the tab](#wasm-in-the-tab))                                                                                       | S    | `bench/wasm/`                                          |
 
 The inventory counts about 2,600 lines to change in 54 tab files if the facade keeps the current
 contracts, plus about 345 at risk, not counting the worker and protocol side. The mirror spike adds
-about 5,000 lines of production code and 3,000 lines of tests. The tab-document spike is about 3,900
-lines of source, 1,700 of tests and 1,000 of benches.
+about 5,000 lines of production code and 3,000 lines of tests. The tab-document spike is about 5,500
+lines of source, 2,200 of tests and 1,100 of benches.
 
 ## Review findings
 

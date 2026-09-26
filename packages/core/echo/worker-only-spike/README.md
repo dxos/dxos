@@ -10,7 +10,7 @@ The design under test is in [OP-IDS.md](../automerge-proxy/docs/OP-IDS.md) and
 
 ## Short answer
 
-1. **Every blocker has a fix that a test or a bench proves.** 30 tests in 13 files pass. Each test
+1. **Every blocker has a fix that a test or a bench proves.** 37 tests in 16 files pass. Each test
    that runs ECHO code also records any Automerge function that receives a tab document, and asserts
    that none did.
 2. **A tab can answer the whole Automerge namespace without Automerge.** A tab document keeps every op
@@ -22,26 +22,34 @@ The design under test is in [OP-IDS.md](../automerge-proxy/docs/OP-IDS.md) and
    are not canonical and applies the tab's exact bytes, so every peer sees the hash the tab reported.
 4. **Tabs recover from a worker restart on their own.** Every change a tab holds rebuilds to its exact
    bytes, so tabs send back what the worker lost, including a closed tab's changes and another peer's.
-5. **In Chromium, a tab document costs half a replica's memory for keystroke-typed text and 40% more
-   for burst-typed text.** A tab holding the test space takes 32.4 MB against 69.8 MB when every
-   keystroke is a change, and 20.1 MB against 14.3 MB when text arrives in 20-character bursts. Three
-   tabs: 96.1 against 208.4 MB, and 59.3 against 41.9 MB. A tab that drops its documents keeps 2 MB; a
-   replica tab keeps its wasm memory, 14.0 and 69.5 MB.
-6. **Writes cost more in the tab, and the worker must batch.** A write takes about 2 ms in the tab
-   against 0.3 to 0.6 ms for a replica. The worker's Automerge spends about 19 ms applying one change
-   to a 45,000-character text in either mode, and about as long for a batch.
+5. **In Chromium a tab document now takes less memory than a replica for both kinds of typing.** A tab
+   holding the test space takes 20.9 MB against 69.8 MB when every keystroke is a change, and 12.8 MB
+   against 14.3 MB when text arrives in 20-character bursts. Three tabs take 61.8 against 208.4 MB, and
+   37.2 against 41.9 MB. A tab that drops its documents keeps 2.7 MB; a replica tab keeps its wasm
+   memory, 14.0 and 69.5 MB.
+6. **A tab document is no slower than a replica anywhere the user waits.** A write takes 0.34 to
+   0.36 ms against 0.38 to 0.45 ms. Receiving another peer's keystroke and reading the text takes 1.8
+   to 2.0 ms against 12.8 to 13.2 ms. Loading the space takes 172 ms for bursts and 237 ms for
+   keystrokes, against 316 and 574 ms.
+7. **The worker takes a tab's change in the time it takes a replica's**, about 13 to 14 ms, nearly all
+   of it Automerge applying the change. It checks the change against a compact index in 6 to 8 µs.
+   In Node the index takes 14.1 MB for the keystroke space and 5.9 MB for the burst space, where the
+   second model it replaces took 20.8 and 12.6 MB.
+
+Five fixes got there from a tab document that wrote in 2 ms, took 32.4 MB for keystrokes and loaded
+the keystroke space in 0.9 s. They are described under [Fixes for latency and memory](#fixes-for-latency-and-memory).
 
 ## How it works
 
 | Part         | Files                                                  | Role                                                                                                                         |
 | ------------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | Tab document | `tab.ts`                                               | Mints Automerge op ids for the tab's own ops, encodes each change, keeps unconfirmed changes, takes acks and refusals by hash |
-| Model        | `model.ts`, `changes.ts`, `ids.ts`                     | Every op with the ops that overwrote it, so any version, cursor, conflict, diff and change is a lookup                      |
+| Model        | `model.ts`, `changes.ts`, `id-index.ts`, `ids.ts`      | Every op with the ops that overwrote it, in typed-array columns, so any version, cursor, conflict, diff and change is a lookup |
 | Formats      | `reader.ts`, `encode.ts`, `sha256.ts`, `save.ts`       | Automerge's saved-document and change formats read and written in JS                                                         |
-| Worker       | `host.ts`                                              | Automerge plus a model per document, which it uses to check each tab change before Automerge sees it                        |
+| Worker       | `host.ts`, `check-index.ts`                            | Automerge plus a check index per document, which it uses to check each tab change before Automerge sees it                  |
 | Namespace    | `namespace.ts`, `mocks.ts`, `immutable-string.ts`      | Automerge's functions answered for tab documents; anything else falls through to Automerge                                  |
 | Handles      | `handle.ts`, `client-handle.ts`                        | ECHO's `Doc.Handle` and `ClientDocHandle` over a tab document                                                               |
-| Transport    | `network.ts`, `sender.ts`                              | Messages between tabs and the worker in order, with structured clone; batching and the page-hide send                       |
+| Transport    | `network.ts`, `sender.ts`                              | Messages between tabs and the worker in order, with structured clone; sends on RepoProxy's schedule and on page hide        |
 
 ### A write
 
@@ -50,13 +58,19 @@ The design under test is in [OP-IDS.md](../automerge-proxy/docs/OP-IDS.md) and
    seen, under the tab's actor. Each op names the element it follows and the values it overwrites
    (`pred`), in Lamport order.
 3. `encodeChange` writes the change chunk as Automerge does and hashes it with SHA-256. The tab applies
-   the change to its model, and its heads become that hash.
-4. The tab sends the change and its bytes. `SpikeHost.submit` checks, in order, that:
+   the change to its model, and its heads become that hash. On the current version the draft's ops
+   also move the tab's cached value, so nothing is read again.
+4. The tab sends the change and its bytes through `BatchedSender`: the first change after a pause at
+   once, later ones at most ten batches a second, as RepoProxy sends. `SpikeHost.submit` checks, in
+   order, that:
    1. the bytes decode to the hash the tab claims (a change the worker already has is acknowledged);
    2. the bytes are canonical, which is the encoder's output for the decoded change;
    3. every dependency is known, and the seq continues the actor's chain;
-   4. the start op is above the highest op the dependencies reach;
-   5. each op names objects, elements and values that exist in the version the tab edited.
+   4. the version the tab edited holds the actor's previous change, which Automerge needs to load what
+      it saves;
+   5. the start op is above the highest op that version reaches;
+   6. each op names an object, element and preds that exist in that version, in the same object and
+      the same key or element, and no op increments a counter.
 5. `flush` applies every queued change of a document in one `A.applyChanges` call, forwards each change
    to the other tabs, saves, then acknowledges each change by hash to every tab that sent it.
 6. A refusal names a hash. The tab takes that change and every pending change built on it out of its
@@ -95,7 +109,7 @@ Largest first. Size is the estimate for the production work, from WORKER-ONLY.md
 | `meta.updatedAt`                               | S    | Change times from the model                                                    | `hostless.test.ts`                                 |
 | Edits pending when a tab closes                | S    | Batch per interval; send the queue on `pagehide`                               | `pagehide.test.ts`                                 |
 | Publishing `@dxos/automerge-proxy`             | S    | The package packs and imports cleanly; it needs a trusted publisher             | `bench/publish/pack.ts`                            |
-| Other wasm in the tab                          | S    | Import the storage module directly; run plugin wasm in a worker the page ends   | `bench/wasm/analyze.ts`, `bench/wasm/run-manifold.ts` |
+| Other wasm in the tab                          | S    | Follow-up: sodium and panproto after the core SDK; plugin wasm out of scope     | `bench/wasm/analyze.ts`, `bench/wasm/run-manifold.ts` |
 
 ### The editor's replica
 
@@ -227,9 +241,10 @@ the worker's Automerge document.
 
 ### Edits pending when a tab closes
 
-`BatchedSender` (`sender.ts`) sends a tab's changes as one batch per interval, which the worker applies
-in one Automerge call, and sends the queue when the page fires `pagehide`. `pagehide.test.ts` shows both,
-and shows a queued batch lost when no `pagehide` reaches the sender.
+`BatchedSender` (`sender.ts`) sends a tab's changes through `UpdateScheduler` at RepoProxy's rate: the
+first change after a pause goes at once, and later ones go at most ten batches a second, each of which
+the worker applies in one Automerge call. The queue goes when the page fires `pagehide`.
+`pagehide.test.ts` shows both, and shows a waiting batch lost when no `pagehide` reaches the sender.
 
 ### Publishing `@dxos/automerge-proxy`
 
@@ -242,48 +257,154 @@ depend on the private package.
 
 ### Other wasm in the tab
 
-- **Sodium.** Composer's storage probe imports the root of `@dxos/client-services`. `bench/wasm/analyze.ts`
-  bundles that import: 1,853 modules and 22 MB of input, with hypercore-crypto's sodium, Automerge's
-  3.6 MB `.wasm` and Subduction's 2.3 MB base64 wasm. Importing the storage module directly bundles 924
-  modules and no wasm.
-- **Plugin wasm.** A realm never returns wasm memory, so the only way to free it is to end the realm.
-  `WasmWorker` (`bench/wasm/wasm-worker.ts`) runs a module's jobs in a dedicated worker and terminates
-  it when idle. With manifold, Spacetime's CSG module, one job run in the page leaves 208.4 MB for good.
-  Through a `WasmWorker` the page holds 3.6 MB, and the total drops from 210.9 MB to 1.0 MB when the
-  worker ends. The same pattern fits wnfs and panproto. pica runs inside Excalidraw, so moving it
-  means changing Excalidraw.
+Out of scope for now: this work covers Automerge's wasm in the core SDK. Two uses come next, and the
+rest belong to plugins.
+
+- **Sodium, a follow-up.** Composer's storage probe imports the root of `@dxos/client-services`.
+  `bench/wasm/analyze.ts` bundles that import: 1,853 modules and 22 MB of input, with
+  hypercore-crypto's sodium, Automerge's 3.6 MB `.wasm` and Subduction's 2.3 MB base64 wasm. Importing
+  the storage module directly bundles 924 modules and no wasm.
+- **panproto, a follow-up** with its core extension. plugin-library's atproto lenses load it, in
+  development builds only.
+- **Plugin wasm: manifold, wnfs and pica.** A realm never returns wasm memory, so the only way to free
+  it is to end the realm. `WasmWorker` (`bench/wasm/wasm-worker.ts`) runs a module's jobs in a
+  dedicated worker and terminates it when idle. With manifold, Spacetime's CSG module, one job run in
+  the page leaves 208.4 MB for good. Through a `WasmWorker` the page holds 3.6 MB, and the total drops
+  from 210.9 MB to 1.0 MB when the worker ends. The same pattern fits wnfs and panproto. pica runs
+  inside Excalidraw, so moving it means changing Excalidraw.
+
+## Fixes for latency and memory
+
+Replica mode sets the bar. A tab must be no slower than a replica tab wherever the user waits, the
+worker should take changes in about the time it takes today, and memory should be as low as it can
+be. A background save may take longer. Five fixes meet the bar; figures are Chromium, one tab.
+
+| Fix                            | What changed                                                                                               | Before                  | After, against a replica                          |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------- |
+| 1. The cached value            | A write applies the draft's ops to the cached value; a remote change diffs only the objects it touched      | 2.0 to 2.2 ms a write   | 0.34 to 0.36 ms against 0.38 to 0.45 ms           |
+| 2. Loading                     | Hashes arrive as bytes keyed by actor and seq; the change table fills in one pass                           | 0.4 and 0.9 s in Node   | 172 and 237 ms against 316 and 574 ms             |
+| 3. Send cadence                | `BatchedSender` on `UpdateScheduler`, at RepoProxy's rate                                                   | One batch per interval  | Sent when a replica tab's changes would be        |
+| 4. Typed arrays                | Ops and changes in typed-array columns; loaded arrays fit exactly                                           | 20.1 and 32.4 MB        | 12.8 and 20.9 MB against 14.3 and 69.8 MB         |
+| 5. The worker's check index    | Each op's object, key or element and kind, plus the change table, in place of a second model               | 12.6 and 20.8 MB (Node) | 5.9 and 14.1 MB in Node, beside Automerge         |
+
+Where a row has two figures, the first is the burst corpus and the second the keystroke corpus, as
+everywhere in this README.
+
+### 1. The cached value moves change by change
+
+A write on the current version turns the draft's ops into the new value with `Op.apply` and reports
+them as the patches, so the tab reads nothing again. A remote change goes into the model first, then
+`model.diff` turns it into patches and `applyPatches` applies them to the cached value.
+
+- **The diff walks only what changed.** It visits the objects that an op between the two versions
+  touched, and their ancestors, so a keystroke into a 45,000-character text costs the text, not the
+  space.
+- **Containers carry tags in a `WeakMap`.** Each container records its tab, its heads and its path.
+  Only new containers get tags; a container shared with the last version keeps its tag, which stays
+  true at its own heads. The root is new in every version.
+- **A refusal reads the whole document again.** Containers that the refused change created carry tags
+  naming heads that no longer exist.
+
+`cache.test.ts` runs 4 seeds of 150 steps: local writes, writes on older versions, a peer's changes,
+refusals and merges between tabs. After every step the value equals a fresh read of the model, and
+every container is frozen and tagged with a path that resolves at its own heads. Receiving a peer's
+keystroke and reading the text takes 1.8 to 2.0 ms against 12.8 to 13.2 ms for a replica, which
+applies each change to Automerge.
+
+### 2. Loading no slower than a replica
+
+After fix 4, loading the keystroke space took 0.61 s against 0.41 to 0.43 s for a replica, most of it
+parsing hex hashes and looking up each dependency by hash. Now:
+
+- **Hashes arrive as bytes, keyed by actor and seq.** A snapshot lists them actor by actor, actors
+  sorted by id, each actor's hashes in seq order. An actor and a seq name one change, so the worker
+  writes the list from its check index, and the tab places each hash from the saved columns. Neither
+  side depends on the order in which a save lists changes, and no snapshot asks Automerge for hashes.
+  Only a document's first load in the worker does, through `A.getChangesMetaSince`: 0.8 s for the
+  keystroke space, or 0.35 s through `A.topoHistoryTraversal`, which returns them in save order.
+- **The change table fills in one pass.** Saved changes name their dependencies by position, so
+  nothing is looked up.
+- **Most values skip `TextDecoder`.** A one-character string decodes by hand, and runs of ops reuse the
+  last object and element they resolved.
+- **Loaded arrays fit exactly.** Most documents in a space are never written to, and the first write
+  grows only the arrays it touches, by an eighth. That first write takes 4.5 to 6.3 ms, against 18 to
+  24 ms for a replica's first write.
+
+In Node, the burst space loads in 0.12 s and the keystroke space in 0.13 to 0.15 s, against 0.20 to
+0.24 s and 0.40 to 0.42 s for replicas. Every one of the 204 documents in both corpora loads to
+Automerge's values, heads and hashes.
+
+### 3. Send cadence
+
+`BatchedSender` sends through `UpdateScheduler` from `@dxos/async`, at RepoProxy's
+`MAX_UPDATE_FREQ` of 10: the first change after a pause goes at once, and later ones coalesce into one
+batch per 100 ms. `pagehide` sends what waits. The worker receives each change when a replica tab's
+would arrive.
+
+### 4. Ops and changes in typed arrays
+
+The model keeps one row per op in typed-array columns: counter, actor, object, key or element, value,
+flags, first successor and first predecessor. Side maps hold only what is rare: a second successor, a
+value that does not fit 32 bits, a write to an element after its insert. A sequence's elements are an
+`Int32Array`. The change table keeps 32-bit columns, the hash as 32 bytes and an open-addressing table
+on it, about 63 bytes a change. Chrome counts array buffers in its heap figure, so the figures include
+them.
+
+A space holds hundreds of small documents, so slack matters: each loaded document carrying 1,024
+spare op rows cost 6 MB in the burst space before loads fit their arrays exactly.
+
+### 5. The worker's check index
+
+The worker held a full model of each document beside Automerge, only to check a tab's references.
+It now keeps each op's object, key or element and kind, found by id, plus the change table. Values
+stay in Automerge. The index refuses what Automerge would reject or read differently from a tab's
+model:
+
+1. an object, element or pred missing from the version the change names;
+2. a pred in another object, key or element, or an element of another sequence;
+3. a delete with no pred, an insert with one, and an update that names the head;
+4. an increment, since the tab's model has no counters and would read it as a new value;
+5. a change whose version lacks its actor's previous change.
+
+A pred need not list every current value: leaving one out makes a conflict, which Automerge and the
+model read alike. A fuzz in `check-index.test.ts` sends 1,600 random changes, mostly malformed, and
+requires every change the index accepts, 561 of them, to apply in Automerge, survive a save and a load
+under its own hash, and read the same in the model. It found rule 5: Automerge applies such a change,
+then cannot load its own save. The old checks accepted it too. A tab never sends one, since it writes
+under a fresh actor on a version that lacks its last change, as Automerge's `changeAt` does.
+
+The index checks and adds a keystroke in 6 to 8 µs; applying one to the model took 35 µs before any
+check. In Chromium the worker spends 13.3 to 13.8 ms on a tab document's change, against 12.9 to 13.3 ms
+on a replica's, nearly all of it `A.applyChanges`. The change table is two thirds of the index for
+the keystroke space, 138,000 changes for 202,000 ops. Keeping 16 bytes of each hash and dropping the
+columns only a tab reads would save about 4 MB more.
 
 ## Memory and latency
 
 The test space is 200 tasks, three documents of about 45,000 characters, and the space root, typed in
-20-character bursts (6,845 changes) or one change per keystroke (136,830 changes). Every tab shares one
+20-character bursts (7,846 changes) or one change per keystroke (137,831 changes). Every tab shares one
 worker, which holds the space in Automerge either way.
 
 Chromium, per tab. Chrome counts wasm memory in its heap figure; the wasm share is in brackets.
 
 | Tabs | Bursts, replicas | Bursts, tab documents | Keystrokes, replicas | Keystrokes, tab documents |
 | ---- | ---------------- | --------------------- | -------------------- | ------------------------- |
-| 1    | 14.3 MB (11.7)   | 20.1 MB               | 69.8 MB (67.2)       | 32.4 MB                   |
-| 3    | 41.9 MB total    | 59.3 MB total         | 208.4 MB total       | 96.1 MB total             |
+| 1    | 14.3 MB (11.7)   | 12.8 MB               | 69.8 MB (67.2)       | 20.9 MB                   |
+| 3    | 41.9 MB total    | 37.2 MB total         | 208.4 MB total       | 61.8 MB total             |
 
 - **Dropping every document.** A replica tab frees 0.5 MB and keeps 14.0 and 69.5 MB. A tab-document
-  tab keeps 2.0 to 2.3 MB.
-- **Writes.** 200 one-character writes to a long document in one tab, median of each run over two
-  runs per corpus. A replica tab writes in 0.3 to 0.6 ms, a tab-document tab in 2.0 to 2.2 ms. The
-  round trip to the worker's acknowledgement takes 19.5 to 20.3 ms and 21.3 to 21.5 ms, with p95 up to
-  23.9 and 25.3 ms. The worker spends 18.6 to 19.2 ms of it applying the change, in both modes.
-- **Where the tab's write time goes.** In Node, recording, encoding and hashing a write takes 0.2 ms
-  (the hash 0.07 ms). The next read then rebuilds the whole document, 3.6 ms for 45,758 characters,
-  because a write drops the tab's cached value. Updating the cached value from the change would remove
-  most of the 2 ms.
-- **Loading, in Node.** Replicas load in 0.25 and 0.57 s. Tab documents load in 0.4 and 0.9 s when the
-  worker sends the change hashes, and in 1.2 and 5.5 s when the tab computes them.
+  tab keeps 2.6 to 2.7 MB.
+- **Writes.** 200 one-character writes to a long document in one tab. A tab-document tab writes in
+  0.34 to 0.36 ms, a replica tab in 0.38 to 0.45 ms. The round trip to the worker's acknowledgement
+  takes 14.3 to 15.0 ms against 13.9 to 14.5 ms, with p95 up to 21.8 and 21.4 ms.
+- **Receiving.** 100 keystrokes from another peer, each applied and followed by a read of the text:
+  1.8 to 2.0 ms a keystroke in a tab-document tab, 12.8 to 13.2 ms in a replica tab.
+- **Loading.** Median of six tabs: 172 and 237 ms for tab documents, 316 and 574 ms for replicas.
 - **Node figures run higher for tab documents**, because Node here has no pointer compression. Above an
-  empty realm of 17.6 MB, tab documents take 34.9 and 49.6 MB against 14.2 and 69.7 MB for replicas.
-
-The burst case is the one where a tab document costs more. The model keeps one JS record per op, and
-the same ops in typed arrays took 28 bytes per op in an earlier prototype ([HISTORY.md](../automerge-proxy/docs/HISTORY.md),
-"What was checked").
+  empty realm of 17.6 MB, tab documents take 12.6 and 20.8 MB against 14.2 and 69.7 MB for replicas,
+  and the worker's check index takes 5.9 and 14.1 MB.
+- **A tab that hashes every change itself** loads in 0.8 and 4.2 s in Node instead of 0.12 and 0.13
+  to 0.15 s, which is why the snapshot carries the hashes.
 
 ## Automerge issues to investigate
 
@@ -293,8 +414,10 @@ Found while building the spike, against Automerge 3.5.0. None has been reported 
    Lamport order, indexes it under the hash of those bytes, and exports it re-encoded under another
    hash. The heads name a hash no peer can reach, and `A.load(A.save(doc))` throws "mismatching heads".
    `heads.test.ts` reproduces it.
-2. **A bad reference corrupts the document.** An unknown element or object in `applyChanges` panics
-   inside the wasm; the document still reads in memory, but its save no longer loads.
+2. **A bad reference corrupts the document.** `applyChanges` accepts most bad references without an
+   error, and then the document's save no longer loads: an unknown object or element, a pred at
+   another key, in another object or on another element, a delete or update with no pred, a map op on
+   a list. An insert after an element of another list panics inside the wasm instead.
 3. **The cached view drifts after `A.merge`.** Properties of the document object disagree with a fresh
    load for 0.3 to 0.4% of keys. `drift.test.ts` reproduces it.
 4. **`getConflicts` on `A.view(doc, heads)` ignores the heads** and reports the current conflicts.
@@ -302,7 +425,7 @@ Found while building the spike, against Automerge 3.5.0. None has been reported 
    returns the stored bits, but `A.encodeChange` of its result differs from the original bytes for 112
    of 794 non-integer values in a sweep, so a change rebuilt through Automerge gets another hash. The
    spike's encoder writes the stored bits.
-6. **A remote change costs time proportional to the text it touches, per call**: about 19 ms at 45,000
+6. **A remote change costs time proportional to the text it touches, per call**: 13 to 19 ms at 45,000
    characters, and about as much for a batch as for one change.
 7. **The format spec says sequence ops are sorted by element id**; saved documents store them in
    document order, which the tab's reader relies on.
@@ -312,6 +435,11 @@ Found while building the spike, against Automerge 3.5.0. None has been reported 
 10. **`A.encodeChange` sorts preds itself**, which hides issue 1 from anyone who encodes through it.
 11. **`A.decodeChange` returns byte values as plain arrays**, and its `Op` type leaves out `elemId` and
     `insert`.
+12. **A change that skips its actor's previous change breaks saves.** `applyChanges` accepts a change
+    with seq 2 whose deps do not reach the actor's seq 1, and `A.load(A.save(doc))` then throws
+    "missing ops". `check-index.test.ts` shows the worker refusing one.
+13. **An increment is accepted where it means nothing.** An `inc` whose pred is not a counter applies,
+    and the key then reads as deleted; an `inc` with no pred applies and changes nothing.
 
 ## Running
 
@@ -322,8 +450,10 @@ moon run worker-only-spike:test
 # A corpus: 200 tasks, 3 documents of 400 paragraphs, 20 characters per change (1 for keystrokes).
 node ../echo-client/docs/worker-only/corpus.mjs /tmp/corpus.json 200 3 400 20
 
-# Memory in Node, and memory and write latency in Chromium.
+# Memory and load time in Node: replicas, tab documents and the worker's check index.
 node --expose-gc --conditions=source src/bench/memory.ts /tmp/corpus.json
+
+# Memory, load, write and receive latency in Chromium.
 node --conditions=source src/bench/browser/run.ts /tmp/corpus.json --tabs 1,2,3
 
 # Wasm in the storage probe's bundle, and plugin wasm in a worker.

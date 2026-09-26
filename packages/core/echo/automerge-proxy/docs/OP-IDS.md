@@ -106,11 +106,16 @@ edited, which name real hashes, its own unconfirmed changes included.
 
 The worker checks the bytes and every reference before Automerge sees them. The bytes must decode to
 the hash the tab claims and be canonical: Automerge indexes a change under the hash of the bytes it
-receives but exports it re-encoded, so other bytes would leave heads that no peer can reach. Each
-element and object must exist in the version the tab edited, the seq must continue the actor's chain,
-the start op must be above that version's highest op, and each `pred` must match its values there,
-because a bad reference corrupts the stored document. The worker then applies the tab's bytes with
-`A.applyChanges`. Acknowledgements and refusals name the hash.
+receives but exports it re-encoded, so other bytes would leave heads that no peer can reach. The seq
+must continue the actor's chain, and the version the tab edited must hold the actor's previous change;
+Automerge applies a change that skips it, then cannot load its own save. The start op must be above
+that version's highest op. Each object, element and `pred` must exist in that version, in the same
+object and the same key or element, because Automerge applies most bad references and then its save
+no longer loads. A `pred` may leave out a current value, which makes a conflict that Automerge and the
+tab read alike. A delete must name a pred, and a tab writes no counter increments. The worker keeps
+only what these checks read: each op's object, key or element and kind, found by id, and the change
+table. It then applies the tab's bytes with `A.applyChanges`. Acknowledgements and refusals name the
+hash.
 
 The worker cannot build the change with `A.encodeChange` instead: it sorts preds itself, and it writes
 some float64 values one unit in the last place off, so its bytes can hash differently from the tab's.
@@ -249,7 +254,7 @@ evidence.
 1. The model is right only while it follows Automerge's merge rules. Those rules are part of the
    storage format, since old peers have to converge with new ones, so they cannot change quietly. The
    fuzz tests against Automerge would run in CI.
-2. The worker pays Automerge's per-call cost for remote changes: about 19 ms at 45,000 characters in
+2. The worker pays Automerge's per-call cost for remote changes: 13 to 19 ms at 45,000 characters in
    the spike, for one change or a batch. Batching bounds it.
 3. Snapshots of long histories are slow until phase 5.
 4. Automerge corrupts a document it is handed a bad reference for. The worker's checks guard the
@@ -257,14 +262,14 @@ evidence.
 5. Each tab session adds an actor to each document it edits, as replica mode does today.
 6. Heads can name changes the worker has not applied yet. A worker call that takes heads waits for
    those changes, as [HISTORY.md](./HISTORY.md) describes.
-7. Hashing in JS costs load time: the spike loads its keystroke corpus in 5.5 s when the tab hashes
-   every change and in 0.9 s when the worker sends the hashes.
+7. Hashing in JS costs load time: the spike loads its keystroke corpus in 4.2 s in Node when the tab
+   hashes every change and in 0.13 to 0.15 s when the worker sends the hashes, so snapshots carry them.
 
-## Open questions
+## Settled questions
 
-1. Should every snapshot carry the change hashes? The tab can compute them, but hashing takes the
-   burst corpus from 0.4 to 1.2 s and the keystroke corpus from 0.9 to 5.5 s.
-
-Heads with unconfirmed changes carry real hashes, which was the first open question here: the spike's
-encoder matches Automerge byte for byte. The Automerge issues found along the way are listed in the
+Every snapshot carries the change hashes, as 32 bytes each, actor by actor with actors sorted by id and
+each actor's hashes in seq order. An actor and a seq name one change, so the worker writes the list
+from its index and the tab places each hash from the saved columns; neither depends on the order in
+which a save lists changes. Heads with unconfirmed changes carry real hashes: the spike's encoder
+matches Automerge byte for byte. Both were open questions here. The Automerge issues found along the way are listed in the
 spike's README for later investigation.

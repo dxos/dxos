@@ -74,9 +74,11 @@ replica it replaces:
 | 156k characters after 100,000 keystrokes | 100.1 MB                                   | 5.3 MB                  | 3.2 MB        |
 
 The hashes are 32 bytes per change. The tab can compute them itself, since the spike's encoder matches
-Automerge byte for byte, but hashing costs load time: the spike's test space loads in 0.4 s with the
-hashes and 1.2 s without when text arrives in bursts, and in 0.9 and 5.5 s when every keystroke is a
-change. The recommendation is the first placement, with the worker sending the hashes. Documents a tab only lists or queries are not loaded at all under index reads, so
+Automerge byte for byte, but hashing costs load time: in Node the spike's test space loads in 0.12 s
+with the hashes and 0.8 s without when text arrives in bursts, and in 0.13 to 0.15 s and 4.2 s when
+every keystroke is a change. A replica loads the same space in 0.20 to 0.24 s and 0.40 to 0.42 s. The
+recommendation is the first placement, with the worker sending the hashes by actor and seq from its
+check index (OP-IDS.md, "Settled questions"). Documents a tab only lists or queries are not loaded at all under index reads, so
 they carry nothing.
 
 ## Writes
