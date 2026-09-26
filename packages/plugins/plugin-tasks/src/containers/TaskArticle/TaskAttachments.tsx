@@ -22,6 +22,7 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { Card, Column, Icon, useTranslation } from '@dxos/react-ui';
+import { Masonry } from '@dxos/react-ui-masonry';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -109,6 +110,9 @@ export const useAttachFiles = (task: Task.Task): AttachFiles => {
 
   return { onFiles: canCreateFiles ? attach : undefined, pending };
 };
+
+/** Removes an attachment; read by the masonry tiles, whose props are fixed to the tile signature. */
+const RemoveAttachmentContext = createContext<((ref: Ref.Ref<File.File>) => void) | undefined>(undefined);
 
 /** Whether files are being dragged over the pane, so the attachments section can mark its target. */
 const FileDragContext = createContext(false);
@@ -204,12 +208,15 @@ export type TaskAttachmentsProps = {
   pending?: readonly PendingAttachment[];
 };
 
+type AttachmentTileData = { kind: 'file'; ref: Ref.Ref<File.File> } | { kind: 'pending'; entry: PendingAttachment };
+
 /**
- * The files attached to a task (`Task.attachments`), each as a card whose body is the file's own
- * `CardContent` surface — so an image previews as an image — followed by a card per file still
- * uploading. With nothing attached the section is a drop area; with cards, the grid itself is the
- * target. Either is marked while files are dragged over the pane, which takes the drop itself.
- * Renders nothing only when there is nothing attached and nothing could be.
+ * The files attached to a task (`Task.attachments`) as cards in a masonry, the same grid as the
+ * task's artifacts, each with the file's own `CardContent` surface as its body — so an image
+ * previews as an image — followed by a card per file still uploading. With nothing attached the
+ * section is a drop area; with cards, the grid itself is the target. Either is marked while files
+ * are dragged over the pane, which takes the drop itself. Renders nothing only when there is
+ * nothing attached and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -222,7 +229,15 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
     { spaceId: Obj.getDatabase(task)?.spaceId },
   );
 
-  const hasCards = (refs?.length ?? 0) > 0 || pending.length > 0;
+  const items = useMemo<AttachmentTileData[]>(
+    () => [
+      ...(refs ?? []).map((ref) => ({ kind: 'file' as const, ref })),
+      ...pending.map((entry) => ({ kind: 'pending' as const, entry })),
+    ],
+    [refs, pending],
+  );
+
+  const hasCards = items.length > 0;
   if (!canAttach && !hasCards) {
     return null;
   }
@@ -235,21 +250,26 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
           'rounded-md border-2 border-dashed',
           dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
           hasCards
-            ? // Inset by the border and padding so the cards stay on the column's content track.
-              '-m-1.5 p-1 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2'
+            ? // Outset by the border and padding so the cards sit on the column's content track.
+              '-m-1.5 p-1'
             : 'flex items-center justify-center gap-2 p-4 text-description',
         )}
         {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
       >
         {hasCards ? (
-          <>
-            {refs?.map((ref) => (
-              <AttachmentCard key={ref.uri} attachment={ref} onRemove={handleRemove} />
-            ))}
-            {pending.map((entry) => (
-              <PendingAttachmentCard key={entry.id} name={entry.name} />
-            ))}
-          </>
+          <RemoveAttachmentContext.Provider value={handleRemove}>
+            <Masonry.Root Tile={AttachmentTile} centered={false}>
+              {/* The pane already scrolls, so the grid is a plain block rather than a nested, padded scroller. */}
+              <Masonry.Viewport
+                items={items}
+                getId={getAttachmentTileId}
+                cacheKey={Obj.getURI(task).toString()}
+                scroll={false}
+                // The masonry pads its top and bottom by the gap, which the section's own spacing already gives.
+                classNames='-my-3'
+              />
+            </Masonry.Root>
+          </RemoveAttachmentContext.Provider>
         ) : (
           <>
             <Icon icon='ph--paperclip--regular' />
@@ -261,11 +281,17 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
   );
 };
 
+const getAttachmentTileId = (item: AttachmentTileData): string =>
+  item.kind === 'file' ? item.ref.uri : `pending:${item.entry.id}`;
+
+const AttachmentTile = ({ data }: { data: AttachmentTileData }) =>
+  data.kind === 'file' ? <AttachmentCard attachment={data.ref} /> : <PendingAttachmentCard name={data.entry.name} />;
+
 /** A file still being stored and attached. */
 const PendingAttachmentCard = ({ name }: { name: string }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Card.Root fullWidth data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
+    <Card.Root data-testid='tasksPlugin.attachment.pending' aria-busy='true'>
       <Card.Header>
         <Card.Block>
           <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
@@ -278,22 +304,18 @@ const PendingAttachmentCard = ({ name }: { name: string }) => {
 };
 
 /** One attachment, resolved by the card itself so a file that replicates in later still appears. */
-const AttachmentCard = ({
-  attachment,
-  onRemove,
-}: {
-  attachment: Ref.Ref<File.File>;
-  onRemove: (ref: Ref.Ref<File.File>) => void;
-}) => {
+const AttachmentCard = ({ attachment }: { attachment: Ref.Ref<File.File> }) => {
   const { t } = useTranslation(meta.profile.key);
+  const onRemove = useContext(RemoveAttachmentContext);
   const [file] = useObject(attachment);
-  if (!file) {
+  const data = useMemo(() => (file ? { subject: file } : undefined), [file]);
+  if (!file || !data) {
     return null;
   }
 
   const icon = Obj.getIcon(file)?.icon ?? 'ph--file--regular';
   return (
-    <Card.Root fullWidth data-testid='tasksPlugin.attachment'>
+    <Card.Root data-testid='tasksPlugin.attachment'>
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={file}>
@@ -301,13 +323,17 @@ const AttachmentCard = ({
           </CardIconSlot>
         </Card.Block>
         <Card.Title classNames='truncate'>{file.name ?? file.id}</Card.Title>
-        <Card.ActionIconButton
-          action='delete'
-          label={t('task-attachment.remove.label')}
-          onClick={() => onRemove(attachment)}
-        />
+        {onRemove && (
+          <Card.ActionIconButton
+            action='delete'
+            label={t('task-attachment.remove.label')}
+            onClick={() => onRemove(attachment)}
+          />
+        )}
       </Card.Header>
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject: file }} limit={1} />
+      <Card.Body>
+        <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+      </Card.Body>
     </Card.Root>
   );
 };
