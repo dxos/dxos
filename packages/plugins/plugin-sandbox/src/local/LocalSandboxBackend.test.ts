@@ -12,7 +12,7 @@ import { join } from 'node:path';
 
 import { EffectEx } from '@dxos/effect';
 
-import { LocalSandboxBackend, type LocalSandboxOptions, sniffMimeType } from './LocalSandboxBackend.ts';
+import { LocalSandboxBackend, type LocalSandboxOptions, sniffMimeType, toolchainDirs } from './LocalSandboxBackend.ts';
 
 const SPACE_ID = 'space-a';
 
@@ -139,6 +139,53 @@ describe.skipIf(unavailable)('LocalSandboxBackend', { timeout: 60_000 }, () => {
     }),
   );
 
+  it.effect('never lets the caller configure the host shell', () =>
+    Effect.gen(function* () {
+      const backend = yield* makeBackend();
+      const id = nextId();
+      const hostDir = yield* Effect.promise(() => mkdtemp(join(tmpdir(), 'dx-sandbox-host-')));
+      cleanup.push(hostDir);
+      const marker = join(hostDir, 'pwned');
+      // Staged in the workspace, where a command can write; BASH_ENV would run it in the unconfined host shell.
+      yield* backend.writeFile(SPACE_ID, id, 'evil.sh', new TextEncoder().encode(`touch '${marker}'\n`));
+      const script = join(backend.root, id, 'workspace', 'evil.sh');
+      const result = yield* backend.exec(SPACE_ID, id, { command: 'echo "[$BASH_ENV]"', env: { BASH_ENV: script } });
+      expect(result.stdout).toBe(`[${script}]\n`);
+      expect(existsSync(marker)).toBe(false);
+
+      const invalid = yield* backend.exec(SPACE_ID, id, { command: 'true', env: { 'A;B': 'x' } }).pipe(Effect.flip);
+      expect(invalid.message).toMatch(/Invalid environment variable name/);
+    }),
+  );
+
+  it.effect('does not follow symlinks out of the workspace in file transfers', () =>
+    Effect.gen(function* () {
+      const backend = yield* makeBackend();
+      const id = nextId();
+      const secret = join(homedir(), `.dx-sandbox-secret-${Date.now()}`);
+      yield* Effect.promise(() => writeFile(secret, 'secret'));
+      cleanup.push(secret);
+      const hostDir = yield* Effect.promise(() => mkdtemp(join(tmpdir(), 'dx-sandbox-host-')));
+      cleanup.push(hostDir);
+      const hostFile = join(hostDir, 'rc');
+      yield* Effect.promise(() => writeFile(hostFile, 'original'));
+
+      yield* backend.exec(SPACE_ID, id, {
+        command: `ln -s '${secret}' key && ln -s '${hostFile}' rc && ln -s '${hostDir}' dir && ln -s '${homedir()}' home`,
+      });
+
+      const read = yield* backend.readFileBytes(SPACE_ID, id, 'key').pipe(Effect.flip);
+      expect(read.message).not.toContain('secret\n');
+      yield* backend.writeFile(SPACE_ID, id, 'rc', new TextEncoder().encode('overwritten')).pipe(Effect.flip);
+      yield* backend.writeFile(SPACE_ID, id, 'dir/new', new TextEncoder().encode('planted')).pipe(Effect.flip);
+      expect(yield* Effect.promise(() => readFile(hostFile, 'utf8'))).toBe('original');
+      expect(existsSync(join(hostDir, 'new'))).toBe(false);
+      // File transfers see what a command sees: the home directory stays hidden through a link.
+      const listed = yield* backend.listFiles(SPACE_ID, id, 'home').pipe(Effect.orElseSucceed(() => []));
+      expect(listed.map(({ name }) => name)).not.toContain(secret.split('/').at(-1));
+    }),
+  );
+
   it.effect("does not inherit the host's environment", () =>
     Effect.gen(function* () {
       const backend = yield* makeBackend();
@@ -256,5 +303,13 @@ describe('sniffMimeType', () => {
     expect(sniffMimeType(PNG_BYTES)).toBe('image/png');
     expect(sniffMimeType(new TextEncoder().encode('héllo'))).toBe('text/plain');
     expect(sniffMimeType(Uint8Array.of(0xff, 0xfe, 0x00, 0x80))).toBe('application/octet-stream');
+  });
+});
+
+describe('toolchainDirs', () => {
+  it('re-allows exactly the PATH entries under home', () => {
+    expect(
+      toolchainDirs('/home/me', ['/home/me/.local/bin', '/usr/bin', '/home/me', '/home/me/.bun/bin', 'rel/bin', '']),
+    ).toEqual(['/home/me/.local/bin', '/home/me/.bun/bin']);
   });
 });

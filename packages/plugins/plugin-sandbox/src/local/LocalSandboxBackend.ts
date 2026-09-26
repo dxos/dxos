@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises';
 import { constants, homedir, platform } from 'node:os';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 
 import { log } from '@dxos/log';
 
@@ -50,6 +50,8 @@ export const DEFAULT_ALLOWED_DOMAINS: readonly string[] = [
 const DEFAULT_EXEC_TIMEOUT = 120_000;
 const DEFAULT_EXPIRY = 3 * 60 * 60 * 1_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024;
+const MAX_TRANSFER_BYTES = 64 * 1024 * 1024;
+const TRANSFER_TIMEOUT = 60_000;
 const LOCAL_BASE_IMAGE = 'local';
 
 /**
@@ -59,7 +61,16 @@ const LOCAL_BASE_IMAGE = 'local';
  */
 let skipSocketFilter: boolean | undefined;
 
+type SpawnResult = {
+  readonly exitCode: number;
+  readonly stdout: OutputBuffer;
+  readonly stderr: OutputBuffer;
+  readonly timedOut: boolean;
+  readonly timeout: number;
+};
+
 type SandboxEntry = {
+  readonly dir: string;
   readonly workspaceDir: string;
   readonly tmpDir: string;
   readonly manager: ISandboxManager;
@@ -109,7 +120,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
       const cwd = request.cwd ? yield* this.#resolve(entry, request.cwd) : entry.workspaceDir;
-      return yield* this.#run(entry, request, cwd).pipe(entry.semaphore.withPermits(1));
+      return yield* this.#run(entry, request, cwd);
     });
   }
 
@@ -120,8 +131,13 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
-      const hostPath = yield* this.#resolve(entry, path);
-      const bytes = new Uint8Array(yield* attempt(`read ${path}`, () => readFile(hostPath)));
+      const target = yield* this.#resolve(entry, path);
+      const result = yield* this.#transfer(entry, `read ${path}`, [
+        `f=${shellQuote(target)}`,
+        '[ -f "$f" ] || { echo "not a file" >&2; exit 2; }',
+        'exec cat -- "$f"',
+      ]);
+      const bytes = new Uint8Array(result.stdout.bytes());
       return { bytes, type: sniffMimeType(bytes) };
     });
   }
@@ -134,11 +150,13 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   ): Effect.Effect<void, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
-      const hostPath = yield* this.#resolve(entry, path);
-      yield* attempt(`write ${path}`, async () => {
-        await mkdir(dirname(hostPath), { recursive: true });
-        await writeFile(hostPath, content);
-      });
+      const target = yield* this.#resolve(entry, path);
+      yield* this.#transfer(
+        entry,
+        `write ${path}`,
+        [`f=${shellQuote(target)}`, 'mkdir -p -- "$(dirname -- "$f")" && cat > "$f"'],
+        content,
+      );
     });
   }
 
@@ -149,19 +167,18 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   ): Effect.Effect<readonly FileEntry[], SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const entry = yield* this.#open(spaceId, sandboxId);
-      const hostPath = yield* this.#resolve(entry, path);
-      return yield* attempt(`list ${path}`, async () => {
-        const dirents = await readdir(hostPath, { withFileTypes: true });
-        return Promise.all(
-          dirents.map(async (dirent): Promise<FileEntry> => {
-            if (dirent.isDirectory()) {
-              return { name: dirent.name, type: 'directory' };
-            }
-            const { size } = await stat(join(hostPath, dirent.name));
-            return { name: dirent.name, type: 'file', size };
-          }),
-        );
-      });
+      const target = yield* this.#resolve(entry, path);
+      // NUL-separated `type size name` records: names may hold any byte but NUL and `/`.
+      const result = yield* this.#transfer(entry, `list ${path}`, [
+        `d=${shellQuote(target)}`,
+        '[ -d "$d" ] || { echo "not a directory" >&2; exit 2; }',
+        'for f in "$d"/* "$d"/.[!.]* "$d"/..?*; do',
+        '  [ -e "$f" ] || [ -L "$f" ] || continue',
+        '  if [ -d "$f" ]; then printf \'d\\t\\t%s\\0\' "${f##*/}"',
+        '  else printf \'f\\t%s\\t%s\\0\' "$(wc -c < "$f" 2>/dev/null | tr -d \' \')" "${f##*/}"; fi',
+        'done',
+      ]);
+      return parseListing(result.stdout.bytes().toString('utf8'));
     });
   }
 
@@ -260,7 +277,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       const workspaceDir = join(dir, 'workspace');
       const tmpDir = join(dir, 'tmp');
       const manager = yield* this.#initializeManager(workspaceDir, tmpDir);
-      const entry: SandboxEntry = { workspaceDir, tmpDir, manager, semaphore: Semaphore.makeUnsafe(1) };
+      const entry: SandboxEntry = { dir, workspaceDir, tmpDir, manager, semaphore: Semaphore.makeUnsafe(1) };
       this.#entries.set(sandboxId, entry);
       return entry;
     }).pipe(this.#openLock.withPermits(1));
@@ -283,7 +300,12 @@ export class LocalSandboxBackend implements SandboxService.Backend {
           // directories are re-allowed by name rather than through `dir`: on Linux a read re-allow
           // is a read-only bind, and one over their parent would shadow their writable binds.
           denyRead: [home, this.#root, ...(this.#options.denyRead ?? [])],
-          allowRead: [workspaceDir, tmpDir, ...toolchainDirs(home), ...(this.#options.allowRead ?? [])],
+          allowRead: [
+            workspaceDir,
+            tmpDir,
+            ...toolchainDirs(home, (process.env.PATH ?? '').split(':')),
+            ...(this.#options.allowRead ?? []),
+          ],
           allowWrite: [workspaceDir, tmpDir],
           denyWrite: [],
         },
@@ -308,19 +330,18 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       }
 
       const manager = yield* start(false);
-      const probe = yield* this.#spawn(
-        manager,
-        'true',
-        { cwd: workspaceDir, env: baseEnv(workspaceDir, tmpDir) },
-        30_000,
-      );
-      if (probe.exitCode === 0 || !probe.stderr.includes('apply-seccomp')) {
+      const probe = yield* this.#spawn(manager, 'true', {
+        cwd: workspaceDir,
+        timeout: 30_000,
+        maxOutputBytes: DEFAULT_MAX_OUTPUT_BYTES,
+      });
+      if (probe.exitCode === 0 || !probe.stderr.text().includes('apply-seccomp')) {
         skipSocketFilter = false;
         return manager;
       }
 
       log.warn('sandbox: seccomp unavailable on this host; unix sockets will not be filtered', {
-        stderr: probe.stderr.trim(),
+        stderr: probe.stderr.text().trim(),
       });
       skipSocketFilter = true;
       yield* attempt('stop sandbox', () => manager.reset());
@@ -330,49 +351,96 @@ export class LocalSandboxBackend implements SandboxService.Backend {
 
   #run(entry: SandboxEntry, request: ExecRequest, cwd: string): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
-      // The command travels as a script file, so newlines, heredocs and quotes reach the shell intact.
+      const exports = yield* Effect.try({
+        try: () => envExports(request.env ?? {}),
+        catch: (cause) => new SandboxService.SandboxError({ message: errorMessage(cause), cause }),
+      });
+      const result = yield* this.#runScript(entry, [...exports, `cd ${shellQuote(cwd)} || exit 1`, request.command], {
+        timeout: request.timeout ?? DEFAULT_EXEC_TIMEOUT,
+        maxOutputBytes: this.#options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
+      });
+      if (result.timedOut) {
+        return {
+          stdout: result.stdout.text(),
+          stderr: `${result.stderr.text()}\ncommand timed out after ${result.timeout}ms and was killed`,
+          exitCode: -1,
+          success: false,
+        };
+      }
+      return {
+        stdout: result.stdout.text(),
+        stderr: result.stderr.text(),
+        exitCode: result.exitCode,
+        success: result.exitCode === 0,
+      };
+    });
+  }
+
+  /**
+   * Runs `lines` as a script inside the sandbox. File transfers go through here too rather than
+   * through host `fs` calls: a command can plant symlinks in its workspace, and only the OS sandbox
+   * resolves them against what the command may actually reach.
+   */
+  #runScript(
+    entry: SandboxEntry,
+    lines: readonly string[],
+    options: { timeout: number; maxOutputBytes: number; input?: Uint8Array },
+  ): Effect.Effect<SpawnResult, SandboxService.SandboxError> {
+    return Effect.gen({ self: this }, function* () {
+      // The script travels as a file, so newlines, heredocs and quotes reach the shell intact.
       const script = join(entry.tmpDir, `.exec-${randomUUID()}.sh`);
       const body = [
         ...limitsPrelude(this.#options.limits ?? DEFAULT_LIMITS, platform()),
-        `cd ${shellQuote(cwd)} || exit 1`,
-        request.command,
+        ...sandboxExports(entry),
+        ...lines,
         '',
       ].join('\n');
-      yield* attempt('stage command', () => writeFile(script, body));
-
-      return yield* this.#spawn(
-        entry.manager,
-        `bash ${shellQuote(script)}`,
-        { cwd, env: { ...baseEnv(entry.workspaceDir, entry.tmpDir), ...request.env } },
-        request.timeout ?? DEFAULT_EXEC_TIMEOUT,
-      ).pipe(
+      // Exclusive create: the directory is writable from inside, and a planted link must not be followed.
+      yield* attempt('stage command', () => writeFile(script, body, { flag: 'wx' }));
+      return yield* this.#spawn(entry.manager, `bash ${shellQuote(script)}`, { cwd: entry.dir, ...options }).pipe(
         Effect.ensuring(
           Effect.promise(async () => {
             entry.manager.cleanupAfterCommand();
             await unlink(script).catch(() => {});
           }),
         ),
+        entry.semaphore.withPermits(1),
       );
     });
   }
 
-  /** Runs `command` confined by `manager`, bounded by `timeout` ms of wall-clock time. */
+  /**
+   * Runs `command` confined by `manager`, bounded by `timeout` ms of wall-clock time. The host
+   * shell that starts the confinement gets a fixed environment: anything a caller or the sandbox
+   * controls (`BASH_ENV`, `HOME`, `LD_PRELOAD`) would run code before the sandbox exists.
+   */
   #spawn(
     manager: ISandboxManager,
     command: string,
-    { cwd, env }: { cwd: string; env: Record<string, string> },
-    timeout: number,
-  ): Effect.Effect<ExecResult, SandboxService.SandboxError> {
-    const maxOutputBytes = this.#options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+    {
+      cwd,
+      timeout,
+      maxOutputBytes,
+      input,
+    }: { cwd: string; timeout: number; maxOutputBytes: number; input?: Uint8Array },
+  ): Effect.Effect<SpawnResult, SandboxService.SandboxError> {
     return Effect.gen(function* () {
       const wrapped = yield* attempt('wrap command', () => manager.wrapWithSandbox(command));
-      return yield* Effect.callback<ExecResult, SandboxService.SandboxError>((resume) => {
+      return yield* Effect.callback<SpawnResult, SandboxService.SandboxError>((resume) => {
         // Its own process group, so a timeout kills everything the command started, not just the shell.
-        const child = spawn('bash', ['-c', wrapped], { cwd, env, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+        const child = spawn('bash', ['-c', wrapped], {
+          cwd,
+          env: HOST_ENV,
+          detached: true,
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
         const stdout = new OutputBuffer(maxOutputBytes);
         const stderr = new OutputBuffer(maxOutputBytes);
         child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
         child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+        // A command that exits without reading its input closes the pipe under us.
+        child.stdin.on('error', () => {});
+        child.stdin.end(input);
 
         let timedOut = false;
         const killGroup = () => {
@@ -399,20 +467,9 @@ export class LocalSandboxBackend implements SandboxService.Backend {
         });
         child.on('close', (code, signal) => {
           clearTimeout(timer);
-          if (timedOut) {
-            resume(
-              Effect.succeed({
-                stdout: stdout.text(),
-                stderr: `${stderr.text()}\ncommand timed out after ${timeout}ms and was killed`,
-                exitCode: -1,
-                success: false,
-              }),
-            );
-            return;
-          }
           // A signal is reported the way a shell reports it, so a SIGXCPU from the CPU limit reads 152.
           const exitCode = code ?? 128 + (signal ? constants.signals[signal] : 0);
-          resume(Effect.succeed({ stdout: stdout.text(), stderr: stderr.text(), exitCode, success: exitCode === 0 }));
+          resume(Effect.succeed({ exitCode, stdout, stderr, timedOut, timeout }));
         });
 
         return Effect.sync(() => {
@@ -421,6 +478,28 @@ export class LocalSandboxBackend implements SandboxService.Backend {
         });
       });
     });
+  }
+
+  /** Runs a file transfer script, failing on a non-zero exit or on output past the transfer limit. */
+  #transfer(
+    entry: SandboxEntry,
+    action: string,
+    lines: readonly string[],
+    input?: Uint8Array,
+  ): Effect.Effect<SpawnResult, SandboxService.SandboxError> {
+    return this.#runScript(entry, lines, { timeout: TRANSFER_TIMEOUT, maxOutputBytes: MAX_TRANSFER_BYTES, input }).pipe(
+      Effect.flatMap((result) => {
+        if (result.timedOut || result.exitCode !== 0 || result.stdout.truncated) {
+          const reason = result.timedOut
+            ? 'timed out'
+            : result.stdout.truncated
+              ? `larger than ${MAX_TRANSFER_BYTES} bytes`
+              : result.stderr.text().trim() || `exit ${result.exitCode}`;
+          return Effect.fail(new SandboxService.SandboxError({ message: `${action}: ${reason}` }));
+        }
+        return Effect.succeed(result);
+      }),
+    );
   }
 
   #close(sandboxId: string): Effect.Effect<void, SandboxService.SandboxError> {
@@ -455,39 +534,73 @@ class OutputBuffer {
     this.#dropped += chunk.length - kept.length;
   }
 
+  get truncated(): boolean {
+    return this.#dropped > 0;
+  }
+
+  bytes(): Buffer {
+    return Buffer.concat(this.#chunks);
+  }
+
   text(): string {
-    const text = Buffer.concat(this.#chunks).toString('utf8');
+    const text = this.bytes().toString('utf8');
     return this.#dropped > 0 ? `${text}\n[${this.#dropped} bytes of output truncated]` : text;
   }
 }
 
 /**
- * The whole environment a command starts with: the host's own is never inherited, since it
- * carries tokens and keys the sandbox exists to keep from the command.
+ * The whole environment of the host shell that starts the confinement. The host's own environment
+ * is never inherited, since it carries tokens and keys the sandbox exists to keep from the command.
  */
-const baseEnv = (workspaceDir: string, tmpDir: string): Record<string, string> => ({
+const HOST_ENV: Record<string, string> = {
   PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
-  HOME: workspaceDir,
-  TMPDIR: tmpDir,
   LANG: 'C.UTF-8',
-  WORKSPACE: workspaceDir,
-});
+};
+
+/** Environment set inside the sandbox, where it can only affect the confined command. */
+const sandboxExports = ({ workspaceDir, tmpDir }: SandboxEntry): string[] => [
+  `export HOME=${shellQuote(workspaceDir)}`,
+  `export TMPDIR=${shellQuote(tmpDir)}`,
+  `export WORKSPACE=${shellQuote(workspaceDir)}`,
+];
+
+/** The caller's variables as `export` lines; a name that is not an identifier would inject shell. */
+const envExports = (env: Record<string, string>): string[] =>
+  Object.entries(env).map(([name, value]) => {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+      throw new Error(`Invalid environment variable name: ${name}`);
+    }
+    return `export ${name}=${shellQuote(value)}`;
+  });
 
 /**
- * Top-level directories under `home` that `PATH` runs tools from (`~/.bun`, `~/.proto`, `~/.cargo`):
- * hiding the home directory must not also hide the interpreters a command is expected to call.
+ * The `PATH` entries under `home` (`~/.bun/bin`, `~/.cargo/bin`), each exactly: hiding the home
+ * directory must not hide the tools a command calls, and widening an entry to its top-level
+ * directory would re-expose `~/.local` or `~/.config` wholesale. A tool that reads beyond its own
+ * directory needs an `allowRead` entry.
  */
-const toolchainDirs = (home: string): string[] => {
+export const toolchainDirs = (home: string, entries: readonly string[]): string[] => {
   const dirs = new Set<string>();
-  for (const entry of (process.env.PATH ?? '').split(':')) {
+  for (const entry of entries) {
     const offset = relative(home, entry);
     if (!entry || !isAbsolute(entry) || offset === '' || offset.startsWith('..') || isAbsolute(offset)) {
       continue;
     }
-    dirs.add(join(home, offset.split(sep)[0]));
+    dirs.add(entry);
   }
   return [...dirs];
 };
+
+const parseListing = (listing: string): FileEntry[] =>
+  listing
+    .split('\0')
+    .filter((record) => record.length > 0)
+    .map((record): FileEntry => {
+      const [kind, size, ...name] = record.split('\t');
+      return kind === 'd'
+        ? { name: name.join('\t'), type: 'directory' }
+        : { name: name.join('\t'), type: 'file', ...(size ? { size: Number(size) } : {}) };
+    });
 
 const MAGIC_TYPES: readonly { type: string; magic: readonly number[] }[] = [
   { type: 'image/png', magic: [0x89, 0x50, 0x4e, 0x47] },
