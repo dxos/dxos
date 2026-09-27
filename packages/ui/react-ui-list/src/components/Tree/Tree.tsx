@@ -1274,6 +1274,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // The live drop instruction, so a test can read which zone the pointer is in rather than
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
+      // The source of a drag in progress, which stays in the list (faded) unless `hideDragSource`.
+      data-dragging={dragState === 'dragging' || undefined}
       data-testid={props.testId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
       aria-posinset={branch ? undefined : indexPath.at(-1)! + 1}
