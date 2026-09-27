@@ -337,7 +337,7 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ..
   const { rows, onLaneSelect } = useGanttContext('Gantt.Legend');
   return (
     <div
-      {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col' })}
+      {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col font-sans' })}
       ref={forwardedRef}
     >
       <div className='flex items-center' style={{ height: HEADER_HEIGHT }}>

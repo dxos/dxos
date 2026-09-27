@@ -171,13 +171,18 @@ const makePlay =
     }
     const subtasks = (root.subtasks ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
     const followed = new Set<string>();
+    let selected: string | undefined;
     let answered = answer === undefined;
     await waitFor(
       async () => {
-        const current = subtasks.find((task) => task.status === 'started');
-        if (current && !followed.has(current.id)) {
-          followed.add(current.id);
-          await selectTask(canvas, current.title);
+        // A task blocked on the question comes first, since the pane is where it is answered; otherwise
+        // each sub-task is shown once, as it starts — with several under way, the newest.
+        const blocked = answered ? undefined : subtasks.find((task) => task.status === 'blocked');
+        const next = blocked ?? subtasks.find((task) => task.status === 'started' && !followed.has(task.id));
+        if (next && next.id !== selected) {
+          followed.add(next.id);
+          selected = next.id;
+          await selectTask(canvas, next.title);
         }
         if (!answered && answer !== undefined) {
           answered = await answerQuestion(canvasElement, answer);
@@ -230,10 +235,10 @@ export const Concurrent: Story = {
 };
 
 /**
- * Sequential, except the agent blocks on a question part-way through a sub-task and ends its turn;
+ * Concurrent, except the agent blocks on a question part-way through a sub-task and ends its turn;
  * answering it from the task's detail pane resumes the agent, which finishes the rest.
  */
 export const Question: Story = {
-  decorators: createDecorators({ strategy: AgentSimulator.withQuestion(AgentSimulator.sequential, QUESTION) }),
+  decorators: createDecorators({ strategy: AgentSimulator.withQuestion(AgentSimulator.concurrent, QUESTION) }),
   play: makePlay({ answer: QUESTION.options[0] }),
 };
