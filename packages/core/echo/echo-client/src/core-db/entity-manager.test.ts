@@ -531,22 +531,6 @@ describe('DatabaseImpl', () => {
       // predicate for the rest of the process, once per load a teardown interrupted.
       expect(db._updateEvent.listenerCount()).to.eq(listenersBeforeLoad);
     });
-
-    // TODO(dmaretskyi): Test for conflict resolution.
-    test('atomic replace object', async () => {
-      const testBuilder = new EchoTestBuilder();
-      await openAndClose(testBuilder);
-      const { db, graph } = await testBuilder.createDatabase();
-      graph.registry.add([TestSchema.Person]);
-      const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
-      await db.atomicReplaceObject(contact.id, {
-        type: DXN.make('com.example.type.task', '0.1.0'),
-        data: { name: 'Bar' },
-      });
-
-      expect(contact.name).to.eq('Bar');
-      expect(Obj.getTypeURI(contact)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
-    });
   });
 });
 

@@ -51,7 +51,9 @@ export interface IDatabaseBinding {
 const STRING_CRDT_LIMIT = 300_000;
 
 export const META_NAMESPACE = 'meta';
-const SYSTEM_NAMESPACE = 'system';
+// Exported so a caller writing directly on the doc (the migration runner's single-change apply)
+// can address `system.type` without opening a second `change`.
+export const SYSTEM_NAMESPACE = 'system';
 
 /**
  * Per-document `getUpdatedAt` cache, keyed by heads: inline objects that share a document

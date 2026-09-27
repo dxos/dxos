@@ -2,14 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing/index.ts';
+import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
 import { defineObjectMigration } from './object-migration.ts';
 
 let builder: EchoTestBuilder;
@@ -180,6 +183,114 @@ test('chained migrations', async () => {
   expect(Type.getVersion(Obj.getType(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
+});
+
+test('applies the write set, the type switch, and the marker in exactly one automerge change, named for the migration', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([ContactV1, ContactV2]);
+
+  const contact = db.add(Obj.make(ContactV1, { firstName: 'Ada', lastName: 'Lovelace' }));
+  await db.flush();
+  const core = getObjectCore(contact);
+  const historyBefore = A.getHistory(core.getDoc()).length;
+
+  await db.runMigrations([migrationV2]);
+
+  const history = A.getHistory(core.getDoc());
+  expect(history.length - historyBefore).to.eq(1);
+  expect(history.at(-1)?.change.message).to.eq(
+    `migration: ${migrationV2.fromType.toString()} -> ${migrationV2.toType.toString()}`,
+  );
+});
+
+test('does not write a data key whose transformed value is unchanged', async () => {
+  const ProfileV1 = Type.makeObject(DXN.make('com.example.type.migrationProfile', '0.1.0'))(
+    Schema.Struct({ handle: Schema.String, bio: Schema.String }),
+  );
+  const ProfileV2 = Type.makeObject(DXN.make('com.example.type.migrationProfile', '0.2.0'))(
+    Schema.Struct({ handle: Schema.String, bio: Schema.String }),
+  );
+  // A pure type bump: every data value is carried over unchanged.
+  const profileMigration = defineObjectMigration({
+    from: ProfileV1,
+    to: ProfileV2,
+    transform: async (from) => ({ handle: from.handle, bio: from.bio }),
+  });
+
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([ProfileV1, ProfileV2]);
+
+  const profile = db.add(Obj.make(ProfileV1, { handle: '@ada', bio: 'Mathematician' }));
+  await db.flush();
+  const core = getObjectCore(profile);
+  const preHeads = A.getHeads(core.getDoc());
+
+  await db.runMigrations([profileMigration]);
+
+  const touchesDataKey = (key: string): boolean =>
+    A.diff(core.getDoc(), preHeads, A.getHeads(core.getDoc())).some((patch) =>
+      patch.path.some((segment, index) => segment === DATA_NAMESPACE && patch.path[index + 1] === key),
+    );
+  expect(touchesDataKey('handle')).to.eq(false);
+  expect(touchesDataKey('bio')).to.eq(false);
+
+  // The type switch and the marker still land — this is a value-compare guard on individual keys,
+  // not a shortcut that skips the whole change when nothing in the data changed.
+  expect(Obj.getTypeURI(profile)?.toString()).to.eq(DXN.make('com.example.type.migrationProfile', '0.2.0'));
+});
+
+test('retires a field the transform drops instead of deleting it, and marks the object with the pre-migration heads', async () => {
+  const NoteV1 = Type.makeObject(DXN.make('com.example.type.migrationNote', '0.1.0'))(
+    Schema.Struct({ title: Schema.String, body: Schema.String }),
+  );
+  const NoteV2 = Type.makeObject(DXN.make('com.example.type.migrationNote', '0.2.0'))(
+    Schema.Struct({ title: Schema.String }),
+  );
+  const noteMigration = defineObjectMigration({
+    from: NoteV1,
+    to: NoteV2,
+    transform: async (from) => ({ title: from.title }),
+  });
+
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([NoteV1, NoteV2]);
+
+  const note = db.add(Obj.make(NoteV1, { title: 'Title', body: 'Body' }));
+  await db.flush();
+  const preHeads = A.getHeads(getObjectCore(note).getDoc());
+
+  await db.runMigrations([noteMigration]);
+
+  // Retained, not deleted: `body` has no home in `NoteV2` but stays readable off the raw path.
+  expect(Obj.getValue(note, ['body'])).to.eq('Body');
+  expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationNote', '0.2.0'));
+
+  const marker = Option.getOrThrow(Annotation.get(note, Migration.MigrationMarkerAnnotation));
+  expect(marker.from).to.eq(noteMigration.fromType.toString());
+  expect(marker.to).to.eq(noteMigration.toType.toString());
+  expect(marker.preHeads).to.deep.eq(preHeads);
+});
+
+test('re-running a migration after it applied performs no further writes', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([ContactV1, ContactV2]);
+
+  const contact = db.add(Obj.make(ContactV1, { firstName: 'Grace', lastName: 'Hopper' }));
+  await db.flush();
+  await db.runMigrations([migrationV2]);
+
+  const core = getObjectCore(contact);
+  const migrationMessagesBefore = A.getHistory(core.getDoc()).filter((entry) =>
+    entry.change.message?.startsWith('migration:'),
+  );
+
+  // The object no longer matches `fromType`, so a second run's query finds nothing to migrate — no
+  // second `migration: ...` change lands, whatever unrelated background activity the doc also sees.
+  await db.runMigrations([migrationV2]);
+  const migrationMessagesAfter = A.getHistory(core.getDoc()).filter((entry) =>
+    entry.change.message?.startsWith('migration:'),
+  );
+  expect(migrationMessagesAfter).to.have.length(migrationMessagesBefore.length);
 });
 
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.

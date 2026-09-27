@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Heads } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
@@ -54,10 +54,17 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { deepMapValues, setDeep } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  EntityManager,
+  type LoadObjectOptions,
+  META_NAMESPACE,
+  SYSTEM_NAMESPACE,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -269,9 +276,41 @@ const combineSyncState = (
 /**
  * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result —
  * `Migration.ObjectMigration.transform` is declared as `(from: unknown, ...) => Promise<unknown>`
- * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`.
+ * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`:
+ * an `id`/`[MetaId]` envelope around the target type's own data keys (the index signature).
  */
-type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
+type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
+
+/**
+ * Structural equality between two ENCODED (automerge-primitive) values: `A.RawString`, `Uint8Array`,
+ * `EncodedReference` (`{ '/': uri }`), plain arrays/objects. Guards `#applyObjectMigration`'s writes so
+ * a value a migration's transform leaves unchanged produces no automerge op.
+ */
+const encodedValuesEqual = (a: unknown, b: unknown): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (a instanceof A.RawString || b instanceof A.RawString) {
+    return String(a) === String(b);
+  }
+  if (a instanceof Uint8Array && b instanceof Uint8Array) {
+    return a.length === b.length && a.every((byte, index) => byte === b[index]);
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, index) => encodedValuesEqual(value, b[index]));
+  }
+  if (isRecord(a) && isRecord(b)) {
+    const aKeys = Object.keys(a);
+    return (
+      aKeys.length === Object.keys(b).length &&
+      aKeys.every((key) => Object.hasOwn(b, key) && encodedValuesEqual(a[key], b[key]))
+    );
+  }
+  return false;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * User-facing API for the space database.
@@ -802,11 +841,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
       delete output?.id;
 
-      await this._entityManager.atomicReplaceObject(object.id, {
-        data: output,
-        type: migration.toType,
-        meta: metaPatch,
-      });
+      // Whole-set validation before any write lands: an invalid transform must not half-write the
+      // object. `toSchema` is the target's entity schema (it requires `id`, which the transform
+      // contract omits), so the object's own — unchanging — id stands in for it here.
+      try {
+        Schema.asserts(migration.toSchema, { ...output, id: object.id });
+      } catch (cause) {
+        throw new Error(
+          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: invalid transform output for object ${object.id}`,
+          { cause },
+        );
+      }
+
+      this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
@@ -814,6 +861,90 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await migration.onMigration({ before, object, db: this });
       }
     }
+  }
+
+  /**
+   * Applies one object migration's write set in a single automerge change on the object's own
+   * `ObjectCore`: data keys the transform's output actually changed (value-compare guarded — an
+   * unchanged key emits no op, and a key the output omits is left untouched as a retired property),
+   * the meta patch (merged key by key, same guard), the type switch, and a
+   * {@link Migration.MigrationMarkerAnnotation} recording the pre-migration heads (post-migration
+   * heads are this very change, locatable by its `message`).
+   *
+   * Every `ObjectCore` helper (`setDecoded`, `setType`, ...) opens its own `change`, so nesting them
+   * here would produce several changes; every write below instead goes straight onto the doc at
+   * `core.mountPath`, inside one `core.change` call.
+   */
+  #applyObjectMigration(
+    object: Obj.Unknown,
+    migration: Migration.ObjectMigration,
+    output: MigrationOutput,
+    metaPatch: Partial<ProtocolEntityMeta> | undefined,
+  ): void {
+    const core = getObjectCore(object);
+    const mountPath = core.mountPath;
+    const preHeads = A.getHeads(core.getDoc());
+
+    // Refs are encoded by URI: a migration transform is expected to carry over refs it already
+    // has, not mint/link new unsaved targets, so no ref-resolver round trip is needed here.
+    const mappedOutput: Record<string, unknown> = deepMapValues(output, (value, recurse) => {
+      if (Ref.isRef(value)) {
+        return EncodedReference.fromURI(value.uri);
+      }
+      if (value instanceof Uint8Array) {
+        return value;
+      }
+      return recurse(value);
+    });
+
+    // `core.encode`'s own object-valued branch drops `undefined` entries (they never reach the
+    // document) rather than writing `null`; matched here since each key is now encoded on its own.
+    const dataWrites = new Map<string, unknown>();
+    for (const [key, value] of Object.entries(mappedOutput)) {
+      if (value === undefined) {
+        continue;
+      }
+      const encoded = core.encode(value);
+      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
+        dataWrites.set(key, encoded);
+      }
+    }
+
+    const metaWrites = new Map<string, unknown>();
+    for (const [key, value] of Object.entries(metaPatch ?? {})) {
+      if (value === undefined) {
+        continue;
+      }
+      const encoded = core.encode(value);
+      if (!encodedValuesEqual(encoded, core.getRaw([META_NAMESPACE, key]))) {
+        metaWrites.set(key, encoded);
+      }
+    }
+
+    const fromType = migration.fromType.toString();
+    const toType = migration.toType.toString();
+    const marker = core.encode(
+      Schema.encodeSync(Migration.MigrationMarkerAnnotation.schema)({
+        from: fromType,
+        to: toType,
+        preHeads: [...preHeads],
+      }),
+    );
+    const typeRef = EncodedReference.fromURI(migration.toType);
+
+    core.change(
+      (doc) => {
+        for (const [key, value] of dataWrites) {
+          setDeep(doc, [...mountPath, DATA_NAMESPACE, key], value);
+        }
+        for (const [key, value] of metaWrites) {
+          setDeep(doc, [...mountPath, META_NAMESPACE, key], value);
+        }
+        setDeep(doc, [...mountPath, META_NAMESPACE, 'annotations', Migration.MigrationMarkerAnnotation.key], marker);
+        setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
+      },
+      { message: `migration: ${fromType} -> ${toType}` },
+    );
   }
 
   /**
@@ -1054,10 +1185,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   batchLoadObjectCores(objectIds: string[], options?: Parameters<EntityManager['batchLoadObjectCores']>[1]) {
     return this._entityManager.batchLoadObjectCores(objectIds, options);
-  }
-
-  atomicReplaceObject(id: string, params: Parameters<EntityManager['atomicReplaceObject']>[1]) {
-    return this._entityManager.atomicReplaceObject(id, params);
   }
 
   allObjectCores() {

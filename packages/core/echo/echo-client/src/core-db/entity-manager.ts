@@ -21,15 +21,8 @@ import {
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity, Ref } from '@dxos/echo';
-import {
-  type BranchRecord,
-  DatabaseDirectory,
-  EncodedReference,
-  type EntityStructure,
-  SpaceDocVersion,
-  type SpaceState,
-} from '@dxos/echo-protocol';
+import { type Database, type Entity } from '@dxos/echo';
+import { type BranchRecord, DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -37,7 +30,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
+import { ComplexSet, chunkArray } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -53,7 +46,6 @@ import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
 import {
   type AddCoreOptions,
-  type AtomicReplaceObjectProps,
   type DocumentChanges,
   type GetObjectCoreByIdOptions,
   type ItemsUpdatedEvent,
@@ -825,44 +817,6 @@ export class EntityManager implements IDatabaseBinding {
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
     }
-  }
-
-  async atomicReplaceObject(id: EntityId, params: AtomicReplaceObjectProps): Promise<void> {
-    const { data, type, meta } = params;
-
-    const core = await this.loadObjectCoreById(id);
-    invariant(core);
-
-    const mappedData = deepMapValues(data, (value, recurse) => {
-      if (Ref.isRef(value)) {
-        return { '/': value.uri };
-      }
-      if (value instanceof Uint8Array) {
-        return value;
-      }
-      return recurse(value);
-    });
-    delete mappedData.id;
-    invariant(mappedData['@type'] === undefined);
-    invariant(mappedData['@meta'] === undefined);
-
-    const existingStruct: EntityStructure = deepMapValues(core.getDecoded([]), (value, recurse) =>
-      value instanceof Uint8Array ? value : recurse(value),
-    );
-    const newStruct: EntityStructure = {
-      ...existingStruct,
-      data: mappedData,
-    };
-
-    if (type !== undefined) {
-      newStruct.system!.type = EncodedReference.fromURI(type);
-    }
-
-    if (meta !== undefined) {
-      newStruct.meta = { ...existingStruct.meta, ...meta };
-    }
-
-    core.setDecoded([], newStruct);
   }
 
   async flush({

@@ -14,7 +14,6 @@ export * from './client/index.ts';
 export * from './errors.ts';
 export {
   type AddCoreOptions,
-  type AtomicReplaceObjectProps,
   type BindOptions,
   type BranchStore,
   type DecodedAutomergePrimaryValue,

@@ -4,10 +4,11 @@
 
 // @import-as-namespace
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { DXN, type URI } from '@dxos/keys';
 
+import * as Annotation from './Annotation.ts';
 import type * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
 import { type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
@@ -188,4 +189,32 @@ export const defineRename = <const From extends string, const To extends string>
   kind: 'rename',
   from: DXN.make<string>(options.from),
   to: DXN.make<string>(options.to),
+});
+
+const MigrationMarkerSchema = Schema.Struct({
+  /** URI of the type the object was migrated from. */
+  from: Schema.String,
+  /** URI of the type the object was migrated to. */
+  to: Schema.String,
+  /**
+   * The object's automerge heads immediately before the migration's change. Post-migration heads
+   * are not stored: they are that change itself, locatable by its `message` (`migration: <from> -> <to>`).
+   */
+  preHeads: Schema.Array(Schema.String),
+});
+
+/**
+ * Value of {@link MigrationMarkerAnnotation}: recorded on an object by the runner immediately after
+ * it applies an object migration's single change.
+ */
+export type MigrationMarker = Schema.Schema.Type<typeof MigrationMarkerSchema>;
+
+/**
+ * Per-object marker left in `EntityMeta.annotations` by the migration runner, so a later pass (the
+ * fold-forward runner, a doctor diagnostic) can find a migrated object and replay any source-property
+ * write that landed after `preHeads`.
+ */
+export const MigrationMarkerAnnotation = Annotation.make<MigrationMarker>({
+  id: 'org.dxos.annotation.migrationMarker',
+  schema: MigrationMarkerSchema,
 });
