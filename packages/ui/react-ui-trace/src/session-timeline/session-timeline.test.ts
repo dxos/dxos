@@ -382,7 +382,7 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
-    'a folded lane begins with its task, and a traced move takes the trace instant over the history second',
+    'a folded lane begins no later than its task, and a traced move takes the trace instant over the history second',
     Effect.fnUntraced(function* ({ expect }) {
       const task = Task.make({ title: 'Only', status: 'started' });
       const chat = makeChat('Only', [task]);
@@ -403,9 +403,39 @@ describe('buildSessionTimeline', () => {
         taskStatusChanges: new Map([[task.id, [{ timestamp: 0, status: 'started', previousStatus: 'todo' }]]]),
       });
       expect(timeline.lanes).toHaveLength(1);
-      expect(timeline.lanes[0]).toMatchObject({ kind: 'session', taskId: task.id, start: 0 });
+      // The history's rounded-down second is replaced by the traced instant, so the lane begins at the
+      // session's first request (1) rather than before any node.
+      expect(timeline.lanes[0]).toMatchObject({ kind: 'session', taskId: task.id, start: 1 });
       const started = timeline.markers.find((marker) => marker.label === 'Task started');
       expect(started?.timestamp).toBe(2);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'a task lane starts at its first node, not at the rounded-down second its history records',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Precise', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+        taskStatusChanges: new Map([[first.id, [{ timestamp: 0, status: 'started', previousStatus: 'todo' }]]]),
+      });
+      const lane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+      const node = timeline.markers.find((marker) => marker.laneId === lane?.id);
+      expect(lane?.start).toBe(2);
+      expect(node?.timestamp).toBe(lane?.start);
     }, Effect.provide(TestTraceService.layer)),
   );
 

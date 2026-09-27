@@ -62,6 +62,48 @@ export const readTaskStatusChanges = (task: Task.Task): TaskStatusChange[] =>
 /** Statuses of a task not yet picked up. */
 const PENDING_STATUSES = new Set<Task.Status>(['todo', 'backlog']);
 
+/**
+ * The edit history's status moves, each timed by the trace event recording the same move when there is
+ * one. History times are whole seconds, rounded down, so on their own they start a lane up to a second
+ * before the node that marks its start; everything derived from them — spans, nodes — reads these.
+ */
+const refineStatusChanges = (
+  changes: ReadonlyMap<string, readonly TaskStatusChange[]>,
+  events: readonly Trace.FlatEvent[],
+): ReadonlyMap<string, readonly TaskStatusChange[]> => {
+  const traced = new Map<string, { timestamp: number; status: string }[]>();
+  for (const event of events) {
+    if (event.type === Trace.TaskStatusChanged.key) {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
+      if (data) {
+        traced.set(data.taskId, [
+          ...(traced.get(data.taskId) ?? []),
+          { timestamp: event.timestamp, status: data.status },
+        ]);
+      }
+    }
+  }
+  return new Map(
+    [...changes].map(([taskId, list]) => {
+      const candidates = [...(traced.get(taskId) ?? [])];
+      return [
+        taskId,
+        list.map((change) => {
+          const index = candidates.findIndex(
+            ({ timestamp, status }) =>
+              status === change.status && Math.abs(timestamp - change.timestamp) <= HISTORY_MATCH_MS,
+          );
+          if (index < 0) {
+            return change;
+          }
+          const [match] = candidates.splice(index, 1);
+          return { ...change, timestamp: match.timestamp };
+        }),
+      ];
+    }),
+  );
+};
+
 const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
 
 /** How long an open lane may be silent before the axis stops following `now`. */
@@ -253,12 +295,13 @@ export const buildSessionTimeline = ({
   processes = [],
   sessions,
   tasks = [],
-  taskStatusChanges,
+  taskStatusChanges: recordedChanges,
   now,
 }: BuildSessionTimelineInput): SessionTimeline => {
   const root = buildSpanTree(traceMessages);
   const spans = flattenSpanTree(root);
   const events = spans.flatMap((span) => span.events).sort((a, b) => a.timestamp - b.timestamp);
+  const taskStatusChanges = recordedChanges && refineStatusChanges(recordedChanges, events);
   const requestBegins = events.filter(
     (event): event is Trace.FlatEvent & { meta: { pid: string } } =>
       event.type === Trace.AgentRequestBegin.key && event.meta.pid !== undefined,
