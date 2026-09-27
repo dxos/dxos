@@ -10,6 +10,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { AiPreprocessor } from '@dxos/ai';
+import { invariant } from '@dxos/invariant';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 
 //
@@ -116,46 +117,39 @@ const callBoundaries = (messages: readonly Message.Message[]): number[] => [
  * Rebuilds every recorded call from the transcript's messages, taking the first call boundary whose
  * prompt has the message count the call was sent with, and returns each cache break in order.
  */
-const replay = (transcript: typeof Transcript.Type) =>
-  Effect.gen(function* () {
-    const messages = transcript.messages.map(toMessage);
-    const breaks: Break[] = [];
-    let previous: Rendered | undefined;
-    const boundaries = callBoundaries(messages);
-    let cursor = 0;
-    for (const [call, request] of transcript.requests.entries()) {
-      const system = transcript.systems[request.system];
-      let prompt: Prompt.Prompt | undefined;
-      for (; cursor < boundaries.length; cursor++) {
-        const candidate = yield* AiPreprocessor.preprocessPrompt(messages.slice(0, boundaries[cursor]), {
-          system,
-          cacheControl: 'ephemeral',
-        });
-        if (candidate.content.filter((message) => message.role !== 'system').length === request.messages) {
-          prompt = candidate;
-          break;
-        }
-      }
-      expect(
-        prompt,
-        `call ${call}: no prefix of the transcript yields ${request.messages} prompt messages`,
-      ).toBeDefined();
-      if (!prompt) {
-        return breaks;
-      }
-      const next: Rendered = {
-        tools: JSON.stringify(transcript.toolsets[request.tools]),
+const replay = Effect.fnUntraced(function* (transcript: typeof Transcript.Type) {
+  const messages = transcript.messages.map(toMessage);
+  const breaks: Break[] = [];
+  let previous: Rendered | undefined;
+  const boundaries = callBoundaries(messages);
+  let cursor = 0;
+  for (const [call, request] of transcript.requests.entries()) {
+    const system = transcript.systems[request.system];
+    let prompt: Prompt.Prompt | undefined;
+    for (; cursor < boundaries.length; cursor++) {
+      const candidate = yield* AiPreprocessor.preprocessPrompt(messages.slice(0, boundaries[cursor]), {
         system,
-        messages: prompt.content.filter((message) => message.role !== 'system').map(renderMessage),
-      };
-      const found = previous && findBreak(call, previous, next);
-      if (found) {
-        breaks.push(found);
+        cacheControl: 'ephemeral',
+      });
+      if (candidate.content.filter((message) => message.role !== 'system').length === request.messages) {
+        prompt = candidate;
+        break;
       }
-      previous = next;
     }
-    return breaks;
-  });
+    invariant(prompt, `call ${call}: no prefix of the transcript yields ${request.messages} prompt messages`);
+    const next: Rendered = {
+      tools: JSON.stringify(transcript.toolsets[request.tools]),
+      system,
+      messages: prompt.content.filter((message) => message.role !== 'system').map(renderMessage),
+    };
+    const found = previous && findBreak(call, previous, next);
+    if (found) {
+      breaks.push(found);
+    }
+    previous = next;
+  }
+  return breaks;
+});
 
 const transcripts = readdirSync(TRANSCRIPTS).filter((file) => file.endsWith('.json'));
 

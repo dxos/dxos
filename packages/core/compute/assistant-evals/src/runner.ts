@@ -212,17 +212,16 @@ const runInstructions = <I>(
  * The run's chat, as JSON records: the seeded one, else the chat the run provisioned. Undefined for
  * a run with no chat, whose transcript could not reproduce its requests.
  */
-const chatMessages = (chatRef: Ref.Ref<Chat.Chat> | undefined) =>
-  Effect.gen(function* () {
-    const chat = chatRef ? yield* Database.load(chatRef) : yield* findObject(Chat.Chat, () => true);
-    if (!chat) {
-      log.warn('no chat to write a transcript from; set `sessionChat` or seed one');
-      return undefined;
-    }
-    const feed = yield* Database.load(chat.feed);
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return messages.map((message) => Obj.toJSON(message));
-  });
+const chatMessages = Effect.fnUntraced(function* (chatRef: Ref.Ref<Chat.Chat> | undefined) {
+  const chat = chatRef ? yield* Database.load(chatRef) : yield* findObject(Chat.Chat, () => true);
+  if (!chat) {
+    log.warn('no chat to write a transcript from; set `sessionChat` or seed one');
+    return undefined;
+  }
+  const feed = yield* Database.load(chat.feed);
+  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  return messages.map((message) => Obj.toJSON(message));
+});
 
 /** One line per run, so a local run shows what it spent without the export step. */
 const logCost = (calls: readonly Usage.Call[]): void => {
