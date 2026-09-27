@@ -27,5 +27,5 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  test: { node: true, workerd: true },
 });
