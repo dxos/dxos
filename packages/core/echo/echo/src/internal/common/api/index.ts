@@ -13,3 +13,4 @@
  */
 
 export * from './meta.ts';
+export * from './device-state.ts';

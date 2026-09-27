@@ -61,6 +61,35 @@ export const CreateDocumentResponse = Schema.Struct({
 });
 export interface CreateDocumentResponse extends Schema.Schema.Type<typeof CreateDocumentResponse> {}
 
+/**
+ * One device-scoped annotation value on an object held by the document.
+ * Device-scoped annotations never enter the automerge document: each device keeps its own values.
+ */
+export const DeviceAnnotation = Schema.Struct({
+  objectId: Schema.String,
+  /** Annotation key (e.g. `org.dxos.annotation.collapsed`). */
+  key: Schema.String,
+  /** JSON-encoded value; absent in a client write deletes the key. */
+  value: Schema.optional(Schema.String),
+});
+export interface DeviceAnnotation extends Schema.Schema.Type<typeof DeviceAnnotation> {}
+
+/**
+ * Availability of a reference target as recorded by the host's index.
+ * - `available`: the target is indexed and live.
+ * - `deleted`: the target is indexed but deleted.
+ * - `dangling`: the index holds no such target.
+ */
+export const RefHintValue = Schema.Literals(['available', 'deleted', 'dangling']);
+export type RefHintValue = Schema.Schema.Type<typeof RefHintValue>;
+
+export const RefHint = Schema.Struct({
+  /** Target URI as written in the reference. */
+  uri: Schema.String,
+  hint: RefHintValue,
+});
+export interface RefHint extends Schema.Schema.Type<typeof RefHint> {}
+
 export const DocumentUpdate = Schema.Struct({
   /**
    * Automerge document id.
@@ -94,6 +123,17 @@ export const DocumentUpdate = Schema.Struct({
    * returns the handle to `'ready'`.
    */
   unavailable: Schema.optional(Schema.Boolean),
+  /**
+   * Device-scoped annotations of the document's objects.
+   * Client → host: writes to apply (a patch). Host → client: every value the device holds for the
+   * document (a replacement snapshot), sent with the initial sync and whenever a value changes.
+   */
+  deviceAnnotations: Schema.optional(mutableArray(DeviceAnnotation)),
+  /**
+   * Host → client: availability of every reference target the document holds, read from the index.
+   * Replaces the previous set for the document.
+   */
+  refHints: Schema.optional(mutableArray(RefHint)),
 });
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 

@@ -410,9 +410,15 @@ export class SqlPlanCompiler {
         // (e.g. a legacy id containing `"`); a NULL column or absent key is a definite non-match, so
         // `not` keeps entities that never carried the annotation.
         const annotations = sql`json_each(COALESCE(m.annotations, '{}'))`;
+        // Device-scoped values never reach `objectMeta`; each row's `value` is one JSON scalar or
+        // structure, which `json_each` yields as a single row carrying its value and type.
+        const device = sql`deviceAnnotations da, json_each(da.value) v`;
+        const deviceRow = sql`da.spaceId = m.spaceId AND da.objectId = m.objectId AND da.key = ${filter.key} AND v.key IS NULL`;
         return filter.value === undefined
-          ? sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key})`
-          : sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key} AND ${scalarEquals(sql, sql`a.value`, sql`a.type`, filter.value)})`;
+          ? sql`(EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key})
+              OR EXISTS (SELECT 1 FROM deviceAnnotations da WHERE da.spaceId = m.spaceId AND da.objectId = m.objectId AND da.key = ${filter.key}))`
+          : sql`(EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key} AND ${scalarEquals(sql, sql`a.value`, sql`a.type`, filter.value)})
+              OR EXISTS (SELECT 1 FROM ${device} WHERE ${deviceRow} AND ${scalarEquals(sql, sql`v.value`, sql`v.type`, filter.value)}))`;
       }
       case 'text-search':
         // The executors behind an index resolve text search in the select; a residual node

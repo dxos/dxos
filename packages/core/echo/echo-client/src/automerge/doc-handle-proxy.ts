@@ -9,6 +9,7 @@ import { EventEmitter } from 'eventemitter3';
 import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { type DataService } from '@dxos/protocols/rpc';
 
 import { DocumentUnavailableError } from '../errors.ts';
 import * as Doc from './Doc.ts';
@@ -25,15 +26,27 @@ export type ChangeEvent<T> = {
 };
 
 export type ClientDocHandleEvents<T> = {
-  change: ChangeEvent<T>;
-  delete: { handle: DocHandleProxy<T> };
+  'change': ChangeEvent<T>;
+  'delete': { handle: DocHandleProxy<T> };
   /**
    * The handle left `'unavailable'` because the document's bytes finally arrived. Emitted only on
    * that transition: a waiter failed by {@link DocHandleProxy._markUnavailable} holds a rejected
    * promise and has nothing else to wake it.
    */
-  available: { handle: DocHandleProxy<T> };
+  'available': { handle: DocHandleProxy<T> };
+  /**
+   * Device-scoped annotation values changed: `local` for a write on this thread (to be sent to the
+   * host), `host` for a snapshot the host delivered.
+   */
+  'device-annotations': { handle: DocHandleProxy<T>; objectIds: ReadonlySet<string>; source: 'local' | 'host' };
+  /** The host delivered new availability hints for the document's reference targets. */
+  'ref-hints': { handle: DocHandleProxy<T> };
 };
+
+/** A device-scoped annotation value; `undefined` marks a deletion not yet sent. */
+type DeviceAnnotationWrite = { objectId: string; key: string; value: unknown };
+
+const deviceAnnotationKey = (objectId: string, key: string) => `${objectId}\0${key}`;
 
 export type DocHandleProxyOptions<T> = {
   initialValue?: T;
@@ -105,6 +118,15 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
+
+  /** Device-scoped annotation values the host holds for the document's objects, by object then key. */
+  #deviceAnnotations = new Map<string, Map<string, unknown>>();
+  /** Local device-annotation writes not yet taken by a send, by {@link deviceAnnotationKey}. */
+  #pendingDeviceAnnotations = new Map<string, DeviceAnnotationWrite>();
+  /** Local device-annotation writes in flight; re-sent until the host acknowledges them. */
+  #sendingDeviceAnnotations = new Map<string, DeviceAnnotationWrite>();
+  /** Index availability of the document's reference targets, by target URI. */
+  #refHints = new Map<string, DataService.RefHintValue>();
 
   constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
     super();
@@ -306,6 +328,102 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Device-scoped annotation values of an object: the host's, overlaid by local writes it has not
+   * acknowledged yet.
+   */
+  getDeviceAnnotations(objectId: string): Readonly<Record<string, unknown>> {
+    const values: Record<string, unknown> = Object.fromEntries(this.#deviceAnnotations.get(objectId) ?? []);
+    for (const writes of [this.#sendingDeviceAnnotations, this.#pendingDeviceAnnotations]) {
+      for (const write of writes.values()) {
+        if (write.objectId !== objectId) {
+          continue;
+        }
+        if (write.value === undefined) {
+          delete values[write.key];
+        } else {
+          values[write.key] = write.value;
+        }
+      }
+    }
+    return values;
+  }
+
+  /**
+   * Writes a device-scoped annotation value of an object; `undefined` deletes it. Visible at once, and
+   * sent to the host with the document's next update.
+   */
+  setDeviceAnnotation(objectId: string, key: string, value: unknown): void {
+    this.#pendingDeviceAnnotations.set(deviceAnnotationKey(objectId, key), { objectId, key, value });
+    this.emit('device-annotations', { handle: this, objectIds: new Set([objectId]), source: 'local' });
+  }
+
+  /**
+   * Availability of a reference target as the host's index last reported it, if the document holds it.
+   */
+  getRefHint(uri: string): DataService.RefHintValue | undefined {
+    return this.#refHints.get(uri);
+  }
+
+  /**
+   * Local device-annotation writes to send, including any whose earlier send was not acknowledged.
+   * @internal
+   */
+  _getPendingDeviceAnnotations(): DataService.DeviceAnnotation[] | undefined {
+    for (const [id, write] of this.#pendingDeviceAnnotations) {
+      this.#sendingDeviceAnnotations.set(id, write);
+    }
+    this.#pendingDeviceAnnotations.clear();
+    if (this.#sendingDeviceAnnotations.size === 0) {
+      return undefined;
+    }
+    return [...this.#sendingDeviceAnnotations.values()].map(({ objectId, key, value }) => ({
+      objectId,
+      key,
+      value: value === undefined ? undefined : JSON.stringify(value),
+    }));
+  }
+
+  /**
+   * Replaces the host's device-annotation values for the document.
+   * @internal
+   */
+  _integrateDeviceAnnotations(annotations: readonly DataService.DeviceAnnotation[]): void {
+    const next = new Map<string, Map<string, unknown>>();
+    for (const { objectId, key, value } of annotations) {
+      if (value === undefined) {
+        continue;
+      }
+      const values = next.get(objectId) ?? new Map<string, unknown>();
+      values.set(key, JSON.parse(value));
+      next.set(objectId, values);
+    }
+    const changed = new Set<string>();
+    for (const objectId of new Set([...this.#deviceAnnotations.keys(), ...next.keys()])) {
+      if (!sameValues(this.#deviceAnnotations.get(objectId), next.get(objectId))) {
+        changed.add(objectId);
+      }
+    }
+    this.#deviceAnnotations = next;
+    if (changed.size > 0) {
+      this.emit('device-annotations', { handle: this, objectIds: changed, source: 'host' });
+    }
+  }
+
+  /**
+   * Replaces the index availability hints for the document's reference targets.
+   * @internal
+   */
+  _integrateRefHints(hints: readonly DataService.RefHint[]): void {
+    const next = new Map(hints.map(({ uri, hint }) => [uri, hint]));
+    const changed =
+      next.size !== this.#refHints.size || [...next].some(([uri, hint]) => this.#refHints.get(uri) !== hint);
+    this.#refHints = next;
+    if (changed) {
+      this.emit('ref-hints', { handle: this });
+    }
+  }
+
+  /**
    * Get pending changes since last write.
    * @internal
    */
@@ -334,7 +452,12 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
     // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
     // everything this handle does, with nothing outstanding.
-    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+    return (
+      this._doc !== undefined &&
+      A.equals(A.getHeads(this._doc), this._lastSentHeads) &&
+      this.#pendingDeviceAnnotations.size === 0 &&
+      this.#sendingDeviceAnnotations.size === 0
+    );
   }
 
   /**
@@ -343,6 +466,24 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _confirmSync(): void {
     this._lastSentHeads = this._currentlySendingHeads;
+  }
+
+  /**
+   * Confirm that the device-annotation writes last taken by {@link _getPendingDeviceAnnotations} were applied.
+   * @internal
+   */
+  _confirmDeviceAnnotations(): void {
+    // The host has committed these; applying them keeps the values visible until its snapshot echoes them.
+    for (const { objectId, key, value } of this.#sendingDeviceAnnotations.values()) {
+      const values = this.#deviceAnnotations.get(objectId) ?? new Map<string, unknown>();
+      if (value === undefined) {
+        values.delete(key);
+      } else {
+        values.set(key, value);
+      }
+      this.#deviceAnnotations.set(objectId, values);
+    }
+    this.#sendingDeviceAnnotations.clear();
   }
 
   /**
@@ -382,3 +523,15 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 }
+
+const sameValues = (
+  a: ReadonlyMap<string, unknown> | undefined,
+  b: ReadonlyMap<string, unknown> | undefined,
+): boolean => {
+  const left = a ?? new Map<string, unknown>();
+  const right = b ?? new Map<string, unknown>();
+  return (
+    left.size === right.size &&
+    [...left].every(([key, value]) => right.has(key) && JSON.stringify(value) === JSON.stringify(right.get(key)))
+  );
+};

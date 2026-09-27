@@ -1634,6 +1634,25 @@ export const queryContainsChanges = (query: QueryAST.Query): boolean => {
  * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
  * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
  */
+/**
+ * True when the filter tree holds an annotation predicate anywhere, which device-scoped values can satisfy.
+ */
+export const filterContainsAnnotation = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'annotation':
+      return true;
+    case 'object':
+      return Object.values(filter.props).some(filterContainsAnnotation);
+    case 'not':
+      return filterContainsAnnotation(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsAnnotation);
+    default:
+      return false;
+  }
+};
+
 export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'in-query':

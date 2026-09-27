@@ -31,6 +31,7 @@ import {
   createProxy,
   createTextMethodError,
   defineHiddenProperty,
+  getDeviceState,
   getEntityKind,
   getProxyHandler,
   getProxyTarget,
@@ -916,6 +917,8 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   if (isProxy(obj)) {
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<EntityMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
+    // Read before the handler swap below, after which the accessor resolves to the database-backed object.
+    const deviceAnnotations = getDeviceState(obj)?.getAnnotations();
 
     // The proxy is kept and re-pointed at this handler, so the object's identity survives the
     // conversion from an in-memory typed object into a database-backed one.
@@ -954,6 +957,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     if (meta && metaNotEmpty(meta)) {
       target[symbolInternals].setMeta(linkMetaRefs(target, meta));
+    }
+    for (const [key, value] of Object.entries(deviceAnnotations ?? {})) {
+      core.setDeviceAnnotation(key, value);
     }
 
     // Now that the previous handler's metadata (parent, relation source/target,

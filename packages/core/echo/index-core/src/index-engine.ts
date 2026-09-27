@@ -13,6 +13,7 @@ import type { EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+import { DeviceAnnotationStore } from './device-annotation-store.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import { IndexedObjectSource } from './indexed-object-source.ts';
 import {
@@ -39,6 +40,11 @@ import { isUnauthorizedFunctionError } from './utils.ts';
  * Result of a single indexing pass over a data source.
  * Carries enough metadata for callers to build targeted invalidation hints.
  */
+/**
+ * Whether the index holds a live, deleted, or no entity for an id.
+ */
+export type EntityAvailability = 'available' | 'deleted' | 'dangling';
+
 export type IndexingResult = {
   updated: number;
   done: boolean;
@@ -152,6 +158,7 @@ export class IndexEngine {
   readonly #reverseRefIndex: ReverseRefIndex;
   readonly #activityIndex: ActivityIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
+  readonly #deviceAnnotations: DeviceAnnotationStore;
   readonly #indexedObjectSource: IndexedObjectSource;
 
   constructor(sql: SqlClient.SqlClient) {
@@ -163,6 +170,7 @@ export class IndexEngine {
     this.#reverseRefIndex = new ReverseRefIndex(sql);
     this.#activityIndex = new ActivityIndex(sql);
     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
+    this.#deviceAnnotations = new DeviceAnnotationStore(sql);
     this.#indexedObjectSource = new IndexedObjectSource(sql);
   }
 
@@ -186,7 +194,15 @@ export class IndexEngine {
       yield* this.#reverseRefIndex.migrate();
       yield* this.#activityIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
+      yield* this.#deviceAnnotations.migrate();
     });
+  }
+
+  /**
+   * Values of device-scoped annotations, which share this database with the index.
+   */
+  get deviceAnnotations(): DeviceAnnotationStore {
+    return this.#deviceAnnotations;
   }
 
   /**
@@ -363,6 +379,28 @@ export class IndexEngine {
   }
 
   /**
+   * Availability of each object as the index records it: `available` when any indexed row for the id
+   * is live, `deleted` when every row is deleted, and `dangling` when the index holds none.
+   */
+  queryAvailability(
+    spaceId: SpaceId,
+    objectIds: readonly EntityId[],
+  ): Effect.Effect<ReadonlyMap<EntityId, EntityAvailability>, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const availability = new Map<EntityId, EntityAvailability>(objectIds.map((id) => [id, 'dangling']));
+      const rows = yield* this.#objectMetaIndex.queryObjectIds({ spaceIds: [spaceId], objectIds });
+      for (const row of rows) {
+        if (!row.deleted) {
+          availability.set(row.objectId, 'available');
+        } else if (availability.get(row.objectId) !== 'available') {
+          availability.set(row.objectId, 'deleted');
+        }
+      }
+      return availability;
+    }).pipe(Effect.withSpan('IndexEngine.queryAvailability'));
+  }
+
+  /**
    * Delete index rows for garbage-collected documents and objects: whole documents (all their
    * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
    * (by record id) into the snapshot store and the FTS and reverse-ref indexes, and drops the
@@ -393,6 +431,7 @@ export class IndexEngine {
           if (opts.documentIds.length > 0) {
             yield* this.#tracker.deleteCursors({ spaceId: opts.spaceId, resourceIds: opts.documentIds });
           }
+          yield* this.#deviceAnnotations.deleteObjects(opts);
           return recordIds.length;
         }),
       );

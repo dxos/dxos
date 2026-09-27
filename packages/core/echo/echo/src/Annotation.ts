@@ -57,6 +57,15 @@ export type TypeId = typeof TypeId;
 // TODO(dmaretskyi): Reconcile Annotation.Key vs DXN -- work-out approach to versioning.
 
 /**
+ * Where an annotation's values on entity instances reside.
+ * - `space`: in the entity's document, replicated to every member of the space (the default).
+ * - `identity`: shared by the devices of one identity. Reserved; not yet supported.
+ * - `device`: on this device only, in its local database. Each device keeps its own value, which
+ *   never replicates; the annotation still attaches to the (replicated) entity.
+ */
+export type Storage = 'space' | 'identity' | 'device';
+
+/**
  * Annotation is a typed property that can be assigned to a schema or an entity instance.
  */
 export interface Annotation<T> {
@@ -70,6 +79,11 @@ export interface Annotation<T> {
    * @example "org.dxos.annotation.color"
    */
   readonly key: Key;
+
+  /**
+   * Where the annotation's values on entity instances reside. Schema-level values always live in the schema.
+   */
+  readonly storage: Storage;
 
   /**
    * Schema of the annotation value.
@@ -107,6 +121,8 @@ interface MakeProps<T> {
   schema: Schema.Codec<T, any, never>;
   /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
+  /** Where values on entity instances reside; see {@link Storage}. Defaults to `space`. */
+  storage?: Storage;
 }
 
 /**
@@ -122,6 +138,13 @@ interface MakeProps<T> {
  * });
  *
  * const schema = Schema.String.annotate(ColorAnnotation.set('red'));
+ *
+ * // Each device keeps its own value; it never replicates.
+ * const CollapsedAnnotation = Annotation.make({
+ *   id: 'org.dxos.annotation.collapsed',
+ *   schema: Schema.Boolean,
+ *   storage: 'device',
+ * });
  * ```
  */
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;

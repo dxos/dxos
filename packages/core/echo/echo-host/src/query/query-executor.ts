@@ -37,12 +37,23 @@ import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
-import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
+import {
+  type DeviceAnnotationValues,
+  filterMatchDoc,
+  filterMatchEntityMeta,
+  filterMatchObjectJSON,
+  getEntityMetaTypeURI,
+} from '../filter/index.ts';
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
-import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+import {
+  type QueryExecutorMode,
+  QueryPlanner,
+  filterContainsAnnotation,
+  filterContainsInQuery,
+} from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
 
 type QueryExecutorOptions = {
@@ -1220,17 +1231,16 @@ export class QueryExecutor extends Resource {
       ? await this._resolveInQueryFilter(step.filter, subqueryTraces)
       : step.filter;
 
+    // Device-scoped annotation values live outside every representation below, so they are merged in.
+    const device = filterContainsAnnotation(filter) ? await this._loadDeviceAnnotations(workingSet) : undefined;
     const result = workingSet.filter((item) => {
+      const values = device?.get(compositeKey(item.spaceId, item.objectId));
       if (item.doc) {
-        return filterMatchDoc(filter, {
-          id: item.objectId,
-          spaceId: item.spaceId,
-          doc: item.doc,
-        });
+        return filterMatchDoc(filter, { id: item.objectId, spaceId: item.spaceId, doc: item.doc }, values);
       } else if (item.data) {
-        return filterMatchObjectJSON(filter, item.data);
+        return filterMatchObjectJSON(filter, item.data, values);
       } else if (item.meta) {
-        return filterMatchEntityMeta(filter, item.meta);
+        return filterMatchEntityMeta(filter, item.meta, values);
       } else {
         return false;
       }
@@ -1246,6 +1256,27 @@ export class QueryExecutor extends Resource {
         children: subqueryTraces,
       },
     };
+  }
+
+  /**
+   * Device-scoped annotation values of the working set's objects, keyed by `compositeKey(spaceId, objectId)`.
+   */
+  private async _loadDeviceAnnotations(workingSet: readonly QueryItem[]): Promise<Map<string, DeviceAnnotationValues>> {
+    const bySpace = new Map<SpaceId, EntityId[]>();
+    for (const item of workingSet) {
+      bySpace.set(item.spaceId, [...(bySpace.get(item.spaceId) ?? []), item.objectId]);
+    }
+    const values = new Map<string, DeviceAnnotationValues>();
+    for (const [spaceId, objectIds] of bySpace) {
+      const rows = await RuntimeProvider.runPromise(this._runtime)(
+        this._indexEngine.deviceAnnotations.queryByObjects(spaceId, objectIds),
+      );
+      for (const { objectId, key, value } of rows) {
+        const id = compositeKey(spaceId, objectId);
+        values.set(id, { ...values.get(id), [key]: JSON.parse(value) });
+      }
+    }
+    return values;
   }
 
   /**

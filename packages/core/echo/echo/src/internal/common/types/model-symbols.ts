@@ -57,6 +57,23 @@ export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
 export const ObjectBranchId = Symbol.for('@dxos/echo/Branch');
 
 /**
+ * Device-state accessor symbol. Resolves to the {@link EntityDeviceState} of a live ECHO object, which
+ * can hold values on this device only (held in memory until the object joins a database); absent on
+ * every other entity.
+ */
+export const ObjectDeviceStateId = Symbol.for('@dxos/echo/DeviceState');
+
+/**
+ * Values an entity keeps on this device only, outside its replicated document.
+ */
+export interface EntityDeviceState {
+  /** Encoded values of the entity's device-scoped annotations, by annotation key. */
+  getAnnotations(): Readonly<Record<string, unknown>>;
+  /** Writes an encoded device-scoped annotation value; `undefined` deletes it. */
+  setAnnotation(key: string, value: unknown): void;
+}
+
+/**
  * Property name for relation source when object is serialized to JSON.
  */
 export const ATTR_RELATION_SOURCE = '@relationSource';

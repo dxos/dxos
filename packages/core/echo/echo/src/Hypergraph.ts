@@ -40,6 +40,12 @@ export interface RefResolverOptions {
    * Affects how non-absolute DXNs are resolved.
    */
   context?: RefResolutionContext;
+
+  /**
+   * Target availability the host's index reported alongside the object being resolved from, by URI.
+   * Consulted for a target the working set does not hold.
+   */
+  hints?: ReadonlyMap<string, Ref.Hint>;
 }
 
 /**

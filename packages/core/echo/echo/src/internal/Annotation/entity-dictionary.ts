@@ -7,9 +7,29 @@ import * as Schema from 'effect/Schema';
 
 import type * as Annotation from '../../Annotation.ts';
 import type * as Entity from '../../Entity.ts';
+import { getDeviceState } from '../common/api/device-state.ts';
 import { getMetaChecked } from '../common/api/meta.ts';
 import { type Mutable, change } from '../common/proxy/reactive.ts';
+import { type EntityDeviceState } from '../common/types/index.ts';
 import { isEntity, isSnapshot } from '../Entity/guard.ts';
+
+const getDeviceStateChecked = <T>(target: unknown, annotation: Annotation.Annotation<T>): EntityDeviceState => {
+  const state = getDeviceState(target);
+  if (!state) {
+    throw new TypeError(
+      `Annotation ${annotation.key} is device-scoped and the target cannot hold device-scoped values.`,
+    );
+  }
+  return state;
+};
+
+/** Reads a device-scoped value, stored in its encoded (JSON) form. */
+const getDeviceValue = <T>(target: unknown, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+  const values = getDeviceState(target)?.getAnnotations();
+  return values !== undefined && annotation.key in values
+    ? Option.some(Schema.decodeUnknownSync(annotation.schema)(values[annotation.key]))
+    : Option.none();
+};
 
 /**
  * Get the value of an annotation from an entity instance or snapshot.
@@ -25,6 +45,10 @@ export const get = <T>(
   if (!isEntity(target) && !isSnapshot(target)) {
     throw new TypeError('Target is not an annotation target.');
   }
+  // A snapshot copies the document, which never holds device-scoped values.
+  if (annotation.storage === 'device') {
+    return getDeviceValue(target, annotation);
+  }
 
   // The dictionary slot is typed `unknown`; at runtime it holds the annotation's decoded value (the
   // proxy codecs nested refs in both directions, and a snapshot deep-copies what the proxy yields),
@@ -36,13 +60,21 @@ export const get = <T>(
 /**
  * Set the value of an annotation on an entity instance.
  * Must be called with a mutable entity — i.e. inside an `Obj.update` callback.
+ * A device-scoped value is written to the device's store immediately and is not undone if the
+ * surrounding update fails.
  *
  * The value is assigned directly to the reactive meta dictionary; the proxy encodes nested Refs and
  * links their unsaved targets on write (matching ordinary property assignment), so no manual
  * encode/persist step is needed.
  */
 export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.Annotation<T>, value: T): void => {
-  if (isEntity(target)) {
+  if (isEntity(target) && annotation.storage === 'device') {
+    // Written to the device's store at once rather than to the document, so it joins no transaction.
+    getDeviceStateChecked(target, annotation).setAnnotation(
+      annotation.key,
+      Schema.encodeSync(annotation.schema)(value),
+    );
+  } else if (isEntity(target)) {
     // The dictionary slot is untyped, so the proxy can't validate against the annotation schema;
     // validate here (without encoding — the proxy encodes nested refs and links targets on assignment).
     Schema.decodeSync(Schema.toType(annotation.schema))(value);
@@ -61,6 +93,17 @@ export const update = <T>(
   annotation: Annotation.Annotation<T>,
   mutator: (value: Mutable<T>) => void,
 ): void => {
+  if (annotation.storage === 'device') {
+    const state = getDeviceStateChecked(target, annotation);
+    const current = getDeviceValue(target, annotation);
+    if (Option.isSome(current)) {
+      // Decoded afresh on every read, so the value is a private copy the mutator may change.
+      const value = current.value;
+      mutator(value as Mutable<T>);
+      state.setAnnotation(annotation.key, Schema.encodeSync(annotation.schema)(value));
+    }
+    return;
+  }
   change(target, (mutable) => {
     const current = get(mutable, annotation);
     if (Option.isSome(current)) {

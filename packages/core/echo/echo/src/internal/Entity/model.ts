@@ -18,11 +18,13 @@ import {
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
   type ATTR_TYPE,
+  type EntityDeviceState,
   EntityKind,
   KindId,
   ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  type ObjectDeviceStateId,
   ObjectVersionId,
   type ParentId,
   RelationSourceDXNId,
@@ -63,6 +65,7 @@ export interface InternalObjectProps {
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectBranchId]?: string;
+  readonly [ObjectDeviceStateId]?: EntityDeviceState;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
   readonly [RelationSourceDXNId]?: EID.EID;

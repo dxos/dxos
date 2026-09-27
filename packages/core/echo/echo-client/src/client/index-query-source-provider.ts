@@ -597,6 +597,7 @@ export class IndexQuerySource implements QuerySource {
       const queueEchoUri = EID.make({ spaceId: result.spaceId, entityId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId, feed: queueEchoUri },
+        hints: result.refHints && new Map(result.refHints.map(({ uri, hint }) => [uri, hint])),
       });
       const database = this._params.graph.getDatabase(result.spaceId);
       // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors

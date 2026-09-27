@@ -66,6 +66,7 @@ import {
   ATTR_TYPE,
   ChangeId,
   ChangeKeyId,
+  type EntityDeviceState,
   EntityKind,
   type EntityMeta,
   type EntityMetaJSON,
@@ -77,10 +78,12 @@ import {
   ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  ObjectDeviceStateId,
   type ObjectJSON,
   ObjectVersionId,
   ParentId,
   type Ref,
+  type RefHint,
   RefImpl,
   type RefResolver,
   type RefResolverRequest,
@@ -446,6 +449,11 @@ class CoreRefResolver implements RefResolver {
   async resolveType(uri: URI.URI): Promise<unknown | undefined> {
     return this.#database()?.resolveType?.(uri);
   }
+
+  /** The working set when it holds the target, else the index hint delivered with this object's document. */
+  hint(uri: URI.URI): RefHint | undefined {
+    return this.#database()?.hint?.(uri) ?? this._target[symbolInternals].getRefHint(uri);
+  }
 }
 
 /** One resolver per target, since every ref read off it resolves the same way. */
@@ -714,6 +722,14 @@ export class EchoRoot extends EchoRecord {
 
   get [ObjectBranchId](): string {
     return this[symbolInternals].branch;
+  }
+
+  get [ObjectDeviceStateId](): EntityDeviceState {
+    const core = this[symbolInternals];
+    return {
+      getAnnotations: () => core.getDeviceAnnotations(),
+      setAnnotation: (key, value) => core.setDeviceAnnotation(key, value),
+    };
   }
 
   get [SchemaKindId](): EntityKind | undefined {

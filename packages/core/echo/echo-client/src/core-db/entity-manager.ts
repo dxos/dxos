@@ -280,6 +280,23 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
+    // Device-scoped annotations and reference hints are not document changes, so they reach objects
+    // and queries here rather than through `_onDocumentUpdate`.
+    this._repoProxy.deviceAnnotationsChanged.on(ctx, ({ objectIds, source }) => {
+      const ids = [...objectIds];
+      // A local write has already notified its object synchronously.
+      if (source === 'host') {
+        this._emitObjectUpdateEvent(ids);
+      }
+      this._scheduleThrottledDbUpdate(ids);
+    });
+    this._repoProxy.refHintsChanged.on(ctx, ({ documentId }) => {
+      const handle = this._repoProxy.handles[documentId];
+      const ids = handle ? this._documentObjects.get(handle) : undefined;
+      if (ids) {
+        this._emitObjectUpdateEvent([...ids]);
+      }
+    });
     ctx.onDispose(() => {
       for (const request of this._satisfactionRequests.values()) {
         request.abort();

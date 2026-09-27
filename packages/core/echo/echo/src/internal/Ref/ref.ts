@@ -192,6 +192,14 @@ const isTargetDeleted = (target: unknown): boolean =>
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
+/**
+ * Whether a reference target exists, as this device last learned it.
+ * - `available`: the target exists and is not deleted.
+ * - `deleted`: the target exists but is deleted.
+ * - `dangling`: no such target is known.
+ */
+export type RefHint = 'available' | 'deleted' | 'dangling';
+
 export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target URI (either an `echo:` EID for an object reference or a `dxn:` DXN for a type reference).
@@ -202,6 +210,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * Returns true if the reference has a target available (inlined or resolver set).
    */
   get isAvailable(): boolean;
+
+  /**
+   * Whether the target exists, without loading it: from the target itself when it is loaded or inlined,
+   * otherwise from the local index's record of it, which arrives with the object holding the reference.
+   * `undefined` when neither is known. A hint, not a guarantee: the index may lag replication.
+   */
+  get hint(): RefHint | undefined;
 
   /**
    * @returns The reference target.
@@ -530,6 +545,12 @@ export interface RefResolver {
    * @deprecated Use {@link resolve}. Removed in Task 11.
    */
   resolveType?(uri: URI.URI): Promise<unknown | undefined>;
+
+  /**
+   * Whether the target of `uri` exists, as far as is known without loading it. Optional — a resolver
+   * with no such knowledge leaves it unimplemented.
+   */
+  hint?(uri: URI.URI): RefHint | undefined;
 }
 
 /**
@@ -614,6 +635,16 @@ export class RefImpl<T> implements Ref<T> {
    */
   get isAvailable(): boolean {
     return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get hint(): RefHint | undefined {
+    if (this.#target) {
+      return isTargetDeleted(this.#target) ? 'deleted' : 'available';
+    }
+    return this.#resolver?.hint?.(this.#uri);
   }
 
   get atom(): Atom.Atom<T | undefined> {

@@ -208,7 +208,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  createRefResolver({ context = {} }: Hypergraph.RefResolverOptions): Ref.Resolver {
+  createRefResolver({ context = {}, hints }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
 
     // A resolved reference that points at a persisted (db-backed) schema object surfaces as the
@@ -272,6 +272,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           }
         }
       },
+
+      hint: (uri: URI.URI) => this.#hintFromWorkingSet(uri, context) ?? hints?.get(uri),
 
       // Parallel to resolveSchema, but returns the Type.AnyEntity entity itself
       // rather than its underlying Effect Schema. Used by `Obj.fromJSON` (queue
@@ -518,6 +520,28 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     }
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
+  }
+
+  /**
+   * Availability of a target known locally: a registry entry for a `dxn:` URI, or an `echo:` target the
+   * working set holds, deleted or not; `undefined` when an `echo:` target is not held.
+   */
+  #hintFromWorkingSet(uri: URI.URI, context: Hypergraph.RefResolutionContext): Ref.Hint | undefined {
+    // The registry is complete in-process, so an absent entry is known to be missing.
+    if (DXN.isDXN(uri)) {
+      return this._registry.getByURI(uri.toString()) ? 'available' : 'dangling';
+    }
+    const eid = EID.tryParse(uri);
+    const spaceId = eid && (EID.getSpaceId(eid) ?? context.space);
+    const objectId = eid && EID.getEntityId(eid);
+    if (!spaceId || !objectId) {
+      return undefined;
+    }
+    const entity = this._databases.get(spaceId)?.getObjectById(objectId, { deleted: true });
+    if (!entity) {
+      return undefined;
+    }
+    return isEchoObject(entity) && getObjectCore(entity).isDeleted() ? 'deleted' : 'available';
   }
 
   /**
