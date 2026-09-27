@@ -119,7 +119,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@tauri-apps/api": "catalog:",

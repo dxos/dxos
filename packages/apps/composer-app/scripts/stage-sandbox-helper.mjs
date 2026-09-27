@@ -5,7 +5,7 @@
 
 // Stages `dx-sandbox`, the local sandbox helper plugin-sandbox compiles (`moon run
 // plugin-sandbox:compile-sidecar`), where the desktop app bundles and spawns it. See
-// plugin-native's `sandbox-launcher.ts` for why it is a scoped shell command, not a Tauri sidecar.
+// plugin-sandbox's `capabilities/local-launcher.ts` for why it is a scoped shell command, not a Tauri sidecar.
 //
 // Usage: node scripts/stage-sandbox-helper.mjs [--required]
 //   --required  fail when the helper has not been compiled (release builds); without it a missing

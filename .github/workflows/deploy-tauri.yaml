@@ -278,7 +278,7 @@ jobs:
             xargs -0 -I{} codesign --force --options runtime --sign "$CERT_ID" "{}"
 
       # plugin-sandbox's local sandbox helper ships like the ollama launcher, as a plain bundled file
-      # (see plugin-native's capabilities/sandbox-launcher.ts). Built from sources, so no moon here.
+      # (see plugin-sandbox's capabilities/local-launcher.ts). Built from sources, so no moon here.
       - name: Build sandbox helper
         run: |
           (cd packages/plugins/plugin-sandbox && proto run bun -- ./scripts/build-sidecar.ts)

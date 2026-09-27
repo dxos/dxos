@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Child, Command } from '@tauri-apps/plugin-shell';
+import type { Child } from '@tauri-apps/plugin-shell';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import * as HttpBackend from '@dxos/plugin-sandbox/HttpBackend';
-import * as SandboxCapabilities from '@dxos/plugin-sandbox/SandboxCapabilities';
-import * as SandboxService from '@dxos/plugin-sandbox/SandboxService';
+import { isTauri } from '@dxos/util';
+
+import * as HttpBackend from '../services/HttpBackend.ts';
+import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
+import * as SandboxService from '../types/SandboxService.ts';
 
 /** How long the helper may take to report its port before the start counts as failed. */
 const START_TIMEOUT_MS = 15_000;
@@ -17,12 +19,14 @@ const START_TIMEOUT_MS = 15_000;
 type Helper = { child: Child; backend: SandboxService.Backend };
 
 /**
- * Runs local sandboxes for the webview through `dx-sandbox`, plugin-sandbox's helper, which serves
- * them on a loopback port. Spawned as a scoped shell command like Ollama, and for the same reason:
- * an `externalBin` sidecar inherits the app's passkey entitlements and macOS kills it at exec.
+ * Runs local sandboxes for the desktop app's webview through `dx-sandbox` (`local/sidecar.ts`),
+ * which serves them on a loopback port. Spawned as a scoped shell command like plugin-native's
+ * Ollama, and for the same reason: an `externalBin` sidecar inherits the app's passkey entitlements
+ * and macOS kills it at exec.
  *
  * The helper starts on first use and again after it dies. Its token is written to stdin, not passed
- * as an argument, since any user on the machine can read another process's arguments.
+ * as an argument, since any user on the machine can read another process's arguments. Outside the
+ * desktop app the launcher only reports that local sandboxes need it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,6 +34,10 @@ export default Capability.makeModule(
     let stopping = false;
 
     const start = async (): Promise<Helper> => {
+      if (!isTauri()) {
+        throw new Error('local sandboxes need the desktop app');
+      }
+      const { Command } = await import('@tauri-apps/plugin-shell');
       const token = randomToken();
       const command = Command.create('dx-sandbox', []);
       const port = new Promise<number>((resolve, reject) => {

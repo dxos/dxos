@@ -44,9 +44,6 @@
     },
     {
       "path": "../plugin-assistant"
-    },
-    {
-      "path": "../plugin-sandbox"
     }
   ]
 }

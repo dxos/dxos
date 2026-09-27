@@ -151,6 +151,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tauri-apps/plugin-shell": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
