@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
-import { afterAll } from 'vitest';
+import { afterAll, expect } from 'vitest';
 
 import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import { AiService, Model } from '@dxos/ai';
@@ -28,9 +28,10 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { EDGE_URLS } from '@dxos/config';
-import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -41,12 +42,14 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
-import { Employer, Organization, Person } from '@dxos/types';
+import { Employer, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { findObject } from './assertions.ts';
 import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
+import * as Transcript from './Transcript.ts';
 import * as Usage from './Usage.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
@@ -205,6 +208,44 @@ const runInstructions = <I>(
     }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
   );
 
+/** The run's chat, as JSON records: the seeded one, else the chat the run provisioned. */
+const chatMessages = (chatRef: Ref.Ref<Chat.Chat> | undefined) =>
+  Effect.gen(function* () {
+    const chat = chatRef ? yield* Database.load(chatRef) : yield* findObject(Chat.Chat, () => true);
+    if (!chat) {
+      return [];
+    }
+    const feed = yield* Database.load(chat.feed);
+    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    return messages.map((message) => Obj.toJSON(message));
+  });
+
+/** One line per run, so a local run shows what it spent without the export step. */
+const logCost = (calls: readonly Usage.Call[]): void => {
+  const priced = calls.every((call) => call.costUsd !== undefined);
+  const costUsd = calls.reduce((total, call) => total + (call.costUsd ?? 0), 0);
+  log.info('eval cost', {
+    calls: calls.length,
+    inputTokens: calls.reduce((total, call) => total + call.inputTokens, 0),
+    cacheReadTokens: calls.reduce((total, call) => total + call.cacheReadTokens, 0),
+    outputTokens: calls.reduce((total, call) => total + call.outputTokens, 0),
+    costUsd: priced ? Number(costUsd.toFixed(4)) : undefined,
+  });
+};
+
+const writeTranscript = (
+  instructions: string,
+  variant: VariantConfig,
+  calls: readonly Usage.Call[],
+  messages: readonly Obj.JSON[],
+): void => {
+  const requests = calls.flatMap((call) => (call.request ? [call.request] : []));
+  const model = calls[0]?.model ?? 'unknown';
+  const name = `${expect.getState().currentTestName ?? 'eval'}-${model}`.replace(/[^\w.-]+/g, '-').slice(0, 120);
+  const filePath = Transcript.write(name, { source: instructions.slice(0, 200), model, requests, messages });
+  log.info('transcript written', { filePath, requests: requests.length, messages: messages.length });
+};
+
 export interface CreateEvalRunnerOptions<I, O> {
   instructions: string;
   input: Schema.Schema<I>;
@@ -353,7 +394,12 @@ export function createEvalRunner<I, O>(
     }
   });
 
-  const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
+  const execute = async (
+    input: I,
+    variant: VariantConfig,
+    record: (call: Usage.Call) => void,
+    onMessages: (messages: Obj.JSON[]) => void,
+  ) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const makeTurnProducer = variant?.makeTurnProducer ?? options.makeTurnProducer;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
@@ -408,8 +454,18 @@ export function createEvalRunner<I, O>(
             runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
+        // Read before grading, while the harness is certain to be open.
+        const captureMessages = Transcript.directory()
+          ? Effect.promise(() =>
+              harness.runPromise(
+                chatMessages(seeded.chat).pipe(
+                  Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service)),
+                ),
+              ),
+            ).pipe(Effect.map(onMessages))
+          : Effect.void;
         if (!options.scored) {
-          return yield* agentStep;
+          return yield* agentStep.pipe(Effect.tap(() => captureMessages));
         }
 
         // The session's wall clock, for a scorer that wants the work done soon as well as done.
@@ -426,6 +482,7 @@ export function createEvalRunner<I, O>(
             )
           : yield* agentStep;
         const durationMillis = Date.now() - startedAt;
+        yield* captureMessages;
 
         // What a scorer runs against: the space and its trace feed, the runtime's operations, and
         // what this run reports about itself.
@@ -490,10 +547,17 @@ export function createEvalRunner<I, O>(
       calls.push(call);
       run.generation(call);
     };
+    let messages: Obj.JSON[] | undefined;
     try {
-      return await execute(input, variant, record);
+      return await execute(input, variant, record, (captured) => {
+        messages = captured;
+      });
     } finally {
       Usage.report(calls, { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name });
+      logCost(calls);
+      if (messages) {
+        writeTranscript(options.instructions, variant, calls, messages);
+      }
       await run.finish();
     }
   };

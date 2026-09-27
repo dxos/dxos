@@ -27,7 +27,8 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/keys": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",

@@ -15,9 +15,12 @@ import { reportTrace, shouldReportTrace } from 'evalite/traces';
 import { type AiService, Model } from '@dxos/ai';
 import type { DXN } from '@dxos/keys';
 
+import * as Cost from './Cost.ts';
+import * as Transcript from './Transcript.ts';
+
 /**
- * One model call's tokens. Cost is not computed here: prices change and differ by route, so the
- * export carries the counts and the model, and a price is applied where the data is read.
+ * One model call's tokens and what they cost at the rate card in {@link Cost}. The counts travel
+ * with the cost, so a run can be repriced when a rate changes.
  */
 export type Call = {
   readonly model: string;
@@ -33,6 +36,10 @@ export type Call = {
   readonly outputTokens: number;
   readonly cacheReadTokens: number;
   readonly cacheWriteTokens: number;
+  /** What the call was sent, when transcripts are being written. */
+  readonly request?: Transcript.Request;
+  /** USD at {@link Cost.PRICE_VERSION}; undefined for a model the card does not price. */
+  readonly costUsd?: number;
   /** Epoch milliseconds. */
   readonly start: number;
   readonly end: number;
@@ -60,8 +67,7 @@ const json = (value: unknown): unknown => {
 
 const fromResponse = (
   model: DXN.DXN,
-  response: ReadonlyArray<Response.AnyPart>,
-  span: Parameters<Telemetry.SpanTransformer>[0]['span'],
+  { prompt, tools, response, span }: Parameters<Telemetry.SpanTransformer>[0],
 ): Call | undefined => {
   const finish = response.find((part): part is Response.FinishPart => part.type === 'finish');
   if (!finish) {
@@ -75,14 +81,7 @@ const fromResponse = (
       .map((key) => [key, span.attributes.get(`gen_ai.request.${key}`)] as const)
       .filter(([, value]) => value !== undefined),
   );
-  return {
-    model: backendName(model),
-    provider: string(span.attributes.get('gen_ai.system')),
-    spanName: span.name,
-    parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
-    input: json(span.attributes.get('dxos.ai.input')),
-    output: json(span.attributes.get('dxos.ai.output')),
-    tools: json(span.attributes.get('dxos.ai.tools')),
+  const tokens = {
     inputTokens:
       finish.usage.inputTokens.uncached ??
       (finish.usage.inputTokens.total ?? 0) -
@@ -91,7 +90,20 @@ const fromResponse = (
     outputTokens: finish.usage.outputTokens.total ?? 0,
     cacheReadTokens: finish.usage.inputTokens.cacheRead ?? 0,
     cacheWriteTokens: finish.usage.inputTokens.cacheWrite ?? 0,
-    start: millis(started),
+  };
+  const start = millis(started);
+  return {
+    model: backendName(model),
+    provider: string(span.attributes.get('gen_ai.system')),
+    spanName: span.name,
+    parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
+    input: json(span.attributes.get('dxos.ai.input')),
+    output: json(span.attributes.get('dxos.ai.output')),
+    tools: json(span.attributes.get('dxos.ai.tools')),
+    request: Transcript.directory() ? Transcript.captureRequest(prompt, tools) : undefined,
+    ...tokens,
+    costUsd: Cost.ofCall(backendName(model), tokens, new Date(start)),
+    start,
     end: ended === undefined ? now : millis(ended),
   };
 };
@@ -110,7 +122,7 @@ export const instrument = (service: AiService.Service, record: (call: Call) => v
           const inner = Context.getOption(context, Telemetry.CurrentSpanTransformer);
           const transformer: Telemetry.SpanTransformer = (input) => {
             Option.map(inner, (transform) => transform(input));
-            const call = fromResponse(model, input.response, input.span);
+            const call = fromResponse(model, input);
             if (call) {
               record(call);
             }
@@ -144,6 +156,7 @@ export const report = (calls: readonly Call[], link: Link): void => {
         model: call.model,
         cacheReadTokens: call.cacheReadTokens,
         cacheWriteTokens: call.cacheWriteTokens,
+        costUsd: call.costUsd,
       },
       usage: {
         inputTokens: call.inputTokens,
