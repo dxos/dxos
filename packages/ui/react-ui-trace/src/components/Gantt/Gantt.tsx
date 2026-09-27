@@ -4,6 +4,7 @@
 
 import { format } from 'date-fns';
 import React, {
+  Fragment,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -106,6 +107,8 @@ export type GanttMarker = {
    * ends at the question until the answer lands.
    */
   wait?: { until: string };
+  /** Awaiting a response — an unanswered question. The node pings until the response arrives. */
+  pending?: boolean;
 };
 
 const PAD_X = 16;
@@ -971,59 +974,70 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
             const row = rowById.get(marker.laneId);
             const cx = markerX.get(marker.id);
             return row && cx !== undefined ? (
-              <HoverCard.Root key={marker.id}>
-                <HoverCard.Trigger asChild>
+              <Fragment key={marker.id}>
+                {/* Pings out from behind the node until answered, so the node itself stays readable. */}
+                {marker.pending && (
                   <circle
                     cx={cx}
                     cy={rowY(row.index)}
                     r={NODE_RADIUS}
-                    className={mx(
-                      'cursor-pointer hover:stroke-[3px] hover:stroke-base-fg',
-                      // A question or an error is ringed in red, and pulses while its lane is still held
-                      // up by it — blocked on the answer, or failed.
-                      isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
-                      isAlert(marker) &&
-                        (row.lane.status === 'blocked' || row.lane.status === 'failed') &&
-                        'animate-pulse',
-                      // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
-                      // slides out of the one before it, and where it does not it simply appears.
-                      slide ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
-                      // The live end pulses in the lane's stronger shade: scanning a wall of finished
-                      // lanes, the ones still moving should be findable without reading the legend.
-                      // A question or an error is a solid node in the lane's own hue: the same thread,
-                      // so it reads as that task's, but the stronger shade so it is found at a glance.
-                      activeEdges.has(marker.id)
-                        ? mx('animate-pulse', !row.lane.hue && STATUS_COLOR[row.lane.status].edge)
-                        : !row.lane.hue &&
-                            (isAlert(marker) ? STATUS_COLOR[row.lane.status].edge : STATUS_COLOR[row.lane.status].node),
-                    )}
-                    style={
-                      row.lane.hue
-                        ? { fill: isAlert(marker) ? hueStrongColor(row.lane.hue) : hueColor(row.lane.hue) }
-                        : undefined
-                    }
-                    onClick={() => onMarkerSelect?.(marker)}
+                    className='animate-ping [transform-box:fill-box] origin-center pointer-events-none fill-red-500'
                   />
-                </HoverCard.Trigger>
-                <HoverCard.Portal>
-                  <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
-                    <div className='font-medium truncate'>{marker.label}</div>
-                    <div className='text-description'>
-                      {marker.kind && `${marker.kind} · `}
-                      {format(marker.timestamp, 'HH:mm:ss.SSS')}
-                      {marker.level && marker.level !== 'info' && (
-                        <span
-                          className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
-                        >
-                          {marker.level}
-                        </span>
+                )}
+                <HoverCard.Root>
+                  <HoverCard.Trigger asChild>
+                    <circle
+                      cx={cx}
+                      cy={rowY(row.index)}
+                      r={NODE_RADIUS}
+                      className={mx(
+                        'cursor-pointer hover:stroke-[3px] hover:stroke-base-fg',
+                        // A question or an error is ringed in red; an error pulses while its lane stays
+                        // failed (an unanswered question pings instead — the ring drawn behind it).
+                        isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
+                        marker.level === 'error' && row.lane.status === 'failed' && 'animate-pulse',
+                        // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
+                        // slides out of the one before it, and where it does not it simply appears.
+                        slide ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
+                        // The live end pulses in the lane's stronger shade: scanning a wall of finished
+                        // lanes, the ones still moving should be findable without reading the legend.
+                        // A question or an error is a solid node in the lane's own hue: the same thread,
+                        // so it reads as that task's, but the stronger shade so it is found at a glance.
+                        activeEdges.has(marker.id)
+                          ? mx('animate-pulse', !row.lane.hue && STATUS_COLOR[row.lane.status].edge)
+                          : !row.lane.hue &&
+                              (isAlert(marker)
+                                ? STATUS_COLOR[row.lane.status].edge
+                                : STATUS_COLOR[row.lane.status].node),
                       )}
-                    </div>
-                    <div className='text-description truncate'>{row.lane.label}</div>
-                    <HoverCard.Arrow />
-                  </HoverCard.Content>
-                </HoverCard.Portal>
-              </HoverCard.Root>
+                      style={
+                        row.lane.hue
+                          ? { fill: isAlert(marker) ? hueStrongColor(row.lane.hue) : hueColor(row.lane.hue) }
+                          : undefined
+                      }
+                      onClick={() => onMarkerSelect?.(marker)}
+                    />
+                  </HoverCard.Trigger>
+                  <HoverCard.Portal>
+                    <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
+                      <div className='font-medium truncate'>{marker.label}</div>
+                      <div className='text-description'>
+                        {marker.kind && `${marker.kind} · `}
+                        {format(marker.timestamp, 'HH:mm:ss.SSS')}
+                        {marker.level && marker.level !== 'info' && (
+                          <span
+                            className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
+                          >
+                            {marker.level}
+                          </span>
+                        )}
+                      </div>
+                      <div className='text-description truncate'>{row.lane.label}</div>
+                      <HoverCard.Arrow />
+                    </HoverCard.Content>
+                  </HoverCard.Portal>
+                </HoverCard.Root>
+              </Fragment>
             ) : null;
           })}
         </svg>

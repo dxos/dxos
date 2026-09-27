@@ -126,6 +126,7 @@ export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttDat
         label: marker.label,
         ...(marker.level ? { level: marker.level } : {}),
         ...(until ? { wait: { until } } : {}),
+        ...(question && !until ? { pending: true } : {}),
       };
     });
 

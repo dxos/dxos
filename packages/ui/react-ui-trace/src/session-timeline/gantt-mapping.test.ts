@@ -65,6 +65,9 @@ describe('sessionTimelineToGantt', () => {
     const byId = new Map((sessionTimelineToGantt(timeline).markers ?? []).map((marker) => [marker.id, marker]));
     expect(byId.get('q1')?.wait).toEqual({ until: 'a1' });
     expect(byId.get('q2')?.wait).toBeUndefined();
+    // The open one is pending until answered; the answered one is not.
+    expect(byId.get('q2')?.pending).toBe(true);
+    expect(byId.get('q1')?.pending).toBeUndefined();
     expect(byId.get('a1')?.wait).toBeUndefined();
   });
 });
