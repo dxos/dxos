@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { File } from '@dxos/types';
 
+import { FileOperation } from '#types';
+
 import * as FilePlugin from './FilePlugin.ts';
-import { FileOperation } from './types/index.ts';
 
 describe('FilePlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

@@ -14,6 +14,10 @@ tasks:
       # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
       # rather than a task name, since the generating task is named per what it generates.
       - '^:#prebuild'
+      # A composer plugin's own `#capabilities` workerd barrel is generated, not checked in; optional
+      # because only composer plugins define `gen-modules`.
+      - target: gen-modules
+        optional: true
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts

@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
+import { ProjectOperation } from '#types';
+
 import * as ProjectsPlugin from './ProjectsPlugin.ts';
-import { ProjectOperation } from './types/index.ts';
 
 describe('ProjectsPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

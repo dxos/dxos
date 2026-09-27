@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { PullRequest } from '@dxos/types';
 
+import { GitHubOperation, Walkthrough } from '#types';
+
 import * as GitHubPlugin from './GitHubPlugin.ts';
-import { GitHubOperation, Walkthrough } from './types/index.ts';
 
 describe('GitHubPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
+import { TaskOperation } from '#types';
+
 import * as TasksPlugin from './TasksPlugin.ts';
-import { TaskOperation } from './types/index.ts';
 
 describe('TasksPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

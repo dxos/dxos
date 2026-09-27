@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import { Type } from '@dxos/echo';
 
+import { AssistantOperation } from '#types';
+
 import * as AssistantPlugin from './AssistantPlugin.ts';
-import { AssistantOperation } from './types/index.ts';
 
 describe('AssistantPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

@@ -7,8 +7,9 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import { Kanban, KanbanOperation } from '#types';
+
 import * as KanbanPlugin from './KanbanPlugin.ts';
-import { Kanban, KanbanOperation } from './types/index.ts';
 
 describe('KanbanPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

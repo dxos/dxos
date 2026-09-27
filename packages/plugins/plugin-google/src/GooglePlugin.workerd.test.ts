@@ -6,9 +6,10 @@ import { describe, test } from 'vitest';
 
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 
+import { GoogleOperation } from '#types';
+
 import * as GooglePlugin from './GooglePlugin.ts';
 import * as GoogleOperationHandlerSet from './operations/GoogleOperationHandlerSet.ts';
-import { GoogleOperation } from './types/index.ts';
 
 describe('GooglePlugin in workerd', () => {
   test('activates headless and contributes its operations', async ({ expect }) => {

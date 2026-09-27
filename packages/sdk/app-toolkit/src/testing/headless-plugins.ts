@@ -4,7 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, type Plugin, PluginManager } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

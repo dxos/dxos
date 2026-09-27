@@ -8,8 +8,9 @@ import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
+import { SpaceOperation } from '#types';
+
 import * as SpacePlugin from './SpacePlugin.ts';
-import { SpaceOperation } from './types/index.ts';
 
 describe('SpacePlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

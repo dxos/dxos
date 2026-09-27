@@ -6,9 +6,10 @@ import { describe, test } from 'vitest';
 
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 
+import { JmapOperation } from '#types';
+
 import * as JmapPlugin from './JmapPlugin.ts';
 import * as JmapOperationHandlerSet from './operations/JmapOperationHandlerSet.ts';
-import { JmapOperation } from './types/index.ts';
 
 describe('JmapPlugin in workerd', () => {
   test('activates headless and contributes its operations', async ({ expect }) => {
