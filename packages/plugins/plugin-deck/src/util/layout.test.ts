@@ -106,6 +106,13 @@ describe('resolveSeededPlanks', () => {
     expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: true, children })).toBeUndefined();
   });
 
+  // A flattened deck shows one plank with the rest as breadcrumbs, which would read siblings as a trail.
+  test('does not seed a flattened deck', ({ expect }) => {
+    expect(
+      resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, flatten: true, children }),
+    ).toBeUndefined();
+  });
+
   test('falls through for an empty collection rather than emptying the deck', ({ expect }) => {
     expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: [] })).toBeUndefined();
   });
