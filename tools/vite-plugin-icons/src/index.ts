@@ -68,7 +68,6 @@ export const IconsPlugin = ({
   };
 
   const visitedFiles = new Set<string>();
-  const status = { updated: false };
 
   let rootDir: string;
   let spritePath: string;
@@ -226,6 +225,30 @@ export const IconsPlugin = ({
     return flushing;
   };
 
+  // Debounce: every new detection resets the timer; only when no new icon has been detected for
+  // `writeDebounceMs` does the write happen, so bursts during cold start collapse into one write.
+  // Every scan path calls this — a symbol found by the request middleware used to wait for some
+  // unrelated later transform, and was never written when none came.
+  const scheduleWrite = () => {
+    if (writeTimer) {
+      clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(() => {
+      writeTimer = null;
+      // Through `flushSprite` so a concurrent `/icons.svg` request coalesces onto this write. Caught:
+      // nothing awaits it, and an unhandled rejection would exit the dev server; `buildEnd` still
+      // awaits and so still fails a production build.
+      void flushSprite().catch((err) => console.error('[icons] Failed to write the sprite:', err));
+    }, writeDebounceMs);
+  };
+
+  /** Records a scan result, scheduling a write when it found anything new. */
+  const noteScan = (updated: boolean) => {
+    if (updated) {
+      scheduleWrite();
+    }
+  };
+
   return [
     {
       // Step 1: Scan source files incrementally.
@@ -243,8 +266,7 @@ export const IconsPlugin = ({
         for (const pattern of scanPaths ?? []) {
           for (const filename of fs.globSync(pattern)) {
             try {
-              const match = scan(fs.readFileSync(filename, 'utf8'));
-              status.updated ||= match;
+              noteScan(scan(fs.readFileSync(filename, 'utf8')));
             } catch {
               // Unreadable entries (e.g. dangling symlinks) are skipped.
             }
@@ -313,9 +335,7 @@ export const IconsPlugin = ({
               const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
               if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                 try {
-                  const src = fs.readFileSync(filename, 'utf8');
-                  const match = scan(src);
-                  status.updated ||= match;
+                  noteScan(scan(fs.readFileSync(filename, 'utf8')));
                 } catch {
                   console.error('Missing file', url);
                 }
@@ -327,14 +347,12 @@ export const IconsPlugin = ({
       },
 
       transformIndexHtml: (html) => {
-        const match = scan(html);
-        status.updated ||= match;
+        noteScan(scan(html));
       },
 
       transform: (src, id) => {
         if (!shouldIgnore(id)) {
-          const match = scan(src);
-          status.updated ||= match;
+          noteScan(scan(src));
         }
       },
     },
@@ -342,29 +360,6 @@ export const IconsPlugin = ({
       // Step 2: Write sprite.
       // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
-      transform: () => {
-        if (!status.updated) {
-          return;
-        }
-        status.updated = false;
-        // Debounce: every flip of `status.updated` resets the timer; only
-        // when no new icon has been detected for `writeDebounceMs` does the
-        // write actually happen. Bursts during cold-start collapse into one
-        // write instead of N.
-        if (writeTimer) {
-          clearTimeout(writeTimer);
-        }
-        writeTimer = setTimeout(() => {
-          writeTimer = null;
-          // Route through `flushSprite` (not `writeSprite`) so a concurrent
-          // `/icons.svg` request coalesces onto this same in-flight write
-          // instead of racing it. No-op when the sprite would be unchanged.
-          // Caught, not discarded: nothing awaits this, so a rejection would reach the process as
-          // an unhandled rejection and exit the dev server. `buildEnd` still awaits and so still
-          // fails a production build.
-          void flushSprite().catch((err) => console.error('[icons] Failed to write the sprite:', err));
-        }, writeDebounceMs);
-      },
       // Force a final write at build close so production builds aren't
       // missing icons that were detected during the very last transforms.
       buildEnd: async () => {
