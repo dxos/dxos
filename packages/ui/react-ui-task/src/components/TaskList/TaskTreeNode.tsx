@@ -429,12 +429,12 @@ const TaskRowHeading = ({
       </div>
       {/* Under the title and the chips line (row 2, which collapses when the task has no chips): it
           has to clear the ordinal and the status control, or it reads as belonging to the row above,
-          and it must stop short of the trailing controls so it does not run beneath the estimate,
-          priority and menu. What the task says, and nothing the log recorded — an exchange replayed
+          and it spans the artifacts column (a PR chip is only row 1) but stops short of the trailing
+          controls so it does not run beneath the assignee, estimate, priority and menu. What the task says, and nothing the log recorded — an exchange replayed
           here grew the row by a line per question and pushed the next task off the screen; the
           detail pane a click opens has the room for it. */}
       {description && (
-        <div className='col-[title] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
+        <div className='col-[title/assignee] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
           <TaskDescription content={description} components={descriptionComponents} />
         </div>
       )}
