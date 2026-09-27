@@ -128,12 +128,12 @@ const DefaultStory = () => {
         </Toolbar>
       ))}
 
-      <div className='flex'>
+      {/* <div className='flex'>
         <Block>
           <Icon icon='ph--circle--regular' />
         </Block>
         <Typography>Hello world</Typography>
-      </div>
+      </div> */}
     </div>
   );
 };
