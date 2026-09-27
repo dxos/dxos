@@ -39,15 +39,14 @@ const toolResults = (feed: Feed.Feed) =>
   });
 
 /** Text of every system-generated notice addressed to the model. */
-const syntheticTexts = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const items = yield* Feed.query(feed, Filter.everything()).run;
-    return items
-      .filter(Obj.instanceOf(Message.Message))
-      .flatMap((message) => message.blocks)
-      .filter((block): block is ContentBlock.Text => block._tag === 'text' && block.disposition === 'synthetic')
-      .map((block) => block.text);
-  });
+const syntheticTexts = Effect.fnUntraced(function* (feed: Feed.Feed) {
+  const items = yield* Feed.query(feed, Filter.everything()).run;
+  return items
+    .filter(Obj.instanceOf(Message.Message))
+    .flatMap((message) => message.blocks)
+    .filter((block): block is ContentBlock.Text => block._tag === 'text' && block.disposition === 'synthetic')
+    .map((block) => block.text);
+});
 
 /** Message text of every model call the scripted model served. */
 const modelInputs: string[] = [];
