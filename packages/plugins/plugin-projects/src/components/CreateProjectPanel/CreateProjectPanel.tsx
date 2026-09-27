@@ -49,9 +49,11 @@ export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templa
   const { results, handleSearch } = useSearchListResults({ items: sorted, extract: (template) => template.label });
 
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Save is ready without a pick.
-  const templateId =
-    selectedId ?? (sorted.find(({ id }) => id === ProjectCapabilities.DefaultTemplateId) ?? sorted[0])?.id;
+  // Preselected so Save is ready without a pick; kept among the visible results so a filter never
+  // leaves Save acting on a row it hid.
+  const templateId = results.some(({ id }) => id === selectedId)
+    ? selectedId
+    : (results.find(({ id }) => id === ProjectCapabilities.DefaultTemplateId) ?? results[0])?.id;
   const values = useMemo(() => ({ name, templateId }), [name, templateId]);
 
   // Returned so the form's `saving` guard keeps Save disabled until creation settles.

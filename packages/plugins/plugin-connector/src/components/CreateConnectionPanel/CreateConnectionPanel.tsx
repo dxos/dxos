@@ -48,6 +48,8 @@ export const CreateConnectionPanel = ({
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();
+  // The OAuth start Continue fires belongs to no form, so no saving guard stops Connect re-running it.
+  const [pending, setPending] = useState(false);
 
   const sorted = useMemo(
     () =>
@@ -62,8 +64,9 @@ export const CreateConnectionPanel = ({
   });
 
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Continue is ready without a pick.
-  const pickedId = selectedId ?? sorted[0]?.id;
+  // Preselected so Continue is ready without a pick; kept among the visible results so a filter
+  // never leaves Continue acting on a row it hid.
+  const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
   const selection = useMemo(() => ({ connectorId: pickedId }), [pickedId]);
 
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
@@ -103,7 +106,8 @@ export const CreateConnectionPanel = ({
       }
       setConnectorId(entry.id);
       if (!entry.credentialForm) {
-        void submit(entry);
+        setPending(true);
+        void submit(entry).finally(() => setPending(false));
       }
     },
     [connectors, submit],
@@ -162,7 +166,7 @@ export const CreateConnectionPanel = ({
           </Form.Content>
         </Form.Root>
       ) : (
-        <Form.Root schema={NoValues} values={{}} onSave={() => submit(connector)} onCancel={handleBack}>
+        <Form.Root schema={NoValues} values={{}} onSave={() => (pending ? undefined : submit(connector))} onCancel={handleBack}>
           <Form.Content>
             <Form.Actions
               submitLabel={t('connect-service.label', { service: connector.label ?? connector.id })}

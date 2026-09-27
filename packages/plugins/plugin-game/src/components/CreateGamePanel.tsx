@@ -113,8 +113,9 @@ const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
     extract: (variant) => variant.label,
   });
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Save is ready without a pick.
-  const variantId = selectedId ?? sorted[0]?.id;
+  // Preselected so Save is ready without a pick; kept among the visible results so a filter never
+  // leaves Save acting on a row it hid.
+  const variantId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
   const values = useMemo(() => ({ variantId }), [variantId]);
   const hasInputs = sorted.find(({ id }) => id === variantId)?.inputSchema !== undefined;
 

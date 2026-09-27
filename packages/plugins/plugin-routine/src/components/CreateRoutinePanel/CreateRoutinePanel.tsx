@@ -72,8 +72,9 @@ export const CreateRoutinePanel = ({
   );
   const { results, handleSearch } = useSearchListResults({ items: sorted, extract: (template) => template.label });
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Continue is ready without a pick.
-  const templateId = selectedId ?? sorted[0]?.id;
+  // Preselected so Continue is ready without a pick; kept among the visible results so a filter
+  // never leaves Continue acting on a row it hid.
+  const templateId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
   const selection = useMemo(() => ({ templateId }), [templateId]);
 
   const scaffold = useCallback(
