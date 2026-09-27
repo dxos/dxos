@@ -5,15 +5,17 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Flex, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
 import { type DiffLineTarget } from '@dxos/ui-editor';
@@ -74,6 +76,10 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
 
   const walkthroughs = useQuery(db, Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(pullRequest) }));
   const walkthrough = useMemo(() => newestWalkthrough(walkthroughs), [walkthroughs]);
+  // Watched by key rather than tied to `generating`, so a run started elsewhere shows here too.
+  const walkthroughProgress = useProgressMonitor(GitHubOperation.createWalkthroughProgressKey(pullRequest));
+  // Present only when plugin-progress is loaded; it is what lets the meter cancel or dismiss a run.
+  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const [status, setStatus] = useState<Status>();
   // The live state where it has arrived, the stored one until then — an absent status is unknown,
@@ -519,6 +525,20 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             )}
           </Flex>
         </Panel.Content>
+        <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+          <ProgressMeter
+            state={
+              walkthroughProgress?.status === 'running' || walkthroughProgress?.status === 'error'
+                ? walkthroughProgress
+                : undefined
+            }
+            onCancel={
+              progressRegistry && walkthroughProgress
+                ? () => progressRegistry.cancel(walkthroughProgress.name)
+                : undefined
+            }
+          />
+        </Panel.Statusbar>
       </Panel.Root>
     </Tabs.Root>
   );
