@@ -139,6 +139,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
+  /** Remove the dragged row from the list instead of fading it. */
+  hideDragSource?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
   debug?: boolean;
   /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */

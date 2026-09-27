@@ -110,11 +110,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
         // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
         // the documents it contains rather than a plank showing the collection itself.
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const seeded = resolveSeededPlanks({
           initial: resolveDeckSpec(
             input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
           )?.initial,
           addBesideOrigin,
+          flatten: !!flatten,
           children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
         });
 
@@ -155,7 +157,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next = navigateSolo(deck.active);
         }
 
-        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.

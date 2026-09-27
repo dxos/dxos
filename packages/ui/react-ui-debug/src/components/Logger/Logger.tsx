@@ -17,11 +17,11 @@ import {
   ErrorStack,
   Field,
   Icon,
-  IconButton,
   Panel,
   Popover,
   ScrollArea,
   Select,
+  SystemIconButton,
   type ThemedClassName,
   ToggleIconButton,
   Toolbar,
@@ -503,15 +503,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
-                <IconButton
-                  icon='ph--clipboard--regular'
+                <SystemIconButton.Clipboard
                   iconOnly
                   density='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'
                   classNames='p-0 opacity-50 group-hover:opacity-100'
-                  onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                  onCopy={() => JSON.stringify(record, null, 2)}
                 />
                 {isExpanded && (
                   <div className='col-span-full'>

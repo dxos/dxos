@@ -11,6 +11,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
+import { validateAssignee } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(
@@ -23,6 +24,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       parentTask,
       milestone,
     }) {
+      yield* validateAssignee(assignee);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
 

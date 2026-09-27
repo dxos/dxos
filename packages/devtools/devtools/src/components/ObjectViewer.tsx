@@ -5,7 +5,7 @@
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { URI } from '@dxos/keys';
-import { Button, Field, SystemIconButton } from '@dxos/react-ui';
+import { Field, SystemIconButton } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 export type ObjectViewerProps = {
@@ -60,9 +60,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
     });
   };
 
-  const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(object, null, 2));
-  }, [object]);
+  const handleCopy = useCallback(() => JSON.stringify(object, null, 2), [object]);
 
   return (
     <>
@@ -73,9 +71,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
               <div className='flex gap-1'>
                 <Field.Input disabled value={id} />
                 <SystemIconButton.Clipboard iconOnly value={id} />
-                <Button value={id} onClick={handleCopy}>
-                  Copy JSON
-                </Button>
+                <SystemIconButton.Clipboard label='Copy JSON' onCopy={handleCopy} />
               </div>
             </div>
           </Field.Root>
