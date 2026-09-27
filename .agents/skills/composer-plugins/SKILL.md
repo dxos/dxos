@@ -648,14 +648,16 @@ See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts
 
 ### Tauri-only modules
 
-Code that only works inside the Tauri shell (spawning a helper process, native plugins) goes behind a
-hand-written `#imports` subpath with a `tauri` condition, and a `default` stub that exports the module
-as `undefined` — `Plugin.addModule(undefined)` is a no-op. Only composer-app's native bundles resolve
-`tauri` (`bundle-tauri`, or `tauri dev` via `TAURI_ENV_PLATFORM`), so the web bundle never carries it.
-It is a package condition, not a capability `environments` value: a `tauri` barrel sliced from the
-canonical one would drop every browser-only module.
+A module that only works inside the Tauri shell (spawning a helper process, native plugins) is
+annotated `environments: ['tauri']` in the canonical barrel. `tauri` is additive, unlike `node` and
+`workerd`: `dx-plugin gen` gives it a barrel with every browser module plus the annotated ones, and
+generates `gen/default.ts` without them, pointing `#capabilities.default` there so the web bundle
+never carries them. Only composer-app's native bundles resolve `tauri` (`bundle-tauri`, or
+`tauri dev` via `TAURI_ENV_PLATFORM`). A plugin with such a module must not list `capabilities` as
+an explicit `entry` in `vite.config.ts`: an explicit entry overrides the derived one and would build
+the canonical barrel as the `default` dist.
 
-See: `plugin-sandbox/package.json` (`#local-launcher`), `plugin-sandbox/src/tauri/`
+See: `plugin-sandbox/src/capabilities/index.ts` (`LocalLauncher`), `app-framework/src/plugin-cli/generate.ts`
 
 ## React Surface
 

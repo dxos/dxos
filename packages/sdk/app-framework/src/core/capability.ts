@@ -499,7 +499,7 @@ export interface Module<Options = void> {
 
 /**
  * A package.json export/import condition a module is additionally split out for, via
- * {@link ModuleSpec}'s `environments` — `'node'` and `'workerd'` in this repo.
+ * {@link ModuleSpec}'s `environments` — `'node'`, `'workerd'` and `'tauri'` in this repo.
  *
  * Deliberately an open string rather than a union: conditions are defined by whichever build tool
  * resolves the package, so the framework has no business enumerating them (a consumer targeting
@@ -509,6 +509,11 @@ export interface Module<Options = void> {
  * the `default` condition, which is what a browser resolves. Omitting `environments` therefore
  * means "do not split this module by environment", not "browser-only": no per-condition variant is
  * generated for it at all.
+ *
+ * `node` and `workerd` are headless subsets of the browser build. `tauri` is the opposite: the
+ * browser plus the Tauri shell, so its variant carries every browser module plus those annotated
+ * for it, and a module annotated only `['tauri']` is left out of `default` (see the generator's
+ * `ADDITIVE_CONDITIONS`).
  *
  * The annotation must be a literal array at the authoring site: barrel generation reads it
  * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a

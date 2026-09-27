@@ -4,8 +4,15 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { OperationHandler, PluginAsset, SandboxLayer, Schema, Settings, SkillDefinition } from '#capabilities';
-import { LocalLauncher } from '#local-launcher';
+import {
+  LocalLauncher,
+  OperationHandler,
+  PluginAsset,
+  SandboxLayer,
+  Schema,
+  Settings,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
