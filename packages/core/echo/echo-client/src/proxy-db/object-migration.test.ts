@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { Annotation, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Lens, Migration, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -291,6 +291,97 @@ test('re-running a migration after it applied performs no further writes', async
     entry.change.message?.startsWith('migration:'),
   );
   expect(migrationMessagesAfter).to.have.length(migrationMessagesBefore.length);
+});
+
+const TaskV1 = Type.makeObject(DXN.make('com.example.type.migrationTask', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    status: Schema.optional(Schema.Literals(['todo', 'done'])),
+    legacyEstimate: Schema.optional(Schema.Number),
+  }),
+);
+
+const TaskV2 = Type.makeObject(DXN.make('com.example.type.migrationTask', '0.2.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    done: Schema.optional(Schema.Boolean),
+    // No counterpart on `TaskV1` — overlay-backed until a migration promotes it (DESIGN §10.7 q1).
+    context: Schema.optional(Schema.Literals(['@home', '@work'])),
+  }),
+);
+
+const TASK_LENS_ID = 'com.example.type.migrationTask.lens';
+
+/** `title` matches by name; `done` is a converted view of `status`; `legacyEstimate` is unread. */
+const taskLens = () =>
+  Lens.make(TASK_LENS_ID, TaskV1, TaskV2, {
+    done: {
+      from: ['status'],
+      get: ({ status }) => status === 'done',
+      put: (done: boolean | undefined, { status }) => ({
+        status: done === true ? ('done' as const) : status === 'done' ? ('todo' as const) : status,
+      }),
+    },
+  });
+
+const NoteV1 = Type.makeObject(DXN.make('com.example.type.migrationLossyNote', '0.1.0'))(
+  Schema.Struct({ title: Schema.String }),
+);
+
+const NoteV2 = Type.makeObject(DXN.make('com.example.type.migrationLossyNote', '0.2.0'))(
+  Schema.Struct({ initial: Schema.optional(Schema.String) }),
+);
+
+/** Reading the first character is not invertible, so `checkLaws` fails against any real title. */
+const lossyLens = () =>
+  Lens.make('com.example.type.migrationLossyNote.lens', NoteV1, NoteV2, {
+    initial: {
+      from: ['title'],
+      get: ({ title }) => title?.[0],
+      put: (initial: string | undefined) => ({ title: initial ?? '' }),
+    },
+  });
+
+test('Migration.fromLens: type switch, converted value, retired drop, and overlay promotion', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([TaskV1, TaskV2]);
+
+  const lens = taskLens();
+  const task = db.add(Obj.make(TaskV1, { title: 'Ship it', status: 'done', legacyEstimate: 5 }));
+  // Set before the migration runs, on the source object: this is the overlay a migration promotes.
+  Lens.put(task, lens, { context: '@work' });
+  await db.flush();
+
+  await db.runMigrations([Migration.fromLens(lens, { allowDropped: ['legacyEstimate'] })]);
+
+  const objects = await db.query(Filter.type(TaskV2)).run();
+  expect(objects).to.have.length(1);
+  const [migrated] = objects;
+
+  expect(Obj.getTypeURI(migrated)?.toString()).to.eq(DXN.make('com.example.type.migrationTask', '0.2.0'));
+  expect(migrated.title).to.eq('Ship it');
+  // The converted value: `status: 'done'` became `done: true`.
+  expect(migrated.done).to.eq(true);
+  // The overlay value set on the source object landed as a real property on the target.
+  expect(migrated.context).to.eq('@work');
+  // Retired, not deleted: `legacyEstimate` has no home in `TaskV2` but stays readable off the raw path.
+  expect(Obj.getValue(migrated, ['legacyEstimate'])).to.eq(5);
+});
+
+test('Migration.fromLens: a law-violating lens throws before writing', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([NoteV1, NoteV2]);
+
+  const note = db.add(Obj.make(NoteV1, { title: 'Ada' }));
+  await db.flush();
+  const core = getObjectCore(note);
+  const preHeads = A.getHeads(core.getDoc());
+
+  await expect(db.runMigrations([Migration.fromLens(lossyLens())])).rejects.toThrow(/GetPut/);
+
+  // Nothing was written: still the original type and the original heads.
+  expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationLossyNote', '0.1.0'));
+  expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
 });
 
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.

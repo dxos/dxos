@@ -12,6 +12,8 @@ import * as Annotation from './Annotation.ts';
 import type * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
 import { type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
+import * as Lens from './Lens.ts';
+import * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
 export const TypeId = '~@dxos/echo/Migration' as const;
@@ -96,6 +98,8 @@ export interface ObjectMigration extends Migration {
   toSchema: Schema.Codec<any, any>;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
   onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
+  /** The lens {@link fromLens} derived this migration from, for the fold-forward runner to reuse. Absent for a hand-written `transform`. */
+  lens?: Lens.Any;
 }
 
 /**
@@ -139,6 +143,101 @@ export const define = <From extends MigrationSchemaInput, To extends MigrationSc
     toSchema,
     transform: options.transform as any,
     onMigration: options.onMigration as any,
+  };
+};
+
+/**
+ * Options for {@link fromLens}.
+ */
+export type FromLensOptions = {
+  /**
+   * Source properties the lens is allowed to drop (`Lens.coverage(lens).dropped`). Any dropped
+   * property not listed here fails the migration's definition, so a loss the author did not
+   * anticipate is a definition-time error rather than a silent omission.
+   */
+  allowDropped?: readonly string[];
+  /**
+   * Callback that is called after the object is migrated. Called for every object that is migrated.
+   *
+   * NOTE: Database mutations performed in this callback are not guaranteed to be idempotent.
+   *       If multiple peers run the migration separately, the effects may be applied multiple times.
+   */
+  onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
+};
+
+/**
+ * Define an object migration whose `transform` is a lens's `get`: the lens's source and target
+ * become the migration's `from`/`to`, and the target view (including any overlay value promoted
+ * into a real target property) becomes the transform output.
+ *
+ * Unlike {@link define}, the loss a mapping causes is checked before the migration ever runs:
+ * a dropped source property fails unless it is named in `allowDropped`, a suspicious (same-name,
+ * incompatible-type) mapping always fails, and the lens's `GetPut` law is re-checked against every
+ * object right before its transform output is computed.
+ *
+ * @example
+ * ```ts
+ * const migration = Migration.fromLens(taskAsGtd, { allowDropped: ['legacyNote'] });
+ * ```
+ */
+export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectMigration => {
+  const { target } = lens;
+  if (!Type.isType(target)) {
+    throw new Error(
+      `Migration.fromLens: "${lens.id}" targets a plain schema; a migration target must be a declared ECHO object type.`,
+    );
+  }
+
+  const fromSchema = Type.getSchema(lens.source);
+  const toSchema = Type.getSchema(target);
+  const fromType = getSchemaURI(fromSchema);
+  if (!fromType) {
+    throw new Error(`Migration.fromLens: "${lens.id}" has an invalid source schema.`);
+  }
+  const toType = getSchemaURI(toSchema);
+  if (!toType) {
+    throw new Error(`Migration.fromLens: "${lens.id}" has an invalid target schema.`);
+  }
+
+  const allowDropped = new Set(options.allowDropped ?? []);
+  const coverage = Lens.coverage(lens);
+  const unexpectedDropped = [...coverage.dropped].filter((property) => !allowDropped.has(property)).sort();
+  if (unexpectedDropped.length > 0) {
+    throw new Error(
+      `Migration.fromLens: "${lens.id}" drops source ${unexpectedDropped.length === 1 ? 'property' : 'properties'} ` +
+        `[${unexpectedDropped.join(', ')}] with no counterpart on the target. Pass allowDropped to accept the loss.`,
+    );
+  }
+  if (coverage.suspicious.length > 0) {
+    const detail = [...coverage.suspicious]
+      .map(({ property, candidates }) => `${property} (candidates: [${candidates.join(', ')}])`)
+      .join('; ');
+    throw new Error(`Migration.fromLens: "${lens.id}" has unresolved suspicious mappings: ${detail}.`);
+  }
+
+  return {
+    [TypeId]: TypeId,
+    kind: 'object',
+    fromType,
+    toType,
+    fromSchema,
+    toSchema,
+    lens,
+    transform: async (from: unknown) => {
+      if (!Obj.isObject(from)) {
+        throw new Error(`Migration.fromLens: "${lens.id}" transform received a non-object value.`);
+      }
+
+      const lawCheck = Lens.checkLaws(from, lens);
+      if (!lawCheck.holds) {
+        const detail = lawCheck.violations.map((violation) => `${violation.property} (${violation.path})`).join('; ');
+        throw new Error(`Migration.fromLens: "${lens.id}" fails the GetPut law for object ${from.id}: ${detail}.`);
+      }
+
+      const { id: _id, ...rest } = Lens.get(from, lens);
+      return rest;
+    },
+    onMigration: options.onMigration,
   };
 };
 
