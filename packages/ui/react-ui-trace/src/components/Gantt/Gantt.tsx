@@ -506,7 +506,11 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   );
   const isEntering = useEnter(markers.map((marker) => marker.id));
 
-  const x = scale.at;
+  // On the time axis the right edge is "now" — the newest event, where open lanes end. While the range
+  // eases toward new bounds, anything newer than the drawn range is held at that edge rather than drawn
+  // past it: the new event and the open ends stay pinned while everything older compresses leftward.
+  const edge = axis === 'time' ? scale.at(shownRange.end) : undefined;
+  const x = (time: number): number => (edge === undefined ? scale.at(time) : Math.min(scale.at(time), edge));
   const rowY = (index: number): number => HEADER_HEIGHT + index * ROW_HEIGHT + ROW_HEIGHT / 2;
   const openSource = (lane: GanttLane): GanttMarker | undefined =>
     lane.openedFrom && markerById.get(lane.openedFrom.markerId);
