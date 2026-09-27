@@ -132,18 +132,19 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+    const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
+    this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
-    const initialResults = await this.#bindingsQuery.run();
+    const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
     this._ctx.onDispose(
-      this.#bindingsQuery.subscribe(async () => {
-        await this._updateBindings(this.#bindingsQuery!.results);
+      bindingsQuery.subscribe(async () => {
+        await this._updateBindings(bindingsQuery.results);
       }),
     );
   }
@@ -153,7 +154,16 @@ export class Binder extends Resource {
    */
   async sync(): Promise<void> {
     if (this.#bindingsQuery) {
-      const results = await this.#bindingsQuery.run();
+      let results: Binding[];
+      try {
+        results = await this.#bindingsQuery.run();
+      } catch (error) {
+        // The query's live subscription already keeps the bindings current, so a re-read that fails
+        // (an index query timing out under load) costs freshness, not correctness — and a caller
+        // running this between agent turns would otherwise fail the whole agent process on it.
+        log.warn('bindings sync failed; keeping the current bindings', { error });
+        return;
+      }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
       log('sync complete', {

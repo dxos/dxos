@@ -220,6 +220,18 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     this._updateQueries.schedule();
   }
 
+  /**
+   * Resolves once every query invalidated so far has re-run and sent its results, so a caller that
+   * waited for the index also sees the queries it changed.
+   */
+  async 'awaitQueryUpdates'(): Promise<void> {
+    if (this._updateQueries.scheduled) {
+      await this._updateQueries.runBlocking();
+    } else {
+      await this._updateQueries.join();
+    }
+  }
+
   private '_createQuery'(
     ctx: Context,
     request: QueryService.QueryRequest,
