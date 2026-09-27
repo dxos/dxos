@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { translations } from '#translations';
 

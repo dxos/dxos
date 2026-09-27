@@ -166,7 +166,12 @@ export const CreateConnectionPanel = ({
           </Form.Content>
         </Form.Root>
       ) : (
-        <Form.Root schema={NoValues} values={{}} onSave={() => (pending ? undefined : submit(connector))} onCancel={handleBack}>
+        <Form.Root
+          schema={NoValues}
+          values={{}}
+          onSave={() => (pending ? undefined : submit(connector))}
+          onCancel={handleBack}
+        >
           <Form.Content>
             <Form.Actions
               submitLabel={t('connect-service.label', { service: connector.label ?? connector.id })}
