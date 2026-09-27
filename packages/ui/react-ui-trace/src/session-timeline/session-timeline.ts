@@ -59,6 +59,9 @@ export const readTaskStatusChanges = (task: Task.Task): TaskStatusChange[] =>
           : [],
       );
 
+/** Statuses of a task not yet picked up. */
+const PENDING_STATUSES = new Set<Task.Status>(['todo', 'backlog']);
+
 const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
 
 /** How long an open lane may be silent before the axis stops following `now`. */
@@ -113,21 +116,19 @@ interface TaskSegment {
 }
 
 /**
- * Cuts a session's events into one segment per task worked, from the status events its task tools
- * write. Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move
- * a task belonging to nothing on this chart, and such an event must not close the segment that is
- * open or move the boundary.
+ * Cuts a session's events into segments of task work, from the status events its task tools write.
+ * Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move a task
+ * belonging to nothing on this chart, and such an event must not open or close anything here.
  *
- * A `started` event opens a segment and closes the one still open — the agent keeps exactly one task
- * in progress. Any other status ends the agent's work on the task: `todo` puts it down as surely as
- * `done`, and whatever the agent does next is no longer that task's. A task can also finish without
- * a start: delegation marks every task it hands over
- * `started` before the agent's first turn, so the run's only event for that task is the one closing
- * it. Such a task gets the stretch since the last boundary, which is where its work happened — but
- * only on the transition out of `started` and only while no other task holds the stretch: a task
- * merely dismissed (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints
- * nothing, and a close arriving after the next task has started leaves that task's segment alone
- * rather than overlapping it.
+ * An agent may hold several tasks in progress at once, and may put one down and pick it up again as
+ * it discovers what depends on what: a `started` event opens a segment for its task and leaves every
+ * other open segment alone, and any other status closes that task's open segment. A task can also
+ * finish without a start: delegation marks every task it hands over `started` before the agent's
+ * first turn, so the run's only event for that task is the one closing it. Such a task gets the
+ * stretch since the last boundary, which is where its work happened — but only on the transition out
+ * of `started` and only while no other task holds the stretch: a task merely dismissed
+ * (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints nothing, and a close
+ * arriving while other work is open leaves that work alone rather than overlapping it.
  */
 const buildTaskSegments = (
   events: readonly Trace.FlatEvent[],
@@ -135,15 +136,8 @@ const buildTaskSegments = (
   taskIds: ReadonlySet<string>,
 ): TaskSegment[] => {
   const segments: TaskSegment[] = [];
-  let open: TaskSegment | undefined;
+  const open = new Map<string, TaskSegment>();
   let boundary = sessionStart;
-  const close = (segment: TaskSegment, timestamp: number): void => {
-    segment.end = timestamp;
-    boundary = timestamp;
-    if (open === segment) {
-      open = undefined;
-    }
-  };
 
   for (const event of events) {
     if (event.type !== Trace.TaskStatusChanged.key) {
@@ -153,37 +147,37 @@ const buildTaskSegments = (
     if (!data || !taskIds.has(data.taskId)) {
       continue;
     }
+    const current = open.get(data.taskId);
     if (data.status === 'started') {
-      if (open && open.taskId !== data.taskId) {
-        close(open, event.timestamp);
-      }
-      if (!open) {
-        open = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
-        segments.push(open);
-        boundary = event.timestamp;
-      }
-    } else {
-      const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
-      if (started) {
-        close(started, event.timestamp);
-      } else if (data.previousStatus === 'started' && open === undefined) {
-        const segment = {
-          taskId: data.taskId,
-          laneId: taskLaneId(data.taskId),
-          start: Math.min(boundary ?? event.timestamp, event.timestamp),
-        };
+      if (!current) {
+        const segment = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
         segments.push(segment);
-        close(segment, event.timestamp);
+        open.set(data.taskId, segment);
       }
+      boundary = event.timestamp;
+    } else if (current) {
+      current.end = event.timestamp;
+      open.delete(data.taskId);
+      boundary = event.timestamp;
+    } else if (data.previousStatus === 'started' && open.size === 0) {
+      segments.push({
+        taskId: data.taskId,
+        laneId: taskLaneId(data.taskId),
+        start: Math.min(boundary ?? event.timestamp, event.timestamp),
+        end: event.timestamp,
+      });
+      boundary = event.timestamp;
     }
   }
   return segments;
 };
 
 /**
- * The segment an event belongs to. Segments meet where one task starts over another, so a
- * status event is matched to its own task's segment, and any other event at a shared boundary
- * goes to the later segment — the newcomer's start is the first thing the agent did on it.
+ * The segment an event belongs to. A status event goes to its own task's segment. Any other event
+ * goes to the one segment in progress when it happened; where segments merely meet, the one ending
+ * there yields to the one beginning — the newcomer's start is the first thing the agent did on it.
+ * With several tasks genuinely in progress at once the event belongs to none of them in particular,
+ * so it stays with the session rather than being credited to whichever started last.
  */
 const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.FlatEvent): TaskSegment | undefined => {
   if (!segments) {
@@ -195,7 +189,12 @@ const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.F
     const data = decode(Trace.TaskStatusChanged.schema, event.data);
     return data && segments.findLast((segment) => segment.taskId === data.taskId && contains(segment));
   }
-  return segments.findLast(contains);
+  const candidates = segments.filter(contains);
+  const inside = candidates.filter((segment) => segment.end === undefined || event.timestamp < segment.end);
+  if (inside.length > 1) {
+    return undefined;
+  }
+  return inside[0] ?? candidates.at(-1);
 };
 
 /**
@@ -397,12 +396,15 @@ export const buildSessionTimeline = ({
     const chatTaskIds = new Set(chatTasks.map((task) => task.id));
     const taskLanes = new Map<string, MutableLane>();
     for (const task of chatTasks) {
+      // A sub-task of a task on the same checklist nests under it, so the chart keeps the hierarchy
+      // the ledger shows; any other task hangs off the session.
+      const parentTask = Task.getParentTask(task);
       const taskLane: MutableLane = {
         id: taskLaneId(task.id),
         kind: 'task',
         label: task.title,
         status: taskLaneStatus(task, tasks),
-        parentId: laneId,
+        parentId: parentTask && chatTaskIds.has(parentTask.id) ? taskLaneId(parentTask.id) : laneId,
         sessionId: source.session?.id,
         taskId: task.id,
       };
@@ -563,7 +565,14 @@ export const buildSessionTimeline = ({
       continue;
     }
     const traced = tracedChanges.get(task.id) ?? [];
-    for (const change of taskStatusChanges?.get(task.id) ?? []) {
+    const changes = taskStatusChanges?.get(task.id) ?? [];
+    // Waiting to be picked up is the lane's absence, not an event on it: a node for it would sit
+    // alone before the bar, reading as work that happened and then a pause.
+    const firstStart = changes.findIndex((change) => change.status === 'started');
+    for (const [index, change] of changes.entries()) {
+      if (PENDING_STATUSES.has(change.status) && (firstStart < 0 || index < firstStart)) {
+        continue;
+      }
       const match = traced.find(
         (event) =>
           !mergedEvents.has(event) &&
@@ -687,11 +696,15 @@ export const buildSessionTimeline = ({
   // A session working exactly one task is that task: the two lanes would carry the same label,
   // so the task lane folds into the session's (which keeps its run span and totals, and takes the
   // task's id and status so it still reads as the work). Only a lone in-session task, with nothing
-  // depending on it and no spawned child, folds — a checklist of several stays a tree.
+  // depending on it, no sub-tasks and no spawned child, folds — a checklist of several stays a tree.
   for (const session of lanes.filter((lane) => lane.kind === 'session' && lane.parentId === undefined)) {
     const children = lanes.filter((lane) => lane.parentId === session.id);
     const [task] = children;
-    if (children.length !== 1 || task.kind !== 'task' || lanes.some((lane) => lane.blockedOn?.includes(task.id))) {
+    if (
+      children.length !== 1 ||
+      task.kind !== 'task' ||
+      lanes.some((lane) => lane.parentId === task.id || lane.blockedOn?.includes(task.id))
+    ) {
       continue;
     }
     lanes.splice(lanes.indexOf(task), 1);

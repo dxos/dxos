@@ -118,7 +118,7 @@ const MasterDetailStory = () => {
 
   return (
     <TestGrid.Root>
-      <TestGrid.Stack>
+      <TestGrid.Stack layout='2fr_1fr'>
         <TestGrid.Panel>
           <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
             <ProjectArticle role='article' subject={project} attendableId={ATTENDABLE_ID} />
@@ -220,47 +220,84 @@ const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
   }
 };
 
+/** The question the `Question` variant's agent asks, and the option the play function picks. */
+const QUESTION: AgentSimulator.Question = {
+  task: 'Cup the samples',
+  question: 'Which lot should the first contract cover?',
+  context: 'Both lots cupped above 86; the budget covers one.',
+  options: ['Ethiopia Guji', 'Colombia Huila'],
+};
+
+/** Clicks `answer` on the open question the detail pane shows, once it is on screen. */
+const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promise<boolean> => {
+  const prompt = canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
+  if (!prompt) {
+    return false;
+  }
+  const option = within(prompt)
+    .queryAllByTestId('task-question.option')
+    .find((candidate) => candidate.textContent?.includes(answer));
+  if (!option) {
+    return false;
+  }
+  // Held a beat so the blocked task and its question read on screen before they resolve.
+  await new Promise((resolve) => setTimeout(resolve, 3_000));
+  await userEvent.click(option);
+  return true;
+};
+
 /**
  * Assigns the first top-level task to the agent, then follows it: each sub-task is opened in the
  * detail pane as the agent starts it, until every sub-task is done and the delegated task is back
- * with its reviewer.
+ * with its reviewer. With `answer`, the question the agent blocks on is answered from that pane.
  */
-const play: Story['play'] = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  await seedContent();
-  await userEvent.click(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 }));
-  await assignToAgent(canvas, DELEGATED_TASK);
+const makePlay =
+  ({ answer }: { answer?: string } = {}): Story['play'] =>
+  async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 }));
+    await assignToAgent(canvas, DELEGATED_TASK);
 
-  // The ledger opens its pipeline chart when a delegation starts.
-  await expect(
-    canvas.findByTestId('projectsPlugin.pipeline.chart', undefined, { timeout: 20_000 }),
-  ).resolves.toBeTruthy();
+    // The ledger opens its pipeline chart when a delegation starts.
+    await expect(
+      canvas.findByTestId('projectsPlugin.pipeline.chart', undefined, { timeout: 20_000 }),
+    ).resolves.toBeTruthy();
 
-  const root = delegatedTask();
-  if (!root) {
-    throw new Error('Expected the delegated task.');
-  }
-  const subtasks = (root.subtasks ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
-  const followed = new Set<string>();
-  await waitFor(
-    async () => {
-      const current = subtasks.find((task) => task.status === 'started');
-      if (current && !followed.has(current.id)) {
-        followed.add(current.id);
-        await selectTask(canvas, current.title);
-      }
-      await expect(subtasks.every(AgentSimulator.isFinished) && AgentSimulator.isFinished(root)).toBe(true);
-    },
-    { timeout: 180_000, interval: 500 },
-  );
+    const root = delegatedTask();
+    if (!root) {
+      throw new Error('Expected the delegated task.');
+    }
+    const subtasks = (root.subtasks ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+    const followed = new Set<string>();
+    let answered = answer === undefined;
+    await waitFor(
+      async () => {
+        const current = subtasks.find((task) => task.status === 'started');
+        if (current && !followed.has(current.id)) {
+          followed.add(current.id);
+          await selectTask(canvas, current.title);
+        }
+        if (!answered && answer !== undefined) {
+          answered = await answerQuestion(canvasElement, answer);
+        }
+        await expect(subtasks.every(AgentSimulator.isFinished) && AgentSimulator.isFinished(root)).toBe(true);
+      },
+      { timeout: 180_000, interval: 500 },
+    );
 
-  // Every sub-task's history records the agent starting and finishing it.
-  for (const task of subtasks) {
-    const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
-    await expect(log.some((line) => /started/i.test(line))).toBe(true);
-    await expect(log.some((line) => /done/i.test(line))).toBe(true);
-  }
-};
+    // Every sub-task's history records the agent starting and finishing it.
+    for (const task of subtasks) {
+      const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
+      await expect(log.some((line) => /started/i.test(line))).toBe(true);
+      await expect(log.some((line) => /done/i.test(line))).toBe(true);
+    }
+    // The exchange stays in the blocked task's history: the question and the answer it resumed on.
+    if (answer !== undefined) {
+      const blocked = subtasks.find((task) => task.title === QUESTION.task);
+      await expect(Task.getQuestions(blocked?.history).map(({ answer }) => answer?.answer)).toEqual([answer]);
+    }
+  };
 
 const meta = {
   title: 'plugins/plugin-projects/stories/AgentSimulation',
@@ -289,10 +326,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** One sub-task at a time, in order. */
-export const Sequential: Story = { decorators: withSimulatedAgent(), play };
+export const Sequential: Story = {
+  decorators: withSimulatedAgent(),
+  play: makePlay(),
+};
 
 /** Every sub-task started at once, then finished one by one. */
 export const Concurrent: Story = {
   decorators: withSimulatedAgent({ strategy: AgentSimulator.concurrent }),
-  play,
+  play: makePlay(),
+};
+
+/**
+ * Sequential, except the agent blocks on a question part-way through a sub-task and ends its turn;
+ * answering it from the task's detail pane resumes the agent, which finishes the rest.
+ */
+export const Question: Story = {
+  decorators: withSimulatedAgent({ strategy: AgentSimulator.withQuestion(AgentSimulator.sequential, QUESTION) }),
+  play: makePlay({ answer: QUESTION.options[0] }),
 };

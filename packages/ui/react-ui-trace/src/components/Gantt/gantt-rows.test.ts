@@ -35,6 +35,21 @@ describe('orderRows', () => {
     `);
   });
 
+  test('a group with a header leads its band with it, and its lanes indent under it', ({ expect }) => {
+    const groups: GanttGroup[] = [{ id: 'g', header: { label: 'Session', status: 'running' } }];
+    const lanes = [lane('a', { groupId: 'g' }), lane('b', { groupId: 'g', parentId: 'a' })];
+    const ordered = orderRows(groups, lanes);
+    expect(`\n${format(ordered)}\n`).toMatchInlineSnapshot(`
+      "
+      0: g
+      1:   a
+      2:     b
+      band g: 0..2
+      "
+    `);
+    expect(ordered.rows[0]).toMatchObject({ header: true, lane: { id: 'g', label: 'Session', groupId: 'g' } });
+  });
+
   test('a lane nests under its parent, which indents it and the lanes under it', ({ expect }) => {
     const groups: GanttGroup[] = [{ id: 'g' }];
     const lanes = [

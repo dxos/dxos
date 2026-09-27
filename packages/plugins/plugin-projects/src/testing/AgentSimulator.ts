@@ -108,6 +108,54 @@ export const concurrent: Strategy = (state) => {
   return next ? finishTurn([next], state.pace) : closeTurn(state);
 };
 
+/** A question the agent puts to the user part-way through a sub-task. */
+export type Question = {
+  /** Title of the sub-task the question blocks. */
+  readonly task: string;
+  readonly question: string;
+  readonly context?: string;
+  readonly options: readonly string[];
+};
+
+/**
+ * Wraps `strategy` so that, once the sub-task titled `question.task` is under way, the agent asks
+ * `question` and ends its turn, as the ask-question tool instructs; answered, it resumes that sub-task
+ * and hands back to `strategy`. The answer arrives as a new turn, so nothing here waits.
+ */
+export const withQuestion =
+  (strategy: Strategy, question: Question): Strategy =>
+  (state) => {
+    const task = state.subtasks.find((candidate) => candidate.title === question.task);
+    const [thread] = task ? Task.getQuestions(task.history) : [];
+    if (task && !thread && task.status === 'started') {
+      return {
+        delay: state.pace.think,
+        parts: [
+          text(`I need a decision before I can finish "${task.title}".`),
+          toolCall(Operation.toolName(PlanningOperations.AskQuestion), {
+            task: task.title,
+            question: question.question,
+            ...(question.context ? { context: question.context } : {}),
+            options: question.options.map((title) => ({ title })),
+          }),
+        ],
+      };
+    }
+    if (task && thread && !thread.answer) {
+      return { parts: [text(`Waiting for an answer to "${question.question}".`)] };
+    }
+    if (task && thread?.answer && task.status === 'blocked') {
+      return {
+        delay: state.pace.think,
+        parts: [
+          text(`Answered "${thread.answer.answer}"; resuming "${task.title}".`),
+          updateTasks([{ task, status: 'started' }]),
+        ],
+      };
+    }
+    return strategy(state);
+  };
+
 /** The root's direct sub-tasks, dropping unresolved refs. */
 const resolveSubtasks = (root: Task.Task): Task.Task[] =>
   (root.subtasks ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
