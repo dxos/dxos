@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -457,11 +457,10 @@ const TaskGroupHeading = ({
 }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <div
-      className={mx(
-        'flex min-w-0 items-center gap-2 self-center',
-        showGutter ? 'col-[gutter/chips-end]' : 'col-[status/chips-end]',
-      )}
+    <Flex
+      align='center'
+      gap='sm'
+      classNames={mx('min-w-0 self-center', showGutter ? 'col-[gutter/chips-end]' : 'col-[status/chips-end]')}
       data-testid='taskList.group.header'
     >
       {group.icon && <Icon icon={group.icon} size={4} classNames={group.iconClassNames} />}
@@ -469,6 +468,6 @@ const TaskGroupHeading = ({
       <span className='text-sm text-description' data-testid='taskList.group.count'>
         {group.count}
       </span>
-    </div>
+    </Flex>
   );
 };

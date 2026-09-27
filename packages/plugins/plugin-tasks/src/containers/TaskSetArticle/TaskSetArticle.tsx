@@ -87,17 +87,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     }
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
   }, [rest, tags]);
-  // Order and grouping persist beside the query, per device and per set, for the same reason.
-  const { sort = TaskSetView.DEFAULT_SORT, group = 'none' } = useViewState(TaskSetView.aspect, taskSet.id);
-  const { update: updateView } = useViewStateActions(TaskSetView.aspect, taskSet.id);
-  const handleSortChange = useCallback(
-    (sort: TaskSetView.Sort) => updateView((view) => ({ ...view, sort })),
-    [updateView],
-  );
-  const handleGroupChange = useCallback(
-    (group: TaskSetView.GroupField) => updateView((view) => ({ ...view, group })),
-    [updateView],
-  );
+  const { sort, group, handleSortChange, handleGroupChange } = useTaskSetArrangement(taskSet.id);
   const { tasks, groups } = useArrangedTasks(taskSet, allTasks, {
     filter,
     statuses,
@@ -348,6 +338,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+/** The list's order and grouping, held in {@link TaskSetView.aspect} beside the query, per device and per set. */
+const useTaskSetArrangement = (contextId: string) => {
+  const { sort = TaskSetView.DEFAULT_SORT, group = 'none' } = useViewState(TaskSetView.aspect, contextId);
+  const { update } = useViewStateActions(TaskSetView.aspect, contextId);
+  const handleSortChange = useCallback((sort: TaskSetView.Sort) => update((view) => ({ ...view, sort })), [update]);
+  const handleGroupChange = useCallback(
+    (group: TaskSetView.GroupField) => update((view) => ({ ...view, group })),
+    [update],
+  );
+  return { sort, group, handleSortChange, handleGroupChange };
+};
 
 /**
  * Which branches are open, held in {@link TaskSetView.aspect} as task id → open. The list speaks in
