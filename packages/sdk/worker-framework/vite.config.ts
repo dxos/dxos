@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ModuleUrlPlugin } from '../../../tools/storybook-react/.storybook/module-url-plugin.ts';
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
@@ -14,5 +15,5 @@ export default defineConfig({
     RpcTiming: 'src/RpcTiming.ts',
   },
   jsx: 'react',
-  test: { node: true, browser: 'chromium', storybook: true },
+  test: { node: true, browser: { browsers: ['chromium'], plugins: [ModuleUrlPlugin()] }, storybook: true },
 });
