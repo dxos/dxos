@@ -150,7 +150,7 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   return (
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
-    <IconBlock square aria-hidden={false} classNames={classNames}>
+    <IconBlock square aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
       <Tag hue={hue} classNames='tabular-nums'>
         {ordinal}
       </Tag>

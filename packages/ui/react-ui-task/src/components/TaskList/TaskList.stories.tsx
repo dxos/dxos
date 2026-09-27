@@ -1215,7 +1215,7 @@ export const TestCheckboxSelection: Story = {
 
     await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
-    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+    await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
     const before = statuses();
     await userEvent.click(boxes()[0]);
@@ -1793,7 +1793,7 @@ export const TestOrdinalsAreLinear: Story = {
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
-        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+        (row) => row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
       );
 
     await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
@@ -1834,7 +1834,7 @@ export const TestHierarchy: Story = {
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
           // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
-          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+          ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
