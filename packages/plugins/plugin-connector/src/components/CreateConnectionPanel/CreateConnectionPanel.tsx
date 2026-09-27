@@ -48,7 +48,7 @@ export const CreateConnectionPanel = ({
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();
-  // The OAuth start Continue fires belongs to no form, so no saving guard stops Connect re-running it.
+  // The OAuth start Continue fires belongs to no form, so its saving guard cannot hold Connect back.
   const [pending, setPending] = useState(false);
 
   const sorted = useMemo(
@@ -176,6 +176,7 @@ export const CreateConnectionPanel = ({
             <Form.Actions
               submitLabel={t('connect-service.label', { service: connector.label ?? connector.id })}
               submitIcon='ph--plugs-connected--regular'
+              submitDisabled={pending}
             />
           </Form.Content>
         </Form.Root>
