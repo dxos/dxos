@@ -25,7 +25,9 @@ export type ProjectPipelineProps = {
   axis?: GanttAxis;
   /** Called by the chart's axis toggle; the toggle is hidden without it. */
   onAxisChange?: (axis: GanttAxis) => void;
-  /** Called with the chat behind a lane the reader picks — a session's, or a task's session. */
+  /** Called with the task behind a task lane the reader picks. */
+  onSelectTask?: (taskId: string) => void;
+  /** Called with the chat behind a session lane the reader picks, and a task lane's with no `onSelectTask`. */
   onSelectChat?: (chat: Chat.Chat) => void;
 };
 
@@ -40,6 +42,7 @@ export const ProjectPipeline = ({
   tasks,
   axis = 'time',
   onAxisChange,
+  onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -50,13 +53,17 @@ export const ProjectPipeline = ({
   // id does, so the pick is resolved through it.
   const handleLaneSelect = useCallback(
     (lane: GanttLane) => {
-      const chatId = timeline.lanes.find((candidate) => candidate.id === lane.id)?.sessionId;
-      const chat = chatId && chats.find((candidate) => candidate.id === chatId);
+      const source = timeline.lanes.find((candidate) => candidate.id === lane.id);
+      if (source?.taskId && onSelectTask) {
+        onSelectTask(source.taskId);
+        return;
+      }
+      const chat = source?.sessionId && chats.find((candidate) => candidate.id === source.sessionId);
       if (chat) {
         onSelectChat?.(chat);
       }
     },
-    [timeline.lanes, chats, onSelectChat],
+    [timeline.lanes, chats, onSelectTask, onSelectChat],
   );
 
   if (timeline.lanes.length === 0) {
@@ -76,7 +83,7 @@ export const ProjectPipeline = ({
       axis={axis}
       onAxisChange={onAxisChange}
       now={Date.now()}
-      onLaneSelect={onSelectChat && handleLaneSelect}
+      onLaneSelect={onSelectTask || onSelectChat ? handleLaneSelect : undefined}
       classNames='p-1'
       data-testid='projectsPlugin.pipeline.chart'
     >

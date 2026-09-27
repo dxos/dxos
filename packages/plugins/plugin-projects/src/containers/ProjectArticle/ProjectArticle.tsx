@@ -13,7 +13,7 @@ import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -154,6 +154,15 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // A session lane on the chart is the way into its chat. The project's own path helper, not the
   // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
   // unparented chats, so that path names a node the deck cannot render.
+  // The same navigation the task ledger's rows use, under the same context, so a lane picked in the
+  // chart selects its row and opens the task where a row click would.
+  const openTask = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: isNotMobile ? 'task' : undefined,
+  });
+
   const handleSelectChat = useCallback(
     (chat: Chat.Chat) => {
       if (!db) {
@@ -328,6 +337,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     tasks={tasks}
                     axis={axis}
                     onAxisChange={setAxis}
+                    onSelectTask={openTask}
                     onSelectChat={handleSelectChat}
                   />
                 )}
