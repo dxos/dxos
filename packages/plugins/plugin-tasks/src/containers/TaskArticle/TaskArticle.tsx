@@ -98,9 +98,6 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
                 <Column.Center classNames='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
-                  {/* First, and always present: the mnemonic is what the task is called when it is
-                    referred to elsewhere, so the chip that copies it leads the flow whether or not
-                    the task carries anything else. */}
                   <TaskMnemonic task={task} />
                   <TaskTags task={task} />
                 </Column.Center>
