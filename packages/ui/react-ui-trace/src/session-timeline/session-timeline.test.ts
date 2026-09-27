@@ -315,7 +315,7 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
-    "a task started over an open one closes it at the boundary, which is the newcomer's",
+    'a task started over an open one runs alongside it, and work while both are open stays with the session',
     Effect.fnUntraced(function* ({ expect }) {
       const first = Task.make({ title: 'First', status: 'started' });
       const second = Task.make({ title: 'Second', status: 'started' });
@@ -326,7 +326,7 @@ describe('buildSessionTimeline', () => {
           yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
           yield* toolCall('Read file'); // 3.
-          // No close for the first: starting the second is what ends it.
+          // No close for the first: the agent holds both.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 4.
           yield* toolCall('Write file'); // 5.
         }),
@@ -338,17 +338,23 @@ describe('buildSessionTimeline', () => {
         sessions: [chat.session],
         tasks: [first, second],
       });
-      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 4 });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({
+        start: 2,
+        end: undefined,
+      });
       expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({
         start: 4,
         end: undefined,
       });
-      // The two segments share the boundary at 4; the second task's own start node sits on its lane.
       const taskMarkers = timeline.markers.filter((marker) => marker.kind === 'task');
       expect(taskMarkers.map(({ laneId, timestamp }) => ({ laneId, timestamp }))).toEqual([
         { laneId: `task:${first.id}`, timestamp: 2 },
         { laneId: `task:${second.id}`, timestamp: 4 },
       ]);
+      // One task open: its work. Two open: the session's, since it cannot be told which it was for.
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Read file')).toBe(`task:${first.id}`);
+      expect(lanesByLabel.get('Write file')).toBe(`session:${chat.session.id}`);
     }, Effect.provide(TestTraceService.layer)),
   );
 
@@ -372,6 +378,109 @@ describe('buildSessionTimeline', () => {
       expect(timeline.lanes[0]).toMatchObject({ id: `session:${chat.id}`, kind: 'session', taskId: task.id });
       const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
       expect(lanesByLabel.get('Read file')).toBe(`session:${chat.id}`);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'a folded lane begins no later than its task, and a traced move takes the trace instant over the history second',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Only', status: 'started' });
+      const chat = makeChat('Only', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Only', status: 'started' }); // 2.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [task],
+        // Delegation started the task before the first request, recorded at whole-second precision.
+        taskStatusChanges: new Map([[task.id, [{ timestamp: 0, status: 'started', previousStatus: 'todo' }]]]),
+      });
+      expect(timeline.lanes).toHaveLength(1);
+      // The history's rounded-down second is replaced by the traced instant, so the lane begins at the
+      // session's first request (1) rather than before any node.
+      expect(timeline.lanes[0]).toMatchObject({ kind: 'session', taskId: task.id, start: 1 });
+      const started = timeline.markers.find((marker) => marker.label === 'Task started');
+      expect(started?.timestamp).toBe(2);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'a task lane starts at its first node, not at the rounded-down second its history records',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'todo' });
+      const chat = makeChat('Precise', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second],
+        taskStatusChanges: new Map([[first.id, [{ timestamp: 0, status: 'started', previousStatus: 'todo' }]]]),
+      });
+      const lane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+      const node = timeline.markers.find((marker) => marker.laneId === lane?.id);
+      expect(lane?.start).toBe(2);
+      expect(node?.timestamp).toBe(lane?.start);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    "a parent task's lane carries each sub-task's start and finish",
+    Effect.fnUntraced(function* ({ expect }) {
+      const parent = Task.make({ title: 'Parent', status: 'started' });
+      const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'done' });
+      const chat = makeChat('Tree', [parent, child]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: child.id, title: 'Child', status: 'started' }); // 2.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: child.id,
+            title: 'Child',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 3.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [parent, child],
+        taskStatusChanges: new Map([
+          [
+            child.id,
+            [
+              { timestamp: 0, status: 'started', previousStatus: 'todo' },
+              { timestamp: 0, status: 'done', previousStatus: 'started' },
+            ],
+          ],
+        ]),
+      });
+      const onParent = timeline.markers
+        .filter((marker) => marker.laneId === `task:${parent.id}`)
+        .map(({ label, timestamp }) => ({ label, timestamp }));
+      expect(onParent).toEqual([
+        { label: 'Child: started', timestamp: 2 },
+        { label: 'Child: done', timestamp: 3 },
+      ]);
     }, Effect.provide(TestTraceService.layer)),
   );
 
@@ -498,7 +607,7 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
-    'a close arriving after the next task started leaves that task the stretch',
+    'a close arriving after the next task started ends the first where it was closed',
     Effect.fnUntraced(function* ({ expect }) {
       const first = Task.make({ title: 'First', status: 'done' });
       const second = Task.make({ title: 'Second', status: 'started' });
@@ -510,8 +619,8 @@ describe('buildSessionTimeline', () => {
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 3.
           yield* toolCall('Write file'); // 4.
-          // The first task's close lands after the second one is under way; the stretch is the
-          // second task's, so nothing may be minted over it.
+          // The first task's close lands after the second one is under way: both were in progress
+          // until then.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
             title: 'First',
@@ -528,13 +637,13 @@ describe('buildSessionTimeline', () => {
         sessions: [chat.session],
         tasks: [first, second],
       });
-      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 3 });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 5 });
       expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({
         start: 3,
         end: undefined,
       });
       const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-      expect(lanesByLabel.get('Write file')).toBe(`task:${second.id}`);
+      expect(lanesByLabel.get('Write file')).toBe(`session:${chat.session.id}`);
       expect(lanesByLabel.get('Read file')).toBe(`task:${second.id}`);
     }, Effect.provide(TestTraceService.layer)),
   );
@@ -739,6 +848,45 @@ describe('buildSessionTimeline', () => {
       { label: 'Task done', timestamp: 2_000, level: undefined },
     ]);
     expect(timeline.range).toEqual({ start: 1_000, end: 3_000 });
+  });
+
+  test('draws no node for the wait before a task was first picked up', ({ expect }) => {
+    const task = Task.make({ title: 'Queued', status: 'todo' });
+    const chat = makeChat('Queue', [task]);
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [task],
+      taskStatusChanges: new Map([
+        [
+          task.id,
+          [
+            { timestamp: 1_000, status: 'todo' },
+            { timestamp: 2_000, status: 'started', previousStatus: 'todo' },
+            // Put back: a move of its own, unlike the wait before the first pick-up.
+            { timestamp: 3_000, status: 'todo', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    expect(
+      timeline.markers.filter((marker) => marker.kind === 'task').map(({ label, timestamp }) => ({ label, timestamp })),
+    ).toEqual([
+      { label: 'Task started', timestamp: 2_000 },
+      { label: 'Task todo', timestamp: 3_000 },
+    ]);
+    expect(timeline.range.start).toBe(2_000);
+  });
+
+  test('nests a sub-task under its parent task when both are on the checklist', ({ expect }) => {
+    const parent = Task.make({ title: 'Parent', status: 'started' });
+    const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'todo' });
+    const chat = makeChat('Tree', [parent, child]);
+    const timeline = buildSessionTimeline({ traceMessages: [], sessions: [chat.session], tasks: [parent, child] });
+
+    expect(timeline.lanes.find((lane) => lane.id === `task:${parent.id}`)?.parentId).toBe(`session:${chat.session.id}`);
+    expect(timeline.lanes.find((lane) => lane.id === `task:${child.id}`)?.parentId).toBe(`task:${parent.id}`);
   });
 
   it.effect(

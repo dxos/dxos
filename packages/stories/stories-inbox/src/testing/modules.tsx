@@ -11,11 +11,11 @@ import { DXN } from '@dxos/keys';
 
 import { moduleSurfaces } from '../modules/index.ts';
 
-/** Contributes the MailboxSync module surfaces so a story can drive them from a `ModuleContainer` layout. */
+/** Contributes the story module surfaces (`StoryRole`) so a story can drive them from a `ModuleContainer` layout. */
 export const StoryModulesPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.modules'),
-    name: 'Mailbox Sync Story Modules',
+    name: 'Inbox Story Modules',
   }),
 ).pipe(
   Plugin.addModule({

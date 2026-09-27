@@ -8,8 +8,8 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Banner, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
+import { Banner, useTranslation } from '@dxos/react-ui';
+import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,6 +21,10 @@ export type ProjectPipelineProps = {
   project: Project.Project;
   /** The project's tasks, in the order the ledger shows them. */
   tasks: readonly Task.Task[];
+  /** `time` fits the run to the pane; `unit` steps per event and scrolls to follow the newest. */
+  axis?: GanttAxis;
+  /** Called by the chart's axis toggle; the toggle is hidden without it. */
+  onAxisChange?: (axis: GanttAxis) => void;
   /** Called with the chat behind a lane the reader picks — a session's, or a task's session. */
   onSelectChat?: (chat: Chat.Chat) => void;
 };
@@ -30,7 +34,14 @@ export type ProjectPipelineProps = {
  * every chat filed under the project is a session, its checklist the task lanes beneath it, redrawn
  * as trace events arrive.
  */
-export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: ProjectPipelineProps) => {
+export const ProjectPipeline = ({
+  space,
+  project,
+  tasks,
+  axis = 'time',
+  onAxisChange,
+  onSelectChat,
+}: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
   const timeline = useSessionTimeline(space, { chats, tasks });
@@ -59,22 +70,22 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
   // Named and totalled here rather than read off the ledger above: a ledger row is several lines
   // tall and a chart row is one, so nothing lines up between them.
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport>
-        <Gantt.Root
-          {...chart}
-          range={timeline.range}
-          now={Date.now()}
-          onLaneSelect={onSelectChat && handleLaneSelect}
-          classNames='p-2'
-          data-testid='projectsPlugin.pipeline.chart'
-        >
-          <Gantt.Legend />
-          <Gantt.Chart />
-          <Gantt.Meta />
-        </Gantt.Root>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Gantt.Root
+      {...chart}
+      range={timeline.range}
+      axis={axis}
+      onAxisChange={onAxisChange}
+      now={Date.now()}
+      onLaneSelect={onSelectChat && handleLaneSelect}
+      classNames='p-1'
+      data-testid='projectsPlugin.pipeline.chart'
+    >
+      <Gantt.Legend>
+        <Gantt.AxisToggle />
+      </Gantt.Legend>
+      <Gantt.Meta />
+      <Gantt.Chart />
+    </Gantt.Root>
   );
 };
 
