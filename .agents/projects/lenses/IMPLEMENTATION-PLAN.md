@@ -21,6 +21,13 @@ better than before._
 | E1     | `1191627c`                                     | `Lens.compose`, `Lens.invert` (safe subset), version-aware `Lens.findPath` / `resolveView`                                       |
 | E2     | `1f759c03`                                     | Fold-forward also carries late overlay writes into promoted properties                                                           |
 
+**Limit fixes (decided 2026-09-27, all to implement):** (1) a per-peer, per-document derived fold
+actor with folds forked from the migration heads plus that actor's previous fold — deterministic,
+bounded actor growth; (2) the migration marker becomes a list of steps so chained migrations fold in
+order; (3) fan-in marks absorbed children and folds late edits to them into the parent (with the type
+switch); (4) array fan-out folds late array writes per element (edits into existing children, new
+id'd elements ensured, removals left to the orphan diagnostic).
+
 Known limits carried forward: array fan-out has no fold-forward for late old-shape array writes after the
 split; fan-in does not switch the child's type before tombstoning; the migration marker keeps only the
 latest step of a chain; two peers folding the same value independently leave equal-valued ops (reported as
