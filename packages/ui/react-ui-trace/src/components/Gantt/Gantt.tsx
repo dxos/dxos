@@ -19,8 +19,9 @@ import { HoverCard, ScrollArea, type ThemedClassName, composable, composableProp
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { type Band, type Row, orderRows } from './gantt-rows.ts';
-import { type GanttAxis, type GanttScale, eventScale, timeScale } from './gantt-scale.ts';
+import { type GanttAxis, type GanttScale, timeScale, unitScale } from './gantt-scale.ts';
 import { useEnter } from './useEnter.ts';
+import { useRangeTween } from './useRangeTween.ts';
 
 /**
  * The chart's vocabulary is groups, lanes, segments and markers — deliberately not the vocabulary of
@@ -95,8 +96,8 @@ const PAD_X = 16;
 const ROW_HEIGHT = 24;
 const HEADER_HEIGHT = 20;
 
-/** Pixels per event on the `event` axis — wide enough that two adjacent nodes read as two. */
-const EVENT_STEP = 32;
+/** Pixels per event on the `unit` axis — wide enough that two adjacent nodes read as two. */
+const UNIT_STEP = 32;
 /** How long a newly arrived element takes to travel from where it came from to where it belongs. */
 const ENTER_TRANSITION = 'duration-500 ease-out';
 
@@ -196,14 +197,17 @@ export type GanttData = {
   range?: { start: number; end: number };
   now?: number;
   showNow?: boolean;
-  /** What the horizontal axis measures; one step per event by default. */
+  /**
+   * What the horizontal axis measures: `unit` steps once per event and scrolls to follow the newest;
+   * `time` fits the whole range to the width and eases to new bounds. `unit` by default.
+   */
   axis?: GanttAxis;
-  /** Pixels per event on the `event` axis. */
-  eventStep?: number;
+  /** Pixels per event on the `unit` axis. */
+  unitStep?: number;
   /**
    * Slide a newly arrived event out of the one before it — out of the node that opened its lane, for
-   * a lane's first — and grow its bar to meet it. Only events that arrive while the chart is on screen
-   * animate, so a chart that is merely mounted is still.
+   * a lane's first — and grow its bar to meet it, on the `unit` axis. Only events that arrive while the
+   * chart is on screen animate, so a chart that is merely mounted is still.
    */
   animate?: boolean;
   onLaneSelect?: (lane: GanttLane) => void;
@@ -218,7 +222,7 @@ type GanttContextValue = {
   markers: readonly GanttMarker[];
   markerById: Map<string, GanttMarker>;
   range: { start: number; end: number };
-} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow' | 'axis' | 'eventStep' | 'animate'>;
+} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow' | 'axis' | 'unitStep' | 'animate'>;
 
 const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt');
 
@@ -243,8 +247,8 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
       range: rangeProp,
       now,
       showNow,
-      axis = 'event',
-      eventStep,
+      axis = 'unit',
+      unitStep,
       animate,
       onLaneSelect,
       onMarkerSelect,
@@ -281,7 +285,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         now={now}
         showNow={showNow}
         axis={axis}
-        eventStep={eventStep}
+        unitStep={unitStep}
         animate={animate}
         onLaneSelect={onLaneSelect}
         onMarkerSelect={onMarkerSelect}
@@ -404,7 +408,7 @@ type Stretch = {
  * group's rectangle encloses its band, and connectors draw dependencies and the node a lane opened
  * out of.
  *
- * The part owns its horizontal scroll: on the `event` axis the drawing is as wide as the events need
+ * The part owns its horizontal scroll: on the `unit` axis the drawing is as wide as the events need
  * and follows the newest of them, while the legend beside it stays where it is.
  */
 const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, forwardedRef) => {
@@ -417,8 +421,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     range,
     now,
     showNow,
-    axis = 'event',
-    eventStep = EVENT_STEP,
+    axis = 'unit',
+    unitStep = UNIT_STEP,
     animate,
     onLaneSelect,
     onMarkerSelect,
@@ -473,12 +477,32 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
     return byLane;
   }, [markers]);
 
+  // The time axis is fitted to the viewport, so moving bounds rescale everything already drawn;
+  // easing the range makes that a slide rather than a jump. The unit axis never rescales.
+  // The time axis moves only when something happens: its bounds end at the newest drawn instant (a
+  // node or a segment edge) rather than at the host's range, which may follow the wall clock and would
+  // rescale an idle chart forever. Open lanes run to that same edge, so none is clipped.
+  const lastEvent = useMemo(() => {
+    const times = [
+      ...markers.map((marker) => marker.timestamp),
+      ...rows.flatMap(({ lane }) => (lane.segments ?? []).flatMap(({ start, end }) => [start, end ?? start])),
+    ];
+    return times.length > 0 ? Math.max(...times) : undefined;
+  }, [markers, rows]);
+  const targetRange = useMemo(
+    () => (lastEvent === undefined ? range : { start: range.start, end: Math.max(lastEvent, range.start) }),
+    [range.start, range.end, lastEvent],
+  );
+  const shownRange = useRangeTween(targetRange, axis === 'time');
+  // CSS geometry transitions would chase every frame of that ease and trail behind it, so they run
+  // on the unit axis only; the stroke dash drawing a connector on is not geometry and always may.
+  const slide = animate === true && axis === 'unit';
   const scale: GanttScale = useMemo(
     () =>
-      axis === 'event'
-        ? eventScale({ times: markers.map((marker) => marker.timestamp), step: eventStep, pad: PAD_X })
-        : timeScale({ range, width, pad: PAD_X }),
-    [axis, markers, eventStep, range, width],
+      axis === 'unit'
+        ? unitScale({ times: markers.map((marker) => marker.timestamp), step: unitStep, pad: PAD_X })
+        : timeScale({ range: shownRange, width, pad: PAD_X }),
+    [axis, markers, unitStep, shownRange, width],
   );
   const isEntering = useEnter(markers.map((marker) => marker.id));
 
@@ -508,15 +532,14 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
       const source = previous ? undefined : openSource(row.lane);
       const origin = previous ? x(previous.timestamp) : source && x(source.timestamp);
       const resting = x(marker.timestamp);
-      markerX.set(marker.id, animate && origin !== undefined && isEntering(marker.id) ? origin : resting);
+      markerX.set(marker.id, slide && origin !== undefined && isEntering(marker.id) ? origin : resting);
     });
   }
 
   /**
-   * A lane's drawn stretches, one per segment. An open segment reaches its last node rather than
-   * `now`: a lane with no fresh event is not shown as still busy, and taking the node's drawn
-   * position rather than its instant is what makes the bar grow with an arriving event instead of
-   * jumping ahead of it.
+   * A lane's drawn stretches, one per segment. An open segment reaches its last node, taking the
+   * node's drawn position rather than its instant so the bar grows with an arriving event instead of
+   * jumping ahead of it — and on to the chart's newest event when that is later.
    */
   const stretchesOf = (lane: GanttLane): Stretch[] => {
     const list = laneMarkers.get(lane.id) ?? [];
@@ -527,16 +550,17 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
       const first = inside[0];
       const last = inside[inside.length - 1];
       const from = x(segment.start);
-      // An open stretch runs to its newest node, and on to `now` when it is later: a lane still being
-      // worked between events (a parent task while its sub-tasks run) is not a point.
+      // An open stretch runs to its newest node, and on to the newest event anywhere on the chart when
+      // that is later: a lane still being worked between its own events (a parent task while its
+      // sub-tasks run) is not a point.
       const lastX = last ? (markerX.get(last.id) ?? x(last.timestamp)) : undefined;
-      const nowX = now !== undefined ? x(now) : undefined;
+      const edgeX = lastEvent !== undefined ? x(lastEvent) : undefined;
       const to =
         segment.end !== undefined
           ? x(segment.end)
-          : lastX !== undefined && nowX !== undefined
-            ? Math.max(lastX, nowX)
-            : (lastX ?? nowX ?? from);
+          : lastX !== undefined && edgeX !== undefined
+            ? Math.max(lastX, edgeX)
+            : (lastX ?? edgeX ?? from);
       const threaded = inside.length > 1 && first && last;
       return {
         from,
@@ -551,13 +575,13 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   // rather than appearing at full length, and the connector that caused it draws out to meet it.
   const isOpening = (lane: GanttLane): boolean => {
     const first = laneMarkers.get(lane.id)?.[0];
-    return animate === true && first !== undefined && isEntering(first.id);
+    return slide && first !== undefined && isEntering(first.id);
   };
 
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
-  const grow = animate && mx('transition-[width]', ENTER_TRANSITION);
+  const grow = slide && mx('transition-[width]', ENTER_TRANSITION);
 
-  // The event axis grows to the right, so the newest event has to be followed — but only while the
+  // The unit axis grows to the right, so the newest event has to be followed — but only while the
   // reader is at its edge; having scrolled back, they are reading, not watching. A layout effect, so
   // the first paint already shows the newest events rather than jumping to them from the start.
   useLayoutEffect(() => {
@@ -837,7 +861,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       width={Math.max(stretch.threadTo - stretch.threadFrom, 0)}
                       height={THREAD_HEIGHT}
                       className={mx(
-                        animate && mx('transition-[x,width]', ENTER_TRANSITION),
+                        slide && mx('transition-[x,width]', ENTER_TRANSITION),
                         !lane.hue && STATUS_COLOR[lane.status].node,
                       )}
                       style={lane.hue ? { fill: hueColor(lane.hue) } : undefined}
@@ -861,7 +885,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       'cursor-pointer stroke-base-surface hover:stroke-[3px] hover:stroke-base-fg',
                       // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
                       // slides out of the one before it, and where it does not it simply appears.
-                      animate ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
+                      slide ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
                       // The live end pulses in the lane's stronger shade: scanning a wall of finished
                       // lanes, the ones still moving should be findable without reading the legend.
                       activeEdges.has(marker.id)

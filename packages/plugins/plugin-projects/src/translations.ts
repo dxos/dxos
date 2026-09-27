@@ -45,6 +45,7 @@ export const translations = [
         'tasks.label': 'Tasks',
         'view.label': 'View',
         'pipeline.label': 'Show pipeline',
+        'time-axis.label': 'Fit to time',
         'no-sessions.message': 'No agent sessions yet. Assign tasks to an agent to start one.',
         'no-task-set.message': 'This project has no task set yet.',
         'artifacts.label': 'Artifacts',

@@ -9,7 +9,7 @@ import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Banner, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
+import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,6 +21,8 @@ export type ProjectPipelineProps = {
   project: Project.Project;
   /** The project's tasks, in the order the ledger shows them. */
   tasks: readonly Task.Task[];
+  /** `time` fits the run to the pane; `unit` steps per event and scrolls to follow the newest. */
+  axis?: GanttAxis;
   /** Called with the chat behind a lane the reader picks — a session's, or a task's session. */
   onSelectChat?: (chat: Chat.Chat) => void;
 };
@@ -30,7 +32,7 @@ export type ProjectPipelineProps = {
  * every chat filed under the project is a session, its checklist the task lanes beneath it, redrawn
  * as trace events arrive.
  */
-export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: ProjectPipelineProps) => {
+export const ProjectPipeline = ({ space, project, tasks, axis = 'time', onSelectChat }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
   const timeline = useSessionTimeline(space, { chats, tasks });
@@ -64,9 +66,7 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
         <Gantt.Root
           {...chart}
           range={timeline.range}
-          // Fitted to the pane: the ledger reads as the whole run at a glance, whereas the event axis
-          // scrolls to the newest events and leaves every finished lane off-screen.
-          axis='time'
+          axis={axis}
           now={Date.now()}
           onLaneSelect={onSelectChat && handleLaneSelect}
           classNames='p-2'

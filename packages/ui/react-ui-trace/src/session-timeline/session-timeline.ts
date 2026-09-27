@@ -586,7 +586,9 @@ export const buildSessionTimeline = ({
         id: `${lane.id}:${markers.length}`,
         laneId: lane.id,
         kind: 'task',
-        timestamp: change.timestamp,
+        // The trace's instant when it recorded the same move: edit-history times are whole seconds, so
+        // on their own they land before the work they mark.
+        timestamp: match?.timestamp ?? change.timestamp,
         label: `Task ${change.status}`,
         level: change.status === 'failed' ? 'error' : undefined,
         pid: match?.meta.pid,
@@ -709,6 +711,11 @@ export const buildSessionTimeline = ({
     }
     lanes.splice(lanes.indexOf(task), 1);
     session.taskId = task.taskId;
+    // The task was started (delegated) before the session's first request, so the folded lane begins
+    // with the task; otherwise its first node would sit alone ahead of the bar.
+    if (task.start !== undefined) {
+      session.start = session.start === undefined ? task.start : Math.min(session.start, task.start);
+    }
     if (task.status === 'blocked' || task.status === 'review' || task.status === 'pending') {
       session.status = task.status;
     }

@@ -223,7 +223,7 @@ export const Sequential: Story = {
   play: makePlay(),
 };
 
-/** Every sub-task started at once, then finished one by one. */
+/** Sub-tasks started one after another so they overlap, then finished one by one. */
 export const Concurrent: Story = {
   decorators: createDecorators({ strategy: AgentSimulator.concurrent }),
   play: makePlay(),

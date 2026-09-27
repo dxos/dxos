@@ -63,7 +63,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { t } = useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = useOperationInvoker();
@@ -108,6 +108,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
+  const toggleAxis = useCallback(
+    () => updateView((prev) => ({ ...prev, axis: (prev.axis ?? 'time') === 'time' ? 'unit' : 'time' })),
+    [updateView],
+  );
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -148,6 +152,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: handleDelegated,
     onTogglePipeline: togglePipeline,
+    timeAxis: axis === 'time',
+    onToggleAxis: toggleAxis,
   });
 
   // A session lane on the chart is the way into its chat. The project's own path helper, not the
@@ -321,7 +327,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
                 {showPipeline && space && (
-                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onSelectChat={handleSelectChat}
+                  />
                 )}
               </Splitter.Panel>
             </Splitter.Root>
@@ -418,6 +430,9 @@ export type ToolbarActionsProps = {
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
   onDelegated: () => void;
   onTogglePipeline: () => void;
+  /** Whether the pipeline chart fits the run to the pane rather than stepping per event. */
+  timeAxis: boolean;
+  onToggleAxis: () => void;
 };
 
 /**
@@ -433,6 +448,8 @@ const useToolbarActions = ({
   onAddArtifact,
   onDelegated,
   onTogglePipeline,
+  timeAxis,
+  onToggleAxis,
 }: ToolbarActionsProps) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
@@ -529,9 +546,9 @@ const useToolbarActions = ({
             label: ['view.label', { ns: meta.profile.key }],
             variant: 'toggleGroup',
             selectCardinality: 'multiple',
-            value: showPipeline ? ['pipeline'] : [],
+            value: [...(showPipeline ? ['pipeline'] : []), ...(showPipeline && timeAxis ? ['time-axis'] : [])],
           },
-          (group) =>
+          (group) => {
             group.action(
               'pipeline',
               {
@@ -540,7 +557,20 @@ const useToolbarActions = ({
                 testId: 'projectsPlugin.pipeline',
               },
               onTogglePipeline,
-            ),
+            );
+            // Only beside an open chart: it changes how the chart reads and means nothing without one.
+            if (showPipeline) {
+              group.action(
+                'time-axis',
+                {
+                  label: ['time-axis.label', { ns: meta.profile.key }],
+                  icon: 'ph--clock--regular',
+                  testId: 'projectsPlugin.timeAxis',
+                },
+                onToggleAxis,
+              );
+            }
+          },
         )
         // In the trailing overflow rather than on the toolbar: adding an artifact is occasional
         // next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
@@ -571,6 +601,8 @@ const useToolbarActions = ({
       delegating,
       showPipeline,
       onTogglePipeline,
+      timeAxis,
+      onToggleAxis,
     ],
   );
 };

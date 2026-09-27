@@ -99,11 +99,14 @@ export const sequential: Strategy = (state) => {
   return next.status === 'started' ? finishTurn([next], state.pace) : startTurn([next], state.pace);
 };
 
-/** Every sub-task started at once, then finished one per turn, in order. */
+/**
+ * Sub-tasks started one per turn, a `think` apart, until all are under way, then finished one per turn
+ * in order — so the work overlaps, each piece begun a little after the last.
+ */
 export const concurrent: Strategy = (state) => {
-  const pending = state.subtasks.filter((task) => !isFinished(task) && task.status !== 'started');
-  if (pending.length > 0) {
-    return startTurn(pending, state.pace);
+  const pending = state.subtasks.find((task) => !isFinished(task) && task.status !== 'started');
+  if (pending) {
+    return startTurn([pending], state.pace);
   }
   const next = state.subtasks.find((task) => !isFinished(task));
   return next ? finishTurn([next], state.pace) : closeTurn(state);
