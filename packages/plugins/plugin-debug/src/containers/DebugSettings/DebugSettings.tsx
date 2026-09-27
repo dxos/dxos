@@ -31,6 +31,9 @@ const StorageAdapters = {
   idb: defs.Runtime_Client_Storage_StorageDriver.IDB,
 } as const;
 
+const isStorageAdapterKey = (value: string): value is keyof typeof StorageAdapters =>
+  Object.hasOwn(StorageAdapters, value);
+
 /** `runtime.client.documentMode` and `proxyIndexReads` for each choice; the client reads them when it starts. */
 const DocumentModes = {
   replica: { documentMode: defs.Runtime_Client_DocumentMode.REPLICA, proxyIndexReads: false },
@@ -152,9 +155,9 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
 
   const handleStorageAdapterChange = useCallback(
     (value: string) => {
-      if (confirm(t('settings.storage-adapter.changed-alert.message'))) {
+      if (isStorageAdapterKey(value) && confirm(t('settings.storage-adapter.changed-alert.message'))) {
         updateConfig(storageConfig, setStorageConfig, [
-          [['runtime', 'client', 'storage', 'dataStore'], StorageAdapters[value as keyof typeof StorageAdapters]],
+          [['runtime', 'client', 'storage', 'dataStore'], StorageAdapters[value]],
         ]);
       }
     },
