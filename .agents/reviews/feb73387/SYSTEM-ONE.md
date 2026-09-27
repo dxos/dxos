@@ -12,8 +12,8 @@ billed input tokens: 31157 (cost $0.0013)
 measured chars per token: 2.83
 ```
 
-## Still needs an agentic reviewer
+## Agentic follow-up
 
-Spawn one subagent per line below (1 in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.
+System One left one group uncertain; it was reviewed by hand against its rule.
 
-- `moon-yml-entrypoint-registration` → append to `groups/04.md`: `packages/common/crx-protocol/package.json` (p=0.16), `packages/plugins/plugin-crx/package.json` (p=0.22), `packages/plugins/plugin-github/package.json` (p=0.16)
+- `moon-yml-entrypoint-registration`: `packages/common/crx-protocol/package.json` (p=0.16), `packages/plugins/plugin-crx/package.json` (p=0.22), `packages/plugins/plugin-github/package.json` (p=0.16). No diagnostics: the diff removes `private` and adds `publishConfig`, and adds or changes no `exports`/`imports` entry.
