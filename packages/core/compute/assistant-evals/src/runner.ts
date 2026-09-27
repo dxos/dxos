@@ -208,12 +208,16 @@ const runInstructions = <I>(
     }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
   );
 
-/** The run's chat, as JSON records: the seeded one, else the chat the run provisioned. */
+/**
+ * The run's chat, as JSON records: the seeded one, else the chat the run provisioned. Undefined for
+ * a run with no chat, whose transcript could not reproduce its requests.
+ */
 const chatMessages = (chatRef: Ref.Ref<Chat.Chat> | undefined) =>
   Effect.gen(function* () {
     const chat = chatRef ? yield* Database.load(chatRef) : yield* findObject(Chat.Chat, () => true);
     if (!chat) {
-      return [];
+      log.warn('no chat to write a transcript from; set `sessionChat` or seed one');
+      return undefined;
     }
     const feed = yield* Database.load(chat.feed);
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
@@ -233,12 +237,7 @@ const logCost = (calls: readonly Usage.Call[]): void => {
   });
 };
 
-const writeTranscript = (
-  instructions: string,
-  variant: VariantConfig,
-  calls: readonly Usage.Call[],
-  messages: readonly Obj.JSON[],
-): void => {
+const writeTranscript = (instructions: string, calls: readonly Usage.Call[], messages: readonly Obj.JSON[]): void => {
   const requests = calls.flatMap((call) => (call.request ? [call.request] : []));
   const model = calls[0]?.model ?? 'unknown';
   const name = `${expect.getState().currentTestName ?? 'eval'}-${model}`.replace(/[^\w.-]+/g, '-').slice(0, 120);
@@ -398,7 +397,7 @@ export function createEvalRunner<I, O>(
     input: I,
     variant: VariantConfig,
     record: (call: Usage.Call) => void,
-    onMessages: (messages: Obj.JSON[]) => void,
+    onMessages: (messages: Obj.JSON[] | undefined) => void,
   ) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const makeTurnProducer = variant?.makeTurnProducer ?? options.makeTurnProducer;
@@ -555,10 +554,16 @@ export function createEvalRunner<I, O>(
     } finally {
       Usage.report(calls, { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name });
       logCost(calls);
-      if (messages) {
-        writeTranscript(options.instructions, variant, calls, messages);
+      try {
+        if (messages) {
+          writeTranscript(options.instructions, calls, messages);
+        }
+      } catch (err) {
+        // A transcript is a by-product: failing to write one must neither mask the outcome nor skip the flush.
+        log.catch(err);
+      } finally {
+        await run.finish();
       }
-      await run.finish();
     }
   };
 }

@@ -8,7 +8,7 @@ import { Harness } from '@dxos/assistant';
 import type * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { McpToolkit } from '@dxos/mcp-client';
 
 import { ToolkitError } from '../../../errors.ts';
@@ -17,16 +17,15 @@ import { ConnectMcpServer } from './definitions.ts';
 export default ConnectMcpServer.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ skill: key, server }) {
-      // Upsert rather than resolve: the server is written to the skill, so a registry skill needs its space copy.
-      const skill = yield* Skill.upsert(key).pipe(
-        Effect.mapError(
-          () => new ToolkitError({ message: `Skill '${key}' was not found in this space or the registry.` }),
-        ),
-      );
+      const notFound = () =>
+        new ToolkitError({ message: `Skill '${key}' was not found in this space or the registry.` });
+      // Read-only until both checks pass, so a refused or unreachable server leaves no registry copy in the space.
+      const [local] = yield* Database.query(Filter.and(Filter.type(Skill.Skill), Filter.key(key))).run;
+      const found = local ?? (yield* Skill.resolve(key).pipe(Effect.mapError(notFound)));
 
       const binder = yield* Harness.binder;
       const bound = binder.getSkills().some((candidate) => Obj.getMeta(candidate).key === key);
-      if (!bound && !skill.agentCanEnable) {
+      if (!bound && !found.agentCanEnable) {
         return yield* Effect.fail(
           new ToolkitError({
             message: `Skill '${key}' is not enabled in this conversation and does not allow the agent to enable it, so its servers would never connect here.`,
@@ -39,6 +38,8 @@ export default ConnectMcpServer.pipe(
         Effect.mapError((error) => new ToolkitError({ message: describeFailure(error), cause: error })),
       );
 
+      // The server is written to the skill, so a registry skill needs its space copy.
+      const skill = yield* Skill.upsert(key).pipe(Effect.mapError(notFound));
       Obj.update(skill, (skill) => {
         skill.mcpServers = [...(skill.mcpServers ?? []).filter(({ url }) => url !== server.url), storedSpec(server)];
       });

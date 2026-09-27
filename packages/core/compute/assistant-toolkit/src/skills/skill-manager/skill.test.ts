@@ -13,7 +13,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext, Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
@@ -261,6 +261,30 @@ describe('Skill Manager', () => {
 
         const bound = yield* getBoundSkills;
         expect(bound.some((candidate: Skill.Skill) => candidate.id === skill.id)).toBe(false);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'connect-mcp-server: a failed connect leaves no copy of a registry skill in the space',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const exit = yield* Effect.exit(
+          Operation.invoke(
+            ConnectMcpServer,
+            { skill: 'org.dxos.skill.memory', server: { url: 'http://127.0.0.1:1/mcp', protocol: 'http' } },
+            { conversation },
+          ),
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+
+        const copies = yield* Database.query(Filter.and(Filter.type(Skill.Skill), Filter.key('org.dxos.skill.memory')))
+          .run;
+        expect(copies).toHaveLength(0);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

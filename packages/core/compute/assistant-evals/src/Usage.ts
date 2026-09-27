@@ -102,7 +102,11 @@ const fromResponse = (
     tools: json(span.attributes.get('dxos.ai.tools')),
     request: Transcript.directory() ? Transcript.captureRequest(prompt, tools) : undefined,
     ...tokens,
-    costUsd: Cost.ofCall(backendName(model), tokens, new Date(start)),
+    // A call whose provider reported no usage is unpriced, not free.
+    costUsd:
+      finish.usage.inputTokens.total === undefined || finish.usage.outputTokens.total === undefined
+        ? undefined
+        : Cost.ofCall(backendName(model), tokens, new Date(start)),
     start,
     end: ended === undefined ? now : millis(ended),
   };
