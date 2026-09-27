@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 
 import { JmapOperation } from '#types';
 
@@ -13,7 +14,11 @@ import * as JmapOperationHandlerSet from './operations/JmapOperationHandlerSet.t
 
 describe('JmapPlugin in workerd', () => {
   test('activates headless and contributes its operations', async ({ expect }) => {
-    const { failures, operationKeys } = await activateHeadlessPlugins([JmapPlugin.make()]);
+    const { failures, operationKeys } = await activateHeadlessPlugins([
+      JmapPlugin.make(),
+      // Declared plugin dependencies; the manager refuses to load the plugin without them.
+      InboxPlugin.make(),
+    ]);
     expect(failures).toEqual([]);
     expect(operationKeys).toContain(String(JmapOperation.JmapSync.meta.key));
   });

@@ -801,7 +801,8 @@ const createWorkerdProject = ({
     ],
     test: {
       name: 'workerd',
-      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      // Matches the node project: a cold plugin activation in workerd alone can take several seconds.
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 15_000),
       include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
       setupFiles,
     },
