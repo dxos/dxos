@@ -23,6 +23,9 @@ export const register = <L extends AnyLens>(lens: L): L => {
 
 export const resolve = (id: string): AnyLens | undefined => byId.get(id);
 
+/** Every registered lens, for building the version graph {@link findPath} walks. */
+export const all = (): readonly AnyLens[] => [...byId.values()];
+
 /** Every registered lens whose source is this type. */
 export const lensesFor = (source: Type.AnyObj | string): readonly AnyLens[] => {
   const name = typename(source);
@@ -33,7 +36,7 @@ export const lensesFor = (source: Type.AnyObj | string): readonly AnyLens[] => {
 export const sourcesFor = (target: Type.AnyObj | string): readonly AnyLens[] => {
   const name = typename(target);
   return [...byId.values()].filter((lens) => {
-    const entity = lens.target as Type.AnyEntity;
+    const entity = lens.target;
     return Type.isType(entity) && Type.getTypename(entity) === name;
   });
 };

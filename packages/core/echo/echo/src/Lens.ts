@@ -17,12 +17,15 @@ import { applyWrites } from './internal/lens/write.ts';
 import type * as Obj from './Obj.ts';
 
 export { type TargetOf, coded, make } from './internal/lens/codec.ts';
+export { compose } from './internal/lens/compose.ts';
+export { invert } from './internal/lens/invert.ts';
+export { findPath, resolveView, versionId } from './internal/lens/path.ts';
 export { of, targetSchema } from './internal/lens/live.ts';
 export { applyWrites } from './internal/lens/write.ts';
 export { lookup, registerCodec, scale } from './internal/lens/codecs.ts';
 export { compatible } from './internal/lens/mapping.ts';
 export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor } from './internal/lens/laws.ts';
-export { clear, lensesFor, register, resolve, sourcesFor } from './internal/lens/registry.ts';
+export { all, clear, lensesFor, register, resolve, sourcesFor } from './internal/lens/registry.ts';
 export { OverlayAnnotation, getOverlay, getOverlays } from './internal/lens/overlay.ts';
 export { Lens as Object, fromObject, toObject } from './internal/lens/entity.ts';
 export {

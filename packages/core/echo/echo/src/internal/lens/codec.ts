@@ -20,7 +20,12 @@ import {
 
 const read = (obj: Obj.Unknown | Obj.Snapshot) => (property: string) => Obj.getValue(obj, [property]);
 
-const project = (obj: Obj.Unknown | Obj.Snapshot, id: string, plan: Plan): Record<string, unknown> => {
+/**
+ * Project a base object through a compiled plan. Exported for {@link Lens.compose}, which builds a
+ * plan whose entries chain through more than one lens but still applies it this same way — there is
+ * only ever one write-set mechanism, not one per hop.
+ */
+export const project = (obj: Obj.Unknown | Obj.Snapshot, id: string, plan: Plan): Record<string, unknown> => {
   const view: Record<string, unknown> = { id: (obj as { id: string }).id };
   for (const entry of plan.entries) {
     const value = entry.get(readSource(read(obj), entry.from));
@@ -37,7 +42,8 @@ const project = (obj: Obj.Unknown | Obj.Snapshot, id: string, plan: Plan): Recor
   return view;
 };
 
-const invert = (view: Record<string, unknown>, obj: Obj.Unknown, id: string, plan: Plan): readonly Write[] => {
+/** Invert a view against a compiled plan into minimal writes. Exported for {@link Lens.compose} — see {@link project}. */
+export const invert = (view: Record<string, unknown>, obj: Obj.Unknown, id: string, plan: Plan): readonly Write[] => {
   const byProperty = new Map<string, ResolvedEntry>(plan.entries.map((entry) => [entry.property, entry]));
   const overlays = new Set(plan.overlays);
   const writes: Write[] = [];
