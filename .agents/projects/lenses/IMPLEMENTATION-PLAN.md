@@ -1,19 +1,20 @@
 # Lens-Backed Migrations — Implementation Plan
 
-_2026-09-25. Turns [M0-REPORT.md](./M0-REPORT.md) and the decisions in [DESIGN.md](./DESIGN.md) §10.7
+_2026-09-25, starting point (committed 2026-09-27). Turns [M0-REPORT.md](./M0-REPORT.md) and the decisions in [DESIGN.md](./DESIGN.md) §10.7
 into shippable phases. Supersedes the M1/M2 task lists in [TASKS.md](./TASKS.md) where they
 disagree (those predate the research). Every phase ships on its own and leaves the system strictly
 better than before._
 
 ## Where things live
 
-| Piece                                                           | Package                                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `Lens`, `Migration.declare`, the `Write` vocabulary             | `@dxos/echo` (after Phase 5 promotes `Lens`)                       |
-| `foldAt` (write at recorded heads, own actor, change `message`) | `@dxos/echo-client` `ObjectCore` (internal)                        |
-| Fold-forward runner                                             | `@dxos/echo-host`, off the worker indexing stream                  |
-| Creation-heads replay for convergence-key duplicates            | `@dxos/echo-host` `ConvergenceKeyMerger` (object-merging project)  |
-| Legacy space-level `Migrations`                                 | `@dxos/migrations`; callers `AppMigrations`, `plugin-space`, `cli` |
+| Piece                                                                | Package                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `Lens`; the existing `Migration` module grows the `Write` vocabulary | `@dxos/echo` (after Phase 5 promotes `Lens`)                       |
+| `db.runMigrations` (today: `atomicReplaceObject`)                    | `@dxos/echo-client` `proxy-db/database.ts`                         |
+| `foldAt` (write at recorded heads, own actor, change `message`)      | `@dxos/echo-client` `ObjectCore` (internal)                        |
+| Fold-forward runner                                                  | `@dxos/echo-host`, off the worker indexing stream                  |
+| Creation-heads replay for convergence-key duplicates                 | `@dxos/echo-host` `ConvergenceKeyMerger` (object-merging project)  |
+| Legacy space-level `Migrations`                                      | `@dxos/migrations`; callers `AppMigrations`, `plugin-space`, `cli` |
 
 ## Phase A — prerequisites (parallel)
 
@@ -23,8 +24,8 @@ better than before._
    `#mergeCandidates` replay each loser's edits since its creation at the winner's creation heads
    for loser-edited fields; skip text replay when creation text differs. Proven in
    `fan-out-engine.test.ts` / `text.test.ts`.
-3. **Type-switch primitive**: whatever the validation spike finds for moving an object from
-   `@1` to `@2` in one change with its data (`validation.test.ts`, in progress).
+3. **Type-switch primitive**: the only one today is the internal `ObjectCore.setType`
+   (`validation.test.ts` V1); expose it to the migration runner rather than building a new one.
 4. **Stale live proxy after a remote reorder** (ECHO bug from `array-fan-out.test.ts` A2b): file and
    fix independently; migrations re-query per run meanwhile.
 
@@ -33,8 +34,10 @@ better than before._
 The migrations we support today (one object, one type, in place), made safe. Does not yet catch
 late old-schema writes; says so in the docs.
 
-1. `Migration.declare({ from: 'T@1', to: 'T@2', lens | migrate })` — pure, synchronous; `migrate()`
-   returns a write set as data. `Migration.fromLens(L)` for mapping-expressible steps.
+1. Extend the existing `Migration` module (`Migration.define` / `defineRename` in `@dxos/echo`)
+   rather than adding a parallel API: `migrate()` returns a write set as data (pure, synchronous);
+   `Migration.fromLens(L)` for mapping-expressible steps. `transform`-style definitions keep
+   working and are compiled to a write set.
 2. `Write` vocabulary, guarded by construction: `assign` (value-compare), `assignText`
    (`updateText` once the target exists, plain create otherwise), `report` (leave source, flag).
 3. Define-time checks: lens coverage (`dropped` surfaced as a reviewable diff) and `checkLaws` over
@@ -42,7 +45,8 @@ late old-schema writes; says so in the docs.
 4. Apply per object in **one change**: minimal writes + type switch + per-object marker
    (`Annotation.set` on `EntityMeta.annotations`) + pre/post heads. Whole write set validated
    against the target version first (§10.7 q5).
-5. Keep source properties; the target schema accepts them as retired.
+5. Keep source properties, declared as **retired** on the target: without a declaration a later
+   write to one is rejected as `Unknown property` (`validation.test.ts` V4c).
 6. "What is left to migrate" becomes a query on type version, replacing the space-level
    `MigrationVersionAnnotation` scalar. Port `AppMigrations`, `plugin-space`, `cli`.
 7. Migrations are kept indefinitely; retirement is a designed-in but unused path (§10.7 q3).
@@ -85,6 +89,26 @@ real runner with no test-side folding.
    tie-break; migrations never use discovered paths (§10.7 q4).
 2. Overlay promotion as an ordinary migration; fold-forward also diffs the annotations path
    (§10.7 q1).
+
+## Package scope
+
+| Package                                                                          | Phases       | Change                                                                                   |
+| -------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `@dxos/echo`                                                                     | A1, B, C, E  | Receives `Lens`; `Migration` grows the `Write` vocabulary; conflict read API; lens paths |
+| `@dxos/echo-client`                                                              | A3, A4, B, C | `runMigrations` minimal writes + `setType` + per-object state; `ObjectCore.foldAt`       |
+| `@dxos/echo-host`                                                                | A2, C, D     | Merge-engine replay; fold-forward runner on the indexing stream                          |
+| `@dxos/index-core`                                                               | C            | Only if the runner needs durable intents / a column                                      |
+| `@dxos/echo-panproto`                                                            | A1           | Keeps engine, hooks, coded lenses; `Lens` module moves out                               |
+| `@dxos/echo-client-e2e`                                                          | all          | Bench becomes acceptance tests                                                           |
+| `sdk/schema`, `plugin-atproto`, `plugin-library`, `stories-lens`, `composer-app` | A1           | `Lens` import path                                                                       |
+| `plugin-illustrator`, `plugin-client`, `compute`                                 | B            | `Migration.define` / `runMigrations` callers; check for whole-object-replace reliance    |
+| `sdk/app-toolkit`, `plugin-space`, `composer-app`, `sdk/migrations`              | B            | Space-level version scalar → per-object queries (scalar deprecated, not removed)         |
+
+## Working agreement
+
+Implementation continues on the research branch (`claude/m0-migrations-research-zw15ml`, PR
+#12439), starting with A1. Defaults until decided otherwise: M1's runner lives in the worker from
+the start; A2 is coordinated with the object-merging project's owners.
 
 ## Not in scope
 
