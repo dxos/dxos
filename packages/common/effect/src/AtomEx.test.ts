@@ -5,11 +5,21 @@
 import * as Duration from 'effect/Duration';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import * as AtomEx from './AtomEx.ts';
 
 const TTL = 100;
+
+// Fake timers make the idle-TTL grace period (a real `setTimeout` inside the registry) deterministic
+// instead of racing a real wall-clock wait.
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('AtomEx.makeRegistry', () => {
   test('keeps an unobserved node through the grace period', async ({ expect }) => {
@@ -19,12 +29,12 @@ describe('AtomEx.makeRegistry', () => {
     registry.subscribe(atom, () => {})();
     const node = registry.getNodes().get(atom);
     // Past the task on which a registry without a TTL removes the node.
-    await wait(TTL / 4);
+    await vi.advanceTimersByTimeAsync(TTL / 4);
     const unsubscribe = registry.subscribe(atom, () => {});
     expect(registry.getNodes().get(atom)).toBe(node);
 
     unsubscribe();
-    await wait(TTL * 3);
+    await vi.advanceTimersByTimeAsync(TTL * 3);
     expect(registry.getNodes().size).toBe(0);
   });
 
@@ -33,7 +43,7 @@ describe('AtomEx.makeRegistry', () => {
     const atom = Atom.make(0);
 
     registry.subscribe(atom, () => {})();
-    await wait(TTL / 4);
+    await vi.advanceTimersByTimeAsync(TTL / 4);
     expect(registry.getNodes().size).toBe(0);
   });
 
@@ -49,7 +59,7 @@ describe('AtomEx.makeOwned', () => {
     const atom = AtomEx.makeOwned(owner, Atom.make(0));
 
     registry.set(atom, 1);
-    await wait(TTL);
+    await vi.advanceTimersByTimeAsync(TTL);
     expect(registry.getNodes().has(atom)).toBe(true);
     expect(registry.get(atom)).toBe(1);
     expect(owner).toBeDefined();
@@ -65,5 +75,3 @@ class TestOwner implements AtomEx.Owner {
     this[AtomEx.OwnerId] = { registry, finalizer: TestOwner.#finalizer };
   }
 }
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

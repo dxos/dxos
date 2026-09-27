@@ -121,6 +121,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

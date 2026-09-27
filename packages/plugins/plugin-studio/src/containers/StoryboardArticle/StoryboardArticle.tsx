@@ -11,9 +11,8 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { Banner, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { FrameStack, StoryboardPlayer } from '#components';
@@ -164,7 +163,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Empty classNames='h-full' label={t('storyboard-empty.message')} />
+                  <Banner.Empty classNames='h-full' label={t('storyboard-empty.message')} />
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}

@@ -5,6 +5,7 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
+import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
 
@@ -12,6 +13,11 @@ type Env = {
   ASSETS: Fetcher;
   APPLE_TEAM_ID?: string;
   ENVIRONMENT?: string;
+  /**
+   * Assets from previous builds, keyed by their path. Optional: while it is unbound the Worker
+   * behaves as if every previous build were gone, which is the behaviour that predates it.
+   */
+  ASSET_ARCHIVE?: R2Bucket;
   FEEDBACK_LOGS?: R2Bucket;
   SIGNOZ_INGEST_URL?: string;
   SIGNOZ_INGESTION_KEY?: string;
@@ -22,6 +28,9 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
 /**
  * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
+ *
+ * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
+ * NDJSON is still accepted because native builds already in the field upload it uncompressed.
  *
  * Admits `nativeOrigins`, whose uploads are necessarily cross-origin, and carries the CORS headers on
  * every response, since the client reads the returned key.
@@ -68,16 +77,17 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Empty body', { status: 400, headers: cors });
   }
 
+  const gzipped = request.headers.get('content-type')?.split(';')[0].trim() === 'application/gzip';
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
-  const key = `logs/${date}/${id}.ndjson`;
+  const key = `logs/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
     // near its memory limit, and a Worker torn down that way resets the connection — the client
     // then sees a rejected `fetch` with no status rather than an error response.
     await env.FEEDBACK_LOGS.put(key, request.body, {
-      httpMetadata: { contentType: 'application/x-ndjson' },
+      httpMetadata: { contentType: gzipped ? 'application/gzip' : 'application/x-ndjson' },
     });
   } catch {
     // R2 rejects a body that does not match Content-Length, as well as its own failures.
@@ -266,6 +276,71 @@ const handleWellKnown = (request: Request, document: object | undefined): Respon
   });
 };
 
+/**
+ * Serve an asset a previous build shipped, from the retention bucket.
+ *
+ * A deploy replaces the asset manifest wholesale, so the moment a new version goes live every chunk
+ * the previous build owned stops resolving — and a tab open across that deploy still imports them.
+ * Every deploy mirrors its `assets/` into this bucket, keyed by path, so those requests keep working
+ * for the environment's retention window.
+ *
+ * Returns `undefined` when there is nothing to serve, leaving the caller to 404: the bucket may be
+ * unbound, and a hit is by definition the uncommon path — the live manifest answers everything the
+ * current build references.
+ */
+const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise<Response | undefined> => {
+  if (!env.ASSET_ARCHIVE || !isHashedAssetPath(url.pathname)) {
+    return undefined;
+  }
+
+  // Keys are stored without the leading slash so the bucket listing reads as a path.
+  const key = url.pathname.slice(1);
+  const object = request.method === 'HEAD' ? await env.ASSET_ARCHIVE.head(key) : await env.ASSET_ARCHIVE.get(key);
+  if (!object) {
+    return undefined;
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('ETag', object.httpEtag);
+  // `_headers` does not reach a Worker-built response. Only hashed paths get this far.
+  headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
+  // Distinguishes a retention hit from a live one in the logs, which is how we learn whether the
+  // window is long enough without instrumenting the client.
+  headers.set('X-Asset-Source', 'archive');
+
+  return new Response('body' in object ? object.body : null, { status: 200, headers });
+};
+
+/**
+ * Serve a request the asset server did not match: it serves live files itself, so the Worker sees only
+ * misses and the `run_worker_first` routes no handler above claimed.
+ *
+ * A request naming a file gets the archived copy or a real 404, never `index.html` with a 200, which a
+ * stale tab's lazy import would report as a MIME error instead of a missing file. Everything else is a
+ * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
+ */
+const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const response = await env.ASSETS.fetch(request);
+  if (response.status !== 404) {
+    return response;
+  }
+
+  const url = new URL(request.url);
+  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
+    const archived = await serveArchivedAsset(request, env, url);
+    return (
+      archived ??
+      new Response('Not found', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+      })
+    );
+  }
+
+  return env.ASSETS.fetch(new Request(new URL('/', url), request));
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
@@ -393,7 +468,7 @@ const handler: ExportedHandler<Env> = {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    return serveAsset(request, env);
   },
 };
 

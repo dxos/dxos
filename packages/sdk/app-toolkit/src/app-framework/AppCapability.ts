@@ -11,6 +11,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
@@ -138,6 +139,16 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 );
 
 /**
+ * Module maker contributing a {@link AppCapabilities.DefaultParent} rule. On the startup pass: an
+ * operation handler asks for rules mid-create, which has no demand event to gate on.
+ */
+export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capability$.moduleMaker(
+  'DefaultParent',
+  AppCapabilities.DefaultParent,
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+);
+
+/**
  * Module maker contributing navigation target resolvers. On the startup pass: URL restore runs as
  * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
  * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.
@@ -155,6 +166,53 @@ export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> 
   AppCapabilities.NavigationHandler,
   { activatesOn: ActivationEvents.Startup, environments: [] },
 );
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/**
+ * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally —
+ * a contribution's `values`, and the `role` (one or several) `Surface.create` resolves from each
+ * definition's filter — so this headless module need not load React's `Surface`.
+ */
+export const undeclaredSurfaceRoles = (result: unknown, declared: readonly string[]): string[] => {
+  const bound = (Array.isArray(result) ? result : [result])
+    .flatMap((contribution) =>
+      isRecord(contribution) &&
+      contribution.capability === Capabilities.ReactSurface &&
+      Array.isArray(contribution.values)
+        ? contribution.values
+        : [],
+    )
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .flatMap((surface) => (isRecord(surface) ? [surface.role].flat() : []))
+    .filter((role): role is string => typeof role === 'string');
+  return [...new Set(bound)].filter((role) => !declared.includes(role));
+};
+
+/**
+ * Reports, when a role-gated module loads, any role its surfaces bind but do not declare: a request
+ * for only that role never loads the module, so the surface silently renders nothing wherever no
+ * declared role was requested first.
+ */
+const withDeclaredRolesCheck =
+  <Props, Requires extends readonly Capability$.AnyTag[], Provides extends readonly Capability$.AnyTag[]>(
+    loader: Capability$.LoadModule<Props, Requires, Provides>,
+    roles: readonly string[],
+  ): Capability$.LoadModule<Props, Requires, Provides> =>
+  () =>
+    loader().then((module) => ({
+      default: (props: Props) =>
+        module.default(props).pipe(
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              const undeclared = undeclaredSurfaceRoles(result, roles);
+              if (undeclared.length > 0) {
+                log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
+              }
+            }),
+          ),
+        ),
+    }));
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
@@ -178,7 +236,7 @@ export const surface = <
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {
   const { roles, ...rest } = options ?? {};
-  return surfaceMaker(loader, {
+  return surfaceMaker(roles?.length ? withDeclaredRolesCheck(loader, roles) : loader, {
     ...rest,
     environments: rest.environments ?? [],
     activatesOn:

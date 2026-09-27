@@ -28,6 +28,7 @@ export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

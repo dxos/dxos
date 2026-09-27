@@ -498,8 +498,9 @@ export class QueryPlanner {
         ]);
       }
 
-      // Mnemonic — a local predicate on the object's own id, so it runs as a filter step over
-      // a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      // Mnemonic and annotation — local predicates on the object's own id or meta, so they run as a
+      // filter step over a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      case 'annotation':
       case 'mnemonic': {
         const planned: QueryAST.Filter = context.selectionInverted ? { type: 'not', filter } : filter;
         return QueryPlan.Plan.make([
@@ -560,9 +561,10 @@ export class QueryPlanner {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
         const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
-        const hasParentFilters = flatFilters.filter((f): f is QueryAST.FilterHasParent => f.type === 'has-parent');
+        // has-parent and (negated) annotation predicates are local checks, planned as post-filters.
+        const localFilters = flatFilters.filter((f) => f.type === 'has-parent' || _isAnnotationPredicate(f));
         const otherFilters = flatFilters.filter(
-          (f) => f.type !== 'timestamp' && f.type !== 'child-of' && f.type !== 'has-parent',
+          (f) => f.type !== 'timestamp' && f.type !== 'child-of' && !localFilters.includes(f),
         );
 
         if (timestampFilters.length > 0 && context.selectionInverted) {
@@ -577,7 +579,7 @@ export class QueryPlanner {
           timestampFilters.length > 0 &&
           otherFilters.length <= 1 &&
           childOfFilters.length === 0 &&
-          hasParentFilters.length === 0
+          localFilters.length === 0
         ) {
           const innerFilter = otherFilters[0];
           const innerPlan = innerFilter
@@ -612,7 +614,7 @@ export class QueryPlanner {
           ]);
         }
 
-        if (timestampFilters.length > 0 && childOfFilters.length === 0 && hasParentFilters.length === 0) {
+        if (timestampFilters.length > 0 && childOfFilters.length === 0 && localFilters.length === 0) {
           throw new QueryError({
             message:
               'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
@@ -620,9 +622,9 @@ export class QueryPlanner {
           });
         }
 
-        // child-of and has-parent both plan as post-filters appended to the remaining filters'
+        // child-of and the local filters plan as post-filters appended to the remaining filters'
         // plan, so `and(type(X), hasParent(false))` keeps its type-indexed select.
-        if (childOfFilters.length > 0 || hasParentFilters.length > 0) {
+        if (childOfFilters.length > 0 || localFilters.length > 0) {
           // A negated conjunction cannot distribute over its conjuncts (`not(and(a, b))` is not
           // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter —
           // possible only when every conjunct is root-executable (child-of is not).
@@ -658,7 +660,7 @@ export class QueryPlanner {
                     ...this._generateDeletedHandlingSteps(context),
                   ]);
 
-          const postFilterSteps: QueryPlan.Step[] = [...childOfFilters, ...hasParentFilters].map((f) => ({
+          const postFilterSteps: QueryPlan.Step[] = [...childOfFilters, ...localFilters].map((f) => ({
             _tag: 'FilterStep' as const,
             filter: f,
           }));
@@ -1552,14 +1554,18 @@ const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.S
   );
 };
 
+const _isAnnotationPredicate = (filter: QueryAST.Filter): boolean =>
+  filter.type === 'annotation' || (filter.type === 'not' && filter.filter.type === 'annotation');
+
 /**
- * Returns true if the filter is `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
+ * Returns true if the filter is `annotation`, `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
  * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
  * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
  * limit must never be pushed past them.
  */
 const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
+    case 'annotation':
     case 'child-of':
     case 'has-parent':
     case 'mnemonic':
@@ -1773,6 +1779,7 @@ const isRootExecutable = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'object':
     case 'tag':
+    case 'annotation':
     case 'has-parent':
     case 'mnemonic':
       return true;

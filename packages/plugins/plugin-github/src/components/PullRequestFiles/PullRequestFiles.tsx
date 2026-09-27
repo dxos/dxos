@@ -4,8 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Field, Grid, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Field, Grid, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -47,10 +46,10 @@ export const PullRequestFiles = ({
   const fence = useMemo(() => (file && file.hunks.length > 0 ? diffFence(file) : undefined), [file]);
 
   if (error) {
-    return <Empty icon='ph--warning--regular' label={error} classNames='dx-expand' />;
+    return <Banner.Empty icon='ph--warning--regular' label={error} classNames='dx-expand' />;
   }
   if (!tree) {
-    return <Empty label={t('files-loading.message')} classNames='dx-expand' />;
+    return <Banner.Empty label={t('files-loading.message')} classNames='dx-expand' />;
   }
 
   return (
@@ -59,7 +58,7 @@ export const PullRequestFiles = ({
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />
       ) : (
-        <Empty label={t(file ? 'file-no-diff.message' : 'no-files.message')} classNames='dx-expand' />
+        <Banner.Empty label={t(file ? 'file-no-diff.message' : 'no-files.message')} classNames='dx-expand' />
       )}
       <ScrollArea.Root thin classNames='border-s border-subdued-separator'>
         <ScrollArea.Viewport classNames='p-2'>

@@ -29,6 +29,7 @@ export class Review extends Type.makeObject<Review>(DXN.make('org.dxos.type.ches
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

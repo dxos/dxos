@@ -7,7 +7,7 @@
   :root {
     --dx-main-transition-duration: 150ms;
     --dx-main-plank-transition-duration: 50ms;
-    --dx-main-transition-easing: cubic-bezier(0.2, 0, 0, 1);
+    --dx-main-transition-easing: cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   /**

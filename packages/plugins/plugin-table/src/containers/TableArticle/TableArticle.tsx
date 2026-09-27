@@ -48,7 +48,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
-    const [view] = useObject(object.view);
+    const [viewRef] = useObject(object, 'view');
+    const [view] = useObject(viewRef);
     const queryAst = view?.query?.ast;
     const typeUri = getTypeURIFromQuery(queryAst);
     const schema = useType(db, typeUri);

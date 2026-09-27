@@ -27,8 +27,11 @@ export type TaskDescriptionProps = ThemedClassName<{
  */
 export const TaskDescription = ({ content, components, classNames }: TaskDescriptionProps) => (
   <MarkdownView
+    data-testid='taskList.item.description'
     content={content}
     classNames={mx('text-sm text-description line-clamp-3', classNames)}
+    // Every block at the row's line height, so the clamp ends on a whole line.
+    uniformLineHeight
     // The row supplies the type scale and the clamp, so the description renders as one inline run
     // rather than the block paragraph the default component wraps it in.
     components={{ ...DESCRIPTION_COMPONENTS, ...components }}

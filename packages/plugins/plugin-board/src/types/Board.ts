@@ -18,6 +18,7 @@ export class Board extends Type.makeObject<Board>(DXN.make('org.dxos.type.board'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

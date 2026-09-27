@@ -39,6 +39,7 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
       connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -22,6 +22,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -217,7 +218,13 @@ export const createProjectChatsChildrenExtension = () =>
         return Effect.succeed([]);
       }
 
-      const children = get(db.query(Query.select(Filter.id(project.id)).children()).atom);
+      const children = get(
+        db.query(
+          Query.select(Filter.id(project.id))
+            .children()
+            .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+        ).atom,
+      );
       return Effect.succeed(
         children
           .filter(Obj.instanceOf(Chat.Chat))

@@ -13,6 +13,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   diffBlocks,
+  scrollbarAutohide,
   walkthroughSidebar,
   walkthroughTheme,
 } from '@dxos/ui-editor';
@@ -45,6 +46,7 @@ export const diffDocumentExtensions = ({
   createBasicExtensions({ lineWrapping: true, readOnly: true }),
   createMarkdownExtensions(),
   decorateMarkdown(),
+  scrollbarAutohide(),
   walkthroughTheme(),
   diffBlocks({ layout, ...(onLineComment ? { onLineComment } : {}) }),
   sidebar === 'none' ? [] : walkthroughSidebar({ variant: sidebar }),

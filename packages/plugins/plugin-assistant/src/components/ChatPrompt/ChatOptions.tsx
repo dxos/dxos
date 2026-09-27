@@ -13,7 +13,7 @@ import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos
 import { useObject, useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Field, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -234,7 +234,12 @@ const ModelsPanel = ({
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
         <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.Item
+              key={id}
+              id={id}
+              classNames='px-2 py-1 dx-focus-ring rounded-xs'
+              data-testid={`assistant.models.${id}`}
+            >
               <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
               <Listbox.Indicator />
             </Listbox.Item>
@@ -328,24 +333,26 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <div className='p-form-chrome space-y-1' data-testid='assistant.mcp-servers'>
-      {servers.map((server) => (
-        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-      ))}
+    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
+      <Listbox.Root>
+        <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
+          {servers.map((server) => (
+            <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div>
-          <IconButton
-            variant='ghost'
-            icon='ph--plus--regular'
-            label={t('mcp-server-add.label')}
-            onClick={() => setAdding(true)}
-            data-testid='assistant.mcp-server.add'
-          />
-        </div>
+        <IconButton
+          variant='ghost'
+          icon='ph--plus--regular'
+          label={t('mcp-server-add.label')}
+          onClick={() => setAdding(true)}
+          data-testid='assistant.mcp-server.add'
+        />
       )}
-    </div>
+    </Flex>
   );
 };
 
@@ -356,14 +363,16 @@ type McpServerRowProps = {
 
 /**
  * `useQuery` returns live objects but only re-renders on result-identity changes,
- * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
- * switch in sync with mutations made through the returned setter.
+ * so we must subscribe to the per-server `enabled`/`oauth`/`name`/`url` fields via `useObject`
+ * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
   // Subscribed so the status re-checks once a sign-in stores tokens.
   useObject(server, 'oauth');
+  const [name] = useObject(server, 'name');
+  const [url] = useObject(server, 'url');
   const [revision, setRevision] = useState(0);
   const status = useMcpServerStatus(server, { enabled: enabled !== false, revision });
   const { signIn, pending, error } = useMcpServerSignIn(server);
@@ -379,16 +388,16 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
         : t(`mcp-server-status.${status.state}`);
 
   return (
-    <div className='flex flex-col px-form-chrome' data-testid='assistant.mcp-server'>
-      <div className='flex items-center gap-2'>
+    <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
+      <Flex align='center' gap='sm'>
         <Field.Root>
-          <Field.Label srOnly>{server.name}</Field.Label>
+          <Field.Label srOnly>{name}</Field.Label>
           <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
         </Field.Root>
-        <div className='flex flex-col flex-1 min-w-0'>
-          <span className='truncate text-sm'>{server.name}</span>
-          <span className='truncate text-xs text-description'>{server.url}</span>
-        </div>
+        <Flex column grow classNames='min-w-0'>
+          <span className='truncate text-sm'>{name}</span>
+          <span className='truncate text-xs text-description'>{url}</span>
+        </Flex>
         {status.state === 'unauthorized' && (
           <IconButton
             variant='primary'
@@ -415,7 +424,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           label={t('mcp-server-remove.label')}
           onClick={() => onRemove(server)}
         />
-      </div>
+      </Flex>
       <span
         className={mx(
           'text-xs truncate',
@@ -428,7 +437,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
       >
         {error ?? statusLabel}
       </span>
-    </div>
+    </Listbox.Item>
   );
 };
 

@@ -5,8 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -74,7 +73,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
   <ScrollArea.Root padding classNames='h-full'>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Empty label='No stats.' />}
+      {stats.length === 0 && <Banner.Empty label='No stats.' />}
       {stats.map((stat) => (
         <div
           key={stat.label}

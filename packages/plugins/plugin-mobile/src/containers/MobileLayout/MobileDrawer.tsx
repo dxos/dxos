@@ -8,8 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
 import { Loading } from '#components';
@@ -69,7 +68,7 @@ export const MobileDrawer = () => {
             placeholder={placeholder}
           />
         ) : (
-          <Empty label={t('empty-drawer.message')} />
+          <Banner.Empty label={t('empty-drawer.message')} />
         )}
       </Panel.Content>
     </Panel.Root>

@@ -76,7 +76,7 @@ const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 // concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
 // activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
 // in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
-// per realm via `initAutomergeWasm()` before the client boots avoids both.
+// per realm (`util/automerge-wasm.ts`) before the client boots avoids both.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**

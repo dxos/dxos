@@ -86,6 +86,11 @@
       "types": "./dist/types/src/operations/CollaborationOperation.d.ts",
       "import": "./dist/lib/operations/CollaborationOperation.mjs"
     },
+    "./CollectionOperation": {
+      "source": "./src/operations/CollectionOperation.ts",
+      "types": "./dist/types/src/operations/CollectionOperation.d.ts",
+      "import": "./dist/lib/operations/CollectionOperation.mjs"
+    },
     "./ConnectorSync": {
       "source": "./src/types/ConnectorSync.ts",
       "types": "./dist/types/src/types/ConnectorSync.d.ts",
@@ -100,6 +105,11 @@
       "source": "./src/app-graph/DeckSpec.ts",
       "types": "./dist/types/src/app-graph/DeckSpec.d.ts",
       "import": "./dist/lib/app-graph/DeckSpec.mjs"
+    },
+    "./DefaultParent": {
+      "source": "./src/types/DefaultParent.ts",
+      "types": "./dist/types/src/types/DefaultParent.d.ts",
+      "import": "./dist/lib/types/DefaultParent.mjs"
     },
     "./GraphPath": {
       "source": "./src/app/GraphPath.ts",
@@ -206,6 +216,11 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
+    },
+    "./AppUpdate": {
+      "source": "./src/app/AppUpdate.ts",
+      "types": "./dist/types/src/app/AppUpdate.d.ts",
+      "import": "./dist/lib/app/AppUpdate.mjs"
     },
     "./Tour": {
       "source": "./src/app-framework/Tour.ts",

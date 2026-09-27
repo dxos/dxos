@@ -2,20 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type ComponentType, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, CardMenuSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
 export type ObjectCardProps = {
   data: Entity.Unknown;
   classNames?: string;
+  /** The host's contribution to this card's menu (see `AppSurface.CardMasonryData.CardMenu`). */
+  CardMenu?: ComponentType<AppSurface.CardMenuData<Obj.Unknown>>;
 };
 
 /**
@@ -25,7 +27,7 @@ export type ObjectCardProps = {
  * Nothing here is type-specific, and the props are the masonry tile signature, so the same card
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
-export const ObjectCard = ({ data: subject, classNames }: ObjectCardProps) => {
+export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
@@ -33,7 +35,11 @@ export const ObjectCard = ({ data: subject, classNames }: ObjectCardProps) => {
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
-  const menuItems = useObjectMenuItems(subject, pivotId);
+  const objectMenuItems = useObjectMenuItems(subject, pivotId);
+  // The card owns its menu: the object's own items are its actions, and the type's and the host's
+  // register theirs as contributions.
+  const menu = useMenuActions();
+  const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
     <Card.Root ref={cardRef} classNames={classNames}>
@@ -45,7 +51,9 @@ export const ObjectCard = ({ data: subject, classNames }: ObjectCardProps) => {
         </Card.Block>
         <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
         <Card.Block end>
-          <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+          <CardMenuSlot subject={subject} menu={menu} />
+          {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
+          <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
             <IconButton
               iconOnly
               variant='ghost'

@@ -15,7 +15,7 @@ import { Annotation, DXN, Format, Ref, Tag, Type } from '@dxos/echo';
 export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(
@@ -54,5 +54,5 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
         title: 'Identities',
       }),
     ),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}

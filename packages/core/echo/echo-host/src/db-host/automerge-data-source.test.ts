@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
+import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 
 import { AutomergeHost } from '../automerge/index.ts';
@@ -343,7 +344,8 @@ describe('AutomergeDataSource', () => {
       dataSource.getChangedObjects(Context.default(), [], { activity: true }),
     );
     expect(firstResult.activity).toEqual([expect.objectContaining({ documentId: handle.documentId, full: true })]);
-    const firstChanges = firstResult.activity![0].changes;
+    invariant(firstResult.activity, 'activity requested via getChangedObjects options');
+    const firstChanges = firstResult.activity[0].changes;
     expect(firstChanges.length).toBeGreaterThan(0);
     const now = Date.now();
     for (const change of firstChanges) {
@@ -355,8 +357,9 @@ describe('AutomergeDataSource', () => {
     const OLD_S = Math.floor(OLD_MS / 1000);
     handle.change(
       (doc: DatabaseDirectory) => {
+        invariant(doc.objects, 'objects populated by createDatabaseDirectory');
         // A string field is spliced character-by-character in this Automerge build and would not exercise `ops === 1`.
-        doc.objects!['obj-1'].data.count = 42;
+        doc.objects['obj-1'].data.count = 42;
       },
       { time: OLD_S },
     );
@@ -415,7 +418,8 @@ describe('AutomergeDataSource', () => {
       dataSource.getChangedObjects(Context.default(), [], { activity: true }),
     );
     expect(first.activity).toEqual([expect.objectContaining({ documentId: branch.documentId, full: true })]);
-    expect(first.activity![0].changes.length).toBeGreaterThan(0);
+    invariant(first.activity, 'activity requested via getChangedObjects options');
+    expect(first.activity[0].changes.length).toBeGreaterThan(0);
 
     const root = await createDatabaseDirectory(host, spaceId, {});
     root.change((doc: DatabaseDirectory) => {

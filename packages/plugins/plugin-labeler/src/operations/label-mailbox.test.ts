@@ -74,7 +74,7 @@ const TestLayer = AssistantTestLayer({
   aiService: Layer.succeed(
     AiService.AiService,
     AiService.make({
-      languageModel: () => ScriptedLanguageModel.scriptedLanguageModelLayer([]),
+      languageModel: () => ScriptedLanguageModel.layer([]),
       decisionModel: () => decisionModel,
     }),
   ),
