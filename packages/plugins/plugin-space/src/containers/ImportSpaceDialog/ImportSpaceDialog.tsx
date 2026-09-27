@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -67,13 +67,19 @@ export const ImportSpaceDialog = () => {
       <Dialog.Body>
         <p className='my-4'>{t('import-space-dialog.description')}</p>
         {importing ? (
-          <div
+          <Flex
+            align='center'
+            justify='center'
+            gap='sm'
+            asChild
             role='status'
-            className='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2'
+            classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
           >
-            <Icon icon='ph--spinner-gap--regular' size={8} classNames='animate-spin' />
-            <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
-          </div>
+            <div>
+              <Icon icon='ph--spinner-gap--regular' size={8} classNames='animate-spin' />
+              <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
+            </div>
+          </Flex>
         ) : (
           <FileUploader
             types={['json', 'tar']}

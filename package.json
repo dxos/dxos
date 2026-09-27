@@ -12,7 +12,7 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
-    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://CI/hub.dxos.network/shared/ANTHROPIC_API_KEY\"\\nexport CLOUDFLARE_API_TOKEN=\"op://CI/dev.dxos.network/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\n' | op inject",
+    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://CI/Claude - agents/credential\"\\nexport CLOUDFLARE_API_TOKEN=\"op://CI/dev.dxos.network/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\n' | op inject",
     "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
@@ -63,6 +63,7 @@
     "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "catalog:",
     "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
     "@changesets/parse": "catalog:",

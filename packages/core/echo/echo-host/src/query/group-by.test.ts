@@ -7,12 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { GroupBy } from './group-by.ts';
 
 describe('GroupBy.truncateTime', () => {
-  const at = (iso: string) => Date.parse(iso);
-
   test('floors to the UTC hour or day, before 1970 too', () => {
-    expect(GroupBy.truncateTime(at('2026-01-05T18:45:12Z'), 'hour')).toBe(at('2026-01-05T18:00:00Z'));
-    expect(GroupBy.truncateTime(at('2026-01-05T18:45:00Z'), 'day')).toBe(at('2026-01-05T00:00:00Z'));
-    expect(GroupBy.truncateTime(at('1969-12-31T23:00:00Z'), 'day')).toBe(at('1969-12-31T00:00:00Z'));
+    expect(GroupBy.truncateTime(Date.parse('2026-01-05T18:45:12Z'), 'hour')).toBe(Date.parse('2026-01-05T18:00:00Z'));
+    expect(GroupBy.truncateTime(Date.parse('2026-01-05T18:45:00Z'), 'day')).toBe(Date.parse('2026-01-05T00:00:00Z'));
+    expect(GroupBy.truncateTime(Date.parse('1969-12-31T23:00:00Z'), 'day')).toBe(Date.parse('1969-12-31T00:00:00Z'));
   });
 
   test('is null for anything but a finite number', () => {

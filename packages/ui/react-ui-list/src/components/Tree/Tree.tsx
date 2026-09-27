@@ -285,6 +285,12 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   dropAtEnd?: boolean;
   /**
+   * Take the dragged row out of the list for the duration of the drag, rather than leaving it in
+   * place faded. Off by default: a faded row keeps the list's geometry, so the rows under the
+   * pointer do not shift as the drag starts.
+   */
+  hideDragSource?: boolean;
+  /**
    * Mount only the rows in view, windowed with `@dxos/react-ui-virtual`.
    *
    * The same mechanism the trace timeline and the message feed use: the placement owns the
@@ -314,7 +320,9 @@ export type TreeProps<T extends { id: string } = any> = {
   /**
    * Keydown on the tree container. The escape hatch for gestures the machine does not own — zag
    * ignores modified arrows, so a consumer can bind e.g. `Alt+Arrow` restructuring here rather
-   * than wrapping the tree in an element that would only exist to carry the handler.
+   * than wrapping the tree in an element that would only exist to carry the handler. A key the
+   * consumer takes (`preventDefault`) on the focused row returns focus to that row once the tree
+   * re-renders, found by id — a restructuring key moves the row to a new path and remounts it.
    */
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 };
@@ -349,6 +357,7 @@ export const Tree = <T extends { id: string } = any>({
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  hideDragSource = false,
   virtualize = false,
   scrollerRef,
   canSelect,
@@ -633,7 +642,20 @@ export const Tree = <T extends { id: string } = any>({
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
-      if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
+      if (event.defaultPrevented) {
+        // The same hand-off a drop makes: a consumer's restructuring key remounts the row under its
+        // new parent, and the unmount drops DOM focus, leaving the next key with no row to reach.
+        // Read off the row the key was pressed on, not the machine's focused value: a row focused
+        // programmatically never reports focus to the machine.
+        const row = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-object-id]') : null;
+        const value = row === event.target ? row.getAttribute('data-value') : null;
+        const entry = value ? byValue.get(value) : undefined;
+        if (entry) {
+          focusNode(entry.id, entry.value);
+        }
+        return;
+      }
+      if (event.key !== 'Enter' && event.key !== ' ') {
         return;
       }
       // The row is a div with role=button, so a real inner control (chevron, status, rename input)
@@ -660,7 +682,7 @@ export const Tree = <T extends { id: string } = any>({
         onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect],
+    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect, focusNode],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -697,6 +719,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onOpenChange,
@@ -720,6 +743,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onSelectNode,
@@ -1029,6 +1053,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canDrop,
     getDropKind,
     leavesAcceptChildren,
+    hideDragSource,
     debug,
     dropBelowExpanded,
     onOpenChange,
@@ -1076,14 +1101,27 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     }
 
     const element = rowRef.current;
-    const makeDraggable = () =>
-      draggable({
-        element,
-        getInitialData: () => data,
-        getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-        onDragStart: () => setDragState('dragging'),
-        onDrop: () => setDragState('idle'),
-      });
+    // Declares the drag a move: pragmatic-drag-and-drop sets `dropEffect` only over a drop target and
+    // never `effectAllowed`, so over a gap or the source row itself the browser falls back to its copy
+    // cursor, which flickers as the pointer crosses rows.
+    const handleNativeDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    };
+    const makeDraggable = () => {
+      element.addEventListener('dragstart', handleNativeDragStart);
+      return combine(
+        () => element.removeEventListener('dragstart', handleNativeDragStart),
+        draggable({
+          element,
+          getInitialData: () => data,
+          getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
+          onDragStart: () => setDragState('dragging'),
+          onDrop: () => setDragState('idle'),
+        }),
+      );
+    };
 
     if (!isItemDroppable) {
       return isItemDraggable ? makeDraggable() : undefined;
@@ -1236,6 +1274,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // The live drop instruction, so a test can read which zone the pointer is in rather than
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
+      // The source of a drag in progress, which stays in the list (faded) unless `hideDragSource`.
+      data-dragging={dragState === 'dragging' || undefined}
       data-testid={props.testId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
       aria-posinset={branch ? undefined : indexPath.at(-1)! + 1}
@@ -1244,10 +1284,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
         isItemDraggable && 'active:cursor-grabbing',
-        // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
-        // copy left behind in place reads as a second row rather than as the one being moved. A
-        // branch's children go with it, since the drag start collapses it.
-        dragState === 'dragging' && 'hidden',
+        // The source row fades in place, or leaves the list when the consumer asks. A branch's
+        // children go with it either way, since the drag start collapses it.
+        dragState === 'dragging' && (hideDragSource ? 'hidden' : 'opacity-50'),
         // Selection keys off zag's `data-selected`: for branches, `aria-selected` lands on the
         // Branch wrapper (display:contents) while the visible row is the control. No focus-within
         // background — after a chevron click focus rests inside the row, and a persistent fill

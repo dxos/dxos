@@ -183,8 +183,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         const guest = await createPeer(host.spaceKey);
         const codeInput = await acceptInvitation(guest, invitation);
         while (!guest.ctx.disposed) {
+          // `failCodeInput` already paces its own retries via `waitForCondition`, so looping it
+          // needs no sleep of its own between attempts.
           await failCodeInput(guest, codeInput, invitation);
-          await sleep(10);
         }
 
         await waitForCondition({ condition: () => guest.sink.lastState === Invitation_State.ERROR });
@@ -253,10 +254,18 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           }),
         );
 
+        await waitForCondition({ condition: () => guests.some((g) => g.sink.lastState === Invitation_State.SUCCESS) });
+        // Give the other racing guests a bounded window to settle before counting how many were
+        // admitted — a guest that loses the race is not guaranteed to reach an explicit ERROR
+        // state promptly, so this polls rather than requiring every guest to reach a terminal
+        // state, and tolerates the poll's own timeout rather than treating it as a failure.
         await waitForCondition({
-          condition: () => guests.find((g) => g.sink.lastState === Invitation_State.SUCCESS) != null,
-        });
-        await sleep(40);
+          condition: () =>
+            guests.every(
+              (g) => g.sink.lastState === Invitation_State.SUCCESS || g.sink.lastState === Invitation_State.ERROR,
+            ),
+          timeout: 200,
+        }).catch(() => {});
         const success = guests.filter((g) => g.sink.lastState === Invitation_State.SUCCESS);
         expect(success.length).to.eq(1);
       });
@@ -386,7 +395,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
       const newHost = await createPeer(toPublicKey(invitation.spaceKey));
       await performAuth(newHost, invitation);
-      await sleep(30);
+      // `hostInvitation` admits further guests into the space, which needs the space's own data
+      // pipeline caught up rather than merely the admission credential recorded.
+      await newHost.peer.dataSpaceManager.waitUntilSpaceReady(newHost.spaceKey);
       await hostInvitation(newHost, invitation);
       return newHost;
     };

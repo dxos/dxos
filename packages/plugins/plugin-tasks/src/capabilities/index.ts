@@ -3,7 +3,9 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -18,6 +20,12 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   environments: [],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'TasksMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });

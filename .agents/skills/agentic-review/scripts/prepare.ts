@@ -9,11 +9,13 @@
 //
 // Usage:
 //   bun prepare.ts [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
-//                    [--slug=<slug>] [--pr-only]
+//                    [--slug=<slug>] [--pr-only] [--fast]
 //
 // Default: no prior finalized review → every rule scans the whole project; a
 // rule never seen in a prior ancestor review also gets a full first pass.
-// `--pr-only` restores diff-only mode (last review or merge-base with main).
+// `--pr-only` restores diff-only mode (last review on this branch, or merge-base with main); its
+// changed set ignores merges, so files that only arrived from main are not reviewed.
+// `--fast` is `--pr-only` recorded as `mode: fast`, for a run System One judges alone (`fast.ts`).
 // Groups are capped at `--max-groups` (default 20; 0 = unlimited): all matched
 // files are still covered — chunk sizes grow so the file set fits the budget.
 //
@@ -36,6 +38,7 @@ import {
   isWorkingTreeDirty,
   lastCommitTouching,
   mainMergeBase,
+  prChangedFiles,
   repoRoot,
   shortSha,
 } from '../lib/git.ts';
@@ -62,12 +65,14 @@ const { values } = parseArgs({
     'main': { type: 'string', default: 'origin/main' },
     'slug': { type: 'string' },
     'pr-only': { type: 'boolean', default: false },
+    'fast': { type: 'boolean', default: false },
   },
 });
 
 const chunkSize = Math.max(1, Number.parseInt(values.chunk, 10) || 15);
 const maxGroups = Number.parseInt(values['max-groups'], 10);
-const prOnly = values['pr-only'] === true;
+const fast = values.fast === true;
+const prOnly = fast || values['pr-only'] === true;
 const root = repoRoot();
 const head = headCommit();
 const short = shortSha(head);
@@ -96,7 +101,7 @@ const asCommit = (value: string | string[] | undefined): string | null => (typeo
 
 type PriorReviewScan = { newest: { commit: string; timestamp: number } | null; seenRuleIds: Set<string> };
 
-const scanPriorReviews = (): PriorReviewScan => {
+const scanPriorReviews = (mainBase: string | null): PriorReviewScan => {
   const reviewsPath = join(root, REVIEWS_DIR);
   let newest: PriorReviewScan['newest'] = null;
   const seenRuleIds = new Set<string>();
@@ -129,6 +134,10 @@ const scanPriorReviews = (): PriorReviewScan => {
       }
       effectiveCommit = landing;
     }
+    // A PR review starts from the PR's own reviews: one already on main covers main's code, not this branch.
+    if (mainBase && isAncestor(effectiveCommit, mainBase)) {
+      continue;
+    }
     for (const ruleId of ruleIdsFromReviewDir(dir, review)) {
       seenRuleIds.add(ruleId);
     }
@@ -140,6 +149,8 @@ const scanPriorReviews = (): PriorReviewScan => {
   return { newest, seenRuleIds };
 };
 
+const mainBase = mainMergeBase(values.main ? [values.main, 'origin/main', 'main'] : undefined);
+
 /** Diff base for incremental / `--pr-only` runs. */
 const resolveDiffBase = (priorCommit: string | null): string => {
   if (values.base) {
@@ -150,11 +161,10 @@ const resolveDiffBase = (priorCommit: string | null): string => {
   }
   // Whole-branch PR diff: merge-base with the first main-like ref, or HEAD when
   // no main ref exists (working-tree-only review).
-  const candidates = values.main ? [values.main, 'origin/main', 'main'] : undefined;
-  return mainMergeBase(candidates) ?? head;
+  return mainBase ?? head;
 };
 
-const { newest: prior, seenRuleIds } = scanPriorReviews();
+const { newest: prior, seenRuleIds } = scanPriorReviews(prOnly ? mainBase : null);
 const priorCommit = prior?.commit ?? null;
 const projectFiles = listRepoFiles();
 
@@ -162,7 +172,7 @@ let base: string;
 let changed: Set<string> | null = null;
 if (prOnly) {
   base = resolveDiffBase(priorCommit);
-  changed = new Set([...changedFiles(base)].filter((path) => projectFiles.has(path)));
+  changed = new Set([...prChangedFiles(base)].filter((path) => projectFiles.has(path)));
 } else if (priorCommit || values.base) {
   // Known rules diff since the prior (or `--base`); unseen rules still full-scan.
   base = resolveDiffBase(priorCommit);
@@ -202,7 +212,7 @@ if (!prOnly && ruleMatches.length > 0 && ruleMatches.every(({ scope }) => scope 
 const groupsDir = join(storeDir, 'groups');
 mkdirSync(groupsDir, { recursive: true });
 
-const modeLabel = prOnly ? 'pr-only' : 'default';
+const modeLabel = fast ? 'fast' : prOnly ? 'pr-only' : 'default';
 const totalFiles = groups.reduce((sum, group) => sum + group.files.length, 0);
 const staging = [
   `# Review staging — ${slug}`,

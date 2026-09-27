@@ -5,8 +5,8 @@
 import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
-import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { useQuery } from '@dxos/echo-react';
+import { Button, Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -14,6 +14,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
+import { PERSON_ICON, shortDid } from './assignee.ts';
 import {
   UNSET_ICON,
   estimateTextStyle,
@@ -22,15 +23,21 @@ import {
   statusIcon,
   statusTextStyle,
 } from './status-icons.ts';
+import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
 
-/** The glyph for an assignee: a person, whoever they turn out to be. */
-const ASSIGNEE_ICON = 'ph--user--regular';
+/** A member of the task's space, offered as an assignee by identity. */
+export type TaskMember = { did: string; name?: string };
 
 export type TaskPropertiesProps = ThemedClassName<{
   task: Task.Task;
+  /**
+   * The space's members, the owner among them. Passed in rather than read here: membership lives in
+   * HALO, which this package does not depend on.
+   */
+  members?: readonly TaskMember[];
   /** Absent renders the properties read-only, as the list's readonly cells do. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }>;
@@ -44,7 +51,7 @@ export type TaskPropertiesProps = ThemedClassName<{
  * task and the room to say what the glyph means — and an unset field can then invite the value
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
-export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertiesProps) => {
+export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
   const priority = task.priority ?? undefined;
@@ -56,11 +63,8 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
   // some task already points at.
   const db = Obj.getDatabase(task);
   const people = useQuery(onTaskUpdate ? db : undefined, Filter.type(Person.Person));
-  const [contact] = useObject(assignee?.contact);
-  // An assistant's actor stands for a session rather than a person, which is why the name falls
-  // back through the actor's own fields before it gives up.
-  const assigneeLabel =
-    contact?.fullName ?? assignee?.name ?? assignee?.email ?? (assignee?.role === 'assistant' ? 'Agent' : undefined);
+  const { label: assigneeLabel, icon: assigneeIcon } = useAssigneeDisplay(assignee);
+  const { createdAt } = Obj.getMeta(task);
 
   return (
     <Column.Section
@@ -69,6 +73,15 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
       classNames={classNames}
       data-testid='taskList.properties'
     >
+      {createdAt !== undefined && (
+        <TaskProperty
+          icon='ph--calendar-plus--regular'
+          label={<Timestamp date={createdAt} />}
+          unset
+          testId='taskList.property.created'
+        />
+      )}
+
       <TaskProperty
         icon={statusIcon(status)}
         iconClassNames={statusTextStyle(status)}
@@ -89,7 +102,7 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
       />
 
       <TaskProperty
-        icon={assignee ? ASSIGNEE_ICON : UNSET_ICON}
+        icon={assignee ? assigneeIcon : UNSET_ICON}
         label={assigneeLabel ?? t('set-assignee.label')}
         unset={!assignee}
         testId='taskList.property.assignee'
@@ -100,15 +113,42 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
               label: t('assignee-none.label'),
               checked: !assignee,
             }),
-            // The space's people, by the label their schema names — the picker offers what the field
-            // accepts, as the status and priority pickers do.
+            // An assignee the people list cannot show — an agent, or an actor with no contact — is
+            // listed as itself, so the picker says who holds the task before it is switched away.
+            ...(assignee &&
+            !assignee.contact &&
+            !members.some((member) => member.did === assignee.identityDid) &&
+            assigneeLabel
+              ? [
+                  createMenuAction('assignee-current', () => {}, {
+                    label: assigneeLabel,
+                    icon: assigneeIcon,
+                    checked: true,
+                    testId: 'taskList.assignee.current',
+                  }),
+                ]
+              : []),
+            // The space's members first — the people who can actually pick the task up — then its
+            // contacts. Both are what the field accepts, as the status and priority pickers offer.
+            ...members.map((member) =>
+              createMenuAction(
+                `assignee-member-${member.did}`,
+                () => onTaskUpdate(task, { assignee: { identityDid: member.did, name: member.name } }),
+                {
+                  label: member.name ?? shortDid(member.did),
+                  icon: PERSON_ICON,
+                  checked: assignee?.identityDid === member.did,
+                  testId: 'taskList.assignee.member',
+                },
+              ),
+            ),
             ...people.map((person) =>
               createMenuAction(
                 `assignee-${person.id}`,
                 () => onTaskUpdate(task, { assignee: { contact: Ref.make(person) } }),
                 {
                   label: Obj.getLabel(person) ?? person.id,
-                  icon: ASSIGNEE_ICON,
+                  icon: PERSON_ICON,
                   checked: Task.refEntityId(assignee?.contact) === person.id,
                 },
               ),
@@ -180,13 +220,14 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       <div className={TASK_GRID_ICON}>
         <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
       </div>
-      <span className={mx('min-w-0 pe-1.5 truncate', unset && 'text-description')}>{label}</span>
+      <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
   if (!actions) {
     return (
-      <div className={mx(TASK_GRID, 'min-w-0')} data-testid={testId}>
+      // The button's own height and centring, so a read-only row lines up with the editable ones.
+      <div className={mx(TASK_GRID, 'items-center min-h-(--dx-control-sm) min-w-0')} data-testid={testId}>
         {content}
       </div>
     );

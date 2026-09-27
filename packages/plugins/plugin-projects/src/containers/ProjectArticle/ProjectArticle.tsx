@@ -371,8 +371,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   const ids = useSelection(taskSet?.id, 'multi');
   const { clear } = useSelectionActions(taskSet?.id);
 
-  // Same query the article's own list runs: membership is the ECHO parent edge, and the canonical
-  // array carries sibling order, which the forest walk turns into the order rows appear in.
+  // Same query the article's own list runs: membership is the ECHO parent edge, and the `tasks` and
+  // `subtasks` lists carry sibling order, which the tree walk turns into the order rows appear in.
   const atom = useMemo(() => {
     const query = taskSet
       ? Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)))
@@ -384,13 +384,13 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
-        get(Obj.atomProperty(task, 'parentTask'));
+        get(Obj.atomProperty(task, 'subtasks'));
         // The delegate action arms on whether the agent already holds a checked row, and delegation
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
       });
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
   const tasks = useAtomValue(atom);

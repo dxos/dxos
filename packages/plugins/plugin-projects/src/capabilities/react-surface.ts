@@ -9,8 +9,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
+import { type Task } from '@dxos/types';
 
-import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle, ProjectTaskCompanion } from '#containers';
+import {
+  MoveTaskDialog,
+  ProjectArticle,
+  ProjectArtifactsArticle,
+  ProjectChatsArticle,
+  ProjectTaskCompanion,
+} from '#containers';
+import { MOVE_TASK_DIALOG } from '#meta';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
@@ -47,6 +55,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(AppSurface.Article, isArtifactsBranch),
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
+      }),
+      Surface.create({
+        id: MOVE_TASK_DIALOG,
+        filter: AppSurface.component<{ task: Task.Task }>(AppSurface.Dialog, MOVE_TASK_DIALOG),
+        component: MoveTaskDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
     ]),
   ),

@@ -1032,14 +1032,8 @@ companion).
       remains is removing it, which needs creation somewhere else — an inline new
       row in the list, or a toolbar action that creates the task and opens its
       plank (plugin-inbox's draft pattern).
-- [ ] **`SpacePlugin` never activates under plugin-tasks' storybook** — `TaskArticle`
-      hands its artifacts to `plugin-space`'s `cardMasonry` surface, and that grid never
-      appears in plugin-tasks' own storybook even with `SpacePlugin.make({})` registered
-      and a direct `Surface.Surface type={AppSurface.CardMasonry}` in the story, while the
-      same article renders it under plugin-projects' `ProjectTaskCompanion` story. Ruled
-      out: a slow lazy body (a 45s wait changes nothing) and a missing registration. The
-      likely mechanism is the plugin's lazy `#plugin` import failing under that package's
-      vite graph — the dev server reports exactly that, a failed fetch of plugin-space's
-      `capabilities/operation-handler.ts`, and a failed lazy load is cached so nothing
-      retries it (cf. #12709). Worth fixing: a story that cannot mount a cross-plugin
-      surface cannot cover what the pane actually shows.
+- [x] **`SpacePlugin` never activates under plugin-tasks' storybook** — the cause was not the
+      lazy import: plugin-space's surface module activates only on a request for one of its
+      declared `roles`, and `org.dxos.role.cardMasonry` was missing from that list, so the grid
+      appeared only where some other plugin-space role (an article) had already activated the
+      module. Fixed by declaring the role; `CardMasonry`'s `ViaSurface` story guards it.

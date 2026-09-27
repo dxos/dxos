@@ -3,30 +3,25 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { SandboxOperation } from '#types';
-
-import { createSandboxClient } from '../../services/sandbox-url.ts';
+import { SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.DownloadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, path, dest }) {
       const { db } = yield* Database.Service;
-      const client = yield* ClientService;
 
       const loadedSandbox = yield* Database.load(sandbox);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const sandboxClient = createSandboxClient(client);
+      const sandboxService = yield* SandboxService.Service;
 
-      const { bytes, type } = yield* sandboxClient.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
+      const { bytes, type } = yield* sandboxService.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
       const fileName = path.split('/').at(-1) ?? path;
 
       if (dest) {
@@ -46,6 +41,6 @@ export default SandboxOperation.DownloadFile.pipe(
       yield* DefaultParent.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };
-    }, Effect.provide(FetchHttpClient.layer)),
+    }),
   ),
 );

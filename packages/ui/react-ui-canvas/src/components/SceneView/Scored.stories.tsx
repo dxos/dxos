@@ -11,6 +11,7 @@ import React, { Fragment, type ReactNode, useContext, useEffect, useMemo, useSta
 
 import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective, Score } from '@dxos/diagram';
 import { BASIC } from '@dxos/diagram/testing';
+import { Flex, Grid } from '@dxos/react-ui';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -217,12 +218,14 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
     registry.set(atoms.selection, new Set(diagnosticElements(converted, refs)));
 
   return (
-    <div
-      className='flex flex-col gap-4 p-3 overflow-y-auto text-sm border-l border-separator'
+    <Flex
+      column
+      gap='lg'
+      classNames='p-3 overflow-y-auto text-sm border-l border-separator'
       data-testid='scene-view.scorecard'
     >
       <Section title='Score'>
-        <div className='flex items-baseline gap-2'>
+        <Flex align='baseline' gap='sm'>
           <span
             className={mx('text-3xl font-mono', total === undefined ? 'text-description' : scoreColor(total))}
             data-testid='scene-view.scorecard.score'
@@ -230,7 +233,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
             {total?.toFixed(2) ?? '—'}
           </span>
           {total !== undefined && baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
-        </div>
+        </Flex>
         <div className='text-xs text-description'>
           0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
           {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '—'}.`}
@@ -240,17 +243,23 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       <Section title='Scores'>
         {scores.map(({ id, kind, description, score, detail, error }) => {
           const previous = baseline?.find((entry) => entry.id === id);
+          // `Grid` only exposes `children`/`role`/`style` beyond `classNames` — no `title` — so the
+          // row's tooltip is carried on every cell instead of the grid container.
+          const title = [description, error ?? detail].filter(Boolean).join('\n');
           return (
-            <div
+            <Grid
               key={id}
-              className='grid grid-cols-[5.5rem_1fr_3rem_2.5rem] items-center gap-2 text-xs'
-              title={[description, error ?? detail].filter(Boolean).join('\n')}
+              cols={['5.5rem', '1fr', '3rem', '2.5rem']}
+              gap='sm'
+              align='center'
+              grow={false}
+              classNames='text-xs'
               data-testid={`scene-view.scorecard.${id}`}
             >
-              <span>
+              <span title={title}>
                 <KindPill kind={kind} />
               </span>
-              <span className='flex flex-col gap-0.5 min-w-0'>
+              <span title={title} className='flex flex-col gap-0.5 min-w-0'>
                 <span className='font-mono truncate'>{id}</span>
                 <span className='h-1 rounded-full bg-separator overflow-hidden'>
                   <span
@@ -259,26 +268,26 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
                   />
                 </span>
               </span>
-              <span className={mx('font-mono text-end', error ? 'text-description' : scoreColor(score))}>
+              <span title={title} className={mx('font-mono text-end', error ? 'text-description' : scoreColor(score))}>
                 {error ? '—' : score.toFixed(2)}
               </span>
-              <span className='font-mono text-end'>
+              <span title={title} className='font-mono text-end'>
                 {previous && !error && !previous.error && <Delta value={score - previous.score} />}
               </span>
-            </div>
+            </Grid>
           );
         })}
       </Section>
 
       <Section title='Metrics'>
-        <div className='grid grid-cols-[1fr_auto] gap-x-4 font-mono text-xs'>
+        <Grid cols={['1fr', 'auto']} grow={false} classNames='gap-x-4 font-mono text-xs'>
           {Object.entries(report.metrics).map(([key, value]) => (
             <Fragment key={key}>
               <span className='text-description'>{key}</span>
               <span className='text-end'>{format(value)}</span>
             </Fragment>
           ))}
-        </div>
+        </Grid>
       </Section>
 
       <Section title={`Diagnostics · ${errors.length} errors · ${warnings.length} warnings`}>
@@ -296,7 +305,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
           </button>
         ))}
       </Section>
-    </div>
+    </Flex>
   );
 };
 
@@ -305,14 +314,14 @@ type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evalua
 const Editor = ({ store, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
   return (
-    <div className='dx-fill grid grid-cols-[1fr_24rem]'>
+    <Grid cols={['1fr', '24rem']} grow={false} classNames='dx-fill'>
       <SceneView.Root store={store} root={root} atoms={atoms}>
         <SceneView.Canvas liveDepth={0} />
         <SceneView.Actions />
         <SceneView.Palette />
       </SceneView.Root>
       <Scorecard store={store} root={root} atoms={atoms} engine={engine} />
-    </div>
+    </Grid>
   );
 };
 

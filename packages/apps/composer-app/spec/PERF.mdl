@@ -62,10 +62,10 @@ test QA-1: A project with a large task set and long documents
     One journey across TWO different cost engines, because a project is not a task list and
     anything in the app can tank performance.
 
-    The task set is the ECHO-shaped half: `TaskSet.tasks` is FLAT and holds every task in the set,
-    sub-tasks included, so a large set is a large ref array: `TaskSet.loadRefs` resolves the cold
-    remainder at concurrency 16, `resolveTasks` de-duplicates the whole array on every read, and the
-    hierarchy the UI renders is derived by walking `Task.parentTask` per task — every one O(set
+    The task set is the ECHO-shaped half: `TaskSet.tasks` lists the roots and each `Task.subtasks`
+    its own children, so a large set is many ref arrays: `TaskSet.loadRefs` resolves the cold
+    remainder of each at concurrency 16, `resolveTasks` walks and de-duplicates the whole tree on
+    every read, and the UI rebuilds the hierarchy from parent edges per task — every one O(set
     size) on a structure the UI reads on each render.
 
     The documents are the editor-shaped half: markdown filed as project artifacts, where the cost is

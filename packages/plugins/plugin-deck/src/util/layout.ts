@@ -119,20 +119,25 @@ export const MAX_SEEDED_PLANKS = 8;
  * Seeds only a navigation (`addBesideOrigin === false`): an `add`, a shift-forced add, or an `auto`
  * that grew a sliding deck are all requests to put *this* node beside what is already open, and
  * replacing the deck there would discard the planks the user was working in.
+ *
+ * Never seeds a flattened deck: it renders only the last plank and reads the ones before it as a
+ * breadcrumb trail, so sibling documents would show as a history nobody navigated.
  */
 export const resolveSeededPlanks = ({
   initial,
   addBesideOrigin,
+  flatten = false,
   children,
 }: {
   initial: 'children' | 'none' | undefined;
   addBesideOrigin: boolean;
+  flatten?: boolean;
   /** Ids of the node's openable graph children, in order. */
   children: readonly string[];
 }): string[] | undefined => {
   // An empty collection falls through to the ordinary open, which shows the collection itself rather
   // than leaving the user on an empty deck.
-  if (addBesideOrigin || initial !== 'children' || children.length === 0) {
+  if (addBesideOrigin || flatten || initial !== 'children' || children.length === 0) {
     return undefined;
   }
   return children.slice(0, MAX_SEEDED_PLANKS);

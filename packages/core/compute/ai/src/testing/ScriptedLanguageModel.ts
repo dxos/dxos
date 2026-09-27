@@ -269,7 +269,7 @@ const unmatched = (request: ScriptedRequest): AiError.AiError =>
 /**
  * Constructs a {@link LanguageModel.LanguageModel} that replays a script: a plain turn list is consumed
  * sequentially; a routed script dispatches each call to the first matching {@link ScriptedRoute},
- * each with its own cursor. Prefer the layer helpers ({@link scriptedLanguageModelLayer} /
+ * each with its own cursor. Prefer the layer helpers ({@link layer} /
  * {@link scriptedAiService}) at call sites.
  */
 export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.LanguageModel> =>
@@ -349,7 +349,7 @@ export const __testing = {
 };
 
 /** A {@link LanguageModel.LanguageModel} layer backed by the scripted model. */
-export const scriptedLanguageModelLayer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
+export const layer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
   Layer.effect(LanguageModel.LanguageModel, makeScriptedLanguageModel(script));
 
 // A single shared model memo per script: sessions in separate processes each call `languageModel()`,

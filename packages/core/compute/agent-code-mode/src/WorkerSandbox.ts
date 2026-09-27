@@ -44,7 +44,7 @@ export type WorkerHandle = {
 /** What the worker's own ECHO client connects to: the host services a tab would connect to. */
 export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'>;
 
-export type WorkerSandboxOptions = {
+export type Options = {
   /**
    * Host-side ECHO services, resolved per evaluation so the served set follows the host lifecycle.
    */
@@ -74,7 +74,7 @@ export type WorkerSandboxOptions = {
  * It is NOT a security boundary: a worker shares the host's permissions and can reach the network
  * and the filesystem. It bounds time and isolates crashes, not authority.
  */
-export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
+export const make = (options: Options): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
       const { db } = Context.get(context.runtime, Database.Service);
@@ -331,5 +331,4 @@ const spawnNodeWorker = async (entry: URL, init: SandboxInit): Promise<WorkerHan
 const toMessagePort = (port: WorkerThreads.MessagePort): MessagePort => port as unknown as MessagePort;
 
 /** Installs {@link make} as the ambient sandbox. */
-export const layer = (options: WorkerSandboxOptions): Layer.Layer<Sandbox.Service> =>
-  Layer.succeed(Sandbox.Service, make(options));
+export const layer = (options: Options): Layer.Layer<Sandbox.Service> => Layer.succeed(Sandbox.Service, make(options));

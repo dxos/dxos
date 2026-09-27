@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -118,8 +118,9 @@ TaskStatusControl.displayName = 'TaskList.StatusControl';
 /**
  * The task's mnemonic, as a chip that copies a reference to it.
  *
- * Copies `@mnemonic` rather than the bare id: that is the form an agent is addressed with, so what
- * lands on the clipboard can be pasted into a prompt as it stands.
+ * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it shows: a mnemonic is
+ * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
+ * an MCP call, another space.
  */
 export const TaskMnemonic = ({
   task,
@@ -134,10 +135,10 @@ export const TaskMnemonic = ({
     classNames={mx('font-mono', classNames)}
     density='sm'
     variant='tag'
-    hue='emerald'
+    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+    hue={getHashHue(Obj.getMnemonic(task))}
     label={Obj.getMnemonic(task)}
-    iconEnd
-    onCopy={() => '@' + Obj.getMnemonic(task)}
+    onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
     data-testid='taskList.item.mnemonic'
   />
 );

@@ -8,6 +8,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -103,7 +104,17 @@ export type TaskEditorTitleProps = ThemedClassName<{}>;
 /** The task's title, committing on blur and on Enter. */
 const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
   const { t } = useTranslation(translationKey);
-  const { draft, setDraft, commitTitle, onUpdate } = useTaskEditorContext('TaskEditor.Title');
+  const { task, current, draft, setDraft, commitTitle, onUpdate } = useTaskEditorContext('TaskEditor.Title');
+  const inputRef = useRef<HTMLInputElement>(null);
+  // An untitled task is one just added (a sub-task from a row's menu), so its title is where the
+  // reader goes next; checked once per task, so clearing a title while typing does not re-trigger it.
+  const untitled = !current?.title;
+  useEffect(() => {
+    if (onUpdate && untitled) {
+      inputRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.id]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -122,6 +133,7 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
         // nothing to say it continues; the ellipsis says so. (Shown while the field is not focused,
         // which is how a pane holds it open.)
         classNames={mx('px-0 text-ellipsis', classNames)}
+        ref={inputRef}
         data-testid='taskEditor.title'
         placeholder={t('task-title.placeholder')}
         value={draft}

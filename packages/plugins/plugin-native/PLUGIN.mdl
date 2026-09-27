@@ -42,8 +42,7 @@ type UpdateState
     kind: UpdateStatus
     version?: string          # set when kind = available
     checkedAt?: number        # epoch ms; set when kind = up-to-date
-    downloaded?: number       # bytes received; set when kind = downloading
-    contentLength?: number    # total bytes; set when kind = downloading
+    progress?: { completed: number, total: number, unit: 'bytes' }  # set when kind = downloading
     error?: string            # set when kind = failed
 ```
 
@@ -59,8 +58,8 @@ component NativeSettings
     settings: Settings
     onSettingsChange(patch: Partial<Settings>)
   state:
-    pending: null | 'check' | 'install' | 'relaunch'
-    status: UpdateState          # derived from UpdateManager capability
+    pending: null | 'check' | 'install' | 'apply'
+    status: UpdateState          # derived from AppCapabilities.UpdateManager (shared with plugin-pwa)
   actions:
     checkForUpdate()
     installUpdate()

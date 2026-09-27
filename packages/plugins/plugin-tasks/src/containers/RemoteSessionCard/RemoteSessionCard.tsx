@@ -102,7 +102,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
               the web URL needs the bridge id, which the harness does not put in the hook payload. */}
           <div className='flex items-center gap-1 min-w-0'>
             <code className='text-xs text-subdued select-all truncate'>{resumeCommand(sessionId)}</code>
-            <SystemIconButton.Clipboard iconOnly variant='ghost' size={4} value={resumeCommand(sessionId)} />
+            <SystemIconButton.Clipboard iconOnly variant='ghost' value={resumeCommand(sessionId)} />
           </div>
         </Card.Row>
       )}

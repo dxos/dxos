@@ -104,9 +104,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           Task.setStatus(task, 'started', { actor: reviewer });
           Obj.update(task, (task) => {
             // The chat's agent holds the work now, so the row says so rather than keeping whoever
-            // had it before. A bare role, as the delegation skill writes: `delegation-strategy`
-            // matches on the role, and a chat session has no name of its own to give.
-            task.assignee = { role: 'assistant' };
+            // had it before. Named by the chat, as the planning tool's self-assignment is: a bare
+            // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a
+            // started one no sub-agent is running.
+            task.assignee = { role: 'assistant', subject: Ref.make(chat) };
             if (reviewer) {
               task.reviewers = [reviewer];
             }

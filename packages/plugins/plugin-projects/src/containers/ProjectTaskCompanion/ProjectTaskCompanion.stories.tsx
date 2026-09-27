@@ -86,6 +86,28 @@ const createProject = (space: Space) => {
     }),
   );
 
+  // Questions the agent asked while working it, placed in the log by date: one answered, one still
+  // waiting — which the pane lets the reader answer in place.
+  const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
+  const agent = { name: 'Scout', role: 'assistant' as const };
+  const answered = Task.ask(worked, {
+    text: 'Which batch should the curve be tuned against?',
+    context: 'Batch 12 ran hot at first crack; batch 14 is the current green lot.',
+    options: [{ title: 'Batch 14', description: 'The lot we will roast for launch.' }, { title: 'Batch 12' }],
+    actor: agent,
+    date: minutesAgo(6),
+  });
+  Task.answer(worked, answered.id, 'Batch 14', { actor: { name: 'Rich', role: 'user' }, date: minutesAgo(5) });
+  Task.ask(worked, {
+    text: 'Should the development window stay at 12 minutes for the lighter roast?',
+    options: [
+      { title: 'Keep 12 minutes', description: 'Same window for every roast level.' },
+      { title: 'Shorten to 10 minutes', description: 'Lighter roasts finish sooner.' },
+    ],
+    actor: agent,
+    date: minutesAgo(2),
+  });
+
   // Artifacts are refs to objects filed in the space, not children of the task — the way
   // `Task.addArtifact` links them, and what the companion's card grid resolves.
   for (const [name, content] of [
@@ -210,6 +232,14 @@ export const Default: Story = {
     await expect(
       canvas.findByText('Status changed from todo to started.', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
+    // Questions sit in the history: the answered one with its answer, the open one with its options.
+    await expect(
+      canvas.findByText('Which batch should the curve be tuned against?', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(
+      canvas.findByText('Should the development window stay at 12 minutes for the lighter roast?'),
+    ).resolves.toBeTruthy();
+    await expect(canvas.findByText('Shorten to 10 minutes')).resolves.toBeTruthy();
     // Each artifact as a card in the grid plugin-space contributes.
     const grid = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
     await waitFor(() => expect(grid()).toBeTruthy(), { timeout: 10_000 });

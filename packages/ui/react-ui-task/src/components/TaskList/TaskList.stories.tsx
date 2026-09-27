@@ -11,12 +11,12 @@ import { random } from '@dxos/random';
 import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { File, PullRequest, Task } from '@dxos/types';
+import { File, PullRequest, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy.ts';
-import { TaskList } from './TaskList.tsx';
+import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 
 random.seed(1);
 
@@ -126,6 +126,13 @@ const seedMany = (n = 40): Task.Task[] =>
     }),
   );
 
+/** Lists `children` under `parent`, which also makes it their parent (`subtasks` owns its entries). */
+const adopt = (parent: Task.Task, ...children: Task.Task[]): void => {
+  Obj.update(parent, (parent) => {
+    parent.subtasks?.push(...children.map((child) => Ref.make(child)));
+  });
+};
+
 /**
  * A full tree: every node down to `depth` has `children` sub-tasks, so the seed exercises what a
  * two-level fixture cannot — indentation compounding past the second level, a branch under a
@@ -142,8 +149,10 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
       description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
-      ...(parent && { parentTask: Ref.make(parent) }),
     });
+    if (parent) {
+      adopt(parent, task);
+    }
     tasks.push(task);
     if (path.length < depth) {
       for (let index = 1; index <= children; index++) {
@@ -158,9 +167,9 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
 };
 
 /**
- * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
- * deliberately interleaves the two branches — a list that walked the array instead of the tree
- * would render them out of order, which is the bug this story exists to catch.
+ * Two roots with sub-tasks two levels deep. The flat list deliberately interleaves the two branches
+ * — a list that walked it instead of the tree would render them out of order, which is the bug this
+ * story exists to catch.
  */
 const seedHierarchy = (): Task.Task[] => {
   const task1 = Task.make({
@@ -175,29 +184,27 @@ const seedHierarchy = (): Task.Task[] => {
   const task3 = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
-    parentTask: Ref.make(task1),
     description: 'One paragraph per lot, in the order they are poured.',
   });
   const task4 = Task.make({
     title: 'Sample the Ethiopian lots',
     status: 'done',
-    parentTask: Ref.make(task2),
   });
   const task5 = Task.make({
     title: 'Approve the label art',
     status: 'todo',
-    parentTask: Ref.make(task1),
   });
   const task6 = Task.make({
     title: 'Log every profile',
     status: 'started',
-    parentTask: Ref.make(task2),
   });
   const task7 = Task.make({
     title: 'Proofread the back label',
     status: 'todo',
-    parentTask: Ref.make(task5),
   });
+  adopt(task1, task3, task5);
+  adopt(task2, task4, task6);
+  adopt(task5, task7);
 
   return [task1, task2, task3, task4, task5, task6, task7];
 };
@@ -208,8 +215,9 @@ const seedHierarchy = (): Task.Task[] => {
  */
 const seedDrag = (): Task.Task[] => {
   const a = Task.make({ title: 'A', status: 'todo' });
-  const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
-  const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
+  const b = Task.make({ title: 'B', status: 'todo' });
+  const c = Task.make({ title: 'C', status: 'todo' });
+  adopt(a, b, c);
   return [a, b, c];
 };
 
@@ -482,6 +490,10 @@ const seedTagged = (): Task.Task[] => {
       for (const tag of byTitle[task.title] ?? []) {
         Obj.addTag(task, Ref.make(tag));
       }
+      // A tagged row with a description, so the story shows the chips sitting between the two.
+      if (task.title === 'Design the new label') {
+        task.description = 'Two variants for the spring blend.';
+      }
     });
   }
   return tasks;
@@ -516,6 +528,7 @@ const DefaultStory = ({
   showEstimates,
   debug,
   framed = true,
+  acceptFiles = false,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -540,8 +553,12 @@ const DefaultStory = ({
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
+  /** Let the create pane take dropped files, recording what each create was handed. */
+  acceptFiles?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
+  // Stands in for the host's attach: the names of the files each create was handed.
+  const [attached, setAttached] = useState<string[]>([]);
 
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
@@ -570,8 +587,19 @@ const DefaultStory = ({
     [],
   );
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
+  // Stands in for the host: a title starting `fail` is refused, one starting `slow` lands late, and
+  // store-and-attach fails for any file named `fail…`.
+  const handleCreate = useCallback<TaskCreateHandler>(async ({ title, ...props }, files) => {
+    if (title.startsWith('fail')) {
+      return { error: new Error('Refused.') };
+    }
+    if (title.startsWith('slow')) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
+    const attachable = (files ?? []).filter((file) => !file.name.startsWith('fail'));
+    setAttached((attached) => [...attached, ...attachable.map((file) => `${title}:${file.name}`)]);
+    return { rejectedFiles: (files ?? []).filter((file) => file.name.startsWith('fail')) };
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
@@ -588,13 +616,20 @@ const DefaultStory = ({
   // Stands in for the `MoveTask` verb: re-parent and reposition in one step, since that is the
   // contract the list is written against.
   const handleMove = useCallback((task: Task.Task, { parentTask, before }: TaskPlacement) => {
-    Obj.update(task, (task) => {
-      if (parentTask) {
-        task.parentTask = Ref.make(parentTask);
-      } else {
-        delete task.parentTask;
-      }
-    });
+    const previous = Task.getParentTask(task);
+    if (previous) {
+      Obj.update(previous, (previous) => {
+        TaskSet.removeRefsInPlace(previous.subtasks ?? [], new Set([task.id]));
+      });
+    }
+    if (parentTask) {
+      Obj.update(parentTask, (parentTask) => {
+        parentTask.subtasks ??= [];
+        TaskSet.insertInPlace(parentTask.subtasks, Ref.make(task), before?.id);
+      });
+    }
+    Obj.setParent(task, parentTask ?? undefined);
+    // Root order is the list's own array order, as the set's `tasks` is for the real verb.
     setTasks((tasks) => {
       const rest = tasks.filter(({ id }) => id !== task.id);
       const anchor = before ? rest.findIndex(({ id }) => id === before.id) : -1;
@@ -628,8 +663,10 @@ const DefaultStory = ({
         <div className='p-2'>
           <TaskList.Editor
             showDescription={showDescription}
+            acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
+          {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </div>
       ) : (
         <TaskList.Editor grid showDescription={showDescription} />
@@ -811,6 +848,85 @@ export const TestListAndDetail: Story = {
   },
 };
 
+/** A single-task list whose description runs past the row's three-line clamp. */
+const seedDescription = (description: string) => () => [
+  Task.make({ title: 'Plan the cupping', status: 'todo', description }),
+];
+
+/**
+ * The row shows exactly three whole lines of the description and no sliver of a fourth: the box is
+ * three line-heights tall, and every line of text is wholly inside it or wholly below it.
+ */
+const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
+  const description = await waitFor(() => {
+    const found = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+    if (!found) {
+      throw new Error('Task description not rendered.');
+    }
+    return found;
+  });
+
+  const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+  const box = description.getBoundingClientRect();
+  await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
+  await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
+
+  // Text rects only: an element's border box spans its padding, which is not a line of text.
+  const walker = document.createTreeWalker(description, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) {
+      continue;
+    }
+    range.selectNodeContents(node);
+    for (const rect of range.getClientRects()) {
+      const inside = rect.bottom <= box.bottom + 0.5;
+      const outside = rect.top >= box.bottom - 0.5;
+      await expect(inside || outside).toBe(true);
+    }
+  }
+};
+
+/** Every block the default renderer pads or rescales — heading, code, quote, list — inside the clamp. */
+export const TestDescriptionClamp: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        '# Cupping plan',
+        '',
+        '```',
+        'roast --profile city',
+        '```',
+        '',
+        '> Book the roaster first.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
+  },
+  play: assertDescriptionClamp,
+};
+
+/** A paragraph run into a list, so the clamp falls between two list items. */
+export const TestDescriptionClampList: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        'Line up the samples before the roaster is booked.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+        '- Kenyan Nyeri',
+        '- Sumatra Mandheling',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
+  },
+  play: assertDescriptionClamp,
+};
+
 export const Hierarchical: Story = {
   args: {
     seed: seedHierarchy,
@@ -905,10 +1021,10 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
- * A long artifact tag takes at most half the row: the chips cell scrolls what does not fit and the
- * title truncates instead of collapsing to nothing.
+ * A row shows no artifact other than a pull request: a task whose only artifact is a document holds
+ * no chips line, and its title keeps the row's width.
  */
-export const TestLongArtifactTag: Story = {
+export const TestArtifactsHiddenInRow: Story = {
   args: {
     showGroupLabels: false,
     seed: () => [
@@ -930,19 +1046,17 @@ export const TestLongArtifactTag: Story = {
       { timeout: 10_000 },
     );
     const title = row.querySelector<HTMLElement>('span.truncate')!;
-    const chips = row.querySelector<HTMLElement>('.col-\\[chips\\]')!;
     await waitFor(async () => {
-      await expect(chips.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width / 2);
-      await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
-      await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
+      await expect(row.querySelector('[data-testid="taskList.item.chips"] > *')).toBeNull();
+      await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
     });
   },
 };
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
- * artifact it names.
+ * `Blob`), beside a task blocked on a question in its history. The row shows only the pull request,
+ * whose pill opens its preview.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -953,7 +1067,11 @@ export const WithArtifacts: Story = {
   },
 };
 
-/** Tags render as chips in the same cell as the task's artifacts and assignee. */
+/**
+ * Tags render as chips with the task's artifacts — a line of their own under the title, starting
+ * where the title cell does and above the description — while the assignee stays on the title line,
+ * right-aligned before the trailing controls.
+ */
 export const WithTags: Story = {
   render: ArtifactsStory,
   args: {
@@ -965,10 +1083,58 @@ export const WithTags: Story = {
     await waitFor(async () => {
       await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.tag"]')).toHaveLength(6);
     });
+
+    const rows = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')];
+    const tagged = rows.filter((row) => row.querySelector('[data-testid="taskList.item.tag"]'));
+    await expect(tagged.length).toBeGreaterThan(0);
+    for (const row of tagged) {
+      const title = titleCell(row).getBoundingClientRect();
+      const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]');
+      await expect(chips).toBeTruthy();
+      const box = chips!.getBoundingClientRect();
+      await expect(box.top).toBeGreaterThanOrEqual(title.bottom - 0.5);
+      await expect(Math.abs(box.left - title.left)).toBeLessThan(1);
+      const description = row.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+      if (description) {
+        await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(box.bottom - 0.5);
+      }
+    }
+    await expect(tagged.some((row) => row.querySelector('[data-testid="taskList.item.description"]'))).toBe(true);
+
+    const assigned = rows.filter((row) => row.querySelector('[data-testid="taskList.item.assignee"]'));
+    await expect(assigned.length).toBeGreaterThan(0);
+    for (const row of assigned) {
+      const assignee = row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!;
+      await expect(
+        row.querySelector('[data-testid="taskList.item.chips"] [data-testid="taskList.item.assignee"]'),
+      ).toBeNull();
+      const title = titleCell(row).getBoundingClientRect();
+      const box = assignee.getBoundingClientRect();
+      const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+      // On the title's line, after it, and flush against the trailing controls.
+      await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
+      await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
+      const priority = row
+        .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
+        .getBoundingClientRect();
+      await expect(priority.left - box.right).toBeLessThan(40);
+    }
+
+    // A row with nothing to show as a chip holds no empty line for them.
+    const untagged = rows.find(
+      (row) =>
+        !row.querySelector('[data-testid="taskList.item.chips"] > *') &&
+        !row.querySelector('[data-testid="taskList.item.description"]'),
+    );
+    if (untagged) {
+      await expect(Math.round(untagged.getBoundingClientRect().height)).toBeLessThanOrEqual(
+        Math.round(titleCell(untagged).getBoundingClientRect().height) + 8,
+      );
+    }
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
+/** A pull request, the one artifact a row shows, opens its summary from the row. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -978,9 +1144,11 @@ export const TestArtifactPreviews: Story = {
   },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"] .col-\\[chips\\] *')].find(
-        (element) => element.textContent === label,
-      );
+      [
+        ...canvasElement.querySelectorAll<HTMLElement>(
+          '[data-testid="taskList.item.chips"] *, [data-testid="taskList.item.artifacts"] *',
+        ),
+      ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
 
     const open = async (label: string, testId: string) => {
@@ -1004,9 +1172,26 @@ export const TestArtifactPreviews: Story = {
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
+    // The pull request sits on the title line, not the chips line under it.
+    const pill = await waitFor(
+      () => {
+        const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.artifacts"] button');
+        const row = pill?.closest<HTMLElement>('[data-testid="taskList.item"]');
+        if (!pill || !row) {
+          throw new Error('Pull request pill not on a row.');
+        }
+        return { pill, row };
+      },
+      { timeout: 10_000 },
+    );
+    const { row } = pill;
+    const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+    await expect(
+      Math.abs(centre(pill.pill.getBoundingClientRect()) - centre(titleCell(row).getBoundingClientRect())),
+    ).toBeLessThan(4);
+
     await open('#12752', 'artifact-preview.pullRequest');
-    await open('label-v2.png', 'artifact-preview.image');
-    await open('roast-timelapse.webm', 'artifact-preview.video');
+    await expect(findTag('label-v2.png')).toBeUndefined();
   },
 };
 
@@ -1202,6 +1387,95 @@ export const TestEdit: Story = {
  * Creating with a description: the pane's description field is present with nothing selected, and
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
+/**
+ * A create the host refuses keeps the draft, so nothing typed is lost; one that lands late does not
+ * clear text typed while it was pending.
+ */
+export const TestCreateFailureKeepsDraft: Story = {
+  args: {
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const titles = () =>
+      [...canvasElement.querySelectorAll('[data-testid="taskList.item.title"]')].map((element) => element.textContent);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('fail to file{Enter}');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(title().value).toEqual('fail to file');
+    await expect(titles()).not.toContain('fail to file');
+
+    await userEvent.clear(title());
+    await userEvent.keyboard('slow to land{Enter}');
+    await userEvent.keyboard(' and more');
+    await waitFor(async () => expect(titles()).toContain('slow to land'), { timeout: 5_000 });
+    await expect(title().value).toEqual('slow to land and more');
+  },
+};
+
+/**
+ * Files dropped on the create pane are held there, one chip each, until the task is created — then
+ * they are handed over with it, for the host to store and attach. A chip can be taken back first.
+ */
+export const TestCreateWithAttachments: Story = {
+  args: {
+    showGroupLabels: false,
+    acceptFiles: true,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const chips = () => [...pane.querySelectorAll<HTMLElement>('[data-testid="taskList.edit.file"]')];
+
+    const dataTransfer = new DataTransfer();
+    for (const name of ['notes.txt', 'draft.txt']) {
+      dataTransfer.items.add(new globalThis.File(['text'], name, { type: 'text/plain' }));
+    }
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+    }
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['notes.txt', 'draft.txt'],
+      ),
+    );
+
+    await userEvent.click(chips()[1].querySelector<HTMLElement>('button')!);
+    await waitFor(async () => expect(chips()).toHaveLength(1));
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Read the notes{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent(
+        'Read the notes:notes.txt',
+      ),
+    );
+    // Handed over with the task, so the pane starts the next one empty.
+    await waitFor(async () => expect(chips()).toHaveLength(0));
+
+    // A file the host could not attach stays on the pane, so it is not lost and can be retried.
+    const failing = new DataTransfer();
+    failing.items.add(new globalThis.File(['text'], 'fail.txt', { type: 'text/plain' }));
+    failing.items.add(new globalThis.File(['text'], 'plan.txt', { type: 'text/plain' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: failing }));
+    }
+    await waitFor(async () => expect(chips()).toHaveLength(2));
+    await userEvent.click(title());
+    await userEvent.keyboard('Plan the week{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent('Plan the week:plan.txt'),
+    );
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['fail.txt'],
+      ),
+    );
+  },
+};
+
 export const TestCreateWithDescription: Story = {
   args: {
     showGroupLabels: false,
@@ -1289,6 +1563,74 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 };
 
 /**
+ * Cmd/Ctrl-Enter in the description saves, as the Save button does: for an edit it writes the
+ * pending text and leaves, and for a create it adds the task — without CodeMirror inserting a line
+ * first. With no title to create from, the key does nothing.
+ */
+export const TestSaveDescriptionWithModEnter: Story = {
+  args: {
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    const found = <T extends Element>(element: T | null | undefined, name: string): T => {
+      if (!element) {
+        throw new Error(`${name} not found.`);
+      }
+      return element;
+    };
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Edit pane');
+    const title = () => found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]'), 'Title');
+    const content = () =>
+      found(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"] .cm-content'), 'Description');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0));
+
+    // Editing: Cmd-Enter writes the description and drops the pane back to creating.
+    const first = rows()[0];
+    first.click();
+    await waitFor(async () => expect(first.getAttribute('aria-selected')).toEqual('true'));
+    const lines = () => content().querySelectorAll('.cm-line').length;
+    await userEvent.click(content());
+    const linesBefore = lines();
+    await userEvent.keyboard(' SAVED{Meta>}{Enter}{/Meta}');
+    await waitFor(async () => expect(title().value).toEqual(''));
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    first.click();
+    await waitFor(async () => expect(content().textContent).toContain('SAVED'));
+    // No line was inserted: the save binding outranks the markdown keymap's own Mod-Enter.
+    await expect(lines()).toEqual(linesBefore);
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(title().value).toEqual(''));
+
+    // Creating: Ctrl-Enter (the binding off macOS) adds the task with its description.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Keyed task');
+    await userEvent.click(content());
+    await userEvent.keyboard('From the keyboard{Control>}{Enter}{/Control}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    const created = found(
+      rows().find((row) => row.textContent?.includes('Keyed task')),
+      'Created row',
+    );
+    await expect(created.textContent).toContain('From the keyboard');
+    await expect(title().value).toEqual('');
+
+    // With no title there is nothing to create: the key does nothing, but still inserts no line.
+    const count = rows().length;
+    await userEvent.click(content());
+    const untitledLines = lines();
+    await userEvent.keyboard('Untitled{Control>}{Enter}{/Control}{Meta>}{Enter}{/Meta}');
+    await expect(rows()).toHaveLength(count);
+    await expect(content().textContent).toContain('Untitled');
+    await expect(lines()).toEqual(untitledLines);
+  },
+};
+
+/**
  * With `showDescription` off the pane is title-only, even for a selected task the list can update —
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
@@ -1317,6 +1659,125 @@ export const TestEditWithoutDescription: Story = {
     await userEvent.keyboard(' EDITED');
     await userEvent.tab();
     await waitFor(async () => expect(first.textContent).toContain('EDITED'));
+  },
+};
+
+/**
+ * `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its
+ * parent — the outliner keys — and `Shift+ArrowUp`/`Down` move it among its siblings. `Tab` from a
+ * control inside the row still moves focus, and a `Tab` that cannot indent leaves focus to travel.
+ */
+export const TestTabIndent: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    framed: false,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map((row) => ({
+        row,
+        title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
+        level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
+      }));
+    const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
+    const row = (title: string): HTMLElement => {
+      const found = rows().find((entry) => entry.title === title)?.row;
+      if (!found) {
+        throw new Error(`Row not found: ${title}`);
+      }
+      return found;
+    };
+    const press = (target: HTMLElement, key: string, shiftKey = false) => {
+      target.focus();
+      const event = new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    await waitFor(async () =>
+      expect(shape()).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+        'Dial in the roast:1',
+        'Sample the Ethiopian lots:2',
+        'Log every profile:2',
+      ]),
+    );
+
+    // Tab: under the previous sibling, carrying its own sub-task along.
+    await expect(press(row('Approve the label art'), 'Tab')).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:3',
+        'Proofread the back label:4',
+      ]),
+    );
+
+    // Shift+Tab: back out, as the peer that follows its parent.
+    await expect(press(row('Approve the label art'), 'Tab', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+      ]),
+    );
+
+    // Shift+ArrowUp: ahead of its previous sibling.
+    await expect(press(row('Approve the label art'), 'ArrowUp', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(1, 3)).toEqual(['Approve the label art:2', 'Proofread the back label:3']),
+    );
+
+    // Consecutive moves with no refocus in between: the moved row keeps focus as it re-renders under
+    // its new parent, so the next key reaches it.
+    const pressFocused = (key: string, shiftKey = false) => {
+      const target = document.activeElement;
+      if (!(target instanceof HTMLElement)) {
+        throw new Error('Nothing focused.');
+      }
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true }));
+    };
+    const focusedTitle = () =>
+      document.activeElement?.closest('[data-object-id]')?.querySelector('[data-testid="taskList.item.title"]')
+        ?.textContent;
+    row('Log every profile').focus();
+    pressFocused('ArrowRight', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowLeft', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab');
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowUp', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Sample the Ethiopian lots:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowDown', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+
+    // Nothing to indent under, so the key is not taken and focus is free to leave the list.
+    await expect(press(row('Ship the spring release'), 'Tab')).toBe(false);
+
+    // From a control inside the row, Tab is the control's, not a move.
+    const status = row('Log every profile').querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
+    if (!status) {
+      throw new Error('Status control not found.');
+    }
+    await expect(press(status, 'Tab')).toBe(false);
+    await expect(shape().at(-1)).toEqual('Log every profile:2');
   },
 };
 
@@ -1453,8 +1914,7 @@ export const TestHierarchy: Story = {
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
-    // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
-    // descendants' refs still point at it wherever it lands.
+    // Moving a parent carries its sub-tasks: they stay listed in its `subtasks` wherever it lands.
     const release = rows().find(({ title }) => title === 'Ship the spring release')!;
     press(release.row, 'ArrowDown');
     await waitFor(async () =>

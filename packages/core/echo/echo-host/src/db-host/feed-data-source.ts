@@ -59,7 +59,7 @@ export class FeedDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
     // For queue, the cursor is assumed to have:
     // spaceId = set
     // resourceId = null
@@ -161,7 +161,9 @@ export class FeedDataSource implements IndexDataSource {
         }
       }
 
-      return { objects, cursors: updatedCursors };
+      // A spent limit may have stopped mid-feed or skipped feeds; the store cannot say which, so the
+      // next pass finds out, and reads empty if there was nothing left.
+      return { objects, cursors: updatedCursors, more: remainingLimit <= 0 };
     }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('FeedDataSource.getChangedObjects'), Effect.orDie);
   }
 }
