@@ -71,7 +71,7 @@ export const createDeploy = ({
 
       const result = await deployScript({
         script,
-        edgeHttpClient: client.edge.http,
+        getEdgeHttpClient: () => client.edge.http,
         ownerDid: client.halo.identity.get()?.did,
         db,
         fn,

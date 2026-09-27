@@ -47,7 +47,7 @@ export const useCreateAndDeployScriptTemplates = (db: Database.Database | undefi
 
         return deployScript({
           db,
-          edgeHttpClient: client.edge.http,
+          getEdgeHttpClient: () => client.edge.http,
           ownerDid: client.halo.identity.get()?.did,
           script: createResult.data.object,
         });

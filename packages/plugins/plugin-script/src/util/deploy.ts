@@ -20,8 +20,8 @@ export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: an
 
 type DeployScriptProps = {
   script: Script.Script;
-  /** Identity-bound EDGE HTTP client. */
-  edgeHttpClient: EdgeHttpClient;
+  /** Identity-bound EDGE HTTP client, read inside the deploy so a missing EDGE URL fails it rather than throwing. */
+  getEdgeHttpClient: () => EdgeHttpClient;
   /** Owner identity DID (`did:halo:…`); deployment fails without one. */
   ownerDid?: string;
   db: Database.Database;
@@ -36,7 +36,7 @@ type DeployScriptResult = { success: boolean; error?: Error; functionId?: string
  */
 export const deployScript = async ({
   script,
-  edgeHttpClient,
+  getEdgeHttpClient,
   ownerDid,
   db,
   fn,
@@ -59,7 +59,7 @@ export const deployScript = async ({
       throw buildResult.error || new Error('Bundle creation failed');
     }
 
-    const functionsServiceClient = new FunctionsServiceClient(edgeHttpClient);
+    const functionsServiceClient = new FunctionsServiceClient(getEdgeHttpClient());
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
       ownerUri: ownerDid,
       version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
