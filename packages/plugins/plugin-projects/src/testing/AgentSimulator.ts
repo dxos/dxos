@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Duration from 'effect/Duration';
+import * as Duration from 'effect/Duration';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -76,8 +76,12 @@ export const startTurn = (tasks: readonly Task.Task[], pace: Pace): ScriptedLang
 });
 
 /** Finishes `tasks` in one turn, after the time they took. */
-export const finishTurn = (tasks: readonly Task.Task[], pace: Pace): ScriptedLanguageModel.ScriptedTurn => ({
-  delay: pace.work,
+export const finishTurn = (
+  tasks: readonly Task.Task[],
+  pace: Pace,
+  delay: Duration.Input = pace.work,
+): ScriptedLanguageModel.ScriptedTurn => ({
+  delay,
   parts: [text(`Finished ${list(tasks)}.`), updateTasks(tasks.map((task) => ({ task, status: 'done' as const })))],
 });
 
@@ -100,16 +104,45 @@ export const sequential: Strategy = (state) => {
 };
 
 /**
- * Sub-tasks started one per turn, a `think` apart, until all are under way, then finished one per turn
- * in order — so the work overlaps, each piece begun a little after the last.
+ * How long a sub-task takes: `pace.work` scaled by a factor from half to double, fixed per title so a
+ * run is repeatable while its tasks still differ in length.
+ */
+export const durationOf = (task: Task.Task, pace: Pace): number => {
+  let hash = 0;
+  for (const char of task.title) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return Duration.toMillis(pace.work) * (0.5 + (hash % 1_000) / 666);
+};
+
+/**
+ * When the task was last started, read off its history (the entry the planning tool's status move
+ * writes); `now` when there is none, so an unrecorded start is due a full duration from here.
+ */
+const startedAt = (task: Task.Task): number => {
+  const entry = (task.history ?? []).findLast(
+    (entry) => Task.isChangeEntry(entry) && /to started/.test(entry.description ?? ''),
+  );
+  return entry ? Date.parse(entry.date) : Date.now();
+};
+
+/**
+ * Sub-tasks started one per turn, a `think` apart, until all are under way; then whichever is due
+ * next finishes — each runs for its own {@link durationOf}, so they end in no fixed order.
  */
 export const concurrent: Strategy = (state) => {
   const pending = state.subtasks.find((task) => !isFinished(task) && task.status !== 'started');
   if (pending) {
     return startTurn([pending], state.pace);
   }
-  const next = state.subtasks.find((task) => !isFinished(task));
-  return next ? finishTurn([next], state.pace) : closeTurn(state);
+  const running = state.subtasks
+    .filter((task) => task.status === 'started')
+    .map((task) => ({ task, due: startedAt(task) + durationOf(task, state.pace) }))
+    .sort((left, right) => left.due - right.due);
+  const [next] = running;
+  return next
+    ? finishTurn([next.task], state.pace, Duration.millis(Math.max(next.due - Date.now(), 0)))
+    : closeTurn(state);
 };
 
 /** A question the agent puts to the user part-way through a sub-task. */
@@ -123,8 +156,8 @@ export type Question = {
 
 /**
  * Wraps `strategy` so that, once the sub-task titled `question.task` is under way, the agent asks
- * `question` and ends its turn, as the ask-question tool instructs; answered, it resumes that sub-task
- * and hands back to `strategy`. The answer arrives as a new turn, so nothing here waits.
+ * `question` and carries on with the other sub-tasks while it waits; answered, it resumes that
+ * sub-task and hands back to `strategy`. The answer is read off the task on the next turn.
  */
 export const withQuestion =
   (strategy: Strategy, question: Question): Strategy =>
@@ -146,7 +179,12 @@ export const withQuestion =
       };
     }
     if (task && thread && !thread.answer) {
-      return { parts: [text(`Waiting for an answer to "${question.question}".`)] };
+      // The blocked task waits; the rest of the work does not. Only when nothing else is left does the
+      // agent end its turn to wait for the answer.
+      const others = { ...state, subtasks: state.subtasks.filter((candidate) => candidate.id !== task.id) };
+      return others.subtasks.some((candidate) => !isFinished(candidate))
+        ? strategy(others)
+        : { parts: [text(`Waiting for an answer to "${question.question}".`)] };
     }
     if (task && thread?.answer && task.status === 'blocked') {
       return {

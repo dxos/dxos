@@ -149,6 +149,9 @@ const BEND_RADIUS = BAR_HEIGHT / 2;
  */
 const hueColor = (hue: Hue): string => `var(--color-${hue}-surface)`;
 
+/** The hue's strong shade, for a node that needs attention (a question, an error) within its lane. */
+const hueStrongColor = (hue: Hue): string => `var(--color-${hue}-text)`;
+
 const STATUS_COLOR: Record<
   GanttLaneStatus,
   { fill: string; node: string; edge: string; thread: string; text: string }
@@ -196,6 +199,9 @@ const STATUS_COLOR: Record<
     text: 'text-red-500',
   },
 };
+
+/** A node that asks for attention: a question put to the reader, or something that went wrong. */
+const isAlert = (marker: GanttMarker): boolean => marker.level === 'warn' || marker.level === 'error';
 
 const CONNECTOR_CLASSNAME = 'stroke-fuchsia-500';
 
@@ -942,17 +948,30 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                     cy={rowY(row.index)}
                     r={NODE_RADIUS}
                     className={mx(
-                      'cursor-pointer stroke-base-surface hover:stroke-[3px] hover:stroke-base-fg',
+                      'cursor-pointer hover:stroke-[3px] hover:stroke-base-fg',
+                      // A question or an error is ringed in red, and pulses while its lane is still held
+                      // up by it — blocked on the answer, or failed.
+                      isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
+                      isAlert(marker) &&
+                        (row.lane.status === 'blocked' || row.lane.status === 'failed') &&
+                        'animate-pulse',
                       // `cx` as a transition: where a browser exposes SVG geometry as CSS the node
                       // slides out of the one before it, and where it does not it simply appears.
                       slide ? mx('transition-[stroke-width,cx]', ENTER_TRANSITION) : 'transition-[stroke-width]',
                       // The live end pulses in the lane's stronger shade: scanning a wall of finished
                       // lanes, the ones still moving should be findable without reading the legend.
+                      // A question or an error is a solid node in the lane's own hue: the same thread,
+                      // so it reads as that task's, but the stronger shade so it is found at a glance.
                       activeEdges.has(marker.id)
                         ? mx('animate-pulse', !row.lane.hue && STATUS_COLOR[row.lane.status].edge)
-                        : !row.lane.hue && STATUS_COLOR[row.lane.status].node,
+                        : !row.lane.hue &&
+                            (isAlert(marker) ? STATUS_COLOR[row.lane.status].edge : STATUS_COLOR[row.lane.status].node),
                     )}
-                    style={row.lane.hue ? { fill: hueColor(row.lane.hue) } : undefined}
+                    style={
+                      row.lane.hue
+                        ? { fill: isAlert(marker) ? hueStrongColor(row.lane.hue) : hueColor(row.lane.hue) }
+                        : undefined
+                    }
                     onClick={() => onMarkerSelect?.(marker)}
                   />
                 </HoverCard.Trigger>

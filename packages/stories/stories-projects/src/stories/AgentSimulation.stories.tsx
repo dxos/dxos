@@ -28,15 +28,49 @@ import { ModuleContainer, storyParameters } from '../testing/index.ts';
 
 const PROJECT_NAME = 'Coffee launch';
 
+type TemplateTask = { title: string; description: string };
+
 /** The project template: two top-level tasks, each with its sub-tasks, in working order. */
-const TEMPLATE: readonly { title: string; subtasks: readonly string[] }[] = [
+const TEMPLATE: readonly (TemplateTask & { subtasks: readonly TemplateTask[] })[] = [
   {
     title: 'Source the beans',
-    subtasks: ['Shortlist three importers', 'Order sample lots', 'Cup the samples', 'Negotiate the first contract'],
+    description: 'Find a green-coffee supplier for the launch roast and lock in the first contract.',
+    subtasks: [
+      {
+        title: 'Shortlist three importers',
+        description: 'Compare importers on origin range, minimum order and lead time; keep the best three.',
+      },
+      {
+        title: 'Order sample lots',
+        description: 'Request 1kg samples of two candidate lots from each shortlisted importer.',
+      },
+      {
+        title: 'Cup the samples',
+        description: 'Roast and cup every sample to SCA protocol and score them side by side.',
+      },
+      {
+        title: 'Negotiate the first contract',
+        description: 'Agree price, volume and delivery schedule for the chosen lot.',
+      },
+    ],
   },
   {
     title: 'Design the packaging',
-    subtasks: ['Draft the label copy', 'Commission the artwork', 'Print a proof run'],
+    description: 'Produce retail bags that carry the brand and the tasting notes of the launch roast.',
+    subtasks: [
+      {
+        title: 'Draft the label copy',
+        description: 'Write the origin story, tasting notes and brewing guide for the back label.',
+      },
+      {
+        title: 'Commission the artwork',
+        description: 'Brief an illustrator on the front panel and agree two rounds of revisions.',
+      },
+      {
+        title: 'Print a proof run',
+        description: 'Print fifty bags to check colour, fold and valve placement before the full run.',
+      },
+    ],
   },
 ];
 
@@ -71,10 +105,10 @@ const seedProject = async ({ space }: { space: Space }) => {
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
   });
-  const roots = TEMPLATE.map(({ title, subtasks }) => {
-    const root = TaskSet.addTask(space.db, taskSet, title);
+  const roots = TEMPLATE.map(({ title, description, subtasks }) => {
+    const root = TaskSet.addTask(space.db, taskSet, title, { description });
     for (const subtask of subtasks) {
-      TaskSet.addTask(space.db, taskSet, subtask, {}, { parent: root });
+      TaskSet.addTask(space.db, taskSet, subtask.title, { description: subtask.description }, { parent: root });
     }
     return root;
   });
@@ -129,6 +163,9 @@ const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
   }
 };
 
+/** How long the question stays open before the play function answers it. */
+const ANSWER_DELAY = 8_000;
+
 /** Clicks `answer` on the open question the detail pane shows, once it is on screen. */
 const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promise<boolean> => {
   const prompt = canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
@@ -141,8 +178,8 @@ const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promi
   if (!option) {
     return false;
   }
-  // Held a beat so the blocked task and its question read on screen before they resolve.
-  await new Promise((resolve) => setTimeout(resolve, 3_000));
+  // Held so the blocked task and its question read on screen, as a person would take a while to answer.
+  await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
   await userEvent.click(option);
   return true;
 };
