@@ -3,8 +3,10 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -15,9 +17,10 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
+import { startTestServer } from '@dxos/mcp-client/testing';
 
 import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
-import { EnableSkills, QuerySkills } from './operations/definitions.ts';
+import { ConnectMcpServer, EnableSkills, QuerySkills } from './operations/definitions.ts';
 import { SkillManagerHandlers } from './operations/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -54,6 +57,15 @@ const getConversationDXN = Effect.gen(function* () {
   const { conversation } = yield* TestConversation;
   return conversation;
 });
+
+const withTestServer = Effect.acquireRelease(
+  Effect.promise(() => startTestServer()),
+  (server) => Effect.promise(() => server.close()),
+);
+
+/** A skill authored in the space, with no registry entry behind it. */
+const addSpaceSkill = (key: 'org.dxos.skill.spaceWeather', props: Partial<Skill.Skill> = {}) =>
+  Database.add(Skill.make({ key, name: 'Space Weather', agentCanEnable: true, mcpServers: [], ...props }));
 
 const getBoundSkills = Effect.gen(function* () {
   const binder = yield* Harness.binder;
@@ -165,6 +177,116 @@ describe('Skill Manager', () => {
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.skill.nonexistent');
         expect(rejected[0].reason).toContain('not found');
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+  it.effect(
+    'enable-skills: enables a skill authored in the space',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        yield* addSpaceSkill('org.dxos.skill.spaceWeather');
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableSkills,
+          { keys: ['org.dxos.skill.spaceWeather'] },
+          { conversation },
+        );
+        expect(rejected).toHaveLength(0);
+        expect(enabled.map((skill: Skill.Skill) => Obj.getMeta(skill).key)).toEqual(['org.dxos.skill.spaceWeather']);
+
+        const bound = yield* getBoundSkills;
+        expect(bound.some((skill: Skill.Skill) => Obj.getMeta(skill).key === 'org.dxos.skill.spaceWeather')).toBe(true);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'connect-mcp-server: saves a reachable server, binds the skill and lists its tools',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const server = yield* withTestServer;
+        const skill = yield* addSpaceSkill('org.dxos.skill.spaceWeather', {
+          mcpServers: [{ name: 'stale', url: server.urls.open, protocol: 'sse' }],
+        });
+
+        const { tools } = yield* Operation.invoke(
+          ConnectMcpServer,
+          {
+            skill: 'org.dxos.skill.spaceWeather',
+            server: { name: 'weather', url: server.urls.open, protocol: 'http' },
+          },
+          { conversation },
+        );
+        expect(tools).toEqual(['get_weather']);
+        // The entry with the same url is replaced rather than duplicated.
+        expect(skill.mcpServers).toEqual([{ name: 'weather', url: server.urls.open, protocol: 'http' }]);
+
+        const bound = yield* getBoundSkills;
+        expect(bound.some((candidate: Skill.Skill) => candidate.id === skill.id)).toBe(true);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'connect-mcp-server: an unreachable server fails with its error and is not saved',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const skill = yield* addSpaceSkill('org.dxos.skill.spaceWeather');
+        // Port 1 on loopback refuses the connection.
+        const url = 'http://127.0.0.1:1/mcp';
+
+        const exit = yield* Effect.exit(
+          Operation.invoke(
+            ConnectMcpServer,
+            { skill: 'org.dxos.skill.spaceWeather', server: { url, protocol: 'http' } },
+            { conversation },
+          ),
+        );
+        if (Exit.isSuccess(exit)) {
+          return expect.fail('Expected the connection to fail.');
+        }
+        expect(Cause.pretty(exit.cause)).toContain(`MCP server ${url} did not connect`);
+        expect(skill.mcpServers).toEqual([]);
+
+        const bound = yield* getBoundSkills;
+        expect(bound.some((candidate: Skill.Skill) => candidate.id === skill.id)).toBe(false);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'connect-mcp-server: a server refusing the credentials says it needs them',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const server = yield* withTestServer;
+        yield* addSpaceSkill('org.dxos.skill.spaceWeather');
+
+        const exit = yield* Effect.exit(
+          Operation.invoke(
+            ConnectMcpServer,
+            { skill: 'org.dxos.skill.spaceWeather', server: { url: server.urls.key, protocol: 'http' } },
+            { conversation },
+          ),
+        );
+        if (Exit.isSuccess(exit)) {
+          return expect.fail('Expected the connection to fail.');
+        }
+        expect(Cause.pretty(exit.cause)).toContain('requires credentials');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

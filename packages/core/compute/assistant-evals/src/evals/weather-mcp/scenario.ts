@@ -9,6 +9,7 @@ import { CapabilityNotFoundError } from '@dxos/app-framework';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
+import { SkillManagerOperations } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -66,21 +67,31 @@ export const OPENING_PROMPT = trim`
 export const isWeatherCall = ({ name, operationKey, error, result }: ToolInvocation): boolean =>
   !operationKey && /weather|forecast/i.test(name) && !error && TEMPERATURE.test(JSON.stringify(result ?? ''));
 
-/** The Database skill's update tool, the one write that reaches a skill's `mcpServers`. */
+/** The Database skill's update tool, the generic write that reaches a skill's `mcpServers`. */
 const UPDATE_OBJECT_KEY = `dxn:${String(SpaceOperation.UpdateObject.meta.key).replace(/^dxn:/, '')}`;
+
+/** The Skill Manager's connect tool, which saves a server only after it answered. */
+const CONNECT_MCP_SERVER_KEY = `dxn:${String(SkillManagerOperations.ConnectMcpServer.meta.key).replace(/^dxn:/, '')}`;
 
 /** The session's own write that put a server at `server` into a skill's `mcpServers`. */
 export const isConfiguration =
   (server: RegExp) =>
   ({ operationKey, input, error }: ToolInvocation): boolean => {
-    if (error || operationKey !== UPDATE_OBJECT_KEY) {
+    if (error) {
+      return false;
+    }
+    if (operationKey === CONNECT_MCP_SERVER_KEY) {
+      const url = parseInput(input)?.server?.url;
+      return typeof url === 'string' && server.test(url);
+    }
+    if (operationKey !== UPDATE_OBJECT_KEY) {
       return false;
     }
     const servers = parseInput(input)?.properties?.mcpServers;
     return Array.isArray(servers) && servers.some((entry) => typeof entry?.url === 'string' && server.test(entry.url));
   };
 
-type UpdatePatch = { properties?: { mcpServers?: { url?: unknown }[] } };
+type UpdatePatch = { properties?: { mcpServers?: { url?: unknown }[] }; server?: { url?: unknown } };
 
 /** The tool's arguments as the transcript stores them; anything unparseable configured nothing. */
 const parseInput = (input: string): UpdatePatch | undefined => {

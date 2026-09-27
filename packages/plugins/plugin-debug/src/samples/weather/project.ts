@@ -34,8 +34,10 @@ every response — without them the tool silently never connects. Deploy with \`
 claim URL. The container is not durable, so file the Worker URL and the tool's response on this \
 project in the turn you produce them.
 
-Configure the server by setting its URL on the Weather MCP skill's \`mcpServers\` with the Database \
-skill; that skill is already bound here, so the tool is available on your next turn.
+Configure the server by connecting its URL to the Weather MCP skill with the Skill Manager's \
+connect-mcp-server tool, which checks the server answers and says why when it does not; that skill is \
+already bound here, so the tool is available on your next tool-calling step of this same run — not in \
+the response that configures it, and without waiting for a new message.
 
 This project needs no Cloudflare login and no API keys. If a step seems to need either, that is the \
 wrong step.`;

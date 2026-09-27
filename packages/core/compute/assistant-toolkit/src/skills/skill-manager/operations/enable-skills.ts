@@ -8,7 +8,7 @@ import * as Result from 'effect/Result';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Ref } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
 
 import { EnableSkills } from './definitions.ts';
 
@@ -19,10 +19,14 @@ export default EnableSkills.pipe(
       const rejected: { key: string; reason: string }[] = [];
 
       for (const key of keys) {
-        const result = yield* Skill.resolve(key).pipe(
-          Effect.mapError(() => ({ key, reason: 'Skill not found in registry.' })),
-          Effect.result,
-        );
+        // A space-authored skill has no registry entry, so the space is searched first.
+        const [local] = yield* Database.query(Filter.and(Filter.type(Skill.Skill), Filter.key(key))).run;
+        const result = local
+          ? Result.succeed(local)
+          : yield* Skill.resolve(key).pipe(
+              Effect.mapError(() => ({ key, reason: 'Skill not found in this space or the registry.' })),
+              Effect.result,
+            );
         if (Result.isFailure(result)) {
           rejected.push(result.failure);
           continue;

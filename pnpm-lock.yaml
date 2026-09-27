@@ -4607,6 +4607,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols

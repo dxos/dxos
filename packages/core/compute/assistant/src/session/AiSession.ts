@@ -240,12 +240,27 @@ export class Session extends Resource {
         invoke: (operation, input) => Operation.invoke(operation, input).pipe(Effect.asVoid, Effect.orDie),
       });
 
+      // Last failure reported per server url, so a server failing the same way every step is reported once.
+      const reportedMcpFailures = new Map<string, string>();
+
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
       const runIteration = Effect.gen({ self: this }, function* () {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
-        const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
+        const { toolkits: mcps, failures } = yield* connectMcpServers(currentSkills, params.mcpServers);
+        // The model otherwise sees only that a configured server's tools are missing, never why.
+        for (const { url, message } of failures) {
+          if (reportedMcpFailures.get(url) !== message) {
+            yield* request.submitNotice(
+              `MCP server ${url} did not connect: ${message}; its tools are unavailable until it does.`,
+            );
+          }
+        }
+        reportedMcpFailures.clear();
+        for (const { url, message } of failures) {
+          reportedMcpFailures.set(url, message);
+        }
         yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
@@ -310,10 +325,16 @@ export class Session extends Resource {
   }
 }
 
+type McpConnections = {
+  toolkits: OpaqueToolkit.OpaqueToolkit[];
+  /** Servers dropped from this step's toolkit. */
+  failures: McpToolkit.McpConnectionError[];
+};
+
 const connectMcpServers = (
   skills: readonly Skill.Skill[],
   spaceServers: readonly McpToolkit.Options[] = [],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
+): Effect.Effect<McpConnections, never, Trace.TraceService | Scope.Scope> => {
   const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
@@ -322,7 +343,7 @@ const connectMcpServers = (
   const allServers = [...skillServers, ...spaceServers];
   if (allServers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
-    return Effect.succeed([]);
+    return Effect.succeed({ toolkits: [], failures: [] });
   }
 
   const connect = pipe(
@@ -374,7 +395,7 @@ const connectMcpServers = (
         Effect.result,
       ),
     ),
-    Effect.map((results) => Array.filterMap(results, (result) => result)),
+    Effect.map((results) => ({ toolkits: Array.getSuccesses(results), failures: Array.getFailures(results) })),
   );
 
   return Effect.gen(function* () {

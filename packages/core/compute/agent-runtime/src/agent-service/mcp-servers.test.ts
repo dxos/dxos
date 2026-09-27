@@ -38,6 +38,20 @@ const toolResults = (feed: Feed.Feed) =>
       .map((block) => JSON.stringify(block.result));
   });
 
+/** Text of every system-generated notice addressed to the model. */
+const syntheticTexts = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const items = yield* Feed.query(feed, Filter.everything()).run;
+    return items
+      .filter(Obj.instanceOf(Message.Message))
+      .flatMap((message) => message.blocks)
+      .filter((block): block is ContentBlock.Text => block._tag === 'text' && block.disposition === 'synthetic')
+      .map((block) => block.text);
+  });
+
+/** Message text of every model call the scripted model served. */
+const modelInputs: string[] = [];
+
 describe('space MCP servers', () => {
   it.effect(
     'only enabled servers are connected, with the credentials stored on them',
@@ -90,6 +104,45 @@ describe('space MCP servers', () => {
             { parts: [toolCall('get_weather', { city: 'Paris' })] },
             { parts: [text('It is sunny in Paris.')] },
           ]),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'a server that fails to connect is reported to the model once, not on every step',
+    Effect.fnUntraced(
+      function* (_) {
+        const server = yield* withTestServer;
+        // Port 1 on loopback refuses the connection.
+        const unreachable = 'http://127.0.0.1:1/mcp';
+        yield* Database.add(Obj.make(McpServer.McpServer, { name: 'down', url: unreachable, protocol: 'http' }));
+        yield* Database.add(
+          Obj.make(McpServer.McpServer, { name: 'weather', url: server.urls.open, protocol: 'http' }),
+        );
+
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the weather in Paris?');
+        yield* session.waitForCompletion();
+
+        const notices = yield* syntheticTexts(session.feed);
+        const failures = notices.filter((notice) => notice.startsWith(`MCP server ${unreachable} did not connect`));
+        // Two model calls each dial the servers again; the unchanged failure is reported only on the first.
+        expect(failures).toHaveLength(1);
+        expect(failures[0]).toContain('its tools are unavailable until it does');
+        expect(modelInputs.some((input) => input.includes(`MCP server ${unreachable} did not connect`))).toBe(true);
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [McpServer.McpServer],
+          aiService: scriptedAiService((request, index) => {
+            modelInputs.push(request.text);
+            return index === 0
+              ? { parts: [toolCall('get_weather', { city: 'Paris' })] }
+              : { parts: [text('It is sunny in Paris.')] };
+          }),
         }),
       ),
       TestHelpers.provideTestContext,

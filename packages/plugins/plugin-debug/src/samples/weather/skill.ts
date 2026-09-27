@@ -13,9 +13,11 @@ import { trim } from '@dxos/util';
 
 const INSTRUCTIONS = trim`
   Carries the weather MCP server this project deploys. Its \`mcpServers\` list starts empty: the
-  Worker URL only exists once the deploy has run, and the run sets it here. A chat with this skill
-  bound connects every listed server at the start of each turn, so the \`get_weather\` tool appears
-  on the turn after the URL is set.
+  Worker URL only exists once the deploy has run, and the run sets it here — preferably with the Skill
+  Manager's connect-mcp-server tool, which checks the server answers first. A chat with this skill
+  bound connects every listed server before each model call, so the \`get_weather\` tool appears on
+  the next tool-calling step of the same run: not in the response that sets the URL, and with no new
+  message needed.
 `;
 
 export type SkillResult = { skill: Skill.Skill };
