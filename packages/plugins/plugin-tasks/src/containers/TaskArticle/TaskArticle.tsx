@@ -8,6 +8,7 @@ import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { useMembers } from '@dxos/halo-react';
 import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
@@ -60,6 +61,12 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
   // The property, not the whole task: subscribing to the object itself would hand the article a
   // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
+  // Everyone in the space, the owner included, as assignees the picker can offer by identity.
+  const spaceMembers = useMembers(Obj.getDatabase(task)?.spaceId);
+  const members = useMemo(
+    () => spaceMembers.flatMap((member) => (member.did ? [{ did: member.did, name: member.displayName }] : [])),
+    [spaceMembers],
+  );
 
   // Open questions only: an answered one is a line in the activity below.
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
@@ -105,7 +112,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
                   room a pane has, each says what its glyph means. */}
-                <TaskProperties task={task} onTaskUpdate={handleUpdate} />
+                <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
 
                 {/* Headed like the sections around it, and only when something is waiting: a
                   standing "Questions" label over nothing says the pane expects them, when what a

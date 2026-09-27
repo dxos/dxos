@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -18,7 +26,6 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
@@ -355,6 +362,8 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
+    // Sized by its content: a row with no pull request holds no width for one.
+    ['artifacts', 'auto'],
     ['assignee', 'var(--dx-control)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
@@ -507,6 +516,11 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
+      {/* On the title line, beside who has the task: the pull request is what the row is scanned for
+          once work is under way, and on a line of its own it pushed the description down. */}
+      <div className='col-[artifacts] row-start-1 flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
+        <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
+      </div>
       <div className='col-[assignee] row-start-1 grid place-items-center'>
         {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
@@ -516,7 +530,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
       {/* TODO(burdon): Update TaskTreeNode to render second line. */}
       <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
-        <TaskTags task={task} />
+        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
       </div>
     </>
   );
@@ -751,10 +765,8 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
   const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
 
-  // Hover, not click, because the session is context for the row rather than a place to navigate to:
-  // the reader wants to know which run owns the task while their eye is already on it. The grace
-  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
-  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  // Click, not hover: a hover-opened card has nothing to close it when the pointer moves on, so it
+  // was left open over the list until the reader clicked somewhere else.
   const openCard = useCallback(() => {
     const trigger = tagRef.current;
     if (!trigger || !session) {
@@ -772,7 +784,24 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       }),
     );
   }, [session, harness, label]);
-  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      // The row is an option: without this the click selects the task as well as opening the card.
+      event.stopPropagation();
+      openCard();
+    },
+    [openCard],
+  );
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.stopPropagation();
+        openCard();
+      }
+    },
+    [openCard],
+  );
 
   if (!label && !agent) {
     return null;
@@ -783,14 +812,9 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
       data-testid='taskList.item.assignee'
-      // Focus as well as hover: the card is the only place the row says which run owns the task, so
-      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
-      tabIndex={session ? 0 : undefined}
-      onPointerEnter={startHover}
-      onPointerLeave={cancelHover}
-      onFocus={startHover}
-      onBlur={cancelHover}
-      classNames={session && 'cursor-help'}
+      // A button when there is a session to show, so the keyboard reaches the card the pointer does.
+      {...(session && { role: 'button', tabIndex: 0, onClick: handleClick, onKeyDown: handleKeyDown })}
+      classNames={session && 'cursor-pointer'}
     >
       {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
       {iconOnly ? <span className='sr-only'>{label}</span> : label}

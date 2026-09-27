@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
-import { PERSON_ICON } from './assignee.ts';
+import { PERSON_ICON, shortDid } from './assignee.ts';
 import {
   UNSET_ICON,
   estimateTextStyle,
@@ -28,8 +28,16 @@ import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
 
+/** A member of the task's space, offered as an assignee by identity. */
+export type TaskMember = { did: string; name?: string };
+
 export type TaskPropertiesProps = ThemedClassName<{
   task: Task.Task;
+  /**
+   * The space's members, the owner among them. Passed in rather than read here: membership lives in
+   * HALO, which this package does not depend on.
+   */
+  members?: readonly TaskMember[];
   /** Absent renders the properties read-only, as the list's readonly cells do. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }>;
@@ -43,7 +51,7 @@ export type TaskPropertiesProps = ThemedClassName<{
  * task and the room to say what the glyph means — and an unset field can then invite the value
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
-export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertiesProps) => {
+export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
   const priority = task.priority ?? undefined;
@@ -97,7 +105,10 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
             }),
             // An assignee the people list cannot show — an agent, or an actor with no contact — is
             // listed as itself, so the picker says who holds the task before it is switched away.
-            ...(assignee && !assignee.contact && assigneeLabel
+            ...(assignee &&
+            !assignee.contact &&
+            !members.some((member) => member.did === assignee.identityDid) &&
+            assigneeLabel
               ? [
                   createMenuAction('assignee-current', () => {}, {
                     label: assigneeLabel,
@@ -107,8 +118,20 @@ export const TaskProperties = ({ task, onTaskUpdate, classNames }: TaskPropertie
                   }),
                 ]
               : []),
-            // The space's people, by the label their schema names — the picker offers what the field
-            // accepts, as the status and priority pickers do.
+            // The space's members first — the people who can actually pick the task up — then its
+            // contacts. Both are what the field accepts, as the status and priority pickers offer.
+            ...members.map((member) =>
+              createMenuAction(
+                `assignee-member-${member.did}`,
+                () => onTaskUpdate(task, { assignee: { identityDid: member.did, name: member.name } }),
+                {
+                  label: member.name ?? shortDid(member.did),
+                  icon: PERSON_ICON,
+                  checked: assignee?.identityDid === member.did,
+                  testId: 'taskList.assignee.member',
+                },
+              ),
+            ),
             ...people.map((person) =>
               createMenuAction(
                 `assignee-${person.id}`,
