@@ -3,7 +3,8 @@
 //
 
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import type { Client } from '@dxos/client';
+import { type Hypergraph } from '@dxos/echo';
+import { type Space } from '@dxos/halo';
 import type { Label } from '@dxos/react-ui';
 
 export type DiagnosticSeverity = 'info' | 'warning' | 'error';
@@ -25,7 +26,8 @@ export type DiagnosticIssue = {
  * Context passed to a diagnostic provider when it runs.
  */
 export type DiagnosticContext = {
-  readonly client: Client;
+  readonly spaces: Space.ServiceApi;
+  readonly graph: Hypergraph.Hypergraph;
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly reportProgress: (message: string) => void;
   readonly signal: AbortSignal;

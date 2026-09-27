@@ -19,7 +19,7 @@ import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { type Client } from '@dxos/client';
+import { type Config } from '@dxos/config';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
@@ -329,8 +329,8 @@ type CredentialsValue = {
  * this service rather than threading them through as explicit parameters.
  *
  * Token sourcing: an operation invoked with a `Connection` composes
- * `fromConnection(ref, client)`; one invoked with an external-sync cursor
- * composes `fromAccessToken(cursor.spec.source, client)` directly (the cursor
+ * `fromConnection(ref, config)`; one invoked with an external-sync cursor
+ * composes `fromAccessToken(cursor.spec.source, config)` directly (the cursor
  * no longer relates to `Connection`).
  *
  * Construction resolves the PDS once (via the public XRPC `resolveHandle`
@@ -339,7 +339,7 @@ type CredentialsValue = {
 export class Credentials extends Context.Service<Credentials, CredentialsValue>()('@dxos/plugin-bluesky/Credentials') {}
 
 /** Loads the connection's access token, resolves its PDS, and packages credentials. */
-export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, config: Config) =>
   Layer.effect(
     Credentials,
     Effect.gen(function* () {
@@ -349,12 +349,12 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, cl
       if (!db) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
       }
-      return yield* packageCredentials(accessToken, db, client);
+      return yield* packageCredentials(accessToken, db, config);
     }),
   );
 
 /** Loads the access token directly, resolves its PDS, and packages credentials. */
-export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>, client: Client) =>
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>, config: Config) =>
   Layer.effect(
     Credentials,
     Effect.gen(function* () {
@@ -363,18 +363,18 @@ export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>
       if (!db) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
       }
-      return yield* packageCredentials(accessToken, db, client);
+      return yield* packageCredentials(accessToken, db, config);
     }),
   );
 
 /** Shared credential-packaging step used by both {@link fromConnection} and {@link fromAccessToken}. */
-const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.Database, client: Client) =>
+const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.Database, config: Config) =>
   Effect.gen(function* () {
     const handle = accessToken.account;
     if (!handle) {
       return yield* Effect.fail(new MissingBlueskyHandleError());
     }
-    const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
+    const edgeBaseUrl = config.values.runtime?.services?.edge?.url;
     if (!edgeBaseUrl) {
       return yield* Effect.fail(new BlueskySyncError({ message: 'EDGE services not configured.' }));
     }

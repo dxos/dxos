@@ -98,7 +98,7 @@ export default Capability.makeModule(
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
-      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { space }));
+      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { db: space?.db }));
       // A newer activation (open or close) arrived while the lookup was in flight; bail
       // out so we don't clobber the latest state.
       if (sequence !== activationSequence) {

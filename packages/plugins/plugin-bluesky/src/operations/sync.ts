@@ -8,7 +8,6 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { type Client } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +24,7 @@ import { SyncBlueskyTargets } from './definitions.ts';
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ connection, priority }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
       const { outputs } = yield* Binding.syncAll({
         connection,
         priority,
@@ -33,9 +32,9 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
           // The credentials layer loads the access token, validates the handle,
           // and resolves the user's PDS once. Public XRPC reads (e.g.
           // `getAuthorFeed`) only need HttpClient and ignore the layer.
-          syncBinding({ client, binding }).pipe(
+          syncBinding({ binding }).pipe(
             Effect.provide(
-              Layer.provideMerge(BlueskyApi.fromAccessToken(binding.spec.source, client), FetchHttpClient.layer),
+              Layer.provideMerge(BlueskyApi.fromAccessToken(binding.spec.source, config), FetchHttpClient.layer),
             ),
           ),
       });
@@ -46,7 +45,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
 
 export default handler;
 
-const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.ExternalCursor }) =>
+const syncBinding = ({ binding }: { binding: Cursor.ExternalCursor }) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(binding);
     if (!db) {
@@ -112,15 +111,13 @@ const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.Exte
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Subscription.Feed missing backing ECHO feed');
     invariant(EchoFeed.getFeedUri(echoFeed), 'ECHO feed not stored in a space');
-    const space = client.spaces.get(db.spaceId);
-    invariant(space, 'space not found');
 
     const feedRef = Ref.make(subscriptionFeed);
     const postObjects = collected.map((item) => {
       const input = BlueskyApi.toSubscriptionPostInput(item);
       return Subscription.makePost({ source: feedRef, ...input });
     });
-    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(Database.layer(space.db)));
+    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(Database.layer(db)));
 
     if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {
