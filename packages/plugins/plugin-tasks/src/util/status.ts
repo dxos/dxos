@@ -15,7 +15,8 @@ export const ALL_STATUSES: readonly Task.Status[] = Task.StatusOptions.map(({ id
 export const STATUS_TERMS: EnumProperty<Task.Status> = { property: 'status', values: ALL_STATUSES };
 
 /**
- * `query` with a status choice stored apart from it written in as `status:` terms.
+ * `query` with a status choice written in as `status:` terms — the status menu's write, and the
+ * migration of a choice stored apart from the query.
  *
  * A query with a top-level `OR` takes no written term, so it is grouped first rather than dropping
  * the choice: `a OR b` with `done` hidden becomes `NOT status:done (a OR b)`.

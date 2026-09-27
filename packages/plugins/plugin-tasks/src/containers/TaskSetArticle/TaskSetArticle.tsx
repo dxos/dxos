@@ -13,7 +13,7 @@ import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
-import { QueryBuilder, parseEnumTerms, writeEnumTerms } from '@dxos/echo-query';
+import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -112,7 +112,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
     // Rewrites the stored query rather than this render's copy, which can trail fast typing.
-    (next: readonly Task.Status[]) => setFilterText((query) => writeEnumTerms(query, STATUS_TERMS, next)),
+    (next: readonly Task.Status[]) => setFilterText((query) => foldStatuses(query, next)),
     [setFilterText],
   );
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
