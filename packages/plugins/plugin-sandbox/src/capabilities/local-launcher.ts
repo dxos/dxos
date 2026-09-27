@@ -41,24 +41,18 @@ export default Capability.makeModule(
       const token = randomToken();
       const command = Command.create('dx-sandbox', []);
       const port = new Promise<number>((resolve, reject) => {
-        let buffer = '';
-        command.stdout.on('data', (data) => {
-          buffer += data;
-          const newline = buffer.indexOf('\n');
-          if (newline >= 0) {
-            const line = buffer.slice(0, newline);
-            // Parsed here, in an event handler: a throw would escape it and leave startup waiting out the timeout.
-            let parsed: unknown;
-            try {
-              parsed = JSON.parse(line);
-            } catch {
-              parsed = undefined;
-            }
-            if (typeof parsed === 'object' && parsed !== null && 'port' in parsed && typeof parsed.port === 'number') {
-              resolve(parsed.port);
-            } else {
-              reject(new Error(`unexpected first line from dx-sandbox: ${line}`));
-            }
+        let reported = false;
+        // Each event is one line, but whether it keeps its terminator is not part of the shell plugin's contract.
+        command.stdout.on('data', (line) => {
+          if (reported) {
+            return;
+          }
+          reported = true;
+          // Parsed here, in an event handler: a throw would escape it and leave startup waiting out the timeout.
+          try {
+            resolve(parseReadyLine(line));
+          } catch (error) {
+            reject(error);
           }
         });
         command.on('close', ({ code, signal }) => {
@@ -113,6 +107,20 @@ export default Capability.makeModule(
     return Capability.contribute(SandboxCapabilities.LocalLauncher, { backend });
   }),
 );
+
+/** Reads the port from the helper's first line of output, `{"port":N}`, with or without its newline. */
+export const parseReadyLine = (line: string): number => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    parsed = undefined;
+  }
+  if (typeof parsed === 'object' && parsed !== null && 'port' in parsed && typeof parsed.port === 'number') {
+    return parsed.port;
+  }
+  throw new Error(`unexpected first line from dx-sandbox: ${line.trim()}`);
+};
 
 /** 256 random bits as hex: what the helper checks every request against. */
 const randomToken = (): string =>
