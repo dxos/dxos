@@ -56,7 +56,7 @@ export const Onboarding = Capability.lazyModule(
       AppCapabilities.Layout,
       ClientCapabilities.Client,
     ],
-    provides: [OnboardingCapabilities.Onboarding],
+    provides: [OnboardingCapabilities.Onboarding, ClientCapabilities.OnIdentityDeleted],
     // The manager reads `client.halo` synchronously at construction, so it needs the forked
     // client initialization to have completed.
     activatesOn: ClientEvents.Initialized,

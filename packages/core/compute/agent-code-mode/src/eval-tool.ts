@@ -24,6 +24,12 @@ export const EVAL_TOOL_NAME = 'eval';
 /** Characters of printed output returned from one eval call before it is truncated. */
 const DEFAULT_MAX_OUTPUT = 8_000;
 
+/** Characters of a failure's message the model is shown; the head says what went wrong. */
+const MAX_ERROR_LENGTH = 1_000;
+
+/** Longer than this, one line of a failure is a serialized value (a schema, an AST), not prose. */
+const MAX_ERROR_LINE_LENGTH = 300;
+
 /** The one tool a code-mode turn carries: everything the model does, it does by writing code for this. */
 export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   description:
@@ -84,7 +90,7 @@ export const makeEvalToolkit = ({
           // Reported as output, not as a tool failure: the model's next move is to read the message
           // and write different code, which a failed turn would deny it.
           log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-          printer.print(`Error: ${result.failure.message}`);
+          printer.print(`Error: ${conciseError(result.failure.message)}`);
         } else if (result.success !== undefined && printer.isEmpty()) {
           // A program that printed nothing but produced a value: show the value rather than nothing.
           printer.print(result.success);
@@ -132,4 +138,23 @@ const format = (value: unknown): string => {
   } catch {
     return String(value);
   }
+};
+
+/**
+ * A failure's message cut to what the model can act on.
+ *
+ * A schema validation error carries its cause chain, and the innermost cause serializes the whole
+ * schema — several kilobytes that spend the output budget and the context window while the first
+ * line has already named the field that failed.
+ */
+export const conciseError = (message: string): string => {
+  const text = message
+    .split('\n')
+    .map((line) =>
+      line.length > MAX_ERROR_LINE_LENGTH
+        ? `${line.slice(0, MAX_ERROR_LINE_LENGTH)}… [${line.length - MAX_ERROR_LINE_LENGTH} characters omitted]`
+        : line,
+    )
+    .join('\n');
+  return text.length > MAX_ERROR_LENGTH ? `${text.slice(0, MAX_ERROR_LENGTH)}… [error truncated]` : text;
 };

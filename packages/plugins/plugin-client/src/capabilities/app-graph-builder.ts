@@ -20,6 +20,8 @@ import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { Account, ClientCapabilities } from '#types';
 
+import { filterSpaceInvitations } from '../inbox/index.ts';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read the client through its atom so the extension establishes a reactive dependency:
@@ -60,6 +62,12 @@ export default Capability.makeModule(
           const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
           const hub = hasHub([client]);
+          // Same filter as the inbox monitor, so the badge matches what the Invitations article lists.
+          const pendingInvitations = filterSpaceInvitations(
+            get(CreateAtom.fromObservable(client.halo.inbox.notices)),
+            get(CreateAtom.fromObservable(client.halo.contacts)),
+            (get(CreateAtom.fromObservable(client.spaces)) ?? []).map((space) => space.key),
+          );
 
           return [
             AppGraphNode.make({
@@ -75,6 +83,7 @@ export default Capability.makeModule(
                 hue: identity?.data?.hue,
                 emoji: identity?.data?.emoji,
                 status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
+                badge: pendingInvitations.length > 0,
               },
             }),
           ];
@@ -138,6 +147,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['security.label', { ns: meta.profile.key }],
                 icon: 'ph--key--regular',
+                testId: 'clientPlugin.security',
               },
             }),
           ];
@@ -159,6 +169,57 @@ export default Capability.makeModule(
                 label: ['devices.label', { ns: meta.profile.key }],
                 icon: 'ph--devices--regular',
                 testId: 'clientPlugin.devices',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountContacts = yield* AppGraphBuilder.createExtension({
+      id: 'accountContacts',
+      url: { key: Account.Contacts, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: () =>
+        Effect.succeed([
+          AppGraphNode.make({
+            id: Account.Contacts,
+            data: Account.path(Account.Contacts),
+            type: meta.profile.key,
+            properties: {
+              label: ['contacts.label', { ns: meta.profile.key }],
+              icon: 'ph--address-book--regular',
+              testId: 'clientPlugin.contacts',
+            },
+          }),
+        ]),
+    });
+
+    const accountSpaceInvitations = yield* AppGraphBuilder.createExtension({
+      id: 'accountSpaceInvitations',
+      url: { key: Account.SpaceInvitations, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          const [client] = get(clientAtom);
+          const pending = client
+            ? filterSpaceInvitations(
+                get(CreateAtom.fromObservable(client.halo.inbox.notices)),
+                get(CreateAtom.fromObservable(client.halo.contacts)),
+                (get(CreateAtom.fromObservable(client.spaces)) ?? []).map((space) => space.key),
+              ).length
+            : 0;
+
+          return [
+            AppGraphNode.make({
+              id: Account.SpaceInvitations,
+              data: Account.path(Account.SpaceInvitations),
+              type: meta.profile.key,
+              properties: {
+                label: ['space-invitations.label', { ns: meta.profile.key }],
+                icon: 'ph--envelope-simple--regular',
+                testId: 'clientPlugin.spaceInvitations',
+                // The tree renders any number, zero included, so only a pending count is set.
+                ...(pending > 0 && { count: pending }),
               },
             }),
           ];
@@ -217,6 +278,8 @@ export default Capability.makeModule(
       ...accountAccount,
       ...accountSecurity,
       ...accountDevices,
+      ...accountContacts,
+      ...accountSpaceInvitations,
       ...accountInvitations,
       ...accountUsage,
     ]);

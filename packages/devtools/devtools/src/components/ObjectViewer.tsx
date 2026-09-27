@@ -5,7 +5,7 @@
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { URI } from '@dxos/keys';
-import { Button, Clipboard, Field } from '@dxos/react-ui';
+import { Button, Field, SystemIconButton } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 export type ObjectViewerProps = {
@@ -67,21 +67,19 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
   return (
     <>
       {id && (
-        <Clipboard.Provider>
-          <div className='flex flex-col'>
-            <Field.Root>
-              <div className='flex flex-col gap-1'>
-                <div className='flex gap-1'>
-                  <Field.Input disabled value={id} />
-                  <Clipboard.IconButton value={id} />
-                  <Button value={id} onClick={handleCopy}>
-                    Copy JSON
-                  </Button>
-                </div>
+        <div className='flex flex-col'>
+          <Field.Root>
+            <div className='flex flex-col gap-1'>
+              <div className='flex gap-1'>
+                <Field.Input disabled value={id} />
+                <SystemIconButton.Clipboard iconOnly value={id} />
+                <Button value={id} onClick={handleCopy}>
+                  Copy JSON
+                </Button>
               </div>
-            </Field.Root>
-          </div>
-        </Clipboard.Provider>
+            </div>
+          </Field.Root>
+        </div>
       )}
       <JsonHighlighter data={object} classNames='text-sm' renderer={rowRenderer} />
     </>

@@ -20,6 +20,7 @@ import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxo
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
+import { messageOf } from '@dxos/errors';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -228,7 +229,17 @@ export class FunctionContext extends Resource {
       // that never arrives otherwise holds the invocation until the Workers runtime kills it as
       // hung — ~30s with no error naming the space, inherited by every caller up the chain.
       await EffectEx.runPromise(
-        Effect.tryPromise(() => db.open()).pipe(
+        Effect.tryPromise({
+          try: () => db.open(),
+          // Reported rather than wrapped bare: `Effect.tryPromise` defaults to an `UnknownError`
+          // whose message says only that a promise rejected, and the reason (a root document the
+          // data plane cannot produce) is the whole diagnosis for the caller.
+          catch: (error) =>
+            new FunctionError({
+              message: `Space ${this.context.spaceId} failed to open: ${messageOf(error) ?? 'unknown error'}`,
+              cause: error,
+            }),
+        }).pipe(
           Effect.timeoutOrElse({
             duration: SPACE_OPEN_TIMEOUT,
             orElse: () =>

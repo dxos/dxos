@@ -110,7 +110,7 @@ describe('AiTelemetry', () => {
       expect(transformer._tag).toEqual('Some');
     }).pipe(
       Effect.provide(
-        AiService.model(DXN.getName(DXN.make('example.com.model.stub'))).pipe(
+        AiService.languageModel(DXN.getName(DXN.make('example.com.model.stub'))).pipe(
           Layer.provide(
             AiModelResolver.buildAiService.pipe(
               Layer.provide(

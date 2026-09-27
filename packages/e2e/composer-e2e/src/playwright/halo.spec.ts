@@ -59,9 +59,7 @@ test.describe('HALO tests', () => {
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
     await guest.openUserDevices();
-    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
-    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
-    // for it — no need to race the reload against a fixed deadline.
+    const guestDocument = await guest.markDocument();
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
     // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
@@ -72,6 +70,8 @@ test.describe('HALO tests', () => {
     // TODO(wittjosiah): Why so slow?
     // Wait for replication to complete — guest inherits all of host's spaces.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
+    // The guest swapped identities without leaving the page.
+    await guest.expectSameDocument(guestDocument);
 
     // TODO(wittjosiah): Display name is not currently set in this test.
     // await host.openIdentityManager();
@@ -79,6 +79,24 @@ test.describe('HALO tests', () => {
     // await waitForExpect(async () => {
     //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
     // });
+  });
+
+  test('log in to an existing identity with its recovery code', { tag: ['@QA-7'] }, async () => {
+    // Recovery re-admits the device through EDGE.
+    test.setTimeout(180_000);
+
+    await host.createSpace();
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    await host.openUserSecurity();
+    const recoveryCode = await host.createRecoveryCode();
+
+    // The guest leaves its own identity for the host's without leaving the page.
+    const guestDocument = await guest.markDocument();
+    await guest.openUserDevices();
+    await guest.recoverIdentity(recoveryCode);
+
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 120_000 });
+    await guest.expectSameDocument(guestDocument);
   });
 
   test('settings sync across devices, and one device can keep its own', { tag: ['@QA-7'] }, async () => {
@@ -132,9 +150,6 @@ test.describe('HALO tests', () => {
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
     await guest.openUserDevices();
-    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
-    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
-    // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
     // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.

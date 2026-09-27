@@ -22,6 +22,16 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
+/** Shows `companionPlanks` at once and records them in the URL, which resolves only later. */
+const showCompanions = Effect.fnUntraced(function* (
+  workspace: string,
+  active: readonly string[],
+  companionPlanks: string[] | undefined,
+) {
+  yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { companionPlanks }));
+  yield* navigateDeck({ workspace, active, companionPlanks });
+});
+
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -34,10 +44,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks }),
-        );
-        yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
+        yield* showCompanions(workspace, deck.active, companionPlanks);
         return;
       }
 
@@ -58,7 +65,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       }));
 
       const companionPlanks = openCompanionPlank(deck.companionPlanks, flatten, plankId);
-      yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
+      yield* showCompanions(workspace, deck.active, companionPlanks);
     }),
   ),
 );

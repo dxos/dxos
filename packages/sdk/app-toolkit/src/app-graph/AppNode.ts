@@ -15,12 +15,12 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
 import * as DeckSpec from './DeckSpec.ts';
 
 //
@@ -86,103 +86,70 @@ export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Se
 export const CAN_DROP_OBJECT = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
-/**
- * Returns true when the object is eligible to live inside a collection:
- * collections are always eligible; other types require {@link CollectionItemAnnotation}.
- */
-export const isCollectionItem = (object: Obj.Unknown): boolean => {
-  if (Obj.instanceOf(Collection.Collection, object)) {
-    return true;
-  }
-  const type = Obj.getType(object);
-  if (!type) {
-    return false;
-  }
-  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
-};
-
-/** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
-export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
-  AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
-
 //
 // Module-level caches.
 //
 
-export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
-export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
+const containerKey = (container: ContainerModel.Container): string =>
+  `${Obj.getURI(container.object)}#${container.property}`;
 
-/** Stable rearrange callback that reorders a Collection's objects array. Keyed by collection URI. */
-export const makeCollectionRearrangeCallback = createFactory(
-  (collection: Collection.Collection) => (nextOrder: unknown[]) => {
-    Obj.update(collection, (collection) => {
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    });
-  },
-  (collection) => Obj.getURI(collection),
+const rearrangeCallback = createFactory(
+  (container: ContainerModel.Container) => (nextOrder: unknown[]) =>
+    ContainerModel.reorder({ container, objects: nextOrder.filter(Obj.isObject) }),
+  containerKey,
 );
 
-//
-// Collection partials.
-//
+const canDropInto = createFactory(
+  (container: ContainerModel.Container) =>
+    (source: TreeData): boolean =>
+      AppGraphNode.isGraphNode(source.item) &&
+      Obj.isObject(source.item.data) &&
+      container.accepts?.(source.item.data) !== false,
+  containerKey,
+);
 
-/** Build collection partials for drag/drop behavior. */
-export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
-  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-  role: 'branch' as const,
-  canDrop: CAN_DROP_COLLECTION_ITEM,
-  onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-    if (!isCollectionItem(child.data)) {
-      return;
-    }
-    Obj.update(collection, (collection) => {
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
-        }
-      }
-    });
-  },
-  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, _destination: AppGraphNode.Node) => {
-    Obj.update(collection, (collection) => {
-      const idx = collection.objects.findIndex((object) => object.target === child.data);
-      if (idx > -1) {
-        collection.objects.splice(idx, 1);
-      }
-    });
-  },
-  // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
-  // onCopy: async (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-  //   const newObject = await cloneObject(child.data, resolve, db);
-  //   db.add(newObject);
-  //   Obj.update(collection, (collection) => {
-  //     if (typeof index !== 'undefined') {
-  //       collection.objects.splice(index, 0, Ref.make(newObject));
-  //     } else {
-  //       collection.objects.push(Ref.make(newObject));
-  //     }
-  //   });
-  // },
-});
+/** Node property: the container an item dropped onto the node joins. */
+const DROP_INTO_PROPERTY = 'dropInto';
 
-export const getCollectionGraphNodePartials = ({
-  db,
-  collection,
-}: {
-  db: Database.Database;
-  collection: Collection.Collection;
-}) => {
-  const id = Obj.getURI(collection);
-  let cached = collectionPartialsCache.get(id);
-  if (!cached) {
-    cached = buildCollectionPartials(collection, db);
-    collectionPartialsCache.set(id, cached);
-  }
-  return cached;
-};
+/** Node property: the container whose members are the node's children. */
+const LIST_OF_PROPERTY = 'listOf';
+
+const getDropInto = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[DROP_INTO_PROPERTY];
+
+export const getListOf = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[LIST_OF_PROPERTY];
+
+/** Partials for a node that items can be dropped onto to join `container`. */
+export const getDropTargetPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    role: 'branch' as const,
+    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+    moveScope: container.moveScope,
+    canDrop: canDropInto(container),
+    isLink: (child: AppGraphNode.Node<Obj.Unknown>, from?: AppGraphNode.Node) =>
+      ContainerModel.wouldLink({ container, object: child.data, from: getListOf(from) }),
+    onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    [DROP_INTO_PROPERTY]: container,
+  }),
+  containerKey,
+);
+
+/** Partials for a node whose children are `container`'s members; it is also a drop target for it. */
+export const getListPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    ...getDropTargetPartials(container, db),
+    onRearrange: rearrangeCallback(container),
+    onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) =>
+      ContainerModel.release({ container, object: child.data, to: getDropInto(destination) }),
+    [LIST_OF_PROPERTY]: container,
+  }),
+  containerKey,
+);
 
 //
 // makeObject.
@@ -198,8 +165,9 @@ export const makeObject = ({
   droppable = true,
   navigable = false,
   deck,
-  onRearrange,
+  dropInto,
   canDrop: canDropOverride,
+  blockInstruction,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.AtomContext;
@@ -216,10 +184,12 @@ export const makeObject = ({
    * {@link AppAnnotation.DeckAnnotation} instead.
    */
   deck?: DeckSpec.DeckSpec;
-  /** Rearrange callback invoked with the next sibling order on drop. */
-  onRearrange?: (nextOrder: unknown[]) => void;
+  /** The container an object dropped onto the row joins. */
+  dropInto?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
+  /** Blocks a drop instruction, for a row whose answer depends on the source. */
+  blockInstruction?: (source: TreeData, instruction: Instruction) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -254,7 +224,7 @@ export const makeObject = ({
   const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ db, collection: object })
+    ? getListPartials(ContainerModel.collection(object), db)
     : graphProps;
 
   const label =
@@ -262,13 +232,6 @@ export const makeObject = ({
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
-
-  const objectUri = Obj.getURI(object);
-  let blockInstruction = blockInstructionCache.get(objectUri);
-  if (!blockInstruction) {
-    blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectUri, blockInstruction);
-  }
 
   const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
@@ -291,9 +254,9 @@ export const makeObject = ({
       selectable,
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
-      onRearrange,
       blockInstruction,
       canDrop,
+      ...(dropInto && droppable ? getDropTargetPartials(dropInto, db) : {}),
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },

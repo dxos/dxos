@@ -76,8 +76,8 @@ is no imperative parent API.
 
 ```ts
 const Doc = Schema.Struct({
-  content: Ref.Ref(Text).pipe(Annotation.SetParent.set(true)),
-  sections: Ref.Array(Ref.Ref(Section).pipe(Annotation.SetParent.set(true))),
+  content: Ref.Ref(Text).pipe(Annotation.SetParent.set()),
+  sections: Ref.Array(Ref.Ref(Section).pipe(Annotation.SetParent.set())),
 }).pipe(Type.makeObject(DXN.make('com.example.type.doc', '0.1.0')));
 ```
 
@@ -169,8 +169,10 @@ const members = await db.query(Filter.childOf(taskSet)).run();
 ```
 
 Reach for the array itself to write membership, and mutate it in place (wholesale reassignment is a
-reactivity anti-pattern — splice instead). The array is also the canonical order, which a query does
-not preserve: sort the results by it when order matters.
+reactivity anti-pattern — splice instead). The array is also the canonical order, and a property
+traversal keeps it: `reference('<prop>')` returns each anchor's targets in array order, anchors in
+natural order. Other membership queries, `childOf` among them, have no array to follow and return
+natural order.
 
 ## Querying
 

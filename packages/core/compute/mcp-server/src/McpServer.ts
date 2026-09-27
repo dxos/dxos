@@ -682,8 +682,8 @@ export const refEnvelope = (id: string): { '/': string } => ({ '/': id });
 export const identity = identityInternal.identity;
 export const icons = iconInternal.icons;
 export const iconResponse = iconInternal.iconResponse;
-export const ICON_LIGHT_PATH = iconInternal.ICON_LIGHT_PATH;
-export const ICON_DARK_PATH = iconInternal.ICON_DARK_PATH;
+export const ICON_PATH = iconInternal.ICON_PATH;
+export const FAVICON_PATH = iconInternal.FAVICON_PATH;
 
 //
 // Registry construction for hosts without one.

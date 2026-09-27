@@ -148,8 +148,8 @@ const fromPersistedChildEvent = (event: {
  * on shutdown. ProcessManager.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, any> {
-  readonly statusAtom: Atom.Writable<ProcessManager.Status>;
+export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
+  readonly statusAtom: Atom.Atom<ProcessManager.Status> = Atom.readable(() => this.#currentStatus);
   readonly parentId: Process.ID | null;
   readonly environment: Process.Environment;
 
@@ -244,8 +244,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    this.statusAtom = Atom.make<ProcessManager.Status>(this.#currentStatus);
-    this.#registry.mount(this.statusAtom);
     log('lifecycle: created', { parentId, key, params });
   }
   snapshotStatus(): ProcessManager.Status {
@@ -278,7 +276,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       },
     };
   }
-  /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
+  /** Run process onSpawn. Called by ProcessManager.Impl after spawn. */
   runOnSpawn(seq?: number): Effect.Effect<void> {
     if (this.#restoring) {
       log('lifecycle: onspawn skipped (restoring)');
@@ -863,7 +861,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
     };
     log('state updated', { pid: this.pid, state });
-    this.#registry.set(this.statusAtom, this.#currentStatus);
+    this.#registry.refresh(this.statusAtom);
     this.#onStatusChanged?.();
     // State is persisted after handlers settle (in #runHandler success pipeline).
   }

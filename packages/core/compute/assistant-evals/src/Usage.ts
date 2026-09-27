@@ -102,10 +102,10 @@ const fromResponse = (
  * with a transformer that records after the one it found.
  */
 export const instrument = (service: AiService.Service, record: (call: Call) => void): AiService.Service => ({
-  metadata: service.metadata,
-  model: (model, options) =>
+  ...service,
+  languageModel: (model, options) =>
     Layer.effectContext(
-      Layer.build(service.model(model, options)).pipe(
+      Layer.build(service.languageModel(model, options)).pipe(
         Effect.map((context) => {
           const inner = Context.getOption(context, Telemetry.CurrentSpanTransformer);
           const transformer: Telemetry.SpanTransformer = (input) => {

@@ -13,6 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 /**
@@ -31,7 +32,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     /** Message feed, owned by the chat so `SetParent` cascades it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), Annotation.FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
@@ -62,6 +63,8 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    Annotation.UserType.set(),
+    ArchivableAnnotation.set(true),
   ),
 ) {}
 

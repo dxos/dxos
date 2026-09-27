@@ -4,11 +4,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
+import { type PublicKey } from '@dxos/keys';
 
 import { SpaceCapabilities } from '#types';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
+  createJoinUrl: (spaceKey: PublicKey) => string;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(

@@ -3,3 +3,4 @@
 //
 
 export * from './load-drawing.ts';
+export * from './score-scene.ts';

@@ -62,6 +62,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 );
 

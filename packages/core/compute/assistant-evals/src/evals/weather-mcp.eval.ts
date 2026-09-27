@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Model } from '@dxos/ai';
-import { McpServer, PlanningSkill } from '@dxos/assistant-toolkit';
+import { PlanningSkill } from '@dxos/assistant-toolkit';
 import { Config } from '@dxos/client';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';

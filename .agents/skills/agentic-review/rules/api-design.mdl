@@ -1,0 +1,470 @@
+---
+id: org.dxos.review.api-design
+name: ApiDesignRules
+version: 0.1.0
+---
+
+Rules mined from a year of human review comments on `dxos/dxos`, clustered and
+counted in `.agents/projects/architecture-rules/dataset/CANDIDATES.md`. Each
+`rule` block below is discovered by the agentic-review harness, matched
+against the files its globs select, and applied by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule prefer-branded-types-over-raw-primitives: Type a domain value with its existing branded type, not a raw string
+  A field, parameter, or interface member that names a domain concept —
+  an id, `DXN`, `EncodedReference`, `AutomergeUrl`, a model-name union —
+  should carry that type, not the bare `string` underneath it. A raw
+  string lets any string in, so the compiler cannot catch a swapped
+  argument or a value from the wrong domain.
+  Flag: a signature typed `string` (or another bare primitive) where a
+  specific branded type already exists in this codebase for that exact
+  concept, and a value widened from its branded type back to `string` or
+  a broader supertype during a refactor.
+  Do not flag: a genuine public-API boundary that intentionally exposes
+  the general/opaque type and narrows only where the caller needs the
+  specific pieces (`Hypergraph.ts` is the canonical exception — name it
+  rather than flag it); a local variable given a generic name because its
+  specific type is already obvious from context.
+  Source: 18 review comments across 11 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9858#discussion_r2378527513.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: importers
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule dont-leak-internal-api-through-public-surface: Keep implementation details out of a package's public entry point
+  A symbol that only the package's own code needs — an internal schema
+  helper, a raw resource handle, an invariant predicate, a
+  backend-selection parameter — must not be exported from the package's
+  public entry point or threaded into a caller-facing signature. Leaking
+  it removes the package's freedom to change that detail later.
+  Flag: an export from a package's root/public module with no caller
+  outside the package, a public wrapper that hands back a raw underlying
+  handle instead of a limited proxy, and an operation-facing parameter
+  that names which backend/mechanism serves the call.
+  Do not flag: a symbol re-exported from an explicit `/internal` subpath
+  (that subpath's contract is "unstable, package-internal"), or a genuine
+  public factory that is the intended entry point.
+  Source: 13 review comments across 10 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9896#discussion_r2394516649.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: public-api, importers
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule comment-hygiene: Comments state settled reasoning, not noise
+  A landed comment carries reasoning the code cannot express on its own —
+  never exploratory musing, a restatement of what the code already says,
+  a stale TODO whose concern this diff already resolves, or decoration.
+  Flag: a comment with "not sure if" or rhetorical-question language, a
+  TODO whose underlying concern the diff resolves, a comment that just
+  repeats a config value's name, a comment naming a migration-phase
+  number instead of describing current behavior, and a `// --- Section
+  ---` style separator.
+  Do not flag: a comment explaining non-obvious rationale — why a version
+  is pinned, why a workaround exists, what an automatic mechanism does
+  *not* guarantee. That is the comment this rule wants kept.
+  Source: 10 review comments across 10 PRs, e.g.
+  https://github.com/dxos/dxos/pull/10016#discussion_r2432238345.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  system-one: on
+  context: diff
+  severity: warn
+```
+
+```mdl
+rule jsdoc-non-obvious-identifiers: Document a parameter, field, or handle whose meaning isn't obvious from its name
+  An id/handle-typed parameter, an opaque handle, or a schema field needs
+  a doc comment saying what it actually refers to when the name and type
+  alone don't say — and an interface member mirroring a documented
+  implementation method must carry that same JSDoc, not go bare.
+  Flag: an id/handle-typed parameter or field with no comment when its
+  concrete referent isn't inferable from name or type alone; an interface
+  declaration whose implementing class has JSDoc that wasn't carried
+  over; a reimplementation of prior logic (e.g. a serialization format)
+  that drops the original's documentation.
+  Do not flag: a field whose name and type together already fully convey
+  its meaning (`readonly id: ObjectId` needs nothing more), or an
+  internal/private field not part of any public contract.
+  Source: 11 review comments across 9 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9896#discussion_r2392070069.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule consistent-field-and-list-ordering: Order struct fields and registered-entry lists by the established convention
+  Fields in a type/interface, props in a component, and entries in a
+  registered list should follow this codebase's established ordering —
+  identifying fields first, callbacks grouped together, order mirroring a
+  canonical sibling API, or alphabetical for a flat registry — not
+  whatever order they were added in.
+  Flag: a struct whose fields scatter relative to an established sibling
+  ordering, a props/type list interleaving callback members with data
+  members, and a new entry appended to an alphabetically-ordered registry
+  (e.g. registered plugins) out of order.
+  Do not flag: an ordering with no established convention to follow, or a
+  struct where every field is equally significant and no canonical
+  sibling exists to mirror.
+  Source: 8 review comments across 7 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9897#discussion_r2411551582.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule options-object-with-defaults: A config parameter is a defaulted options object, not required positional args
+  A function taking configuration should accept one options object with
+  optional fields and sensible defaults, so no caller is forced to write
+  `fn({})`; a range should be a `{begin, end}`-shaped object rather than
+  one-sided, since it will likely need the other bound later; and a
+  public interface's option type should be defined locally, not imported
+  straight from the wire/protocol layer.
+  Flag: an options parameter with no default that forces every caller to
+  pass `{}`, a one-sided parameter (`until: n`) on a function likely to
+  need the opposite bound too, and a public interface importing a type
+  straight from the wire/protocol layer.
+  Do not flag: a function with only one meaningful parameter, where an
+  options object would just add indirection.
+  Source: 5 review comments across 5 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9886#discussion_r2380131044.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: importers
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule name-for-general-behavior: Name for what a function or concept actually does, not its first narrow case
+  Once a helper, component, or concept is reused beyond the context it
+  was first written in — or its real behavior turns out to differ from
+  what its name implies — the name should describe its actual, general
+  purpose, not the original caller's situation or an adjacent-but-
+  different concept.
+  Flag: a general-purpose helper still named after its first caller's
+  situation, a function or property whose name suggests a related but
+  different behavior than what it actually does, and a documented concept
+  whose name fits only its most common use case.
+  Do not flag: a name that is intentionally narrow because the function
+  genuinely is single-purpose and unlikely to widen.
+  Source: 5 review comments across 4 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9957#discussion_r2412494077.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: importers
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule co-locate-tightly-coupled-code: Keep a component's Props, its private hook, and its story beside it
+  A component's Props type, a context provider/hook that only that
+  component uses, and its own storybook story belong in the same file or
+  directory as the component — not split into a separate shared file or
+  a loose top-level location a reader has to go hunting for.
+  Flag: a Props type defined in a separate shared types file when only
+  one component uses it, a context root and its tightly-coupled
+  provider/hook split across files, and a component placed as a loose
+  file rather than in its own directory alongside its story.
+  Do not flag: a type or hook genuinely shared across multiple unrelated
+  components — that one does belong in a shared location.
+  Source: 4 review comments across 4 PRs, e.g.
+  https://github.com/dxos/dxos/pull/10595#discussion_r2834162361.
+  scope: repo
+  files:
+    - packages/**/src/**/*.tsx
+    - packages/**/src/**/*.ts
+  unit: file
+  context: siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule consistent-file-naming-within-folder: Keep filenames within one folder to a single convention
+  Test files use lowercase kebab-case, a storybook's default render
+  component is named `DefaultStory`, and every file within one folder
+  follows the same naming pattern (e.g. all verb-first) rather than
+  mixing conventions the next reader has to reverse-engineer.
+  Flag: a capitalized test filename, a storybook default export not
+  named `DefaultStory`, and a folder mixing naming patterns across
+  sibling files.
+  Do not flag: a filename convention genuinely established as an
+  exception elsewhere in the same package.
+  Source: 3 review comments across 3 PRs, e.g.
+  https://github.com/dxos/dxos/pull/10400#discussion_r2730264252.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule no-precision-loss-on-generic-refactor: A refactor must not widen a typed API's precision
+  A refactor must preserve or restore an API's original type precision —
+  its generic constraints, return type, and parameter types — rather than
+  settling for `any`, a broader supertype, a dropped generic parameter,
+  or a union of overlapping representations because it was easier to get
+  the refactor to compile.
+  Flag: a generic bound or return type wider or vaguer than the
+  pre-refactor version with no stated reason, and a parameter signature
+  that now accepts a union of two representations of the same concept
+  instead of one canonical shape.
+  Do not flag: a deliberate, stated widening that is the actual point of
+  the change (genuinely generalizing an API to a new use case).
+  Source: 13 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/11458#discussion_r3305786817.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: diff
+  system-one: on
+  question: Does this file's diff widen or blur the precision of a typed API — its generics, return type, or parameters — with no stated reason?
+  severity: warn
+```
+
+```mdl
+rule namespace-brand-key-prefixing: Namespace a brand or annotation key string with its owning module's path
+  A string key used as a type-branding or annotation identifier must be
+  namespaced with its owning package/module path (e.g.
+  `~@dxos/schema/annotation/X`), or it can silently collide with a
+  similarly-named key defined elsewhere in the codebase.
+  Flag: a bare, unqualified brand/annotation key string with no
+  module-path prefix.
+  Do not flag: a key already scoped by construction, e.g. generated from
+  a `Symbol`, which is inherently collision-free.
+  Source: 3 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/12143#discussion_r3552629282.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule event-handler-naming-convention: Name callback props with the established on/handle + Noun + Verb pattern
+  Callback props follow this codebase's `on{Noun}{Event}` /
+  `handle{Noun}{Verb}` convention, matching the Radix-derived pattern
+  already in use, so a reader can tell a handler from its name alone
+  without opening the component.
+  Flag: a callback prop or handler function named outside the
+  on/handle-NounVerb pattern.
+  Do not flag: a non-callback prop, or a handler already conventional
+  even if it reads slightly differently (an established exception already
+  in wide use).
+  Source: 3 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/9918#discussion_r2400874804.
+  scope: repo
+  files:
+    - packages/**/src/**/*.tsx
+    - packages/**/src/**/*.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule keep-parallel-apis-structurally-aligned: Give parallel modules and methods the same signature shape
+  When two parallel modules expose equivalent operations (e.g. `Obj` and
+  `Relation`), or two analogous methods return the same kind of result,
+  they should share the same function name, parameter naming, and return
+  shape, so a caller can treat them uniformly instead of relearning a
+  slightly different contract for each.
+  Flag: a sibling module's equivalent method with a differently-named
+  parameter or a differently-shaped return type than its counterpart.
+  Do not flag: a genuine, documented difference in behavior between the
+  two that justifies a different signature.
+  Source: 2 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/11458#discussion_r3313674902.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: similar
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule barrel-imports-not-internal-paths: Import from a directory's barrel, not a file inside it
+  A consumer should import a symbol from the package or directory's
+  barrel (`index.ts`), not by reaching past it into one of its individual
+  files — reaching in couples the caller to internal layout that the
+  barrel exists to hide.
+  Flag: an import path that reaches past a directory's barrel into one of
+  its individual files.
+  Do not flag: an import from inside the same package/directory the file
+  being edited belongs to (internal relative imports are expected), or a
+  deliberate deep import documented as the package's own convention.
+  Source: 2 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/10719#discussion_r2923806591.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  system-one: on
+  context: imports
+  severity: warn
+```
+
+```mdl
+rule consistent-private-field-convention: Use one privacy convention per class
+  A class should not mix true ES `#private` fields with TypeScript
+  `private`/underscore-prefixed fields for the same kind of member — pick
+  one convention and hold it for the whole class, so a reader isn't left
+  guessing why two fields that look equally private are spelled
+  differently.
+  Flag: a class with both `#field` and `_field`/`private field` members
+  serving the same role.
+  Do not flag: a class that consistently uses `_field` throughout
+  (CLAUDE.md allows keeping `_private` as-is; the flag is inconsistency,
+  not the underscore convention itself).
+  Source: 2 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/11308#discussion_r3247596264.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule setter-must-not-own-transaction: A low-level setter must not open its own batched-update transaction
+  A property-setting helper must mutate an already-open draft/update
+  directly and must not itself call the object's batched-update primitive
+  (`update()`) — doing so prevents a caller from batching several field
+  writes into one transaction, forcing one transaction per field instead.
+  Flag: a setter function whose body opens and closes its own
+  update/transaction wrapper internally.
+  Do not flag: the top-level public update/transaction entrypoint itself,
+  whose whole job is to open that wrapper.
+  Source: 2 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/11658#discussion_r3344564064.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: importers
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule deprecated-tag-must-be-accurate: `@deprecated` needs a named replacement; a transitional API needs the tag
+  `@deprecated` should mark an API only when a concrete migration path
+  exists — a TODO is more honest when no replacement exists yet — and
+  conversely, an API deliberately kept around during a migration window
+  should be tagged `@deprecated` so it isn't mistaken for a first-class
+  API by the next caller.
+  Flag: an `@deprecated` tag with no named replacement, and a knowingly-
+  transitional API left undocumented instead of tagged.
+  Do not flag: an `@deprecated` tag that does name its replacement.
+  Source: 2 review comments across 2 PRs, e.g.
+  https://github.com/dxos/dxos/pull/10243#discussion_r2572134040.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: diff
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule no-env-vars-in-low-level-modules: A low-level module reads its config from constructor params, never the environment
+  Configuration derived from the environment must be resolved once at a
+  higher layer and threaded down through explicit constructor parameters.
+  A low-level component that reads an env var inline becomes untestable
+  in isolation and hides where its configuration actually comes from.
+  Flag: an environment-variable read (`process.env` or similar) inside a
+  low-level class or module that is otherwise constructed with explicit
+  parameters.
+  Do not flag: the single top-level bootstrap/config-loading module whose
+  job is precisely to read the environment once.
+  Source: 2 review comments across 1 PR, e.g.
+  https://github.com/dxos/dxos/pull/13288#discussion_r4079310094. Kept
+  despite one PR: the principle is sharp and broadly generalizable.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: process\.env
+  unit: file
+  context: package
+  system-one: on
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

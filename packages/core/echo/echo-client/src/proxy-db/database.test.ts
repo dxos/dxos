@@ -709,6 +709,58 @@ describe('Database', () => {
     });
   });
 
+  test('a parent atom follows the parent edge', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const task = db.add(Obj.make(TestSchema.Task, { title: 'x' }));
+    const first = db.add(Obj.make(TestSchema.Person, { name: 'first', tasks: [Ref.make(task)] }));
+    const second = db.add(Obj.make(TestSchema.Person, { name: 'second', tasks: [Ref.make(task)] }));
+    Obj.setParent(task, first);
+    await db.flush();
+
+    const registry = AtomRegistry.make();
+    const atom = Obj.parentAtom(task);
+    registry.subscribe(atom, () => {});
+    expect(registry.get(atom)?.id).toBe(first.id);
+
+    Obj.setParent(task, second);
+    await expect.poll(() => registry.get(atom)?.id).toBe(second.id);
+  });
+
+  test('a property traversal returns targets in array order', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+    // Reversed against creation, so the array order cannot coincide with id order.
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.toReversed().map(Ref.make) }));
+    await db.flush();
+
+    const results = await db.query(Query.select(Filter.entity(person)).reference('tasks')).run();
+    expect(results.map((task) => task.title)).toEqual(['three', 'two', 'one']);
+  });
+
+  test('a property traversal follows the array as it is reordered and extended', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.map(Ref.make) }));
+    await db.flush();
+
+    const registry = AtomRegistry.make();
+    const atom = db.query(Query.select(Filter.entity(person)).reference('tasks')).atom;
+    registry.subscribe(atom, () => {});
+    const titles = () => registry.get(atom).map((task) => task.title);
+    await expect.poll(titles).toEqual(['one', 'two', 'three']);
+
+    Obj.update(person, (person) => {
+      person.tasks = [person.tasks![2], person.tasks![0], person.tasks![1]];
+    });
+    await expect.poll(titles).toEqual(['three', 'one', 'two']);
+
+    const four = db.add(Obj.make(TestSchema.Task, { title: 'four' }));
+    Obj.update(person, (person) => {
+      person.tasks!.push(Ref.make(four));
+    });
+    await expect.poll(titles).toEqual(['three', 'one', 'two', 'four']);
+  });
+
   describe('loading deleted targets', () => {
     // Refs read back off the holder carry no inlined target, so these exercise the resolver.
     const setup = async () => {

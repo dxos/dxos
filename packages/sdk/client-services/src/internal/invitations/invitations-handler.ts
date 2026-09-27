@@ -1,0 +1,650 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { create } from '@bufbuild/protobuf';
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+
+import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
+import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
+import { type Context, ContextDisposedError } from '@dxos/context';
+import { createKeyPair, sign } from '@dxos/crypto';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import {
+  type SwarmConnection,
+  type SwarmNetworkManager,
+  SwarmNetworkManagerService,
+  createTeleportProtocolFactory,
+} from '@dxos/network-manager';
+import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
+import { buf, fromPublicKey, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  type AdmissionKeypair,
+  AdmissionKeypairSchema,
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  AuthenticationRequestSchema,
+  AuthenticationResponse_Status,
+  type IntroductionResponse,
+  InvitationOptions_Role,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
+import { trace as _trace } from '@dxos/tracing';
+import { ComplexSet } from '@dxos/util';
+
+import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler.ts';
+import { InvitationGuestExtension } from './invitation-guest-extenstion.ts';
+import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension.ts';
+import { createGuardedInvitationState, getInvitationOutcome } from './invitation-state.ts';
+import { InvitationTopology } from './invitation-topology.ts';
+
+const metrics = _trace.metrics;
+
+const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
+
+export type InvitationConnectionProps = {
+  teleport: Partial<TeleportProps>;
+  edgeInvitations?: EdgeInvitationConfig;
+};
+
+/**
+ * Generic handler for Halo and Space invitations.
+ * Handles the life-cycle of invitations between peers.
+ *
+ * Host
+ * - Creates an invitation containing a swarm topic (which can be shared via a URL, QR code, or direct message).
+ * - Joins the swarm with the topic and waits for guest's introduction.
+ * - Wait for guest to authenticate with challenge specified in the invitation.
+ * - Waits for guest to present credentials (containing local device and feed keys).
+ * - Writes credentials to control feed then exits or waits for more guests (multi use invitations).
+ *
+ * Guest
+ * - Joins the swarm with the topic.
+ * - Sends an introduction.
+ * - Submits the challenge.
+ * - If Space handler then creates a local cloned space (with genesis block).
+ * - Sends admission credentials.
+ *  ```
+ *  [Guest]                                          [Host]
+ *   |------------------------------------Introduce-->|
+ *   |-------------------------------[Authenticate]-->|
+ *   |----------------------------------------Admit-->|
+ *  ```
+ *
+ *  TODO: consider refactoring using xstate making the logic separation more explicit:
+ *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
+ *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
+ */
+/**
+ * Effect service tag for {@link InvitationsHandler}.
+ */
+export class InvitationsHandlerService extends EffectContext.Service<InvitationsHandlerService, InvitationsHandler>()(
+  '@dxos/client-services/InvitationsHandler',
+) {}
+
+export class InvitationsHandler {
+  /**
+   * @internal
+   */
+  constructor(
+    private readonly _networkManager: SwarmNetworkManager,
+    private readonly _edgeClient?: EdgeHttpClient,
+    private readonly _connectionProps?: InvitationConnectionProps,
+  ) {}
+
+  handleInvitationFlow(
+    ctx: Context,
+    stream: PushStream<Invitation>,
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+  ): void {
+    log.verbose('dxos.sdk.invitations-handler.handleInvitationFlow', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
+    metrics.increment('dxos.invitation.host', 1, { tags: { role: 'host', method: 'swarm' } });
+
+    const hostSpanId = `invitation-host-${invitation.invitationId}`;
+    // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream (the caller's ctx owns `stream.complete()` via onDispose).
+    // Do NOT await `invitationCtx.dispose()` here: `derive()` registers a parent -> child
+    // dispose hook, so awaiting the parent dispose would re-enter the still-pending child
+    // dispose promise and deadlock.
+    const invitationCtx = ctx;
+    ctx =
+      _trace.spanStart({
+        id: hostSpanId,
+        instance: this,
+        methodName: 'handleInvitationFlow',
+        parentCtx: ctx,
+        op: 'invitation.host',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+        },
+      }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
+    ctx.onDispose(() => _trace.spanEnd(hostSpanId));
+    const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    const topology = new InvitationTopology(InvitationOptions_Role.HOST);
+    // Called for every connecting peer.
+    const createExtension = (remotePeerId: PublicKey): InvitationHostExtension => {
+      const extension = new InvitationHostExtension(guardedState.mutex, {
+        get activeInvitation() {
+          return ctx.disposed ? null : guardedState.current;
+        },
+
+        onStateUpdate: (newState: Invitation_State): Invitation => {
+          if (newState !== Invitation_State.ERROR && newState !== Invitation_State.TIMEOUT) {
+            guardedState.set(extension, newState);
+          }
+          return guardedState.current;
+        },
+
+        admit: async (admissionRequest) => {
+          try {
+            log.verbose('dxos.sdk.invitations-handler.host.admit', {
+              invitationId: invitation.invitationId,
+              ...protocol.toJSON(),
+            });
+            const deviceKey = admissionRequest.kind.value?.deviceKey;
+            invariant(deviceKey, 'Admission request carries no device key.');
+            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
+
+            // Updating credentials complete.
+            extension.completedTrigger.wake(requirePublicKey(deviceKey));
+
+            return admissionResponse;
+          } catch (err: any) {
+            // TODO(burdon): Generic RPC callback to report error to client.
+            guardedState.error(extension, err);
+            throw err; // Propagate error to guest.
+          }
+        },
+
+        onOpen: (connectionCtx: Context, extensionsCtx: ExtensionContext) => {
+          let admitted = false;
+          connectionCtx.onDispose(() => {
+            if (!admitted) {
+              guardedState.set(extension, Invitation_State.CONNECTING);
+            }
+          });
+
+          scheduleTask(connectionCtx, async () => {
+            try {
+              log('opening host invitation handler');
+              log.verbose('connected', { ...protocol.toJSON() });
+              const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
+              log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
+              guardedState.set(extension, Invitation_State.SUCCESS);
+              metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
+              log('host invitation handler opened');
+              admitted = true;
+              topology.retire(remotePeerId);
+
+              if (!invitation.multiUse) {
+                await ctx.dispose();
+              }
+            } catch (err: any) {
+              const stateChanged = guardedState.set(extension, Invitation_State.CONNECTING);
+              if (err instanceof TimeoutError) {
+                if (stateChanged) {
+                  metrics.increment('dxos.invitation.timeout', 1, { tags: { role: 'host', method: 'swarm' } });
+                  log.verbose('timeout', { ...protocol.toJSON() });
+                }
+              } else {
+                if (stateChanged) {
+                  metrics.increment('dxos.invitation.failed', 1, { tags: { role: 'host', method: 'swarm' } });
+                  log.error('failed', err);
+                }
+              }
+              // Close connection
+              extensionsCtx.close(err);
+            }
+          });
+        },
+        onError: (err) => {
+          const stateChanged = guardedState.set(extension, Invitation_State.CONNECTING);
+          if (err instanceof InvalidInvitationExtensionRoleError) {
+            log('invalid role', { ...err.context });
+            topology.retire(remotePeerId);
+            return;
+          }
+          if (err instanceof TimeoutError) {
+            if (stateChanged) {
+              metrics.increment('dxos.invitation.timeout', 1, { tags: { role: 'host', method: 'swarm' } });
+              log.verbose('timeout', { err });
+            }
+          } else {
+            if (stateChanged) {
+              metrics.increment('dxos.invitation.failed', 1, { tags: { role: 'host', method: 'swarm' } });
+              log.error('failed', err);
+            }
+          }
+        },
+      });
+
+      return extension;
+    };
+
+    const expiresOn = getExpirationTime(invitation);
+    if (expiresOn) {
+      if (expiresOn.getTime() < Date.now()) {
+        log.warn('invitation has already expired');
+        guardedState.set(null, Invitation_State.EXPIRED);
+        void ctx.dispose().catch((err) => log.catch(err));
+        return;
+      }
+      scheduleTask(
+        ctx,
+        async () => {
+          // ensure the swarm is closed before changing state and closing the stream.
+          await swarmConnection.close(ctx);
+          guardedState.set(null, Invitation_State.EXPIRED);
+          metrics.increment('dxos.invitation.expired', 1, { tags: { role: 'host', method: 'swarm' } });
+          await ctx.dispose();
+        },
+        expiresOn.getTime() - Date.now(),
+      );
+    }
+
+    let swarmConnection: SwarmConnection;
+    scheduleTask(ctx, async () => {
+      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions_Role.HOST, topology, createExtension);
+      guardedState.set(null, Invitation_State.CONNECTING);
+    });
+  }
+
+  acceptInvitation(
+    ctx: Context,
+    stream: PushStream<Invitation>,
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+    otpEnteredTrigger: Trigger<string>,
+    deviceProfile?: DeviceProfileDocument,
+  ): void {
+    log.verbose('dxos.sdk.invitations-handler.acceptInvitation', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
+    const { timeout = INVITATION_TIMEOUT } = invitation;
+
+    // The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334)
+    // queries this span's name and attributes: update it when changing them.
+    const guestSpanId = `invitation-guest-${invitation.invitationId}`;
+    // Reassign ctx to the child context returned by spanStart so downstream calls
+    // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
+    // parent rather than starting a new root trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream. See note in `handleInvitationFlow`: must not await the parent
+    // dispose here (`derive()` registers a parent -> child dispose hook, so awaiting would
+    // re-enter the still-pending child dispose promise and deadlock).
+    const invitationCtx = ctx;
+    ctx =
+      _trace.spanStart({
+        id: guestSpanId,
+        instance: this,
+        methodName: 'acceptInvitation',
+        parentCtx: ctx,
+        op: 'invitation.guest',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+          'ctx.dxos.invitation.type': Invitation_Type[invitation.type],
+          ...(invitation.spaceId ? { 'ctx.spaceId': invitation.spaceId } : {}),
+        },
+      }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
+
+    if (deviceProfile) {
+      invariant(invitation.kind === Invitation_Kind.DEVICE, 'deviceProfile provided for non-device invitation');
+    }
+
+    const triedPeersIds = new ComplexSet(PublicKey.hash);
+    const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    // A delegated invitation races EDGE against member devices, so its type cannot say which one admitted the guest.
+    let admittedBy: 'edge' | 'peer' | undefined;
+    ctx.onDispose(() =>
+      _trace.spanEnd(guestSpanId, {
+        attributes: {
+          outcome: getInvitationOutcome(guardedState.current.state),
+          ...(admittedBy ? { 'dxos.invitation.admittedBy': admittedBy } : {}),
+        },
+      }),
+    );
+
+    const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
+      const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
+      log('should cancel invitation flow', {
+        isLockedByAnotherConnection,
+        invitationType: Invitation_Type.DELEGATED,
+        triedPeers: triedPeersIds.size,
+      });
+      if (isLockedByAnotherConnection) {
+        return false;
+      }
+      // A delegated invitation may be retried against other hosts, so it is disposed only on timeout
+      // or once the retry budget is spent.
+      return invitation.type !== Invitation_Type.DELEGATED || triedPeersIds.size >= MAX_DELEGATED_INVITATION_HOST_TRIES;
+    };
+
+    let admitted = false;
+    const createExtension = (): InvitationGuestExtension => {
+      const extension = new InvitationGuestExtension(guardedState.mutex, {
+        onStateUpdate: (newState: Invitation_State) => {
+          guardedState.set(extension, newState);
+        },
+        onOpen: (connectionCtx: Context, extensionCtx: ExtensionContext) => {
+          triedPeersIds.add(extensionCtx.remotePeerId);
+
+          if (admitted) {
+            extensionCtx.close();
+            return;
+          }
+
+          connectionCtx.onDispose(async () => {
+            log.verbose('extension disposed', { admitted, currentState: guardedState.current.state });
+            if (!admitted) {
+              guardedState.error(extension, new ContextDisposedError());
+              if (shouldCancelInvitationFlow(extension)) {
+                await ctx.dispose();
+              }
+            }
+          });
+
+          scheduleTask(connectionCtx, async () => {
+            try {
+              log('opening guest invitation handler');
+
+              scheduleTask(
+                connectionCtx,
+                () => {
+                  guardedState.set(extension, Invitation_State.TIMEOUT);
+                  extensionCtx.close();
+                },
+                timeout,
+              );
+
+              log.verbose('dxos.sdk.invitations-handler.guest.connected', { ...protocol.toJSON() });
+              guardedState.set(extension, Invitation_State.CONNECTED);
+
+              // 1. Introduce guest to host.
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
+              const introductionResponse = await extension.rpc.InvitationHostService.introduce({
+                invitationId: invitation.invitationId,
+                ...protocol.createIntroduction(),
+              });
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce-response', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+                authMethod: introductionResponse.authMethod,
+              });
+              invitation.authMethod = introductionResponse.authMethod;
+
+              // 2. Get authentication code.
+              if (isAuthenticationRequired(invitation)) {
+                switch (invitation.authMethod) {
+                  case Invitation_AuthMethod.SHARED_SECRET:
+                    await this._handleGuestOtpAuth(
+                      extension,
+                      (state) => guardedState.set(extension, state),
+                      otpEnteredTrigger,
+                      { timeout },
+                    );
+                    break;
+                  case Invitation_AuthMethod.KNOWN_PUBLIC_KEY:
+                    await this._handleGuestKpkAuth(
+                      extension,
+                      (state) => guardedState.set(extension, state),
+                      invitation,
+                      introductionResponse,
+                    );
+                    break;
+                }
+              }
+
+              // 3. Send admission credentials to host (with local space keys).
+              log.verbose('dxos.sdk.invitations-handler.guest.request-admission', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
+              const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
+              const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
+
+              // Remote connection no longer needed.
+              admitted = true;
+
+              // 4. Record credential in our HALO.
+              const result = await protocol.accept(ctx, admissionResponse, admissionRequest);
+
+              // 5. Success.
+              log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
+              metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
+              admittedBy = 'peer';
+              guardedState.complete({
+                ...guardedState.current,
+                ...result,
+                state: Invitation_State.SUCCESS,
+              });
+              log('guest invitation handler opened');
+            } catch (err: any) {
+              if (err instanceof TimeoutError) {
+                log.verbose('timeout', { ...protocol.toJSON() });
+                guardedState.set(extension, Invitation_State.TIMEOUT);
+              } else {
+                log.verbose('auth failed', err);
+                guardedState.error(extension, err);
+              }
+              extensionCtx.close(err);
+            }
+          });
+        },
+        onError: (err) => {
+          if (err instanceof InvalidInvitationExtensionRoleError) {
+            return;
+          }
+          if (err instanceof TimeoutError) {
+            log.verbose('timeout', { ...protocol.toJSON() });
+            guardedState.set(extension, Invitation_State.TIMEOUT);
+          } else {
+            log.verbose('auth failed', err);
+            guardedState.error(extension, err);
+          }
+        },
+      });
+
+      return extension;
+    };
+
+    const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
+      onInvitationSuccess: async (edgeCtx, admissionResponse, admissionRequest) => {
+        const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
+        log.info('admitted by edge', { ...protocol.toJSON() });
+        metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
+        admittedBy = 'edge';
+        guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
+      },
+    });
+    edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
+
+    scheduleTask(ctx, async () => {
+      const error = checkInvitation(protocol, invitation);
+      if (error) {
+        stream.error(error);
+        await ctx.dispose();
+      } else {
+        invariant(invitation.swarmKey);
+
+        const timeoutInactive = () => {
+          if (guardedState.mutex.isLocked()) {
+            scheduleTask(ctx, timeoutInactive, timeout);
+          } else {
+            guardedState.set(null, Invitation_State.TIMEOUT);
+          }
+        };
+
+        // Timeout if no connection is established.
+        scheduleTask(ctx, timeoutInactive, timeout);
+
+        await this._joinSwarm(
+          ctx,
+          invitation,
+          InvitationOptions_Role.GUEST,
+          new InvitationTopology(InvitationOptions_Role.GUEST),
+          createExtension,
+        );
+        guardedState.set(null, Invitation_State.CONNECTING);
+      }
+    });
+  }
+
+  private async _joinSwarm(
+    ctx: Context,
+    invitation: Invitation,
+    role: InvitationOptions_Role,
+    topology: InvitationTopology,
+    extensionFactory: (remotePeerId: PublicKey) => TeleportExtension,
+  ): Promise<SwarmConnection> {
+    let label: string;
+    if (role === InvitationOptions_Role.GUEST) {
+      label = 'invitation guest';
+    } else if (invitation.kind === Invitation_Kind.DEVICE) {
+      label = 'invitation host for device';
+    } else {
+      label = `invitation host for space ${toPublicKey(invitation.spaceKey)?.truncate()}`;
+    }
+    const swarmKey = toPublicKey(invitation.swarmKey);
+    invariant(swarmKey, 'swarmKey missing in the invitation');
+    const swarmConnection = await this._networkManager.joinSwarm(ctx, {
+      topic: swarmKey,
+      protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+        teleport.addExtension('dxos.halo.invitations', extensionFactory(teleport.remotePeerId));
+      }, this._connectionProps?.teleport),
+      topology,
+      label,
+    });
+    ctx.onDispose(() => swarmConnection.close(ctx));
+    return swarmConnection;
+  }
+
+  private async _handleGuestOtpAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Invitation_State) => void,
+    authenticated: Trigger<string>,
+    options: { timeout: number },
+  ): Promise<void> {
+    for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+      log('guest waiting for authentication code...');
+      setState(Invitation_State.READY_FOR_AUTHENTICATION);
+      const authCode = await authenticated.wait(options);
+
+      log('sending authentication request');
+      setState(Invitation_State.AUTHENTICATING);
+      const response = await extension.rpc.InvitationHostService.authenticate(
+        create(AuthenticationRequestSchema, { authCode }),
+      );
+      if (response.status === undefined || response.status === AuthenticationResponse_Status.OK) {
+        break;
+      }
+
+      if (response.status === AuthenticationResponse_Status.INVALID_OTP) {
+        if (attempt === MAX_OTP_ATTEMPTS) {
+          throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+        } else {
+          log('retrying invalid code', { attempt });
+          authenticated.reset();
+        }
+      }
+    }
+  }
+
+  private async _handleGuestKpkAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Invitation_State) => void,
+    invitation: Invitation,
+    introductionResponse: IntroductionResponse,
+  ): Promise<void> {
+    const guestPrivateKey = invitation.guestKeypair?.privateKey?.data;
+    if (guestPrivateKey == null) {
+      throw new Error('keypair missing in the invitation');
+    }
+    if (introductionResponse.challenge == null) {
+      throw new Error('challenge missing in the introduction');
+    }
+    log('sending authentication request');
+    const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(guestPrivateKey));
+    const response = await extension.rpc.InvitationHostService.authenticate(
+      create(AuthenticationRequestSchema, { signedChallenge: signature }),
+    );
+    if (response.status !== AuthenticationResponse_Status.OK) {
+      throw new Error(`Authentication failed with code: ${response.status}`);
+    }
+  }
+}
+
+const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
+  const expiresOn = getExpirationTime(invitation);
+  if (expiresOn && expiresOn.getTime() < Date.now()) {
+    return new InvalidInvitationError({ message: 'Invitation already expired.' });
+  }
+  return protocol.checkInvitation(invitation);
+};
+
+export const createAdmissionKeypair = (): AdmissionKeypair => {
+  const keypair = createKeyPair();
+  return buf.create(AdmissionKeypairSchema, {
+    publicKey: fromPublicKey(PublicKey.from(keypair.publicKey)),
+    privateKey: { data: new Uint8Array(keypair.secretKey) },
+  });
+};
+
+export type InvitationsHandlerLayerOptions = {
+  connectionProps?: InvitationConnectionProps;
+};
+
+/**
+ * Effect Layer constructing an {@link InvitationsHandler}.
+ */
+export const InvitationsHandlerLayer = (
+  options: InvitationsHandlerLayerOptions = {},
+): Layer.Layer<InvitationsHandlerService, never, SwarmNetworkManagerService> =>
+  Layer.effect(
+    InvitationsHandlerService,
+    Effect.gen(function* () {
+      const networkManager = yield* SwarmNetworkManagerService;
+      const edgeClient = yield* Effect.serviceOption(EdgeHttpClientService);
+      return new InvitationsHandler(networkManager, Option.getOrUndefined(edgeClient), options.connectionProps);
+    }),
+  );

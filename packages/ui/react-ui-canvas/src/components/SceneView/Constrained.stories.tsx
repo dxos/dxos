@@ -3,13 +3,11 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
@@ -50,17 +48,6 @@ const INITIAL: ConstrainedModel = {
   ],
 };
 
-const RegistryWrapper = ({ children }: { children: ReactNode }) => {
-  const [registry] = useState(() => Registry.make());
-  return <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>;
-};
-
-const withRegistry: Decorator = (Story) => (
-  <RegistryWrapper>
-    <Story />
-  </RegistryWrapper>
-);
-
 const ConstraintList = ({ model }: { model: Atom.Writable<ConstrainedModel> }) => {
   const value = useAtomValue(model);
   return (
@@ -86,7 +73,13 @@ const DefaultStory = () => {
   const projection = useSceneProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <SceneView store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection} />
+      <SceneView.Root store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+        <SceneView.Canvas />
+        <SceneView.Navigation />
+        <SceneView.Actions />
+        <SceneView.Debug />
+        <SceneView.Palette />
+      </SceneView.Root>
       <ConstraintList model={model} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>

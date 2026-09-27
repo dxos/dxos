@@ -15,7 +15,7 @@ import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
-import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { AtomEx, RuntimeProvider } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
@@ -36,7 +36,7 @@ export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.co
       added: Schema.Array(Ref.Ref(Obj.Unknown)),
       removed: Schema.Array(Ref.Ref(Obj.Unknown)),
     }),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 export type BindingProps = Partial<{
   skills: Ref.Ref<Skill.Skill>[];

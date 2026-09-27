@@ -158,7 +158,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
           ),
         ),

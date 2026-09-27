@@ -16,9 +16,6 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
-      "path": "packages/experimental/ai-typesafe/tsconfig.json"
-    },
-    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -182,6 +179,9 @@
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"

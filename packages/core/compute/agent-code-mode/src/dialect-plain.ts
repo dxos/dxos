@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -76,6 +76,8 @@ export const PlainDialect: Dialect = {
           }),
         ),
 
+      /** A reference to `obj`, which is what a `Ref<typename>` field holds. */
+      ref: (obj: Obj.Unknown) => Ref.make(obj),
       add: (obj: Obj.Unknown) => run(Database.add(obj)),
       remove: (obj: Obj.Unknown) => run(Database.remove(obj)),
       flush: () => run(Database.flush()),
@@ -118,6 +120,9 @@ export const PlainDialect: Dialect = {
     - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
     - \`await flush()\` — waits for pending writes to land; call it before printing a final
       confirmation.
+    - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
+      an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
+      Where an operation's input takes references, pass \`ref(obj)\` too.
 
     ${renderTypes(types)}
 

@@ -269,7 +269,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           if (unknown.length > 0) {
             const prompt = `${CLASSIFY_PROMPT}\n\n${unknown.map(promptEntry).join('\n\n')}`;
             const payload = yield* generateClassification(prompt, strict ?? true).pipe(
-              Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
+              Effect.provide(AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
             );
             for (const result of payload.results) {
               const message = unknown[result.index];

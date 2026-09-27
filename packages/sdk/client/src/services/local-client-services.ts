@@ -18,7 +18,7 @@ import {
   makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type ClientServicesStackOptions, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { ServiceStack } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -75,9 +75,9 @@ export type LocalClientServicesParams = {
   signalManager?: SignalManager;
   connectionLog?: boolean;
   callbacks?: { onReset?: () => Promise<void> };
-  /** See {@link ClientServicesStackOptions.autoConnect}. */
+  /** See {@link ServiceStack.ClientServicesStackOptions.autoConnect}. */
   autoConnect?: boolean;
-  runtimeProps?: ServiceContextRuntimeProps;
+  runtimeProps?: ServiceStack.ServiceContextRuntimeProps;
   createOpfsWorker?: () => Worker;
   /**
    * Path to SQLite database file for persistent indexing in Node/Bun.
@@ -204,7 +204,7 @@ const sqliteLayerFromParams = ({
 };
 
 /**
- * Runs the client services in-process: the stack from {@link layerClientServices} over a SQLite
+ * Runs the client services in-process: the stack from {@link ServiceStack.layerClientServices} over a SQLite
  * layer chosen by config, served to the client without a wire hop.
  */
 export class LocalClientServices implements ClientServicesProvider {
@@ -268,7 +268,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { layerClientServices, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
+    const { ServiceStack, Events: HostEvents, SqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
@@ -280,7 +280,7 @@ export class LocalClientServices implements ClientServicesProvider {
       // before the lifecycle events below run.
       const stackContext = await EffectEx.runPromise(
         Layer.build(
-          layerClientServices({
+          ServiceStack.layerClientServices({
             runtimeProps: this._params.runtimeProps,
             signalManager: this._params.signalManager,
             transportFactory: this._params.transportFactory,
@@ -310,7 +310,7 @@ export class LocalClientServices implements ClientServicesProvider {
         Effect.gen({ self: this }, function* () {
           yield* Hook.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
           yield* Hook.on(HostEvents.WipingStorage, () =>
-            wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
+            SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
           );
           yield* Hook.on(HostEvents.Reset, () =>
             Effect.promise(async () => {

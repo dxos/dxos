@@ -49,6 +49,7 @@ export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos
     Schema.annotate({ title: 'Walkthrough', description: 'A narrated reading of a pull request.' }),
     LabelAnnotation.set(['title', 'commit']),
     Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

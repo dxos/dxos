@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -39,9 +39,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
         }
       }
 
-      // A cross-set parent would flatten the hierarchy here (the parent id is absent from this set,
-      // so the task reads as a root).
-      if (parent && !taskSet.tasks.some((ref) => Task.refEntityId(ref) === parent.id)) {
+      // A parent outside the set would file the task in another set's tree.
+      if (parent && !TaskSet.ensureMember(taskSet, parent)) {
         return yield* Effect.fail(
           new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
         );
@@ -54,11 +53,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
           description,
           priority,
           assignee,
-          parentTask: parent ? Ref.make(parent) : undefined,
           milestone,
         }),
       );
-      TaskSet.addTaskToSet(taskSet, task);
+      TaskSet.addTaskToSet(taskSet, task, { parent });
       yield* Database.flush();
       return { task: task };
     }),

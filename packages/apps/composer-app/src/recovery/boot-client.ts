@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Client } from '@dxos/client';
-import { DevtoolsHostService } from '@dxos/client-services';
+import { Devtools } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { setupConfig } from '../util/index.ts';
 
 let bootedClient: Client | undefined;
@@ -32,7 +32,7 @@ export const bootRecoveryClient = async (): Promise<Client> => {
 
   // This client hosts echo in-page; automerge is slim-resolved and must be initialized before
   // it (see util/automerge-wasm.ts).
-  await initAutomergeWasm();
+  await initEchoHostWasm();
 
   const base = await setupConfig();
   const config = new Config(
@@ -91,7 +91,7 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   const devtoolsHost = await EffectEx.runPromise(
     (bootedClient.services as LocalClientServices).stack
       .getServiceResolver()
-      .resolve(DevtoolsHostService, {})
+      .resolve(Devtools.DevtoolsHostService, {})
       .pipe(Effect.orDie, Effect.scoped),
   );
   return devtoolsHost.exportSqliteDatabase();

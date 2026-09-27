@@ -9,7 +9,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
-import { DataSpaceManagerService } from '@dxos/client-services';
+import { SpacesContract } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
@@ -259,7 +259,7 @@ describe('Spaces', () => {
     await space1.waitUntilReady();
 
     const dataSpaceManager1 = await EffectEx.runPromise(
-      services1.stack.getServiceResolver().resolve(DataSpaceManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+      services1.stack.getServiceResolver().resolve(SpacesContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
     );
     const dataSpace1 = dataSpaceManager1.spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
@@ -719,8 +719,8 @@ describe('Spaces', () => {
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
 
-    const { extractSpaceArchive } = await import('@dxos/client-services');
-    const extracted = await extractSpaceArchive(archive);
+    const { Spaces } = await import('@dxos/client-services');
+    const extracted = await Spaces.extractSpaceArchive(archive);
     expect(Object.keys(extracted.feeds).length).to.be.greaterThan(0);
 
     const feedIds = Object.keys(extracted.feeds);

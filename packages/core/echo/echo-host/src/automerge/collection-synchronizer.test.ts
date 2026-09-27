@@ -4,9 +4,11 @@
 
 import * as A from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
-import { describe, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { SpaceId } from '@dxos/keys';
+import { type StartSpanOptions, TRACE_PROCESSOR, type TracingBackend, trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import {
@@ -17,6 +19,7 @@ import {
   subsetRemoteToLocal,
   withoutEmptyHeads,
 } from './collection-synchronizer.ts';
+import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async ({ expect }) => {
@@ -381,6 +384,276 @@ describe('CollectionSynchronizer', () => {
       }
     });
   });
+
+  // The `syncPeer` span feeds a PostHog dashboard, so when it opens and how it ends is its contract.
+  describe('sync span', () => {
+    const peerId = 'peer1' as PeerId;
+    let savedBackend: TracingBackend;
+    let spans: RecordedSpan[];
+    let spaceId: SpaceId;
+    let collectionId: string;
+
+    beforeEach(() => {
+      savedBackend = TRACE_PROCESSOR.tracingBackend;
+      spans = [];
+      TRACE_PROCESSOR.tracingBackend = createRecordingBackend(spans);
+      // Installing a backend replays the spans earlier tests buffered; only this test's own are under test.
+      spans.length = 0;
+      spaceId = SpaceId.random();
+      collectionId = deriveCollectionIdFromSpaceId(spaceId);
+    });
+
+    afterEach(() => {
+      TRACE_PROCESSOR.tracingBackend = savedBackend;
+    });
+
+    const spansFor = (id: string) => spans.filter((span) => span.options.attributes?.['ctx.collectionId'] === id);
+
+    const openSynchronizer = async () => {
+      const synchronizer = await new CollectionSynchronizer({
+        queryCollectionState: () => {},
+        sendCollectionState: () => {},
+        shouldSyncCollection: () => true,
+      }).open();
+      onTestFinished(async () => {
+        await synchronizer.close();
+      });
+      return synchronizer;
+    };
+
+    test('opens no span for a peer that is already in sync', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      // Connecting is not divergence: only a diff with work outstanding opens a span.
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+      await Promise.resolve();
+
+      expect(spans).toEqual([]);
+    });
+
+    test('stays open until the peer is fully synced, not only until no document differs', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, {
+        documents: { a: TEST_HEADS[0] } as Record<DocumentId, A.Heads>,
+      });
+
+      // `b` is only missing locally, so nothing is `different` yet the peer is not synced.
+      const remote: CollectionState = {
+        documents: { a: TEST_HEADS[0], b: TEST_HEADS[1] } as Record<DocumentId, A.Heads>,
+      };
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(remote));
+      // A stalled peer repeats itself; the span keeps measuring from the first divergence.
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(remote));
+
+      const [span, ...rest] = spansFor(collectionId);
+      expect(rest).toEqual([]);
+      expect(span.options.name).toBe('CollectionSynchronizer.syncPeer');
+      expect(span.options.attributes).toEqual({
+        'ctx.peerId': peerId,
+        'ctx.collectionId': collectionId,
+        'ctx.spaceId': spaceId,
+        'ctx.trigger': 'initial',
+        'ctx.missingOnLocal': 1,
+        'ctx.missingOnRemote': 0,
+        'ctx.different': 0,
+      });
+      expect(span.ended).toBe(false);
+
+      synchronizer.setLocalCollectionState(collectionId, structuredClone(remote));
+      expect(span.ended).toBe(true);
+      expect(span.endAttributes).toEqual({ 'ctx.outcome': 'synced' });
+    });
+
+    test('tags each span with what exposed the divergence', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+
+      // The peer's first state diverges, then the peer catches up.
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+      // A local change diverges, then the peer catches up.
+      synchronizer.setLocalCollectionState(collectionId, STATE_2);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      // The peer changes, then we catch up.
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+
+      expect(
+        spansFor(collectionId).map((span) => [
+          span.options.attributes?.['ctx.trigger'],
+          span.endAttributes?.['ctx.outcome'],
+        ]),
+      ).toEqual([
+        ['initial', 'synced'],
+        ['local', 'synced'],
+        ['remote', 'synced'],
+      ]);
+    });
+
+    test('opens a new span each time the pair diverges again after syncing', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      // An edit to `b` diverges, then the peer catches up.
+      const edited: CollectionState = {
+        documents: { ...STATE_1.documents, b: TEST_HEADS[3] } as Record<DocumentId, A.Heads>,
+      };
+      synchronizer.setLocalCollectionState(collectionId, edited);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(edited));
+      // A new document diverges again, then the peer catches up again.
+      const created: CollectionState = {
+        documents: { ...edited.documents, d: TEST_HEADS[0] } as Record<DocumentId, A.Heads>,
+      };
+      synchronizer.setLocalCollectionState(collectionId, created);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(created));
+
+      expect(
+        spansFor(collectionId).map((span) => ({
+          trigger: span.options.attributes?.['ctx.trigger'],
+          different: span.options.attributes?.['ctx.different'],
+          missingOnRemote: span.options.attributes?.['ctx.missingOnRemote'],
+          outcome: span.endAttributes?.['ctx.outcome'],
+        })),
+      ).toEqual([
+        { trigger: 'local', different: 1, missingOnRemote: 0, outcome: 'synced' },
+        { trigger: 'local', different: 0, missingOnRemote: 1, outcome: 'synced' },
+      ]);
+    });
+
+    test('opens a new span when the pair diverges again after reconnecting', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onConnectionClosed(peerId);
+
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(
+        spansFor(collectionId).map((span) => [
+          span.options.attributes?.['ctx.trigger'],
+          span.endAttributes?.['ctx.outcome'],
+        ]),
+      ).toEqual([
+        ['initial', 'disconnected'],
+        ['initial', 'synced'],
+      ]);
+    });
+
+    test('gives every span a pair opens its own id', async ({ expect }) => {
+      const spanStart = vi.spyOn(trace, 'spanStart');
+      onTestFinished(() => {
+        spanStart.mockRestore();
+      });
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+
+      // Diverges and syncs twice on one connection, then diverges again on a new connection from the same peer.
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+      synchronizer.setLocalCollectionState(collectionId, STATE_2);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      synchronizer.onConnectionClosed(peerId);
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(spansFor(collectionId)).toHaveLength(3);
+      const spanIds = spanStart.mock.calls.map(([params]) => params.id);
+      expect(new Set(spanIds).size).toBe(3);
+    });
+
+    test('compares a state that arrived before registration once the collection registers', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      expect(spans).toEqual([]);
+
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(
+        spansFor(collectionId).map((span) => [
+          span.options.attributes?.['ctx.trigger'],
+          span.endAttributes?.['ctx.outcome'],
+        ]),
+      ).toEqual([['initial', 'synced']]);
+    });
+
+    test('opens no span for a late state from a gone peer or a cleared collection', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      synchronizer.clearLocalCollectionState(collectionId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+
+      const otherCollectionId = deriveCollectionIdFromSpaceId(SpaceId.random());
+      synchronizer.setLocalCollectionState(otherCollectionId, STATE_1);
+      synchronizer.onConnectionClosed(peerId);
+      synchronizer.onRemoteStateReceived(otherCollectionId, peerId, structuredClone(STATE_2));
+
+      expect(spans).toEqual([]);
+    });
+
+    test('ends as disconnected when the peer drops before syncing', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+
+      synchronizer.onConnectionClosed(peerId);
+
+      const [span] = spansFor(collectionId);
+      expect(span.ended).toBe(true);
+      expect(span.endAttributes).toEqual({ 'ctx.outcome': 'disconnected' });
+    });
+
+    test('ends as closed with its collection or synchronizer, and opens none after close', async ({ expect }) => {
+      const otherCollectionId = deriveCollectionIdFromSpaceId(SpaceId.random());
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      for (const id of [collectionId, otherCollectionId]) {
+        synchronizer.setLocalCollectionState(id, STATE_1);
+        synchronizer.onRemoteStateReceived(id, peerId, structuredClone(STATE_2));
+      }
+
+      synchronizer.clearLocalCollectionState(collectionId);
+      expect(spansFor(collectionId).map((span) => span.endAttributes)).toEqual([{ 'ctx.outcome': 'closed' }]);
+      expect(spansFor(otherCollectionId).map((span) => span.ended)).toEqual([false]);
+
+      await synchronizer.close();
+      expect(spansFor(otherCollectionId).map((span) => span.endAttributes)).toEqual([{ 'ctx.outcome': 'closed' }]);
+
+      // A late diverging state after close must not open a span that nothing would end.
+      synchronizer.onRemoteStateReceived(otherCollectionId, peerId, {
+        documents: { a: TEST_HEADS[3] } as Record<DocumentId, A.Heads>,
+      });
+      expect(spansFor(otherCollectionId)).toHaveLength(1);
+    });
+
+    test('keeps the spans of synchronizers that share a peer apart', async ({ expect }) => {
+      const first = await openSynchronizer();
+      const second = await openSynchronizer();
+      for (const synchronizer of [first, second]) {
+        synchronizer.onConnectionOpen(peerId);
+        synchronizer.setLocalCollectionState(collectionId, STATE_1);
+        synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      }
+
+      first.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(spansFor(collectionId).map((span) => span.endAttributes?.['ctx.outcome'])).toEqual(['synced', undefined]);
+    });
+  });
 });
 
 const TEST_HEADS = range(4).map((i) => A.getHeads(A.from({ i: i.toString() })));
@@ -400,3 +673,24 @@ const STATE_2: CollectionState = {
     d: TEST_HEADS[2],
   } as Record<DocumentId, A.Heads>,
 };
+
+type RecordedSpan = {
+  options: StartSpanOptions;
+  ended: boolean;
+  endAttributes?: Record<string, any>;
+};
+
+const createRecordingBackend = (spans: RecordedSpan[]): TracingBackend => ({
+  startSpan: (options) => {
+    const span: RecordedSpan = { options, ended: false };
+    spans.push(span);
+    return {
+      end: () => {
+        span.ended = true;
+      },
+      setAttributes: (attributes) => {
+        span.endAttributes = { ...span.endAttributes, ...attributes };
+      },
+    };
+  },
+});

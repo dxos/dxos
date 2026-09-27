@@ -22,6 +22,7 @@ import { DeckCapabilities } from '#types';
 import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
+  matchOpenEntities,
   plankIdForName,
   pushSubjectsToStack,
   resolveLevelOpen,
@@ -59,39 +60,17 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* withViewTransition(applyWorkspace(workspaceToEnter));
       }
 
-      // Dedup subjects against the active deck using EID identity.
-      // The same object can appear under different graph paths (e.g., via collections vs types).
-      // Resolve each subject's EID and, if it matches an already-open deck item, remap the
-      // subject to the existing deck entry so the already-open check matches by identity.
-      {
-        const deck = yield* DeckCapabilities.getDeck();
-        const active = deck.active;
-        if (active.length > 0 && input.subject.length > 0) {
-          // Build EID → deck item ID map for active items.
-          const deckEidMap = new Map<string, string>();
-          for (const deckId of active) {
-            const eid = GraphPath.tryGetEid(graph, deckId);
-            if (Option.isSome(eid)) {
-              deckEidMap.set(eid.value, deckId);
-            }
-          }
-
-          // Remap subjects whose EID matches an existing deck item.
-          if (deckEidMap.size > 0) {
-            const remapped = input.subject.map((subjectId) => {
-              const eid = GraphPath.tryGetEid(graph, subjectId);
-              if (Option.isSome(eid)) {
-                const existing = deckEidMap.get(eid.value);
-                if (existing && existing !== subjectId) {
-                  return existing;
-                }
-              }
-              return subjectId;
-            });
-            input = { ...input, subject: remapped };
-          }
-        }
-      }
+      // The same object can appear under several graph paths (two collections, or a collection and its
+      // type). A plain navigation moves its open plank onto the path asked for; any other open reuses
+      // the plank where it is rather than opening the object twice.
+      const rehome = (input.disposition ?? 'solo') === 'solo' && !input.modifiers?.shift;
+      const matched = matchOpenEntities({
+        active: (yield* DeckCapabilities.getDeck()).active,
+        subjects: input.subject,
+        entityOf: (id) => Option.getOrUndefined(GraphPath.tryGetEid(graph, id)),
+        rehome,
+      });
+      input = { ...input, subject: matched.subjects };
 
       // Compute the next active deck state and apply it. Dispositions:
       // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
@@ -114,8 +93,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
       let scrolled: string | undefined;
       {
-        const deck = yield* DeckCapabilities.getDeck();
-        previouslyOpenIds = new Set<string>(deck.active);
+        const before = yield* DeckCapabilities.getDeck();
+        previouslyOpenIds = new Set<string>(before.active);
+        // A re-homed plank is the same plank under its new path, not one this open closes.
+        const deck = {
+          ...before,
+          active: matched.active,
+          companionPlanks: before.companionPlanks?.map((id) => matched.moved.get(id) ?? id),
+        };
 
         const disposition = input.disposition ?? 'solo';
         const shift = !!input.modifiers?.shift;

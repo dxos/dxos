@@ -16,8 +16,9 @@ import { Capability, Plugin } from '../../../core/index.ts';
 import { createTestApp } from '../../../testing/harness.ts';
 import { render } from '../../../testing/react.tsx';
 import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
-import { setSurfaceDebug } from './SurfaceDebug.tsx';
+import { getMountedSurfaces, setSurfaceDebug } from './SurfaceDebug.tsx';
 import { surfaceMetrics } from './SurfaceMetrics.ts';
+import { SurfaceProfilerProvider } from './SurfaceProfilerContext.tsx';
 import { type Definition, create, makeFilter } from './types.ts';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
@@ -651,6 +652,30 @@ describe('SurfaceComponent dev metrics', () => {
       expect(metric?.dataUnstable).toBe(false);
     } finally {
       setSurfaceDebug(false);
+    }
+  });
+});
+
+describe('SurfaceComponent mount registry', () => {
+  test('a production build registers surfaces only under a profiler provider', async ({ expect }) => {
+    vi.stubEnv('DEV', false);
+    try {
+      await using harness = await createTestApp({ plugins: [TestPlugin()] });
+
+      const plain = render(harness, <SurfaceComponent type={RoleA} />);
+      await plain.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(false);
+      plain.unmount();
+
+      // The devtools Surfaces card lists this registry; it must be populated in production too.
+      const profiled = render(harness, <SurfaceComponent type={RoleA} />, {
+        reactContexts: [SurfaceProfilerProvider],
+      });
+      await profiled.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(true);
+      profiled.unmount();
+    } finally {
+      vi.unstubAllEnvs();
     }
   });
 });

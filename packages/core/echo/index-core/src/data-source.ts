@@ -8,7 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { type Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 
-import { type IndexerObject } from './indexes/interface.ts';
+import { type DocumentActivity, type IndexerObject } from './indexes/interface.ts';
 
 /**
  * Cursor into indexable data-source.
@@ -46,9 +46,18 @@ export interface IndexDataSource {
   beginPass?(): void;
   endPass?(): void;
 
+  /**
+   * Objects changed since `cursors`, and, when `opts.activity` is set, the changes behind them per
+   * document (the activity index's input). Both are relative to the same cursors, so a source
+   * reporting a change once per cursor advance reports it exactly once. `opts.objects === false`
+   * asks for the activity alone, so an activity-only caller does not pay for object extraction.
+   */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError>;
+    opts?: { limit?: number; activity?: boolean; objects?: boolean },
+  ): Effect.Effect<
+    { objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] },
+    SqlError.SqlError
+  >;
 }

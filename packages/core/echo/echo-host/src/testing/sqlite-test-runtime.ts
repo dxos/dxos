@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
 
-import { SqliteStorageAdapter } from '../automerge/sqlite-storage-adapter.ts';
+import { SqliteStorageAdapter, type SqliteStorageCallbacks } from '../automerge/sqlite-storage-adapter.ts';
 
 export type TestSqliteRuntime = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
@@ -39,10 +39,16 @@ export type TestSqliteStorageAdapter = {
 /**
  * Opens a migrated {@link SqliteStorageAdapter} over a fresh SQLite runtime.
  * `dispose` closes the adapter and tears down the runtime.
+ *
+ * `callbacks` lets a test wait for a write to actually land — `save` no-ops once the adapter is
+ * closed, so sleeping and hoping an auto-save fired first silently drops it.
  */
-export const createTestSqliteStorageAdapter = async (filename = ':memory:'): Promise<TestSqliteStorageAdapter> => {
+export const createTestSqliteStorageAdapter = async (
+  filename = ':memory:',
+  callbacks?: SqliteStorageCallbacks,
+): Promise<TestSqliteStorageAdapter> => {
   const { runtime, dispose } = createTestSqliteRuntime(filename);
-  const adapter = new SqliteStorageAdapter({ runtime });
+  const adapter = new SqliteStorageAdapter({ runtime, callbacks });
   await adapter.open();
   await RuntimeProvider.runPromise(runtime)(adapter.migrate);
   return {

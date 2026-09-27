@@ -25,12 +25,12 @@ const TLDRAW_VARIANT = 'tldraw.com/2';
 const SURFACE_TIMEOUT = 30_000;
 
 /**
- * The automated arm of `app:QA-10`'s `into` and `back` steps. It covers a subset: that the embed's
+ * The automated arm of `app:QA-11`'s `into` and `back` steps. It covers a subset: that the embed's
  * open control reaches the drawing by its database route with the document still open behind it, and
  * that the crumb comes back to a document whose embed is still mounted. What it does not check, and
- * a human run of QA-10 still does: that the canvas renders rather than merely resolving, the crumb
+ * a human run of QA-11 still does: that the canvas renders rather than merely resolving, the crumb
  * trail's labels, comment threads surviving the round trip, reload survival, and typing the URI a
- * character at a time — this writes it in one insertion, so the prefix crash QA-10's `embed` step
+ * character at a time — this writes it in one insertion, so the prefix crash QA-11's `embed` step
  * exists to catch is covered by `parseObjectUri`'s unit test instead.
  */
 test.describe('Embed tests', () => {
@@ -50,7 +50,7 @@ test.describe('Embed tests', () => {
     await host.close();
   });
 
-  test('navigate into an embedded object and back', { tag: ['@QA-10'] }, async () => {
+  test('navigate into an embedded object and back', { tag: ['@QA-11'] }, async () => {
     await host.createSpace();
 
     // Read from the plank rather than the navtree row, whose only handle on an unnamed drawing is a

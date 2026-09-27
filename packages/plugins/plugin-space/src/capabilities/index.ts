@@ -20,7 +20,7 @@ import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers.ts';
-import { makeCreateInvitationUrl } from './helpers.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
 export * from './settings-sync/index.ts';
@@ -40,6 +40,7 @@ export const Dashboard = Capability.lazyModule(
   },
   () => import('./dashboard.ts'),
 );
+export const DefaultParent = AppCapability.defaultParent(() => import('./default-parent.ts'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -67,6 +68,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
+    'org.dxos.role.cardMasonry',
     'org.dxos.role.dialog',
     'org.dxos.role.formInput',
     'org.dxos.role.navbarEnd',
@@ -134,6 +136,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
+    createJoinUrl: makeCreateJoinUrl(options),
   }),
 });
 export const Translations = AppCapability.translations([

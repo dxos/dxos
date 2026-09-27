@@ -3,3 +3,4 @@
 //
 
 export * from './SceneView.tsx';
+export * from './SceneViewContext.ts';

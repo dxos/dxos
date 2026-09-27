@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
-import { makeWorkerRuntime } from '@dxos/client-services';
+import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -54,7 +54,7 @@ export class TestWorkerFactory extends Resource {
       storageLockKey: STORAGE_LOCK_KEY,
       createRuntime: ({ config: configValues, requestShutdown }) =>
         Effect.gen({ self: this }, function* () {
-          const runtime = yield* makeWorkerRuntime({
+          const runtime = yield* WorkerRuntime.makeWorkerRuntime({
             configProvider: Effect.sync(() => this._config ?? new Config(configValues ?? {})),
             requestShutdown: Effect.sync(requestShutdown),
             automaticallyConnectWebrtc: false,

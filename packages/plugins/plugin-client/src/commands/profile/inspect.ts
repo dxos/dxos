@@ -16,11 +16,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
 
-  const { decodeProfileArchive } = yield* Effect.promise(() => import('@dxos/client-services'));
+  const { Storage } = yield* Effect.promise(() => import('@dxos/client-services'));
 
   const data = yield* fs.readFile(file);
 
-  const archive = decodeProfileArchive(data);
+  const archive = Storage.decodeProfileArchive(data);
 
   if (json) {
     yield* Console.log(

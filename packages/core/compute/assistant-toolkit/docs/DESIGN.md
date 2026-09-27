@@ -18,7 +18,7 @@ here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`
 - **`Task.status`**: `todo | started | done | failed | cancelled`. `started` is stamped by the
   runtime at sub-agent spawn — never by an operation — so a started agent task always means a
   live process, and an orphaned `started` is detectable.
-- **`Task.dependsOn`**: execution-ordering refs (orthogonal to `parentTask` hierarchy and
+- **`Task.dependsOn`**: execution-ordering refs (orthogonal to `subtasks` hierarchy and
   `milestone` grouping). A task is _ready_ when every dependency resolved within the checklist is
   `done` (`Task.isTaskReady`; a dangling ref reads as satisfied).
 

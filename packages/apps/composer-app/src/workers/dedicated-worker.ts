@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { IdentityManagerService } from '@dxos/client-services';
+import { IdentityContract } from '@dxos/client-services';
 import { runDedicatedWorker } from '@dxos/client/worker';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -13,7 +13,7 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { isTauri } from '@dxos/util';
 
-import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
 
 // This worker hosts echo and can saturate its own loop, so the log sink runs in a nested
@@ -40,13 +40,13 @@ runDedicatedWorker({
     observability.catch((err) => log.catch(err));
     // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
     // initialized before it runs (see util/automerge-wasm.ts).
-    await initAutomergeWasm();
+    await initEchoHostWasm();
   },
   onStart: async (stack) => {
     const instance = await observability;
     if (instance) {
       const identityManager = await EffectEx.runPromise(
-        stack.getServiceResolver().resolve(IdentityManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+        stack.getServiceResolver().resolve(IdentityContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
       );
       await EffectEx.runPromise(
         instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),

@@ -27,6 +27,7 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
@@ -67,6 +68,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   QueryService.Rpcs,
   FeedService.Rpcs,
   ContactsService.Rpcs,
+  InboxService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
@@ -90,6 +92,7 @@ export type ClientServicesHandlers = {
   QueryService: QueryService.Handlers;
   FeedService: FeedService.Handlers;
   ContactsService: ContactsService.Handlers;
+  InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
@@ -345,6 +348,7 @@ export interface ClientServicesRpc
     QueryService.Client,
     FeedService.Client,
     ContactsService.Client,
+    InboxService.Client,
     EdgeAgentService.Client,
     DevtoolsHost.Client {}
 

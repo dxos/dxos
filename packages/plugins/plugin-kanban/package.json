@@ -192,7 +192,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

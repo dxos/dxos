@@ -57,6 +57,17 @@ for event in UserPromptSubmit Stop SessionEnd; do
     "$(session_handlers "$event" | jq -r 'length')"
 done
 
+# Cloud sessions cannot authenticate the plugin's server, so each handler is mirrored onto the
+# claude.ai connector named `Composer`; a mirror that drifts from the original reports differently.
+for event in UserPromptSubmit Stop SessionEnd; do
+  check "$event mirrors the report onto the Composer connector" 'true' \
+    "$(jq --arg event "$event" '
+      [ .hooks[$event][] | select(any(.hooks[]; .server == "plugin:dxos:composer")) ] as $plugin
+      | [ .hooks[$event][] | select(any(.hooks[]; .server == "Composer")) ] as $connector
+      | ($connector | length) == 1
+        and ($plugin[0] | .hooks |= map(.server = "Composer")) == $connector[0]' "$config")"
+done
+
 # Each event reports what only it knows: the prompt carries the worktree, `Stop` carries the turn's
 # final message, and `SessionEnd` is the only one that may write a terminal state.
 check 'the prompt hook reports the worktree' '"${cwd}"' \

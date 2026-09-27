@@ -89,7 +89,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
             narrate: (prompt) =>
               LanguageModel.generateText({ prompt }).pipe(
                 Effect.map((response) => response.text),
-                Effect.provide(AiService.model(MODEL).pipe(Layer.orDie)),
+                Effect.provide(AiService.languageModel(MODEL).pipe(Layer.orDie)),
                 Effect.orDie,
               ),
           });

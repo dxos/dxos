@@ -95,6 +95,40 @@ describe('diagnostics', () => {
     expect(fanIn.metrics.crossings).toBe(0);
   });
 
+  test('detects labels overlapping each other or a box, not a frame', ({ expect }) => {
+    const label = (id: string, x: number, y: number, text: string): Scene.Element => ({ kind: 'text', id, x, y, text });
+    const report = analyze([
+      box('a', 0, 0),
+      box('frame', -32, -32, 400, 400),
+      { id: 'edges', elements: [label('one', 100, 100, 'spawn child'), label('two', 110, 110, 'per process')] },
+      { id: 'more', elements: [label('three', 10, 10, 'on a box'), label('clear', 300, 300, 'x')] },
+    ]);
+    expect(report.metrics.textOverlaps).toBe(2);
+    expect(report.diagnostics.filter(({ code }) => code === 'text-overlap').map(({ refs }) => refs)).toEqual([
+      ['edges/one', 'edges/two'],
+      ['more/three', 'a/frame'],
+    ]);
+  });
+
+  test('detects connectors running along the same line, not ones that only cross or share a port', ({ expect }) => {
+    const report = analyze([
+      {
+        id: 'edges',
+        elements: [
+          arrow('trunk', { x: 0, y: 0 }, { x: 200, y: 0 }),
+          arrow('shares', { x: 100, y: 0 }, { x: 300, y: 0 }),
+          arrow('crosses', { x: 50, y: -50 }, { x: 50, y: 50 }),
+          arrow('port', { x: 0, y: 0 }, { x: 0, y: 100 }),
+        ],
+      },
+    ]);
+    expect(report.metrics.edgeOverlaps).toBe(1);
+    expect(report.diagnostics.find(({ code }) => code === 'edge-overlap')?.refs).toEqual([
+      'edges/trunk',
+      'edges/shares',
+    ]);
+  });
+
   test('rejoins a routed path with its arrow head and counts its bends', ({ expect }) => {
     const report = analyze([
       {

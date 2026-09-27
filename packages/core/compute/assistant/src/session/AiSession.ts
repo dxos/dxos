@@ -11,12 +11,12 @@ import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
+import type * as Scope from 'effect/Scope';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
@@ -47,7 +47,7 @@ export type RunProps<R = never> = {
   /**
    * Space-level MCP servers to connect alongside skill-defined ones.
    */
-  mcpServers?: readonly McpServer.McpServer[];
+  mcpServers?: readonly McpToolkit.Options[];
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -241,7 +241,8 @@ export class Session extends Resource {
       });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
-      do {
+      // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
+      const runIteration = Effect.gen({ self: this }, function* () {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
@@ -262,16 +263,19 @@ export class Session extends Resource {
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
-          break;
+          return 'done' as const;
         }
         // A paused server-tool turn (e.g. Anthropic `pause_turn`) resumes with another request and
         // no local tool execution; the trailing server tool call must be left intact for the provider.
         if (finishReason === 'pause') {
-          continue;
+          return 'continue' as const;
         }
 
         yield* request.runTools({ toolkit });
-      } while (true);
+        return 'continue' as const;
+      }).pipe(Effect.scoped);
+
+      while ((yield* runIteration) !== 'done') {}
 
       log('result', {
         messages: request.pending.length,
@@ -308,18 +312,13 @@ export class Session extends Resource {
 
 const connectMcpServers = (
   skills: readonly Skill.Skill[],
-  spaceMcpServers: readonly McpServer.McpServer[] = [],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
+  spaceServers: readonly McpToolkit.Options[] = [],
+): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
   const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.Options[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
-    url,
-    protocol,
-    apiKey,
-  }));
   const allServers = [...skillServers, ...spaceServers];
   if (allServers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
@@ -348,6 +347,7 @@ const connectMcpServers = (
               url: error.url,
               protocol: error.protocol,
               message: error.message,
+              unauthorized: error.unauthorized,
             });
           }),
         ),

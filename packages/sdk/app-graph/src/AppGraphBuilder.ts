@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position, isNonNullable } from '@dxos/util';
 
-import { scheduleTask, yieldOrContinue } from '#scheduler';
+import { frameBudget, scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './AppGraph.ts';
 import * as Node from './AppGraphNode.ts';
@@ -263,6 +263,10 @@ export class GraphBuilder extends Builder.GraphBuilder<
     return yieldOrContinue('idle');
   }
 
+  override _frameBudget(): Builder.FrameBudget | undefined {
+    return frameBudget;
+  }
+
   override _onReleaseRelation(target: { id: string; relation: string }): void {
     super._onReleaseRelation(target);
     Graph.releaseRelation(this.graph, target.id, target.relation);
@@ -304,6 +308,8 @@ const makeStore = (
     onExpand: (id, relation) => hooks.onExpand(id, Graph.relationKey(relation)),
     onRemoveNode: hooks.onRemoveNode,
   });
+  // Connectors read node atoms between writes, so the builder keeps them pinned for its lifetime.
+  const release = Graph.retain(graph);
 
   return {
     graph,
@@ -321,6 +327,7 @@ const makeStore = (
         ._model.outgoing(id)
         .map(({ source, target, type }) => ({ source, target, relation: type })),
     constructNode: (node) => graph._constructNode(node),
+    dispose: release,
   };
 };
 

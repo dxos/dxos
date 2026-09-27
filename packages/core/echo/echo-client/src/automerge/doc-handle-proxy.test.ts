@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { generateAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -10,7 +11,12 @@ import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-host';
 import { createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { openAndClose } from '@dxos/test-utils';
 
+import { DocumentUnavailableError } from '../errors.ts';
 import { DocHandleProxy } from './doc-handle-proxy.ts';
+import { toDocumentId } from './document-id.ts';
+
+/** Any well-formed document id; these tests never reach a host. */
+const DOCUMENT_ID = toDocumentId(generateAutomergeUrl());
 
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {
@@ -100,6 +106,63 @@ describe('DocHandleProxy', () => {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }
+  });
+
+  test('a document the host cannot produce fails its waiters', async () => {
+    const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    const ready = handle.whenReady();
+
+    handle._markUnavailable(DOCUMENT_ID);
+
+    await expect(ready).rejects.toThrow(DocumentUnavailableError);
+    expect(handle.state).to.equal('unavailable');
+    // A document the host has no bytes for is not on its disk either.
+    expect(await handle.whenSettledOnDisk()).to.be.false;
+  });
+
+  test('bytes arriving after an unavailable verdict make the handle ready', async () => {
+    const text = 'delivered late';
+    const source = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    source.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+
+    const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    handle._markUnavailable(DOCUMENT_ID);
+    await expect(handle.whenReady()).rejects.toThrow(DocumentUnavailableError);
+
+    // The waiter the verdict failed holds a rejected promise, so the transition is announced: it is
+    // the only thing that can tell a caller the document it gave up on has arrived.
+    const available = new Trigger();
+    handle.once('available', () => available.wake());
+
+    // Replication catching up supersedes the verdict, so a space that was unopenable opens on a
+    // later attempt rather than staying failed for the life of the handle.
+    handle._integrateHostUpdate(source._getPendingChanges()!);
+
+    await available.wait({ timeout: 1000 });
+    await handle.whenReady();
+    expect(handle.state).to.equal('ready');
+    expect(handle.doc().text).to.equal(text);
+  });
+
+  test('a handle that was never unavailable does not announce availability', async () => {
+    const source = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    source.change((doc: { text: string }) => {
+      doc.text = 'ordinary load';
+    });
+
+    const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    let announced = false;
+    handle.once('available', () => {
+      announced = true;
+    });
+
+    handle._integrateHostUpdate(source._getPendingChanges()!);
+
+    await handle.whenReady();
+    // Only the recovery transition carries the event; every load would otherwise emit one.
+    expect(announced).to.be.false;
   });
 });
 

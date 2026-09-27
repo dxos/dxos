@@ -50,6 +50,7 @@ export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.t
     // `IconAnnotation` sets the default icon and color for objects of this type.
     // These appear in the navigation tree, breadcrumbs, and object headers.
     Annotation.IconAnnotation.set({ icon: 'ph--book-open--regular', hue: 'cyan' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

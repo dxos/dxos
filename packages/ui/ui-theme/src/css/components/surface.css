@@ -8,8 +8,8 @@
  * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`;
  * in React, `elevation={0..5}` on Panel, Toolbar, Card, Dialog and Popover sets it.
  * The `dx-*-surface` classes are role-named zones on the same ladder, kept because they read well
- * at call sites (`dx-card-surface` says more than `data-surface="base"`); a role may sit a step
- * below the level its name suggests, as cards and modals do.
+ * at call sites (`dx-card-surface` says more than `data-surface="raised"`); a role names the level
+ * it reads at, and `theme/surfaces.css` is where that choice is stated.
  *
  * A bare `bg-*-surface` utility paints the colour but does NOT publish `--surface-bg`, so every
  * aspect inside it collapses onto the base-surface fallback — never use one to enter a zone.
@@ -59,12 +59,16 @@
     --surface-bg: var(--color-l1-surface);
   }
 
-  /* A card sits on the canvas's level; a dialog one above it (see the ladder in theme/surfaces.css). */
   [data-surface='base'],
   .dx-base-surface,
-  .dx-attention-surface,
-  .dx-card-surface {
+  .dx-attention-surface {
     --surface-bg: var(--dx-surface-base);
+  }
+
+  /* Reads its own token rather than joining a level's group: a card's level is a design decision
+     stated once, in theme/surfaces.css, and the class is where a reader looks for it. */
+  .dx-card-surface {
+    --surface-bg: var(--color-card-surface);
   }
 
   /* Not a level: a tinted zone (a tour card, a callout) whose controls derive their states from the tint. */

@@ -4,16 +4,18 @@
 
 import { describe, test } from 'vitest';
 
-import { type Scene } from '../model/types.ts';
-import { DEFAULT_EXTENT, boundsFromPoints, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
+import { type BuiltinNode, MAJOR_GRID, type Scene } from '../model/types.ts';
+import { DEFAULT_EXTENT, boundsFromPoints, contentBounds, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
+
+const nodes: Record<string, BuiltinNode> = {
+  a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
+  b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, size: { width: 100, height: 100 } },
+  t: { type: 'note', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
+};
 
 const scene: Scene = {
   id: 's',
-  nodes: {
-    a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
-    b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, rx: 50, ry: 50 },
-    t: { type: 'text', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
-  },
+  nodes,
   links: {
     l: { type: 'line', id: 'l', z: 'A', source: { node: 'a' }, target: { node: 'b' } },
   },
@@ -38,9 +40,44 @@ describe('hit', () => {
     expect(nodesIntersecting(scene, boundsFromPoints({ x: 0, y: 0 }, { x: 600, y: 600 })).length).toBe(3);
   });
 
-  test('sceneBounds is the padded union of nodes grown to the grid, or the default extent', ({ expect }) => {
-    expect(sceneBounds(scene, 10, 1)).toEqual({ x: 40, y: 40, width: 495, height: 480 });
-    expect(sceneBounds(scene, 10)).toEqual({ x: 0, y: 0, width: 576, height: 576 });
+  test('the default extent is centred on the origin and lands on the major grid', ({ expect }) => {
+    // A scene is laid out around (0, 0); an extent anchored at the origin instead would put its centre
+    // — and so the initial fit — well below and right of the content.
+    expect(DEFAULT_EXTENT.x + DEFAULT_EXTENT.width / 2).toBe(0);
+    expect(DEFAULT_EXTENT.y + DEFAULT_EXTENT.height / 2).toBe(0);
+    expect(Math.abs(DEFAULT_EXTENT.x % MAJOR_GRID)).toBe(0);
+    expect(Math.abs(DEFAULT_EXTENT.y % MAJOR_GRID)).toBe(0);
+  });
+
+  test('sceneBounds grows the default extent by the padded union of the nodes', ({ expect }) => {
+    // Content inside the default extent leaves it as it is, whatever the padding or grid.
+    const near: Scene = { id: 'near', nodes: { a: nodes.a }, links: {} };
+    expect(sceneBounds(near, 10, 1)).toEqual(DEFAULT_EXTENT);
+    expect(sceneBounds(near, 10)).toEqual(DEFAULT_EXTENT);
     expect(sceneBounds({ id: 'empty', nodes: {}, links: {} })).toEqual(DEFAULT_EXTENT);
+    // A node beyond it grows the frame that way, and the default still holds the other three sides.
+    const far: BuiltinNode = {
+      type: 'rect',
+      id: 'far',
+      z: 'Z',
+      center: { x: 2000, y: -400 },
+      size: { width: 100, height: 100 },
+    };
+    expect(sceneBounds({ ...near, nodes: { ...near.nodes, far } })).toEqual({
+      x: -832,
+      y: -576,
+      width: 3008,
+      height: 1088,
+    });
+  });
+
+  test('contentBounds frames the content alone, and the floor only when there is none', ({ expect }) => {
+    // The same scene seen two ways: on its own it gets the editing surface, in a portal its own content.
+    const near: Scene = { id: 'near', nodes: { a: nodes.a }, links: {} };
+    expect(sceneBounds(near)).toEqual(DEFAULT_EXTENT);
+    // The node's 50..150 box, padded by a major cell and grown to the grid.
+    expect(contentBounds(near)).toEqual({ x: -64, y: -64, width: 320, height: 320 });
+    // Nothing to frame, so the floor is the frame rather than a degenerate box.
+    expect(contentBounds({ id: 'empty', nodes: {}, links: {} })).toEqual(DEFAULT_EXTENT);
   });
 });

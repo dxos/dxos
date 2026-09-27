@@ -35,6 +35,8 @@ import {
   checkpointWal,
 } from './opfs-pragmas.ts';
 import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
+import { readRow } from './row-decode.ts';
+import { instantiateSqliteModule } from './sqlite-module.ts';
 import { instrumentVfs } from './vfs-metrics.ts';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
@@ -62,7 +64,7 @@ const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
 const DEFAULT_VFS_DIRECTORY = 'opfs';
 
-const initModule = Effect.runSync(Effect.cached(Effect.promise(() => SQLiteESMFactory())));
+const initModule = Effect.runSync(Effect.cached(Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory))));
 
 const initEffect = Effect.runSync(Effect.cached(initModule.pipe(Effect.map((module) => WaSqlite.Factory(module)))));
 
@@ -166,12 +168,13 @@ export const makeOpfs = (
               // wa-sqlite bind_collection is typed for SQLiteCompatibleType[] only.
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const decoded = readRow(sqlite3, stmt, sql, columns);
+                columns = decoded.columns;
+                const row = decoded.row;
                 if (rowMode === 'object') {
                   const obj: Record<string, unknown> = {};
-                  for (let index = 0; index < columns!.length; index++) {
-                    obj[columns![index]] = row[index];
+                  for (let index = 0; index < columns.length; index++) {
+                    obj[columns[index]] = row[index];
                   }
                   results.push(obj);
                 } else {
@@ -214,11 +217,12 @@ export const makeOpfs = (
               let columns: Array<string> | undefined;
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const decoded = readRow(sqlite3, stmt, sql, columns);
+                columns = decoded.columns;
+                const row = decoded.row;
                 const obj: Record<string, unknown> = {};
-                for (let index = 0; index < columns!.length; index++) {
-                  obj[columns![index]] = row[index];
+                for (let index = 0; index < columns.length; index++) {
+                  obj[columns[index]] = row[index];
                 }
                 resultCount++;
                 yield obj;

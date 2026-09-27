@@ -73,6 +73,15 @@ const formStyles = tv({
       true: {},
       false: {},
     },
+    // A nested field set is a bordered `group` (a struct's fields) or a titled `section` of free content.
+    appearance: {
+      group: {},
+      section: {
+        fieldSetTitle: 'text-lg',
+        fieldSetLegend: 'pb-trim-sm',
+        fieldSetHeader: 'pb-trim-sm',
+      },
+    },
     // A top-level field set is a titled section; a nested one is an indented, bordered group.
     depth: {
       // The section's top space sits on the legend: WebKit lays a rendered legend at the fieldset's
@@ -82,13 +91,18 @@ const formStyles = tv({
         fieldSetLegend: 'pt-form-section-gap',
         fieldSetTitle: 'text-lg',
       },
-      // The legend sits above the box, like a field's label above its control; the body is the box.
-      nested: {
-        fieldSetBody: 'border border-subdued-separator rounded-sm px-trim-sm py-trim-sm',
-      },
+      nested: {},
     },
   },
   compoundVariants: [
+    {
+      // The legend sits above the box, like a field's label above its control; the body is the box.
+      depth: 'nested',
+      appearance: 'group',
+      class: {
+        fieldSetBody: 'border border-subdued-separator rounded-sm px-trim-sm py-trim-sm',
+      },
+    },
     {
       // The control leads and the label follows it on one line; description and error span both.
       variant: 'default',
@@ -134,11 +148,24 @@ const formStyles = tv({
         fieldSetBody: 'gap-trim-md',
       },
     },
+    {
+      variant: 'settings',
+      depth: 'nested',
+      appearance: 'section',
+      class: {
+        // Inset to the root title's edge; a section after another adds the root's gap again to read as a break.
+        fieldSet: '[fieldset+&]:pt-trim-md',
+        fieldSetTitle: 'px-trim-md',
+        fieldSetDescription: 'px-trim-md',
+        fieldSetBody: 'px-trim-md',
+      },
+    },
   ],
   defaultVariants: {
     variant: 'default',
     labelPlacement: 'above',
     labelled: true,
+    appearance: 'group',
     depth: 'root',
   },
 });

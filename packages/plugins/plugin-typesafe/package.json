@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-typesafe",
   "version": "0.11.1",
   "private": true,
-  "description": "TypeSafe System One connector and decision-model layer for Composer.",
+  "description": "TypeSafe System One connector and decision-model resolver for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -81,15 +81,20 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@dxos/ai-typesafe": "workspace:*",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import {
   MAX_SEEDED_PLANKS,
   addSubjectsToActiveDeck,
+  matchOpenEntities,
   pushSubjectsToStack,
   resolveLevelOpen,
   resolveSeededPlanks,
@@ -202,5 +203,40 @@ describe('pushSubjectsToStack', () => {
 
   test('pushes onto an empty stack', ({ expect }) => {
     expect(pushSubjectsToStack([], ['a'])).toEqual(['a']);
+  });
+});
+
+describe('matchOpenEntities', () => {
+  // Two paths to one object: `x/obj` and `y/obj`.
+  const entityOf = (id: string) => id.split('/').at(-1);
+
+  test('a re-homing open moves the open plank onto the new path', ({ expect }) => {
+    const result = matchOpenEntities({ active: ['a', 'x/obj'], subjects: ['y/obj'], entityOf, rehome: true });
+    expect(result.active).toEqual(['a', 'y/obj']);
+    expect(result.subjects).toEqual(['y/obj']);
+    expect([...result.moved]).toEqual([['x/obj', 'y/obj']]);
+  });
+
+  test('any other open reuses the open plank', ({ expect }) => {
+    const result = matchOpenEntities({ active: ['a', 'x/obj'], subjects: ['y/obj'], entityOf, rehome: false });
+    expect(result.active).toEqual(['a', 'x/obj']);
+    expect(result.subjects).toEqual(['x/obj']);
+    expect(result.moved.size).toBe(0);
+  });
+
+  test('a subject already open under its own path changes nothing', ({ expect }) => {
+    const result = matchOpenEntities({ active: ['x/obj'], subjects: ['x/obj'], entityOf, rehome: true });
+    expect(result.active).toEqual(['x/obj']);
+    expect(result.moved.size).toBe(0);
+  });
+
+  test('a subject without an entity passes through', ({ expect }) => {
+    const result = matchOpenEntities({
+      active: ['x/obj'],
+      subjects: ['settings'],
+      entityOf: () => undefined,
+      rehome: true,
+    });
+    expect(result).toEqual({ active: ['x/obj'], subjects: ['settings'], moved: new Map() });
   });
 });

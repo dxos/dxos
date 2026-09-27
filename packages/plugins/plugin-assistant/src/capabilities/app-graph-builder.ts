@@ -215,7 +215,7 @@ export default Capability.makeModule(
               icon: 'ph--line-segments--regular',
               data: 'trace',
               position: Position.last,
-              mount: 'always',
+              mount: 'selected',
             }),
           ]),
       }),

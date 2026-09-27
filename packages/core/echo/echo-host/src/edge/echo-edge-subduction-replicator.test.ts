@@ -22,10 +22,7 @@ import { compositeKey } from '@dxos/util';
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge/index.ts';
 import { EchoEdgeSubductionReplicator, MAX_IN_PLACE_REHANDSHAKES } from './echo-edge-subduction-replicator.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
+describe('EchoEdgeSubductionReplicator', () => {
   test('opens a subduction connection when connectToSpace is called', async () => {
     const { client } = await createClientServer();
 

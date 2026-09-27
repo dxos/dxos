@@ -203,27 +203,6 @@ export const diffBlockTheme = EditorView.theme({
     backgroundImage:
       'repeating-linear-gradient(45deg, transparent 0 5px, var(--cm-diff-hatch) 5px 6px, transparent 6px 11px)',
   },
-
-  //
-  // Syntax (classHighlighter emits `tok-*`; kept aligned with the editor's own highlight style).
-  //
-
-  '.cm-diff-line .tok-keyword': { color: 'light-dark(var(--color-purple-700), var(--color-purple-300))' },
-  // Not italicised: a doc comment is often the whole of an added chunk, and a wall of italics in a
-  // proportional-to-mono mix reads as an artefact rather than as code.
-  '.cm-diff-line .tok-comment': { color: 'var(--color-description)' },
-  '.cm-diff-line .tok-string': { color: 'light-dark(var(--color-amber-700), var(--color-amber-300))' },
-  '.cm-diff-line .tok-number, .cm-diff-line .tok-bool, .cm-diff-line .tok-atom': {
-    color: 'light-dark(var(--color-orange-700), var(--color-orange-300))',
-  },
-  '.cm-diff-line .tok-typeName, .cm-diff-line .tok-className, .cm-diff-line .tok-namespace': {
-    color: 'light-dark(var(--color-teal-700), var(--color-teal-300))',
-  },
-  '.cm-diff-line .tok-propertyName': { color: 'light-dark(var(--color-blue-700), var(--color-blue-300))' },
-  '.cm-diff-line .tok-variableName': { color: 'var(--color-base-fg)' },
-  '.cm-diff-line .tok-definition': { color: 'light-dark(var(--color-blue-700), var(--color-blue-200))' },
-  '.cm-diff-line .tok-operator, .cm-diff-line .tok-punctuation': { color: 'var(--color-description)' },
-  '.cm-diff-line .tok-meta': { color: 'var(--color-subdued)' },
 });
 
 /**

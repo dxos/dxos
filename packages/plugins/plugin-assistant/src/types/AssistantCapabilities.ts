@@ -51,6 +51,8 @@ export const HomeSuggestionsCacheSchema = Schema.Record(
       generatedAt: Schema.Number,
       /** Non-empty, trimmed prompts from a successful generation. */
       prompts: Schema.Array(Schema.String),
+      /** The recent objects the prompts were generated from; an unchanged set reuses them. */
+      fingerprint: Schema.optional(Schema.String),
     }),
   ),
 );

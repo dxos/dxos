@@ -58,7 +58,6 @@ describe('tldraw drawing variant', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { object: drawing } = yield* Operation.invoke(DrawingOperation.Create, { name: 'Portrait' });
-        yield* Database.add(drawing);
         yield* Database.flush();
         const ref = Ref.make(drawing);
 

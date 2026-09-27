@@ -206,6 +206,17 @@ export class Placement {
     if (prepended) {
       this.#anchor = { ...this.#anchor, index: this.#anchor.index + prepended };
     }
+
+    // A model that shrank below the anchor leaves it past the last row, where it would mount nothing:
+    // the last row takes over, placed where the rows before it end.
+    if (count && this.#anchor.index >= count) {
+      const index = count - 1;
+      let start = 0;
+      for (let row = 0; row < index; row++) {
+        start += this.extentOf(row);
+      }
+      this.#anchor = { id: this.#getId(index), index, start };
+    }
   }
 
   /**

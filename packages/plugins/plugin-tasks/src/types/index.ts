@@ -7,5 +7,6 @@ export * as TasksCapabilities from './TasksCapabilities.ts';
 export * as OutlineOperation from './OutlineOperation.ts';
 export * as RemoteSessionOperation from './RemoteSessionOperation.ts';
 export * as TaskOperation from './TaskOperation.ts';
+export * as TaskSetView from './TaskSetView.ts';
 export * as TasksEvents from './TasksEvents.ts';
 export * as TasksUtil from './TasksUtil.ts';

@@ -12,7 +12,6 @@ export const ChatArticle: ComponentType<any> = lazy(() => import('./ChatArticle/
 export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog/index.ts'));
 export const IntegrationPrompt: ComponentType<any> = lazy(() => import('./IntegrationPrompt/index.ts'));
 export const PluginPrompt: ComponentType<any> = lazy(() => import('./PluginPrompt/index.ts'));
-export const QuestionCard: ComponentType<any> = lazy(() => import('./QuestionCard/index.ts'));
 export const ObjectCardSurface: ComponentType<any> = lazy(() => import('./ObjectCardSurface/index.ts'));
 export const QuestionSurface: ComponentType<any> = lazy(() => import('./QuestionSurface/index.ts'));
 export const SpaceHomePrompt: ComponentType<any> = lazy(() => import('./SpaceHomePrompt/index.ts'));

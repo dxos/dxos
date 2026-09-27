@@ -11,13 +11,10 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+import { chunkArray, chunkRows } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
 import { type Index, type IndexerObject } from './interface.ts';
 import { extractIndexableText } from './text-extractor.ts';
-
-/** Each indexed row binds two variables, so the batch is half what a single-column `IN` allows. */
-const INSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -268,9 +265,31 @@ export class FtsIndex implements Index {
       for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
         yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
       }
-      for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
+      for (const chunk of chunkRows(rows)) {
         yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
       }
     }),
   );
 }
+
+/**
+ * The `WHERE` fragment matching `ftsIndex f` against free text, and whether BM25 ranking applies.
+ * Terms shorter than the trigram tokenizer's three characters fall back to `LIKE`, which cannot
+ * rank. `undefined` when the text has no terms. Mirrors the conditions {@link FtsIndex.query}
+ * builds, so the compiled and in-memory executors match the same rows.
+ */
+export const buildFtsCondition = (
+  sql: SqlClient.SqlClient,
+  text: string,
+): { condition: Statement.Fragment; ranked: boolean } | undefined => {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const terms = trimmed.split(/\s+/).filter(Boolean);
+  const minTermLength = Math.min(...terms.map((term) => term.length));
+  if (minTermLength < 3) {
+    return { condition: sql.and(terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)), ranked: false };
+  }
+  return { condition: sql`f.text MATCH ${escapeFts5Query(trimmed)}`, ranked: true };
+};

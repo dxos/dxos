@@ -5,14 +5,17 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, osTranslations } from '@dxos/ui-theme';
 
+import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
 
 /** Callbacks are absent on a read-only tile (e.g. a staged merge result). */
@@ -35,6 +38,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);
@@ -50,6 +54,8 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
   const type = Obj.getType(object);
   const showCardContent = !!type && Option.getOrElse(CardAnnotation.get(Type.getSchema(type)), () => false);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
+
+  const { archived, item: archiveItem } = useArchiveMenuItem(object);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter. A card click toggles selection —
   // the companion follows the selection, so navigating away on every click would fight the review
@@ -70,6 +76,16 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             },
           ]
         : []),
+      // Offered where the tile is interactive, which is where it can be opened.
+      ...(onOpen && TypeOptions.isUserObject(object)
+        ? [
+            {
+              icon: CollectionOperation.OpenAddToCollection.meta.icon,
+              label: t('add-to-collection.label', { ns: osTranslations }),
+              onClick: () => void invokePromise(CollectionOperation.OpenAddToCollection, { object }),
+            },
+          ]
+        : []),
       ...(onDelete
         ? [
             {
@@ -82,8 +98,9 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             },
           ]
         : []),
+      ...(archiveItem ? [archiveItem] : []),
     ],
-    [t, typename, onOpen, onDelete, object],
+    [t, typename, onOpen, onDelete, archiveItem, object, invokePromise],
   );
 
   return (
@@ -98,6 +115,11 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
+        {archived && (
+          <Card.Row>
+            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+          </Card.Row>
+        )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>

@@ -47,14 +47,14 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
       : never;
 
 /**
- * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
- * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
- * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
- * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
- * type. Consumers never read it.
+ * Phantom brand on query results that are plain records rather than entities: the flat row
+ * {@link Query.aggregate} produces, and {@link Change.Change}. Present only at the type level (never
+ * at runtime), it lets hooks like `useQuery`/`usePagination` return the record as-is instead of
+ * wrapping it in `Entity.Entity`. The brand is a required property so `T extends RecordResult`
+ * discriminates — an optional one would be satisfied by any type. Consumers never read it.
  */
-export interface AggregateResult {
-  readonly '~@dxos/echo/Query.AggregateResult': true;
+export interface RecordResult {
+  readonly '~@dxos/echo/Query.RecordResult': true;
 }
 
 export const QueryTypeId = '~@dxos/echo/Query' as const;

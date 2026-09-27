@@ -2,11 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { PullRequest } from '@dxos/types';
+
 import { meta } from '#meta';
+import { Walkthrough } from '#types';
 
 export const translations = [
   {
     'en-US': {
+      [Type.getTypename(PullRequest.PullRequest)]: {
+        'typename.label': 'Pull request',
+        'typename.label_zero': 'Pull requests',
+        'typename.label_one': 'Pull request',
+        'typename.label_other': 'Pull requests',
+        'object-name.placeholder': 'New pull request',
+        'rename-object.label': 'Rename pull request',
+        'delete-object.label': 'Delete pull request',
+        'object-deleted.label': 'Pull request deleted',
+      },
+      [Type.getTypename(Walkthrough.Walkthrough)]: {
+        'typename.label': 'Walkthrough',
+        'typename.label_zero': 'Walkthroughs',
+        'typename.label_one': 'Walkthrough',
+        'typename.label_other': 'Walkthroughs',
+        'object-name.placeholder': 'New walkthrough',
+        'rename-object.label': 'Rename walkthrough',
+        'delete-object.label': 'Delete walkthrough',
+        'object-deleted.label': 'Walkthrough deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'GitHub',
         'sync-now.label': 'Sync now',
@@ -29,6 +54,7 @@ export const translations = [
         'import-pull-request-no-space.title': 'Open a space to import a pull request into',
         'open-pull-request.label': 'Open pull request',
         'github-token-rejected.title': 'GitHub rejected your connection — reconnect GitHub and try again',
+        'open-github-connection.label': 'Go to connection',
         'walkthrough-ready.title': 'Walkthrough ready',
         'walkthrough-failed.title': 'Walkthrough generation failed',
         'approve-pull-request.label': 'Approve',
@@ -46,12 +72,45 @@ export const translations = [
         'copy-link.label': 'Copy link to pull request',
         'copy-link-success.title': 'Link copied',
         'copy-link-error.title': 'Could not copy the link',
-        'ci-status.success': 'CI passing',
-        'ci-status.failure': 'CI failing',
-        'ci-status.pending': 'CI running',
-        'ci-status.none': 'No CI',
-        'ci-status.unknown': 'CI unknown',
+        'ci-status.success.label': 'CI passing',
+        'ci-status.failure.label': 'CI failing',
+        'ci-status.pending.label': 'CI running',
+        'ci-status.none.label': 'No CI',
+        'ci-status.unknown.label': 'CI unknown',
+        'views.label': 'Views',
+        'overview-tab.label': 'Overview',
+        'walkthrough-tab.label': 'Walkthrough',
+        'files-tab.label': 'Files',
+        'files-tree.label': 'Changed files',
+        'files-reviewed.label': '{{reviewed}} of {{total}} files reviewed',
+        'files-loading.message': 'Loading the changed files…',
+        'files-error.message': 'Could not read the changed files.',
+        'no-files.message': 'This pull request changes no files.',
+        'file-no-diff.message': 'No text changes to show — a binary file, or a rename without edits.',
+        'file-reviewed.label': 'Reviewed',
+        'previous-file.label': 'Previous file',
+        'next-file.label': 'Next file',
+        'details.label': 'Details',
+        'no-description.message': 'No description provided.',
+        'related.label': 'Related',
+        'checks.label': 'Checks',
+        'checks-summary.label': '{{passed}} passed · {{failed}} failed · {{pending}} running · {{skipped}} skipped',
+        'checks-loading.message': 'Loading checks…',
+        'no-checks.message': 'No checks ran on the head commit.',
+        'check-outcome.success.label': 'Passed',
+        'check-outcome.failure.label': 'Failed',
+        'check-outcome.pending.label': 'Running',
+        'check-outcome.skipped.label': 'Skipped',
+        'check-outcome.neutral.label': 'Neutral',
+        'preview-deployment.label': 'Composer preview',
+        'claude-session.label': 'Claude Code session',
+        'claude-generated.label': 'Generated with Claude Code',
+        'artifact-video.label': 'Demo video',
+        'artifact-image.label': 'Screenshot',
+        'artifact-file.label': 'Artifact',
+        'branches.label': 'Branches',
+        'open-link.label': 'Open',
       },
     },
   },
-];
+] as const satisfies Resource[];

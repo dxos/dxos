@@ -4,12 +4,12 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { Connector, LayerSpecs, SettingsModule } from '#capabilities';
+import { Connector, ModelResolver, SettingsModule } from '#capabilities';
 import { meta } from '#meta';
 
 export const TypeSafePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Connector),
-  Plugin.addModule(LayerSpecs),
+  Plugin.addModule(ModelResolver),
   Plugin.addModule(SettingsModule),
   Plugin.make,
 );

@@ -192,6 +192,27 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
 };
 
 /**
+ * Attend `element` the way focusing it would, without moving focus. Answers the attended ids, or
+ * undefined when nothing changed: an element outside any attendable leaves attention where it was.
+ */
+export const attendElement = (attention: AttentionManager, element: Element): string[] | undefined => {
+  const selector = [
+    ATTENDABLE_SELECTOR,
+    ...Array.from(document.querySelectorAll('[aria-controls]')).map(
+      (el) => `[id="${el.getAttribute('aria-controls')}"]`,
+    ),
+  ].join(',');
+  const prev = attention.getCurrent();
+  const next = getAttendables(selector, element);
+  if (next.length === 0 || (prev.length === next.length && prev.every((id, index) => next[index] === id))) {
+    return undefined;
+  }
+
+  attention.update(next);
+  return next;
+};
+
+/**
  * The outermost attendable ancestor of `element` — the root of any nested attendables (e.g. a section
  * within a stack). Structural (real DOM ancestry), so it is independent of what currently has attention.
  * Resolve it from an in-DOM element: a portaled subtree (a menu, a popover) is not under its own

@@ -36,7 +36,7 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
     }),
     /** Owned body: `SetParent` cascades it and deep-clones it with the instructions. */
     text: Ref.Ref(Text.Text).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotate({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
     ),
@@ -52,7 +52,6 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
