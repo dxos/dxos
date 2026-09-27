@@ -30,7 +30,7 @@ import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
 import { type Band, type Row, orderRows } from './gantt-rows.ts';
-import { type GanttAxis, type GanttScale, timeScale, unitScale } from './gantt-scale.ts';
+import { type GanttAxis, type GanttScale, formatElapsed, timeScale, unitScale } from './gantt-scale.ts';
 import { useEnter } from './useEnter.ts';
 import { useRangeTween } from './useRangeTween.ts';
 
@@ -1018,11 +1018,13 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                     />
                   </HoverCard.Trigger>
                   <HoverCard.Portal>
-                    <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
+                    <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
                       <div className='font-medium truncate'>{marker.label}</div>
-                      <div className='text-description'>
+                      <div className='text-description tabular-nums'>
                         {marker.kind && `${marker.kind} · `}
-                        {format(marker.timestamp, 'HH:mm:ss.SSS')}
+                        {format(marker.timestamp, 'HH:mm:ss')}
+                        {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
+                        {` · +${formatElapsed(marker.timestamp - range.start, { span: marker.timestamp - range.start, step: 1_000 })}`}
                         {marker.level && marker.level !== 'info' && (
                           <span
                             className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
