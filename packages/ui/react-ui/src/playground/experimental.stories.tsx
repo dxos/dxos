@@ -18,6 +18,7 @@ type Metrics = {
   lineHeight: string;
   fontSize: string;
   iconSize: string;
+  gapSize: string;
 };
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -31,35 +32,40 @@ const metrics: Record<Size, Metrics> = {
     lineHeight: 'var(--text-xs--line-height)',
     fontSize: 'var(--text-xs)',
     iconSize: '0.75rem',
+    gapSize: '0.25rem',
   },
   sm: {
     blockSize: '1.5rem',
     lineHeight: 'var(--text-sm--line-height)',
     fontSize: 'var(--text-sm)',
     iconSize: '1rem',
+    gapSize: '0.25rem',
   },
   md: {
     blockSize: '2rem',
     lineHeight: 'var(--text-base--line-height)',
     fontSize: 'var(--text-base)',
     iconSize: '1.5rem',
+    gapSize: '0.5rem',
   },
   lg: {
     blockSize: '2.5rem',
     lineHeight: 'var(--text-lg--line-height)',
     fontSize: 'var(--text-lg)',
     iconSize: '2rem',
+    gapSize: '0.5rem',
   },
   xl: {
     blockSize: '3rem',
     lineHeight: 'var(--text-xl--line-height)',
     fontSize: 'var(--text-xl)',
     iconSize: '2.5rem',
+    gapSize: '0.5rem',
   },
 };
 
 const Toolbar = ({ children, size = 'md' }: PropsWithChildren<{ size?: Size }>) => {
-  const { blockSize, lineHeight, fontSize, iconSize } = metrics[size];
+  const { blockSize, lineHeight, fontSize, iconSize, gapSize } = metrics[size];
   return (
     <div
       className='shrink-0 w-full flex items-center overflow-x-auto scrollbar-none'
@@ -69,6 +75,7 @@ const Toolbar = ({ children, size = 'md' }: PropsWithChildren<{ size?: Size }>) 
           '--line-height': lineHeight,
           '--font-size': fontSize,
           '--icon-size': iconSize,
+          '--gap-size': gapSize,
         } as CSSProperties
       }
     >
@@ -95,14 +102,24 @@ const Input = () => {
     <input
       type='text'
       placeholder='Input'
-      className='w-full bg-base-surface border-none dx-focus-ring-inset p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'
+      className={[
+        'w-full px-(--gap-size) py-0',
+        'text-[length:var(--font-size,1rem)] leading-(--line-height)',
+        'bg-base-surface border-none dx-focus-ring-inset',
+      ].join(' ')}
     />
   );
 };
 
 const Button = ({ children }: PropsWithChildren) => {
   return (
-    <button className='w-fit bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'>
+    <button
+      className={[
+        'w-fit px-(--gap-size) py-0',
+        'text-[length:var(--font-size,1rem)] leading-(--line-height)',
+        'bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset',
+      ].join(' ')}
+    >
       {children}
     </button>
   );
@@ -114,26 +131,43 @@ const Typography = ({ children }: PropsWithChildren) => {
 
 const DefaultStory = () => {
   return (
-    <div className='flex flex-col gap-2'>
-      {SIZES.map((size) => (
-        <Toolbar key={size} size={size}>
+    <div className='flex flex-col divide-y divide-separator'>
+      <div className='grid grid-cols-[min-content_1fr] gap-1'>
+        <div>
           <Block>
             <Icon icon='ph--circle--regular' />
           </Block>
-          <Input />
-          <Button>Save</Button>
-          <Block>
-            <Icon icon='ph--circle--regular' />
-          </Block>
-        </Toolbar>
-      ))}
+        </div>
+        <Typography>Lorem ipsum dolor sit amet</Typography>
+      </div>
 
-      {/* <div className='flex'>
-        <Block>
-          <Icon icon='ph--circle--regular' />
-        </Block>
-        <Typography>Hello world</Typography>
-      </div> */}
+      <div className='grid grid-cols-[min-content_1fr] gap-1'>
+        <div>
+          <Block>
+            <Icon icon='ph--circle--regular' />
+          </Block>
+        </div>
+        <Typography>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat.
+        </Typography>
+      </div>
+
+      <div>
+        {SIZES.map((size) => (
+          <Toolbar key={size} size={size}>
+            <Block>
+              <Icon icon='ph--circle--regular' />
+            </Block>
+            <Input />
+            <Button>Save</Button>
+            <Block>
+              <Icon icon='ph--circle--regular' />
+            </Block>
+          </Toolbar>
+        ))}
+      </div>
     </div>
   );
 };
