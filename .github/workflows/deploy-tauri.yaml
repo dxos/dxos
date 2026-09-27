@@ -253,14 +253,10 @@ jobs:
       - name: Export DX_POSTHOG_API_KEY for Tauri bundle
         run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
 
-      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job. Normally always present (the
-      # tauri job only runs when build-bundle succeeded); the moon fallback below is defensive.
-      - name: Download Composer bundle
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: composer-bundle
-          path: packages/apps/composer-app/out/composer
+      # Not the web bundle deploy-apps.yml builds: the desktop bundle resolves the `tauri` package
+      # condition, which admits Tauri-only modules (plugin-sandbox's local sandbox launcher).
+      - name: Build Composer bundle
+        run: moon run composer-app:bundle-tauri
 
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
@@ -278,7 +274,7 @@ jobs:
             xargs -0 -I{} codesign --force --options runtime --sign "$CERT_ID" "{}"
 
       # plugin-sandbox's local sandbox helper ships like the ollama launcher, as a plain bundled file
-      # (see plugin-sandbox's capabilities/local-launcher.ts). Built from sources, so no moon here.
+      # (see plugin-sandbox's tauri/local-launcher.ts). Built from sources, so no moon here.
       - name: Build sandbox helper
         run: |
           (cd packages/plugins/plugin-sandbox && proto run bun -- ./scripts/build-sidecar.ts)
@@ -294,17 +290,9 @@ jobs:
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
       - name: Build Tauri app
-        # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
-        # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
-        # Without one: fall back to `moon run` (which builds the bundle + sidecar via task deps).
-        run: |
-          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-            echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
-            ( cd packages/apps/composer-app && pnpm exec tauri build )
-          else
-            echo "No prebuilt bundle (unexpected) — falling back to moon."
-            moon run composer-app:tauri-build
-          fi
+        # `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds the out/composer built
+        # above and only does the native compile (+ the desktop ollama sidecar).
+        run: (cd packages/apps/composer-app && pnpm exec tauri build)
         env:
           # The following environment variables are only set when building on macOS runners (depot-macos-latest).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
@@ -475,30 +463,9 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
-      # No artifact reuse here, unlike the desktop job: the shared `composer-bundle` is built for this
-      # workflow's environment (iOS only builds from `dev`), so it carries the full plugin catalog. iOS
-      # ships the curated production set, so the bundle is always built here — `tauri-ios-build` carries
-      # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
-      # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
-      # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
-      # Previous approach, kept here to restore verbatim when that day comes:
-      #
-      # - name: Download Composer bundle
-      #   continue-on-error: true
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: composer-bundle
-      #     path: packages/apps/composer-app/out/composer
-      #
-      # - name: Build Tauri app for iOS
-      #   run: |
-      #     if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-      #       echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
-      #       ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
-      #     else
-      #       echo "No prebuilt bundle (unexpected) — falling back to moon."
-      #       moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
-      #     fi
+      # Built here rather than reused from deploy-apps.yml: like the desktop job, iOS needs the `tauri`
+      # package condition, and it ships the curated production set — `tauri-ios-build` carries both
+      # `DX_PLUGIN_SET=production` and `DX_TAURI` on its `bundle` dep. iOS needs no ollama sidecar.
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:

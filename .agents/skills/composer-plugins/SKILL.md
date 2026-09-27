@@ -646,6 +646,17 @@ pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
 See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
 `plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
 
+### Tauri-only modules
+
+Code that only works inside the Tauri shell (spawning a helper process, native plugins) goes behind a
+hand-written `#imports` subpath with a `tauri` condition, and a `default` stub that exports the module
+as `undefined` — `Plugin.addModule(undefined)` is a no-op. Only composer-app's native bundles resolve
+`tauri` (`bundle-tauri`, or `tauri dev` via `TAURI_ENV_PLATFORM`), so the web bundle never carries it.
+It is a package condition, not a capability `environments` value: a `tauri` barrel sliced from the
+canonical one would drop every browser-only module.
+
+See: `plugin-sandbox/package.json` (`#local-launcher`), `plugin-sandbox/src/tauri/`
+
 ## React Surface
 
 Surfaces are contributed via `Capability.contribute(Capabilities.ReactSurface, [...])` with `Surface.create()`.

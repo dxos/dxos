@@ -34,6 +34,15 @@
       "node": "./dist/lib/local-backend.node.mjs",
       "default": "./dist/lib/local-backend.browser.mjs"
     },
+    "#local-launcher": {
+      "source": {
+        "tauri": "./src/tauri/index.ts",
+        "default": "./src/tauri/unsupported.ts"
+      },
+      "types": "./dist/types/src/tauri/index.d.ts",
+      "tauri": "./dist/lib/local-launcher.tauri.mjs",
+      "default": "./dist/lib/local-launcher.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",

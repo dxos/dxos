@@ -16,7 +16,8 @@ macOS) via `@carderne/sandbox-runtime`:
 
 - **Where they run**: in-process under Node or Bun. In the desktop app, whose webview cannot spawn
   processes, the plugin starts `dx-sandbox` (this package's `compile-sidecar` output) and the
-  webview reaches it on a loopback port with a per-launch token passed over stdin.
+  webview reaches it on a loopback port with a per-launch token passed over stdin. The launcher is
+  resolved only under the `tauri` package condition (`#local-launcher`), so the web bundle omits it.
 - **Filesystem**: each sandbox is `$DX_SANDBOX_ROOT/<id>/` (default `~/.local/state/dxos/sandboxes`).
   Commands write only its `workspace/` (their cwd and `$HOME`) and `tmp/`; the user's home directory
   and other sandboxes are unreadable. `/workspace/…` paths in file operations map onto `workspace/`.
