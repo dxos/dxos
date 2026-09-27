@@ -2,24 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { RegistryOperation, describeLoadError } from '#operations';
 
 export const LoadPluginDialog = () => {
-  const manager = usePluginManager();
+  const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback(async () => {
     const trimmed = url.trim();
     if (!trimmed) {
       return;
@@ -27,21 +26,15 @@ export const LoadPluginDialog = () => {
 
     setLoading(true);
     setError(null);
-
-    void Effect.gen(function* () {
-      const plugin = yield* manager.add(trimmed);
-      yield* manager.enable(plugin.meta.profile.key);
+    // `invokePromise` reports a handler failure as `{ error }` rather than rejecting.
+    const { error } = await invokePromise(RegistryOperation.LoadPlugin, { url: trimmed });
+    setLoading(false);
+    if (error) {
+      setError(describeLoadError(error));
+    } else {
       closeRef.current?.click();
-    }).pipe(
-      Effect.catch((err) =>
-        Effect.sync(() => {
-          setError(describeError(err));
-        }),
-      ),
-      Effect.tap(() => Effect.sync(() => setLoading(false))),
-      EffectEx.runAndForwardErrors,
-    );
-  }, [url, manager]);
+    }
+  }, [url, invokePromise]);
 
   return (
     <Dialog.Content>
@@ -65,7 +58,7 @@ export const LoadPluginDialog = () => {
               }}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  handleLoad();
+                  void handleLoad();
                 }
               }}
               disabled={loading}
@@ -74,7 +67,7 @@ export const LoadPluginDialog = () => {
             {error && <Field.HelperText>{error}</Field.HelperText>}
           </Field.Root>
           <Flex justify='end'>
-            <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
+            <Button variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
               {loading ? t('loading.label') : t('load-plugin.label')}
             </Button>
           </Flex>
@@ -85,10 +78,3 @@ export const LoadPluginDialog = () => {
 };
 
 LoadPluginDialog.displayName = 'LoadPluginDialog';
-
-/**
- * A load failure only names its stage (`import-failed`, `manifest-error`); the cause says what to fix
- * in the plugin, e.g. a module that threw while evaluating.
- */
-const describeError = (error: unknown): string =>
-  error instanceof Error && error.cause instanceof Error ? `${String(error)}: ${error.cause.message}` : String(error);
