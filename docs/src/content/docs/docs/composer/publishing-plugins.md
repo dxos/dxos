@@ -124,17 +124,17 @@ export default Config2.make({
 
 Field reference for `plugin`:
 
-| Field         | Required | Notes                                                                                                           |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). The plugin's globally-unique key.                      |
-| `name`        | yes      | Human-readable name shown in the registry.                                                                      |
-| `description` | no       | Short description shown on the plugin's detail view.                                                            |
-| `author`      | no       | Author or organization name.                                                                                    |
-| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.    |
-| `source`      | no       | Source repository URL.                                                                                          |
-| `homePage`    | no       | Homepage URL.                                                                                                   |
-| `tags`        | no       | List of tags for categorization/discovery.                                                                      |
-| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs. |
+| Field         | Required | Notes                                                                                                                                   |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`) whose last segment is camelCase — no hyphens. The plugin's globally-unique key. |
+| `name`        | yes      | Human-readable name shown in the registry.                                                                                              |
+| `description` | no       | Short description shown on the plugin's detail view.                                                                                    |
+| `author`      | no       | Author or organization name.                                                                                                            |
+| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.                            |
+| `source`      | no       | Source repository URL.                                                                                                                  |
+| `homePage`    | no       | Homepage URL.                                                                                                                           |
+| `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
+| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
 
 Field reference for `publish`:
 
@@ -209,12 +209,100 @@ This removes the package profile and all of its release records from your PDS. T
 
 ## Local development
 
-You don't need to publish to test your plugin against Composer. Run your plugin's Vite dev server and load it by URL:
+You don't need to publish to test your plugin against Composer. Composer loads a plugin from the URL of its
+**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded:
 
-1. Start your dev server (e.g. `vite`) — note the port.
-2. In Composer, open **Settings → Plugins → Load by URL** and point it at your dev server's plugin entry (e.g. `http://localhost:5173/src/MyPlugin.tsx`).
+1. Serve the plugin. Either run your plugin's Vite dev server — `composerPlugin` serves a dev manifest at
+   `/manifest.json` (e.g. `http://localhost:3967/manifest.json`) — or serve a built `dist` directory, which
+   contains `manifest.json` and `index.mjs`.
+2. In Composer, open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste
+   the manifest URL.
 
-> Loading by URL works against a **bundled build** of Composer. It does not work when running Composer from its own Vite dev server.
+The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
+the entry it names.
+
+> Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
+> app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
+> `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
+> imports fail there.
+
+### A plugin without a build step
+
+Because the host provides every shared package through its import map, a plugin can be a single hand-written
+ES module — no bundler, no JSX — next to a manifest that lists it:
+
+```json
+{
+  "key": "org.example.plugin.hello",
+  "name": "Hello",
+  "version": "0.0.1",
+  "assets": ["index.mjs"]
+}
+```
+
+```js
+// index.mjs
+import * as Effect from 'effect/Effect';
+import { createElement } from 'react';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
+import { Surface } from '@dxos/app-framework/ui';
+
+// Must match the manifest's `key`.
+const meta = Plugin.getMetaFromConfig({
+  plugin: { key: 'org.example.plugin.hello', name: 'Hello' },
+});
+
+// The space Home page renders every surface contributed for this role.
+const SpaceHomeContent = Role.make('org.dxos.plugin.space.role.homeContent');
+
+const Hello = () =>
+  createElement(
+    'div',
+    { className: 'p-4 rounded-md border border-separator' },
+    'Hello!',
+  );
+
+export default Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'surface',
+    activatesOn: ActivationEvents.Startup,
+    // Declare what `activate` returns; an undeclared capability fails activation.
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.ReactSurface,
+          Surface.create({
+            id: 'hello',
+            filter: Surface.makeFilter(SpaceHomeContent),
+            component: Hello,
+          }),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
+```
+
+Serve both files from one directory with a JavaScript MIME type for `.mjs` (and CORS, if the directory is on
+another origin), then load `<directory URL>/manifest.json`. Things to know:
+
+- The default export must be a `Plugin` (or a zero-argument function returning one), and its key must equal
+  the manifest's `key`.
+- Ids are camelCase: the key's last segment (`org.example.plugin.spaceClock`, not `…space-clock`), module ids
+  and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it is imported, and a surface
+  with a hyphenated id is dropped without rendering.
+- Every module lists the capabilities its `activate` returns in `provides`.
+- Import only packages the host shares — the `@dxos/*` libraries and `react`, `react-dom` and `effect`.
+  `@dxos/plugin-*` packages are not in the import map.
+- A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
+- The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
+  same URL.
 
 ## Command reference
 
