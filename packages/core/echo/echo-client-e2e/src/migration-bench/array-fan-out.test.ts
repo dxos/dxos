@@ -371,17 +371,14 @@ describe('array fan-out (design 5): two-step composition against the real merge 
       expect(rawItemByName(parent, 'alpha').id).to.eq(undefined);
     }
 
-    // A DISTINCT, unplanned finding, verified rather than assumed: peer 1's OWN long-held live
-    // proxy -- the same object it called `stampIds` through -- presents a STALE, WRONG id for
-    // `alpha` at this point: `gamma`'s id, leaked from peer 1's own earlier write to array index 2
-    // (`alpha`'s post-merge slot). Re-querying the SAME db for the SAME object returns the SAME
-    // cached instance and is equally stale -- this is scoped to the live object graph of one
-    // peer/session, not to a single query call. A genuinely independent peer, never having read
-    // this path before the reorder landed, sees the correct (blank) value.
-    expect(findByName(parent1, 'alpha').id).to.eq(rawItemByName(parent1, 'gamma').id);
-    expect(findByName(parent1, 'alpha').id).to.not.eq(rawItemByName(parent1, 'alpha').id);
-    const staleRequery = await queryParent(db1, parent1.id);
-    expect(findByName(staleRequery, 'alpha').id).to.eq(findByName(parent1, 'alpha').id);
+    // The live proxy -- the same object `stampIds` wrote the earlier stamps through -- agrees with
+    // the raw document for the reordered element: no leak of `gamma`'s id (its pre-heal neighbour at
+    // this slot) onto `alpha`. Re-querying the same db for the same object is equally correct, and a
+    // genuinely independent peer that never held a reference before the reorder landed agrees too.
+    expect(findByName(parent1, 'alpha').id).to.eq(rawItemByName(parent1, 'alpha').id);
+    expect(findByName(parent1, 'alpha').id).to.eq(undefined);
+    const requeried = await queryParent(db1, parent1.id);
+    expect(findByName(requeried, 'alpha').id).to.eq(undefined);
 
     const peer3 = await builder.createPeer({ types: [ArrayParentDoc, ElementChildDoc] });
     await peer3.host.addReplicator(Context.default(), await network!.createReplicator());
@@ -391,18 +388,17 @@ describe('array fan-out (design 5): two-step composition against the real merge 
     const freshParent = await queryParent(db3, parent1.id);
     expect(findByName(freshParent, 'alpha').id).to.eq(undefined);
 
-    // The practical consequence for step 1 specifically, demonstrated directly: iterating the
-    // STALE live array (as `stampIds` naturally does) sees `alpha.id` as already defined and
-    // WRONGLY skips it -- the presence guard's idempotence claim can be defeated by this proxy
-    // artifact, not just by a genuine prior stamp. A migration re-invoked through a FRESH read (as
-    // any real re-invocation would be, since it re-queries rather than holding a reference across
-    // the whole rollout) sees the genuine blank and mints a SECOND id for `alpha` -- peer 1's
-    // original stamp for it is unrecoverable, not merely delayed.
+    // The practical consequence for step 1, demonstrated directly: since the live proxy already
+    // agrees with the document, `stampIds` restamps the genuine blank through `parent1` itself -- no
+    // fresh re-query is needed to recover from the reorder. Peer 1's original stamp for the OLD
+    // `alpha` node is still unrecoverable (it targeted a node the reorder deleted), so this is a
+    // second id for the element, not the first one restored -- but the presence guard now sees the
+    // truth through the object it is naturally invoked with, rather than being defeated by a stale
+    // proxy read.
+    expect(stampIds(parent1)).to.eq(true);
+    await db1.flush();
+    expect(rawItemByName(parent1, 'alpha').id).to.not.eq(undefined);
     expect(stampIds(parent1)).to.eq(false);
-    expect(stampIds(freshParent)).to.eq(true);
-    await db3.flush();
-    expect(rawItemByName(freshParent, 'alpha').id).to.not.eq(undefined);
-    expect(stampIds(freshParent)).to.eq(false);
   });
 
   test('A3: step 2 split independently by both peers collapses to one child per element; a parent ref resolves to the survivor', async ({

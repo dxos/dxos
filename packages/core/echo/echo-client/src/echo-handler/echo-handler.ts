@@ -251,7 +251,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
     for (const key of Object.keys(target)) {
-      if (key !== PROPERTY_ID && (!present || !Object.hasOwn(record, key))) {
+      // Only a root object's `id` is synthetic; a nested `id` is a schema field that must go stale-clean.
+      if ((!isRootDataObject(target) || key !== PROPERTY_ID) && (!present || !Object.hasOwn(record, key))) {
         delete (target as any)[key];
       }
     }
