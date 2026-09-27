@@ -85,7 +85,10 @@ untouched property survives a migration; a crash mid-space resumes from any peer
 3. Text folds: splice replay with two markers per property (source checkpoint + target fork
    frontier).
 4. Conflict read API: presented value by policy + the alternatives, for a review UI.
-5. **Measure the runner's cost** on the indexing hot path (the one unpriced element).
+5. **Measure the runner's cost** — **done (2026-09-27)**, `fold-forward.bench.test.ts` (`DX_BENCH=1`),
+   4-core sandbox, 20 edits of history per object: an idle full pass costs ~0.6 ms per migrated
+   object (50 → 35 ms, 200 → 113 ms), an update-scoped pass 11–18 ms, and each late write ~15 ms to
+   fold. Linear, and small enough that no worker-side detector is needed.
 
 **Done when**: every late-write case in `single-object`, `conflicts`, `text` passes through the
 real runner with no test-side folding.
