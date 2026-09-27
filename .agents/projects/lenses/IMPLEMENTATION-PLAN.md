@@ -126,8 +126,10 @@ real runner with no test-side folding.
 ## Working agreement
 
 Implementation continues on the research branch (`claude/m0-migrations-research-zw15ml`, PR
-#12439), starting with A1. Defaults until decided otherwise: M1's runner lives in the worker from
-the start; A2 is coordinated with the object-merging project's owners.
+#12439), starting with A1. Defaults taken 2026-09-27 (overridable): M1's runner stays client-side
+(`runMigrations`), because migrations are plugin code the worker cannot load; fold-forward is split
+— the worker indexing stream detects and records durable intents, the client executes them (this
+refines §10.7 q6); A2 is implemented on this branch.
 
 ## Not in scope
 
