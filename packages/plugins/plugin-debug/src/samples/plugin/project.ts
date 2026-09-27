@@ -45,29 +45,28 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
   // `Project.make` builds an outline for the project and the instructions' prose is stored as a
   // Text; a phase has to declare every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline, Text.Text],
-  run: ({ tasks }: ProjectInput) =>
-    Effect.gen(function* () {
-      const instructions = yield* Database.add(
-        Instructions.make({
-          name: 'Composer Plugin',
-          description: 'Bindings for a chat working this project.',
-          text: INSTRUCTIONS,
-          skills: [Ref.fromURI(Skill.registryURI(COMPUTER_SKILL))],
-          objects: [Ref.make(tasks.taskSet)],
-        }),
-      );
+  run: Effect.fnUntraced(function* ({ tasks }: ProjectInput) {
+    const instructions = yield* Database.add(
+      Instructions.make({
+        name: 'Composer Plugin',
+        description: 'Bindings for a chat working this project.',
+        text: INSTRUCTIONS,
+        skills: [Ref.fromURI(Skill.registryURI(COMPUTER_SKILL))],
+        objects: [Ref.make(tasks.taskSet)],
+      }),
+    );
 
-      const project = yield* Database.add(
-        Project.make({
-          name: 'Composer Plugin',
-          description:
-            'A TypeScript plugin that adds a live clock page to the sidebar, built on this machine and loaded into the running app.',
-          status: 'active',
-          instructions: Ref.make(instructions),
-          taskSet: Ref.make(tasks.taskSet),
-        }),
-      );
+    const project = yield* Database.add(
+      Project.make({
+        name: 'Composer Plugin',
+        description:
+          'A TypeScript plugin that adds a live clock page to the sidebar, built on this machine and loaded into the running app.',
+        status: 'active',
+        instructions: Ref.make(instructions),
+        taskSet: Ref.make(tasks.taskSet),
+      }),
+    );
 
-      return { project, instructions };
-    }),
+    return { project, instructions };
+  }),
 });

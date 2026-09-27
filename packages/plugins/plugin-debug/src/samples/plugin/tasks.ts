@@ -51,45 +51,44 @@ export type TasksResult = { taskSet: TaskSet.TaskSet; tasks: Task.Task[] };
 /** The four steps, each depending on the one before it. */
 export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
-  run: () =>
-    Effect.gen(function* () {
-      const taskSet = yield* Database.add(
-        TaskSet.make({
-          name: 'Composer Plugin',
-          description: 'From an empty folder to a plugin loaded into this app.',
-        }),
-      );
+  run: Effect.fnUntraced(function* () {
+    const taskSet = yield* Database.add(
+      TaskSet.make({
+        name: 'Composer Plugin',
+        description: 'From an empty folder to a plugin loaded into this app.',
+      }),
+    );
 
-      const tasks = STEPS.map((step) =>
-        Task.make({
-          title: step.title,
-          description: step.description,
-          estimate: step.estimate,
-          status: 'todo',
-          // Task carries no due date; its dates are activity-log lines, so that is where they go.
-          history: [
-            {
-              id: EntityId.random(),
-              date: daysAgo(0),
-              event: 'created' as const,
-              description: 'Filed from the Composer plugin template.',
-            },
-          ],
-        }),
-      );
-      yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {
-        taskSet.tasks = refs;
-      });
+    const tasks = STEPS.map((step) =>
+      Task.make({
+        title: step.title,
+        description: step.description,
+        estimate: step.estimate,
+        status: 'todo',
+        // Task carries no due date; its dates are activity-log lines, so that is where they go.
+        history: [
+          {
+            id: EntityId.random(),
+            date: daysAgo(0),
+            event: 'created' as const,
+            description: 'Filed from the Composer plugin template.',
+          },
+        ],
+      }),
+    );
+    yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {
+      taskSet.tasks = refs;
+    });
 
-      for (const [index, task] of tasks.entries()) {
-        if (index > 0) {
-          const previous = tasks[index - 1];
-          Obj.update(task, (task) => {
-            task.dependsOn = [Ref.make(previous)];
-          });
-        }
+    for (const [index, task] of tasks.entries()) {
+      if (index > 0) {
+        const previous = tasks[index - 1];
+        Obj.update(task, (task) => {
+          task.dependsOn = [Ref.make(previous)];
+        });
       }
+    }
 
-      return { taskSet, tasks };
-    }),
+    return { taskSet, tasks };
+  }),
 });
