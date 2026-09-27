@@ -3,7 +3,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Compiles the local sandbox helper the desktop app bundles (`src/local/sidecar-main.ts`) into a
+// Compiles the local sandbox helper the desktop app bundles (`src/bin/dx-sandbox.ts`) into a
 // single executable for the host platform at `dist/sidecar/dx-sandbox`.
 
 import { type BunPlugin } from 'bun';
@@ -34,7 +34,7 @@ const nodeStdPlugin: BunPlugin = {
 
 await mkdir('dist/sidecar', { recursive: true });
 const result = await Bun.build({
-  entrypoints: ['./src/local/sidecar-main.ts'],
+  entrypoints: ['./src/bin/dx-sandbox.ts'],
   target: 'bun',
   plugins: [nodeStdPlugin],
   // Workspace packages resolve to their sources, so the helper builds without a prior `moon build`.
