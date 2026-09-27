@@ -124,7 +124,7 @@ const seedProject = async ({ space }: { space: Space }) => {
 };
 
 /** The plugin stack, with the assistant's language model replaced by the simulator. */
-const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'root'> = {}) =>
+const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'roots'> = {}) =>
   createStoryDecorators({
     types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     onInit: seedProject,
@@ -132,7 +132,9 @@ const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'r
       SpacePlugin({}),
       TasksPlugin.make(),
       ProjectsPlugin.make(),
-      AssistantPlugin.make({ aiServiceMiddleware: AgentSimulator.middleware({ root: delegatedTask, ...options }) }),
+      AssistantPlugin.make({
+        aiServiceMiddleware: AgentSimulator.middleware({ roots: () => seeded?.roots ?? [], ...options }),
+      }),
       // Provides `RemoteProcessManager`, which the assistant's agent service requires.
       RoutinePlugin.make(),
       // Selecting a row asks the deck to show its companion; the layout here already does.
@@ -157,6 +159,7 @@ const assignToAgent = async (canvas: ReturnType<typeof within>, title: string) =
     throw new Error(`No task row titled "${title}".`);
   }
   await userEvent.click(await within(row).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   await userEvent.click(await screen.findByText('Assign to agent', undefined, { timeout: 10_000 }));
 };
 

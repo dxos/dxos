@@ -47,8 +47,11 @@ export type AgentState = {
 export type Strategy = (state: AgentState) => ScriptedLanguageModel.ScriptedTurn;
 
 export type AgentSimulatorOptions = {
-  /** The task handed to the agent; read on every call, since it only exists once the story seeds it. */
-  readonly root: () => Task.Task | undefined;
+  /**
+   * The tasks that may be handed to the agent; read on every call, since they only exist once the
+   * story seeds them. Each call works on the one delegated to the chat making it.
+   */
+  readonly roots: () => readonly Task.Task[];
   readonly strategy?: Strategy;
   readonly pace?: Partial<Pace>;
 };
@@ -205,8 +208,24 @@ const resolveSubtasks = (root: Task.Task): Task.Task[] =>
 /**
  * The turn generator to hand to `ScriptedLanguageModel.scriptedAiServiceMiddleware`.
  */
+/** The chat a request comes from: its own entry among the prompt's context objects. */
+const CHAT_CONTEXT = /<dxn>([^<]+)<\/dxn>\s*<typename>org\.dxos\.type\.assistant\.chat<\/typename>/;
+
+/**
+ * The task delegated to the chat behind `request`. Delegation names the chat as the task's assignee,
+ * and the chat is among the prompt's context objects, so each session finds its own task even with
+ * several delegated at once.
+ */
+const delegatedTo = (
+  request: ScriptedLanguageModel.ScriptedRequest,
+  roots: readonly Task.Task[],
+): Task.Task | undefined => {
+  const chatId = request.system.match(CHAT_CONTEXT)?.[1]?.split('/').at(-1);
+  return chatId ? roots.find((task) => Task.refEntityId(task.assignee?.subject) === chatId) : undefined;
+};
+
 export const make = ({
-  root,
+  roots,
   strategy = sequential,
   pace,
 }: AgentSimulatorOptions): ScriptedLanguageModel.ScriptedTurnGenerator => {
@@ -218,7 +237,7 @@ export const make = ({
     if (promptIncludes(PLAN_REMINDER_PROMPT)(request)) {
       return { parts: [text('stop')] };
     }
-    const task = root();
+    const task = delegatedTo(request, roots());
     if (!task) {
       return { parts: [text('No task has been assigned.')] };
     }
