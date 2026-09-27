@@ -9,7 +9,7 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Lens } from '@dxos/echo-panproto';
+import { Lens } from '@dxos/echo';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';

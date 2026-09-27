@@ -4,9 +4,9 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
+import * as Type from '../../Type.ts';
 import { getCodec } from './codecs.ts';
 import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types.ts';
 

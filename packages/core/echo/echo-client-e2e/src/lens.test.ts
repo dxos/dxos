@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Lens, Obj, Query, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
-import { Lens } from '@dxos/echo-panproto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Task } from '@dxos/types';

@@ -4,17 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Type } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+import { Annotation, DXN, Lens, Type } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 //
 // The demo lens: a `Task` viewed as a GTD task.
 //
 // `GtdTask` is written out, not derived — that is what lets an interface be built once against it and
-// reused for every source that maps to it. It lives here rather than in `@dxos/echo-panproto` because
-// `core/echo` must not depend on `sdk/types`: the mechanism ships in the package, an example lens
-// ships with the types it binds.
+// reused for every source that maps to it. It lives here rather than in `@dxos/echo` because `core/echo`
+// must not depend on `sdk/types`: the mechanism ships in the package, an example lens ships with the
+// types it binds.
 //
 
 /** The shape the lensed interface is written against. */

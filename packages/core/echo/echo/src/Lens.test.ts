@@ -6,9 +6,12 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
+import * as Annotation from './Annotation.ts';
 import * as Lens from './Lens.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
 
 //
 // Source and target are both declared types, mirroring the real case (a `DataType.Task` and a

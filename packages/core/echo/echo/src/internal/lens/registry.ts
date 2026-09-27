@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-
+import * as Type from '../../Type.ts';
 import { type AnyLens } from './types.ts';
 
 //

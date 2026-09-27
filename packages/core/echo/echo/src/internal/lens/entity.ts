@@ -4,8 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
+import * as Annotation from '../../Annotation.ts';
+import * as Obj from '../../Obj.ts';
+import * as Type from '../../Type.ts';
 import { make } from './codec.ts';
 import { hasCodec } from './codecs.ts';
 import { type AnyLens, type Mapping } from './types.ts';

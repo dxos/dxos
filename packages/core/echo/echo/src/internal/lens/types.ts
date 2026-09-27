@@ -4,7 +4,8 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type Obj, type Type } from '@dxos/echo';
+import type * as Obj from '../../Obj.ts';
+import type * as Type from '../../Type.ts';
 
 //
 // The object lens: one live ECHO object viewed through a second declared type. Unlike the wire lens

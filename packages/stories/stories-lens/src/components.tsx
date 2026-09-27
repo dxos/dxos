@@ -4,8 +4,7 @@
 
 import React, { type ReactNode, useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+import { Lens, Obj } from '@dxos/echo';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';

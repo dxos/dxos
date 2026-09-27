@@ -57,9 +57,6 @@
       "path": "../echo-host"
     },
     {
-      "path": "../echo-panproto"
-    },
-    {
       "path": "../echo-protocol"
     },
     {

@@ -4,8 +4,8 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Obj, type Type } from '@dxos/echo';
-
+import * as Obj from '../../Obj.ts';
+import type * as Type from '../../Type.ts';
 import { plan as compile, readSource } from './mapping.ts';
 import { getOverlay } from './overlay.ts';
 import {

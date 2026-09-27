@@ -4,9 +4,9 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { ChangeId, SchemaId, TypeEntityId, TypeId } from '@dxos/echo/internal';
-
+import * as Obj from '../../Obj.ts';
+import * as Type from '../../Type.ts';
+import { ChangeId, SchemaId, TypeEntityId, TypeId } from '../index.ts';
 import { getOverlay } from './overlay.ts';
 import { type AnyLens, type Lens } from './types.ts';
 import { applyWrites } from './write.ts';

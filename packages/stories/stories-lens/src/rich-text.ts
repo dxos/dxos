@@ -5,7 +5,7 @@
 import { parser } from '@lezer/markdown';
 import * as Schema from 'effect/Schema';
 
-import { Lens } from '@dxos/echo-panproto';
+import { Lens } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 //
