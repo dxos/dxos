@@ -812,7 +812,6 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                         cx={anchorX}
                         cy={rowY(index)}
                         r={NODE_RADIUS}
-                        strokeDasharray='2 2'
                         className={mx('fill-base-surface', STATUS_COLOR.blocked.thread)}
                       />,
                     ]
@@ -981,7 +980,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                     cx={cx}
                     cy={rowY(row.index)}
                     r={NODE_RADIUS}
-                    className='animate-ping [transform-box:fill-box] origin-center pointer-events-none fill-red-500'
+                    className='animate-ping transform-fill origin-center pointer-events-none fill-error-500'
                   />
                 )}
                 <HoverCard.Root>
