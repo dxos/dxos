@@ -8,54 +8,66 @@ import React, { CSSProperties, type PropsWithChildren } from 'react';
 import { useIconHref } from '../hooks/index.ts';
 import { withLayout, withTheme } from '../testing/index.ts';
 
+// Issues
+// - [ ] Sizes (check all make sense for all inputs)
+// - [ ] Focus ring (clipping?)
+// - [ ] Padding
+
 type Metrics = {
-  fontSize: string;
   blockSize: string;
   lineHeight: string;
+  fontSize: string;
   iconSize: string;
 };
 
-type Size = 'xs' | 'sm' | 'md' | 'lg';
+type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-const SIZES: Size[] = ['xs', 'sm', 'md', 'lg'];
+const SIZES: Size[] = ['xs', 'sm', 'md', 'lg', 'xl'];
 
+// Type sizes are the theme's own tokens (`md` is Tailwind's `base`), so the toolbar tracks the scale.
 const metrics: Record<Size, Metrics> = {
   xs: {
-    fontSize: '12px',
-    blockSize: '20px',
-    lineHeight: '20px',
-    iconSize: '12px',
+    blockSize: '1.25rem',
+    lineHeight: 'var(--text-xs--line-height)',
+    fontSize: 'var(--text-xs)',
+    iconSize: '0.75rem',
   },
   sm: {
-    fontSize: '14px',
-    blockSize: '24px',
-    lineHeight: '24px',
-    iconSize: '16px',
+    blockSize: '1.5rem',
+    lineHeight: 'var(--text-sm--line-height)',
+    fontSize: 'var(--text-sm)',
+    iconSize: '1rem',
   },
   md: {
-    fontSize: '16px',
-    blockSize: '32px',
-    lineHeight: '32px',
-    iconSize: '24px',
+    blockSize: '2rem',
+    lineHeight: 'var(--text-base--line-height)',
+    fontSize: 'var(--text-base)',
+    iconSize: '1.5rem',
   },
   lg: {
-    fontSize: '18px',
-    blockSize: '40px',
-    lineHeight: '40px',
-    iconSize: '32px',
+    blockSize: '2.5rem',
+    lineHeight: 'var(--text-lg--line-height)',
+    fontSize: 'var(--text-lg)',
+    iconSize: '2rem',
+  },
+  xl: {
+    blockSize: '3rem',
+    lineHeight: 'var(--text-xl--line-height)',
+    fontSize: 'var(--text-xl)',
+    iconSize: '2.5rem',
   },
 };
 
 const Toolbar = ({ children, size = 'md' }: PropsWithChildren<{ size?: Size }>) => {
-  const { fontSize, blockSize, lineHeight, iconSize } = metrics[size];
+  const { blockSize, lineHeight, fontSize, iconSize } = metrics[size];
   return (
     <div
       className='shrink-0 w-full flex items-center overflow-x-auto scrollbar-none'
       style={
         {
-          '--font-size': fontSize,
           '--block-size': blockSize,
           '--line-height': lineHeight,
+          '--font-size': fontSize,
           '--icon-size': iconSize,
         } as CSSProperties
       }
@@ -72,7 +84,7 @@ const Block = ({ children }: PropsWithChildren) => {
 const Icon = ({ icon }: { icon: string }) => {
   const href = useIconHref(icon);
   return (
-    <svg className='w-(--icon-size,24px) h-(--icon-size,24px)'>
+    <svg className='w-(--icon-size,1.5rem) h-(--icon-size,1.5rem)'>
       <use href={href} />
     </svg>
   );
@@ -83,14 +95,14 @@ const Input = () => {
     <input
       type='text'
       placeholder='Input'
-      className='w-full bg-base-surface border-none outline-none ring-0 p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'
+      className='w-full bg-base-surface border-none dx-focus-ring-inset p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'
     />
   );
 };
 
 const Button = ({ children }: PropsWithChildren) => {
   return (
-    <button className='w-fit bg-base-surface hover:bg-hover-surface border-none outline-none p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'>
+    <button className='w-fit bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset p-0 text-[length:var(--font-size,1rem)] leading-(--line-height)'>
       {children}
     </button>
   );
@@ -129,7 +141,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/playground/experimental',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[300px]' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
     layout: 'centered',
   },
