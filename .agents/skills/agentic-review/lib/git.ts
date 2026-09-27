@@ -20,8 +20,8 @@ const resolveRoot = (): string => {
   return cachedRoot;
 };
 
-/** Options for {@link git}. */
-export type GitOptions = { allowFail?: boolean };
+/** Options for {@link git}; `cwd` overrides the repo root (tests run against a scratch repo). */
+export type GitOptions = { allowFail?: boolean; cwd?: string; input?: string };
 
 /** Narrow shape of the error `execFileSync` throws, enough to read its captured stderr. */
 type ExecError = { stderr?: unknown; message: string };
@@ -30,16 +30,17 @@ const isExecError = (error: unknown): error is ExecError =>
   typeof error === 'object' && error !== null && 'message' in error;
 
 /** Run git and return trimmed stdout; throws on non-zero exit unless `allowFail`. */
-export function git(args: string[], options?: { allowFail?: false }): string;
-export function git(args: string[], options: { allowFail: true }): string | null;
-export function git(args: string[], { allowFail = false }: GitOptions = {}): string | null {
+export function git(args: string[], options?: { allowFail?: false; cwd?: string; input?: string }): string;
+export function git(args: string[], options: { allowFail: true; cwd?: string; input?: string }): string | null;
+export function git(args: string[], { allowFail = false, cwd, input }: GitOptions = {}): string | null {
   try {
     // Pipe stderr so a tolerated failure (allowFail) does not leak git's fatal
     // messages to the console.
     return execFileSync('git', args, {
-      cwd: resolveRoot(),
+      cwd: cwd ?? resolveRoot(),
       encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
+      input,
+      stdio: [input == null ? 'ignore' : 'pipe', 'pipe', 'pipe'],
       maxBuffer: 64 * 1024 * 1024,
     }).trim();
   } catch (err) {
@@ -54,9 +55,10 @@ export function git(args: string[], { allowFail = false }: GitOptions = {}): str
 /** Resolve the merge-base of HEAD with the first main-like ref that exists. */
 export const mainMergeBase = (
   candidates: string[] = ['origin/main', 'main', 'origin/master', 'master'],
+  cwd?: string,
 ): string | null => {
   for (const ref of candidates) {
-    const base = mergeBase('HEAD', ref);
+    const base = mergeBase('HEAD', ref, cwd);
     if (base) {
       return base;
     }
@@ -82,8 +84,8 @@ export const isWorkingTreeDirty = (): boolean => {
 };
 
 /** Committer timestamp (unix seconds) for a commit, or 0 if unknown. */
-export const commitTimestamp = (commit: string): number => {
-  const out = git(['show', '-s', '--format=%ct', commit], { allowFail: true });
+export const commitTimestamp = (commit: string, cwd?: string): number => {
+  const out = git(['show', '-s', '--format=%ct', commit], { allowFail: true, cwd });
   return out ? Number.parseInt(out, 10) : 0;
 };
 
@@ -94,9 +96,9 @@ export const commitTimestamp = (commit: string): number => {
  * prior review referencing an unfetched commit), both of which mean base
  * resolution should skip it rather than fail.
  */
-export const isAncestor = (ancestor: string, descendant: string): boolean => {
+export const isAncestor = (ancestor: string, descendant: string, cwd?: string): boolean => {
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { stdio: 'ignore' });
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd, stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -105,7 +107,8 @@ export const isAncestor = (ancestor: string, descendant: string): boolean => {
 
 /** Best-effort merge-base of two refs; null if either is unknown. Internal — the
  * only consumer is `mainMergeBase`. */
-const mergeBase = (a: string, b: string): string | null => git(['merge-base', a, b], { allowFail: true });
+const mergeBase = (a: string, b: string, cwd?: string): string | null =>
+  git(['merge-base', a, b], { allowFail: true, cwd });
 
 /**
  * Newest commit reachable from `ref` that touched `path`, or null if none. Used
@@ -119,26 +122,42 @@ export const lastCommitTouching = (path: string, ref: string = 'HEAD'): string |
   return commit || null;
 };
 
+/** Non-empty trimmed lines of a git listing; a failed (null) listing yields none. */
+const lines = (out: string | null): string[] =>
+  (out ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+/** Staged, unstaged, and untracked paths — uncommitted work is the author's by definition. */
+const workingTreeChanges = (cwd?: string): string[] => [
+  ...lines(git(['diff', '--name-only', 'HEAD'], { allowFail: true, cwd })),
+  ...lines(git(['diff', '--name-only', '--cached'], { allowFail: true, cwd })),
+  ...lines(git(['ls-files', '--others', '--exclude-standard'], { allowFail: true, cwd })),
+];
+
 /**
  * Repo-relative paths changed between `base` and the working tree: committed
  * diff `base..HEAD`, plus staged, unstaged, and untracked changes.
  */
-export const changedFiles = (base: string): Set<string> => {
-  const paths = new Set<string>();
-  const collect = (out: string | null): void => {
-    if (!out) {
-      return;
-    }
-    for (const line of out.split(/\r?\n/)) {
-      const path = line.trim();
-      if (path) {
-        paths.add(path);
-      }
-    }
-  };
-  collect(git(['diff', '--name-only', `${base}..HEAD`], { allowFail: true }));
-  collect(git(['diff', '--name-only', 'HEAD'], { allowFail: true }));
-  collect(git(['diff', '--name-only', '--cached'], { allowFail: true }));
-  collect(git(['ls-files', '--others', '--exclude-standard'], { allowFail: true }));
-  return paths;
+export const changedFiles = (base: string): Set<string> =>
+  new Set([...lines(git(['diff', '--name-only', `${base}..HEAD`], { allowFail: true })), ...workingTreeChanges()]);
+
+/**
+ * Paths a PR's own commits changed since `base`, ignoring merges: a file counts only when a
+ * non-merge commit on HEAD's first-parent line touched it and it still differs from `base`.
+ * A merge from main, and the conflict resolution inside it, therefore adds nothing — the review
+ * judges the author's change, not the main-line code it was reconciled with.
+ */
+export const prChangedFiles = (base: string, cwd?: string): Set<string> => {
+  const touched = new Set(
+    lines(
+      git(['log', '--first-parent', '--no-merges', '--format=', '--name-only', `${base}..HEAD`], {
+        allowFail: true,
+        cwd,
+      }),
+    ),
+  );
+  const net = lines(git(['diff', '--name-only', base, 'HEAD'], { allowFail: true, cwd }));
+  return new Set([...net.filter((path) => touched.has(path)), ...workingTreeChanges(cwd)]);
 };

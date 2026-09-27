@@ -67,6 +67,7 @@
       "@dxos/echo-query",
       "@dxos/echo-react",
       "@dxos/echo-solid",
+      "@dxos/echo-sqlite",
       "@dxos/edge-client",
       "@dxos/edge-compute",
       "@dxos/effect",
