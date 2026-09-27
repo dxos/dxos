@@ -311,9 +311,8 @@ export const Plain: Story = {
     // Nothing produced yet, so the artifacts section is absent rather than empty.
     await expect(canvas.queryByTestId('tasksPlugin.artifacts')).toBeNull();
     // The creation time the database records for the task.
-    await expect(
-      canvas.findByTestId('taskList.property.created', undefined, { timeout: 10_000 }),
-    ).resolves.toHaveTextContent(/^Created /);
+    const created = await canvas.findByTestId('taskList.property.created', undefined, { timeout: 10_000 });
+    await expect(created.querySelector('time[data-testid="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
   },
 };
 
