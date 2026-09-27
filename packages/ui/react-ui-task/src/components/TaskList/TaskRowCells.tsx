@@ -122,17 +122,9 @@ TaskStatusControl.displayName = 'TaskList.StatusControl';
  * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
  * an MCP call, another space.
  */
-export const TaskMnemonic = ({
-  task,
-  classNames,
-}: {
-  // A snapshot too: the row reads its subject off one, and the mnemonic comes from the id, which a
-  // snapshot carries like the object does.
-  task: Obj.Unknown | Obj.Snapshot;
-  classNames?: string;
-}) => (
+export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
   <SystemIconButton.Clipboard
-    classNames={mx('font-mono', classNames)}
+    classNames='tabular-nums'
     density='sm'
     variant='tag'
     // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
