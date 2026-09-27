@@ -277,6 +277,22 @@ jobs:
           find packages/apps/composer-app/src-tauri/sidecar/ollama-runtime -type f -print0 |
             xargs -0 -I{} codesign --force --options runtime --sign "$CERT_ID" "{}"
 
+      # plugin-sandbox's local sandbox helper ships like the ollama launcher, as a plain bundled file
+      # (see plugin-native's capabilities/sandbox-launcher.ts). Built from sources, so no moon here.
+      - name: Build sandbox helper
+        run: |
+          (cd packages/plugins/plugin-sandbox && proto run bun -- ./scripts/build-sidecar.ts)
+          (cd packages/apps/composer-app && node scripts/stage-sandbox-helper.mjs --required)
+
+      # Signed with its own entitlements: a Bun executable's JIT needs the unrestricted
+      # `allow-jit` family, and must not get the app's restricted ones (which macOS kills it for).
+      - name: Sign sandbox helper
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          codesign --force --options runtime --sign "$CERT_ID" \
+            --entitlements packages/apps/composer-app/src-tauri/SandboxHelper.entitlements.plist \
+            packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
+
       - name: Build Tauri app
         # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
         # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
@@ -316,6 +332,21 @@ jobs:
           if [ -n "$entitlements" ]; then
             echo "::error::ollama launcher is signed with entitlements: $entitlements" && exit 1
           fi
+
+      # The helper must run under the hardened runtime and claim none of the app's restricted
+      # entitlements, which only the app's provisioning profile covers.
+      - name: Verify sandbox helper signature
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          helper="$app/Contents/Resources/dx-sandbox"
+          codesign --verify --strict "$helper"
+          entitlements=$(codesign -d --entitlements - --xml "$helper" 2>/dev/null)
+          for restricted in application-identifier associated-domains team-identifier keychain-access-groups; do
+            if echo "$entitlements" | grep -q "$restricted"; then
+              echo "::error::dx-sandbox is signed with restricted entitlement $restricted" && exit 1
+            fi
+          done
 
       - name: Upload assets
         timeout-minutes: 30

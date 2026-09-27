@@ -24,3 +24,19 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # The local sandbox helper the desktop app bundles, compiled for the host platform. Not part of
+  # `build`: only composer-app's Tauri build consumes it.
+  compile-sidecar:
+    command: bun
+    args:
+      - ./scripts/build-sidecar.ts
+    deps:
+      - ^:build
+    inputs:
+      - '@group(production)'
+      - scripts/build-sidecar.ts
+      - /.prototools
+    outputs:
+      - dist/sidecar/
+    options:
+      timeout: 120

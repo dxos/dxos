@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createSandboxManager } from '@carderne/sandbox-runtime';
 import { afterAll, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -22,9 +21,9 @@ import { Sandbox, SandboxOperation } from '#types';
 import { layerLocal } from '../services/layer.ts';
 import { SandboxHandlers } from '../skills/functions/index.ts';
 import SandboxSkill from '../skills/sandbox-skill.ts';
+import { canRunLocalSandboxes } from './probe.ts';
 
-const probe = createSandboxManager();
-const unavailable = !probe.isSupportedPlatform() || probe.checkDependencies().errors.length > 0;
+const unavailable = !(await canRunLocalSandboxes());
 
 // Read when the local backend is first built, so set before any test runs.
 const root = mkdtempSync(join(tmpdir(), 'dx-sandbox-ops-'));

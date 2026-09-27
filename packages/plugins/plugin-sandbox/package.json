@@ -87,6 +87,21 @@
       "source": "./src/types/SandboxService.ts",
       "types": "./dist/types/src/types/SandboxService.d.ts",
       "import": "./dist/lib/SandboxService.mjs"
+    },
+    "./SandboxCapabilities": {
+      "source": "./src/types/SandboxCapabilities.ts",
+      "types": "./dist/types/src/types/SandboxCapabilities.d.ts",
+      "import": "./dist/lib/SandboxCapabilities.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./HttpBackend": {
+      "source": "./src/services/HttpBackend.ts",
+      "types": "./dist/types/src/services/HttpBackend.d.ts",
+      "import": "./dist/lib/HttpBackend.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -103,6 +118,15 @@
       ],
       "SandboxService": [
         "dist/types/src/types/SandboxService.d.ts"
+      ],
+      "SandboxCapabilities": [
+        "dist/types/src/types/SandboxCapabilities.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "HttpBackend": [
+        "dist/types/src/services/HttpBackend.d.ts"
       ]
     }
   },
@@ -120,6 +144,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
@@ -131,7 +156,6 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",

@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as SandboxCapabilities from '@dxos/plugin-sandbox/SandboxCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -32,6 +33,12 @@ export const Ollama = Capability.lazyModule(
     activatesOn: ActivationEvents.Startup,
   },
   () => import('./ollama.ts'),
+);
+// The helper spawns on first use, not here, so activating with the app costs nothing.
+export const SandboxLauncher = Capability.lazyModule(
+  'SandboxLauncher',
+  { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup },
+  () => import('./sandbox-launcher.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

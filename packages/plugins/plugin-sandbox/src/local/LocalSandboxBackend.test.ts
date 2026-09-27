@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createSandboxManager } from '@carderne/sandbox-runtime';
 import { afterAll, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { existsSync } from 'node:fs';
@@ -12,13 +11,12 @@ import { join } from 'node:path';
 
 import { EffectEx } from '@dxos/effect';
 
+import { canRunLocalSandboxes } from '../testing/probe.ts';
 import { LocalSandboxBackend, type LocalSandboxOptions, sniffMimeType, toolchainDirs } from './LocalSandboxBackend.ts';
 
 const SPACE_ID = 'space-a';
 
-// Runs only where the OS sandbox is available (bubblewrap + socat + ripgrep on Linux; macOS).
-const probe = createSandboxManager();
-const unavailable = !probe.isSupportedPlatform() || probe.checkDependencies().errors.length > 0;
+const unavailable = !(await canRunLocalSandboxes());
 
 // A 1x1 red PNG.
 const PNG_BYTES = Uint8Array.from(

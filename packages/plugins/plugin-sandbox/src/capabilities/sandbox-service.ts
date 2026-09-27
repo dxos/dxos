@@ -11,16 +11,16 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 
 import { SandboxService } from '#types';
 
-import { layer } from '../services/layer.ts';
+import { layerFromCapabilities } from '../services/layer.ts';
 
 /** One backend for the application: local sandboxes share proxies and per-sandbox command locks. */
 const SandboxLayerSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ClientService],
+    requires: [ClientService, Capability.Service],
     provides: [SandboxService.Service],
   },
-  () => layer,
+  () => layerFromCapabilities,
 );
 
 export default Capability.makeModule(() =>

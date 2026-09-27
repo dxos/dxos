@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
+import { SandboxCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -18,6 +19,9 @@ export const PluginAsset = AppCapability.pluginAsset({
 });
 export const SandboxLayer = AppCapability.layerSpec(() => import('./sandbox-service.ts'), { name: 'SandboxLayer' });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  provides: [SandboxCapabilities.Settings],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

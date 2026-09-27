@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createSandboxManager } from '@carderne/sandbox-runtime';
 import * as Effect from 'effect/Effect';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -22,9 +21,9 @@ import { SandboxPlugin } from '#plugin';
 import { Sandbox, SandboxOperation } from '#types';
 
 import { SANDBOX_BACKEND_ENV } from './services/layer.ts';
+import { canRunLocalSandboxes } from './testing/probe.ts';
 
-const probe = createSandboxManager();
-const unavailable = !probe.isSupportedPlatform() || probe.checkDependencies().errors.length > 0;
+const unavailable = !(await canRunLocalSandboxes());
 
 // Read when the plugin's layer spec is first built, so set before the app starts.
 const root = mkdtempSync(join(tmpdir(), 'dx-sandbox-plugin-'));
