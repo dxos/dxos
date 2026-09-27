@@ -310,10 +310,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         // Only where a plugin can store the file, as the task's own article decides.
         acceptFiles={!!attachFile}
         descriptionExtensions={descriptionExtensions}
-        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
-        // and a fourth line would double it. `mx-trim-md` reproduces the old wrapper div's outer
-        // inset as a margin — `px-trim-md` would instead be merged (tailwind-merge) with the
-        // existing `p-2`'s horizontal component and silently dropped.
+        // Flush with the list, with no border of its own: it reads as the list's last row.
         classNames='bg-input-surface px-15 py-2'
         placeholder={t('task-create.placeholder')}
       />
