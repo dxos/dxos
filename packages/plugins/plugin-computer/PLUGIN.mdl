@@ -5,8 +5,8 @@ version: 0.1.0
 ---
 
 Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash tool and a
-multi-string-replace edit tool, carried by a single vite dev-server route that runs a shell script
-under a configured root. Nothing is mounted outside a vite dev server.
+multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
+that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
 ## Extensions
 

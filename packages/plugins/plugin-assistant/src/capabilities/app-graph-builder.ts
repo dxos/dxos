@@ -24,7 +24,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
-import { Database, DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Type } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -35,6 +35,8 @@ import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
@@ -164,10 +166,13 @@ export default Capability.makeModule(
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullishOr(state.currentChat[objectUri]),
-              Option.flatMap((dxnStr) => Option.fromNullishOr(DXN.tryMake(dxnStr))),
-              Option.flatMap((dxn) => Option.fromNullishOr(Obj.getDatabase(object)?.makeRef(dxn))),
-              Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
+              Option.fromNullishOr(currentChatRef(object, state.currentChat[objectUri])),
+              // The atom yields a snapshot, which `Obj.isObject` rejects: subscribe through it so the
+              // node re-runs once the chat loads, and hand on the live target.
+              Option.flatMap((ref) => {
+                get(Obj.atom(ref));
+                return Option.fromNullishOr(ref.target);
+              }),
               Option.filter(Obj.isObject),
               Option.orElse(() => pipe(Option.fromNullishOr(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
