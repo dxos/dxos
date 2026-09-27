@@ -25,4 +25,12 @@ describe('foldStatuses', () => {
     expect(parseEnumTerms(query, STATUS_TERMS).values).to.deep.eq(hidden('done'));
     expect(new QueryBuilder().build(query).filter).to.exist;
   });
+
+  test('a grouped query takes the next choice in place rather than stacking', ({ expect }) => {
+    const once = foldStatuses('title:a OR title:b', hidden('done'));
+    expect(foldStatuses(once, hidden('done', 'cancelled'))).to.eq(
+      'NOT status:done NOT status:cancelled (title:a OR title:b)',
+    );
+    expect(foldStatuses(once, ALL_STATUSES)).to.eq('(title:a OR title:b)');
+  });
 });

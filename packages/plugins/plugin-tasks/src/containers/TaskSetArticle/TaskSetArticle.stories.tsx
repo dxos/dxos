@@ -374,6 +374,89 @@ export const SharedFilterState: Story = {
 };
 
 /**
+ * Grouping puts the rows under collapsible headers with counts, and a sort reorders the rows within
+ * each group. Both choices persist per device beside the filter, and dragging is off while either is
+ * set, since a drop writes the set's own order.
+ */
+export const SortAndGroup: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    const option = (testId: string) => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+    const headers = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group.header"]')).map((header) =>
+        header.textContent?.trim(),
+      );
+    // Visible rows only: a collapsed branch hides its rows rather than unmounting them.
+    const titles = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]'))
+        .filter((title) => title.checkVisibility())
+        .map((title) => title.textContent);
+    const stored = () =>
+      JSON.parse(globalThis.localStorage.getItem(`dxos:view-state:tasks-task-set-view:${context.taskSet.id}`) ?? '{}');
+
+    // Group by status: one header per non-empty status, in the status table's order, with its count.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.group"]'));
+    await waitFor(() => expect(option('tasks.group.status')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.group.status'));
+    await waitFor(() => expect(headers()).toEqual(['Todo2', 'Started2', 'Done1', 'Cancelled1']), { timeout: 10_000 });
+    await expect(stored().group).toEqual('status');
+
+    // A header collapses like a branch.
+    const doneGroup = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group"]')).find((row) =>
+        row.textContent?.includes('Done'),
+      ) ?? null;
+    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]') ?? null);
+    await waitFor(() => expect(titles()).not.toContain('Source green coffee'), { timeout: 10_000 });
+    await expect(headers()).toContain('Done1');
+
+    // Order by title, descending: rows reorder within their group.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.sort"]'));
+    await waitFor(() => expect(option('tasks.sort.title')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.sort.title'));
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.sort"]'));
+    await waitFor(() => expect(option('tasks.sort.desc')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.sort.desc'));
+    await waitFor(
+      () =>
+        expect(titles()).toEqual([
+          'Schedule cuppings',
+          'Design label',
+          'Finalize roast curve',
+          'Draft launch email',
+          'Print run v1',
+        ]),
+      { timeout: 10_000 },
+    );
+    await expect(stored().sort).toEqual({ field: 'title', direction: 'desc' });
+
+    // Ungrouped, the sort still holds across the whole list.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.group"]'));
+    await waitFor(() => expect(option('tasks.group.none')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.group.none'));
+    await waitFor(() => expect(headers()).toEqual([]), { timeout: 10_000 });
+    await waitFor(
+      () =>
+        expect(titles()).toEqual([
+          'Source green coffee',
+          'Schedule cuppings',
+          'Print run v1',
+          'Finalize roast curve',
+          'Draft launch email',
+          'Design label',
+        ]),
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
  *
@@ -415,8 +498,7 @@ export const Checkboxes: Story = {
 
 /**
  * The set resolves into one flat list and stays live afterwards — each mutation below is the one
- * that would go stale if the view were cached. Milestones are seeded but deliberately not rendered
- * yet (see TASKS.md).
+ * that would go stale if the view were cached. Milestones are seeded but, ungrouped, not rendered.
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
