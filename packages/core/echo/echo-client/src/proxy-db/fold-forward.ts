@@ -17,6 +17,7 @@ import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { META_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
@@ -99,6 +100,39 @@ const lateRetiredWrites = (
     }
   }
   return byKey;
+};
+
+/**
+ * Late writes to a `lens`'s overlaid target properties — an old client still lensing through it writes
+ * one into the object's annotation dictionary (`overlay.ts`'s own storage shape:
+ * `meta.annotations[OverlayAnnotation.key][lens.id][property]`), a meta path fold-forward's usual
+ * data-path diff (`lateRetiredWrites`) never sees. Returns the changed property names, not patches: an
+ * overlay write is folded as a whole-value read of its CURRENT state, never replayed op-by-op.
+ */
+const lateOverlayWrites = (
+  doc: AutomergeDoc<unknown>,
+  mountPath: readonly (string | number)[],
+  base: Heads,
+  current: Heads,
+  lensId: string,
+  overlaid: ReadonlySet<string>,
+): ReadonlySet<string> => {
+  const properties = new Set<string>();
+  const overlayPath = [...mountPath, META_NAMESPACE, 'annotations', Lens.OverlayAnnotation.key, lensId];
+  const propertyIndex = overlayPath.length;
+  for (const patch of A.diff(doc, base, current)) {
+    if (patch.action === 'conflict') {
+      continue;
+    }
+    if (patch.path.length <= propertyIndex || !overlayPath.every((segment, index) => patch.path[index] === segment)) {
+      continue;
+    }
+    const property = patch.path[propertyIndex];
+    if (typeof property === 'string' && overlaid.has(property)) {
+      properties.add(property);
+    }
+  }
+  return properties;
 };
 
 type TextPatch = SpliceTextPatch | DelPatch;
@@ -234,9 +268,19 @@ const foldObject = async (
     return;
   }
 
+  const currentHeads = A.getHeads(doc);
   const retired = new Set(marker.retired);
-  const lateWrites = lateRetiredWrites(doc, mountPath, base, A.getHeads(doc), retired);
-  if (lateWrites.size === 0) {
+  const lateWrites = lateRetiredWrites(doc, mountPath, base, currentHeads, retired);
+
+  // `Lens.coverage` throws for a coded lens, but `Migration.fromLens` already calls it at definition
+  // time (and only sets `lens` for a `fromLens` migration), so a lens present here always has a plan.
+  const overlaid = migration.lens ? new Set(Lens.coverage(migration.lens).overlaid) : undefined;
+  const overlayLateWrites =
+    migration.lens && overlaid && overlaid.size > 0
+      ? lateOverlayWrites(doc, mountPath, base, currentHeads, migration.lens.id, overlaid)
+      : new Set<string>();
+
+  if (lateWrites.size === 0 && overlayLateWrites.size === 0) {
     return;
   }
 
@@ -271,18 +315,38 @@ const foldObject = async (
     }
   }
 
-  const snapshot = core.getDecoded(['data']);
-  invariant(isRecord(snapshot), 'foldForward: expected an object body at the data path');
-  const output = await recomputeMigrationOutput(db, migration, object.id, snapshot);
-
   const dataWrites = new Map<string, unknown>();
-  for (const [key, value] of Object.entries(output)) {
-    if (key === 'id' || value === undefined || textTargets.has(key)) {
-      continue;
+  if (lateWrites.size > 0) {
+    const snapshot = core.getDecoded(['data']);
+    invariant(isRecord(snapshot), 'foldForward: expected an object body at the data path');
+    const output = await recomputeMigrationOutput(db, migration, object.id, snapshot);
+    for (const [key, value] of Object.entries(output)) {
+      if (key === 'id' || value === undefined || textTargets.has(key)) {
+        continue;
+      }
+      const encoded = core.encode(value);
+      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
+        dataWrites.set(key, encoded);
+      }
     }
-    const encoded = core.encode(value);
-    if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
-      dataWrites.set(key, encoded);
+  }
+
+  // An overlay write is never part of `snapshot` (it lives in meta, not data), so it is folded from
+  // the object's CURRENT overlay value directly, whole-value, into the SAME `dataWrites` batch —
+  // one `foldAt` change per object regardless of how many of its properties fell behind.
+  if (migration.lens) {
+    for (const property of overlayLateWrites) {
+      if (dataWrites.has(property)) {
+        continue;
+      }
+      const value = Lens.getOverlay(object, migration.lens.id, property);
+      if (value === undefined) {
+        continue;
+      }
+      const encoded = core.encode(value);
+      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, property]))) {
+        dataWrites.set(property, encoded);
+      }
     }
   }
 

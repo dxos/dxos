@@ -50,6 +50,18 @@ class NoteV2 extends Type.makeObject<NoteV2>(DXN.make('org.dxos.test.foldForward
 const noteLens = Lens.make('org.dxos.test.foldForward.note.lens', NoteV1, NoteV2, { content: 'body' });
 const noteMigration = Migration.fromLens(noteLens);
 
+class TaskV1 extends Type.makeObject<TaskV1>(DXN.make('org.dxos.test.foldForward.Task', '0.1.0'))(
+  Schema.Struct({ title: Schema.String }),
+) {}
+
+class TaskV2 extends Type.makeObject<TaskV2>(DXN.make('org.dxos.test.foldForward.Task', '0.2.0'))(
+  Schema.Struct({ title: Schema.String, priority: Schema.optional(Schema.String) }),
+) {}
+
+/** `priority` has no source counterpart, so the lens stores it as an overlay (`Lens.coverage(lens).overlaid`). */
+const taskLens = Lens.make('org.dxos.test.foldForward.task.lens', TaskV1, TaskV2, {});
+const taskMigration = Migration.fromLens(taskLens);
+
 let builder: EchoTestBuilder;
 
 beforeEach(async () => {
@@ -222,6 +234,109 @@ describe('fold-forward: text (fromLens identity rename)', () => {
     expect(content).to.include('Hi'); // still not reverted.
     // The first fold's insertion appears exactly once — a re-fork bug would duplicate it.
     expect(content?.split('brave new').length).to.eq(2);
+  });
+});
+
+describe('fold-forward: lens overlay properties', () => {
+  test('an overlay value present before migration is promoted onto the real property, and stays in the overlay', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([TaskV1, TaskV2]);
+
+    const task = db.add(Obj.make(TaskV1, { title: 'Write report' }));
+    await db.flush();
+    Lens.put(task, taskLens, { priority: 'high' });
+    await db.flush();
+
+    await db.runMigrations([taskMigration]);
+    expect(Obj.getValue(task, ['priority'])).to.eq('high');
+
+    // The migration promotes the overlay into a real property but does not delete the source-side
+    // annotation — it is what an old client, still lensing through `taskLens`, keeps writing to.
+    expect(Lens.getOverlays(task, taskLens.id).priority).to.eq('high');
+  });
+
+  test('a late overlay write folds into the promoted property, and a second pass is a no-op', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([TaskV1, TaskV2]);
+
+    const task = db.add(Obj.make(TaskV1, { title: 'Write report' }));
+    await db.flush();
+    await db.runMigrations([taskMigration]);
+    expect(Obj.getValue(task, ['priority'])).to.eq(undefined);
+
+    // An old client, still lensing through `taskLens`, writes the overlaid property — it lands in the
+    // annotation dictionary (`meta.annotations`), never the (now-real) `priority` data key.
+    Lens.put(task, taskLens, { priority: 'urgent' });
+    await db.flush();
+    expect(Obj.getValue(task, ['priority'])).to.eq(undefined); // not yet folded.
+
+    await db.foldForward([taskMigration]);
+    expect(Obj.getValue(task, ['priority'])).to.eq('urgent');
+
+    // The checkpoint (`foldedAt`) advanced, so a second pass with nothing new writes nothing.
+    const core = getObjectCore(task);
+    const historyLengthAfterFold = A.getHistory(core.getDoc()).length;
+    await db.foldForward([taskMigration]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLengthAfterFold);
+    expect(Obj.getValue(task, ['priority'])).to.eq('urgent');
+  });
+
+  test('a raw overlay annotation write (simulating an old client with no Lens.put) folds the same way', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([TaskV1, TaskV2]);
+
+    const task = db.add(Obj.make(TaskV1, { title: 'Write report' }));
+    await db.flush();
+    await db.runMigrations([taskMigration]);
+
+    // Straight to the annotation dictionary, bypassing `Lens.put` entirely.
+    Obj.update(task, (task) => {
+      Annotation.set(task, Lens.OverlayAnnotation, { [taskLens.id]: { priority: 'urgent' } });
+    });
+    await db.flush();
+    expect(Obj.getValue(task, ['priority'])).to.eq(undefined); // not yet folded.
+
+    await db.foldForward([taskMigration]);
+    expect(Obj.getValue(task, ['priority'])).to.eq('urgent');
+  });
+
+  test('a concurrent direct edit to the promoted property creates a real conflict; Obj.getConflict presents the direct edit and lists the fold', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([TaskV1, TaskV2]);
+
+    const task = db.add(Obj.make(TaskV1, { title: 'Write report' }));
+    await db.flush();
+    await db.runMigrations([taskMigration]);
+
+    // A direct edit through the new schema...
+    Obj.update(task, (task) => {
+      Obj.setValue(task, ['priority'], 'medium');
+    });
+    await db.flush();
+
+    // ...concurrent (in CRDT terms — the fold is forced back to the migration's own heads) with a late
+    // overlay write from an old client still lensing through `taskLens`.
+    Lens.put(task, taskLens, { priority: 'urgent' });
+    await db.flush();
+
+    await db.foldForward([taskMigration]);
+
+    // User wins: `Obj.getConflict`'s policy-resolved `presented` value is the direct edit, the late
+    // overlay value is not lost.
+    const conflict = Obj.getConflict(task, 'priority');
+    invariant(conflict, 'expected a real Automerge conflict on `priority`');
+    expect(conflict.presented).to.eq('medium');
+    expect(conflict.alternatives).to.have.length(2);
+    const fold = conflict.alternatives.find((alternative) => alternative.fold);
+    const direct = conflict.alternatives.find((alternative) => !alternative.fold);
+    expect(fold?.value).to.eq('urgent');
+    expect(direct?.value).to.eq('medium');
+
+    // Re-running performs no further writes: the checkpoint already covers this late write.
+    const core = getObjectCore(task);
+    const historyLength = A.getHistory(core.getDoc()).length;
+    await db.foldForward([taskMigration]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLength);
   });
 });
 
