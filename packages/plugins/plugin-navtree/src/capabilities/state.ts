@@ -12,6 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as DeckSeed from '@dxos/plugin-deck/DeckSeed';
 import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
@@ -37,10 +38,20 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* AttentionCapabilities.ViewState;
 
-    // Mirror of the layout's active planks. An item registers its path only on its first render, which
-    // can happen long after the layout change that made it current, so entries derive `current` from
-    // this at creation time rather than waiting for the next layout notification.
-    let activeIds: readonly string[] = registry.get(layoutAtom).active;
+    // Resolved once the graph is up; until then the seed rule below cannot apply.
+    let graph: AppGraph.ExpandableGraph | undefined;
+
+    // What the user navigated to, which is not always what the deck opened: a collection opens its
+    // documents in its own place, and lighting those up read as a multi-selection nobody made.
+    const currentIds = (active: readonly string[]): readonly string[] => {
+      const source = graph && DeckSeed.sourceOf(graph, active);
+      return source ? [source] : active;
+    };
+
+    // Mirror of the current items. An item registers its path only on its first render, which can
+    // happen long after the layout change that made it current, so entries derive `current` from this
+    // at creation time rather than waiting for the next layout notification.
+    let activeIds: readonly string[] = currentIds(registry.get(layoutAtom).active);
 
     /** Item state for a path not seen before: `current` follows the layout, `open` starts closed. */
     const initialItemState = (pathString: string): NavTreeCapabilities.NavTreeItemState => ({
@@ -101,8 +112,9 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes to update current state.
     const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const removed = activeIds.filter((id) => !layout.active.includes(id));
-      activeIds = layout.active;
+      const nextIds = currentIds(layout.active);
+      const removed = activeIds.filter((id) => !nextIds.includes(id));
+      activeIds = nextIds;
 
       const handleUpdate = () => {
         // Mark removed items as not current.
@@ -113,8 +125,8 @@ export default Capability.makeModule(
           });
         });
 
-        // Mark active items as current.
-        layout.active.forEach((id: string) => {
+        // Mark current items as current.
+        nextIds.forEach((id: string) => {
           const keys = Array.from(new Set([...backingState.keys(), id])).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
             setItem(Path.parts(key), 'current', true);
@@ -129,7 +141,8 @@ export default Capability.makeModule(
     });
 
     yield* Effect.gen(function* () {
-      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      const { graph: appGraph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      graph = appGraph;
       // A workspace the deck left is released, so entering one re-expands it and the items the tree
       // still remembers as open.
       const reexpandWorkspace = (workspace: string | undefined) => {
@@ -137,12 +150,12 @@ export default Capability.makeModule(
           return;
         }
 
-        AppGraph.expandSync(graph, workspace, 'child');
+        AppGraph.expandSync(appGraph, workspace, 'child');
         for (const [pathString, state] of backingState.entries()) {
           const path = Path.parts(pathString);
           const nodeId = path[path.length - 1];
           if (state.open && !isTopLevelPath(path) && nodeId && GraphPath.getWorkspaceFromPath(nodeId) === workspace) {
-            AppGraph.expandSync(graph, nodeId, 'child');
+            AppGraph.expandSync(appGraph, nodeId, 'child');
           }
         }
       };
