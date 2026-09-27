@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { format } from 'date-fns';
 import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';

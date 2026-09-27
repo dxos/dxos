@@ -283,16 +283,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       tasks={tasks}
       groups={groups}
       hierarchical
-      collapsed={collapsed}
-      onCollapsedChange={setCollapsed}
       selectable
       showDescription
-      descriptionComponents={descriptionComponents}
       showEstimates
+      descriptionComponents={descriptionComponents}
       checked={checked}
+      collapsed={collapsed}
+      selected={currentId}
       getTaskActions={getTaskActions}
       onTaskCheck={onTaskCheck}
-      selected={currentId}
+      onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskMove={arranged ? undefined : handleMove}
@@ -311,7 +311,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         acceptFiles={!!attachFile}
         descriptionExtensions={descriptionExtensions}
         // Flush with the list, with no border of its own: it reads as the list's last row.
-        classNames='bg-input-surface px-15 py-2'
+        classNames='bg-input-surface px-15 pb-2'
         placeholder={t('task-create.placeholder')}
       />
     </TaskList.Root>
