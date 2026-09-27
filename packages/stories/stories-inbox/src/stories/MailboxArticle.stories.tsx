@@ -45,6 +45,9 @@ const MINIMAL_PDF =
   '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n' +
   'trailer<</Root 1 0 R>>';
 
+/** The message `seedAttachment` attached the PDF to, so the play function opens that one. */
+let attachedMessageId: string | undefined;
+
 /** Attaches a PDF blob to the mailbox's first feed message. */
 const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) => {
   const feed = await mailbox.feed.tryLoad();
@@ -64,6 +67,7 @@ const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) =
   Obj.update(message, (message) => {
     message.attachments = [{ name: 'invoice.pdf', ref: Ref.make(blob) }];
   });
+  attachedMessageId = message.id;
   await db.flush({ indexes: true });
 };
 
@@ -109,11 +113,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Clicks the first rendered mailbox tile once the seeded list has rendered. */
-const selectFirstTile = async (canvasElement: HTMLElement) => {
+/** Clicks the tile for `id` (else the first) once the seeded list has rendered. */
+const selectTile = async (canvasElement: HTMLElement, id?: string) => {
   const tile = await waitFor(
     () => {
-      const found = canvasElement.querySelector<HTMLElement>('[data-object-id]');
+      const found = canvasElement.querySelector<HTMLElement>(
+        id ? `[data-object-id="${CSS.escape(id)}"]` : '[data-object-id]',
+      );
       if (!found) {
         throw new Error('No mailbox tile rendered.');
       }
@@ -139,7 +145,7 @@ export const Default: Story = {
 
     // Selecting a row publishes the selection under the mailbox cell's attendable id, which the
     // diagnostic cells follow.
-    await selectFirstTile(canvasElement);
+    await selectTile(canvasElement);
     await expect(await canvas.findByTestId('message-json', undefined, { timeout: 5_000 })).toBeInTheDocument();
     await expect(await canvas.findByTestId('message-blocks', undefined, { timeout: 5_000 })).toBeInTheDocument();
   },
@@ -168,7 +174,9 @@ export const Attachments: Story = {
     const canvas = within(canvasElement);
     await canvas.findByText('Open an attachment', undefined, { timeout: 12_000 });
 
-    await selectFirstTile(canvasElement);
+    await selectTile(canvasElement, attachedMessageId);
     await waitFor(() => expect(canvas.queryByText('Select a message')).toBeNull(), { timeout: 5_000 });
+    await userEvent.click(await canvas.findByText('invoice.pdf', undefined, { timeout: 5_000 }));
+    await waitFor(() => expect(canvas.queryByText('Open an attachment')).toBeNull(), { timeout: 5_000 });
   },
 };

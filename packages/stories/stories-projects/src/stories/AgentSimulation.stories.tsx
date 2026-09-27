@@ -119,7 +119,9 @@ const seedProject = async ({ space }: { space: Space }) => {
     return root;
   });
   await space.db.flush({ indexes: true });
-  seeded = { generation: storyGeneration, space, roots };
+  if (storyGeneration === generation) {
+    seeded = { generation: storyGeneration, space, roots };
+  }
   return [[Cell.article(project)], [Cell.companion(project, 'task')]];
 };
 
@@ -233,7 +235,8 @@ const makePlay =
         if (!answered && answer !== undefined) {
           answered = await answerQuestion(canvasElement, answer);
         }
-        await expect(subtasks.every(AgentSimulator.isFinished) && AgentSimulator.isFinished(root)).toBe(true);
+        // The delegated task has reviewers, so the agent's `done` lands it in `review`.
+        await expect(subtasks.every(AgentSimulator.isFinished) && root.status === 'review').toBe(true);
       },
       { timeout: 180_000, interval: 500 },
     );

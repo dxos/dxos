@@ -214,13 +214,25 @@ export const IconsPlugin = ({
   // at once (svg-sprite writes to a fixed path). Returns the write so callers
   // can await a complete sprite on disk.
   let flushing: Promise<void> | null = null;
-  const flushSprite = () => {
+  // A flush requested mid-write: that write read the symbol set before the new detection, so it
+  // runs again once the write settles rather than coalescing onto it.
+  let rerun = false;
+  const flushSprite = (): Promise<void> => {
     if (writeTimer) {
       clearTimeout(writeTimer);
       writeTimer = null;
     }
-    flushing ??= writeSprite().finally(() => {
+    if (flushing) {
+      rerun = true;
+      // Settles with the follow-up write, which `finally` below has started by then.
+      return flushing.then(() => flushing ?? undefined);
+    }
+    flushing = writeSprite().finally(() => {
       flushing = null;
+      if (rerun) {
+        rerun = false;
+        void flushSprite().catch((err) => console.error('[icons] Failed to write the sprite:', err));
+      }
     });
     return flushing;
   };

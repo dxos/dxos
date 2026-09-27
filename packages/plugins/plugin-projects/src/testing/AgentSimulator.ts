@@ -166,7 +166,10 @@ export const withQuestion =
   (strategy: Strategy, question: Question): Strategy =>
   (state) => {
     const task = state.subtasks.find((candidate) => candidate.title === question.task);
-    const [thread] = task ? Task.getQuestions(task.history) : [];
+    // The configured question's own thread: an earlier, answered one must not stand in for it.
+    const thread = task
+      ? Task.getQuestions(task.history).find(({ question: entry }) => entry.text === question.question)
+      : undefined;
     if (task && !thread && task.status === 'started') {
       return {
         delay: state.pace.think,
