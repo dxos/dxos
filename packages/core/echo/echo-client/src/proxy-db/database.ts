@@ -78,8 +78,11 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import { runArrayFanOutMigration, runStampElementIdsMigration } from './array-fan-out.ts';
 import { encodedValuesEqual, mapRefsToEncodedReferences } from './encoded-value.ts';
+import { runFanInMigration } from './fan-in.ts';
 import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
+import { createObjectMigrationContext } from './migration-context.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -807,6 +810,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this.#runObjectMigration(migration);
       } else if (Migration.isRenameMigration(migration)) {
         await this.#runRenameMigration(migration);
+      } else if (Migration.isFanInMigration(migration)) {
+        await runFanInMigration(this, migration);
+      } else if (Migration.isArrayFanOutMigration(migration)) {
+        await runArrayFanOutMigration(this, migration);
+      } else if (Migration.isStampElementIdsMigration(migration)) {
+        await runStampElementIdsMigration(this, migration);
       }
     }
     await this._entityManager.flush();
@@ -855,7 +864,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
       const before = JSON.parse(JSON.stringify(object));
 
-      const output = (await migration.transform(object, { db: this })) as MigrationOutput | undefined;
+      const output = (await migration.transform(object, createObjectMigrationContext(this))) as
+        | MigrationOutput
+        | undefined;
       const metaPatch = output?.[MetaId];
       if (metaPatch !== undefined && output != null) {
         delete output[MetaId];

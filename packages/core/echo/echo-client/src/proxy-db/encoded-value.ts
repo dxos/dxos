@@ -5,15 +5,18 @@
 import { next as A } from '@automerge/automerge';
 
 import { Ref } from '@dxos/echo';
-import { EncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { deepMapValues } from '@dxos/util';
 
+import { type ObjectCore } from '../core-db/object-core.ts';
+
 //
-// Shared by the migration runner (`database.ts#applyObjectMigration`) and the fold-forward runner
-// (`fold-forward.ts`): both write a migration's/lens's plain-JS write set onto an `ObjectCore`'s raw
-// document keys and must guard every write with a value-compare (M0-REPORT.md design item 1 — an
-// unguarded fold loop never settles). Kept in its own module, rather than exported from either
-// caller, so neither pulls the other in and creates an import cycle.
+// Shared by every writer onto an `ObjectCore`'s raw document keys — the migration runner
+// (`database.ts#applyObjectMigration`), the fold-forward runner (`fold-forward.ts`), cross-object
+// `assign`/`ensure` (`migration-context.ts`), and fan-in/array-fan-out (`fan-in.ts`,
+// `array-fan-out.ts`): all write a plain-JS write set and must guard every write with a value-compare
+// (M0-REPORT.md design item 1 — an unguarded fold loop never settles). Kept in its own module, rather
+// than exported from any one caller, so none of them pulls another in and creates an import cycle.
 //
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -62,3 +65,25 @@ export const mapRefsToEncodedReferences = (output: Record<string, unknown>): Rec
     }
     return recurse(value);
   });
+
+/**
+ * The data keys of `output` whose encoded value actually differs from `core`'s current document —
+ * the value-compare guard shared by every writer onto an `ObjectCore`'s data namespace: the migration
+ * runner's own change, a cross-object `assign`, and a fan-in absorption. A key `output` maps to
+ * `undefined` is skipped, matching `core.encode`'s own object-valued branch, which never writes
+ * `undefined` entries to the document.
+ */
+export const computeGuardedDataWrites = (core: ObjectCore, output: Record<string, unknown>): Map<string, unknown> => {
+  const mappedOutput = mapRefsToEncodedReferences(output);
+  const writes = new Map<string, unknown>();
+  for (const [key, value] of Object.entries(mappedOutput)) {
+    if (value === undefined) {
+      continue;
+    }
+    const encoded = core.encode(value);
+    if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
+      writes.set(key, encoded);
+    }
+  }
+  return writes;
+};

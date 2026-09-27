@@ -1,0 +1,161 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import { describe, expect, test } from 'vitest';
+
+import { DXN, Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+
+//
+// Phase D item 4 (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md`; M0-REPORT.md design item 5):
+// array fan-out through the real `Migration.defineStampElementIds` / `Migration.defineArrayFanOut` /
+// `Migration.findOrphanedChildren` API — the stable-id precondition, the two-step composition, the
+// per-object all-or-nothing gate, and the orphan diagnostic.
+//
+
+const ElementStruct = Schema.Struct({ id: Schema.optional(Schema.String), name: Schema.String });
+
+class ArrayFanChildDoc extends Type.makeObject<ArrayFanChildDoc>(
+  DXN.make('org.dxos.test.migration.arrayfanout.Child', '0.1.0'),
+)(Schema.Struct({ name: Schema.optional(Schema.String) })) {}
+
+class ArrayFanParentV1 extends Type.makeObject<ArrayFanParentV1>(
+  DXN.make('org.dxos.test.migration.arrayfanout.Parent', '0.1.0'),
+)(Schema.Struct({ items: Schema.optional(Schema.Array(ElementStruct)) })) {}
+
+class ArrayFanParentV2 extends Type.makeObject<ArrayFanParentV2>(
+  DXN.make('org.dxos.test.migration.arrayfanout.Parent', '0.2.0'),
+)(
+  Schema.Struct({
+    items: Schema.optional(Schema.Array(ElementStruct)),
+    itemsRefs: Schema.optional(Schema.Array(Ref.Ref(ArrayFanChildDoc))),
+  }),
+) {}
+
+class NoIdElementParentDoc extends Type.makeObject<NoIdElementParentDoc>(
+  DXN.make('org.dxos.test.migration.arrayfanout.NoIdParent', '0.1.0'),
+)(Schema.Struct({ items: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String }))) })) {}
+
+const stampMigration = Migration.defineStampElementIds({ type: ArrayFanParentV1, property: 'items', elementId: 'id' });
+
+const toChild = (element: Record<string, unknown>): { name: string } => ({ name: String(element.name) });
+
+const fanOutMigration = Migration.defineArrayFanOut({
+  from: ArrayFanParentV1,
+  to: ArrayFanParentV2,
+  property: 'items',
+  elementId: 'id',
+  child: ArrayFanChildDoc,
+  toChild,
+});
+
+describe('migration array fan-out: definition-time checks', () => {
+  test('is a definition error when the element schema has no elementId field', () => {
+    expect(() =>
+      Migration.defineArrayFanOut({
+        from: NoIdElementParentDoc,
+        to: ArrayFanParentV2,
+        property: 'items',
+        elementId: 'id',
+        child: ArrayFanChildDoc,
+        toChild,
+      }),
+    ).toThrow(/no "id" field/);
+  });
+});
+
+describe('migration array fan-out: stamping, the split, the gate, and the orphan diagnostic', () => {
+  test('stamping is idempotent, then the split creates one child per element and keeps the source array', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(ArrayFanParentV1, { items: [{ name: 'alpha' }, { name: 'beta' }] }));
+    await db.flush();
+
+    await db.runMigrations([stampMigration]);
+    expect(parent.items).toHaveLength(2);
+    expect((parent.items ?? []).every((item) => item.id !== undefined)).toBe(true);
+    const idsAfterFirstStamp = (parent.items ?? []).map((item) => item.id);
+
+    // Presence-guarded: a re-run after reconciliation is a no-op.
+    await db.runMigrations([stampMigration]);
+    expect((parent.items ?? []).map((item) => item.id)).toEqual(idsAfterFirstStamp);
+
+    await db.runMigrations([fanOutMigration]);
+
+    await expect
+      .poll(() => Obj.getTypeURI(parent)?.toString())
+      .toBe('dxn:org.dxos.test.migration.arrayfanout.Parent:0.2.0');
+
+    const children = await db.query(Filter.type(ArrayFanChildDoc)).run();
+    expect(children).toHaveLength(2);
+    expect(children.map((child) => child.name).sort()).toEqual(['alpha', 'beta']);
+
+    // The source array is kept in place, untouched — never replaced with refs.
+    const itemsAfter: unknown = Obj.getValue(parent, ['items']);
+    invariant(Array.isArray(itemsAfter), 'expected the source array to remain');
+    expect(itemsAfter).toHaveLength(2);
+
+    // The new property carries one ref per element.
+    const refsAfter: unknown = Obj.getValue(parent, ['itemsRefs']);
+    invariant(Array.isArray(refsAfter), 'expected the refs array to exist');
+    expect(refsAfter).toHaveLength(2);
+    for (const ref of refsAfter) {
+      invariant(Ref.isRef(ref), 'expected each entry to be a Ref');
+    }
+    const loadedChildren = await Promise.all(refsAfter.map((ref) => (Ref.isRef(ref) ? ref.load() : undefined)));
+    const loadedNames = loadedChildren.map((child) => (child ? Obj.getValue(child, ['name']) : undefined));
+    expect(loadedNames.sort()).toEqual(['alpha', 'beta']);
+  });
+
+  test('an element with no stable id yet leaves the whole object alone this pass (all-or-nothing)', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    // Deliberately un-stamped.
+    const parent = db.add(Obj.make(ArrayFanParentV1, { items: [{ name: 'alpha' }] }));
+    await db.flush();
+
+    await db.runMigrations([fanOutMigration]);
+
+    expect(Obj.getTypeURI(parent)?.toString()).toBe('dxn:org.dxos.test.migration.arrayfanout.Parent:0.1.0');
+    expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
+  test('findOrphanedChildren reports a child whose remembered element id the parent no longer shows', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(ArrayFanParentV1, { items: [{ name: 'alpha' }] }));
+    await db.flush();
+    await db.runMigrations([stampMigration]);
+
+    // Model an early split under a raced stamp (M0-REPORT.md design item 5's residual): a live child
+    // keyed to an id the array no longer shows, alongside the correct split.
+    const prematureElementId = PublicKey.random().toHex();
+    const orphan = db.add(Obj.make(ArrayFanChildDoc, { name: 'alpha' }));
+    Obj.update(orphan, (orphan) => {
+      Obj.getMeta(orphan).convergenceKey = Migration.makeArrayFanOutConvergenceKey(
+        fanOutMigration.fromType.toString(),
+        parent.id,
+        'items',
+        prematureElementId,
+      );
+    });
+    await db.flush();
+
+    await db.runMigrations([fanOutMigration]);
+    const children = await db.query(Filter.type(ArrayFanChildDoc)).run();
+    expect(children).toHaveLength(2); // the orphan, plus the one legitimate split.
+
+    const orphans = await Migration.findOrphanedChildren(db, fanOutMigration);
+    expect(orphans.map((candidate) => candidate.id)).toEqual([orphan.id]);
+  });
+});

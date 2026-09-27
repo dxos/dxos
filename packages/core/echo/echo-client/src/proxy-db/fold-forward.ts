@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 
 import { getObjectCore } from '../echo-handler/index.ts';
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
+import { createObjectMigrationContext } from './migration-context.ts';
 
 //
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
@@ -187,7 +188,7 @@ const recomputeMigrationOutput = async (
     return rest;
   }
 
-  const output = await migration.transform({ id, ...snapshot }, { db });
+  const output = await migration.transform({ id, ...snapshot }, createObjectMigrationContext(db));
   return isRecord(output) ? output : {};
 };
 

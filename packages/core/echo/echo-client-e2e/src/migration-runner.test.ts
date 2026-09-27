@@ -108,3 +108,83 @@ describe('migration runner: concurrent edits survive', () => {
     await expect.poll(() => Obj.getValue(contact2, ['name'])).toBe('Ada Lovelace');
   });
 });
+
+//
+// Phase D item 1: `ensure`'s effects happen DURING `transform`, before the source object's own
+// change lands — a crash in between must be healed by re-running, with `ensure` finding (never
+// duplicating) whatever an earlier, interrupted attempt already created.
+// See `.agents/projects/lenses/IMPLEMENTATION-PLAN.md` Phase D item 1.
+//
+
+class CrashChildDoc extends Type.makeObject<CrashChildDoc>(
+  DXN.make('org.dxos.test.migration.runner.crash.Child', '0.1.0'),
+)(Schema.Struct({ note: Schema.optional(Schema.String) })) {}
+
+class CrashSourceV1 extends Type.makeObject<CrashSourceV1>(
+  DXN.make('org.dxos.test.migration.runner.crash.Source', '0.1.0'),
+)(Schema.Struct({ name: Schema.String })) {}
+
+class CrashSourceV2 extends Type.makeObject<CrashSourceV2>(
+  DXN.make('org.dxos.test.migration.runner.crash.Source', '0.2.0'),
+)(Schema.Struct({ name: Schema.String })) {}
+
+describe('migration runner: ensure is idempotent across a crash between ensure and the source change', () => {
+  let builder: EchoTestBuilder;
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('re-running after a mid-transform crash converges with exactly one child, never a duplicate', async () => {
+    builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [CrashSourceV1, CrashSourceV2, CrashChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const source = db.add(Obj.make(CrashSourceV1, { name: 'Ada' }));
+    await db.flush();
+
+    // The first attempt: `ensure` commits the child, then the transform throws — standing in for a
+    // process crash right after, before `#runObjectMigration` ever writes the source's own change.
+    let attempts = 0;
+    const crashOnceMigration = Migration.define({
+      from: CrashSourceV1,
+      to: CrashSourceV2,
+      transform: async (from, context) => {
+        attempts += 1;
+        context.ensure(CrashChildDoc, `crash-resume:${from.id}:child`, { note: 'child note' });
+        if (attempts === 1) {
+          throw new Error('simulated crash: after ensure, before the source change lands');
+        }
+        return { name: from.name };
+      },
+    });
+
+    await expect(db.runMigrations([crashOnceMigration])).rejects.toThrow(/simulated crash/);
+
+    // The source object kept its old type — its own change never landed — but the child `ensure`
+    // created before the "crash" is real, committed, and queryable.
+    expect(Obj.getTypename(source)).toBe('org.dxos.test.migration.runner.crash.Source');
+    expect(Obj.getTypeURI(source)?.toString()).toBe('dxn:org.dxos.test.migration.runner.crash.Source:0.1.0');
+    const childrenAfterCrash = await db.query(Filter.type(CrashChildDoc)).run();
+    expect(childrenAfterCrash).toHaveLength(1);
+
+    // Re-run: the source is still `fromType`, so the runner re-executes `transform` from scratch.
+    // `ensure` finds the SAME child by convergence key rather than minting a second one, and this
+    // time the transform completes, landing the source's own change.
+    await db.runMigrations([crashOnceMigration]);
+
+    expect(attempts).toBe(2);
+    await expect
+      .poll(() => Obj.getTypeURI(source)?.toString())
+      .toBe('dxn:org.dxos.test.migration.runner.crash.Source:0.2.0');
+
+    const childrenAfterResume = await db.query(Filter.type(CrashChildDoc)).run();
+    expect(childrenAfterResume).toHaveLength(1);
+    expect(childrenAfterResume[0].id).toBe(childrenAfterCrash[0].id);
+
+    // A third run is a pure no-op: the source no longer matches `fromType`, so the migration does
+    // not even re-invoke `transform`.
+    await db.runMigrations([crashOnceMigration]);
+    expect(attempts).toBe(2);
+  });
+});
