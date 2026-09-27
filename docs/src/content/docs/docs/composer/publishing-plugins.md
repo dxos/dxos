@@ -216,7 +216,8 @@ You don't need to publish to test your plugin against Composer. Composer loads a
    `/manifest.json` (e.g. `http://localhost:3967/manifest.json`) — or serve a built `dist` directory, which
    contains `manifest.json` and `index.mjs`.
 2. In Composer, open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste
-   the manifest URL.
+   the manifest URL. An assistant that has built a plugin offers the same step inline: it shows a prompt with
+   the manifest URL, and the plugin loads when you click **Load plugin**.
 
 The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
 the entry it names.
@@ -226,61 +227,149 @@ the entry it names.
 > `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
 > imports fail there.
 
-### A plugin without a build step
+### Example: a plugin with its own sidebar page
 
-Because the host provides every shared package through its import map, a plugin can be a single hand-written
-ES module — no bundler, no JSX — next to a manifest that lists it:
+A small plugin in TypeScript that adds a workspace to the left rail with one page, opened as an article. It
+builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+
+Four files:
+
+```ts
+// dx.config.ts
+import { Config2 } from '@dxos/app-framework/config';
+
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.hello', // must match the key the plugin declares; last segment camelCase
+    name: 'Hello',
+    icon: { key: 'ph--hand-waving--regular', hue: 'amber' },
+  },
+});
+```
+
+```ts
+// vite.config.ts
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+import { composerPlugin } from '@dxos/app-framework/vite-plugin';
+
+export default defineConfig({
+  plugins: [...composerPlugin({ entry: 'src/plugin.tsx' }), react()],
+  build: { outDir: 'dist' }, // any directory you serve
+});
+```
 
 ```json
+// tsconfig.json
 {
-  "key": "org.example.plugin.hello",
-  "name": "Hello",
-  "version": "0.0.1",
-  "assets": ["index.mjs"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": []
+  },
+  "include": ["src", "dx.config.ts"]
 }
 ```
 
-```js
-// index.mjs
+```tsx
+// src/plugin.tsx
 import * as Effect from 'effect/Effect';
-import { createElement } from 'react';
+import React from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-// Must match the manifest's `key`.
-const meta = Plugin.getMetaFromConfig({
-  plugin: { key: 'org.example.plugin.hello', name: 'Hello' },
-});
+import config from '../dx.config.ts';
 
-// The space Home page renders every surface contributed for this role.
-const SpaceHomeContent = Role.make('org.dxos.plugin.space.role.homeContent');
+const meta = Plugin.getMetaFromConfig(config);
+const WORKSPACE = 'helloWorkspace';
+const PAGE = 'helloPage';
 
-const Hello = () =>
-  createElement(
-    'div',
-    { className: 'p-4 rounded-md border border-separator' },
-    'Hello!',
-  );
+const HelloArticle = () => (
+  <div style={{ padding: '2rem', fontSize: '2rem' }}>Hello from a plugin!</div>
+);
 
 export default Plugin.define(meta).pipe(
   Plugin.addModule({
+    id: 'appGraph',
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AppGraphBuilder],
+    activate: () =>
+      Effect.gen(function* () {
+        // A workspace: a tab in the left rail.
+        const workspace = yield* AppGraphBuilder.createExtension({
+          id: 'helloWorkspace',
+          match: GraphNodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed([
+              AppGraphNode.make({
+                id: WORKSPACE,
+                type: `${meta.profile.key}.workspace`,
+                data: null,
+                properties: {
+                  label: 'Hello',
+                  icon: 'ph--hand-waving--regular',
+                  disposition: 'workspace',
+                },
+              }),
+            ]),
+        });
+        // A page in that workspace. The URL binding is what lets the deck open it.
+        const page = yield* AppGraphBuilder.createExtension({
+          id: 'helloPage',
+          match: GraphNodeMatcher.whenId(`root/${WORKSPACE}`),
+          url: {
+            key: PAGE,
+            kind: 'singleton',
+            path: [],
+            workspace: (id) => id === WORKSPACE,
+          },
+          connector: () =>
+            Effect.succeed([
+              AppGraphNode.make({
+                id: PAGE,
+                type: `${meta.profile.key}.page`,
+                data: PAGE,
+                properties: { label: 'Hello', icon: 'ph--article--regular' },
+              }),
+            ]),
+        });
+        return [
+          Capability.contribute(AppCapabilities.AppGraphBuilder, [
+            ...workspace,
+            ...page,
+          ]),
+        ];
+      }),
+  }),
+  Plugin.addModule({
     id: 'surface',
     activatesOn: ActivationEvents.Startup,
-    // Declare what `activate` returns; an undeclared capability fails activation.
     provides: [Capabilities.ReactSurface],
     activate: () =>
       Effect.succeed([
         Capability.contribute(
           Capabilities.ReactSurface,
+          // Renders the page's article: the node's `data` is the subject.
           Surface.create({
-            id: 'hello',
-            filter: Surface.makeFilter(SpaceHomeContent),
-            component: Hello,
+            id: 'helloArticle',
+            filter: AppSurface.literal(AppSurface.Article, PAGE),
+            component: HelloArticle,
           }),
         ),
       ]),
@@ -289,17 +378,27 @@ export default Plugin.define(meta).pipe(
 );
 ```
 
-Serve both files from one directory with a JavaScript MIME type for `.mjs` (and CORS, if the directory is on
-another origin), then load `<directory URL>/manifest.json`. Things to know:
+Typecheck, then build, from the plugin's directory:
 
-- The default export must be a `Plugin` (or a zero-argument function returning one), and its key must equal
-  the manifest's `key`.
-- Ids are camelCase: the key's last segment (`org.example.plugin.spaceClock`, not `…space-clock`), module ids
-  and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it is imported, and a surface
-  with a hyphenated id is dropped without rendering.
+```bash
+tsc -p tsconfig.json   # vite does not typecheck
+vite build             # writes dist/manifest.json and dist/index.mjs
+```
+
+Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads, a
+new tab appears in the left rail; selecting it opens the page. The version in the manifest comes from a
+`package.json` next to `dx.config.ts`, or `0.0.0` without one.
+
+Things to know:
+
+- Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
+  `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
+  so the build bundles whatever you use from them.
+- Ids are camelCase: the key's last segment (`org.example.plugin.helloWorld`, not `…hello-world`), module ids,
+  graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
+  is imported; a hyphenated extension or surface id is dropped without an error.
+- `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
 - Every module lists the capabilities its `activate` returns in `provides`.
-- Import only packages the host shares — the `@dxos/*` libraries and `react`, `react-dom` and `effect`.
-  `@dxos/plugin-*` packages are not in the import map.
 - A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
 - The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
   same URL.
