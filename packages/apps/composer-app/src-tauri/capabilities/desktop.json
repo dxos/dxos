@@ -46,6 +46,7 @@
     "fs:write-all",
     "macos-passkey:default",
     "process:default",
+    "shell:allow-kill",
     "shell:allow-open",
     {
       "identifier": "shell:allow-spawn",
@@ -54,9 +55,15 @@
           "args": ["serve"],
           "cmd": "$RESOURCE/ollama",
           "name": "ollama"
+        },
+        {
+          "args": [],
+          "cmd": "$RESOURCE/dx-sandbox",
+          "name": "dx-sandbox"
         }
       ]
     },
+    "shell:allow-stdin-write",
     "opener:allow-open-url",
     "opener:default",
     "updater:default",
