@@ -32,10 +32,8 @@ const getRawElement = (object: Obj.Unknown, property: string, index: number): un
 };
 
 /**
- * The step-2 gate's second half (M0-REPORT.md design item 5): `id` present is necessary but not
- * sufficient — two peers' concurrent stamps of the SAME blank leave a live register conflict that
- * `A.getConflicts` sees even after one value is presented, and splitting on it would silently pick a
- * side instead of waiting for the caller's explicit reconcile write.
+ * Whether the element's id register holds concurrent stamps that DISAGREE: splitting then would
+ * silently pick a side. Equal-valued leftovers (peers re-asserting the same id) are agreement.
  */
 const hasUnresolvedIdConflict = (object: Obj.Unknown, property: string, index: number, elementId: string): boolean => {
   const rawElement = getRawElement(object, property, index);
@@ -43,7 +41,7 @@ const hasUnresolvedIdConflict = (object: Obj.Unknown, property: string, index: n
     return false;
   }
   const conflicts = A.getConflicts(rawElement, elementId);
-  return conflicts !== undefined && Object.keys(conflicts).length > 0;
+  return conflicts !== undefined && new Set(Object.values(conflicts).map(String)).size > 1;
 };
 
 /**
@@ -164,6 +162,9 @@ export const runStampElementIdsMigration = async (
         const existing: unknown = Obj.getValue(object, [migration.property, index, migration.elementId]);
         if (existing === undefined) {
           Obj.setValue(object, [migration.property, index, migration.elementId], PublicKey.random().toHex());
+        } else if (hasUnresolvedIdConflict(object, migration.property, index, migration.elementId)) {
+          // Re-asserting the presented id supersedes the raced stamps; peers doing so concurrently agree.
+          Obj.setValue(object, [migration.property, index, migration.elementId], existing);
         }
       }
     });

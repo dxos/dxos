@@ -2,19 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { getDeep } from '@dxos/util';
+
+import { createPartitionedPair } from './migration-bench/harness.ts';
 
 //
-// Phase D item 4 (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md`; M0-REPORT.md design item 5):
-// array fan-out through the real `Migration.defineStampElementIds` / `Migration.defineArrayFanOut` /
-// `Migration.findOrphanedChildren` API — the stable-id precondition, the two-step composition, the
-// per-object all-or-nothing gate, and the orphan diagnostic.
+// Array fan-out through the real API: the stable-id precondition, the two-step composition, the
+// per-object all-or-nothing gate, raced-stamp reconciliation, and the orphan diagnostic.
 //
 
 const ElementStruct = Schema.Struct({ id: Schema.optional(Schema.String), name: Schema.String });
@@ -126,6 +128,67 @@ describe('migration array fan-out: stamping, the split, the gate, and the orphan
 
     expect(Obj.getTypeURI(parent)?.toString()).toBe('dxn:org.dxos.test.migration.arrayfanout.Parent:0.1.0');
     expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
+  test('raced stamps block the split until a stamping re-run reconciles them', async () => {
+    // Peers must close before the network they replicate over.
+    const builder = await new EchoTestBuilder().open();
+    const pair = await createPartitionedPair(builder, [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc]);
+    try {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using db1 = await pair.peer1.createDatabase(spaceKey);
+      const parent1 = db1.add(Obj.make(ArrayFanParentV1, { items: [{ name: 'alpha' }] }));
+      await db1.flush();
+      const rootUrl = db1.rootUrl;
+      invariant(rootUrl, 'root url');
+      await using db2 = await pair.peer2.openDatabase(spaceKey, rootUrl);
+      await pair.syncAll(db1, db2);
+      let parent2: ArrayFanParentV1 | undefined;
+      await expect
+        .poll(async () => {
+          [parent2] = await db2.query(Filter.id(parent1.id)).run();
+          return parent2;
+        })
+        .toBeDefined();
+      invariant(parent2, 'replicated parent');
+
+      // Both peers stamp the same blank element while partitioned: the id register now disagrees.
+      await pair.partition();
+      await db1.runMigrations([stampMigration]);
+      await db2.runMigrations([stampMigration]);
+      await pair.heal();
+      await pair.syncAll(db1, db2);
+      // The gate cannot see a stamp that has not arrived yet; wait until this peer holds both.
+      await expect
+        .poll(() => {
+          const core = getObjectCore(parent1);
+          const element: unknown = getDeep(core.getDoc(), [...core.mountPath, 'data', 'items', 0]);
+          return typeof element === 'object' && element !== null
+            ? Object.keys(A.getConflicts(element, 'id') ?? {}).length
+            : 0;
+        })
+        .toBe(2);
+
+      await db1.runMigrations([fanOutMigration]);
+      expect(Obj.getTypeURI(parent1)?.toString()).toBe(fanOutMigration.fromType.toString());
+      expect(await db1.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+
+      // A stamping re-run re-asserts the presented id, which clears the disagreement everywhere.
+      await db1.runMigrations([stampMigration]);
+      await db1.flush();
+      await pair.syncAll(db1, db2);
+      // Replicated heads can land before this peer's view reflects them; the split is re-runnable.
+      await expect
+        .poll(async () => {
+          await db2.runMigrations([fanOutMigration]);
+          return Obj.getTypeURI(parent2 ?? parent1)?.toString();
+        })
+        .toBe(fanOutMigration.toType.toString());
+      expect(await db2.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(1);
+    } finally {
+      await builder.close();
+      await pair.network.close();
+    }
   });
 
   test('findOrphanedChildren reports a child whose remembered element id the parent no longer shows', async () => {
