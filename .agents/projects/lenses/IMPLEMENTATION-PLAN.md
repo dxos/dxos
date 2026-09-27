@@ -34,7 +34,7 @@ better than before._
 The migrations we support today (one object, one type, in place), made safe. Does not yet catch
 late old-schema writes; says so in the docs.
 
-1. Extend the existing `Migration` module (`Migration.define` / `defineRename` in `@dxos/echo`)
+1. **DONE (`Migration.fromLens`):** Extend the existing `Migration` module (`Migration.define` / `defineRename` in `@dxos/echo`)
    rather than adding a parallel API: `migrate()` returns a write set as data (pure, synchronous);
    `Migration.fromLens(L)` for mapping-expressible steps. `transform`-style definitions keep
    working and are compiled to a write set.
@@ -45,13 +45,14 @@ late old-schema writes; says so in the docs.
 4. Apply per object in **one change**: minimal writes + type switch + per-object marker
    (`Annotation.set` on `EntityMeta.annotations`) + pre/post heads. Whole write set validated
    against the target version first (§10.7 q5).
-5. Keep source properties, declared as **retired** on the target: without a declaration a later
-   write to one is rejected as `Unknown property` (`validation.test.ts` V4c).
+5. Keep source properties, recorded as **retired** in the migration marker. Writes to them from
+   target-type code stay rejected (`validation.test.ts` V4c), which is correct: only old clients
+   write them, and their replicated ops are not validated. **Done** (marker `retired`).
 6. "What is left to migrate" becomes a query on type version, replacing the space-level
    `MigrationVersionAnnotation` scalar. Port `AppMigrations`, `plugin-space`, `cli`.
 7. Migrations are kept indefinitely; retirement is a designed-in but unused path (§10.7 q3).
 
-**B1 — first slice (no API change):** rewrite `EchoDatabase#runObjectMigration`
+**B1 — first slice (no API change), DONE:** rewrite `EchoDatabase#runObjectMigration`
 (`echo-client/src/proxy-db/database.ts`) to stop using `atomicReplaceObject`, which replaces the
 whole entity struct and so clobbers any concurrent edit. Keep `Migration.define`'s async `transform`
 contract. Per object, in **one automerge change** (`ObjectCore.change`, change `message` naming the

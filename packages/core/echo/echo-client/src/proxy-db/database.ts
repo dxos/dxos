@@ -928,6 +928,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         from: fromType,
         to: toType,
         preHeads: [...preHeads],
+        retired: Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {})
+          .filter((key) => !Object.hasOwn(mappedOutput, key))
+          .sort(),
       }),
     );
     const typeRef = EncodedReference.fromURI(migration.toType);

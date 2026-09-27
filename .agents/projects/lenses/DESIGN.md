@@ -970,8 +970,9 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    base type is what is changing. — **DECIDED (2026-09-25):** ordinary writes validate against the
    object's own current version (today's per-property `_validateValue`); the migration's write set
    validates as a whole against the target version and applies in the same change as the type
-   switch; retained source properties are declared by the migration and accepted by the target as
-   retired; a fold write that fails target validation becomes `Write.report` (source left, flagged).
+   switch; retained source properties are recorded as retired in the object's migration marker
+   (refined 2026-09-27: the target does not accept writes to them — only old clients write them, and
+   replicated ops are not validated — so no schema-level declaration is needed); a fold write that fails target validation becomes `Write.report` (source left, flagged).
    Validation is a local-write guard only — replicated ops are never validated, so readers must
    tolerate invalid data regardless.
 6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data

@@ -300,6 +300,11 @@ const MigrationMarkerSchema = Schema.Struct({
    * are not stored: they are that change itself, locatable by its `message` (`migration: <from> -> <to>`).
    */
   preHeads: Schema.Array(Schema.String),
+  /**
+   * Source data keys the migration left in place because its output omits them: kept so fold-forward
+   * can read late writes to them, and never written by code on the target type.
+   */
+  retired: Schema.Array(Schema.String),
 });
 
 /**

@@ -269,6 +269,7 @@ test('retires a field the transform drops instead of deleting it, and marks the 
   expect(marker.from).to.eq(noteMigration.fromType.toString());
   expect(marker.to).to.eq(noteMigration.toType.toString());
   expect(marker.preHeads).to.deep.eq(preHeads);
+  expect(marker.retired).to.deep.eq(['body']);
 });
 
 test('re-running a migration after it applied performs no further writes', async () => {
