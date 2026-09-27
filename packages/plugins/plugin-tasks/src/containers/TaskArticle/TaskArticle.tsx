@@ -79,8 +79,8 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
           <ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
-                section headings and the cards all start at the content track, and only a glyph
-                hangs outside it. */}
+                  section headings and the cards all start at the content track, and only a glyph
+                  hangs outside it. */}
               <Column.Root gutter='md' gap='lg' classNames='py-2'>
                 <Column.Center>
                   {/* The task's own fields, not the list's strip: the pane has a subject, so it
@@ -123,9 +123,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 )}
 
                 <TaskAttachments task={task} canAttach={!!handleAttach} pending={pendingAttachments} />
-
                 {history && history.length > 0 && <TaskHistory entries={history} />}
-
                 <TaskArtifacts task={task} />
               </Column.Root>
             </TaskAttachmentDropZone>
