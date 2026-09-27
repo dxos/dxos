@@ -8,9 +8,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { URI } from '@dxos/keys';
 import { Card, Icon } from '@dxos/react-ui';
-import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, parseObjectUri } from '@dxos/ui-editor';
 
 export type ObjectCardProps = {
   /** The object's URI. */
@@ -27,7 +26,7 @@ export type ObjectCardProps = {
  * loaded still lands once it does.
  */
 export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
-  const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
+  const uri = useMemo(() => parseObjectUri(eid), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
   const [subject] = useObject(object);

@@ -4,12 +4,30 @@
 
 import { type Extension } from '@codemirror/state';
 
+import { EID, URI } from '@dxos/keys';
+
 import { AnchorWidget } from './anchor.ts';
 import { type LinkWidgetProps, linkWidgets, matchSchemes } from './link-widgets.ts';
 import { type WidgetDef } from './widgets.ts';
 
 /** URL schemes that name an ECHO object. */
 export const OBJECT_URL_SCHEMES = ['eid:', 'echo:'];
+
+/**
+ * The URI a widget may resolve, or `undefined` while the link does not name a whole object yet.
+ *
+ * A link is claimed by its scheme alone, so a widget is built from every prefix a link passes
+ * through — as it is typed, or as a model streams it — and resolving one that names no entity
+ * throws from inside render, where no editor-side catch can reach it.
+ */
+export const parseObjectUri = (eid: string | undefined): URI.URI | undefined => {
+  if (!eid) {
+    return undefined;
+  }
+  const parsed = EID.tryParse(eid);
+  // A space-only `echo://<spaceId>` parses but names no entity, and resolving that throws too.
+  return parsed && EID.getEntityId(parsed) ? URI.make(eid) : undefined;
+};
 
 /** A link widget's props, with the URL under the name the object machinery uses. */
 export type ObjectLinkProps<TContext = unknown> = LinkWidgetProps<TContext> & { eid: string };

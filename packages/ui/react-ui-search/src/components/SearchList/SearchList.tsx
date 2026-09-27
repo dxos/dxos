@@ -259,27 +259,33 @@ SearchListViewport.displayName = 'SearchList.Viewport';
 
 type SearchListItemProps = ThemedClassName<{
   /** Unique identifier. */
-  value: string;
+  'value': string;
   /** Display label. */
-  label: string;
+  'label': string;
   /** Icon id. */
-  icon?: string;
+  'icon'?: string;
   /** Additional class names for the icon. */
-  iconClassNames?: string;
+  'iconClassNames'?: string;
   /** Show a check icon to the right. */
-  checked?: boolean;
+  'checked'?: boolean;
   /** Suffix text after the label. */
-  suffix?: string;
+  'suffix'?: string;
   /** Callback when item is selected. */
-  onSelect?: () => void;
+  'onSelect'?: () => void;
   /** Disabled. */
-  disabled?: boolean;
+  'disabled'?: boolean;
+  /** Named explicitly rather than spread, so a list's items stay addressable without a label. */
+  'data-testid'?: string;
 }>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ classNames, value, label, icon, iconClassNames, checked, suffix, onSelect, disabled }, forwardedRef) => {
+  (
+    { classNames, value, label, icon, iconClassNames, checked, suffix, onSelect, disabled, 'data-testid': testId },
+    forwardedRef,
+  ) => {
     return (
       <Picker.Item
+        data-testid={testId}
         value={value}
         onSelect={onSelect}
         disabled={disabled}
