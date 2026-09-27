@@ -311,6 +311,22 @@ const MigrationMarkerSchema = Schema.Struct({
    * can read late writes to them, and never written by code on the target type.
    */
   retired: Schema.Array(Schema.String),
+  /**
+   * Document heads immediately after the last fold-forward pass's writes for this object. `A.diff`
+   * from here (falling back to the migration's own post-heads, located via `preHeads`, before the
+   * first fold) names exactly the source writes no pass has folded yet — never a durable intent, so
+   * a crash between the fold and this checkpoint just re-diffs a wider (harmless, value-compared)
+   * range on the next pass.
+   */
+  foldedAt: Schema.optional(Schema.Array(Schema.String)),
+  /**
+   * Per-retired-property TARGET-side fork frontier for a text splice replay (a `fromLens` rename of a
+   * string property), keyed by the retired source property. Distinct from {@link foldedAt}: this is
+   * where the NEXT replay forks the target's own change from, which must advance to the heads the
+   * PREVIOUS replay's `changeAt` returned (never back to the migration heads) or later offsets overrun
+   * — see M0-REPORT.md design item 9. Absent until the first text fold for that property.
+   */
+  textFrontier: Schema.optional(Schema.Record(Schema.String, Schema.Array(Schema.String))),
 });
 
 /**

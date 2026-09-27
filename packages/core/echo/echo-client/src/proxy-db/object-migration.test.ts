@@ -197,8 +197,10 @@ test('applies the write set, the type switch, and the marker in exactly one auto
   await db.runMigrations([migrationV2]);
 
   const history = A.getHistory(core.getDoc());
-  expect(history.length - historyBefore).to.eq(1);
-  expect(history.at(-1)?.change.message).to.eq(
+  // A dependency-free change is a document genesis the host side can contribute late, not an edit.
+  const edits = history.slice(historyBefore).filter((entry) => entry.change.deps.length > 0);
+  expect(edits).to.have.length(1);
+  expect(edits[0].change.message).to.eq(
     `migration: ${migrationV2.fromType.toString()} -> ${migrationV2.toType.toString()}`,
   );
 });

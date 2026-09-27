@@ -8,7 +8,7 @@ import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, debounce, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
@@ -54,7 +54,7 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { deepMapValues, setDeep } from '@dxos/util';
+import { setDeep } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
@@ -78,6 +78,8 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import { encodedValuesEqual, mapRefsToEncodedReferences } from './encoded-value.ts';
+import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -104,6 +106,20 @@ export interface EchoDatabase extends Database.Database {
    * Run migrations.
    */
   runMigrations(migrations: Migration.Migration[]): Promise<void>;
+
+  /**
+   * Folds a late old-shape write forward into a previously migrated object: for objects of each
+   * migration's `toType` carrying its marker whose retired properties changed since the marker's
+   * checkpoint, recomputes and applies the difference. `runMigrations` calls it at the end of every
+   * run; call it directly to fold without re-running the migrations.
+   */
+  foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void>;
+
+  /**
+   * Folds forward, debounced, whenever objects in this database change — the objects a replicated
+   * late write touches. `getMigrations` is read on each pass so the current set always applies.
+   */
+  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -282,36 +298,8 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
 
-/**
- * Structural equality between two ENCODED (automerge-primitive) values: `A.RawString`, `Uint8Array`,
- * `EncodedReference` (`{ '/': uri }`), plain arrays/objects. Guards `#applyObjectMigration`'s writes so
- * a value a migration's transform leaves unchanged produces no automerge op.
- */
-const encodedValuesEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) {
-    return true;
-  }
-  if (a instanceof A.RawString || b instanceof A.RawString) {
-    return String(a) === String(b);
-  }
-  if (a instanceof Uint8Array && b instanceof Uint8Array) {
-    return a.length === b.length && a.every((byte, index) => byte === b[index]);
-  }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((value, index) => encodedValuesEqual(value, b[index]));
-  }
-  if (isRecord(a) && isRecord(b)) {
-    const aKeys = Object.keys(a);
-    return (
-      aKeys.length === Object.keys(b).length &&
-      aKeys.every((key) => Object.hasOwn(b, key) && encodedValuesEqual(a[key], b[key]))
-    );
-  }
-  return false;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+/** Idle time after the last update before a watched fold-forward pass, so a burst folds once. */
+const FOLD_FORWARD_DEBOUNCE_MS = 2_000;
 
 /**
  * User-facing API for the space database.
@@ -822,6 +810,34 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this._entityManager.flush();
+
+    // A peer may already hold late old-shape writes to objects this run just migrated.
+    await this.foldForward(migrations);
+  }
+
+  async foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
+    await foldForwardMigrations(this, migrations, options);
+    await this._entityManager.flush();
+  }
+
+  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn {
+    // Only objects that changed since the last pass can have gained a late write.
+    let changed = new Set<string>();
+    const pass = debounce(() => {
+      const objectIds = changed;
+      changed = new Set();
+      void this.foldForward(getMigrations(), { objectIds }).catch((err) => {
+        if (!(err instanceof RpcClosedError)) {
+          log.catch(err);
+        }
+      });
+    }, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
+    return this._entityManager._updateEvent.on((event) => {
+      for (const { id } of event.itemsUpdated) {
+        changed.add(id);
+      }
+      pass();
+    });
   }
 
   async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
@@ -891,17 +907,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const mountPath = core.mountPath;
     const preHeads = A.getHeads(core.getDoc());
 
-    // Refs are encoded by URI: a migration transform is expected to carry over refs it already
-    // has, not mint/link new unsaved targets, so no ref-resolver round trip is needed here.
-    const mappedOutput: Record<string, unknown> = deepMapValues(output, (value, recurse) => {
-      if (Ref.isRef(value)) {
-        return EncodedReference.fromURI(value.uri);
-      }
-      if (value instanceof Uint8Array) {
-        return value;
-      }
-      return recurse(value);
-    });
+    const mappedOutput = mapRefsToEncodedReferences(output);
 
     // `core.encode`'s own object-valued branch drops `undefined` entries (they never reach the
     // document) rather than writing `null`; matched here since each key is now encoded on its own.

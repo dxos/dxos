@@ -1,0 +1,258 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { next as A } from '@automerge/automerge';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
+import { Annotation, DXN, Lens, Migration, Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+
+import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
+import { updateText } from '../text.ts';
+
+//
+// Phase C2/C3 (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md` Phase C; M0-REPORT.md design items
+// 1, 6, 9): fold-forward as a standing rule, derived from the document rather than a durable intent.
+// Single-db suite — see `../../../echo-client-e2e/src/fold-forward.test.ts` for the cross-peer
+// (partitioned, asymmetric-schema) acceptance suite. A "late old-schema write" is simulated here by
+// writing the retired key directly through `ObjectCore` (`setDecoded`/`getDocAccessor`), the same way
+// an old client's replicated change would land: through the raw document, never through the current
+// (target) typed proxy, which schema-rejects a write to a retired property.
+//
+
+class ContactV1 extends Type.makeObject<ContactV1>(DXN.make('org.dxos.test.foldForward.Contact', '0.1.0'))(
+  Schema.Struct({ fullName: Schema.String }),
+) {}
+
+class ContactV2 extends Type.makeObject<ContactV2>(DXN.make('org.dxos.test.foldForward.Contact', '0.2.0'))(
+  Schema.Struct({ name: Schema.String }),
+) {}
+
+/** An opaque `define`-style migration (not lens-backed) so the generic recompute-and-compare path is exercised. */
+const contactMigration = Migration.define({
+  from: ContactV1,
+  to: ContactV2,
+  transform: async (from) => ({ name: from.fullName }),
+});
+
+class NoteV1 extends Type.makeObject<NoteV1>(DXN.make('org.dxos.test.foldForward.Note', '0.1.0'))(
+  Schema.Struct({ body: Schema.optional(Schema.String) }),
+) {}
+
+class NoteV2 extends Type.makeObject<NoteV2>(DXN.make('org.dxos.test.foldForward.Note', '0.2.0'))(
+  Schema.Struct({ content: Schema.optional(Schema.String) }),
+) {}
+
+/** A bare rename (`content` <- `body`): the one shape `fromLens` folds character-wise instead of whole-value. */
+const noteLens = Lens.make('org.dxos.test.foldForward.note.lens', NoteV1, NoteV2, { content: 'body' });
+const noteMigration = Migration.fromLens(noteLens);
+
+let builder: EchoTestBuilder;
+
+beforeEach(async () => {
+  builder = await new EchoTestBuilder().open();
+});
+
+afterEach(async () => {
+  await builder.close();
+});
+
+describe('fold-forward: retired scalar properties', () => {
+  test('a late write to a retired property folds into the migrated target, and a second pass is a no-op', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+    // `contact`'s compile-time type is still `ContactV1` (the runtime type switch does not change the
+    // TypeScript type of the binding) — `Obj.getValue` reads the migrated property without a cast.
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace');
+
+    // Simulate an old client's late write to the retired `fullName` key, straight on the raw core.
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+    await db.flush();
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace'); // not yet folded.
+
+    await db.foldForward([contactMigration]);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace-Byron');
+
+    // The checkpoint (`foldedAt`) advanced, so a second pass with nothing new writes nothing.
+    const core = getObjectCore(contact);
+    const historyLengthAfterFold = A.getHistory(core.getDoc()).length;
+    await db.foldForward([contactMigration]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLengthAfterFold);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace-Byron');
+  });
+
+  test('a pass scoped to other objects leaves an unlisted object unfolded', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+    await db.flush();
+
+    await db.foldForward([contactMigration], { objectIds: new Set(['some-other-object']) });
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace');
+
+    await db.foldForward([contactMigration], { objectIds: new Set([contact.id]) });
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace-Byron');
+  });
+
+  test('watchFoldForward folds a late write once objects update', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+    const unwatch = db.watchFoldForward(() => [contactMigration], { debounceMs: 10 });
+    try {
+      getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+      await db.flush();
+      await expect.poll(() => Obj.getValue(contact, ['name'])).toBe('Ada Lovelace-Byron');
+    } finally {
+      unwatch();
+    }
+  });
+
+  test('a concurrent direct edit to the target creates a real conflict; Obj.getConflict presents the direct edit', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Grace Hopper' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+
+    // A direct edit through the new schema...
+    Obj.update(contact, (contact) => {
+      Obj.setValue(contact, ['name'], 'Amazing Grace');
+    });
+    await db.flush();
+
+    // ...concurrent (in CRDT terms — the fold is forced back to the migration's own heads) with a
+    // late old-schema write to the retired property.
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Grace Murray Hopper');
+    await db.flush();
+
+    await db.foldForward([contactMigration]);
+
+    // User wins: `Obj.getConflict`'s policy-resolved `presented` value is the direct edit, the late
+    // value is not lost. The ORDINARY property read is a plain Automerge counter-dominance read, not
+    // policy-filtered (`ObjectCore.foldAt`'s own doc comment: "typically" the direct edit wins there,
+    // not guaranteed), so only `presented` is asserted on.
+    const conflict = Obj.getConflict(contact, 'name');
+    invariant(conflict, 'expected a real Automerge conflict on `name`');
+    expect(conflict.presented).to.eq('Amazing Grace');
+    expect(conflict.alternatives).to.have.length(2);
+    const fold = conflict.alternatives.find((alternative) => alternative.fold);
+    const direct = conflict.alternatives.find((alternative) => !alternative.fold);
+    expect(fold?.value).to.eq('Grace Murray Hopper');
+    expect(direct?.value).to.eq('Amazing Grace');
+
+    // Re-running performs no further writes: the checkpoint already covers this late write, and the
+    // conflict — read straight from Automerge — is untouched by a fold that changes nothing.
+    const core = getObjectCore(contact);
+    const historyLength = A.getHistory(core.getDoc()).length;
+    await db.foldForward([contactMigration]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLength);
+  });
+});
+
+describe('fold-forward: text (fromLens identity rename)', () => {
+  test('a late source splice merges character-wise with a concurrent target edit', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([NoteV1, NoteV2]);
+
+    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
+    await db.flush();
+    await db.runMigrations([noteMigration]);
+    // `note`'s compile-time type is still `NoteV1` — `Obj.getValue` reads `content` without a cast.
+    expect(Obj.getValue(note, ['content'])).to.eq('Hello world');
+
+    // A direct edit through the new schema, in a disjoint region of the original text.
+    updateText(note, ['content'], 'Hi world');
+    await db.flush();
+
+    // A late old-schema splice edit to the retired `body` key.
+    updateText(note, ['body'], 'Hello brave new world');
+    await db.flush();
+    expect(Obj.getValue(note, ['content'])).to.eq('Hi world'); // not yet folded.
+
+    await db.foldForward([noteMigration]);
+
+    // Both edit streams survive, character-wise — neither clobbers the other.
+    const content = Obj.getValue(note, ['content']);
+    expect(content).to.include('Hi');
+    expect(content).to.include('brave new');
+    expect(content).to.not.include('Hello');
+    expect(content?.endsWith('world')).to.eq(true);
+  });
+
+  test('two successive late text edits fold correctly via the advancing target frontier', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([NoteV1, NoteV2]);
+
+    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
+    await db.flush();
+    await db.runMigrations([noteMigration]);
+
+    updateText(note, ['content'], 'Hi world');
+    await db.flush();
+    updateText(note, ['body'], 'Hello brave new world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+    expect(Obj.getValue(note, ['content'])).to.include('brave new');
+
+    // A second late edit on the source: diffing from the ADVANCED checkpoint must name only the new
+    // edit, and the replay must fork from the frontier the FIRST replay returned — re-forking from the
+    // original migration heads would overrun offsets (M0-REPORT.md design item 9).
+    updateText(note, ['body'], 'Hello brave new wonderful world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+
+    const content = Obj.getValue(note, ['content']);
+    expect(content).to.include('wonderful');
+    expect(content).to.include('Hi'); // still not reverted.
+    // The first fold's insertion appears exactly once — a re-fork bug would duplicate it.
+    expect(content?.split('brave new').length).to.eq(2);
+  });
+});
+
+describe('fold-forward: safety', () => {
+  test('an object with a foreign migration checkpoint, and one with no marker at all, are both skipped safely', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Katherine Johnson' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Katherine Coleman Johnson');
+    await db.flush();
+
+    // Corrupt the marker's `preHeads` to a hash the document has never seen — the ancestry check
+    // (M0-REPORT.md design item 1: "never fold on foreign heads") must skip it, not throw or diff
+    // against "everything is new".
+    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
+    Obj.update(contact, (contact) => {
+      Annotation.set(contact, Migration.MigrationMarkerAnnotation, { ...marker, preHeads: ['0'.repeat(64)] });
+    });
+    await db.flush();
+
+    // An object of the target type that was never migrated (no marker at all).
+    const untouched = db.add(Obj.make(ContactV2, { name: 'Direct' }));
+    await db.flush();
+
+    await expect(db.foldForward([contactMigration])).resolves.toBeUndefined();
+
+    // Skipped: the late write to `fullName` was never folded into `name`.
+    expect(Obj.getValue(contact, ['name'])).to.eq('Katherine Johnson');
+    expect(untouched.name).to.eq('Direct');
+  });
+});
