@@ -7,7 +7,7 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -77,7 +77,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
       {createdAt !== undefined && (
         <TaskProperty
           icon='ph--calendar-plus--regular'
-          label={t('task-created.label', { date: format(createdAt, 'PPp') })}
+          label={<Timestamp date={createdAt} />}
           unset
           testId='taskList.property.created'
         />

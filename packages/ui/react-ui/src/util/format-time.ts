@@ -7,6 +7,12 @@ export type FormatCompactOptions = {
   now?: Date;
 };
 
+/** An instant as an ISO string, a Unix timestamp in milliseconds, or a Date. */
+export type DateLike = string | number | Date;
+
+/** Normalizes a {@link DateLike}; an unparseable value yields an invalid Date, which callers check. */
+export const toDate = (date: DateLike): Date => (date instanceof Date ? date : new Date(date));
+
 /** Beyond two hours a minute count stops being read as a count and starts being arithmetic. */
 const COMPACT_MINUTES = 120;
 
@@ -27,8 +33,8 @@ const MAX_TIMEOUT = 2_147_483_647;
  * Returns the empty string for an unparseable value: a compact cell has no room to explain itself,
  * and the tooltip carries the original for anyone who needs it.
  */
-export const formatCompact = (date: string | Date, { now }: FormatCompactOptions = {}): string => {
-  const parsed = typeof date === 'string' ? new Date(date) : date;
+export const formatCompact = (date: DateLike, { now }: FormatCompactOptions = {}): string => {
+  const parsed = toDate(date);
   if (Number.isNaN(parsed.getTime())) {
     return '';
   }
@@ -70,8 +76,8 @@ const formatCompactDate = (date: Date, reference: Date): string =>
  * timer) or wakes for nothing (a day-old entry on a one-second timer); asking the value when it next
  * changes is the only cadence that is both exact and idle when it can be.
  */
-export const compactInterval = (date: string | Date, { now }: FormatCompactOptions = {}): number | undefined => {
-  const parsed = typeof date === 'string' ? new Date(date) : date;
+export const compactInterval = (date: DateLike, { now }: FormatCompactOptions = {}): number | undefined => {
+  const parsed = toDate(date);
   if (Number.isNaN(parsed.getTime())) {
     return undefined;
   }
