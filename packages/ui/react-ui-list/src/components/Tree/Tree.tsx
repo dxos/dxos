@@ -1101,14 +1101,27 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     }
 
     const element = rowRef.current;
-    const makeDraggable = () =>
-      draggable({
-        element,
-        getInitialData: () => data,
-        getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-        onDragStart: () => setDragState('dragging'),
-        onDrop: () => setDragState('idle'),
-      });
+    // Declares the drag a move: pragmatic-drag-and-drop sets `dropEffect` only over a drop target and
+    // never `effectAllowed`, so over a gap or the source row itself the browser falls back to its copy
+    // cursor, which flickers as the pointer crosses rows.
+    const handleNativeDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    };
+    const makeDraggable = () => {
+      element.addEventListener('dragstart', handleNativeDragStart);
+      return combine(
+        () => element.removeEventListener('dragstart', handleNativeDragStart),
+        draggable({
+          element,
+          getInitialData: () => data,
+          getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
+          onDragStart: () => setDragState('dragging'),
+          onDrop: () => setDragState('idle'),
+        }),
+      );
+    };
 
     if (!isItemDroppable) {
       return isItemDraggable ? makeDraggable() : undefined;

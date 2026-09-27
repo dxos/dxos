@@ -14,6 +14,7 @@ export type UseNavTreeStateResult = {
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;
   getItemAtom: (path: string[]) => Atom.Atom<NavTreeCapabilities.NavTreeItemState>;
   setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
+  pick: (id: string) => boolean;
 };
 
 /**

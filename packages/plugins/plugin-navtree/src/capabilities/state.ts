@@ -43,7 +43,18 @@ export default Capability.makeModule(
 
     // What the user navigated to, which is not always what the deck opened: a collection opens its
     // documents in its own place, and lighting those up read as a multi-selection nobody made.
+    // A plank the user picked out of a seeded deck, held until the set of open planks changes: the
+    // deck does not change when an already-open plank is chosen, so nothing else would record it.
+    let picked: { id: string; active: readonly string[] } | undefined;
     const currentIds = (active: readonly string[]): readonly string[] => {
+      if (
+        picked &&
+        picked.active.length === active.length &&
+        picked.active.every((id, index) => id === active[index])
+      ) {
+        return [picked.id];
+      }
+      picked = undefined;
       const source = graph && DeckSeed.sourceOf(graph, active);
       return source ? [source] : active;
     };
@@ -110,9 +121,7 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscribe to layout changes to update current state.
-    const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const nextIds = currentIds(layout.active);
+    const updateCurrent = (nextIds: readonly string[]) => {
       const removed = activeIds.filter((id) => !nextIds.includes(id));
       activeIds = nextIds;
 
@@ -138,7 +147,21 @@ export default Capability.makeModule(
       // would set state during the tree's render pass). Items whose path is not registered yet no longer
       // need waiting out — they seed `current` from `activeIds` when they register.
       queueMicrotask(handleUpdate);
-    });
+    };
+
+    // Subscribe to layout changes to update current state.
+    const unsubscribe = registry.subscribe(layoutAtom, (layout) => updateCurrent(currentIds(layout.active)));
+
+    const pick = (id: string): boolean => {
+      const { active } = registry.get(layoutAtom);
+      if (!active.includes(id)) {
+        return false;
+      }
+
+      picked = { id, active: [...active] };
+      updateCurrent([id]);
+      return true;
+    };
 
     yield* Effect.gen(function* () {
       const { graph: appGraph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
@@ -176,6 +199,7 @@ export default Capability.makeModule(
       getItem,
       getItemAtom,
       setItem,
+      pick,
     });
   }),
 );
