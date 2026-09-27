@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { format } from 'date-fns';
 import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -64,6 +65,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
   const db = Obj.getDatabase(task);
   const people = useQuery(onTaskUpdate ? db : undefined, Filter.type(Person.Person));
   const { label: assigneeLabel, icon: assigneeIcon } = useAssigneeDisplay(assignee);
+  const { createdAt } = Obj.getMeta(task);
 
   return (
     <Column.Section
@@ -184,6 +186,15 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
             ))
         }
       />
+
+      {createdAt !== undefined && (
+        <TaskProperty
+          icon='ph--calendar-plus--regular'
+          label={t('task-created.label', { date: format(createdAt, 'PPp') })}
+          unset
+          testId='taskList.property.created'
+        />
+      )}
     </Column.Section>
   );
 };

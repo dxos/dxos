@@ -24,7 +24,7 @@ copy "+". `Gantt.Chart` opens scrolled to its newest events. Plugin settings in 
 
 Task list rows show a task's pull requests in their own column on the title line, left of the
 assignee; the assignee picker offers the space's members, the owner included (`TaskProperties` takes
-`members`); the assignee chip opens its session card on click rather than hover, which had left it
+`members`); its properties show when it was created; the assignee chip opens its session card on click rather than hover, which had left it
 stuck open. `tasks.create` and `tasks.update` reject an assignee that names no one — it must carry a
 contact, a member's `identityDid`, or an agent session. Copy-to-clipboard buttons use
 `SystemIconButton.Clipboard`, so they share one icon and the "Copied" confirmation.
