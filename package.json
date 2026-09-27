@@ -81,6 +81,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@dxos/vite-plugin-log": "workspace:*",
+    "@dxos/vite-plugin-module-url": "workspace:*",
     "@effect/language-service": "catalog:",
     "@effect/tsgo": "catalog:",
     "@effect/vitest": "catalog:",

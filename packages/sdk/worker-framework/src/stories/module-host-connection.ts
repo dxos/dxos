@@ -83,16 +83,27 @@ export class ModuleHostConnection extends Resource {
 
   override async _open(): Promise<void> {
     this.#scope = Effect.runSync(Scope.make());
-    await this.#connection.open();
+    try {
+      await this.#connection.open();
+    } catch (error) {
+      // `Resource` stays closed after a failed open, so `_close` never runs to release the scope.
+      await this.#closeScope();
+      throw error;
+    }
   }
 
   override async _close(): Promise<void> {
     await this.#connection.close();
-    if (this.#scope) {
-      await EffectEx.runPromise(Scope.close(this.#scope, Exit.void));
-      this.#scope = undefined;
-    }
+    await this.#closeScope();
     this.#rpc = undefined;
+  }
+
+  async #closeScope(): Promise<void> {
+    const scope = this.#scope;
+    this.#scope = undefined;
+    if (scope) {
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+    }
   }
 
   listModules = async (): Promise<readonly ModuleInfo[]> => EffectEx.runPromise(this.#client.listModules({}));

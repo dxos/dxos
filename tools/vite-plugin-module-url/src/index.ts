@@ -2,14 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { posix } from 'node:path';
+import { basename, extname, posix } from 'node:path';
 import { type Plugin } from 'vite';
 
 const QUERY = '?module-url';
 
 /**
+ * Path prefix the dev server mounts `/@fs/` under. The dev server ignores an absolute-URL base's origin,
+ * and a relative base (`./`, empty) is only meaningful for build output, so both reduce to a path.
+ */
+const devBasePath = (base: string): string => {
+  if (/^[a-z][a-z\d+.-]*:/i.test(base)) {
+    return new URL(base).pathname;
+  }
+  return base.startsWith('/') ? base : '/';
+};
+
+/**
  * Resolves `import url from './module.ts?module-url'` to the URL of that module compiled as a
- * standalone ES chunk whose exports are preserved, so another realm (e.g. a worker) can `import()` it.
+ * standalone ES module whose exports are preserved, so another realm (e.g. a worker) can `import()` it.
  *
  * Vite's built-ins cannot do this: `new URL('./x.ts', import.meta.url)` and `?url` copy the raw
  * source as an asset, and `?worker&url` bundles a worker entry with its exports tree-shaken away.
@@ -40,11 +51,16 @@ export const ModuleUrlPlugin = (): Plugin => {
 
       const file = id.slice(0, -QUERY.length);
       if (command === 'serve') {
-        const path = JSON.stringify(posix.join(base, '@fs', file));
+        const path = JSON.stringify(posix.join(devBasePath(base), '@fs', file));
         return `export default new URL(${path}, location.href).href;`;
       }
 
-      const ref = this.emitFile({ type: 'chunk', id: file, preserveSignature: 'strict' });
+      const ref = this.emitFile({
+        type: 'chunk',
+        id: file,
+        name: basename(file, extname(file)),
+        preserveSignature: 'strict',
+      });
       return `export default import.meta.ROLLUP_FILE_URL_${ref};`;
     },
   };

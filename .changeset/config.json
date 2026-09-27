@@ -224,6 +224,7 @@
       "@dxos/vite-plugin-import-source",
       "@dxos/vite-plugin-log",
       "@dxos/vite-plugin-log-example",
+      "@dxos/vite-plugin-module-url",
       "@dxos/vite-plugin-shutdown",
       "@dxos/vscode-extension",
       "@dxos/web-context",

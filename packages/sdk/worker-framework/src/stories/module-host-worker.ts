@@ -25,7 +25,8 @@ const isHostedModule = (value: unknown): value is HostedModule =>
   typeof value.name === 'string' &&
   'methods' in value &&
   typeof value.methods === 'object' &&
-  value.methods !== null;
+  value.methods !== null &&
+  Object.values(value.methods).every((method) => typeof method === 'function');
 
 // A bad URL is reported per module rather than failing `createRuntime`, which would surface as
 // `init-failed` and leave every tab without a worker.
@@ -33,10 +34,27 @@ const loadModule = (url: string): Effect.Effect<LoadedModule> =>
   Effect.tryPromise(() => import(/* @vite-ignore */ url)).pipe(
     Effect.map((exports): LoadedModule => {
       const candidate: unknown = exports.module;
-      return isHostedModule(candidate) ? { url, module: candidate } : { url, error: 'missing `module` export' };
+      return isHostedModule(candidate)
+        ? { url, module: candidate }
+        : { url, error: 'missing or malformed `module` export' };
     }),
     Effect.catch((error) => Effect.succeed<LoadedModule>({ url, error: String(error.cause ?? error) })),
   );
+
+// Invocation is routed by name, so a later module reusing a name is rejected rather than shadowing the first.
+const rejectDuplicateNames = (loaded: LoadedModule[]): LoadedModule[] => {
+  const seen = new Set<string>();
+  return loaded.map((entry) => {
+    if (!entry.module) {
+      return entry;
+    }
+    if (seen.has(entry.module.name)) {
+      return { url: entry.url, error: `duplicate module name: ${entry.module.name}` };
+    }
+    seen.add(entry.module.name);
+    return entry;
+  });
+};
 
 const makeHandlers = (loaded: LoadedModule[]) => {
   const byName = new Map(loaded.flatMap(({ module }) => (module ? [[module.name, module] as const] : [])));
@@ -51,8 +69,10 @@ const makeHandlers = (loaded: LoadedModule[]) => {
         ),
       invoke: ({ module: moduleName, method, args }) =>
         Effect.gen(function* () {
-          const fn = byName.get(moduleName)?.methods[method];
-          if (!fn) {
+          const methods = byName.get(moduleName)?.methods;
+          // Own properties only, so inherited names like `toString` are not callable over RPC.
+          const fn = methods && Object.hasOwn(methods, method) ? methods[method] : undefined;
+          if (typeof fn !== 'function') {
             return yield* new ModuleInvokeError({ message: `unknown method: ${moduleName}.${method}` });
           }
           return yield* Effect.tryPromise({
@@ -72,7 +92,7 @@ Worker.run({
   createRuntime: ({ config }) =>
     Effect.gen(function* () {
       const moduleUrls = isModuleHostConfig(config) ? config.moduleUrls : [];
-      const loaded = yield* Effect.forEach(moduleUrls, loadModule, { concurrency: 'unbounded' });
+      const loaded = rejectDuplicateNames(yield* Effect.forEach(moduleUrls, loadModule, { concurrency: 'unbounded' }));
       const handlers = makeHandlers(loaded);
       return {
         createSession: () => Rpc.serveFromContext(ModuleHostRpcs, handlers),

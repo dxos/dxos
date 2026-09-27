@@ -22,6 +22,7 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
@@ -187,6 +188,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
+  // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
+  ModuleUrlPlugin(),
   wasm(),
   // sourcemaps(),
 ];

@@ -9,6 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ModuleHostConnection } from './module-host-connection.ts';
 import { type ModuleInfo } from './module-host-service.ts';
+import geometryUrl from './modules/geometry.ts?module-url';
 import mathUrl from './modules/math.ts?module-url';
 import textUrl from './modules/text.ts?module-url';
 
@@ -82,9 +83,11 @@ const ModulePanel = ({ connection, info }: { connection: ModuleHostConnection; i
   );
 };
 
+type Session = { connection: ModuleHostConnection; blobUrl: string };
+
 const ModuleHostStory = () => {
   const [blobSource, setBlobSource] = useState(DEFAULT_BLOB_SOURCE);
-  const [connection, setConnection] = useState<ModuleHostConnection>();
+  const [session, setSession] = useState<Session>();
   const [modules, setModules] = useState<readonly ModuleInfo[]>([]);
   const [error, setError] = useState<string>();
 
@@ -92,31 +95,36 @@ const ModuleHostStory = () => {
   const handleStart = useCallback(async () => {
     setError(undefined);
     setModules([]);
-    await connection?.close();
+    // Close first: opening while the old worker lives would join it as a follower with its old modules.
+    await session?.connection.close();
     const blobUrl = toBlobUrl(blobSource);
-    const next = new ModuleHostConnection({ moduleUrls: [mathUrl, textUrl, blobUrl] });
-    setConnection(next);
+    const connection = new ModuleHostConnection({ moduleUrls: [mathUrl, textUrl, geometryUrl, blobUrl] });
+    setSession({ connection, blobUrl });
     try {
-      await next.open();
-      setModules(await next.listModules());
+      await connection.open();
+      setModules(await connection.listModules());
     } catch (err) {
       setError(errorMessage(err));
     }
-  }, [connection, blobSource]);
+  }, [session, blobSource]);
 
+  // The blob URL outlives the first import: a failover re-creates the worker, which imports it again.
   useEffect(
     () => () => {
-      void connection?.close();
+      if (session) {
+        void session.connection.close().finally(() => URL.revokeObjectURL(session.blobUrl));
+      }
     },
-    [connection],
+    [session],
   );
 
   return (
     <div className='flex max-w-2xl flex-col gap-4 p-6'>
       <p className='text-sm text-subdued'>
         The tab passes module URLs in the worker&apos;s init config; the worker <code>import()</code>s each one and
-        routes <code>invoke</code> RPCs to its exported methods. <code>math</code> and <code>text</code> are Vite chunks
-        resolved via <code>?module-url</code>; <code>blob</code> is compiled from the source below.
+        routes <code>invoke</code> RPCs to its exported methods. <code>math</code>, <code>text</code> and{' '}
+        <code>geometry</code> are TS modules compiled by Vite and resolved via <code>?module-url</code>;{' '}
+        <code>blob</code> is plain JS loaded from a blob URL of the source below.
       </p>
       <textarea
         className='h-40 rounded border border-separator bg-transparent p-2 font-mono text-xs'
@@ -129,10 +137,10 @@ const ModuleHostStory = () => {
         className='self-start rounded-md bg-accent-bg px-3 py-2 text-sm font-medium text-accent-fg'
         onClick={() => void handleStart()}
       >
-        {connection ? 'Restart worker' : 'Start worker'}
+        {session ? 'Restart worker' : 'Start worker'}
       </button>
       {error && <div className='text-xs text-error-text'>{error}</div>}
-      {connection && modules.map((info) => <ModulePanel key={info.url} connection={connection} info={info} />)}
+      {session && modules.map((info) => <ModulePanel key={info.url} connection={session.connection} info={info} />)}
     </div>
   );
 };
