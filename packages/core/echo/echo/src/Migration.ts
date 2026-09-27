@@ -110,6 +110,12 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
 /**
  * Define a migration between two object schemas.
  *
+ * The runner applies each object's transform output as minimal writes in one change, keeps source
+ * properties the output omits (recorded as retired in {@link MigrationMarkerAnnotation}), and
+ * resumes safely after a partial run. Not yet handled: a write made in the old shape after an
+ * object migrated (e.g. by a peer that was offline) stays on the retired property and is not
+ * carried forward, and `onMigration` effects may run once per peer.
+ *
  * @example
  * ```ts
  * const migration = Migration.define({

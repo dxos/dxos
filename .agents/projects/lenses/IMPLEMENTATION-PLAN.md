@@ -48,8 +48,12 @@ late old-schema writes; says so in the docs.
 5. Keep source properties, recorded as **retired** in the migration marker. Writes to them from
    target-type code stay rejected (`validation.test.ts` V4c), which is correct: only old clients
    write them, and their replicated ops are not validated. **Done** (marker `retired`).
-6. "What is left to migrate" becomes a query on type version, replacing the space-level
-   `MigrationVersionAnnotation` scalar. Port `AppMigrations`, `plugin-space`, `cli`.
+6. ~~Replace the space-level `MigrationVersionAnnotation` scalar~~ — **dropped:** object
+   migrations already select per object by type (`Filter.type(fromType)`); the space-level
+   `@dxos/migrations` registry is a separate app-wide mechanism (composer's entries are 2024 no-ops)
+   and stays as is. The runner additionally skips any object whose live type is no longer `from`,
+   because the type query reads the index, which can lag a migration just applied (found by the
+   crash-resume test; without the guard a re-run migrated objects twice).
 7. Migrations are kept indefinitely; retirement is a designed-in but unused path (§10.7 q3).
 
 **B1 — first slice (no API change), DONE:** rewrite `EchoDatabase#runObjectMigration`

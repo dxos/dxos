@@ -420,3 +420,43 @@ export const FieldSchema = Schema.Struct({
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
+
+test('a run that fails partway is completed by the next run, each object migrated exactly once', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([ContactV1, ContactV2]);
+
+  const contacts = ['Ada', 'Grace', 'Katherine'].map((firstName) =>
+    db.add(Obj.make(ContactV1, { firstName, lastName: 'Test' })),
+  );
+  await db.flush();
+
+  // Simulates a crash mid-space: the first run dies on its second object.
+  let failOn: string | undefined = contacts[1].id;
+  const flaky = Migration.define({
+    from: ContactV1,
+    to: ContactV2,
+    transform: async (from) => {
+      if (from.id === failOn) {
+        throw new Error('simulated crash');
+      }
+      return { name: `${from.firstName} ${from.lastName}` };
+    },
+  });
+
+  await expect(db.runMigrations([flaky])).rejects.toThrow('simulated crash');
+  const migratedAfterCrash = contacts.filter(
+    (contact) => Obj.getTypeURI(contact)?.toString() === DXN.make('com.example.type.person', '0.2.0'),
+  );
+  expect(migratedAfterCrash.length).to.be.lessThan(contacts.length);
+
+  failOn = undefined;
+  await db.runMigrations([flaky]);
+
+  for (const contact of contacts) {
+    expect(Obj.getTypeURI(contact)?.toString()).to.eq(DXN.make('com.example.type.person', '0.2.0'));
+    const migrationChanges = A.getHistory(getObjectCore(contact).getDoc()).filter((entry) =>
+      entry.change.message?.startsWith('migration:'),
+    );
+    expect(migrationChanges).to.have.length(1);
+  }
+});

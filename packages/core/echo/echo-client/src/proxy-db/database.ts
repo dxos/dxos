@@ -831,6 +831,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       objects: objects.length,
     });
     for (const object of objects) {
+      // The type query reads the index, which can still list an object an earlier run already
+      // migrated; its live type is the authority, so a re-run never migrates an object twice.
+      if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
+        continue;
+      }
       const before = JSON.parse(JSON.stringify(object));
 
       const output = (await migration.transform(object, { db: this })) as MigrationOutput | undefined;
