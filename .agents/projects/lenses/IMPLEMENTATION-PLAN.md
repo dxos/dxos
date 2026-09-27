@@ -5,6 +5,27 @@ into shippable phases. Supersedes the M1/M2 task lists in [TASKS.md](./TASKS.md)
 disagree (those predate the research). Every phase ships on its own and leaves the system strictly
 better than before._
 
+## Status (2026-09-27): all phases implemented on this branch
+
+| Phase  | Commit                                         | What landed                                                                                                                      |
+| ------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| A1     | `1ea37277`                                     | `Lens` promoted into `@dxos/echo`; `echo-panproto` keeps engine + hooks                                                          |
+| A2     | `c150dd00`                                     | Merge engine replays a loser's pre-merge edits at the winner's creation heads (text only on equal baselines)                     |
+| A3     | `70cf198f`                                     | Type switch = internal `ObjectCore.setType`, used by the runner                                                                  |
+| A4     | `42ff5f66`                                     | Stale nested `id` on record refresh (array element reused by a remote reorder)                                                   |
+| B (M1) | `70cf198f`, `44cf023f`, `b779cd04`, `3bfe18bd` | Minimal-write single-change migrations, retired props in the marker, `Migration.fromLens`, crash resume (live-type guard)        |
+| C1/C4  | `773bae1f`, `79b5df3b`                         | `ObjectCore.foldAt` (fresh actor per fold), `Obj.getConflict` (user-wins; equal values are no conflict)                          |
+| C2/C3  | `69c4100e`                                     | `db.foldForward` / `db.watchFoldForward`: pending work derived from marker + history, character-wise text renames                |
+| C5     | `8cae3897`                                     | Cost: ~0.6 ms per migrated object per idle pass, 11–18 ms scoped pass, ~15 ms per late write                                     |
+| D      | `b3af6336`, `0c110911`                         | `ensure`/`assign`, `defineFanIn`, `defineStampElementIds`, `defineArrayFanOut` (+ raced-stamp reconcile), `findOrphanedChildren` |
+| E1     | `1191627c`                                     | `Lens.compose`, `Lens.invert` (safe subset), version-aware `Lens.findPath` / `resolveView`                                       |
+| E2     | `1f759c03`                                     | Fold-forward also carries late overlay writes into promoted properties                                                           |
+
+Known limits carried forward: array fan-out has no fold-forward for late old-shape array writes after the
+split; fan-in does not switch the child's type before tombstoning; the migration marker keeps only the
+latest step of a chain; two peers folding the same value independently leave equal-valued ops (reported as
+no conflict); `foldAt` adds one actor per fold.
+
 ## Where things live
 
 | Piece                                                                | Package                                                            |

@@ -393,7 +393,7 @@ projects:
     tasks: .agents/projects/lenses/TASKS.md
     design: .agents/projects/lenses/DESIGN.md
     prs: [12420, 12439]
-    resume: 'MIGRATION RESEARCH + FOLLOW-UP SPIKES DONE 2026-09-25 — DRAFT PR #12439 (merged with main, incl. landed #12412). Record: .agents/projects/lenses/M0-REPORT.md (9 outcomes; creation-heads replay fixes fan-out pre-merge loss; sentinel-actor user-wins sound only for byte-identical changes; character-wise text folds; array fan-out proven vs real engine). Bench: echo-client-e2e/src/migration-bench/ (10 files, 46 tests). Fixed waitUntilHeadsReplicated hang on patchless merges. OPEN: winner-policy mechanism decision; engine adoption of creation-heads replay; stale live proxy after remote reorder; revisit DESIGN §10.7 q1,q3-q5,q7.'
+    resume: 'LENS-BACKED MIGRATIONS IMPLEMENTED 2026-09-27 on PR #12439 (phases A–E, all verified; status table in .agents/projects/lenses/IMPLEMENTATION-PLAN.md). Research record: M0-REPORT.md. Delivered: Lens in @dxos/echo; minimal-write single-change runMigrations with retired props + marker; Migration.fromLens; merge-engine creation-heads replay; ObjectCore.foldAt + Obj.getConflict; db.foldForward/watchFoldForward (text + overlay); multi-object ensure/assign, fan-in, array fan-out + orphan diagnostic; Lens.compose/invert/findPath. CI checks deferred by user. NEXT: user review; known limits listed in the plan.'
   - name: mcp
     status: active
     user: burdon
