@@ -63,6 +63,8 @@ The protections that are real:
 - **Same-origin only.** The route requires a JSON content type, which a cross-origin page cannot
   send without a preflight this route never answers, and it refuses a request whose `Origin` names
   another host.
+- **This machine only.** A server started with `--host` listens on every interface, and `Origin` is
+  not authentication, so the route refuses any request whose peer address is not loopback.
 - **Bounded.** Per-request timeout (killing the whole process group), and an output cap that reports
   `truncated` rather than returning a response the size of a build log.
 - **Not agent-enablable.** The skill sets `agentCanEnable: false`, so the assistant cannot turn shell
