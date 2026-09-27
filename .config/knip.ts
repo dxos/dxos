@@ -73,9 +73,6 @@ const AUXILIARY_ENTRY = [
   'src/**/*-processor.js',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
-  // The canonical capability barrel: `dx-plugin gen` slices it into `gen/<condition>.ts` rather than
-  // importing it, so once `#capabilities.default` resolves a generated barrel nothing imports it.
-  'src/capabilities/index.{ts,tsx}',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
   // nothing ever imports them. Scoped to checked-in locations — a bare `**` would pull the
   // generated `dist/types` tree into the analysis.
@@ -511,6 +508,9 @@ for (const manifest of globSync(
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+    // The canonical capability barrel: `dx-plugin gen` slices it into `gen/<condition>.ts` rather than
+    // importing it, so once `#capabilities.default` resolves a generated barrel nothing imports it.
+    'src/capabilities/index.{ts,tsx}',
   ];
 
   workspaces[dir] = {
