@@ -45,13 +45,14 @@ export class DocumentSidecar {
    * Every device-scoped annotation value held for each document.
    */
   async readDeviceAnnotations(
+    spaceId: SpaceId,
     documentIds: readonly DocumentId[],
   ): Promise<Map<string, DataService.DeviceAnnotation[]>> {
     const result = new Map<string, DataService.DeviceAnnotation[]>(documentIds.map((id) => [id, []]));
     if (documentIds.length === 0) {
       return result;
     }
-    const rows = await this.#run(this._params.indexEngine().deviceAnnotations.queryByDocuments(documentIds));
+    const rows = await this.#run(this._params.indexEngine().deviceAnnotations.queryByDocuments(spaceId, documentIds));
     for (const { documentId, objectId, key, value } of rows) {
       result.get(documentId)?.push({ objectId, key, value });
     }

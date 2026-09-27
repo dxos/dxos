@@ -37,11 +37,12 @@ describe('DeviceAnnotationStore', () => {
         { spaceId, documentId: 'doc-1', objectId: 'a', key: 'org.example.two' },
       ]);
 
-      expect(yield* store.queryByDocuments(['doc-1'])).toEqual([
+      expect(yield* store.queryByDocuments(spaceId, ['doc-1'])).toEqual([
         { spaceId, documentId: 'doc-1', objectId: 'a', key: 'org.example.one', value: '2' },
       ]);
       expect((yield* store.queryByObjects(spaceId, ['b'])).map(({ value }) => value)).toEqual(['true']);
       expect(yield* store.queryByObjects(SpaceId.random(), ['b'])).toEqual([]);
+      expect(yield* store.queryByDocuments(SpaceId.random(), ['doc-1'])).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -52,8 +53,8 @@ describe('DeviceAnnotationStore', () => {
       const spaceId = SpaceId.random();
       yield* store.write([{ spaceId, documentId: 'doc-1', objectId: 'a', key: 'k.k.k', value: '1' }]);
       yield* store.write([{ spaceId, documentId: 'doc-2', objectId: 'a', key: 'k.k.k', value: '1' }]);
-      expect(yield* store.queryByDocuments(['doc-1'])).toEqual([]);
-      expect(yield* store.queryByDocuments(['doc-2'])).toHaveLength(1);
+      expect(yield* store.queryByDocuments(spaceId, ['doc-1'])).toEqual([]);
+      expect(yield* store.queryByDocuments(spaceId, ['doc-2'])).toHaveLength(1);
     }, Effect.provide(TestLayer)),
   );
 
@@ -68,7 +69,9 @@ describe('DeviceAnnotationStore', () => {
         { spaceId, documentId: 'doc-2', objectId: 'c', key: 'k.k.k', value: '1' },
       ]);
       yield* store.deleteObjects({ spaceId, documentIds: ['doc-1'], objects: [{ objectId: 'b' }] });
-      expect((yield* store.queryByDocuments(['doc-1', 'doc-2'])).map(({ objectId }) => objectId)).toEqual(['c']);
+      expect((yield* store.queryByDocuments(spaceId, ['doc-1', 'doc-2'])).map(({ objectId }) => objectId)).toEqual([
+        'c',
+      ]);
     }, Effect.provide(TestLayer)),
   );
 });

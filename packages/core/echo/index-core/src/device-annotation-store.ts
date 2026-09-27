@@ -81,16 +81,19 @@ export class DeviceAnnotationStore {
   );
 
   /**
-   * Every value recorded against the given documents.
+   * Every value recorded against the given documents of one space.
    */
   queryByDocuments = Effect.fn('DeviceAnnotationStore.queryByDocuments')(
-    (documentIds: readonly string[]): Effect.Effect<readonly DeviceAnnotationRow[], SqlError.SqlError> =>
+    (
+      spaceId: SpaceId,
+      documentIds: readonly string[],
+    ): Effect.Effect<readonly DeviceAnnotationRow[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
         const rows: DeviceAnnotationRow[] = [];
-        for (const chunk of chunkArray([...new Set(documentIds)], chunkSizeForBoundVariables(1))) {
+        for (const chunk of chunkArray([...new Set(documentIds)], chunkSizeForBoundVariables(2))) {
           rows.push(
-            ...(yield* sql<DeviceAnnotationRow>`SELECT spaceId, documentId, objectId, key, value FROM deviceAnnotations WHERE ${sql.in('documentId', chunk)}`),
+            ...(yield* sql<DeviceAnnotationRow>`SELECT spaceId, documentId, objectId, key, value FROM deviceAnnotations WHERE spaceId = ${spaceId} AND ${sql.in('documentId', chunk)}`),
           );
         }
         return rows;

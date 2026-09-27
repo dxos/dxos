@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, isValidDocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -245,12 +245,13 @@ export class DocumentsSynchronizer extends Resource {
 
   async update(ctx: Context, updates: DataService.DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation, deviceAnnotations } of updates) {
+      invariant(isValidDocumentId(documentId), `Invalid document id: ${documentId}`);
       // Before the annotations: a write may annotate an object this same mutation creates.
       if (mutation) {
-        await this._writeMutation(ctx, documentId as DocumentId, mutation);
+        await this._writeMutation(ctx, documentId, mutation);
       }
       if (deviceAnnotations?.length) {
-        await this._writeDeviceAnnotations(documentId as DocumentId, deviceAnnotations);
+        await this._writeDeviceAnnotations(documentId, deviceAnnotations);
       }
     }
     // TODO(mykola): This should not be required.
@@ -334,7 +335,10 @@ export class DocumentsSynchronizer extends Resource {
     // Only documents the client already holds: a snapshot for one not yet delivered would be dropped.
     const delivered = (documentId: DocumentId) => this._syncStates.get(documentId)?.lastSentHead !== undefined;
 
-    const annotated = [...new Set([...initial, ...this._pendingDeviceAnnotations])].filter(delivered);
+    // Values are scoped by space, so a subscription that names none has none to send.
+    const annotated = this._params.spaceId
+      ? [...new Set([...initial, ...this._pendingDeviceAnnotations])].filter(delivered)
+      : [];
     this._pendingDeviceAnnotations.clear();
     const hinted = [...this._pendingRefHints].filter(
       (documentId) => delivered(documentId) && this._syncStates.get(documentId)?.references !== undefined,
@@ -343,8 +347,8 @@ export class DocumentsSynchronizer extends Resource {
 
     const sidecars = new Map<string, Pick<DataService.DocumentUpdate, 'deviceAnnotations' | 'refHints'>>();
     try {
-      if (annotated.length > 0) {
-        const values = await sidecar.readDeviceAnnotations(annotated);
+      if (annotated.length > 0 && this._params.spaceId) {
+        const values = await sidecar.readDeviceAnnotations(this._params.spaceId, annotated);
         for (const documentId of annotated) {
           const annotations = values.get(documentId) ?? [];
           // An empty snapshot on first delivery says nothing the client does not already assume.

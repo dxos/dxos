@@ -17,4 +17,4 @@ CREATE TABLE IF NOT EXISTS deviceAnnotations (
   PRIMARY KEY (spaceId, objectId, key)
 );
 
-CREATE INDEX IF NOT EXISTS idx_deviceAnnotations_documentId ON deviceAnnotations (documentId);
+CREATE INDEX IF NOT EXISTS idx_deviceAnnotations_space_document ON deviceAnnotations (spaceId, documentId);
