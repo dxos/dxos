@@ -18,16 +18,19 @@ export const spaceHeadings = (markdown: string): string => {
   const result: string[] = [];
   let fence: string | undefined;
   for (const line of lines) {
-    const marker = line.match(FENCE)?.[1];
+    // Split on `\n` alone, so a CRLF line keeps its `\r`: matched without it, written back with it.
+    const crlf = line.endsWith('\r');
+    const text = crlf ? line.slice(0, -1) : line;
+    const marker = text.match(FENCE)?.[1];
     if (fence) {
-      const closer = line.match(CLOSING_FENCE)?.[1];
+      const closer = text.match(CLOSING_FENCE)?.[1];
       if (closer && closer[0] === fence[0] && closer.length >= fence.length) {
         fence = undefined;
       }
     } else if (marker) {
       fence = marker;
-    } else if (HEADING.test(line) && result.length > 0 && result[result.length - 1].trim() !== '') {
-      result.push('');
+    } else if (HEADING.test(text) && result.length > 0 && result[result.length - 1].trim() !== '') {
+      result.push(crlf ? '\r' : '');
     }
     result.push(line);
   }

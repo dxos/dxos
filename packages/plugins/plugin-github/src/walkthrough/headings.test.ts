@@ -28,6 +28,11 @@ describe('spaceHeadings', () => {
     expect(spaceHeadings(markdown)).to.equal('Prose.\n\n```md\nText.\n```ts\n# still code\n```\nAfter.\n\n## Next\n');
   });
 
+  test('reads CRLF lines, and keeps their line endings', () => {
+    const markdown = 'Prose.\r\n\r\n```\r\ncode\r\n```\r\nAfter.\r\n## Next\r\n';
+    expect(spaceHeadings(markdown)).to.equal('Prose.\r\n\r\n```\r\ncode\r\n```\r\nAfter.\r\n\r\n## Next\r\n');
+  });
+
   test('does not treat a hashtag as a heading', () => {
     const markdown = 'Prose.\n#hashtag';
     expect(spaceHeadings(markdown)).to.equal(markdown);
