@@ -3,6 +3,8 @@
 //
 
 const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
+/** A closing fence carries nothing after its marker: a line with an info string only opens one. */
+const CLOSING_FENCE = /^\s{0,3}(`{3,}|~{3,})[ \t]*$/;
 const HEADING = /^\s{0,3}#{1,6}(\s|$)/;
 
 /**
@@ -18,7 +20,8 @@ export const spaceHeadings = (markdown: string): string => {
   for (const line of lines) {
     const marker = line.match(FENCE)?.[1];
     if (fence) {
-      if (marker && marker[0] === fence[0] && marker.length >= fence.length) {
+      const closer = line.match(CLOSING_FENCE)?.[1];
+      if (closer && closer[0] === fence[0] && closer.length >= fence.length) {
         fence = undefined;
       }
     } else if (marker) {
