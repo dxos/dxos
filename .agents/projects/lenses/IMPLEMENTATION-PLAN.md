@@ -51,6 +51,20 @@ late old-schema writes; says so in the docs.
    `MigrationVersionAnnotation` scalar. Port `AppMigrations`, `plugin-space`, `cli`.
 7. Migrations are kept indefinitely; retirement is a designed-in but unused path (§10.7 q3).
 
+**B1 — first slice (no API change):** rewrite `EchoDatabase#runObjectMigration`
+(`echo-client/src/proxy-db/database.ts`) to stop using `atomicReplaceObject`, which replaces the
+whole entity struct and so clobbers any concurrent edit. Keep `Migration.define`'s async `transform`
+contract. Per object, in **one automerge change** (`ObjectCore.change`, change `message` naming the
+migration): validate the transform output against `toSchema`; write only data keys whose encoded
+value differs (value-compare); leave keys absent from the output in place (retired); merge the meta
+patch per key; `setType(toType)`; set a per-object marker annotation holding the migration's
+`from`/`to` and the pre-migration heads (post-migration heads are the migration change itself,
+found by its message, so no second write is needed). `onMigration` still runs after. Real
+migrations that intentionally drop fields (`sdk/types` `TaskMigration` `parentTask`,
+`compute` `Operation` `key`/`version`) keep them as retired properties — verify nothing strictly
+decodes whole objects. Tests: a concurrent edit to an untouched property survives; the change count
+is exactly one per object; re-running is a no-op; existing migration suites stay green.
+
 **Done when**: bench single-object suite passes against the real API; a concurrent edit to an
 untouched property survives a migration; a crash mid-space resumes from any peer.
 
