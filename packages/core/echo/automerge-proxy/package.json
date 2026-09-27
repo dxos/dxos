@@ -104,5 +104,8 @@
   },
   "devDependencies": {
     "fast-check": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
