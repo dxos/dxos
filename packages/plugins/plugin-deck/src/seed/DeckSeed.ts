@@ -25,15 +25,13 @@ export const sourceOf = (graph: AppGraph.ExpandableGraph, active: readonly strin
   // Every parent, not the first: a document in two collections was seeded by whichever was opened.
   // Membership rather than order, since the planks may have been rearranged since the seed.
   const open = new Set(active);
-  const source = AppGraph.getConnections(graph, first, AppGraph.inverseRelation(AppGraphNode.child)).find(
-    (parent) => {
-      const seeded = resolveSeededPlanks({
-        initial: resolveDeckSpec(parent)?.initial,
-        addBesideOrigin: false,
-        children: openableChildren(graph, parent.id),
-      });
-      return seeded?.length === open.size && seeded.every((id) => open.has(id));
-    },
-  );
+  const source = AppGraph.getConnections(graph, first, AppGraph.inverseRelation(AppGraphNode.child)).find((parent) => {
+    const seeded = resolveSeededPlanks({
+      initial: resolveDeckSpec(parent)?.initial,
+      addBesideOrigin: false,
+      children: openableChildren(graph, parent.id),
+    });
+    return seeded?.length === open.size && seeded.every((id) => open.has(id));
+  });
   return source?.id;
 };

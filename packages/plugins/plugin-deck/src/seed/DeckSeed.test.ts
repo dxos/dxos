@@ -33,6 +33,19 @@ describe('DeckSeed.sourceOf', () => {
     expect(DeckSeed.sourceOf(graph, children.slice(0, 8))).toBe('root/c');
   });
 
+  test('rearranged planks are still the seed', ({ expect }) => {
+    const { graph, children } = setup(3);
+    expect(DeckSeed.sourceOf(graph, [...children].reverse())).toBe('root/c');
+  });
+
+  test('a document in two collections resolves to the one whose seed is open', ({ expect }) => {
+    const { graph, children } = setup(2);
+    // An earlier parent that does not seed its deck, so the first connection is not the match.
+    AppGraph.addNode(graph, { id: 'root/other', type: 'test' });
+    AppGraph.addEdge(graph, { source: 'root/other', target: children[0], relation: 'child' });
+    expect(DeckSeed.sourceOf(graph, children)).toBe('root/c');
+  });
+
   test('one document of the collection opened on its own is not the seed', ({ expect }) => {
     const { graph, children } = setup(3);
     expect(DeckSeed.sourceOf(graph, [children[1]])).toBeUndefined();
