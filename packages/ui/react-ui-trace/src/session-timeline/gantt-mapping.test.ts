@@ -8,7 +8,7 @@ import { sessionTimelineToGantt } from './gantt-mapping.ts';
 import { type SessionTimeline } from './types.ts';
 
 describe('sessionTimelineToGantt', () => {
-  test('a session is the header of its band, under its own id, and its tasks sit inside it', ({ expect }) => {
+  test('a session is the band around its tasks, with no row of its own', ({ expect }) => {
     const timeline: SessionTimeline = {
       lanes: [
         { id: 'session:a', kind: 'session', label: 'Chat', status: 'running', start: 1, toolCalls: 2 },
@@ -20,17 +20,25 @@ describe('sessionTimelineToGantt', () => {
     };
 
     const { groups, lanes, markers } = sessionTimelineToGantt(timeline);
-    expect(groups).toEqual([
-      {
-        id: 'session:a',
-        header: { label: 'Chat', status: 'running', segments: [{ start: 1 }], meta: [{ label: '2 tools' }] },
-      },
-    ]);
-    // No lane doubles the session; its markers address the group, whose header row draws them.
+    // The session is the band alone: no row doubles it, and its own nodes have nowhere to go.
+    expect(groups).toEqual([{ id: 'session:a' }]);
     expect(lanes.map(({ id, groupId, parentId }) => ({ id, groupId, parentId }))).toEqual([
       { id: 'task:1', groupId: 'session:a', parentId: undefined },
       { id: 'task:2', groupId: 'session:a', parentId: 'task:1' },
     ]);
-    expect(markers?.[0]?.laneId).toBe('session:a');
+    expect(markers).toEqual([]);
+  });
+
+  test('a session standing for one task is that task, drawn inside its own band', ({ expect }) => {
+    const timeline: SessionTimeline = {
+      lanes: [{ id: 'session:a', kind: 'session', label: 'Only', status: 'running', start: 1, taskId: 't' }],
+      markers: [{ id: 'm', laneId: 'session:a', kind: 'task', timestamp: 1, label: 'Task started' }],
+      range: { start: 1, end: 1 },
+    };
+
+    const { groups, lanes, markers } = sessionTimelineToGantt(timeline);
+    expect(groups).toEqual([{ id: 'session:a' }]);
+    expect(lanes).toMatchObject([{ id: 'session:a', groupId: 'session:a', label: 'Only' }]);
+    expect(markers?.map(({ laneId }) => laneId)).toEqual(['session:a']);
   });
 });

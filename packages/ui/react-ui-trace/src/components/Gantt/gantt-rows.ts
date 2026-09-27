@@ -12,8 +12,6 @@ export type Row = {
   depth: number;
   index: number;
   groupId: string | undefined;
-  /** The row is its group's header: the lane stands for the group itself. */
-  header?: boolean;
 };
 
 /** A group's rows, contiguous — which is what lets one rectangle enclose them. */
@@ -48,20 +46,10 @@ export const orderRows = (
 
   const visitGroup = (group: GanttGroup, depth: number): void => {
     const first = rows.length;
-    // The header leads its band, and the group's lanes indent under it as they would under a parent.
-    if (group.header) {
-      rows.push({
-        lane: { ...group.header, id: group.id, groupId: group.id },
-        depth,
-        index: rows.length,
-        groupId: group.id,
-        header: true,
-      });
-    }
     pushLanes(
       lanes.filter((lane) => lane.groupId === group.id),
       undefined,
-      group.header ? depth + 1 : depth,
+      depth,
     );
     if (rows.length > first) {
       bands.push({ group, first, last: rows.length - 1 });

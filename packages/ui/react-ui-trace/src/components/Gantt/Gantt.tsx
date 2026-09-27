@@ -21,20 +21,14 @@ import { useEnter } from './useEnter.ts';
 export type GanttLaneStatus = 'pending' | 'blocked' | 'running' | 'review' | 'done' | 'failed';
 
 /**
- * A band of related lanes, enclosed by one rectangle. A group may also be a thing of its own — the
- * process whose work the lanes are — in which case its `header` names it and carries its own nodes on
- * the band's first row, and the rectangle is its extent rather than a bar of its own.
+ * A band of related lanes, enclosed by one rectangle. Pure structure: the lanes inside carry the
+ * labels, so a group needs no name of its own.
  */
 export type GanttGroup = {
   id: string;
   /** Indents under another group; a nested group's band is drawn after its parent's. */
   parentId?: string;
-  /** The group as a row: markers addressed to the group's id are drawn on it. */
-  header?: GanttGroupHeader;
 };
-
-/** What a group's header row carries: a lane's facts, placed by the group rather than by itself. */
-export type GanttGroupHeader = Omit<GanttLane, 'id' | 'groupId' | 'parentId'>;
 
 /** One stretch during which a lane was worked. `end` is absent while the stretch is still open. */
 export type GanttSegment = {
@@ -314,12 +308,11 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
       ref={forwardedRef}
     >
       <div style={{ height: HEADER_HEIGHT }} />
-      {rows.map(({ lane, depth, header }) => (
+      {rows.map(({ lane, depth }) => (
         <div
           key={lane.id}
           className={mx(
             'flex items-center gap-2 truncate',
-            header && 'font-medium',
             onLaneSelect && 'cursor-pointer hover:bg-hover-surface-subtle',
           )}
           style={{ height: ROW_HEIGHT, paddingInlineStart: `${0.5 + depth}rem` }}
@@ -779,9 +772,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
           })}
 
           {/* One bar per segment: the gaps between them are the stretches the lane was not worked. */}
-          {/* A header's extent is its band's rectangle, so it draws no bar of its own. */}
-          {rows.flatMap(({ lane, index, header }) =>
-            (header ? [] : stretchesOf(lane)).map((stretch, segment) => {
+          {rows.flatMap(({ lane, index }) =>
+            stretchesOf(lane).map((stretch, segment) => {
               const start = stretch.from - BAR_OVERHANG;
               const bar = {
                 x: start,

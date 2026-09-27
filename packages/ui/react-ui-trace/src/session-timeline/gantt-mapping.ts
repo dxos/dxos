@@ -17,12 +17,10 @@ import { type Lane, type SessionTimeline, type TokenUsage } from './types.ts';
  * The one place the domain's nouns meet the chart's.
  *
  * The chart knows only groups, lanes, segments and markers; this file knows that a **process** is a
- * group whose header is the process itself, a **task** is a lane inside it, a **subtask** nests under
- * its parent task, and a **delegation** opens a band out of the node that spawned it. Keeping the
- * translation here is what lets either vocabulary change without dragging the other with it.
- *
- * A process's group takes the process lane's own id, so every reference to that lane — its markers,
- * a delegation's source node, the lane a host resolves a pick through — lands on the header row.
+ * group — the band around the lanes of the tasks it works, with no row of its own — a **task** is a
+ * lane inside it, a **subtask** nests under its parent task, and a **delegation** opens a lane out of
+ * the node that spawned it. Keeping the translation here is what lets either vocabulary change without
+ * dragging the other with it.
  */
 const formatTokens = (tokens: TokenUsage): string =>
   tokens.total >= 1_000 ? Unit.Thousand(tokens.total).toString() : String(tokens.total);
@@ -45,10 +43,12 @@ const segmentsOf = (lane: Lane): GanttLane['segments'] =>
 /**
  * Maps a session timeline onto the chart's model.
  *
- * Every process becomes a band headed by itself and holding the lanes of the tasks it works. A process
- * spawned by another nests its band under its parent's, and its header opens out of the exact node
- * that spawned it — so causality is drawn by `openedFrom` while membership is `groupId` and nesting
- * is `parentId`, three facts the timeline's single `parentId` used to carry at once.
+ * Every process becomes a band holding the lanes of the tasks it works; the process itself draws no
+ * row, so its own nodes (requests, tool calls no task claims) are dropped. A process standing for one
+ * task — a delegated sub-agent, or a session the builder folded its lone task into — is that task's
+ * lane, so it keeps its span, its nodes and the node it opened out of. A process spawned by another
+ * nests its band under its parent's — so causality is drawn by `openedFrom` while membership is
+ * `groupId` and nesting is `parentId`, three facts the timeline's single `parentId` used to carry.
  */
 export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttData, 'groups' | 'lanes' | 'markers'> => {
   const byId = new Map(timeline.lanes.map((lane) => [lane.id, lane]));
@@ -84,28 +84,32 @@ export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttDat
         // A process spawned by another sits inside its parent's band; a task's parent resolves to the
         // process working it, which is the band this one nests under.
         ...(parent ? { parentId: bandOf(parent) } : {}),
-        header: facts,
       });
-      continue;
+      if (lane.taskId === undefined) {
+        continue;
+      }
     }
 
     lanes.push({
       id: lane.id,
       groupId: bandOf(lane),
       // A task nests under its parent task; one hanging off its process sits at the top of the band.
-      ...(parent?.kind === 'task' ? { parentId: parent.id } : {}),
+      ...(lane.kind === 'task' && parent?.kind === 'task' ? { parentId: parent.id } : {}),
       ...facts,
     });
   }
 
-  const markers: GanttMarker[] = timeline.markers.map((marker) => ({
-    id: marker.id,
-    laneId: marker.laneId,
-    kind: marker.kind,
-    timestamp: marker.timestamp,
-    label: marker.label,
-    ...(marker.level ? { level: marker.level } : {}),
-  }));
+  const drawn = new Set(lanes.map((lane) => lane.id));
+  const markers: GanttMarker[] = timeline.markers
+    .flatMap((marker) => (drawn.has(marker.laneId) ? [marker] : []))
+    .map((marker) => ({
+      id: marker.id,
+      laneId: marker.laneId,
+      kind: marker.kind,
+      timestamp: marker.timestamp,
+      label: marker.label,
+      ...(marker.level ? { level: marker.level } : {}),
+    }));
 
   return { groups, lanes, markers };
 };
