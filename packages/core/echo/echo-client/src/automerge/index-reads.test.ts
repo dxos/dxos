@@ -236,6 +236,26 @@ describe('objects read from the index', () => {
     expect(handleOf(inReader).isCopy).toBe(true);
   });
 
+  test('a newer index copy notifies subscribers of the object', async () => {
+    const { spaceKey, rootUrl, ids } = await setup(3);
+    const reader = await openTab(spaceKey, rootUrl, { indexed: true });
+    const inReader = await load(reader, ids[1]);
+    const seen: string[] = [];
+    const unsubscribe = Obj.subscribe(inReader, () => seen.push(Reflect.get(inReader, 'title')));
+
+    const writer = await openTab(spaceKey, rootUrl, { indexed: false });
+    const inWriter = await load(writer, ids[1]);
+    Obj.update(inWriter, (inWriter) => {
+      inWriter.title = 'renamed elsewhere';
+    });
+    await writer.flush();
+    await peer.host.updateIndexes();
+
+    await expect.poll(() => seen).toContain('renamed elsewhere');
+    expect(handleOf(inReader).isCopy).toBe(true);
+    unsubscribe();
+  });
+
   test('a write made against an out-of-date index copy lands among the changes the copy lacked', async () => {
     const { spaceKey, rootUrl, ids } = await setup(1);
     const reader = await openTab(spaceKey, rootUrl, { indexed: true });
