@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -37,35 +36,22 @@ describe('EchoHost.updateIndexes', () => {
   // batch; waiting for one hung every feed-scoped one-shot query issued mid-stream until it timed out.
   test('returns once the writes made before the call are indexed, while writes keep arriving', async () => {
     const { host, runtime, spaceId, saveObject } = await setup();
-    const update = host.indexEngine.update.bind(host.indexEngine);
-    // Slowed so every pass overlaps a write: the stream never leaves an empty batch behind it.
-    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
-      Effect.delay(update(ctx, source, opts), '20 millis'),
-    );
-
-    let streaming = true;
-    const stream = (async () => {
-      while (streaming) {
-        await saveObject(EntityId.random());
-        await sleep(5);
-      }
-    })();
-    onTestFinished(async () => {
-      streaming = false;
-      await stream;
-    });
-    await sleep(100);
-
     const written = EntityId.random();
     await saveObject(written);
-    const outcome = await Promise.race([
-      host.updateIndexes().then(() => 'indexed' as const),
-      sleep(5_000).then(() => 'stalled' as const),
-    ]);
-    streaming = false;
-    await stream;
 
-    expect(outcome).toBe('indexed');
+    // Every pass lands a write before it finishes, for as long as the caller waits: the next pass
+    // always has input, as under a stream, without depending on timing.
+    let waiting = true;
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
+      update(ctx, source, opts).pipe(
+        Effect.tap(() => (waiting ? Effect.promise(() => saveObject(EntityId.random())) : Effect.void)),
+      ),
+    );
+
+    await host.updateIndexes();
+    waiting = false;
+
     const rows = await RuntimeProvider.runPromise(runtime)(
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );

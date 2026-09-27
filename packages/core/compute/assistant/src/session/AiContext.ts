@@ -132,18 +132,19 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+    const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
+    this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
-    const initialResults = await this.#bindingsQuery.run();
+    const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
     this._ctx.onDispose(
-      this.#bindingsQuery.subscribe(async () => {
-        await this._updateBindings(this.#bindingsQuery!.results);
+      bindingsQuery.subscribe(async () => {
+        await this._updateBindings(bindingsQuery.results);
       }),
     );
   }
