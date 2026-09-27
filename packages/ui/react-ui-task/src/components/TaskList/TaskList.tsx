@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -12,12 +20,12 @@ import {
   IconBlock,
   IconButton,
   Tag,
+  Tooltip,
   composable,
   composableProps,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
@@ -33,7 +41,14 @@ import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
-import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
+import {
+  type TaskGroup,
+  type TaskNode,
+  buildTaskForest,
+  buildTaskGroups,
+  flattenVisibleTasks,
+  taskGroupNodeId,
+} from './tree-model.ts';
 import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
@@ -57,6 +72,14 @@ type TaskListRootProps = PropsWithChildren<{
    * Group rows into status sections (Linear order); flat list otherwise.
    */
   groupByStatus?: boolean;
+  /**
+   * Partition the rows under collapsible group headers, each with its count — the host decides the
+   * partition (by status, priority, assignee, milestone…) and the order, of groups and within each.
+   * Supersedes `groupByStatus`. With `hierarchical`, sub-tasks still nest under a parent in the same
+   * group. A group's collapsed state lives in `collapsed` beside the branches', under the group's
+   * node id (`taskGroupNodeId`).
+   */
+  groups?: readonly TaskGroup[];
   /**
    * Render the set as the tree it stores (`Task.subtasks`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
@@ -167,6 +190,7 @@ const TaskListRoot = ({
   children,
   tasks,
   groupByStatus = true,
+  groups,
   debug = false,
   showGroupLabels = true,
   showOrdinals = false,
@@ -235,8 +259,14 @@ const TaskListRoot = ({
   // for a handle that no longer exists only pushed every title one square right.
   const showGutter = showOrdinals || !!onTaskCheck;
   const gridTemplateColumns = useMemo(
-    () => buildGridTemplate({ toggle: hierarchical, showGutter, showEstimates, hasActions: !!getTaskActions }),
-    [hierarchical, showGutter, showEstimates, getTaskActions],
+    () =>
+      buildGridTemplate({
+        toggle: hierarchical || !!groups,
+        showGutter,
+        showEstimates,
+        hasActions: !!getTaskActions,
+      }),
+    [hierarchical, groups, showGutter, showEstimates, getTaskActions],
   );
 
   return (
@@ -246,6 +276,7 @@ const TaskListRoot = ({
       // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
       // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
       groupByStatus={groupByStatus}
+      groups={groups}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
@@ -331,13 +362,16 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    // Capped so a long session name truncates rather than squeezing the title to nothing.
-    ['assignee', 'fit-content(40%)'],
+    // Sized by its content: a row with no pull request holds no width for one.
+    ['artifacts', 'auto'],
+    ['assignee', 'var(--dx-control)'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
   ];
+
   const tracks = candidates.filter((track): track is GridTrack => !!track);
+
   // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
   // is invalid and silently drops the whole declaration, which is what happens the moment the
   // toggle track is omitted — so the first track's name joins the row's own.
@@ -363,6 +397,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
   const {
     tasks,
     groupByStatus,
+    groups,
     hierarchical,
     selected,
     checked,
@@ -382,26 +417,35 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     onTaskMove,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
-  const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
+  // A group's header collapses like a branch, so its node id joins the tasks' in the same set.
+  const collapsed = useMemo(
+    () =>
+      new Set(
+        [...tasks.map((task) => task.id), ...(groups ?? []).map((group) => taskGroupNodeId(group))].filter(isCollapsed),
+      ),
+    [tasks, groups, isCollapsed],
+  );
 
   // Grouping and hierarchy are alternatives: a status group holds its tasks flat, because a
   // sub-task's status need not match its parent's.
-  const grouping = !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
+  const grouping = !groups && !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
 
   // Numbered down the list as rendered, 1..N. Flat either way: an ordinal names a task ("run 3"),
   // where a `1.2.1` path would renumber a whole branch.
   const ordinals = useMemo(() => {
-    const ordered = grouping
-      ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
-      : hierarchical
-        ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
-        : tasks;
+    const ordered = groups
+      ? flattenVisibleTasks(buildTaskGroups(groups, hierarchical), collapsed)
+      : grouping
+        ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
+        : hierarchical
+          ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
+          : tasks;
     // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
     // `ordered` — numbering them would leave gaps in the column the reader can actually see.
     const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
     // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk.
     return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
-  }, [tasks, collapsed, grouping, hierarchical, dragging]);
+  }, [tasks, collapsed, groups, grouping, hierarchical, dragging]);
 
   // One path: every mode renders through `Tree`. A flat list is a tree of depth one, and a status
   // group is a `group` node the machine splices out of its own topology.
@@ -411,6 +455,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
+      groups={groups}
       tasks={tasks}
       collapsed={collapsed}
       showGutter={showGutter}
@@ -471,26 +516,22 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Direct children of the row's grid. The tags and artifacts take a line of their own under the
-          title and above the description: on the title line they competed with it for width, and a
-          long artifact tag truncated the one thing a reader scans the list for. `empty:hidden` keeps
-          a row with no chips from holding an empty line. The assignee stays on the title line, where
-          "who has it" is read with the title. */}
-      <div
-        data-testid='taskList.item.chips'
-        className='col-[title] row-start-2 flex min-w-0 flex-wrap items-center gap-1 pb-1 empty:hidden'
-      >
-        <TaskTags task={task} assignee={false} />
+      {/* On the title line, beside who has the task: the pull request is what the row is scanned for
+          once work is under way, and on a line of its own it pushed the description down. */}
+      <div className='col-[artifacts] row-start-1 flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
+        <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
       </div>
-      <div className='col-[assignee] row-start-1 flex h-(--dx-control) min-w-0 items-center justify-end ps-1 *:truncate'>
-        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+      <div className='col-[assignee] row-start-1 grid place-items-center'>
+        {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
-      {/* The controls flow into the `estimate`, `priority` and `actions` tracks in this order —
-          `buildGridTemplate` declares a track only when its option is on, and the matching cell is
-          omitted on the same condition, so the two never drift. */}
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
+
+      {/* TODO(burdon): Update TaskTreeNode to render second line. */}
+      <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
+        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      </div>
     </>
   );
 };
@@ -566,7 +607,7 @@ TaskListItemActions.displayName = 'TaskList.ItemActions';
  * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
  * targets are not in memory yet, and a sync read would leave the row permanently empty.
  */
-const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
+const TaskListItemArtifacts = ({ task, filter }: { task: Task.Task; filter?: (obj: Obj.Unknown) => boolean }) => {
   const db = Obj.getDatabase(task);
   const ids = useMemo(
     () =>
@@ -577,9 +618,10 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
     [task.artifacts],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  // Without a database — a story, a preview — the refs were made from objects already in hand, so
-  // their targets resolve synchronously and the row still shows what the task produced.
-  const artifacts = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  // Without a database — a story, a preview — the refs were made from objects already in hand,
+  // so their targets resolve synchronously and the row still shows what the task produced.
+  const resolved = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  const artifacts = filter ? resolved.filter(filter) : resolved;
 
   return (
     <>
@@ -594,29 +636,12 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 /**
  * Everything a task carries as a chip: its tags, what it produced, and who has it.
- *
- * Bare chips with no layout of their own, so a host decides how they run — the row scrolls them on
- * one line inside its chip cell, a detail pane wraps them into a flow under the title. Rendering the
- * same set in both is the point: a reader who learned the row's chips reads the pane's without
- * learning anything new.
  */
-export const TaskTags = ({
-  task,
-  assignee = true,
-}: {
-  task: Task.Task;
-  /** Off where the host places the assignee itself — the list row keeps it on the title line. */
-  assignee?: boolean;
-}) => {
-  // The object, not the prop: an assignee set from elsewhere must reach the chips without the host
-  // re-rendering, which is what a row's snapshot gives it and a pane's subject does not.
-  const [snapshot] = useObject(task);
-  const current = snapshot ?? task;
+export const TaskTags = ({ task }: { task: Task.Task }) => {
   return (
     <>
       <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      <TaskListItemArtifacts task={task} />
-      {assignee && current?.assignee && <TaskListAssignee assignee={current.assignee} />}
+      <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
     </>
   );
 };
@@ -729,17 +754,19 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
 // properties row.
 //
 
-type TaskListAssigneeProps = { assignee: Actor.Actor };
+type TaskListAssigneeProps = {
+  assignee: Actor.Actor;
+  /** Shows the glyph alone, naming the assignee on hover — for a row where the name crowds the title. */
+  iconOnly?: boolean;
+};
 
-const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee, iconOnly }, _forwardedRef) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
 
-  // Hover, not click, because the session is context for the row rather than a place to navigate to:
-  // the reader wants to know which run owns the task while their eye is already on it. The grace
-  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
-  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  // Click, not hover: a hover-opened card has nothing to close it when the pointer moves on, so it
+  // was left open over the list until the reader clicked somewhere else.
   const openCard = useCallback(() => {
     const trigger = tagRef.current;
     if (!trigger || !session) {
@@ -757,29 +784,50 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       }),
     );
   }, [session, harness, label]);
-  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      // The row is an option: without this the click selects the task as well as opening the card.
+      event.stopPropagation();
+      openCard();
+    },
+    [openCard],
+  );
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.stopPropagation();
+        openCard();
+      }
+    },
+    [openCard],
+  );
 
   if (!label && !agent) {
     return null;
   }
 
-  return (
+  const tag = (
     <Tag
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
       data-testid='taskList.item.assignee'
-      // Focus as well as hover: the card is the only place the row says which run owns the task, so
-      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
-      tabIndex={session ? 0 : undefined}
-      onPointerEnter={startHover}
-      onPointerLeave={cancelHover}
-      onFocus={startHover}
-      onBlur={cancelHover}
-      classNames={session && 'cursor-help'}
+      // A button when there is a session to show, so the keyboard reaches the card the pointer does.
+      {...(session && { role: 'button', tabIndex: 0, onClick: handleClick, onKeyDown: handleKeyDown })}
+      classNames={session && 'cursor-pointer'}
     >
-      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
-      {label}
+      {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {iconOnly ? <span className='sr-only'>{label}</span> : label}
     </Tag>
+  );
+
+  // A session opens its card on hover, which already names the run; a tooltip would stack on it.
+  return iconOnly && !session && label ? (
+    <Tooltip.Trigger asChild content={label}>
+      {tag}
+    </Tooltip.Trigger>
+  ) : (
+    tag
   );
 });
 

@@ -1,0 +1,105 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { afterAll, beforeAll, describe, expect, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { EffectEx } from '@dxos/effect';
+
+import * as HttpBackend from '../services/HttpBackend.ts';
+import { canRunLocalSandboxes } from '../testing/probe.ts';
+import { LocalSandboxBackend } from './LocalSandboxBackend.ts';
+import { type SandboxServer, serve } from './server.ts';
+
+const unavailable = !(await canRunLocalSandboxes());
+
+const TOKEN = 'test-token-0123456789';
+const SPACE_ID = 'space-a';
+
+describe.skipIf(unavailable)('local sandbox server', { timeout: 60_000 }, () => {
+  let root: string;
+  let backend: LocalSandboxBackend;
+  let server: SandboxServer;
+  let url: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'dx-sandbox-server-'));
+    backend = new LocalSandboxBackend({ root, path: process.env.PATH });
+    server = await serve({ backend, token: TOKEN });
+    url = `http://127.0.0.1:${server.port}`;
+  });
+
+  afterAll(async () => {
+    await server.close();
+    await EffectEx.runPromise(Effect.ignore(backend.close()));
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it.effect('serves every backend call over HTTP', () =>
+    Effect.gen(function* () {
+      const remote = HttpBackend.make(url, TOKEN);
+      const record = yield* remote.create(SPACE_ID, 'sbx1', { name: 'remote' });
+      expect(record).toMatchObject({ id: 'sbx1', name: 'remote', baseImage: 'local' });
+
+      const result = yield* remote.exec(SPACE_ID, 'sbx1', { command: 'echo "$GREETING"', env: { GREETING: 'hi' } });
+      expect(result).toMatchObject({ exitCode: 0, success: true, stdout: 'hi\n' });
+
+      // Every byte value, so an encoding that is not byte-exact shows.
+      const bytes = Uint8Array.from({ length: 256 }, (_, index) => index);
+      yield* remote.writeFile(SPACE_ID, 'sbx1', 'dir/all.bin', bytes);
+      const read = yield* remote.readFileBytes(SPACE_ID, 'sbx1', '/workspace/dir/all.bin');
+      expect(read.bytes).toEqual(bytes);
+      expect(yield* remote.listFiles(SPACE_ID, 'sbx1', 'dir')).toEqual([{ name: 'all.bin', type: 'file', size: 256 }]);
+    }),
+  );
+
+  it.effect('reports backend failures as sandbox errors', () =>
+    Effect.gen(function* () {
+      const remote = HttpBackend.make(url, TOKEN);
+      const error = yield* remote.readFileBytes(SPACE_ID, 'sbx1', '/etc/passwd').pipe(Effect.flip);
+      expect(error.message).toMatch(/outside the sandbox workspace/);
+    }),
+  );
+
+  it.effect('refuses requests without the token', () =>
+    Effect.gen(function* () {
+      const error = yield* HttpBackend.make(url, 'wrong-token')
+        .exec(SPACE_ID, 'sbx1', { command: 'true' })
+        .pipe(Effect.flip);
+      expect(error.message).toBe('unauthorized');
+    }),
+  );
+
+  it('refuses a rebound host name', async () => {
+    const { request } = await import('node:http');
+    const status = await new Promise<number | undefined>((resolve, reject) => {
+      const outgoing = request(
+        {
+          host: '127.0.0.1',
+          port: server.port,
+          path: '/exec',
+          method: 'POST',
+          headers: { host: `attacker.example:${server.port}`, authorization: `Bearer ${TOKEN}` },
+        },
+        (response) => resolve(response.statusCode),
+      );
+      outgoing.on('error', reject);
+      outgoing.end('{}');
+    });
+    expect(status).toBe(403);
+  });
+
+  it('rejects malformed calls', async () => {
+    const response = await fetch(`${url}/exec`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ spaceId: SPACE_ID, sandboxId: 'sbx1' }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'missing field: request' });
+  });
+});

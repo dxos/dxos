@@ -8,6 +8,7 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
       - ^:build
       - '^:#prebuild'
     options:
@@ -27,6 +28,7 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
       - ^:build
       - '^:#prebuild'
     preset: server

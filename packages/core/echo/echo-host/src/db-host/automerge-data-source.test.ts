@@ -191,6 +191,12 @@ describe('AutomergeDataSource', () => {
 
     expect(result.objects).toHaveLength(2);
     expect(result.cursors).toHaveLength(2);
+    expect(result.more).toBe(true);
+
+    // A limit the backlog exactly fills is not a cut: `more` says a changed document was left behind.
+    const exact = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), [], { limit: 3 }));
+    expect(exact.objects).toHaveLength(3);
+    expect(exact.more).toBe(false);
   });
 
   test('extracts multiple objects from a document', async () => {

@@ -63,7 +63,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { t } = useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = useOperationInvoker();
@@ -108,6 +108,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
+  const setAxis = useCallback((axis: ProjectView.Axis) => updateView((prev) => ({ ...prev, axis })), [updateView]);
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -321,7 +322,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
                 {showPipeline && space && (
-                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onAxisChange={setAxis}
+                    onSelectChat={handleSelectChat}
+                  />
                 )}
               </Splitter.Panel>
             </Splitter.Root>

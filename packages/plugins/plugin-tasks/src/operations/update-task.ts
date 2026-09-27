@@ -12,6 +12,7 @@ import { Actor, RemoteSession, Task, TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
+import { validateAssignee } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
@@ -27,6 +28,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       milestone,
       parentTask,
     }) {
+      // A session supplies the subject itself, so only a bare actor is checked.
+      if (!remoteSession) {
+        yield* validateAssignee(assignee);
+      }
       const task = yield* Database.load(taskRef);
       // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
       // session that does not exist yet is created rather than dropping the assignment.

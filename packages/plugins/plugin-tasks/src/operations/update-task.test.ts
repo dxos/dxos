@@ -124,7 +124,7 @@ describe('update-task', () => {
       yield* updateTask.handler({
         task: Ref.make(task),
         status: 'done',
-        assignee: { name: 'Scout', role: 'assistant' },
+        assignee: { name: 'Scout', role: 'assistant', identityDid: 'did:key:scout' },
       });
       expect((task.history ?? []).filter(Task.isChangeEntry).map((entry) => entry.description)).toEqual([
         'Status changed from todo to done. Assigned to Scout.',
@@ -143,6 +143,30 @@ describe('update-task', () => {
     ),
   );
 
+  it.effect('rejects an assignee that identifies no one', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(task), assignee: { name: 'Scout' } }));
+      expect(exit._tag).toBe('Failure');
+      expect(task.assignee).toBeUndefined();
+
+      const created = yield* Effect.exit(
+        createTask.handler({ taskSet: Ref.make(taskSet), title: 'Other', assignee: { email: 'scout@example.com' } }),
+      );
+      expect(created._tag).toBe('Failure');
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
+  );
+
   it.effect('clears an optional field with null', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
@@ -150,7 +174,7 @@ describe('update-task', () => {
       const { task } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Draft',
-        assignee: { name: 'Scout' },
+        assignee: { name: 'Scout', identityDid: 'did:key:scout' },
       });
 
       // Without `null` the operation could set an assignee but never remove one, since `undefined`
@@ -298,7 +322,10 @@ describe('update-task subtree', () => {
     Effect.gen(function* () {
       const { root, child, grandchild, other } = yield* makeTree();
 
-      yield* updateTask.handler({ task: Ref.make(child), assignee: { role: 'assistant', name: 'agent' } });
+      yield* updateTask.handler({
+        task: Ref.make(child),
+        assignee: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
 
       for (const member of [root, child, grandchild]) {
         expect(member.assignee?.name).toBe('agent');

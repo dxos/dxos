@@ -55,7 +55,7 @@ const textSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', trun
   mx(variant === 'description' && 'text-sm text-description line-clamp-3', truncate && 'truncate', ...etc);
 
 const poster: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__poster col-span-3 max-h-[200px] select-none pointer-events-none', ...etc);
+  mx('dx-card__poster col-span-3 max-h-[200px] __select-none __pointer-events-none', ...etc);
 
 const posterIcon: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);

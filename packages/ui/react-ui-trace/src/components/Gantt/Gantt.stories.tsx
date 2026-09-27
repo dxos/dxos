@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useEffect, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -459,7 +460,7 @@ type StreamState = {
  * on, and its return edge would precede theirs.
  *
  * It returns the clock as well: on the time axis a chart cannot extend past `now`, so a live story
- * has to carry one, while the event axis makes its own room and ignores it.
+ * has to carry one, while the unit axis makes its own room and ignores it.
  */
 const useEventStream = (
   seedGroups: readonly GanttGroup[],
@@ -712,8 +713,8 @@ const DefaultStory = ({
     maxSpawns,
   });
   // A live chart on the time axis has to be given room ahead of its newest event, and the range it
-  // was handed ends before that event ever arrives; the event axis makes its own room.
-  const live = interval !== undefined && data.axis !== 'event';
+  // was handed ends before that event ever arrives; the unit axis makes its own room.
+  const live = interval !== undefined && data.axis !== 'unit';
   const range = live && data.range ? { start: data.range.start, end: stream.now + step } : data.range;
   const now = live ? stream.now : data.now;
 
@@ -789,7 +790,7 @@ export const SingleLane: Story = {
     groups: singleLaneGroups,
     lanes: singleLaneLanes,
     markers: singleLaneMarkers,
-    axis: 'event',
+    axis: 'unit',
     animate: true,
     interval: 1_000,
     laneId: 'lane',
@@ -830,7 +831,7 @@ export const OneLane: Story = {
     groups: oneLaneGroups,
     lanes: oneLaneLanes,
     markers: oneLaneMarkers,
-    axis: 'event',
+    axis: 'unit',
     range: undefined,
     now: undefined,
   },
@@ -842,9 +843,35 @@ export const ManyLanes: Story = {
     groups: manyLaneGroups,
     lanes: manyLaneLanes,
     markers: manyLaneMarkers,
-    axis: 'event',
+    axis: 'unit',
     range: undefined,
     now: undefined,
+  },
+};
+
+/** A chart wider than its viewport opens scrolled to its newest events, not to the start of the history. */
+export const TestOpensAtNewest: Story = {
+  args: {
+    ...ManyLanes.args,
+    chartOnly: true,
+    inspect: false,
+  },
+  decorators: [(Story) => <div className='w-[240px]'>{Story()}</div>],
+  play: async ({ canvasElement }) => {
+    const viewport = await waitFor(
+      () => {
+        const element = [...canvasElement.querySelectorAll<HTMLElement>('*')].find(
+          (candidate) =>
+            candidate.scrollWidth > candidate.clientWidth + 1 && getComputedStyle(candidate).overflowX !== 'visible',
+        );
+        if (!element) {
+          throw new Error('No horizontally scrolling viewport.');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    await expect(viewport.scrollWidth - viewport.clientWidth - viewport.scrollLeft).toBeLessThanOrEqual(1);
   },
 };
 
@@ -854,7 +881,7 @@ export const Branching: Story = {
     groups: branchingGroups,
     lanes: branchingLanes,
     markers: branchingMarkers,
-    axis: 'event',
+    axis: 'unit',
     range: undefined,
     now: undefined,
   },
@@ -866,7 +893,7 @@ export const ManyGroups: Story = {
     groups: manyGroupGroups,
     lanes: manyGroupLanes,
     markers: manyGroupMarkers,
-    axis: 'event',
+    axis: 'unit',
     range: undefined,
     now: undefined,
   },

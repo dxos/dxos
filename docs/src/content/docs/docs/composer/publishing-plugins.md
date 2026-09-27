@@ -124,17 +124,17 @@ export default Config2.make({
 
 Field reference for `plugin`:
 
-| Field         | Required | Notes                                                                                                           |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). The plugin's globally-unique key.                      |
-| `name`        | yes      | Human-readable name shown in the registry.                                                                      |
-| `description` | no       | Short description shown on the plugin's detail view.                                                            |
-| `author`      | no       | Author or organization name.                                                                                    |
-| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.    |
-| `source`      | no       | Source repository URL.                                                                                          |
-| `homePage`    | no       | Homepage URL.                                                                                                   |
-| `tags`        | no       | List of tags for categorization/discovery.                                                                      |
-| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs. |
+| Field         | Required | Notes                                                                                                                                   |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`) whose last segment is camelCase — no hyphens. The plugin's globally-unique key. |
+| `name`        | yes      | Human-readable name shown in the registry.                                                                                              |
+| `description` | no       | Short description shown on the plugin's detail view.                                                                                    |
+| `author`      | no       | Author or organization name.                                                                                                            |
+| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.                            |
+| `source`      | no       | Source repository URL.                                                                                                                  |
+| `homePage`    | no       | Homepage URL.                                                                                                                           |
+| `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
+| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
 
 Field reference for `publish`:
 
@@ -209,12 +209,203 @@ This removes the package profile and all of its release records from your PDS. T
 
 ## Local development
 
-You don't need to publish to test your plugin against Composer. Run your plugin's Vite dev server and load it by URL:
+You don't need to publish to test your plugin against Composer. Composer loads a plugin from the URL of its
+**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded:
 
-1. Start your dev server (e.g. `vite`) — note the port.
-2. In Composer, open **Settings → Plugins → Load by URL** and point it at your dev server's plugin entry (e.g. `http://localhost:5173/src/MyPlugin.tsx`).
+1. Serve the plugin. Either run your plugin's Vite dev server — `composerPlugin` serves a dev manifest at
+   `/manifest.json` (e.g. `http://localhost:3967/manifest.json`) — or serve a built `dist` directory, which
+   contains `manifest.json` and `index.mjs`.
+2. In Composer, open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste
+   the manifest URL. An assistant that has built a plugin offers the same step inline: it shows a prompt with
+   the manifest URL, and the plugin loads when you click **Load plugin**.
 
-> Loading by URL works against a **bundled build** of Composer. It does not work when running Composer from its own Vite dev server.
+The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
+the entry it names.
+
+To have the assistant build one for you, create a space from the **Composer Plugin** template (in the debug
+plugin's templates) in a Composer served locally by `vite preview`. It seeds a project whose tasks walk a chat
+through the example below, from writing the files to the load prompt; delegate the project to start it.
+
+> Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
+> app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
+> `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
+> imports fail there.
+
+### Example: a plugin with its own sidebar page
+
+A small plugin in TypeScript that adds a workspace to the left rail with one page, opened as an article. It
+builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+
+Four files:
+
+```ts
+// dx.config.ts
+import { Config2 } from '@dxos/app-framework/config';
+
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.hello', // must match the key the plugin declares; last segment camelCase
+    name: 'Hello',
+    icon: { key: 'ph--hand-waving--regular', hue: 'amber' },
+  },
+});
+```
+
+```ts
+// vite.config.ts
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+import { composerPlugin } from '@dxos/app-framework/vite-plugin';
+
+export default defineConfig({
+  plugins: [...composerPlugin({ entry: 'src/plugin.tsx' }), react()],
+  build: { outDir: 'dist' }, // any directory you serve
+});
+```
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": []
+  },
+  "include": ["src", "dx.config.ts"]
+}
+```
+
+```tsx
+// src/plugin.tsx
+import * as Effect from 'effect/Effect';
+import React from 'react';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { Surface } from '@dxos/app-framework/ui';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+
+import config from '../dx.config.ts';
+
+const meta = Plugin.getMetaFromConfig(config);
+const WORKSPACE = 'helloWorkspace';
+const PAGE = 'helloPage';
+
+const HelloArticle = () => (
+  <div style={{ padding: '2rem', fontSize: '2rem' }}>Hello from a plugin!</div>
+);
+
+export default Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'appGraph',
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AppGraphBuilder],
+    activate: () =>
+      Effect.gen(function* () {
+        // A workspace: a tab in the left rail.
+        const workspace = yield* AppGraphBuilder.createExtension({
+          id: 'helloWorkspace',
+          match: GraphNodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed([
+              AppGraphNode.make({
+                id: WORKSPACE,
+                type: `${meta.profile.key}.workspace`,
+                data: null,
+                properties: {
+                  label: 'Hello',
+                  icon: 'ph--hand-waving--regular',
+                  disposition: 'workspace',
+                },
+              }),
+            ]),
+        });
+        // A page in that workspace. The URL binding is what lets the deck open it.
+        const page = yield* AppGraphBuilder.createExtension({
+          id: 'helloPage',
+          match: GraphNodeMatcher.whenId(`root/${WORKSPACE}`),
+          url: {
+            key: PAGE,
+            kind: 'singleton',
+            path: [],
+            workspace: (id) => id === WORKSPACE,
+          },
+          connector: () =>
+            Effect.succeed([
+              AppGraphNode.make({
+                id: PAGE,
+                type: `${meta.profile.key}.page`,
+                data: PAGE,
+                properties: { label: 'Hello', icon: 'ph--article--regular' },
+              }),
+            ]),
+        });
+        return [
+          Capability.contribute(AppCapabilities.AppGraphBuilder, [
+            ...workspace,
+            ...page,
+          ]),
+        ];
+      }),
+  }),
+  Plugin.addModule({
+    id: 'surface',
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.ReactSurface,
+          // Renders the page's article: the node's `data` is the subject.
+          Surface.create({
+            id: 'helloArticle',
+            filter: AppSurface.literal(AppSurface.Article, PAGE),
+            component: HelloArticle,
+          }),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
+```
+
+Typecheck, then build, from the plugin's directory:
+
+```bash
+tsc -p tsconfig.json   # vite does not typecheck
+vite build             # writes dist/manifest.json and dist/index.mjs
+```
+
+Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads, a
+new tab appears in the left rail; selecting it opens the page. The version in the manifest comes from a
+`package.json` next to `dx.config.ts`, or `0.0.0` without one.
+
+Things to know:
+
+- Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
+  `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
+  so the build bundles whatever you use from them.
+- Ids are camelCase: the key's last segment (`org.example.plugin.helloWorld`, not `…hello-world`), module ids,
+  graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
+  is imported; a hyphenated extension or surface id is dropped without an error.
+- `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
+- Every module lists the capabilities its `activate` returns in `provides`.
+- A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
+- The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
+  same URL.
 
 ## Command reference
 
