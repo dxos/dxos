@@ -220,6 +220,7 @@
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@dxos/vite-plugin-log": "workspace:*",
+    "@dxos/vite-plugin-module-url": "workspace:*",
     "@dxos/vite-plugin-shutdown": "workspace:*",
     "@dxos/web-context-solid": "workspace:*",
     "@dxos/worker-framework": "workspace:*",

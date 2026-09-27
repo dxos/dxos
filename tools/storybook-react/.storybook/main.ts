@@ -13,6 +13,7 @@ import wasm from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -431,6 +432,9 @@ export const createConfig = ({
               });
             },
           },
+
+          // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
+          ModuleUrlPlugin(),
 
           importSource({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
