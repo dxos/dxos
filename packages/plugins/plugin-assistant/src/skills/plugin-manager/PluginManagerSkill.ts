@@ -12,8 +12,8 @@ export const key = 'org.dxos.skill.pluginManager';
 
 /**
  * Read-only: the skill may inspect the host but never change it. Enabling a plugin reshapes the
- * user's workspace, so it is offered as a `plugin-prompt` surface the user clicks instead of a tool
- * the agent can call.
+ * user's workspace, and loading one by URL runs its code, so both are offered as surfaces the user
+ * clicks (`plugin-prompt`, `plugin-url-prompt`) instead of tools the agent can call.
  *
  * `QueryDisabledPlugins` is deliberately absent: it reaches the agent as a template input, so
  * projecting it as a tool as well would offer a call the instructions go on to prohibit.
@@ -68,8 +68,15 @@ export const make = (): Skill.Skill =>
         - Call [query-plugins] to search the whole installed set, or to re-read state after the
           user has enabled something. A plugin's tools appear only once it activates, so confirm
           \`active\` there rather than assuming the capability is ready.
-        - A plugin the host does not have installed at all cannot be enabled — say so instead of
-          prompting for it.
+        - A plugin the host does not have installed at all cannot be enabled. When you know the URL
+          of its manifest.json — a plugin you just built and served, say — offer to load it instead,
+          with the 'plugin-url-prompt' role, the manifest URL and a name for the label:
+
+          <surface role='plugin-url-prompt' data='{"url":"http://localhost:4173/plugins/hello/manifest.json","name":"Hello"}' />
+
+          Loading runs that code inside the app, so it is the user's decision, taken by clicking the
+          prompt; a message reporting the plugin that loaded arrives as the next user turn. Without a
+          URL, say the plugin is not installed instead of prompting for it.
         - Core plugins are always on and cannot be disabled, so never offer to turn one off.
       `,
       inputs: [
