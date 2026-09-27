@@ -112,7 +112,7 @@ describe('ObjectCore.foldAt', () => {
     ).toThrow();
   });
 
-  test('re-folding the same value at the same heads is harmless: both peers keep the same presented value', async () => {
+  test('re-folding the same value at the same heads reports no conflict', async () => {
     const { db } = await builder.createDatabase({ types: [Person] });
 
     const person = db.add(Obj.make(Person, { fullName: 'original' }));
@@ -121,19 +121,11 @@ describe('ObjectCore.foldAt', () => {
 
     const message = 'fold: fullName -> name';
     getObjectCore(person).foldAt(heads, (data) => (data.name = 'late'), { message });
-    // A second, independently-authored fold of the SAME value at the SAME heads: each `foldAt` call
-    // mints its own fresh actor (never a shared/reused one -- see `ObjectCore.foldAt`'s doc comment),
-    // so this is NOT byte-identical to the first fold and is not deduplicated as a true no-op.
-    // Documented behaviour: it lands as a second, equal-valued conflict alternative rather than as
-    // a no-op change -- noise an attribution UI would need to collapse, but harmless to `presented`,
-    // since every alternative agrees on the value.
+    // A second, independently-authored fold of the same value at the same heads mints its own actor,
+    // so Automerge keeps two ops; they agree on the value, so there is nothing to resolve.
     getObjectCore(person).foldAt(heads, (data) => (data.name = 'late'), { message });
 
     expect(person.name).to.eq('late');
-    const conflict = Obj.getConflict(person, 'name');
-    invariant(conflict, 'expected the two independent folds to register as a conflict');
-    expect(conflict.presented).to.eq('late');
-    expect(conflict.alternatives).to.have.length(2);
-    expect(conflict.alternatives.every((alternative) => alternative.fold && alternative.value === 'late')).to.eq(true);
+    expect(Obj.getConflict(person, 'name')).to.be.undefined;
   });
 });

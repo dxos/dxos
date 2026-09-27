@@ -265,6 +265,13 @@ export const getObjectConflict = (object: Obj.Unknown, property: string): Obj.Co
     return undefined;
   }
 
+  // Peers that independently fold or replay the same value leave several ops holding it; that is
+  // not a disagreement anyone needs to resolve.
+  const rawValues = Object.values(rawConflicts).map(canonicalJson);
+  if (rawValues.every((value) => value === rawValues[0])) {
+    return undefined;
+  }
+
   const changes = A.getChangesMetaSince(doc, []);
   const findChange = (actor: string, counter: bigint) =>
     changes.find(
@@ -300,6 +307,14 @@ export const getObjectConflict = (object: Obj.Unknown, property: string): Obj.Co
     alternatives: alternatives.map(({ counter: _counter, ...alternative }) => alternative),
   };
 };
+
+/** JSON with object keys sorted, so structurally equal raw Automerge values compare equal as strings. */
+const canonicalJson = (value: unknown): string =>
+  JSON.stringify(value, (_key, nested: unknown) =>
+    nested !== null && typeof nested === 'object' && !Array.isArray(nested) && !(nested instanceof Uint8Array)
+      ? Object.fromEntries(Object.entries(nested).sort(([left], [right]) => left.localeCompare(right)))
+      : nested,
+  );
 
 /** Reconstructs the object over a historical view of its document as an immutable snapshot. */
 const snapshotAt = <T extends Obj.Unknown>(objectCore: ObjectCore, historical: Doc<any>): Obj.Snapshot<T> => {

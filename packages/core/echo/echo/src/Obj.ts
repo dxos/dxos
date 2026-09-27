@@ -685,7 +685,8 @@ export interface Conflict {
 
 /**
  * The live Automerge conflict at `property` — several values written concurrently that Automerge could
- * not order causally — or `undefined` when the property has none.
+ * not order causally — or `undefined` when the property has none, including when every concurrent
+ * value is equal (e.g. two peers folding the same late write).
  *
  * A fold-forward migration write (`ObjectCore.foldAt`) is deliberately re-keyed into the causal past so
  * a later direct edit conflicts with it instead of being silently overwritten (design: "conflicts are
