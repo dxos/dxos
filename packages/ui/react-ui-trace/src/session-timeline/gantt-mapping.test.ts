@@ -44,7 +44,7 @@ describe('sessionTimelineToGantt', () => {
     expect(markers?.map(({ laneId }) => laneId)).toEqual(['session:a']);
   });
 
-  test('a question waits for its answer, or runs on open while unanswered', ({ expect }) => {
+  test('an answered question waits until its answer; an open one has no wait yet', ({ expect }) => {
     const task = Task.make({ title: 'Cup', status: 'blocked' });
     const asked = Task.ask(task, { text: 'Which lot?' });
     const open = Task.ask(task, { text: 'Which roast?' });
@@ -64,7 +64,7 @@ describe('sessionTimelineToGantt', () => {
 
     const byId = new Map((sessionTimelineToGantt(timeline).markers ?? []).map((marker) => [marker.id, marker]));
     expect(byId.get('q1')?.wait).toEqual({ until: 'a1' });
-    expect(byId.get('q2')?.wait).toEqual({});
+    expect(byId.get('q2')?.wait).toBeUndefined();
     expect(byId.get('a1')?.wait).toBeUndefined();
   });
 });

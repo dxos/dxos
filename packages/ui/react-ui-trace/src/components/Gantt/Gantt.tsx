@@ -101,10 +101,11 @@ export type GanttMarker = {
   label: string;
   level?: 'info' | 'warn' | 'error';
   /**
-   * A wait begun at this node — a question put to the reader. Drawn as a dashed line along the lane to
-   * the node that ended it (`until`), or on to the chart's newest event while it is still open.
+   * A wait begun at this node and since ended — a question put to the reader and answered. Drawn as a
+   * dashed line along the lane to the node that ended it; a wait still open draws nothing, so the lane
+   * ends at the question until the answer lands.
    */
-  wait?: { until?: string };
+  wait?: { until: string };
 };
 
 const PAD_X = 16;
@@ -941,13 +942,12 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
             ),
           )}
 
-          {/* A wait, dashed from the node that began it to the one that ended it — or to now while open —
-              so the stretch a task spent held up reads as part of its lane rather than a gap in it. */}
+          {/* An answered wait, dashed from the node that began it to the one that ended it, so the stretch
+              a task spent held up reads as part of its lane rather than a gap in it. */}
           {markers.flatMap((marker) => {
             const row = marker.wait && rowById.get(marker.laneId);
             const from = markerX.get(marker.id);
-            const until = marker.wait?.until;
-            const to = until !== undefined ? markerX.get(until) : lastEvent !== undefined ? x(lastEvent) : undefined;
+            const to = marker.wait && markerX.get(marker.wait.until);
             if (!row || from === undefined || to === undefined || to <= from) {
               return [];
             }
