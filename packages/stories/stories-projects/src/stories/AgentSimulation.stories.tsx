@@ -10,6 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as ProjectView from '@dxos/plugin-projects/ProjectView';
 import { AgentSimulator } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -101,6 +102,11 @@ const seedProject = async ({ space }: { space: Space }) => {
   if (!taskSet) {
     throw new Error('Expected the project to own a task set.');
   }
+  // Opens on the Tasks tab, as the project's persisted view state would after an earlier visit, so the
+  // article does not flash Overview before the play function reaches the ledger. Written straight to
+  // the view-state store's `local` backend, before the article first reads it.
+  const view: ProjectView.State = { tab: 'tasks', pipeline: false };
+  window.localStorage.setItem(`dxos:view-state:${ProjectView.aspect.key}:${project.id}`, JSON.stringify(view));
   const instructions = Instructions.make({ [Obj.Parent]: project, text: 'You are working on a coffee launch.' });
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
