@@ -51,7 +51,19 @@ export const captureRequest = (prompt: Prompt.Prompt, tools: ReadonlyArray<Tool.
   messages: prompt.content.filter((message) => message.role !== 'system').length,
 });
 
-/** Writes `<directory>/<name>.json`, interning system prompts and tool sets. */
+/**
+ * Credentials a session can print into its own transcript: a temporary Cloudflare deployment's claim
+ * URL, and bearer tokens. A transcript is committed as a fixture, so they never reach the file.
+ */
+const SECRETS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/claimToken=[\w-]+/g, 'claimToken=REDACTED'],
+  [/\b(Bearer\s+)[\w.~+/-]{16,}=*/gi, '$1REDACTED'],
+];
+
+export const redact = (text: string): string =>
+  SECRETS.reduce((redacted, [pattern, replacement]) => redacted.replace(pattern, replacement), text);
+
+/** Writes `<directory>/<name>.json`, interning system prompts and tool sets, with credentials redacted. */
 export const write = (
   name: string,
   {
@@ -93,6 +105,6 @@ export const write = (
   };
   mkdirSync(dir, { recursive: true });
   const filePath = path.join(dir, `${name}.json`);
-  writeFileSync(filePath, `${JSON.stringify(file, null, 2)}\n`);
+  writeFileSync(filePath, `${redact(JSON.stringify(file, null, 2))}\n`);
   return filePath;
 };

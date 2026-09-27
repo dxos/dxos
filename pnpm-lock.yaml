@@ -4405,9 +4405,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
     devDependencies:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
@@ -4469,6 +4466,9 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../link
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/mcp-client':
         specifier: workspace:*
         version: link:../mcp-client
