@@ -6,7 +6,7 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Column, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -64,6 +64,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
   const db = Obj.getDatabase(task);
   const people = useQuery(onTaskUpdate ? db : undefined, Filter.type(Person.Person));
   const { label: assigneeLabel, icon: assigneeIcon } = useAssigneeDisplay(assignee);
+  const { createdAt } = Obj.getMeta(task);
 
   return (
     <Column.Section
@@ -72,6 +73,15 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
       classNames={classNames}
       data-testid='taskList.properties'
     >
+      {createdAt !== undefined && (
+        <TaskProperty
+          icon='ph--calendar-plus--regular'
+          label={<Timestamp date={createdAt} />}
+          unset
+          testId='taskList.property.created'
+        />
+      )}
+
       <TaskProperty
         icon={statusIcon(status)}
         iconClassNames={statusTextStyle(status)}
@@ -210,13 +220,14 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
       <div className={TASK_GRID_ICON}>
         <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
       </div>
-      <span className={mx('min-w-0 pe-1.5 truncate', unset && 'text-description')}>{label}</span>
+      <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>
   );
 
   if (!actions) {
     return (
-      <div className={mx(TASK_GRID, 'min-w-0')} data-testid={testId}>
+      // The button's own height and centring, so a read-only row lines up with the editable ones.
+      <div className={mx(TASK_GRID, 'items-center min-h-(--dx-control-sm) min-w-0')} data-testid={testId}>
         {content}
       </div>
     );
