@@ -228,7 +228,13 @@ describe('E5: fan-out (1->N) against the LANDED convergence-key merge engine (#1
     network = undefined;
   });
 
-  test('E5a: the real engine drops an unconflicted loser edit the winner never touched', async () => {
+  test('E5a: FIXED -- the real engine now recovers an unconflicted loser edit the winner never touched', async () => {
+    // Landed fix (object-merging project, Phase A item 2): `ConvergenceKeyMerger#mergeCandidates`
+    // now runs the creation-heads replay this file's `replayLoserEditsAtWinnerCreation` prototyped
+    // below -- that helper is superseded by the real engine and kept here only as this bench's
+    // documentation of the mechanism (E5c-e still exercise it directly against cloned doc state).
+    // The real-engine equivalent, with no test-side replay call, lives in
+    // `echo-client-e2e/src/merge-replay.test.ts`.
     const [spaceKey] = PublicKey.randomSequence();
     const pair = await createPartitionedPair(builder, [FanOutEngineDoc]);
     network = pair.network;
@@ -249,19 +255,18 @@ describe('E5: fan-out (1->N) against the LANDED convergence-key merge engine (#1
 
     // Finding: confirms the hypothesis -- each fan-out duplicate is created in its OWN linked
     // document (a distinct documentId), not inlined together in the space's shared root document.
-    // The replay below never depends on them sharing a doc: it reads the loser's doc separately
-    // and writes to the winner's doc through its OWN handle.
+    // The prototype below never depended on them sharing a doc, and neither does the real fix: it
+    // reads the loser's doc separately and writes to the winner's doc through its OWN handle.
     expect(getObjectCore(winnerOnDb1).docHandle?.documentId).to.not.eq(getObjectCore(loserOnDb1).docHandle?.documentId);
 
-    // The tombstoned loser still carries its edit -- the merge dropped it from the WINNER, not
-    // from the loser's own history.
+    // The tombstoned loser still carries its edit -- losers are never erased.
     expect(loserOnDb1.note).to.eq('loser edit');
-    // The defect: the winner never touched `note`, yet its baseline value survives, because it
-    // trivially "defines" the field (the migration wrote it on both copies).
-    expect(winnerOnDb1.note).to.eq(BASELINE_NOTE);
+    // Was the defect (the winner's untouched baseline trivially "defining" the field); now the
+    // creation-heads replay lands the loser's unconflicted edit onto the winner automatically.
+    expect(winnerOnDb1.note).to.eq('loser edit');
   });
 
-  test('E5b: the loss persists even when the winner edits a DIFFERENT (disjoint) field', async () => {
+  test('E5b: FIXED -- the recovery holds even when the winner edits a DIFFERENT (disjoint) field', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const pair = await createPartitionedPair(builder, [FanOutEngineDoc]);
     network = pair.network;
@@ -285,18 +290,25 @@ describe('E5: fan-out (1->N) against the LANDED convergence-key merge engine (#1
 
     // The winner's own edit survives -- it is the smallest-id candidate that defines `tag`.
     expect(winnerOnDb1.tag).to.eq('winner tag edit');
-    // But its DISJOINT field is untouched by that edit, and the loser's `note` edit is STILL lost:
-    // the winner's untouched baseline `note` still counts as "defining" the field.
+    // And its DISJOINT field is now ALSO recovered: the replay is per-field, so `tag` staying the
+    // winner's own edit does not block `note` being folded in from the loser.
     expect(loserOnDb1.note).to.eq('loser note edit');
-    expect(winnerOnDb1.note).to.eq(BASELINE_NOTE);
+    expect(winnerOnDb1.note).to.eq('loser note edit');
   });
 
-  test('E5c: replaying the loser`s since-creation edits at the winner`s creation heads recovers the unconflicted edit, and re-running is a no-op', async () => {
+  test('E5c: FIXED -- the real engine`s own replay lands the unconflicted edit as a clean fast-forward, idempotently', async () => {
+    // Superseded: this used to run the prototype `replayLoserEditsAtWinnerCreation` by hand on top
+    // of the (then-buggy) real engine's output. The real engine now performs exactly this replay
+    // itself inside `ConvergenceKeyMerger#mergeCandidates`, so running the prototype again here
+    // would fork a SECOND, independent concurrent write from a different actor at the same
+    // `winnerCreationHeads` -- manufacturing a spurious conflict on an already-correct value instead
+    // of demonstrating one. The real-engine equivalent of this test (with no test-side replay call
+    // anywhere) lives in `echo-client-e2e/src/merge-replay.test.ts`.
     const [spaceKey] = PublicKey.randomSequence();
     const pair = await createPartitionedPair(builder, [FanOutEngineDoc]);
     network = pair.network;
 
-    const { db1, winnerId, loserId, winnerCreationHeads, loserCreationHeads } = await setUpFanOutPair(
+    const { db1, winnerId } = await setUpFanOutPair(
       pair,
       spaceKey,
       'org.dxos.test.migration.bench.fanout-engine:E5c',
@@ -308,46 +320,29 @@ describe('E5: fan-out (1->N) against the LANDED convergence-key merge engine (#1
     );
 
     const winnerOnDb1 = await queryById(db1, winnerId);
-    const loserOnDb1 = await queryIncludingDeleted(db1, loserId);
-    expect(winnerOnDb1.note).to.eq(BASELINE_NOTE); // The defect, reconfirmed before the fix.
-
-    const replayed = new Map<string, Heads>();
-    const wrote = replayLoserEditsAtWinnerCreation(
-      winnerOnDb1,
-      loserOnDb1,
-      winnerCreationHeads,
-      loserCreationHeads,
-      replayed,
-    );
-    await db1.flush();
-
-    expect(wrote).to.eq(true);
     expect(winnerOnDb1.note).to.eq('loser edit');
-    // Unconflicted: the winner never wrote `note` after its own creation, so the replay landed as
-    // a clean fast-forward, not a register conflict.
+    // Unconflicted: the winner never wrote `note` after its own creation, so the engine's replay
+    // landed as a clean fast-forward, not a register conflict.
     expect(conflictsOn(winnerOnDb1, 'note')).to.be.undefined;
 
-    // Idempotence: re-running with the SAME loser state (no new edits since) is a genuine no-op.
+    // Idempotence: a further indexing pass with no new edits on either side writes nothing new —
+    // the engine's own message-tagged idempotence guard (`convergence-key-merge.ts`), not this
+    // bench's prototype map.
     const preRerunHeads = headsOf(winnerOnDb1);
-    const wroteOnRerun = replayLoserEditsAtWinnerCreation(
-      winnerOnDb1,
-      loserOnDb1,
-      winnerCreationHeads,
-      loserCreationHeads,
-      replayed,
-    );
-    await db1.flush();
-    expect(wroteOnRerun).to.eq(false);
+    await db1.updateIndexes();
     expect(writesSince(winnerOnDb1, preRerunHeads)).to.deep.eq([]);
   });
 
-  test('E5d: a field BOTH sides edited becomes a real automerge conflict after the replay, and converges identically on both peers', async () => {
+  test('E5d: FIXED -- a field BOTH sides edited becomes a real automerge conflict automatically, converged identically on both peers', async () => {
+    // Superseded, like E5c: the real engine now runs the replay itself, so this asserts directly on
+    // its output instead of driving the prototype helper. See `echo-client-e2e/src/merge-replay.test.ts`
+    // for the up-to-date, no-test-side-replay version of this scenario.
     const [spaceKey] = PublicKey.randomSequence();
     const pair = await createPartitionedPair(builder, [FanOutEngineDoc]);
     network = pair.network;
     const { syncAll } = pair;
 
-    const { db1, db2, winnerId, loserId, winnerCreationHeads, loserCreationHeads } = await setUpFanOutPair(
+    const { db1, db2, winnerId, loserId } = await setUpFanOutPair(
       pair,
       spaceKey,
       'org.dxos.test.migration.bench.fanout-engine:E5d',
@@ -363,32 +358,15 @@ describe('E5: fan-out (1->N) against the LANDED convergence-key merge engine (#1
 
     const winnerOnDb1 = await queryById(db1, winnerId);
     const loserOnDb1 = await queryIncludingDeleted(db1, loserId);
-    // The real engine already picked the winner's own edit -- no conflict is visible yet, because
-    // automerge never saw a competing write on ONE register: the two edits sit in different
-    // entities' `data` trees.
-    expect(winnerOnDb1.note).to.eq('winner value');
-    expect(conflictsOn(winnerOnDb1, 'note')).to.be.undefined;
-
-    const replayed1 = new Map<string, Heads>();
-    replayLoserEditsAtWinnerCreation(winnerOnDb1, loserOnDb1, winnerCreationHeads, loserCreationHeads, replayed1);
-    await db1.flush();
-
     const conflicts1 = conflictsOn(winnerOnDb1, 'note');
-    invariant(conflicts1, 'expected a live conflict on `note` after the replay');
+    invariant(conflicts1, 'expected a live conflict on `note` after the engine`s own replay');
     expect(Object.values(conflicts1).sort()).to.deep.eq(['loser value', 'winner value']);
+    expect(loserOnDb1.note).to.eq('loser value'); // the loser's own copy stays readable, unmodified.
 
-    // Independent replay on peer 2 too, from the SAME recorded heads -- any peer may run it, like
-    // the migration's own folds (mirrors `fan-out.test.ts`'s E4c convergence claim).
+    // Both peers converge on the SAME presented value and the SAME conflict set — nothing here was
+    // computed locally by this test; each peer's own worker ran the replay independently.
     const winnerOnDb2 = await queryById(db2, winnerId);
-    const loserOnDb2 = await queryIncludingDeleted(db2, loserId);
-    const replayed2 = new Map<string, Heads>();
-    replayLoserEditsAtWinnerCreation(winnerOnDb2, loserOnDb2, winnerCreationHeads, loserCreationHeads, replayed2);
-    await db2.flush();
-
     await syncAll(db1, db2);
-
-    // Same presented value and the SAME conflict SET on both peers -- two independently-computed
-    // rekeyed writes carrying the same content are indistinguishable to the CRDT.
     await expect.poll(() => winnerOnDb1.note !== undefined && winnerOnDb1.note === winnerOnDb2.note).toBe(true);
     await expect
       .poll(() => {

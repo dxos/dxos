@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, type UrlHeads, encodeHeads } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
 import {
@@ -28,6 +28,13 @@ export type MergeDocumentRef = {
   readonly documentId: DocumentId;
   doc(): A.Doc<DatabaseDirectory>;
   change(callback: A.ChangeFn<DatabaseDirectory>): void;
+
+  /** Forks at `heads`, applies the change, and merges the result back — the creation-heads replay's write. */
+  changeAt(
+    heads: UrlHeads,
+    callback: A.ChangeFn<DatabaseDirectory>,
+    options?: A.ChangeOptions<DatabaseDirectory>,
+  ): UrlHeads | undefined;
   [Symbol.dispose]?: () => void;
 };
 
@@ -337,6 +344,26 @@ export class ConvergenceKeyMerger {
       return false;
     }
 
+    // Creation-heads replay (M0-REPORT.md item 4): the flat write above is a no-op for every field
+    // the winner already defines — trivially true when a migration's fan-out wrote every field on
+    // every duplicate — so a loser's unconflicted edit would otherwise vanish without this. Skipped
+    // group-wide, falling back to the flat result above, when the winner's own creation heads can't
+    // be derived; skipped per-loser when that loser's can't.
+    const winnerCreationHeads = deriveCreationHeads(winner.handle.doc(), winner.objectId);
+    if (winnerCreationHeads === undefined) {
+      log.debug('winner creation heads not found; falling back to the flat merge result', {
+        convergenceKey,
+        winnerId: winner.objectId,
+      });
+    } else {
+      for (const loserId of result.losers) {
+        const loser = byId.get(loserId);
+        if (loser) {
+          this.#replayLoserEdits(winner, loser, winnerCreationHeads, convergenceKey);
+        }
+      }
+    }
+
     // Make the fold durable before any tombstone can be: a crash that persists a loser's
     // watermark without the winner's folded data would strand the loser's state below a
     // watermark nothing re-reads.
@@ -404,6 +431,141 @@ export class ConvergenceKeyMerger {
       await this.#rewriteReferences(ctx, spaceId, redirected, groupHandles);
     }
     return true;
+  }
+
+  /**
+   * Replay `loser`'s edits since ITS OWN creation onto `winner`'s document at `winner`'s creation
+   * heads (M0-REPORT.md "the final design" item 4, prototyped in `fan-out-engine.test.ts` /
+   * `text.test.ts`).
+   *
+   * Each duplicate lives in its own document (confirmed empirically in E5a), so its creation heads
+   * are a real baseline: diffing the loser from them (`deriveCreationHeads`) names exactly its
+   * post-creation edits. Replaying those at the winner's own creation heads lands them concurrent
+   * with whatever the winner itself wrote since its own creation — a clean fast-forward when the
+   * winner never touched the field, a real Automerge register conflict (`A.getConflicts`) when it
+   * did, on every peer identically. Text fields replay their splice/del patches character-wise
+   * (`text.test.ts` Ta1/Tb1) instead of the whole-value copy scalar fields get, and only when both
+   * copies' creation-time text agrees — a divergent baseline misaligns every offset and corrupts the
+   * winner (Tb2), so a mismatch is skipped and logged rather than risked.
+   *
+   * The change `message` doubles as the idempotence marker (no new persisted field): a loser already
+   * tagged `merge-replay: <loserId>` in the winner's own history has nothing left to do, so a retried
+   * pass — the crash window between this write's flush and the loser's tombstone, the only way
+   * `#mergeCandidates` can see the same live candidate twice — is a genuine no-op rather than a
+   * duplicated conflict alternative or, for text, a duplicated splice.
+   */
+  #replayLoserEdits(
+    winner: GroupMember,
+    loser: GroupMember,
+    winnerCreationHeads: string[],
+    convergenceKey: string,
+  ): void {
+    const message = _replayMessageFor(loser.objectId);
+    if (_hasReplayMarker(winner.handle.doc(), loser.objectId)) {
+      return;
+    }
+
+    const loserDoc = loser.handle.doc();
+    const loserCreationHeads = deriveCreationHeads(loserDoc, loser.objectId);
+    if (loserCreationHeads === undefined) {
+      log.debug('loser creation heads not found; keeping the flat merge result for this loser', {
+        convergenceKey,
+        loserId: loser.objectId,
+      });
+      return;
+    }
+    const loserCurrentHeads = A.getHeads(loserDoc);
+    if (_headsEqual(loserCreationHeads, loserCurrentHeads)) {
+      return; // The loser never edited anything after its own creation — nothing to replay.
+    }
+
+    const prefix = ['objects', loser.objectId, 'data'];
+    const fieldPatches = new Map<string, A.Patch[]>();
+    for (const patch of A.diff(loserDoc, loserCreationHeads, loserCurrentHeads)) {
+      if (patch.path.length <= prefix.length || !prefix.every((key, index) => patch.path[index] === key)) {
+        continue;
+      }
+      const field = String(patch.path[prefix.length]);
+      if (field === PROPERTY_ID) {
+        continue;
+      }
+      const forField = fieldPatches.get(field) ?? [];
+      forField.push(patch);
+      fieldPatches.set(field, forField);
+    }
+    if (fieldPatches.size === 0) {
+      return;
+    }
+
+    const loserData = loser.entity.data ?? {};
+    const scalarFields: string[] = [];
+    const textPatchesByField = new Map<string, (A.SpliceTextPatch | A.DelPatch)[]>();
+    for (const [field, patches] of fieldPatches) {
+      // A whole-value reassignment recreates the text container (a `put` recreating an empty one,
+      // even for a scalar register write — `text.test.ts` Ta0) before any splice, so a field is a
+      // genuine incremental text edit — safe for character-wise replay — only when EVERY patch since
+      // the loser's creation is a splice/del; one `put` anywhere means "replaced", not "edited", and
+      // the field is replayed as a whole-value scalar copy like today's flat merge.
+      const isPureTextEdit =
+        patches.length > 0 && patches.every((patch) => patch.action === 'splice' || patch.action === 'del');
+      if (!isPureTextEdit) {
+        scalarFields.push(field);
+        continue;
+      }
+      const textPatches = patches.filter(
+        (patch): patch is A.SpliceTextPatch | A.DelPatch => patch.action === 'splice' || patch.action === 'del',
+      );
+      const winnerBaseline = _valueAt(winner.handle.doc(), winner.objectId, field, winnerCreationHeads);
+      const loserBaseline = _valueAt(loserDoc, loser.objectId, field, loserCreationHeads);
+      if (typeof winnerBaseline === 'string' && winnerBaseline === loserBaseline) {
+        textPatchesByField.set(field, textPatches);
+      } else {
+        log.debug('skipping text replay across mismatched creation baselines', {
+          convergenceKey,
+          loserId: loser.objectId,
+          field,
+        });
+      }
+    }
+    if (scalarFields.length === 0 && textPatchesByField.size === 0) {
+      return;
+    }
+
+    winner.handle.changeAt(
+      encodeHeads(winnerCreationHeads),
+      (doc: DatabaseDirectory) => {
+        const entity = doc.objects?.[winner.objectId];
+        if (!entity) {
+          return;
+        }
+        if (entity.data === undefined) {
+          entity.data = {};
+        }
+        for (const field of scalarFields) {
+          const value = loserData[field];
+          if (value === undefined) {
+            delete entity.data[field];
+          } else {
+            entity.data[field] = _clone(value);
+          }
+        }
+        for (const [field, textPatches] of textPatchesByField) {
+          const path = ['objects', winner.objectId, 'data', field];
+          for (const patch of textPatches) {
+            const offset = patch.path.at(-1);
+            if (typeof offset !== 'number') {
+              continue;
+            }
+            if (patch.action === 'splice') {
+              A.splice(doc, path, offset, 0, patch.value);
+            } else {
+              A.splice(doc, path, offset, patch.length ?? 1);
+            }
+          }
+        }
+      },
+      { message },
+    );
   }
 
   /**
@@ -642,6 +804,56 @@ const _readEntity = (
   }
   return entity;
 };
+
+/** The change `message` a creation-heads replay writes and later looks for — see `#replayLoserEdits`. */
+const _replayMessageFor = (loserId: EntityId): string => `merge-replay: ${loserId}`;
+
+/**
+ * Whether `doc` already carries a replay for `loserId` — the idempotence check that lets a retried
+ * `#mergeCandidates` (the crash window between the replay's flush and the loser's tombstone) skip
+ * straight to re-tombstoning instead of writing a duplicate conflict alternative or splice.
+ */
+const _hasReplayMarker = (doc: A.Doc<DatabaseDirectory>, loserId: EntityId): boolean => {
+  const message = _replayMessageFor(loserId);
+  return A.getChangesMetaSince(doc, []).some((meta) => meta.message === message);
+};
+
+/**
+ * Derives an entity's creation heads from its OWN document history: the frontier right after the
+ * earliest change whose diff touches `objects.<objectId>` — the change that created its entry.
+ *
+ * No new persisted field: an ECHO object's document keeps its full change history (no compaction
+ * that would discard it — epochs, the one mechanism that would, are out of scope per M0-REPORT.md
+ * item 8), so this is always derivable from what the document already carries. The scan is the same
+ * frontier-accumulation idiom `getObjectChanges` (`echo-client/src/echo-handler/edit-history.ts`)
+ * uses to walk a document's history in topological order. It is robust to both layouts a candidate's
+ * document can have: for the common case (confirmed empirically in `fan-out-engine.test.ts` E5a) of
+ * one object per document, the object's entry is created in the document's very first change, so the
+ * loop returns after one iteration; a multi-object document (or one that held a different object
+ * first) is handled identically, by walking forward until this object's id first appears.
+ */
+export const deriveCreationHeads = (doc: A.Doc<DatabaseDirectory>, objectId: EntityId): string[] | undefined => {
+  let frontier: string[] = [];
+  for (const meta of A.getChangesMetaSince(doc, [])) {
+    const previous = frontier;
+    frontier = [...previous.filter((hash) => !meta.deps.includes(hash)), meta.hash].sort();
+    const patches = A.diff(doc, previous, frontier);
+    if (patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objectId)) {
+      return frontier;
+    }
+  }
+  return undefined;
+};
+
+/** The value of `objectId`'s `field` as of `heads`, read from a historical view (never the live proxy). */
+const _valueAt = (doc: A.Doc<DatabaseDirectory>, objectId: EntityId, field: string, heads: string[]): unknown => {
+  const view = A.view(doc, heads);
+  return view.objects?.[objectId]?.data?.[field];
+};
+
+/** Set-equality of two head frontiers, order-independent — heads are unordered by construction. */
+const _headsEqual = (a: readonly string[], b: readonly string[]): boolean =>
+  [...a].sort().join(',') === [...b].sort().join(',');
 
 /**
  * The effective fold watermark: the stored `mergedAtHeads` unioned with every conflicting value
