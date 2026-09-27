@@ -340,7 +340,7 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ..
       {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col' })}
       ref={forwardedRef}
     >
-      <div className='flex items-center ps-1' style={{ height: HEADER_HEIGHT }}>
+      <div className='flex items-center' style={{ height: HEADER_HEIGHT }}>
         {children}
       </div>
       {rows.map(({ lane, depth }) => (
@@ -382,13 +382,13 @@ GanttLegend.displayName = 'Gantt.Legend';
 // AxisToggle
 //
 
-type GanttAxisToggleProps = ThemedClassName<{}>;
+type GanttAxisToggleProps = {};
 
 /**
  * Switches the chart between its axes: `time`, the run fitted to the width, and `unit`, one step per
  * event. Renders nothing unless the root was given `onAxisChange`, since the axis is the host's state.
  */
-const GanttAxisToggle = ({ classNames }: GanttAxisToggleProps) => {
+const GanttAxisToggle = (_: GanttAxisToggleProps) => {
   const { t } = useTranslation(translationKey);
   const { axis = 'unit', onAxisChange } = useGanttContext('Gantt.AxisToggle');
   if (!onAxisChange) {
@@ -399,11 +399,11 @@ const GanttAxisToggle = ({ classNames }: GanttAxisToggleProps) => {
   return (
     <IconButton
       variant='ghost'
+      density='sm'
+      size={3}
       iconOnly
       icon={axis === 'time' ? 'ph--clock--regular' : 'ph--list-numbers--regular'}
-      size={4}
       label={t(axis === 'time' ? 'gantt-axis-unit.label' : 'gantt-axis-time.label')}
-      classNames={mx('p-0.5 min-h-0', classNames)}
       onClick={() => onAxisChange(axis === 'time' ? 'unit' : 'time')}
       data-testid='gantt.axisToggle'
     />

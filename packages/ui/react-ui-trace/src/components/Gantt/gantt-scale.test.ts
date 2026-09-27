@@ -18,10 +18,14 @@ describe('timeScale', () => {
     expect(scale.width).toBe(220);
   });
 
-  test('labels a sub-second span to the millisecond, so its ticks are not all the same second', ({ expect }) => {
-    const labels = timeScale({ range: { start: 0, end: 800 }, width: 600, pad: PAD }).ticks.map(({ label }) => label);
-    expect(new Set(labels).size).toBe(labels.length);
-    expect(labels[0]).toMatch(/\.\d{3}$/);
+  test('labels ticks with elapsed time at round intervals', ({ expect }) => {
+    const labels = (end: number) =>
+      timeScale({ range: { start: 1_000_000, end: 1_000_000 + end }, width: 600, pad: PAD }).ticks.map(
+        ({ label }) => label,
+      );
+    expect(labels(40_000)).toEqual(['0s', '5s', '10s', '15s', '20s', '25s', '30s', '35s', '40s']);
+    expect(labels(800)).toEqual(['0.0s', '0.1s', '0.2s', '0.3s', '0.4s', '0.5s', '0.6s', '0.7s', '0.8s']);
+    expect(labels(150_000)).toEqual(['0:00', '0:30', '1:00', '1:30', '2:00', '2:30']);
   });
 
   test('an instantaneous range does not divide by zero', ({ expect }) => {
@@ -32,10 +36,11 @@ describe('timeScale', () => {
   test('ticks thin out with the width, never below two', ({ expect }) => {
     const wide = timeScale({ range: { start: 0, end: 1_000 }, width: 800, pad: PAD });
     const narrow = timeScale({ range: { start: 0, end: 1_000 }, width: 120, pad: PAD });
-    expect(wide.ticks).toHaveLength(5);
+    // Round 0.2s steps across the wide one; the narrow one keeps just its two ends.
+    expect(wide.ticks).toHaveLength(6);
     expect(narrow.ticks).toHaveLength(2);
     expect(wide.ticks[0].at).toBe(PAD);
-    expect(wide.ticks[4].at).toBe(790);
+    expect(wide.ticks[5].at).toBe(790);
   });
 });
 

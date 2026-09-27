@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { format } from 'date-fns';
-
 /**
  * What the horizontal axis measures.
  * - `time` — real duration, fitted to the width available: an idle gap is as wide as it was long.
- * - `event` — one fixed step per event: a burst and a lull read alike, and the drawing grows to the
+ * - `unit` — one fixed step per event: a burst and a lull read alike, and the drawing grows to the
  *   right instead of compressing, so an event already placed never moves again. That is what makes a
  *   live chart watchable — on a fitted axis every arrival shifts the whole history left.
  */
@@ -25,10 +23,36 @@ export type GanttScale = {
   ticks: GanttTick[];
 };
 
-/** Upper bound on the time axis's ticks; `HH:mm:ss` needs the room, and more of them says nothing. */
-const MAX_TIME_TICKS = 5;
-const TIME_LABEL_WIDTH = 72;
-const PRECISE_TIME_LABEL_WIDTH = 104;
+/** Room a tick label needs; elapsed labels are short, so this also caps how many fit. */
+const TIME_LABEL_WIDTH = 56;
+const MAX_TIME_TICKS = 10;
+
+/** Round tick intervals in milliseconds, so elapsed labels read `0s, 10s, 20s` rather than `13.4s`. */
+const TICK_STEPS = [
+  100, 200, 500, 1_000, 2_000, 5_000, 10_000, 15_000, 30_000, 60_000, 120_000, 300_000, 600_000, 900_000, 1_800_000,
+  3_600_000, 7_200_000, 21_600_000, 43_200_000, 86_400_000,
+];
+
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+/**
+ * Elapsed time since the start of the axis. The span picks the form for every tick alike, so a
+ * run's labels read as one unit: `0.2s` below a second's step, `45s` below a minute, `1:05` below an
+ * hour, `1:02:05` beyond.
+ */
+export const formatElapsed = (elapsed: number, { span, step }: { span: number; step: number }): string => {
+  const seconds = Math.round(elapsed / 1_000);
+  if (span >= 3_600_000) {
+    return `${Math.floor(seconds / 3_600)}:${pad2(Math.floor(seconds / 60) % 60)}:${pad2(seconds % 60)}`;
+  }
+  if (span >= 60_000) {
+    return `${Math.floor(seconds / 60)}:${pad2(seconds % 60)}`;
+  }
+  if (step < 1_000) {
+    return `${(elapsed / 1_000).toFixed(1)}s`;
+  }
+  return `${seconds}s`;
+};
 
 /** An event's ordinal is two or three glyphs, so its labels pack tighter than a clock's. */
 const EVENT_LABEL_WIDTH = 40;
@@ -41,24 +65,20 @@ export type TimeScaleOptions = {
   pad: number;
 };
 
-/** Duration against width: the axis the reader reads as a clock. */
+/** Duration against width, labelled with the time elapsed since the start of the range. */
 export const timeScale = ({ range, width, pad }: TimeScaleOptions): GanttScale => {
   const span = Math.max(range.end - range.start, 1);
   const inner = Math.max(width - 2 * pad, 1);
   const at = (time: number): number => pad + ((time - range.start) / span) * inner;
-  const countFor = (labelWidth: number) => Math.max(2, Math.min(MAX_TIME_TICKS, Math.floor(inner / labelWidth)));
-  // Seconds alone would label every tick of a sub-second span the same; the longer label needs more room.
-  const precise = span / (countFor(TIME_LABEL_WIDTH) - 1) < 1_000;
-  const count = countFor(precise ? PRECISE_TIME_LABEL_WIDTH : TIME_LABEL_WIDTH);
-  const tickFormat = precise ? 'HH:mm:ss.SSS' : 'HH:mm:ss';
-  return {
-    at,
-    width,
-    ticks: Array.from({ length: count }, (_, index) => {
-      const time = range.start + (span * index) / (count - 1);
-      return { at: at(time), label: format(time, tickFormat) };
-    }),
-  };
+  const maxTicks = Math.max(2, Math.min(MAX_TIME_TICKS, Math.floor(inner / TIME_LABEL_WIDTH)));
+  const step =
+    TICK_STEPS.find((candidate) => span / candidate <= maxTicks - 1) ??
+    Math.ceil(span / (maxTicks - 1) / TICK_STEPS[TICK_STEPS.length - 1]) * TICK_STEPS[TICK_STEPS.length - 1];
+  const ticks: GanttTick[] = [];
+  for (let elapsed = 0; elapsed <= span; elapsed += step) {
+    ticks.push({ at: at(range.start + elapsed), label: formatElapsed(elapsed, { span, step }) });
+  }
+  return { at, width, ticks };
 };
 
 export type UnitScaleOptions = {
