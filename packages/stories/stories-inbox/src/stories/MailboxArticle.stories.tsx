@@ -84,7 +84,7 @@ const meta = {
   title: 'stories/stories-inbox/MailboxArticle',
   render: DefaultStory,
   decorators: createStoryDecorators<StoryArgs>(({ args: { count = 0, threads = 10, attachments = false } }) => ({
-    types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
+    types: [Blob.Blob, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
     plugins: [InboxPlugin(), PreviewPlugin.make(), UpdateCompanionStubPlugin(), StoryModulesPlugin()],
     onInit: async ({ space }) => {
       const mailbox = await initializeMailbox(space.db, count, threads);
