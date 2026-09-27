@@ -71,6 +71,7 @@ import {
   checkoutVersionSnapshot,
   createObject,
   getObjectChanges,
+  getObjectConflict,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
@@ -1138,6 +1139,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
     return getObjectChanges(obj, opts);
+  }
+
+  getConflict<T extends Obj.Unknown>(obj: T, property: string): Obj.Conflict | undefined {
+    return getObjectConflict(obj, property);
   }
 
   listBranches(objectId: string): string[] {

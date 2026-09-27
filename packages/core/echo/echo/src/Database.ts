@@ -245,6 +245,12 @@ export interface Database extends Queryable {
    */
   getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[];
 
+  /**
+   * The live Automerge conflict at `property`, or `undefined` when it has none. Prefer
+   * `Obj.getConflict(obj, property)`.
+   */
+  getConflict<T extends Obj.Unknown>(obj: T, property: string): Obj.Conflict | undefined;
+
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];
 

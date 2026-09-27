@@ -372,6 +372,86 @@ export class ObjectCore {
     return result;
   }
 
+  /**
+   * Writes `mutate` on this object's `data` map as it stood at `heads`, rather than at the live
+   * frontier, so a late (fold-forward) value lands as a real Automerge conflict against anything
+   * written since instead of silently overwriting it (DESIGN.md item 6, "conflicts are
+   * history-native"). `Obj.getConflict` is how a caller then resolves the policy winner.
+   *
+   * The write is forked off a VIEW of the whole document taken AT `heads`; `A.clone` mints the fork a
+   * fresh actor rather than reusing this object's own working actor or a shared sentinel constant --
+   * both were tried and rejected in the M0 migration research: a shared sentinel across peers risks a
+   * duplicate-`(actor, seq)` merge rejection unless every peer's fold is byte-identical, and reusing
+   * this object's OWN actor collides the same way against a change this actor makes after `heads`
+   * (verified: it is exactly what a later direct edit on this object is). A fresh actor per fold has
+   * neither failure mode.
+   *
+   * Forking at the OLDER `heads` state (instead of a plain live-handle `changeAt`, whose op counter is
+   * derived from the CURRENT frontier and so dominates -- wins the ordinary read over -- any edit made
+   * since `heads` regardless of actor) bounds the fold's own counter to that older history. A later
+   * direct edit's counter reflects everything written since, anywhere in the document, so it typically
+   * ties or exceeds the fold's, and the ordinary (Automerge) read keeps showing the user's edit in the
+   * common case. The exact tie-break is not otherwise controlled: `Obj.getConflict` resolves the policy
+   * winner from `A.getConflicts` by change `message`, not by which actor wins a counter tie.
+   *
+   * Idempotent in effect only when `mutate` and `options.message` are a pure function of `heads` and the
+   * value being folded (time is fixed at `0` for the same reason): a byte-identical re-run produces the
+   * same change hash, which Automerge merges as a no-op. Folding a genuinely different value at the same
+   * `heads` is not a re-run -- it legitimately conflicts with whatever is already there.
+   *
+   * @param heads Frontier the write is made concurrent with; must be ancestors of the current document.
+   * @param mutate Given the object's `data` map as it stood at `heads`, to mutate in place.
+   * @param options.message Deterministic commit message identifying the fold; `Obj.getConflict` reads
+   *   it (a `fold:`/`migration:` prefix) to tell a fold from a direct edit.
+   * @returns The heads immediately after the fold's own change, or `undefined` if it changed nothing.
+   */
+  foldAt(
+    heads: Heads,
+    mutate: (data: EntityStructure['data']) => void,
+    options: { message: string },
+  ): Heads | undefined {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+
+    const mountPath = this.mountPath;
+    const changeOptions = { message: options.message, time: 0 };
+    const applyMutate = (draft: unknown): void => {
+      const data = getDeep<EntityStructure['data']>(draft, [...mountPath, DATA_NAMESPACE]);
+      invariant(data, 'foldAt: object body not present at the recorded heads');
+      mutate(data);
+    };
+
+    if (this.doc) {
+      invariant(A.hasHeads(this.doc, heads), 'foldAt: heads are not an ancestor of the current document');
+      const view = A.view(this.doc, heads);
+      const clone = A.clone(view);
+      const { newDoc: folded, newHeads } = A.changeAt(clone, heads, changeOptions, applyMutate);
+      if (!newHeads) {
+        return undefined;
+      }
+
+      this.doc = A.merge(this.doc, folded);
+      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
+      this.notifyUpdate();
+      return newHeads;
+    }
+
+    const docHandle = this.docHandle;
+    invariant(docHandle, 'foldAt: object has no document to fold on');
+    const liveDoc = docHandle.doc();
+    invariant(A.hasHeads(liveDoc, heads), 'foldAt: heads are not an ancestor of the current document');
+    const view = A.view(liveDoc, heads);
+    const clone = A.clone(view);
+    const { newDoc: folded, newHeads } = A.changeAt(clone, heads, changeOptions, applyMutate);
+    if (!newHeads) {
+      return undefined;
+    }
+
+    // No manual notification: the DB already processes the `change` event `update` emits.
+    this.#writeAndRefresh(() => docHandle.update((current) => A.merge(current, folded)));
+    return newHeads;
+  }
+
   getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {
     assertArgument(Doc.isKeyPath(path), 'path');
     const self = this;
