@@ -1,9 +1,9 @@
 # @dxos/plugin-computer
 
 > **Proof of concept, dev only.** Presented in the app as **Coding (Dev)**. The tools need a Composer
-> served by a vite dev server that mounted this package's plugin; the tree they work in is that
-> server's own working directory. A deployed build has no dev server, so it has no shell: both tools
-> fail with a configuration error.
+> served by a vite dev or preview server that mounted this package's plugin; the tree they work in is
+> that server's own working directory. A deployed build has no vite server, so it has no shell: both
+> tools fail with a configuration error.
 
 A minimal coding harness for Composer's assistant: a **bash** tool and a **multi-string-replace**
 edit tool that run in a working tree on the developer's machine.
@@ -57,12 +57,14 @@ is an error rather than a quietly substituted directory.
 
 The protections that are real:
 
-- **Dev only, settings-gated.** `apply: 'serve'` mounts the route in a dev server and nowhere else, so
-  a deployed Composer has no shell; the Composer plugin is off by default and registered only in
+- **Dev only, settings-gated.** `apply: 'serve'` mounts the route in `vite dev` and `vite preview` and
+  nowhere else, so a deployed Composer has no shell; the Composer plugin is off by default and registered only in
   dev/labs builds.
 - **Same-origin only.** The route requires a JSON content type, which a cross-origin page cannot
   send without a preflight this route never answers, and it refuses a request whose `Origin` names
   another host.
+- **This machine only.** A server started with `--host` listens on every interface, and `Origin` is
+  not authentication, so the route refuses any request whose peer address is not loopback.
 - **Bounded.** Per-request timeout (killing the whole process group), and an output cap that reports
   `truncated` rather than returning a response the size of a build log.
 - **Not agent-enablable.** The skill sets `agentCanEnable: false`, so the assistant cannot turn shell

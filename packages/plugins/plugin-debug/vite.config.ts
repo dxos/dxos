@@ -16,6 +16,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     IncidentSpace: 'src/samples/incident/IncidentSpace.ts',
     PipelineSpace: 'src/samples/crm/PipelineSpace.ts',
+    PluginSpace: 'src/samples/plugin/PluginSpace.ts',
     ReviewSpace: 'src/samples/review/ReviewSpace.ts',
     StockfishSpace: 'src/samples/stockfish/StockfishSpace.ts',
     TidepoolSpace: 'src/samples/tidepool/TidepoolSpace.ts',
