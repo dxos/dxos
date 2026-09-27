@@ -70,26 +70,22 @@ export const ProjectPipeline = ({
   // Named and totalled here rather than read off the ledger above: a ledger row is several lines
   // tall and a chart row is one, so nothing lines up between them.
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport>
-        <Gantt.Root
-          {...chart}
-          range={timeline.range}
-          axis={axis}
-          onAxisChange={onAxisChange}
-          now={Date.now()}
-          onLaneSelect={onSelectChat && handleLaneSelect}
-          classNames='p-2'
-          data-testid='projectsPlugin.pipeline.chart'
-        >
-          <Gantt.Legend>
-            <Gantt.AxisToggle />
-          </Gantt.Legend>
-          <Gantt.Chart />
-          <Gantt.Meta />
-        </Gantt.Root>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Gantt.Root
+      {...chart}
+      range={timeline.range}
+      axis={axis}
+      onAxisChange={onAxisChange}
+      now={Date.now()}
+      onLaneSelect={onSelectChat && handleLaneSelect}
+      classNames='p-1'
+      data-testid='projectsPlugin.pipeline.chart'
+    >
+      <Gantt.Legend>
+        <Gantt.AxisToggle />
+      </Gantt.Legend>
+      <Gantt.Meta />
+      <Gantt.Chart />
+    </Gantt.Root>
   );
 };
 
