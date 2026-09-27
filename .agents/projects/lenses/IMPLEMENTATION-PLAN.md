@@ -129,7 +129,12 @@ Implementation continues on the research branch (`claude/m0-migrations-research-
 #12439), starting with A1. Defaults taken 2026-09-27 (overridable): M1's runner stays client-side
 (`runMigrations`), because migrations are plugin code the worker cannot load; fold-forward is split
 — the worker indexing stream detects and records durable intents, the client executes them (this
-refines §10.7 q6); A2 is implemented on this branch.
+refines §10.7 q6); A2 is implemented on this branch. **Refined again while building C2:** no separate
+durable intent is needed at all — the migration marker plus the document history always say which
+retired properties were written after the migration, so the client runner re-derives "behind"
+objects from document state (at startup, after a run, on replicated updates) and checkpoints with
+`foldedAt`. A worker-side detector is an optimisation to add only if C5's cost measurement calls for
+it. C1 (`ObjectCore.foldAt`) and C4 (`Obj.getConflict`) are done.
 
 ## Not in scope
 
