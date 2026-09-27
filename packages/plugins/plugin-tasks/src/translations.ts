@@ -76,7 +76,6 @@ export const translations = [
         'sort-asc.label': 'Ascending',
         'sort-desc.label': 'Descending',
         'group.label': 'Group by',
-        'group-by.label': 'Group: {{field}}',
         'group-none.label': 'No grouping',
         'group-status.label': 'Status',
         'group-priority.label': 'Priority',

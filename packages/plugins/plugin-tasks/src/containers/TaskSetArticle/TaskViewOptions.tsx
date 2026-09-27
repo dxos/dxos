@@ -139,7 +139,7 @@ export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
       <IconButton
         icon={grouped ? GROUP_ICONS[value] : 'ph--rows--regular'}
         iconOnly={!grouped}
-        label={grouped ? t('group-by.label', { field: t(`group-${value}.label`) }) : t('group.label')}
+        label={grouped ? t(`group-${value}.label`) : t('group.label')}
         data-testid='tasks.group'
       />
     </ActionMenu>

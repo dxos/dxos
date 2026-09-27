@@ -525,14 +525,16 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
       const first = inside[0];
       const last = inside[inside.length - 1];
       const from = x(segment.start);
+      // An open stretch runs to its newest node, and on to `now` when it is later: a lane still being
+      // worked between events (a parent task while its sub-tasks run) is not a point.
+      const lastX = last ? (markerX.get(last.id) ?? x(last.timestamp)) : undefined;
+      const nowX = now !== undefined ? x(now) : undefined;
       const to =
         segment.end !== undefined
           ? x(segment.end)
-          : last
-            ? (markerX.get(last.id) ?? x(last.timestamp))
-            : now !== undefined
-              ? x(now)
-              : from;
+          : lastX !== undefined && nowX !== undefined
+            ? Math.max(lastX, nowX)
+            : (lastX ?? nowX ?? from);
       const threaded = inside.length > 1 && first && last;
       return {
         from,

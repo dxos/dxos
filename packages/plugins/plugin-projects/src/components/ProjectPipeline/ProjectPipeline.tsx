@@ -64,6 +64,9 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
         <Gantt.Root
           {...chart}
           range={timeline.range}
+          // Fitted to the pane: the ledger reads as the whole run at a glance, whereas the event axis
+          // scrolls to the newest events and leaves every finished lane off-screen.
+          axis='time'
           now={Date.now()}
           onLaneSelect={onSelectChat && handleLaneSelect}
           classNames='p-2'
