@@ -46,11 +46,18 @@ export default Capability.makeModule(
           buffer += data;
           const newline = buffer.indexOf('\n');
           if (newline >= 0) {
-            const parsed: unknown = JSON.parse(buffer.slice(0, newline));
+            const line = buffer.slice(0, newline);
+            // Parsed here, in an event handler: a throw would escape it and leave startup waiting out the timeout.
+            let parsed: unknown;
+            try {
+              parsed = JSON.parse(line);
+            } catch {
+              parsed = undefined;
+            }
             if (typeof parsed === 'object' && parsed !== null && 'port' in parsed && typeof parsed.port === 'number') {
               resolve(parsed.port);
             } else {
-              reject(new Error(`unexpected first line from dx-sandbox: ${buffer.slice(0, newline)}`));
+              reject(new Error(`unexpected first line from dx-sandbox: ${line}`));
             }
           }
         });

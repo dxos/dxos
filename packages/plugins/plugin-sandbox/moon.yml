@@ -39,4 +39,7 @@ tasks:
     outputs:
       - dist/sidecar/
     options:
+      # Compiled for the host, which moon's hash does not cover: a cached artifact could be another
+      # platform's executable. It builds in seconds, so it is simply never cached.
+      cache: false
       timeout: 120
