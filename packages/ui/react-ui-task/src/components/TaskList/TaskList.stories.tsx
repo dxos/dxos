@@ -1144,9 +1144,11 @@ export const TestArtifactPreviews: Story = {
   },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.chips"] *')].find(
-        (element) => element.textContent === label,
-      );
+      [
+        ...canvasElement.querySelectorAll<HTMLElement>(
+          '[data-testid="taskList.item.chips"] *, [data-testid="taskList.item.artifacts"] *',
+        ),
+      ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
 
     const open = async (label: string, testId: string) => {
@@ -1170,6 +1172,24 @@ export const TestArtifactPreviews: Story = {
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
+    // The pull request sits on the title line, not the chips line under it.
+    const pill = await waitFor(
+      () => {
+        const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.artifacts"] button');
+        const row = pill?.closest<HTMLElement>('[data-testid="taskList.item"]');
+        if (!pill || !row) {
+          throw new Error('Pull request pill not on a row.');
+        }
+        return { pill, row };
+      },
+      { timeout: 10_000 },
+    );
+    const { row } = pill;
+    const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+    await expect(
+      Math.abs(centre(pill.pill.getBoundingClientRect()) - centre(titleCell(row).getBoundingClientRect())),
+    ).toBeLessThan(4);
+
     await open('#12752', 'artifact-preview.pullRequest');
     await expect(findTag('label-v2.png')).toBeUndefined();
   },

@@ -3,7 +3,16 @@
 //
 
 import { format } from 'date-fns';
-import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type ReactNode,
+  forwardRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 import { HoverCard, ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
@@ -304,7 +313,7 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
   const { rows, onLaneSelect } = useGanttContext('Gantt.Legend');
   return (
     <div
-      {...composableProps(props, { classNames: 'shrink-0 w-[min(20rem,40%)] min-w-40 flex flex-col' })}
+      {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col' })}
       ref={forwardedRef}
     >
       <div style={{ height: HEADER_HEIGHT }} />
@@ -548,14 +557,27 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
   const grow = animate && mx('transition-[width]', ENTER_TRANSITION);
 
-  // The event axis grows to the right, so the newest event has to be followed — but only a drawing
-  // that just grew, and only while the reader is at its edge. On first paint they are at the start of
-  // the history, which is where they should be; having scrolled back, they are reading, not watching.
-  useEffect(() => {
+  // The event axis grows to the right, so the newest event has to be followed — but only while the
+  // reader is at its edge; having scrolled back, they are reading, not watching. A layout effect, so
+  // the first paint already shows the newest events rather than jumping to them from the start.
+  useLayoutEffect(() => {
     const element = viewportRef.current;
-    const grown = drawnRef.current !== undefined && scale.width > drawnRef.current;
+    const previous = drawnRef.current;
     drawnRef.current = scale.width;
-    if (!element || !grown || !followRef.current) {
+    if (!element) {
+      return;
+    }
+
+    // Opened on the present: what is happening now is what the chart is looked at for. A drawing that
+    // fitted until now counts as opening too — its events arrived after mount, and there was no place
+    // in it for the reader to keep.
+    const grown = previous !== undefined && scale.width > previous;
+    if (previous === undefined || (grown && previous <= element.clientWidth)) {
+      element.scrollLeft = element.scrollWidth;
+      return;
+    }
+
+    if (!grown || !followRef.current) {
       return;
     }
 

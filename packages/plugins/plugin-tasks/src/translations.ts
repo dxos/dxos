@@ -65,7 +65,6 @@ export const translations = [
         'filter-status-all.label': 'Show all statuses',
         'filter-status-none.label': 'Hide all statuses',
         'sort.label': 'Order by',
-        'sort-by.label': 'Order: {{field}}',
         'sort-manual.label': 'Manual',
         'sort-status.label': 'Status',
         'sort-priority.label': 'Priority',

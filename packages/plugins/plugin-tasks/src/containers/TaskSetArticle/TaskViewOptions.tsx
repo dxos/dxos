@@ -90,7 +90,8 @@ export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
               : 'ph--sort-descending--regular'
         }
         iconOnly={!sorted}
-        label={sorted ? t('sort-by.label', { field: t(`sort-${value.field}.label`) }) : t('sort.label')}
+        // The field alone: the sort glyph beside it already says this is the order.
+        label={sorted ? t(`sort-${value.field}.label`) : t('sort.label')}
         data-testid='tasks.sort'
       />
     </ActionMenu>

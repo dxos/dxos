@@ -15,6 +15,7 @@ import {
   IconButton,
   Menu,
   Popover,
+  SystemIconButton,
   useFileDownload,
   useMediaQuery,
   useTranslation,
@@ -92,9 +93,7 @@ export const ResetDialog = ({
     log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
   }, [errorProp]);
 
-  const handleCopyError = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(error));
-  }, [error]);
+  const handleCopyError = useCallback(() => JSON.stringify(error), [error]);
 
   const handleDownloadLogs = useCallback(async () => {
     const file = await exportManualLogDownload(logStore);
@@ -164,12 +163,7 @@ export const ResetDialog = ({
                       data-testid='resetDialog.showStackTrace'
                     />
                     <div className='flex items-center gap-1'>
-                      <IconButton
-                        icon='ph--clipboard--duotone'
-                        iconOnly
-                        label={t('copy-error.label')}
-                        onClick={handleCopyError}
-                      />
+                      <SystemIconButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
                       <IconButton
                         icon='ph--download-simple--regular'
                         iconOnly

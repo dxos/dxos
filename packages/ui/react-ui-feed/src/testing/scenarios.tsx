@@ -5,7 +5,7 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton } from '@dxos/react-ui';
+import { IconButton, SystemIconButton } from '@dxos/react-ui';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -452,13 +452,12 @@ const Row = ({ children, classNames }: { children: React.ReactNode; classNames?:
  */
 /** Copies the message's extracted text — the model's truth, not the DOM's partial render. */
 const CopyButton = ({ message }: { message: Message.Message }) => (
-  <IconButton
-    icon='ph--copy--regular'
+  <SystemIconButton.Clipboard
     iconOnly
     label='Copy'
     variant='ghost'
     density='sm'
-    onClick={() => void navigator.clipboard?.writeText(Message.extractText(message))}
+    onCopy={() => Message.extractText(message)}
   />
 );
 

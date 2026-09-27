@@ -26,7 +26,10 @@ describe('list-tasks', () => {
       const { task: done } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Done thing' });
       yield* updateTask.handler({ task: Ref.make(done), status: 'done' });
       const { task: open } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open thing' });
-      yield* updateTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
+      yield* updateTask.handler({
+        task: Ref.make(open),
+        assignee: { email: 'kai@example.com', identityDid: 'did:key:kai' },
+      });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Sub thing', parentTask: Ref.make(open) });
 
       const all = yield* listTasks.handler({ taskSet: Ref.make(taskSet) });
