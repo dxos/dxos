@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
+import { Task } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
 import {
@@ -39,6 +42,8 @@ const laneMeta = (lane: Lane): GanttMeta[] => [
  */
 const segmentsOf = (lane: Lane): GanttLane['segments'] =>
   lane.start === undefined ? undefined : [{ start: lane.start, ...(lane.end === undefined ? {} : { end: lane.end }) }];
+
+const isHistoryEntry = Schema.is(Task.HistoryEntry);
 
 /**
  * Maps a session timeline onto the chart's model.
@@ -100,16 +105,29 @@ export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttDat
   }
 
   const drawn = new Set(lanes.map((lane) => lane.id));
+  // A question waits for its answer: each answer node names the question it closes, by the question's
+  // id in the task's history, so the pair is joined on the same lane.
+  const answerByQuestion = new Map<string, string>();
+  for (const marker of timeline.markers) {
+    if (isHistoryEntry(marker.detail) && Task.isAnswerEntry(marker.detail)) {
+      answerByQuestion.set(`${marker.laneId}:${marker.detail.questionId}`, marker.id);
+    }
+  }
   const markers: GanttMarker[] = timeline.markers
     .flatMap((marker) => (drawn.has(marker.laneId) ? [marker] : []))
-    .map((marker) => ({
-      id: marker.id,
-      laneId: marker.laneId,
-      kind: marker.kind,
-      timestamp: marker.timestamp,
-      label: marker.label,
-      ...(marker.level ? { level: marker.level } : {}),
-    }));
+    .map((marker) => {
+      const question = isHistoryEntry(marker.detail) && Task.isQuestionEntry(marker.detail) ? marker.detail : undefined;
+      const until = question && answerByQuestion.get(`${marker.laneId}:${question.id}`);
+      return {
+        id: marker.id,
+        laneId: marker.laneId,
+        kind: marker.kind,
+        timestamp: marker.timestamp,
+        label: marker.label,
+        ...(marker.level ? { level: marker.level } : {}),
+        ...(question ? { wait: until ? { until } : {} } : {}),
+      };
+    });
 
   return { groups, lanes, markers };
 };

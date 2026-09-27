@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Task } from '@dxos/types';
+
 import { sessionTimelineToGantt } from './gantt-mapping.ts';
 import { type SessionTimeline } from './types.ts';
 
@@ -40,5 +42,29 @@ describe('sessionTimelineToGantt', () => {
     expect(groups).toEqual([{ id: 'session:a' }]);
     expect(lanes).toMatchObject([{ id: 'session:a', groupId: 'session:a', label: 'Only' }]);
     expect(markers?.map(({ laneId }) => laneId)).toEqual(['session:a']);
+  });
+
+  test('a question waits for its answer, or runs on open while unanswered', ({ expect }) => {
+    const task = Task.make({ title: 'Cup', status: 'blocked' });
+    const asked = Task.ask(task, { text: 'Which lot?' });
+    const open = Task.ask(task, { text: 'Which roast?' });
+    const answered = Task.answer(task, asked.id, 'Guji');
+    const timeline: SessionTimeline = {
+      lanes: [
+        { id: 'session:a', kind: 'session', label: 'Chat', status: 'running', start: 1 },
+        { id: 'task:1', kind: 'task', label: 'Cup', status: 'blocked', start: 2, parentId: 'session:a' },
+      ],
+      markers: [
+        { id: 'q1', laneId: 'task:1', kind: 'task', timestamp: 3, label: 'Which lot?', level: 'warn', detail: asked },
+        { id: 'q2', laneId: 'task:1', kind: 'task', timestamp: 4, label: 'Which roast?', level: 'warn', detail: open },
+        { id: 'a1', laneId: 'task:1', kind: 'task', timestamp: 5, label: 'Answered: Guji', detail: answered },
+      ],
+      range: { start: 1, end: 5 },
+    };
+
+    const byId = new Map((sessionTimelineToGantt(timeline).markers ?? []).map((marker) => [marker.id, marker]));
+    expect(byId.get('q1')?.wait).toEqual({ until: 'a1' });
+    expect(byId.get('q2')?.wait).toEqual({});
+    expect(byId.get('a1')?.wait).toBeUndefined();
   });
 });

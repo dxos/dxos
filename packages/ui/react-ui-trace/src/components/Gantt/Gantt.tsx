@@ -100,6 +100,11 @@ export type GanttMarker = {
   timestamp: number;
   label: string;
   level?: 'info' | 'warn' | 'error';
+  /**
+   * A wait begun at this node — a question put to the reader. Drawn as a dashed line along the lane to
+   * the node that ended it (`until`), or on to the chart's newest event while it is still open.
+   */
+  wait?: { until?: string };
 };
 
 const PAD_X = 16;
@@ -935,6 +940,31 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                   ],
             ),
           )}
+
+          {/* A wait, dashed from the node that began it to the one that ended it — or to now while open —
+              so the stretch a task spent held up reads as part of its lane rather than a gap in it. */}
+          {markers.flatMap((marker) => {
+            const row = marker.wait && rowById.get(marker.laneId);
+            const from = markerX.get(marker.id);
+            const until = marker.wait?.until;
+            const to = until !== undefined ? markerX.get(until) : lastEvent !== undefined ? x(lastEvent) : undefined;
+            if (!row || from === undefined || to === undefined || to <= from) {
+              return [];
+            }
+            return [
+              <line
+                key={`wait:${marker.id}`}
+                x1={from}
+                x2={to}
+                y1={rowY(row.index)}
+                y2={rowY(row.index)}
+                strokeWidth={2}
+                strokeDasharray='4 3'
+                className={row.lane.hue ? undefined : STATUS_COLOR[row.lane.status].thread}
+                style={row.lane.hue ? { stroke: hueStrongColor(row.lane.hue) } : undefined}
+              />,
+            ];
+          })}
 
           {/* Nodes last, over the bars and every line, so a line reads as ending at a node's centre. */}
           {markers.map((marker) => {
