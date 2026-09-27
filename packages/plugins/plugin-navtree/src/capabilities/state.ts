@@ -45,13 +45,10 @@ export default Capability.makeModule(
     // documents in its own place, and lighting those up read as a multi-selection nobody made.
     // A plank the user picked out of a seeded deck, held until the set of open planks changes: the
     // deck does not change when an already-open plank is chosen, so nothing else would record it.
-    let picked: { id: string; active: readonly string[] } | undefined;
+    // Compared as a set: rearranging the open planks does not change which one was picked.
+    let picked: { id: string; active: ReadonlySet<string> } | undefined;
     const currentIds = (active: readonly string[]): readonly string[] => {
-      if (
-        picked &&
-        picked.active.length === active.length &&
-        picked.active.every((id, index) => id === active[index])
-      ) {
+      if (picked && picked.active.size === active.length && active.every((id) => picked?.active.has(id))) {
         return [picked.id];
       }
       picked = undefined;
@@ -158,7 +155,7 @@ export default Capability.makeModule(
         return false;
       }
 
-      picked = { id, active: [...active] };
+      picked = { id, active: new Set(active) };
       updateCurrent([id]);
       return true;
     };
@@ -166,6 +163,8 @@ export default Capability.makeModule(
     yield* Effect.gen(function* () {
       const { graph: appGraph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
       graph = appGraph;
+      // Items registered before the graph was up derived `current` without the seed rule.
+      updateCurrent(currentIds(registry.get(layoutAtom).active));
       // A workspace the deck left is released, so entering one re-expands it and the items the tree
       // still remembers as open.
       const reexpandWorkspace = (workspace: string | undefined) => {
