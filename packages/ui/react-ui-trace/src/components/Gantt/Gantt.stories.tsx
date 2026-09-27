@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useEffect, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -845,6 +846,32 @@ export const ManyLanes: Story = {
     axis: 'event',
     range: undefined,
     now: undefined,
+  },
+};
+
+/** A chart wider than its viewport opens scrolled to its newest events, not to the start of the history. */
+export const TestOpensAtNewest: Story = {
+  args: {
+    ...ManyLanes.args,
+    chartOnly: true,
+    inspect: false,
+  },
+  decorators: [(Story) => <div className='w-[240px]'>{Story()}</div>],
+  play: async ({ canvasElement }) => {
+    const viewport = await waitFor(
+      () => {
+        const element = [...canvasElement.querySelectorAll<HTMLElement>('*')].find(
+          (candidate) =>
+            candidate.scrollWidth > candidate.clientWidth + 1 && getComputedStyle(candidate).overflowX !== 'visible',
+        );
+        if (!element) {
+          throw new Error('No horizontally scrolling viewport.');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    await expect(viewport.scrollWidth - viewport.clientWidth - viewport.scrollLeft).toBeLessThanOrEqual(1);
   },
 };
 

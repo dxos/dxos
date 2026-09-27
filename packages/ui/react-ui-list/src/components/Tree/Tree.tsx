@@ -285,6 +285,12 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   dropAtEnd?: boolean;
   /**
+   * Take the dragged row out of the list for the duration of the drag, rather than leaving it in
+   * place faded. Off by default: a faded row keeps the list's geometry, so the rows under the
+   * pointer do not shift as the drag starts.
+   */
+  hideDragSource?: boolean;
+  /**
    * Mount only the rows in view, windowed with `@dxos/react-ui-virtual`.
    *
    * The same mechanism the trace timeline and the message feed use: the placement owns the
@@ -351,6 +357,7 @@ export const Tree = <T extends { id: string } = any>({
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  hideDragSource = false,
   virtualize = false,
   scrollerRef,
   canSelect,
@@ -712,6 +719,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onOpenChange,
@@ -735,6 +743,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onSelectNode,
@@ -1044,6 +1053,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canDrop,
     getDropKind,
     leavesAcceptChildren,
+    hideDragSource,
     debug,
     dropBelowExpanded,
     onOpenChange,
@@ -1091,14 +1101,27 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     }
 
     const element = rowRef.current;
-    const makeDraggable = () =>
-      draggable({
-        element,
-        getInitialData: () => data,
-        getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-        onDragStart: () => setDragState('dragging'),
-        onDrop: () => setDragState('idle'),
-      });
+    // Declares the drag a move: pragmatic-drag-and-drop sets `dropEffect` only over a drop target and
+    // never `effectAllowed`, so over a gap or the source row itself the browser falls back to its copy
+    // cursor, which flickers as the pointer crosses rows.
+    const handleNativeDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    };
+    const makeDraggable = () => {
+      element.addEventListener('dragstart', handleNativeDragStart);
+      return combine(
+        () => element.removeEventListener('dragstart', handleNativeDragStart),
+        draggable({
+          element,
+          getInitialData: () => data,
+          getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
+          onDragStart: () => setDragState('dragging'),
+          onDrop: () => setDragState('idle'),
+        }),
+      );
+    };
 
     if (!isItemDroppable) {
       return isItemDraggable ? makeDraggable() : undefined;
@@ -1251,6 +1274,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // The live drop instruction, so a test can read which zone the pointer is in rather than
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
+      // The source of a drag in progress, which stays in the list (faded) unless `hideDragSource`.
+      data-dragging={dragState === 'dragging' || undefined}
       data-testid={props.testId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
       aria-posinset={branch ? undefined : indexPath.at(-1)! + 1}
@@ -1259,10 +1284,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
         isItemDraggable && 'active:cursor-grabbing',
-        // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
-        // copy left behind in place reads as a second row rather than as the one being moved. A
-        // branch's children go with it, since the drag start collapses it.
-        dragState === 'dragging' && 'hidden',
+        // The source row fades in place, or leaves the list when the consumer asks. A branch's
+        // children go with it either way, since the drag start collapses it.
+        dragState === 'dragging' && (hideDragSource ? 'hidden' : 'opacity-50'),
         // Selection keys off zag's `data-selected`: for branches, `aria-selected` lands on the
         // Branch wrapper (display:contents) while the visible row is the control. No focus-within
         // background — after a chevron click focus rests inside the row, and a persistent fill

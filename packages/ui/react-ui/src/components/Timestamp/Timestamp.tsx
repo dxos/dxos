@@ -7,12 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { compactInterval, formatCompact } from '../../util/format-time.ts';
+import { type DateLike, compactInterval, formatCompact, toDate } from '../../util/format-time.ts';
 import { TextTooltip } from '../Tooltip/index.ts';
 
 export type TimestampProps = ThemedClassName<{
-  /** The instant shown, as an ISO string or a Date. */
-  date: string | Date;
+  /** The instant shown, as an ISO string, a Unix timestamp in milliseconds, or a Date. */
+  date: DateLike;
   /**
    * The instant to measure against. Supplied by a story or a test so the counter does not move with
    * the wall clock; live otherwise, which is the point of the component.
@@ -32,7 +32,7 @@ export type TimestampProps = ThemedClassName<{
  * Everything shown is lossy, which is why the tooltip carries the timestamp in full: the compact
  * form answers "recently?" and the tooltip answers "when exactly?".
  */
-export const Timestamp = ({ date, now, classNames }: TimestampProps) => {
+export const Timestamp = ({ classNames, date, now }: TimestampProps) => {
   // The tick's only job is to re-render; the value is derived, so nothing can drift out of step
   // with what is displayed.
   const [, setTick] = useState(0);
@@ -64,7 +64,7 @@ export const Timestamp = ({ date, now, classNames }: TimestampProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, live]);
 
-  const parsed = typeof date === 'string' ? new Date(date) : date;
+  const parsed = toDate(date);
   const compact = formatCompact(date, { now });
   if (!compact) {
     return null;

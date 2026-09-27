@@ -609,8 +609,8 @@ export class AppManager {
 
   /**
    * Drags `active` onto `over` and releases only once `over` reports `instruction` as its drop zone.
-   * The dragged row leaves the list when the drag starts, so rows below it move up: the target is
-   * measured after that, not before.
+   * The target is measured once the drag has started, so a tree that removes its source row (and
+   * moves the rows below it up) is measured where it ends up.
    */
   async dragTo(
     active: Locator,
@@ -638,7 +638,7 @@ export class AppManager {
     // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
     // it leaves the pointer over the row that slides into the dragged row's place.
     await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toBeHidden();
+    await expect(active).toHaveAttribute('data-dragging', 'true');
 
     const box = await over.boundingBox();
     if (!box) {

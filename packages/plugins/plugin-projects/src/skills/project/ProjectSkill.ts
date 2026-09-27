@@ -34,6 +34,10 @@ export const operations: readonly Operation.Definition.Any[] = [
   TaskOperation.CreateTask,
   TaskOperation.UpdateTask,
   TaskOperation.ListTasks,
+  // Order is list position and set membership is the set's `tasks` array, so neither is reachable
+  // from a field patch; without these an agent hand-edits both arrays.
+  TaskOperation.MoveTask,
+  TaskOperation.MoveTaskToSet,
   // Records what a task produced (a file, a document) on the task itself, without needing a project.
   TaskOperation.AddArtifact,
   // Files a question on a task and blocks it; the answer comes back in the task's history.
