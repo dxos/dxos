@@ -104,6 +104,12 @@ const refineStatusChanges = (
   );
 };
 
+/** Statuses that end a stretch of work on a task. */
+const CLOSED_STATUSES = new Set<Task.Status>(['done', 'review', 'failed', 'cancelled']);
+
+const isStatusChange = (detail: unknown): detail is TaskStatusChange =>
+  typeof detail === 'object' && detail !== null && 'status' in detail && isStatus(detail.status);
+
 const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
 
 /** How long an open lane may be silent before the axis stops following `now`. */
@@ -766,6 +772,27 @@ export const buildSessionTimeline = ({
       if (marker.laneId === task.id) {
         markers[index] = { ...marker, laneId: session.id };
       }
+    });
+  }
+
+  // A parent task's lane carries each sub-task's start and finish as nodes of its own, so the parent
+  // reads as the span of its sub-tasks' work rather than one unbroken bar.
+  const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
+  for (const marker of [...markers]) {
+    const lane = laneById.get(marker.laneId);
+    const parent = lane?.kind === 'task' && lane.parentId ? laneById.get(lane.parentId) : undefined;
+    if (!lane || parent?.kind !== 'task' || !isStatusChange(marker.detail)) {
+      continue;
+    }
+    const { status } = marker.detail;
+    if (status !== 'started' && !CLOSED_STATUSES.has(status)) {
+      continue;
+    }
+    markers.push({
+      ...marker,
+      id: `${parent.id}:sub:${marker.id}`,
+      laneId: parent.id,
+      label: `${lane.label}: ${status}`,
     });
   }
 

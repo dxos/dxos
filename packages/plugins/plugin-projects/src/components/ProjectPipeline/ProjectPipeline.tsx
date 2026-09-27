@@ -23,6 +23,8 @@ export type ProjectPipelineProps = {
   tasks: readonly Task.Task[];
   /** `time` fits the run to the pane; `unit` steps per event and scrolls to follow the newest. */
   axis?: GanttAxis;
+  /** Called by the chart's axis toggle; the toggle is hidden without it. */
+  onAxisChange?: (axis: GanttAxis) => void;
   /** Called with the chat behind a lane the reader picks — a session's, or a task's session. */
   onSelectChat?: (chat: Chat.Chat) => void;
 };
@@ -32,7 +34,14 @@ export type ProjectPipelineProps = {
  * every chat filed under the project is a session, its checklist the task lanes beneath it, redrawn
  * as trace events arrive.
  */
-export const ProjectPipeline = ({ space, project, tasks, axis = 'time', onSelectChat }: ProjectPipelineProps) => {
+export const ProjectPipeline = ({
+  space,
+  project,
+  tasks,
+  axis = 'time',
+  onAxisChange,
+  onSelectChat,
+}: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
   const timeline = useSessionTimeline(space, { chats, tasks });
@@ -67,12 +76,15 @@ export const ProjectPipeline = ({ space, project, tasks, axis = 'time', onSelect
           {...chart}
           range={timeline.range}
           axis={axis}
+          onAxisChange={onAxisChange}
           now={Date.now()}
           onLaneSelect={onSelectChat && handleLaneSelect}
           classNames='p-2'
           data-testid='projectsPlugin.pipeline.chart'
         >
-          <Gantt.Legend />
+          <Gantt.Legend>
+            <Gantt.AxisToggle />
+          </Gantt.Legend>
           <Gantt.Chart />
           <Gantt.Meta />
         </Gantt.Root>

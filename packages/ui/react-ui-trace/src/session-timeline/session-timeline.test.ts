@@ -440,6 +440,51 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
+    "a parent task's lane carries each sub-task's start and finish",
+    Effect.fnUntraced(function* ({ expect }) {
+      const parent = Task.make({ title: 'Parent', status: 'started' });
+      const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'done' });
+      const chat = makeChat('Tree', [parent, child]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: child.id, title: 'Child', status: 'started' }); // 2.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: child.id,
+            title: 'Child',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 3.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [parent, child],
+        taskStatusChanges: new Map([
+          [
+            child.id,
+            [
+              { timestamp: 0, status: 'started', previousStatus: 'todo' },
+              { timestamp: 0, status: 'done', previousStatus: 'started' },
+            ],
+          ],
+        ]),
+      });
+      const onParent = timeline.markers
+        .filter((marker) => marker.laneId === `task:${parent.id}`)
+        .map(({ label, timestamp }) => ({ label, timestamp }));
+      expect(onParent).toEqual([
+        { label: 'Child: started', timestamp: 2 },
+        { label: 'Child: done', timestamp: 3 },
+      ]);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
     'a run whose process ended without a request end closes at its last event, and the axis stops following now',
     Effect.fnUntraced(function* ({ expect }) {
       const task = Task.make({ title: 'Only', status: 'started' });

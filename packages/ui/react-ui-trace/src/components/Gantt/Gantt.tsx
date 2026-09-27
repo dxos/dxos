@@ -5,6 +5,7 @@
 import { format } from 'date-fns';
 import React, {
   type KeyboardEvent,
+  type PropsWithChildren,
   type ReactNode,
   forwardRef,
   useEffect,
@@ -15,9 +16,18 @@ import React, {
 } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { HoverCard, ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  HoverCard,
+  IconButton,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Hue, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations.ts';
 import { type Band, type Row, orderRows } from './gantt-rows.ts';
 import { type GanttAxis, type GanttScale, timeScale, unitScale } from './gantt-scale.ts';
 import { useEnter } from './useEnter.ts';
@@ -212,6 +222,8 @@ export type GanttData = {
   animate?: boolean;
   onLaneSelect?: (lane: GanttLane) => void;
   onMarkerSelect?: (marker: GanttMarker) => void;
+  /** Called by `Gantt.AxisToggle`; without it the toggle does not render. */
+  onAxisChange?: (axis: GanttAxis) => void;
 };
 
 /** What every part reads: the ordered rows and the shared axis, resolved once by the root. */
@@ -222,7 +234,10 @@ type GanttContextValue = {
   markers: readonly GanttMarker[];
   markerById: Map<string, GanttMarker>;
   range: { start: number; end: number };
-} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow' | 'axis' | 'unitStep' | 'animate'>;
+} & Pick<
+  GanttData,
+  'onLaneSelect' | 'onMarkerSelect' | 'onAxisChange' | 'now' | 'showNow' | 'axis' | 'unitStep' | 'animate'
+>;
 
 const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt');
 
@@ -252,6 +267,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
       animate,
       onLaneSelect,
       onMarkerSelect,
+      onAxisChange,
       children,
       ...props
     },
@@ -289,6 +305,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         animate={animate}
         onLaneSelect={onLaneSelect}
         onMarkerSelect={onMarkerSelect}
+        onAxisChange={onAxisChange}
       >
         <div
           {...composableProps(props, {
@@ -310,17 +327,22 @@ GanttRoot.displayName = 'Gantt.Root';
 // Legend
 //
 
-type GanttLegendProps = ThemedClassName<{}>;
+type GanttLegendProps = ThemedClassName<PropsWithChildren>;
 
-/** The lane names, one per row, indented by depth; each row is the lane's keyboard path. */
-const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forwardedRef) => {
+/**
+ * The lane names, one per row, indented by depth; each row is the lane's keyboard path. Children go
+ * in the header row above the names, beside the chart's axis labels (e.g. `Gantt.AxisToggle`).
+ */
+const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
   const { rows, onLaneSelect } = useGanttContext('Gantt.Legend');
   return (
     <div
       {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col' })}
       ref={forwardedRef}
     >
-      <div style={{ height: HEADER_HEIGHT }} />
+      <div className='flex items-center ps-1' style={{ height: HEADER_HEIGHT }}>
+        {children}
+      </div>
       {rows.map(({ lane, depth }) => (
         <div
           key={lane.id}
@@ -355,6 +377,40 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
 });
 
 GanttLegend.displayName = 'Gantt.Legend';
+
+//
+// AxisToggle
+//
+
+type GanttAxisToggleProps = ThemedClassName<{}>;
+
+/**
+ * Switches the chart between its axes: `time`, the run fitted to the width, and `unit`, one step per
+ * event. Renders nothing unless the root was given `onAxisChange`, since the axis is the host's state.
+ */
+const GanttAxisToggle = ({ classNames }: GanttAxisToggleProps) => {
+  const { t } = useTranslation(translationKey);
+  const { axis = 'unit', onAxisChange } = useGanttContext('Gantt.AxisToggle');
+  if (!onAxisChange) {
+    return null;
+  }
+
+  // The icon names the axis in use; the label names the one a click switches to.
+  return (
+    <IconButton
+      variant='ghost'
+      iconOnly
+      icon={axis === 'time' ? 'ph--clock--regular' : 'ph--list-numbers--regular'}
+      size={4}
+      label={t(axis === 'time' ? 'gantt-axis-unit.label' : 'gantt-axis-time.label')}
+      classNames={mx('p-0.5 min-h-0', classNames)}
+      onClick={() => onAxisChange(axis === 'time' ? 'unit' : 'time')}
+      data-testid='gantt.axisToggle'
+    />
+  );
+};
+
+GanttAxisToggle.displayName = 'Gantt.AxisToggle';
 
 //
 // Meta
@@ -932,8 +988,9 @@ GanttChart.displayName = 'Gantt.Chart';
 export const Gantt = {
   Root: GanttRoot,
   Legend: GanttLegend,
+  AxisToggle: GanttAxisToggle,
   Chart: GanttChart,
   Meta: GanttMeta,
 };
 
-export type { GanttChartProps, GanttLegendProps, GanttMetaProps, GanttRootProps };
+export type { GanttAxisToggleProps, GanttChartProps, GanttLegendProps, GanttMetaProps, GanttRootProps };

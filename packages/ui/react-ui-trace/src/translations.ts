@@ -12,6 +12,9 @@ export const translations = [
       [translationKey]: {
         'no-commits.message': 'No events yet',
 
+        'gantt-axis-time.label': 'Fit to time',
+        'gantt-axis-unit.label': 'One step per event',
+
         'trace.label': 'Trace',
         'trace-processes.label': 'Processes',
         'trace-details.label': 'Details',
