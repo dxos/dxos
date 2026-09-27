@@ -81,7 +81,7 @@ const edgeContext = (capabilities: CapabilityManager.CapabilityManager) => (): E
   const [config] = capabilities.getAll(ClientCapabilities.Config);
   const [identity] = capabilities.getAll(ClientCapabilities.IdentityService);
   if (!config || !identity) {
-    throw new Error('Client is not initialized.');
+    throw new Error(`Sandbox EDGE backend: client ${config ? 'identity' : 'config'} is not available yet.`);
   }
   return { config, identity };
 };
