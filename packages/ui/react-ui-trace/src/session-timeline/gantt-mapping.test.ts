@@ -31,6 +31,6 @@ describe('sessionTimelineToGantt', () => {
       { id: 'task:1', groupId: 'session:a', parentId: undefined },
       { id: 'task:2', groupId: 'session:a', parentId: 'task:1' },
     ]);
-    expect(markers[0].laneId).toBe('session:a');
+    expect(markers?.[0]?.laneId).toBe('session:a');
   });
 });

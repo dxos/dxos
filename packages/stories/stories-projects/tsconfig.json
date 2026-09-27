@@ -43,10 +43,16 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
     },
     {
       "path": "../../plugins/plugin-projects"

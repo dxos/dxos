@@ -6,6 +6,7 @@
 
 import type * as Duration from 'effect/Duration';
 
+import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { PlanningOperations } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
@@ -183,3 +184,10 @@ export const make = ({
     return strategy({ root: task, subtasks: resolveSubtasks(task), pace: resolvedPace });
   };
 };
+
+/**
+ * The simulator as an `AssistantPlugin({ aiServiceMiddleware })` option: every language model the
+ * assistant resolves becomes the simulated agent.
+ */
+export const middleware = (options: AgentSimulatorOptions): ((upstream: AiService.Service) => AiService.Service) =>
+  ScriptedLanguageModel.scriptedAiServiceMiddleware(make(options));
