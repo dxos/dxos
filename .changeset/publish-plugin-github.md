@@ -1,4 +1,5 @@
 ---
+'@dxos/crx-protocol': patch
 '@dxos/plugin-github': patch
 ---
 
