@@ -68,7 +68,6 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
-          DX_TAURI: 'true'
     inputs:
       - scripts/check-plugin-set.mjs
       - src/plugin-defs.production.tsx
@@ -124,6 +123,7 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
+          DX_TAURI: 'true'
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand`, so they need exactly
   # `serve`'s narrowed dependency set rather than the `tauri` tag's whole-graph `^:build` — extended
   # so the three inner loops cannot drift.
