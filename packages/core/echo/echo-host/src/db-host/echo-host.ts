@@ -207,6 +207,9 @@ export class EchoHost extends Resource {
   /** The newest input generation a drained pass has fully indexed. */
   #indexedGeneration = 0;
 
+  /** Whether the last pass found nothing to index. */
+  #lastPassIdle = false;
+
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
@@ -505,6 +508,18 @@ export class EchoHost extends Resource {
         return;
       }
     }
+    // One more pass when the last still found work, as the old wait-for-idle ended: under a quiet
+    // index it is empty and gives the results the last pass invalidated time to reach their clients,
+    // which callers that flush then read depend on. One, so a stream still cannot hold the caller.
+    if (!this.#lastPassIdle) {
+      await this._updateIndexes.runBlocking();
+      if (this._ctx.disposed) {
+        return;
+      }
+    }
+    // A pass invalidates queries as it ends and they re-run on their own task; callers flushing the
+    // index expect those results too.
+    await this._queryService.awaitQueryUpdates();
 
     if (secondaryIndexes) {
       await this.updateSecondaryIndexes();
@@ -1264,6 +1279,7 @@ export class EchoHost extends Resource {
       const generation = this.#inputGeneration;
       // Drained here rather than inside the pass so the span can report what triggered it.
       const outcome = await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
+      this.#lastPassIdle = outcome?.done ?? false;
       if (outcome?.drained) {
         this.#indexedGeneration = Math.max(this.#indexedGeneration, generation);
       }
