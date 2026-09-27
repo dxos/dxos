@@ -71,16 +71,15 @@ describe('unitScale', () => {
     expect(scale.at(10_000)).toBe(30);
   });
 
-  test('the width is the events plus the headroom the next one will occupy', ({ expect }) => {
-    expect(unitScale({ times: [0, 10, 20], step: STEP, pad: PAD }).width).toBe(2 * PAD + 3 * STEP);
-    expect(unitScale({ times: [0, 10, 20], step: STEP, pad: PAD, headroom: 0 }).width).toBe(2 * PAD + 2 * STEP);
+  test('the width ends at the newest event, with no empty unit after it', ({ expect }) => {
+    expect(unitScale({ times: [0, 10, 20], step: STEP, pad: PAD }).width).toBe(2 * PAD + 2 * STEP);
   });
 
   test('no events is a drawing with no axis rather than a division by zero', ({ expect }) => {
     const scale = unitScale({ times: [], step: STEP, pad: PAD });
     expect(scale.at(1_234)).toBe(PAD);
     expect(scale.ticks).toEqual([]);
-    expect(scale.width).toBe(2 * PAD + STEP);
+    expect(scale.width).toBe(2 * PAD);
   });
 
   test('ticks are event ordinals, strided so their labels cannot collide', ({ expect }) => {

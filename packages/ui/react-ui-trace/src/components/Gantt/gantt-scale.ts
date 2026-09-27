@@ -86,9 +86,8 @@ export type UnitScaleOptions = {
   times: readonly number[];
   /** Pixels per event — the axis's one unit. */
   step: number;
+  /** Clearance at each end, which also keeps the newest node off the edge. */
   pad: number;
-  /** Trailing units of empty axis, so a live lane's newest event is not against the edge. */
-  headroom?: number;
 };
 
 /**
@@ -96,7 +95,7 @@ export type UnitScaleOptions = {
  * delegation drops from a parent's node to its child's first node, and only a shared ordering keeps
  * those two at the same offset.
  */
-export const unitScale = ({ times, step, pad, headroom = 1 }: UnitScaleOptions): GanttScale => {
+export const unitScale = ({ times, step, pad }: UnitScaleOptions): GanttScale => {
   const events = [...new Set(times)].sort((left, right) => left - right);
   const last = Math.max(events.length - 1, 0);
 
@@ -140,5 +139,5 @@ export const unitScale = ({ times, step, pad, headroom = 1 }: UnitScaleOptions):
     ticks.push({ at: pad + index * step, label: `#${index + 1}` });
   }
 
-  return { at: (time) => pad + unit(time) * step, width: 2 * pad + (last + headroom) * step, ticks };
+  return { at: (time) => pad + unit(time) * step, width: 2 * pad + last * step, ticks };
 };
