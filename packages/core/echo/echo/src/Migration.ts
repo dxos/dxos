@@ -454,6 +454,61 @@ export const defineFanIn = <From extends Type.AnyObj, To extends Type.AnyObj = F
   };
 };
 
+/**
+ * Value of {@link FanInMarkerAnnotation}: recorded on the CHILD by {@link runFanInMigration} (in
+ * `@dxos/echo-client`) in the same change as its type switch and tombstone. `migration` doubles as
+ * that change's own `message`, so a fold-forward pass locates it by message + `deps` the same way
+ * {@link MigrationMarkerAnnotation}'s steps locate their own migration change; `preHeads` is the
+ * child's frontier immediately before that change, and `absorbedAtParentHeads` is the PARENT's
+ * frontier immediately after the `assign` that absorbed this child landed — the base a late fold
+ * writes into the parent concurrently with, so a direct edit made after absorption still conflicts
+ * with the fold instead of being silently overwritten.
+ */
+export const FanInMarkerSchema = Schema.Struct({
+  /** `` `fan-in: <fromType> -> <parentId>` `` — also the absorb change's own `message`. */
+  migration: Schema.String,
+  /** Id of the parent object this child was absorbed into. */
+  parentId: Schema.String,
+  /** The child's own automerge heads immediately before its absorb change. */
+  preHeads: Schema.Array(Schema.String),
+  /** The parent's automerge heads immediately after the absorb `assign` landed. */
+  absorbedAtParentHeads: Schema.Array(Schema.String),
+  /**
+   * Absorbed keys whose value at absorb time came FROM THE CHILD: the parent had no value for the key
+   * yet, or the declared `collision` policy picked the child's value over a genuinely competing parent
+   * value. A key the parent's OWN pre-existing value won is never listed here. This is what lets a
+   * fold-forward pass tell "the child updating its own contribution" (fold it in directly) from "the
+   * child's value newly colliding with the parent's" (still subject to `collision`) — collapsing the
+   * two would freeze a `parent-wins` fan-in's very first absorption forever, since every later child
+   * edit would then compare against a parent value that only exists because THIS child put it there.
+   * Absent on a marker written before this field existed — see {@link FanInMigration}'s fold-forward
+   * runner, which falls back to running `collision` for every key on such a marker.
+   */
+  fromChild: Schema.optional(Schema.Array(Schema.String)),
+  /**
+   * Child heads through which a fold-forward pass has already re-absorbed late writes. Absent until
+   * the first late write folds; advanced in place (never a whole-annotation replace) so a concurrent
+   * write to a sibling field of this same marker is never disturbed.
+   */
+  foldedAt: Schema.optional(Schema.Array(Schema.String)),
+});
+
+/**
+ * A tombstoned fan-in child's absorption record — see {@link FanInMarkerSchema}.
+ */
+export type FanInMarker = Schema.Schema.Type<typeof FanInMarkerSchema>;
+
+/**
+ * Per-child marker left in `EntityMeta.annotations` by the fan-in runner, so a fold-forward pass can
+ * find an already-absorbed (tombstoned) child and replay any write that landed on it after absorption
+ * — the child's history stays readable and never silently ignored (M0-REPORT.md design item 3, "late
+ * writes to tombstoned children fold forward; tombstones never erase").
+ */
+export const FanInMarkerAnnotation = Annotation.make<FanInMarker>({
+  id: 'org.dxos.annotation.fanInMarker',
+  schema: FanInMarkerSchema,
+});
+
 //
 // Array fan-out (M0-REPORT.md design item 5): fanning an array property out into one child per
 // element requires each element to carry a pre-existing stable id — declaring it over an id-less

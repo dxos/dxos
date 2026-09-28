@@ -12,7 +12,7 @@ import {
 } from '@automerge/automerge';
 import * as Option from 'effect/Option';
 
-import { Annotation, type Database, Filter, Lens, Migration, Obj } from '@dxos/echo';
+import { Annotation, type Database, Filter, Lens, Migration, Obj, Query } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -20,7 +20,8 @@ import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { encodedValuesEqual, isRecord } from './encoded-value.ts';
+import { computeGuardedDataWrites, encodedValuesEqual, isRecord } from './encoded-value.ts';
+import { resolvePatch } from './fan-in.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
 
 //
@@ -430,6 +431,197 @@ const foldObject = async (
   }
 };
 
+//
+// Fan-in fold-forward (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md` "Limit fixes" item 3;
+// M0-REPORT.md design item 3): a tombstoned fan-in child is excluded from every DEFAULT query, so
+// finding one that fell behind requires the same `deleted: 'include'` option `merge-replay.test.ts`
+// uses for a merged-away object. There is no per-step chain here (a child is absorbed exactly once,
+// by exactly one fan-in) — the child's own {@link Migration.FanInMarkerAnnotation} is the whole state.
+//
+
+/** The message a fan-in fold-forward write onto the PARENT is stamped with; mirrors {@link foldMessage}. */
+const fanInFoldMessage = (fromType: string, parentId: string): string => `fold: fan-in ${fromType} -> ${parentId}`;
+
+/**
+ * Locates the automerge change that absorbed `child`: the one whose `message` equals the marker's own
+ * `migration` field and whose `deps` are exactly `marker.preHeads` — {@link runFanInMigration} (in
+ * `fan-in.ts`) authors that change synchronously right after reading `preHeads`, so no other change on
+ * the child's document can share both. Mirrors {@link findPostMigrationHeads} for object migrations.
+ */
+const findFanInAbsorbHeads = (doc: AutomergeDoc<unknown>, marker: Migration.FanInMarker): Heads | undefined => {
+  const change = A.getChangesMetaSince(doc, []).find(
+    (candidate) => candidate.message === marker.migration && sameHeadSet(candidate.deps, marker.preHeads),
+  );
+  return change && [change.hash];
+};
+
+/**
+ * Whether ANY of `child`'s own data changed between `base` and `current`. A tombstoned fan-in child has
+ * no narrower "retired" set the way an object-migration step does (`step.retired` names exactly the
+ * properties the transform dropped) — once absorbed, its WHOLE body is behind everything `absorb` might
+ * read, so any data write since the checkpoint is a candidate late write.
+ */
+const hasLateChildWrites = (
+  doc: AutomergeDoc<unknown>,
+  mountPath: readonly (string | number)[],
+  base: Heads,
+  current: Heads,
+): boolean => {
+  const dataPath = [...mountPath, DATA_NAMESPACE];
+  return A.diff(doc, base, current).some(
+    (patch) => patch.action !== 'conflict' && dataPath.every((segment, index) => patch.path[index] === segment),
+  );
+};
+
+/**
+ * Resolves a late-recomputed `patch` against `parent`'s CURRENT values for the fold-forward path: a key
+ * in `fromChild` is the child updating ITS OWN prior contribution (the parent had no value for it, or
+ * `collision` already picked the child's value, at absorb time — see {@link Migration.FanInMarkerSchema}'s
+ * `fromChild` doc comment) and folds straight through, never back through `collision` — re-running the
+ * policy would compare against a parent value that only exists because this SAME child put it there,
+ * which is exactly what froze a `parent-wins` fan-in's absorption forever before this existed. A key NOT
+ * in `fromChild` is still subject to `collision`, same as the initial absorption (`fan-in.ts#resolvePatch`).
+ * `fromChild: undefined` — a marker written before this field existed — falls back to the old, uniform
+ * behavior: every changed key goes through `collision` against the parent's current value.
+ */
+const resolveFoldPatch = (
+  parent: Obj.Unknown,
+  patch: Record<string, unknown>,
+  collision: Migration.CollisionPolicy,
+  fromChild: ReadonlySet<string> | undefined,
+): Record<string, unknown> => {
+  const policyResolved = resolvePatch(parent, patch, collision).values;
+  if (!fromChild) {
+    return policyResolved;
+  }
+  const resolved = { ...policyResolved };
+  for (const key of fromChild) {
+    if (Object.hasOwn(patch, key)) {
+      resolved[key] = patch[key];
+    }
+  }
+  return resolved;
+};
+
+/**
+ * Folds one absorbed child forward if it received a late (old-client) write since its own checkpoint:
+ * recomputes {@link Migration.FanInMigration.absorb} from the child's CURRENT data (including the late
+ * write) and resolves the result against the PARENT's CURRENT values — {@link resolveFoldPatch}, the
+ * `fromChild`-aware variant of `fan-in.ts#resolvePatch` — then writes the guarded difference into the
+ * parent with `foldAt` at the recorded `absorbedAtParentHeads`, concurrent with everything the parent
+ * has done since, so a direct edit on the same property becomes a real conflict instead of being
+ * silently overwritten. Never throws: a missing parent or a foreign frontier is logged and left for the
+ * next pass. A re-run with nothing new recomputes the same guarded-equal patch and writes nothing.
+ */
+const foldFanInChild = async (
+  db: Database.Database,
+  migration: Migration.FanInMigration,
+  child: Obj.Unknown,
+  marker: Migration.FanInMarker,
+): Promise<void> => {
+  const core = getObjectCore(child);
+  const doc = core.getDoc();
+  const mountPath = core.mountPath;
+
+  if (!A.hasHeads(doc, [...marker.preHeads])) {
+    log.warn('foldForward: skipping fan-in child with foreign absorb heads', { child: child.id });
+    return;
+  }
+
+  const absorbHeads = findFanInAbsorbHeads(doc, marker);
+  if (!absorbHeads) {
+    log.warn('foldForward: could not locate the absorb change for a fan-in child', { child: child.id });
+    return;
+  }
+
+  const base: Heads = marker.foldedAt ? [...marker.foldedAt] : absorbHeads;
+  if (!A.hasHeads(doc, base)) {
+    log.warn('foldForward: skipping fan-in child with a foreign fold checkpoint', { child: child.id });
+    return;
+  }
+
+  const currentHeads = A.getHeads(doc);
+  if (!hasLateChildWrites(doc, mountPath, base, currentHeads)) {
+    return;
+  }
+
+  const [parent] = await db.query(Filter.id(marker.parentId)).run();
+  if (!parent) {
+    log.warn('foldForward: fan-in parent no longer resolvable, skipping', {
+      child: child.id,
+      parent: marker.parentId,
+    });
+    return;
+  }
+  const parentCore = getObjectCore(parent);
+  if (!A.hasHeads(parentCore.getDoc(), [...marker.absorbedAtParentHeads])) {
+    log.warn('foldForward: skipping fan-in child whose absorb-time parent heads are foreign', { child: child.id });
+    return;
+  }
+
+  const snapshot = core.getDecoded(['data']);
+  invariant(isRecord(snapshot), 'foldForward: expected an object body at a fan-in child data path');
+  const patch = migration.absorb(parent, { id: child.id, ...snapshot });
+  const fromChild = marker.fromChild ? new Set(marker.fromChild) : undefined;
+  const resolved = resolveFoldPatch(parent, patch, migration.collision, fromChild);
+  const dataWrites = computeGuardedDataWrites(parentCore, resolved);
+
+  if (dataWrites.size > 0) {
+    parentCore.foldAt(
+      [...marker.absorbedAtParentHeads],
+      (data) => {
+        for (const [key, value] of dataWrites) {
+          data[key] = value;
+        }
+      },
+      { message: fanInFoldMessage(migration.fromType.toString(), marker.parentId), scope: `fan-in:${child.id}` },
+    );
+  }
+
+  // Advanced in place (never a whole-marker replace), like `foldStep`'s own `foldedAt` write — a
+  // sibling field of this same marker (or a concurrent peer's identical fold checkpoint) is never
+  // disturbed. Ordinary (non-fold) write: the runner's own bookkeeping, never user data.
+  const markerPath = [...mountPath, META_NAMESPACE, 'annotations', Migration.FanInMarkerAnnotation.key];
+  const foldedAt = core.encode([...currentHeads]);
+  core.change((doc) => {
+    setDeep(doc, [...markerPath, 'foldedAt'], foldedAt);
+  });
+};
+
+/**
+ * Folds every already-absorbed child of one {@link Migration.FanInMigration} forward — see
+ * {@link foldFanInChild}. Queried with `deleted: 'include'` since an absorbed child is a tombstone,
+ * excluded from every default query.
+ */
+const foldFanInMigration = async (
+  db: Database.Database,
+  migration: Migration.FanInMigration,
+  processed: Set<string>,
+  options: FoldForwardOptions,
+): Promise<void> => {
+  const children: Obj.Unknown[] = await db
+    .query(Query.select(Filter.type(migration.fromType)).options({ deleted: 'include' }))
+    .run();
+  for (const child of children) {
+    if (options.objectIds && !options.objectIds.has(child.id)) {
+      continue;
+    }
+    if (processed.has(child.id)) {
+      continue;
+    }
+    const markerOption = Annotation.get(child, Migration.FanInMarkerAnnotation);
+    if (Option.isNone(markerOption)) {
+      continue; // Not yet absorbed -- `runFanInMigration` handles a still-live child, not this pass.
+    }
+    processed.add(child.id);
+    try {
+      await foldFanInChild(db, migration, child, markerOption.value);
+    } catch (err) {
+      log.warn('foldForward: failed to fold a fan-in child forward', { child: child.id, err });
+    }
+  }
+};
+
 /** Options for {@link foldForwardMigrations}. */
 export type FoldForwardOptions = {
   /** Restricts the pass to these objects, so an update-triggered pass skips unchanged history. */
@@ -442,7 +634,8 @@ export type FoldForwardOptions = {
  * though several migrations' `toType` queries could in principle name it (its current type matches
  * exactly one of them in practice); {@link foldObject} then walks its WHOLE step chain, not just the
  * step belonging to the migration whose query found it. Rename migrations carry no marker and are
- * skipped.
+ * skipped. A {@link Migration.FanInMigration} is folded via {@link foldFanInMigration} instead — its
+ * children live under a different type (`fromType`, not `toType`) and are tombstoned, not renamed.
  */
 export const foldForwardMigrations = async (
   db: Database.Database,
@@ -451,24 +644,24 @@ export const foldForwardMigrations = async (
 ): Promise<void> => {
   const processed = new Set<string>();
   for (const migration of migrations) {
-    if (!Migration.isObjectMigration(migration)) {
-      continue;
-    }
-
-    const objects = await db.query(Filter.type(migration.toType)).run();
-    for (const object of objects) {
-      if (options.objectIds && !options.objectIds.has(object.id)) {
-        continue;
+    if (Migration.isObjectMigration(migration)) {
+      const objects = await db.query(Filter.type(migration.toType)).run();
+      for (const object of objects) {
+        if (options.objectIds && !options.objectIds.has(object.id)) {
+          continue;
+        }
+        if (processed.has(object.id)) {
+          continue;
+        }
+        processed.add(object.id);
+        try {
+          await foldObject(db, migrations, object);
+        } catch (err) {
+          log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
+        }
       }
-      if (processed.has(object.id)) {
-        continue;
-      }
-      processed.add(object.id);
-      try {
-        await foldObject(db, migrations, object);
-      } catch (err) {
-        log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
-      }
+    } else if (Migration.isFanInMigration(migration)) {
+      await foldFanInMigration(db, migration, processed, options);
     }
   }
 };

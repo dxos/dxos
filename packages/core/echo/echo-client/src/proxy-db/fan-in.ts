@@ -2,9 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Filter, Migration, Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
+import { type Heads } from '@automerge/automerge';
+import * as Schema from 'effect/Schema';
 
+import { type Database, Filter, Migration, Obj } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
+import { log } from '@dxos/log';
+import { setDeep } from '@dxos/util';
+
+import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { assignPatch } from './migration-context.ts';
 
@@ -37,25 +43,56 @@ const resolveCollision = (
 };
 
 /**
+ * Message stamped on a child's absorb change (tombstone + type switch + {@link Migration.FanInMarker})
+ * and stored verbatim as that marker's own `migration` field, so a fold-forward pass locates the exact
+ * change by `message` + `deps` — see {@link Migration.FanInMarkerSchema}'s doc comment.
+ */
+export const fanInAbsorbMessage = (fromType: string, parentId: string): string => `fan-in: ${fromType} -> ${parentId}`;
+
+/** {@link resolvePatch}'s result: the resolved values, plus which keys came from the child. */
+export type ResolvedPatch = {
+  values: Record<string, unknown>;
+  /**
+   * Keys whose resolved value came FROM THE CHILD: the parent had no value yet, or `collision` picked
+   * the child's value over a genuinely competing parent value. Excludes a key the parent's OWN
+   * pre-existing value won, and a key where parent and child already agreed (neither "absorbed" it —
+   * see {@link Migration.FanInMarkerSchema}'s `fromChild` field, which this is recorded into).
+   */
+  fromChild: readonly string[];
+};
+
+/**
  * Resolves `patch` (one child's proposed absorption) against `parent`'s CURRENT values: a key the
  * parent has never set (or already agrees with) is absorbed outright; a key the parent already holds
  * a DIFFERENT value for — its own direct edit, or an earlier child absorbed in this same run — is a
- * genuine collision, resolved by `collision`.
+ * genuine collision, resolved by `collision`. Exported for `fold-forward.ts`, which resolves a late
+ * child edit's recomputed patch against the parent's CURRENT values the exact same way.
  */
-const resolvePatch = (
+export const resolvePatch = (
   parent: Obj.Unknown,
   patch: Record<string, unknown>,
   collision: Migration.CollisionPolicy,
-): Record<string, unknown> => {
-  const resolved: Record<string, unknown> = {};
+): ResolvedPatch => {
+  const values: Record<string, unknown> = {};
+  const fromChild: string[] = [];
   for (const [key, childValue] of Object.entries(patch)) {
     const parentValue: unknown = Obj.getValue(parent, [key]);
-    resolved[key] =
-      parentValue === undefined || parentValue === childValue
-        ? childValue
-        : resolveCollision(collision, parentValue, childValue, key);
+    if (parentValue === undefined) {
+      values[key] = childValue;
+      fromChild.push(key);
+      continue;
+    }
+    if (parentValue === childValue) {
+      values[key] = childValue; // Already agreed — neither side "absorbed" anything here.
+      continue;
+    }
+    const resolved = resolveCollision(collision, parentValue, childValue, key);
+    values[key] = resolved;
+    if (resolved === childValue) {
+      fromChild.push(key);
+    }
   }
-  return resolved;
+  return { values, fromChild };
 };
 
 /**
@@ -82,9 +119,58 @@ export const runFanInMigration = async (db: Database.Database, migration: Migrat
     const parent = await parentRef.load();
 
     const patch = migration.absorb(parent, child);
-    const resolved = resolvePatch(parent, patch, migration.collision);
+    const { values: resolved, fromChild } = resolvePatch(parent, patch, migration.collision);
     assignPatch(parent, resolved, `migration: fan-in ${migration.fromType.toString()}`);
+    // The parent's frontier right after the absorb write landed — a fold-forward pass forks its own
+    // write from here, so it stays concurrent with everything the parent does afterward.
+    const absorbedAtParentHeads = getObjectCore(parent).getHeads();
+    // Captured immediately before the child's OWN change, never earlier: parent and child share one
+    // automerge document, so the `assign` above already moved the document's frontier, and the absorb
+    // change's real `deps` — what a fold-forward pass matches `preHeads` against — reflect that.
+    const preHeads = getObjectCore(child).getHeads();
 
-    db.remove(child);
+    absorbChild(child, migration, parent.id, preHeads, absorbedAtParentHeads, fromChild);
   }
+};
+
+/**
+ * Tombstones `child` in the SAME automerge change as its {@link Migration.FanInMarkerAnnotation} and,
+ * when `migration.to` is declared, its type switch — together, so a crash can never leave the child
+ * tombstoned without the marker a fold-forward pass needs to find its late writes, or type-switched
+ * without being tombstoned. Never erases: `deleted` is a flag, `child`'s data stays readable (M0-
+ * REPORT.md design item 3).
+ */
+const absorbChild = (
+  child: Obj.Unknown,
+  migration: Migration.FanInMigration,
+  parentId: string,
+  preHeads: Heads,
+  absorbedAtParentHeads: Heads,
+  fromChild: readonly string[],
+): void => {
+  const core = getObjectCore(child);
+  const mountPath = core.mountPath;
+  const message = fanInAbsorbMessage(migration.fromType.toString(), parentId);
+
+  const marker = core.encode(
+    Schema.encodeSync(Migration.FanInMarkerSchema)({
+      migration: message,
+      parentId,
+      preHeads: [...preHeads],
+      absorbedAtParentHeads: [...absorbedAtParentHeads],
+      fromChild: [...fromChild].sort(),
+    }),
+  );
+  const typeRef = migration.toType ? EncodedReference.fromURI(migration.toType) : undefined;
+
+  core.change(
+    (doc) => {
+      setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'deleted'], true);
+      if (typeRef) {
+        setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
+      }
+      setDeep(doc, [...mountPath, META_NAMESPACE, 'annotations', Migration.FanInMarkerAnnotation.key], marker);
+    },
+    { message },
+  );
 };
