@@ -30,7 +30,7 @@ export const installSelectors = (version) => {
   }
   window.__autocueVersion = version;
 
-  const CUSTOM = new Set(['visible', 'has-text', 'text', 'text-is', 'has']);
+  const CUSTOM = new Set(['visible', 'has-text', 'text', 'text-is', 'has', 'not']);
 
   const normalize = (text) =>
     String(text ?? '')
@@ -223,6 +223,12 @@ export const installSelectors = (version) => {
         return textOf(element) === normalize(parseText(pseudo.arg).text);
       case 'has':
         return splitTopLevel(pseudo.arg, ',').some((part) => queryCss(part, [element]).length > 0);
+      case 'not':
+        // A compound may hold custom pseudo-classes (`:not(:has-text("x"))`); a complex argument is the browser's.
+        return !splitTopLevel(pseudo.arg, ',').some((part) => {
+          const steps = parseComplex(part);
+          return steps.length === 1 ? matchesStep(element, steps[0]) : element.matches(part);
+        });
       default:
         return false;
     }

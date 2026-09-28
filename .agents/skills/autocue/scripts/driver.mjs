@@ -43,7 +43,7 @@ import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { startLogTap, startPolledLogTap } from './logs.mjs';
@@ -90,7 +90,9 @@ const parseArgs = () => {
     // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through tauri-driver).
     'target': 'browser',
     // Tauri only: the app binary, and the port tauri-driver listens on (its native driver takes the next).
-    'app': new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url).pathname,
+    'app': fileURLToPath(
+      new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url),
+    ),
     'driver-port': 4444,
     'headed': 'off',
   };
@@ -210,9 +212,9 @@ const context = tauri
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);
 const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(options.out, 'app.log'));
-if (logFile) {
-  await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }));
-}
+const logTap = logFile
+  ? await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }))
+  : undefined;
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -868,6 +870,8 @@ const handlers = {
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     const recorded = await recorder?.stop();
+    // Before the session closes: the polled tap drains once more and stops its timer.
+    await logTap?.close();
     await context?.close();
     await browser?.close();
     await native?.close();

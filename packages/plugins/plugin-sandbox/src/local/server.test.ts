@@ -110,6 +110,14 @@ describe.skipIf(unavailable)('local sandbox server', { timeout: 60_000 }, () => 
       expect(module.status).toBe(200);
       expect(module.headers.get('content-type')).toBe('text/javascript');
       expect(module.headers.get('access-control-allow-origin')).toBe('*');
+      const foreign = yield* Effect.promise(() =>
+        fetch(`${base}index.mjs`, { headers: { origin: 'https://example.com' } }),
+      );
+      expect(foreign.headers.get('access-control-allow-origin')).toBeNull();
+      const app = yield* Effect.promise(() =>
+        fetch(`${base}index.mjs`, { headers: { origin: 'http://localhost:26777' } }),
+      );
+      expect(app.headers.get('access-control-allow-origin')).toBe('http://localhost:26777');
       expect(yield* Effect.promise(() => module.text())).toBe('export default 1;');
 
       for (const path of ['..%2Fsecret.txt', '../secret.txt', 'missing.mjs', '']) {

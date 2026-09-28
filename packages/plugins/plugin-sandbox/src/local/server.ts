@@ -108,6 +108,10 @@ const handle = async (
     return;
   }
   if (request.method === 'GET' && (request.url ?? '').startsWith(FILES_PREFIX)) {
+    // No bearer token guards these, so only a page on this machine (the app) may read them cross-origin.
+    if (!isLocalOrigin(request.headers.origin)) {
+      response.removeHeader('Access-Control-Allow-Origin');
+    }
     await serveFile(backend, published, request.url ?? '', response);
     return;
   }
@@ -143,6 +147,10 @@ const handle = async (
   }
   throw new Error('sandbox call died', { cause: exit.cause });
 };
+
+/** A loopback web origin, or the webview's own scheme; an absent `Origin` is a same-origin or non-browser request. */
+const isLocalOrigin = (origin: string | undefined): boolean =>
+  origin === undefined || /^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?|tauri:\/\/localhost)$/.test(origin);
 
 /** Registers a directory for {@link serveFile}, once the backend confirms it is one. */
 const publish = (

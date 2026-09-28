@@ -342,18 +342,18 @@ pub fn run() {
                     // Through WebKit, not `navigate`, which dispatches to this (main) thread and would wait on itself.
                     view.reload();
                     // Tauri's termination hook is macOS-only; without this a dead WebContent process freezes the window.
-                    let last_reload = std::cell::Cell::new(None::<std::time::Instant>);
+                    const COOLDOWN: std::time::Duration = std::time::Duration::from_secs(60);
+                    let last_reload = std::rc::Rc::new(std::cell::Cell::new(None::<std::time::Instant>));
                     view.connect_web_process_terminated(move |view, reason| {
                         web_process::record(MAIN_WINDOW_LABEL, true);
-                        // A page that dies again within a minute of its reload would only crash-loop.
-                        let recent = last_reload.get().is_some_and(|at| at.elapsed() < std::time::Duration::from_secs(60));
-                        if recent {
-                            log::error!("web process terminated again ({reason:?}); not reloading");
-                            return;
-                        }
-                        log::warn!("web process terminated ({reason:?}); reloading");
-                        last_reload.set(Some(std::time::Instant::now()));
-                        view.reload();
+                        // At most one reload a minute: a page that dies straight after its reload would crash-loop.
+                        let wait = last_reload.get().map_or(std::time::Duration::ZERO, |at| COOLDOWN.saturating_sub(at.elapsed()));
+                        log::warn!("web process terminated ({reason:?}); reloading in {}s", wait.as_secs());
+                        let (view, last_reload) = (view.clone(), last_reload.clone());
+                        glib::timeout_add_local_once(wait, move || {
+                            last_reload.set(Some(std::time::Instant::now()));
+                            view.reload();
+                        });
                     });
                 })?;
 

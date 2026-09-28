@@ -97,6 +97,16 @@ export const launchTauri = async ({ app, width, height, scale, theme, port, head
 
   const children = [];
   let closing = false;
+  let session;
+  // A launch that fails partway must not leave Xvfb or tauri-driver holding the display and port for the next one.
+  const abort = async (error) => {
+    closing = true;
+    await session?.close();
+    for (const child of children.toReversed()) {
+      child.kill('SIGTERM');
+    }
+    throw error;
+  };
   const watch = (child, name) => {
     children.push(child);
     child.on('exit', (code, signal) => {
@@ -126,7 +136,7 @@ export const launchTauri = async ({ app, width, height, scale, theme, port, head
       await sleep(100);
     }
     if (!existsSync(lock)) {
-      throw new Error(`Xvfb did not start on ${display}`);
+      await abort(new Error(`Xvfb did not start on ${display}`));
     }
   }
 
@@ -163,10 +173,13 @@ export const launchTauri = async ({ app, width, height, scale, theme, port, head
     ),
     'tauri-driver',
   );
-  await waitForHttp(`http://127.0.0.1:${driverPort}/status`, 15_000, 'tauri-driver');
-
-  const session = await createSession(`http://127.0.0.1:${driverPort}`, { 'tauri:options': { application: app } });
-  await session.setTimeouts({ script: 120_000, pageLoad: 300_000, implicit: 0 });
+  try {
+    await waitForHttp(`http://127.0.0.1:${driverPort}/status`, 15_000, 'tauri-driver');
+    session = await createSession(`http://127.0.0.1:${driverPort}`, { 'tauri:options': { application: app } });
+    await session.setTimeouts({ script: 120_000, pageLoad: 300_000, implicit: 0 });
+  } catch (error) {
+    await abort(error);
+  }
   // No window manager on Xvfb, so the window keeps whatever it restored from the last run; pin it.
   await session.setWindowRect({ x: 0, y: 0, width, height }).catch((error) => {
     console.warn(`could not size the window: ${error.message}`);
