@@ -63,3 +63,20 @@ FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
 - [x] **Tooltip** — Ark Tooltip; portalled `sm` popup, 20rem cap, 300ms open delay (DESIGN.md follow-up 17). — `components/Tooltip/`; Open play test.
 - [x] **Per-component stories** — a `<Name>.stories.tsx` for Block, Button, Checkbox, Container, Field, Group, Icon, IconButton, Input, Label, ScrollArea, Select, Toolbar, Typography; per-component assertions moved out of `components.stories.tsx` (now a gallery + Benchmark); shared helpers in `testing.ts`. — 84 storybook tests pass.
 - [x] **Block-sized cells** — IconButton, Checkbox and Switch occupy a block square with the control inset (DESIGN.md follow-up 19). — IconButton Sizes, Checkbox Sizes, Form/FieldSet/Card Layout play tests.
+
+## Phase 3: Fixes and react-ui-form port
+
+Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a parallel `react-ui-form/next`
+(DESIGN.md "Phase 3: react-ui-form port").
+
+### Tasks
+
+- [ ] **Tooltip focus-swap fix** — tabbing between triggers must keep the next tooltip open (zag 1.43.3 closes it).
+- [ ] **Switch `role='switch'`** — expose switch semantics on the hidden input (`aria-checked`).
+- [ ] **IconButton Tooltip** — IconButton shows its `label` in a `Next.Tooltip` instead of a native `title`.
+- [ ] **Export Next** — `@dxos/react-ui/next` subpath + `next/theme/index.css`; zag packages back to dependencies.
+- [ ] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons.
+- [ ] **`react-ui-form/next`** — Viewport/Content/Fields/FieldSet/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
+- [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
+- [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.
+- [ ] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`.

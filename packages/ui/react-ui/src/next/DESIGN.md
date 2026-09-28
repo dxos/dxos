@@ -189,3 +189,23 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     as a rail Block's, and labels after a checkbox or switch align with icon-button rows. Trailing Blocks in
     `Field.Header`, `FieldSet.Legend` and `Card.Header` take the same visible box and inset, so they keep matching
     IconButtons; the occupied cell, not the visible box, ends at the control's edge.
+
+## Phase 3: react-ui-form port
+
+`@dxos/react-ui-form` (~155 importing files; public extension points `fieldMap`, `FormFieldRenderer`, `fieldProvider`,
+`createSelectField`, `FormFieldRow`) is ported as a **parallel `react-ui-form/next`** with the same `Form.*` API and
+renderer contract, rendered with `Next.*`, so plugins and their custom renderers migrate one at a time (decision 1's
+parallel-namespace approach; no compatibility shims).
+
+1. **Prerequisite:** export Next from `@dxos/react-ui` (a `next` subpath and its CSS).
+2. **Field coverage.** Direct Next equivalents: Text, Password, Number, Tuple, GeoPoint, Boolean (Switch), Select/
+   AsyncSelect, Autofill, InlineRef, nested groups (FieldSet + Collapsible + Tooltip), array add/remove (IconButton).
+   New components: `Textarea`, `DateInput`, `Popover` + `Combobox` (Ref/lookup), `Tag`, `ToggleIconButton`, optional
+   `Banner`; Select needs option icons. Restyle only: HuePicker, the markdown editor, OrderedList, `DxAnchor`.
+3. **Layout mapping.** `Form.Viewport` → `Next.Container gutter` + composed `Next.ScrollArea` (no Column helpers);
+   `FormFieldRow` → `Field.Root` + `Field.Header` (error icon/Tooltip and array actions in the trailing slot);
+   `labelPlacement: 'beside'` → Checkbox/Switch labels; `inline` hides the header; `static` renders Typography.
+4. **Open decision:** `variant='settings'` (bordered two-column label/control grid, ~37 files) conflicts with decision
+   13's label-above fields and needs a Container-`columns` settings layout.
+5. **Order:** export → new components → `react-ui-form/next` core on ready fields (reusing the tested
+   `resolveFieldRenderer`) → settings layout → Ref/lookup fields → pilot plugin.
