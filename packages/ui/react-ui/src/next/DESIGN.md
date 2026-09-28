@@ -158,3 +158,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     Header, Body (`Container gutter='md'` as a composed `ScrollArea` viewport) and Footer (`Group justify='end'`) share
     one gutter. The Body keeps ScrollArea's `data-scope` (finding 10), and Select mounts its popup on open so a modal
     dialog's one-time `aria-hidden` sweep does not hide it.
+11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--nx-icon-size` high, 1.75×
+    wide, 2px thumb inset) filled with the accent when checked. Ark exposes it as a native checkbox input (no
+    `role=switch`, state via `checked` rather than `aria-checked`); decision 9 keeps us from adding the role ourselves.

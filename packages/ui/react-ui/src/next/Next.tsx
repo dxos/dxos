@@ -28,6 +28,8 @@ import {
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
+  Switch as NextSwitch,
+  type SwitchProps as NextSwitchProps,
   Toolbar as NextToolbar,
   type ToolbarProps as NextToolbarProps,
   Typography as NextTypography,
@@ -63,4 +65,6 @@ export namespace Next {
   export const Select = NextSelect;
   export type SelectOption = NextSelectOption;
   export const Dialog = NextDialog;
+  export const Switch = NextSwitch;
+  export type SwitchProps = NextSwitchProps;
 }

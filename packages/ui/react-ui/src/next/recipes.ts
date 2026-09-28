@@ -38,4 +38,7 @@ export const recipes = {
   dialogDescription: () => 'nx-dialog-description',
   dialogBody: () => 'nx-dialog-body',
   dialogFooter: () => 'nx-dialog-footer',
+  switch: () => 'nx-switch',
+  switchControl: () => 'nx-switch-control',
+  switchThumb: () => 'nx-switch-thumb',
 } as const;

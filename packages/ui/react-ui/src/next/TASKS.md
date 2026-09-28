@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 1 complete; next is choosing Phase 2 scope. Uncommitted: none. Last: Group for form actions, toolbar gap token, experimental story removed._
+_Resume: Phase 2 in progress (FieldSet, Card, Collapsible, Menu, Switch, Tooltip). Uncommitted: none._
 
 ## Phase 0: Design
 
@@ -47,3 +47,11 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11). — ~110ms mount+layout in headless Chromium.
 - [x] **Phase 1 review follow-ups** — `Next.Group` for form actions; explicit `Select.Content` size; toolbar gap `--nx-gap-size`; experimental story removed.
 - [x] **Dialog** — Ark Dialog at `level='raised'` with explicit `size`; Body = Container + ScrollArea, Footer = Group (DESIGN.md follow-up 10). — `components/Dialog/`; Default, LongContent, Sizes play tests.
+
+## Phase 2: More primitives
+
+FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
+
+### Tasks
+
+- [x] **Switch** — Ark Switch; icon-tall track, block-tall row (DESIGN.md follow-up 11). — `components/Switch/`; Toggle play test.

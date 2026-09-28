@@ -15,5 +15,6 @@ export * from './Input/index.ts';
 export * from './Label/index.ts';
 export * from './ScrollArea/index.ts';
 export * from './Select/index.ts';
+export * from './Switch/index.ts';
 export * from './Toolbar/index.ts';
 export * from './Typography/index.ts';
