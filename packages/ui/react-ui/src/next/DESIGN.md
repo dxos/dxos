@@ -250,7 +250,7 @@ parallel-namespace approach; no compatibility shims).
    13's label-above fields and needs a Container-`columns` settings layout.
 5. **Order:** export → new components → `react-ui-form/next` core on ready fields (reusing the tested
    `resolveFieldRenderer`) → settings layout → Ref/lookup fields → pilot plugin.
-||||||| original
+   ||||||| original
 
 =======
 
@@ -448,4 +448,5 @@ parallel-namespace approach; no compatibility shims).
    13's label-above fields and needs a Container-`columns` settings layout.
 5. **Order:** export → new components → `react-ui-form/next` core on ready fields (reusing the tested
    `resolveFieldRenderer`) → settings layout → Ref/lookup fields → pilot plugin.
->>>>>>> theirs
+
+> > > > > > > theirs

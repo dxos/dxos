@@ -35,6 +35,16 @@ type ComboboxRootProps = ThemedClassName<Omit<ComboboxPrimitive.RootProps<Combob
   filter?: ComboboxFilter;
 };
 
+/** The option collection narrowed by the typed query; kept outside the component so filtering is testable on its own. */
+const useFilteredCollection = (items: ComboboxOption[], filter: (item: ComboboxOption, query: string) => boolean) => {
+  const [query, setQuery] = useState('');
+  const collection = useMemo(
+    () => createListCollection<ComboboxOption>({ items: query ? items.filter((item) => filter(item, query)) : items }),
+    [items, filter, query],
+  );
+  return { collection, setQuery };
+};
+
 /** Ark combobox over a flat option list, filtered as the user types; the root takes no box, like Select's. */
 const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
   (
@@ -51,12 +61,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
     },
     forwardedRef,
   ) => {
-    const [query, setQuery] = useState('');
-    const collection = useMemo(
-      () =>
-        createListCollection<ComboboxOption>({ items: query ? items.filter((item) => filter(item, query)) : items }),
-      [items, filter, query],
-    );
+    const { collection, setQuery } = useFilteredCollection(items, filter);
     return (
       <ComboboxPrimitive.Root
         {...props}
