@@ -1,0 +1,18 @@
+/*
+ * Next theme: rules match only `.nx-*` elements and variables are `--nx-*` (decision 2), so nothing here reaches the
+ * current primitives.
+ */
+
+@import './size.css';
+@import './container.css';
+@import './scroll-area.css';
+@import './level.css';
+@import './control.css';
+@import './dialog.css';
+@import './switch.css';
+@import './fieldset.css';
+@import './image.css';
+@import './card.css';
+@import './collapsible.css';
+@import './menu.css';
+@import './tooltip.css';

@@ -1,0 +1,46 @@
+/*
+ * FieldSet: a borderless `<fieldset>` that stacks its Fields with the container gap, headed by a label row like
+ * `Field.Header`.
+ */
+
+@layer dx-components {
+  .nx-fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-gap-size);
+    /* The UA's fieldset box (border, padding, margin, min-content width) would break the content track. */
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  .nx-fieldset > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+
+  /* The rendered legend sits outside the flex flow, so it takes the full width itself to reach the control's edge. */
+  .nx-fieldset-legend {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    width: 100%;
+    min-height: var(--nx-block-size);
+    padding: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    font-weight: 500;
+  }
+  /* The legend text is a bare text node, so the first trailing part pushes the rest to the row's end. */
+  .nx-fieldset-legend > :is(.nx-block, .nx-button):not(:is(.nx-block, .nx-button) ~ *) {
+    margin-inline-start: auto;
+  }
+  .nx-fieldset-legend > .nx-block {
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+    margin: var(--nx-control-inset);
+  }
+  .nx-fieldset[data-disabled] {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,66 @@
+/*
+ * Switch: an icon-tall track in a block-tall row, like Checkbox, so it reads at the scale of the icons beside it.
+ */
+
+@layer dx-components {
+  .nx-switch {
+    display: inline-flex;
+    align-items: center;
+    /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
+    align-self: start;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    cursor: pointer;
+  }
+  .nx-switch[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .nx-switch-control {
+    --nx-switch-inset: 2px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: calc(var(--nx-icon-size) * 1.75);
+    height: var(--nx-icon-size);
+    /* Centred in a block-sized cell, so a switch takes the same space as an IconButton and labels align. */
+    margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size) * 1.75) / 2);
+    padding: var(--nx-switch-inset);
+    border-radius: 9999px;
+    background: var(--color-input-surface);
+    transition: background-color 120ms ease-out;
+  }
+  .nx-switch:hover:not([data-disabled]) .nx-switch-control:not([data-state='checked']) {
+    background: var(--color-hover-surface);
+  }
+  .nx-switch-control[data-state='checked'] {
+    background: var(--color-accent-bg);
+  }
+  .nx-switch-control[data-focus-visible] {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+
+  .nx-switch-thumb {
+    width: calc(var(--nx-icon-size) - 2 * var(--nx-switch-inset));
+    height: calc(var(--nx-icon-size) - 2 * var(--nx-switch-inset));
+    border-radius: 9999px;
+    background: var(--color-description);
+    transition: transform 120ms ease-out;
+  }
+  /* Travel is the track's inner width less the thumb: 1.75 icons minus one icon. */
+  .nx-switch-thumb[data-state='checked'] {
+    transform: translateX(calc(var(--nx-icon-size) * 0.75));
+    background: var(--color-accent-fg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-switch-control,
+    .nx-switch-thumb {
+      transition: none;
+    }
+  }
+}
