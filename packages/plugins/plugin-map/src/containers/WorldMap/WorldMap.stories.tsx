@@ -20,6 +20,10 @@ const meta = {
       control: 'select',
       options: ['equirectangular', 'mercator', 'transverse-mercator', 'orthographic'],
     },
+    fit: {
+      control: 'select',
+      options: ['contain', 'cover'],
+    },
   },
 } satisfies Meta<typeof WorldMap>;
 
@@ -28,5 +32,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { projection: 'equirectangular' },
+  args: { projection: 'equirectangular', fit: 'contain' },
 };

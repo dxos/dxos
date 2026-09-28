@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         id: 'surface.worldMap',
         filter: Surface.makeFilter(World),
         component: WorldMap,
-        props: ({ data: { projection } }) => ({ projection }),
+        props: ({ data: { projection, fit } }) => ({ projection, fit }),
       }),
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).

@@ -177,7 +177,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       expect: |
         the navtree keeps its own groups (CONTENT, SYSTEM) and gains a WORLD CLOCK group holding Clocks; the
         page opens as an article with an equirectangular world map above one clock card for the local
-        timezone (date, ticking time, timezone) and an empty card with a large plus button
+        timezone (date, ticking time, timezone) and an empty card of the same size with a large plus button
       note: |
         An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
         navtree with its own; the guide now teaches a navtree group.

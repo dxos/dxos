@@ -512,15 +512,16 @@ const schema = Schema.Struct({
 ```
 
 Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws a
-plain world map, and `projection` picks the projection (`equirectangular`, `mercator`, `transverse-mercator` or
-`orthographic`):
+plain world map: `projection` picks the projection (`equirectangular`, `mercator`, `transverse-mercator` or
+`orthographic`), and `fit` places the whole world inside the surface (`contain`) or fills it (`cover`), as
+`object-fit` does for an image:
 
 ```tsx
 import * as MapRole from '@dxos/plugin-map/MapRole';
 
 <Surface.Surface
   type={MapRole.World}
-  data={{ projection: 'equirectangular' }}
+  data={{ projection: 'equirectangular', fit: 'contain' }}
   limit={1}
 />;
 ```

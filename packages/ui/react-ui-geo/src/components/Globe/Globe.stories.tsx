@@ -361,9 +361,9 @@ export const Mercator = () => {
 export const Equirectangular = () => {
   const topology = useTopology();
   return (
-    <Globe.Root>
+    <Globe.Root zoom={1}>
       <Globe.Viewport>
-        <Globe.Canvas topology={topology} projection='equirectangular' styles={monochrome} />
+        <Globe.Canvas topology={topology} projection='equirectangular' fit='contain' styles={monochrome} />
       </Globe.Viewport>
     </Globe.Root>
   );
