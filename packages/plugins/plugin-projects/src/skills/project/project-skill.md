@@ -157,7 +157,8 @@ Tasks nest to any depth: a root task sits in the task set, and each sub-task sit
 `subtasks`. Read the whole tree before acting on any part of it.
 
 - Load it with `tasks-list { project, includeSubtasks: true, spaceId }`. Without `includeSubtasks`
-  you see only root tasks and miss most of the work.
+  you see only root tasks and miss most of the work. Results are paged: while the response carries
+  `nextCursor`, call again with `after: nextCursor` (and the same `includeSubtasks: true`).
 - For any task you touch, look **down** (its `subtasks`, recursively) and **up** (the task whose
   `subtasks` lists it, up to the root). A sub-task's intent and acceptance criteria often live on
   its parent.
@@ -321,7 +322,7 @@ spaceId }`. Report the new project id.
 ## Workflow discipline
 
 1. **At task start** — `space-query-objects { typename: 'org.dxos.type.project' }`, then `projects-get` + `tasks-list` (project ref
-   and `spaceId` on both) to reload state; create the project if none exists for this stream.
+   and `spaceId` on both, `includeSubtasks: true` on `tasks-list`) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
    statuses stale, and never batch-update everything at the end.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
