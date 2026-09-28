@@ -403,6 +403,22 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `setOpen(true)` while a tooltip is `closing`, so an `openDelay` shorter than zag's 150ms `closeDelay` could still
     swallow a quick re-hover; the 300ms default cannot.
 
+49. **Scrolling regions always use `Next.ScrollArea`; popups use `width='thin'`** (amends 44 and 45). No Next part
+    scrolls with `overflow: auto` and a native bar. Menu, Select and Combobox content sits in `PopupScroll`
+    (`components/ScrollArea/PopupScroll.tsx`): the ScrollArea frame is the popup surface (`.nx-popup`,
+    `data-surface='popup'`, `data-size`, capped at `min(--available-height, 20rem)`) and the Ark content is its
+    viewport, because zag scrolls the highlighted item into view only when the content element itself overflows
+    (`scrollIntoView` checks the root's `overflow`); an inner viewport would leave keyboard navigation stranded below
+    the fold. The frame drops inline-size containment so the popup still sizes to its items, and draws Menu's arrow
+    beside the viewport, whose overflow would clip it. Each content is wrapped in a `composable` part, since a plain
+    Ark part under `asChild` gets the dev slot-warning wrapper (finding 5), which breaks the frame's child rules; the
+    wrapper restates Ark's `data-scope`/`data-part`, which the viewport slot would replace (finding 10). Popover
+    already scrolls through `Popover.Body`. `Toolbar.Root` is the viewport of a thin ScrollArea along its orientation
+    whose bar shows on hover. `expectScrollingPopup` (`testing.ts`) asserts overflow, no native bar and a highlight
+    kept in view in the Menu, Select and Combobox `Test`s; `popupFrame` finds the surface. The thumbs'
+    ResizeObserver reports a benign "ResizeObserver loop" when a popup resizes with its reference in the same frame
+    (the Select `multiple` case); vitest does not fail on it.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

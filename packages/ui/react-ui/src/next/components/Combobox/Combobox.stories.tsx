@@ -12,7 +12,16 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, controlSize, expectAnchoredBelow, expectScoped, sizeRow } from '../../testing.ts';
+import {
+  GEOMETRY,
+  byTestId,
+  controlSize,
+  expectAnchoredBelow,
+  expectScoped,
+  expectScrollingPopup,
+  popupFrame,
+  sizeRow,
+} from '../../testing.ts';
 
 const OPTIONS: Next.ComboboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
@@ -20,6 +29,12 @@ const OPTIONS: Next.ComboboxOption[] = [
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
   { value: 'dan', label: 'Dan Brown', icon: 'ph--user--regular', disabled: true },
 ];
+
+/** Enough options to overflow the popup's 20rem cap at every size. */
+const LONG: Next.ComboboxOption[] = Array.from({ length: 30 }, (_, index) => ({
+  value: `person-${index + 1}`,
+  label: `Person ${index + 1}`,
+}));
 
 const startsWith: Next.ComboboxFilter = (option, query) => option.label.toLowerCase().startsWith(query.toLowerCase());
 
@@ -41,7 +56,7 @@ const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
   );
 };
 
-/** The default substring filter, a custom prefix `filter`, and late-loading items. */
+/** The default substring filter, a custom prefix `filter`, late-loading items, and a long list that scrolls. */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Field.Root>
@@ -60,6 +75,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Combobox.Root>
     </Next.Field.Root>
     <AsyncCombobox size={size} />
+    <Next.Field.Root>
+      <Next.Combobox.Root items={LONG}>
+        <Next.Combobox.Label>Assignee {size}</Next.Combobox.Label>
+        <Next.Combobox.Input placeholder='Many people' data-testid={`long-${size}`} />
+        <Next.Combobox.Content size={size} />
+      </Next.Combobox.Root>
+    </Next.Field.Root>
   </>
 );
 
@@ -82,7 +104,8 @@ export const Default: Story = {};
  * The control row is control-tall and as wide as an Input at every size, with its caret trigger a control square. A
  * preselected value shows its label once late items load; typing then Enter selects the first match; a custom
  * `filter` replaces the default substring match. Typing filters the portalled listbox (case-insensitive substring) and
- * choosing fills the input; the story ends open.
+ * choosing fills the input; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the highlight in
+ * view. The story ends open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -121,13 +144,25 @@ export const Test: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
+    // A long listbox scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
+    const assignee = md.getByRole('combobox', { name: 'Assignee md' });
+    await userEvent.click(within(byTestId(canvasElement, 'long-md')).getByRole('button'));
+    const longList = await body.findByRole('listbox');
+    await waitFor(() => expect(assignee).toHaveFocus());
+    await expect(popupFrame(longList)).toHaveAttribute('data-width', 'thin');
+    await expectScrollingPopup(longList, 20);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
     const input = md.getByRole('combobox', { name: 'Owner md' });
 
     await userEvent.click(within(byTestId(canvasElement, 'combobox-md')).getByRole('button'));
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
     await expectAnchoredBelow(byTestId(canvasElement, 'combobox-md'), listbox);
-    await expect(listbox).toHaveAttribute('data-surface', 'popup');
+    // The ScrollArea frame is the surface; the listbox itself is its viewport.
+    await expect(popupFrame(listbox)).toHaveAttribute('data-surface', 'popup');
+    await expect(listbox).toHaveAttribute('data-scope', 'combobox');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Dan Brown' })).toHaveAttribute('data-disabled');
 

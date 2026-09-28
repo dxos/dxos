@@ -11,11 +11,15 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectAnchoredBelow, expectArrow } from '../../testing.ts';
+import { byTestId, expectAnchoredBelow, expectArrow, expectScrollingPopup, popupFrame } from '../../testing.ts';
+
+/** Enough items to overflow the popup's 20rem cap at every size. */
+const LONG = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
 /**
- * A menu of items, groups, a checkbox item, a radio group and a nested menu; a region with a context menu; and a menu
- * with no trigger, opened under control and anchored to a text span (a virtual trigger) with an arrow.
+ * A menu of items, groups, a checkbox item, a radio group and a nested menu; a long menu that scrolls; a region with a
+ * context menu; and a menu with no trigger, opened under control and anchored to a text span (a virtual trigger) with
+ * an arrow.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [selected, setSelected] = useState<string>();
@@ -66,6 +70,18 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               <Next.Menu.Item value='link'>Copy link</Next.Menu.Item>
             </Next.Menu.Content>
           </Next.Menu.Sub>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
+      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Next.Menu.Trigger asChild>
+          <Next.Button data-testid={`long-${size}`}>Long</Next.Button>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content size={size}>
+          {LONG.map((label) => (
+            <Next.Menu.Item key={label} value={label}>
+              {label}
+            </Next.Menu.Item>
+          ))}
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
@@ -135,8 +151,8 @@ export const Default: Story = {};
  * Escape closes the menu and returns focus to the trigger. Arrow keys move the highlight, skipping disabled items, and
  * Enter selects. Checkbox and radio items report `aria-checked` and update the caller's state, their labels aligned
  * by a leading indicator cell; a SubTrigger opens its nested menu beside it on ArrowRight. A ContextTrigger opens its
- * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. The story ends with the menu
- * open.
+ * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. A long menu scrolls in a
+ * thin ScrollArea with no native bar, keeping the highlight in view. The story ends with the menu open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -150,8 +166,10 @@ export const Test: Story = {
     await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     let menu = await open(canvasElement);
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    await expect(menu).toHaveAttribute('data-surface', 'popup');
-    await expect(menu).toHaveAttribute('data-size', 'md');
+    // The ScrollArea frame is the surface; the menu itself is its viewport.
+    await expect(popupFrame(menu)).toHaveAttribute('data-surface', 'popup');
+    await expect(popupFrame(menu)).toHaveAttribute('data-size', 'md');
+    await expect(menu).toHaveAttribute('data-scope', 'menu');
     await expect(within(menu).getByRole('group', { name: 'Edit' })).toBeInTheDocument();
     await expect(within(menu).getAllByRole('menuitem')).toHaveLength(6);
     await expect(within(menu).getAllByRole('separator')).toHaveLength(3);
@@ -221,6 +239,16 @@ export const Test: Story = {
     menu = await open(canvasElement);
     await userEvent.click(within(menu).getByRole('menuitemradio', { name: 'Date' }));
     await waitFor(() => expect(byTestId(canvasElement, 'options-md')).toHaveTextContent('sort by date'));
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
+
+    // A long menu scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
+    await userEvent.click(byTestId(canvasElement, 'long-md'));
+    const long = await within(canvasElement.ownerDocument.body).findByRole('menu');
+    await waitFor(() => expect(long).toHaveFocus());
+    await expect(popupFrame(long)).toHaveAttribute('data-width', 'thin');
+    await expectScrollingPopup(long, 20);
+    await waitFor(() => expect(highlighted(long)).toBe('Item 20'));
+    await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 
     // A context menu opens at the pointer.

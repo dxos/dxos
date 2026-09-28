@@ -10,9 +10,11 @@ import React, { type ReactNode, type RefObject, forwardRef, useEffect, useMemo, 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
+import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
 import { type SelectOption } from '../Select/index.ts';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
@@ -149,21 +151,28 @@ type ComboboxContentProps = ThemedClassName<ComboboxPrimitive.ContentProps> & {
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled listbox at `level='popup'`; without children it lists the options that match the typed text. */
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const ComboboxViewport = composable<HTMLDivElement, ComboboxPrimitive.ContentProps>((props, forwardedRef) => (
+  <ComboboxPrimitive.Content {...composableProps(props)} data-scope='combobox' data-part='content' ref={forwardedRef} />
+));
+
+/**
+ * Portalled listbox at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the listbox itself; without
+ * children it lists the options that match the typed text.
+ */
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => (
     <Portal container={container}>
       <ComboboxPrimitive.Positioner>
-        <ComboboxPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), classNames)}
-          ref={forwardedRef}
-        >
-          {children ?? <ComboboxItems />}
-          <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
-        </ComboboxPrimitive.Content>
+        <PopupScroll size={size} classNames={mx(classNames)}>
+          <ComboboxViewport {...props} ref={forwardedRef}>
+            {children ?? <ComboboxItems />}
+            <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
+          </ComboboxViewport>
+        </PopupScroll>
       </ComboboxPrimitive.Positioner>
     </Portal>
   ),

@@ -430,6 +430,31 @@
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
+  /*
+   * A scrolling popup (Menu, Select, Combobox): the ScrollArea frame is the surface and the Ark content its viewport,
+   * since zag scrolls the highlighted item into view only inside a scrolling content element.
+   */
+  .nx-scroll-root.nx-popup {
+    /* Inline-size containment would size the popup without its items. */
+    container-type: normal;
+    max-height: min(var(--available-height, 20rem), 20rem);
+    padding-block: 0;
+  }
+  .nx-scroll-root.nx-popup:has(> .nx-scroll-viewport[hidden]) {
+    display: none;
+  }
+  .nx-popup > .nx-scroll-viewport {
+    padding-block: var(--nx-control-inset);
+    scroll-padding-block: var(--nx-control-inset);
+    border-radius: inherit;
+  }
+  .nx-popup > .nx-scroll-viewport:focus {
+    outline: none;
+  }
+  .nx-popup > .nx-scroll-viewport:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
   /* A small caption naming the Menu or Select group that follows. */
   .nx-popup-group-label {
     display: flex;
@@ -494,10 +519,14 @@
     gap: var(--nx-control-inset);
     width: 100%;
     min-height: var(--nx-block-size);
-    overflow-x: auto;
-    scrollbar-width: none;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
+  }
+  /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  .nx-scroll-root.nx-toolbar-scroll {
+    flex-shrink: 0;
+    width: 100%;
+    container-type: normal;
   }
   .nx-toolbar > .nx-control:not([data-square]),
   .nx-toolbar > .nx-select > .nx-control {

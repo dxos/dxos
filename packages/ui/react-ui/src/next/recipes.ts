@@ -17,6 +17,7 @@ export const recipes = {
   icon: () => 'nx-icon',
   typography: () => 'nx-typography',
   toolbar: () => 'nx-toolbar',
+  toolbarScroll: () => 'nx-toolbar-scroll',
   toolbarText: () => 'nx-toolbar-text',
   toolbarLink: () => `nx-toolbar-link ${FOCUS_RING}`,
   group: () => 'nx-group',

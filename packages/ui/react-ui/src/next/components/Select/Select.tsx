@@ -10,10 +10,11 @@ import React, { type ReactNode, type RefObject, forwardRef, useMemo } from 'reac
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon, type IconHue } from '../Icon/index.ts';
+import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 
@@ -144,20 +145,24 @@ type SelectContentProps = ThemedClassName<SelectPrimitive.ContentProps> & {
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled listbox at `level='popup'`. */
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const SelectViewport = composable<HTMLDivElement, SelectPrimitive.ContentProps>((props, forwardedRef) => (
+  <SelectPrimitive.Content {...composableProps(props)} data-scope='select' data-part='content' ref={forwardedRef} />
+));
+
+/** Portalled listbox at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the listbox itself. */
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ classNames, size, container, children, ...props }, forwardedRef) => (
     <Portal container={container}>
       <SelectPrimitive.Positioner>
-        <SelectPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </SelectPrimitive.Content>
+        <PopupScroll size={size} classNames={mx(classNames)}>
+          <SelectViewport {...props} ref={forwardedRef}>
+            {children}
+          </SelectViewport>
+        </PopupScroll>
       </SelectPrimitive.Positioner>
     </Portal>
   ),

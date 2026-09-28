@@ -4,12 +4,20 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
-import React, { type AnchorHTMLAttributes, createContext, forwardRef, useContext, useId } from 'react';
+import React, {
+  type AnchorHTMLAttributes,
+  type HTMLAttributes,
+  createContext,
+  forwardRef,
+  useContext,
+  useId,
+} from 'react';
 
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
 import * as toolbar from './toolbar-machine.ts';
@@ -37,7 +45,18 @@ type ToolbarRootProps = {
   disabled?: boolean;
 };
 
-/** `role=toolbar` with the roving focus that role promises (decision 9). */
+/**
+ * The toolbar element as a composable part, so the ScrollArea viewport slot merges onto it (a plain `ark.div` gets the
+ * dev warning wrapper, which breaks the frame's child rules).
+ */
+const ToolbarElement = composable<HTMLDivElement, HTMLAttributes<HTMLDivElement> & { asChild?: boolean }>(
+  (props, forwardedRef) => <ark.div {...composableProps(props)} ref={forwardedRef} />,
+);
+
+/**
+ * `role=toolbar` with the roving focus that role promises (decision 9); items that overflow scroll along its axis in a
+ * thin ScrollArea whose bar shows on hover, the toolbar itself being the viewport.
+ */
 const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
   ({ children, asChild, size, orientation = 'horizontal', loop = true, disabled, ...props }, forwardedRef) => {
     const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
@@ -45,16 +64,26 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
     const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
     return (
       <ToolbarContext.Provider value={api}>
-        <ark.div
-          asChild={asChild}
-          {...rest}
-          {...api.getRootProps()}
-          data-size={size}
-          className={className}
-          ref={forwardedRef}
+        <ScrollArea.Root
+          size={size}
+          width='thin'
+          orientation={orientation}
+          autoHide
+          classNames={recipes.toolbarScroll()}
         >
-          {children}
-        </ark.div>
+          <ScrollArea.Viewport asChild>
+            <ToolbarElement
+              asChild={asChild}
+              {...rest}
+              {...api.getRootProps()}
+              data-size={size}
+              classNames={className}
+              ref={forwardedRef}
+            >
+              {children}
+            </ToolbarElement>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </ToolbarContext.Provider>
     );
   },

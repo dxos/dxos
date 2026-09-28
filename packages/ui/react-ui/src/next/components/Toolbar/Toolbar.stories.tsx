@@ -101,7 +101,8 @@ export const Default: Story = {};
  * or Select trigger); a Separator sits the same three insets from its neighbours and is skipped by the roving focus.
  * A `Toolbar.ToggleGroup`'s items join the toolbar's roving focus, so the group adds no tab stop. A DragHandle is a
  * ghost icon-only Button outside the roving focus; Text truncates in the free space; a Link is an item. With
- * `loop={false}` arrows stop at the ends; a `disabled` toolbar disables every control and has no tab stop.
+ * `loop={false}` arrows stop at the ends; a `disabled` toolbar disables every control and has no tab stop. Items that
+ * overflow scroll sideways in a thin horizontal ScrollArea (no native bar) whose viewport is the toolbar.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -123,6 +124,17 @@ export const Test: Story = {
       await expect(toolbar).toHaveAttribute('aria-orientation', 'horizontal');
     }
     await expectScoped(canvasElement);
+
+    // Overflowing items scroll sideways in a thin horizontal ScrollArea whose viewport is the toolbar itself.
+    const scroller = byTestId(canvasElement, 'toolbar-md');
+    const frame = scroller.parentElement;
+    await expect(frame).toHaveClass('nx-scroll-root');
+    await expect(frame).toHaveAttribute('data-orientation', 'horizontal');
+    await expect(frame).toHaveAttribute('data-width', 'thin');
+    await expect(scroller).toHaveClass('nx-scroll-viewport');
+    await expect(getComputedStyle(scroller).overflowX).toBe('auto');
+    await expect(getComputedStyle(scroller).overflowY).toBe('hidden');
+    await expect(getComputedStyle(scroller).scrollbarWidth).toBe('none');
 
     // The separator is a control-tall vertical rule and no item: roving focus passes over it.
     const separator = byTestId(canvasElement, 'separator-md');

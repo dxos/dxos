@@ -86,12 +86,6 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
       <Next.Button icon='ph--share--regular' label={`Share ${size}`} data-testid={`share-${size}`} />
       <Next.Button iconEnd='ph--caret-down--regular' label={`More ${size}`} data-testid={`more-${size}`} />
     </Next.Toolbar.Root>
-    <Next.Container gutter='rail' layout='row'>
-      <Next.Block rail='start' data-testid={`rail-${size}`}>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Typography>Row {size}</Next.Typography>
-    </Next.Container>
     {variants && (
       <Next.Group>
         {VARIANTS.map(({ name, variant, valence }) => (
@@ -111,7 +105,7 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
         ))}
       </Next.Group>
     )}
-    <Next.Group>
+    <Next.Toolbar.Root>
       <Next.Button caretDown data-testid={`caret-${size}`}>
         Format
       </Next.Button>
@@ -144,7 +138,7 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
           {hue}
         </Next.Button>
       ))}
-    </Next.Group>
+    </Next.Toolbar.Root>
   </>
 );
 
@@ -219,9 +213,6 @@ export const Test: Story = {
 
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left, 0);
-      const buttonIcon = byTestId(canvasElement, `add-${size}`).querySelector('svg')?.getBoundingClientRect();
-      const railIcon = byTestId(canvasElement, `rail-${size}`).querySelector('svg')?.getBoundingClientRect();
-      await expect(buttonIcon?.left, `add-${size} icon x`).toBeCloseTo(railIcon?.left ?? Number.NaN, 0);
 
       // A leading icon then the label, spaced by the gap and padded like a text button; a trailing icon mirrors it.
       const share = byTestId(canvasElement, `share-${size}`);

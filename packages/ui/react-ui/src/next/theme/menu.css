@@ -3,11 +3,9 @@
  */
 
 @layer dx-components {
-  /* A long menu scrolls inside the space the positioner reports, which is what the current `Menu.Viewport` did. */
+  /* The frame of `PopupScroll`; a long menu scrolls in it (`.nx-popup` with a viewport, `control.css`). */
   .nx-menu {
     min-width: 10rem;
-    max-height: var(--available-height, none);
-    overflow-y: auto;
   }
 
   .nx-menu-item {

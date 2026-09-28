@@ -9,9 +9,11 @@ import React, { type ReactNode, type RefObject, forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
+import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -77,25 +79,37 @@ type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled menu at `level='popup'`; a nested menu's Content is the same part inside a `Menu.Sub`. */
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((props, forwardedRef) => (
+  <MenuPrimitive.Content {...composableProps(props)} data-scope='menu' data-part='content' ref={forwardedRef} />
+));
+
+/**
+ * Portalled menu at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the menu itself; a nested menu's
+ * Content is the same part inside a `Menu.Sub`.
+ */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
   ({ classNames, size = 'md', arrow = false, container, children, ...props }, forwardedRef) => (
     <Portal container={container}>
       <MenuPrimitive.Positioner>
-        <MenuPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), recipes.menuContent(), classNames)}
-          ref={forwardedRef}
+        <PopupScroll
+          size={size}
+          classNames={mx(recipes.menuContent(), classNames)}
+          outside={
+            arrow && (
+              <MenuPrimitive.Arrow className={recipes.arrow()}>
+                <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
+              </MenuPrimitive.Arrow>
+            )
+          }
         >
-          {children}
-          {arrow && (
-            <MenuPrimitive.Arrow className={recipes.arrow()}>
-              <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
-            </MenuPrimitive.Arrow>
-          )}
-        </MenuPrimitive.Content>
+          <MenuViewport {...props} ref={forwardedRef}>
+            {children}
+          </MenuViewport>
+        </PopupScroll>
       </MenuPrimitive.Positioner>
     </Portal>
   ),

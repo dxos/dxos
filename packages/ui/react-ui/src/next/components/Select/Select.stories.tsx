@@ -12,7 +12,16 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, centreY, controlSize, expectAnchoredBelow, expectScoped, sizeRow } from '../../testing.ts';
+import {
+  byTestId,
+  centreY,
+  controlSize,
+  expectAnchoredBelow,
+  expectScoped,
+  expectScrollingPopup,
+  popupFrame,
+  sizeRow,
+} from '../../testing.ts';
 
 const OPTIONS: Next.SelectOption[] = [
   { value: 'red', label: 'Red' },
@@ -26,6 +35,12 @@ const ICON_OPTIONS: Next.SelectOption[] = [
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
+
+/** Enough options to overflow the popup's 20rem cap at every size. */
+const LONG: Next.SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
+  value: `option-${index + 1}`,
+  label: `Option ${index + 1}`,
+}));
 
 const FRUIT: Next.SelectOption[] = [
   { value: 'apple', label: 'Apple', icon: 'ph--circle--fill', iconHue: 'red' },
@@ -95,6 +110,14 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
+      <Next.Select.Root items={LONG}>
+        <Next.Select.Trigger placeholder='Long' aria-label={`Long ${size}`} />
+        <Next.Select.Content size={size}>
+          {LONG.map((item) => (
+            <Next.Select.Item key={item.value} item={item} />
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
       <Next.Select.Root items={[]}>
         <Next.Select.Trigger placeholder='Loading' aria-label={`Lookup ${size}`} loading />
         <Next.Select.Content size={size} />
@@ -123,7 +146,8 @@ export const Default: Story = {};
  * portalled listbox at `level='popup'`; choosing an option closes it and shows the choice, and Escape closes it without
  * choosing; a decorative Separator spans the popup between options. Grouped options sit in labelled `group`s, a
  * `hue` colours an option's icon, and an Item's children replace its icon and label. A `multiple` select stays open
- * while choosing and lists every choice; a `loading` trigger is busy and spins in place of its caret. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
+ * highlight in view; a `loading` trigger is busy and spins in place of its caret. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
 export const Test: Story = {
@@ -144,9 +168,12 @@ export const Test: Story = {
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
     await expectAnchoredBelow(trigger, listbox);
-    await expect(listbox.dataset.surface).toBe('popup');
-    await expect(listbox.dataset.size).toBe('md');
-    await expect(getComputedStyle(listbox).getPropertyValue('--nx-level').trim()).toBe('5');
+    // The ScrollArea frame is the surface; the listbox itself is its viewport.
+    const frame = popupFrame(listbox);
+    await expect(frame.dataset.surface).toBe('popup');
+    await expect(frame.dataset.size).toBe('md');
+    await expect(getComputedStyle(frame).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(listbox.dataset.scope).toBe('select');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Black' })).toHaveAttribute('data-disabled');
     // The separator is decorative: a listbox owns only options and groups.
@@ -204,6 +231,15 @@ export const Test: Story = {
     await expect(body.getByRole('listbox')).toBe(colorList);
     await waitFor(() => expect(colors).toHaveTextContent('Red, Blue'));
     await expect(within(colorList).getByRole('option', { name: 'Red' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
+    // A long listbox scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
+    await userEvent.click(canvas.getByRole('combobox', { name: 'Long md' }));
+    const longList = await body.findByRole('listbox');
+    await waitFor(() => expect(longList).toHaveFocus());
+    await expect(popupFrame(longList)).toHaveAttribute('data-width', 'thin');
+    await expectScrollingPopup(longList, 20);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
