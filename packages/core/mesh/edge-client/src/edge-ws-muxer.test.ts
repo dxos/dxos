@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -10,8 +10,10 @@ import { concatUint8Arrays, isNonNullable } from '@dxos/util';
 
 import { protocol } from './defs.ts';
 import {
+  CLOUDFLARE_MESSAGE_MAX_BYTES,
   MAX_INBOUND_CHUNK_COUNT,
   MAX_INBOUND_MESSAGE_BYTES,
+  MessageTooLargeError,
   SegmentedMessageLimitError,
   WebSocketClosedError,
   WebSocketMuxer,
@@ -26,9 +28,13 @@ const FLAG_SEGMENT_SEQ = 1;
 const FLAG_SEGMENT_SEQ_TERMINATED = 2;
 const WIRE_SEGMENT_BYTES = 16_384;
 
+const WS_CONNECTING = 0;
 const WS_OPEN = 1;
 const WS_CLOSING = 2;
 const WS_CLOSED = 3;
+
+// The muxer waits once the socket buffers this much.
+const SOCKET_BUFFER_FULL = 1_000_000;
 
 describe('WebSocketMuxerTest', () => {
   test('basic message reassembly', async ({ expect }) => {
@@ -122,19 +128,29 @@ describe('WebSocketMuxerTest', () => {
     ['closing', WS_CLOSING],
     ['closed', WS_CLOSED],
   ] as const) {
-    test(`rejects queued segmented sends once the socket is ${state}`, async ({ expect }) => {
+    test(`rejects a send on a ${state} socket without writing it`, async ({ expect }) => {
       const socket = new TestSocket();
-      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
-      const sends = [
-        muxer.send(textMessage(SEGMENTED_CONTENT, 'service-a')),
-        muxer.send(textMessage(SEGMENTED_CONTENT, 'service-b')),
-      ];
       socket.readyState = readyState;
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
 
-      await Promise.all(sends.map((sent) => expect(sent).rejects.toBeInstanceOf(WebSocketClosedError)));
+      await expect(muxer.send(unsegmentedMessage('small'))).rejects.toBeInstanceOf(WebSocketClosedError);
+      await expect(muxer.send(textMessage(SEGMENTED_CONTENT))).rejects.toBeInstanceOf(WebSocketClosedError);
       expect(socket.frames).toHaveLength(0);
     });
   }
+
+  test('rejects a message over the size limit instead of dropping it', async ({ expect }) => {
+    const socket = new TestSocket();
+    const muxer = new WebSocketMuxer(socket);
+    const content = 'A'.repeat(CLOUDFLARE_MESSAGE_MAX_BYTES);
+
+    await expect(muxer.send(unsegmentedMessage(content))).rejects.toBeInstanceOf(MessageTooLargeError);
+    expect(socket.frames).toHaveLength(0);
+
+    // With a service id the same content is segmented, which only the larger RPC limit bounds.
+    await muxer.send(textMessage(content));
+    expect(socket.frames.length).toBeGreaterThan(1);
+  });
 
   test('rejects the rest of a segmented message when the socket closes mid-sequence', async ({ expect }) => {
     const socket = new TestSocket();
@@ -216,31 +232,123 @@ describe('WebSocketMuxerTest', () => {
     expect(socket.frames).toHaveLength(2);
   });
 
-  test('keeps 300 concurrent segmented messages apart on one-byte channel ids', async ({ expect }) => {
-    const socket = new TestSocket();
-    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
-    const services = Array.from({ length: 300 }, (_, index) => `service-${index}`);
-    await Promise.all(
-      services.map((serviceId) => muxer.send(textMessage(`${serviceId}:${SEGMENTED_CONTENT}`, serviceId))),
-    );
+  describe('send timing', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
 
-    const receiver = new WebSocketMuxer(new TestSocket());
-    const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
-    expect(received.map((message) => message.serviceId).sort()).toEqual([...services].sort());
-    expect(received.every((message) => textOf(message) === `${message.serviceId}:${SEGMENTED_CONTENT}`)).toBe(true);
-  });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-  test('rejects queued segmented sends when the muxer is destroyed', async ({ expect }) => {
-    const socket = new TestSocket();
-    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
-    const sent = muxer.send(textMessage(SEGMENTED_CONTENT));
+    for (const [socketKind, bufferedAmount] of [
+      ['a socket without bufferedAmount, as in workerd', undefined],
+      ['a socket with an empty buffer', 0],
+    ] as const) {
+      test(`writes every segment before send returns on ${socketKind}`, async ({ expect }) => {
+        const socket = new TestSocket();
+        socket.bufferedAmount = bufferedAmount;
+        const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+        const message = textMessage(SEGMENTED_CONTENT);
+        const sent = muxer.send(message);
 
-    // The order `EdgeWsConnection` tears down in: close the socket, then destroy the muxer.
-    socket.readyState = WS_CLOSING;
-    muxer.destroy();
+        expect(socket.frames).toHaveLength(segmentCount(message));
+        expect(vi.getTimerCount()).toBe(0);
+        await sent;
+      });
+    }
 
-    await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
-    expect(socket.frames).toHaveLength(0);
+    test('waits while the socket buffer is full and resumes once it drains', async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = 0;
+      socket.onFrame = () => {
+        socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      };
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const message = textMessage(SEGMENTED_CONTENT);
+      const sent = muxer.send(message);
+      expect(socket.frames).toHaveLength(1);
+
+      vi.advanceTimersToNextTimer();
+      expect(socket.frames).toHaveLength(1);
+
+      socket.onFrame = undefined;
+      socket.bufferedAmount = 0;
+      vi.advanceTimersToNextTimer();
+      expect(socket.frames).toHaveLength(segmentCount(message));
+      await sent;
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    test('waits while the socket is connecting', async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.readyState = WS_CONNECTING;
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const message = textMessage(SEGMENTED_CONTENT);
+      const sent = muxer.send(message);
+      expect(socket.frames).toHaveLength(0);
+
+      socket.readyState = WS_OPEN;
+      vi.advanceTimersToNextTimer();
+      expect(socket.frames).toHaveLength(segmentCount(message));
+      await sent;
+    });
+
+    for (const [state, readyState] of [
+      ['closing', WS_CLOSING],
+      ['closed', WS_CLOSED],
+    ] as const) {
+      test(`rejects sends queued behind a full buffer once the socket is ${state}`, async ({ expect }) => {
+        const socket = new TestSocket();
+        socket.bufferedAmount = SOCKET_BUFFER_FULL;
+        const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+        const sends = [
+          muxer.send(textMessage(SEGMENTED_CONTENT, 'service-a')),
+          muxer.send(textMessage(SEGMENTED_CONTENT, 'service-b')),
+        ];
+        socket.readyState = readyState;
+        vi.advanceTimersToNextTimer();
+
+        await Promise.all(sends.map((sent) => expect(sent).rejects.toBeInstanceOf(WebSocketClosedError)));
+        expect(socket.frames).toHaveLength(0);
+        expect(vi.getTimerCount()).toBe(0);
+      });
+    }
+
+    test('rejects sends queued behind a full buffer when the muxer is destroyed', async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const sent = muxer.send(textMessage(SEGMENTED_CONTENT));
+
+      // The order `EdgeWsConnection` tears down in: close the socket, then destroy the muxer.
+      socket.readyState = WS_CLOSING;
+      muxer.destroy();
+
+      await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
+      expect(socket.frames).toHaveLength(0);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    test('keeps 300 queued segmented messages apart on one-byte channel ids', async ({ expect }) => {
+      const socket = new TestSocket();
+      // Queued behind a full buffer, the messages go out one segment per channel per round.
+      socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const services = Array.from({ length: 300 }, (_, index) => `service-${index}`);
+      const sends = services.map((serviceId) =>
+        muxer.send(textMessage(`${serviceId}:${SEGMENTED_CONTENT}`, serviceId)),
+      );
+      socket.bufferedAmount = 0;
+      vi.runAllTimers();
+      await Promise.all(sends);
+
+      expect(socket.frames[1][1]).not.toBe(socket.frames[0][1]);
+      const receiver = new WebSocketMuxer(new TestSocket());
+      const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
+      expect(received.map((message) => message.serviceId).sort()).toEqual([...services].sort());
+      expect(received.every((message) => textOf(message) === `${message.serviceId}:${SEGMENTED_CONTENT}`)).toBe(true);
+    });
   });
 });
 
@@ -248,6 +356,8 @@ describe('WebSocketMuxerTest', () => {
 class TestSocket {
   readonly frames: Uint8Array[] = [];
   readyState = WS_OPEN;
+  /** Left unset, as workerd's is. */
+  bufferedAmount?: number;
   sendError?: Error;
   onFrame?: () => void;
 
@@ -271,6 +381,12 @@ const segmentChunk = (payload: Uint8Array) => {
 
 const textMessage = (message: string, serviceId = 'test-service') =>
   protocol.createMessage(TextMessageSchema, { serviceId, payload: { message } });
+
+/** Without a service id the muxer never segments a message. */
+const unsegmentedMessage = (message: string) => protocol.createMessage(TextMessageSchema, { payload: { message } });
+
+const segmentCount = (message: Message) =>
+  Math.ceil(buf.toBinary(MessageSchema, message).byteLength / MAX_CHUNK_LENGTH);
 
 const textOf = (message: Message) => protocol.getPayload(message, TextMessageSchema).message;
 

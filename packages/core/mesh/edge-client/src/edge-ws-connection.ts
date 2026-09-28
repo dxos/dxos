@@ -164,7 +164,7 @@ export class EdgeWsConnection extends Resource {
       this._wsMuxer.send(message).catch((error) => {
         // A close mid-send is routine (the close handler reconnects), so it is not reported as an error.
         if (error instanceof WebSocketClosedError) {
-          log.verbose('segmented message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
+          log.verbose('message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
         } else {
           log.catch(error);
         }

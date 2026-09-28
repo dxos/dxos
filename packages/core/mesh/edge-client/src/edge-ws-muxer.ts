@@ -66,7 +66,8 @@ export class WebSocketMuxer {
    */
   private _segmentedSendError: Error | undefined;
 
-  private _sendTimeout: any | undefined;
+  /** Set while segments wait for the socket to open or its buffer to drain. */
+  private _sendTimeout: ReturnType<typeof setTimeout> | undefined;
 
   private readonly _maxChunkLength: number;
 
@@ -78,25 +79,27 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Resolves when all the message chunks get enqueued for sending.
-   * A segmented message instead rejects with {@link WebSocketClosedError} if the socket starts closing or the muxer is
-   * destroyed first, or with the error the socket's `send` throws; any of these drops every queued segmented message,
-   * not just this one. Once a message was cut off mid-sequence, every later segmented message rejects with that error.
+   * Resolves once the socket has taken the whole message; segments wait only while the socket is connecting or its
+   * buffer is full.
+   * Rejects with {@link MessageTooLargeError} past the Cloudflare limit, and with {@link WebSocketClosedError} if the
+   * socket is closing or closed, or starts closing or the muxer is destroyed while segments wait. A segmented send also
+   * rejects with the error the socket's `send` throws. A close or a throw drops every queued segmented message, and
+   * once a message was cut off mid-sequence every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
+    if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
+      throw new WebSocketClosedError(this._ws.readyState);
+    }
     const binary = buf.toBinary(MessageSchema, message);
     const channelId = this._resolveChannel(message);
-    if (
-      (channelId == null && binary.byteLength > CLOUDFLARE_MESSAGE_MAX_BYTES) ||
-      binary.byteLength > CLOUDFLARE_RPC_MAX_BYTES
-    ) {
-      log.error('Large message dropped', {
+    const maxByteLength = channelId == null ? CLOUDFLARE_MESSAGE_MAX_BYTES : CLOUDFLARE_RPC_MAX_BYTES;
+    if (binary.byteLength > maxByteLength) {
+      throw new MessageTooLargeError({
         byteLength: binary.byteLength,
+        maxByteLength,
         serviceId: message.serviceId,
         payload: protocol.getPayloadType(message),
-        channelId,
       });
-      return;
     }
 
     if (channelId == null || binary.length < this._maxChunkLength) {
@@ -239,74 +242,64 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.delete(channelId);
   }
 
+  /** Writes queued segments one per channel per round until none are left or the socket cannot take more. */
   private _sendChunkedMessages(): void {
     if (this._sendTimeout) {
       return;
     }
 
-    const send = () => {
-      if (this._ws.readyState === WebSocket.CONNECTING) {
-        // `send()` throws `InvalidStateError` before the handshake completes, so wait it out.
-        this._sendTimeout = setTimeout(send, BUFFER_FULL_BACKOFF_TIMEOUT);
-        return;
-      }
-      if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-        log.warn('send called for closed websocket', {
-          readyState: this._ws.readyState,
-          pendingChannels: this._outMessageChunks.size,
-        });
-        this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
-        this._sendTimeout = undefined;
-        return;
-      }
-
-      let timeout = 0;
-      const emptyChannels: number[] = [];
-      for (const [channelId, messages] of this._outMessageChunks.entries()) {
-        if (this._ws.bufferedAmount != null) {
-          if (this._ws.bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT) {
-            log.debug('muxer send paused (websocket buffer full)', {
-              channelId,
-              bufferedAmount: this._ws.bufferedAmount,
-              pendingChannels: this._outMessageChunks.size,
-            });
-            timeout = BUFFER_FULL_BACKOFF_TIMEOUT;
-            break;
-          }
+    while (this._outMessageChunks.size > 0) {
+      for (const [channelId, chunks] of this._outMessageChunks) {
+        const { readyState, bufferedAmount } = this._ws;
+        if (readyState === WebSocket.CLOSING || readyState === WebSocket.CLOSED) {
+          log.warn('muxer dropped queued segments (websocket closed)', {
+            readyState,
+            pendingChannels: this._outMessageChunks.size,
+          });
+          this._rejectPendingSends(new WebSocketClosedError(readyState));
+          return;
         }
-
-        const nextMessage = messages.shift();
-        if (nextMessage) {
-          try {
-            this._ws.send(nextMessage.payload);
-          } catch (error) {
-            log.warn('muxer failed to send segmented message chunk', { channelId, error });
-            const sendError = error instanceof Error ? error : new Error(String(error));
-            nextMessage.trigger?.throw(sendError);
-            this._rejectPendingSends(sendError);
+        // `send()` throws `InvalidStateError` before the handshake completes, and a full buffer is back-pressure.
+        if (
+          readyState === WebSocket.CONNECTING ||
+          (bufferedAmount != null && bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT)
+        ) {
+          log.debug('muxer send paused', {
+            readyState,
+            bufferedAmount,
+            pendingChannels: this._outMessageChunks.size,
+          });
+          this._sendTimeout = setTimeout(() => {
             this._sendTimeout = undefined;
-            return;
-          }
-          if ((nextMessage.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
-            this._outOpenSequences.add(channelId);
-          } else {
-            this._outOpenSequences.delete(channelId);
-          }
-          nextMessage.trigger?.wake();
-        } else {
-          emptyChannels.push(channelId);
+            this._sendChunkedMessages();
+          }, BUFFER_FULL_BACKOFF_TIMEOUT);
+          return;
         }
-      }
 
-      emptyChannels.forEach((channelId) => this._outMessageChunks.delete(channelId));
-
-      if (this._outMessageChunks.size > 0) {
-        this._sendTimeout = setTimeout(send, timeout);
-      } else {
-        this._sendTimeout = undefined;
+        const chunk = chunks.shift();
+        if (chunks.length === 0) {
+          this._outMessageChunks.delete(channelId);
+        }
+        if (!chunk) {
+          continue;
+        }
+        try {
+          this._ws.send(chunk.payload);
+        } catch (error) {
+          log.warn('muxer failed to send segmented message chunk', { channelId, error });
+          const sendError = error instanceof Error ? error : new Error(String(error));
+          chunk.trigger?.throw(sendError);
+          this._rejectPendingSends(sendError);
+          return;
+        }
+        if ((chunk.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
+          this._outOpenSequences.add(channelId);
+        } else {
+          this._outOpenSequences.delete(channelId);
+        }
+        chunk.trigger?.wake();
       }
-    };
-    this._sendTimeout = setTimeout(send);
+    }
   }
 
   /** Rejects every queued segmented send and drops the chunks they had yet to send. */
@@ -351,15 +344,24 @@ export class SegmentedMessageLimitError extends Error {
 }
 
 /**
- * Rejects a segmented send whose remaining segments were dropped because the socket began closing, or the muxer was
- * destroyed, before they could be handed to it.
+ * Rejects a send on a closing or closed socket, or a segmented send whose remaining segments were dropped because the
+ * socket began closing, or the muxer was destroyed, before they could be handed to it.
  */
 export class WebSocketClosedError extends BaseError.extend(
   'WebSocketClosedError',
-  'WebSocket closed before a segmented message was sent.',
+  'WebSocket closed before the message was sent.',
 ) {
   constructor(readyState: number) {
     super({ context: { readyState } });
+  }
+}
+
+/**
+ * Rejects a send past Cloudflare's limit: 1MB for a message sent whole, 32MB for a segmented one.
+ */
+export class MessageTooLargeError extends BaseError.extend('MessageTooLargeError', 'Message exceeds the size limit.') {
+  constructor(context: { byteLength: number; maxByteLength: number; serviceId?: string; payload?: string }) {
+    super({ context });
   }
 }
 
