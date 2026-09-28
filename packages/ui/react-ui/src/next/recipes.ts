@@ -59,7 +59,6 @@ export const recipes = {
   menuItem: () => 'nx-menu-item',
   menuItemText: () => 'nx-menu-item-text',
   menuShortcut: () => 'nx-menu-shortcut',
-  menuSeparator: () => 'nx-menu-separator',
   menuGroupLabel: () => 'nx-menu-group-label',
   tooltipContent: () => 'nx-tooltip',
   textarea: () => `nx-control nx-input nx-textarea ${FOCUS_RING}`,
@@ -75,4 +74,5 @@ export const recipes = {
   comboboxTrigger: () => 'nx-combobox-trigger',
   comboboxEmpty: () => 'nx-combobox-empty',
   tag: () => 'nx-tag',
+  separator: () => 'nx-separator',
 } as const;

@@ -288,6 +288,13 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     tests dismissal. A variants × sizes matrix decorator was not needed: variants render as a row per size.
     `components.stories.tsx`, `Form.stories.tsx` and `spike/*` keep their own layouts.
 
+38. **Separator** is one 1px rule in `--color-separator` (`theme/separator.css`): horizontal it stretches across its
+    track with an inset above and below; vertical it is control-tall with an inline inset, so a toolbar keeps three
+    insets between any two neighbours. It claims `role=separator` (plus `aria-orientation` when vertical) unless
+    `decorative`. `Menu.Separator` is Ark's part with the same rule; `Select.Separator` is always decorative, since a
+    listbox owns only options and groups. `Toolbar.Separator` takes the axis across the toolbar's orientation and is
+    not a roving item. Toolbar therefore became a namespace (`Toolbar.Root`), like every other composite.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

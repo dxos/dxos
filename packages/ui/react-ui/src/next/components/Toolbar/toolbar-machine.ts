@@ -117,6 +117,7 @@ const isTextEntry = (target: EventTarget | null) =>
 
 export type ToolbarApi = {
   focusedValue: string | null;
+  orientation: Orientation;
   getRootProps: () => {
     'id': string;
     'role': 'toolbar';
@@ -146,6 +147,7 @@ export const connect = (service: ToolbarService): ToolbarApi => {
 
   return {
     focusedValue,
+    orientation,
     getRootProps: () => ({
       'id': getRootId(scope),
       'role': 'toolbar',

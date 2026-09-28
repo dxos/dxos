@@ -15,10 +15,10 @@ import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
-  <Next.Toolbar data-testid={`toolbar-${size}`}>
+  <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
     <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
     <Next.Input placeholder='Disabled' aria-label={`Disabled ${size}`} disabled />
-  </Next.Toolbar>
+  </Next.Toolbar.Root>
 );
 
 const meta = {

@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { Fragment } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
@@ -29,12 +29,15 @@ const ICON_OPTIONS: Next.SelectOption[] = [
 
 /** A plain select and one whose options have leading icons; `Select.Content` takes the row's size (finding 9). */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Toolbar data-testid={`toolbar-${size}`}>
+  <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
     <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
       <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
       <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
         {OPTIONS.map((item) => (
-          <Next.Select.Item key={item.value} item={item} />
+          <Fragment key={item.value}>
+            {item.disabled && <Next.Select.Separator />}
+            <Next.Select.Item item={item} />
+          </Fragment>
         ))}
       </Next.Select.Content>
     </Next.Select.Root>
@@ -46,7 +49,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         ))}
       </Next.Select.Content>
     </Next.Select.Root>
-  </Next.Toolbar>
+  </Next.Toolbar.Root>
 );
 
 const meta = {
@@ -65,7 +68,7 @@ export const Default: Story = {};
 /**
  * Triggers are control-tall and centred in their block at every size (decision 12). Clicking the trigger opens a
  * portalled listbox at `level='popup'`; choosing an option closes it and shows the choice, and Escape closes it without
- * choosing. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * choosing; a decorative Separator spans the popup between options. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
 export const Test: Story = {
@@ -90,6 +93,11 @@ export const Test: Story = {
     await expect(getComputedStyle(listbox).getPropertyValue('--nx-level').trim()).toBe('5');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Black' })).toHaveAttribute('data-disabled');
+    // The separator is decorative: a listbox owns only options and groups.
+    const separator = listbox.querySelector<HTMLElement>('[data-scope="separator"]');
+    await expect(separator).toHaveAttribute('aria-hidden', 'true');
+    await expect(within(listbox).queryByRole('separator')).toBeNull();
+    await expect(separator?.getBoundingClientRect().width).toBeCloseTo(listbox.clientWidth, 0);
 
     await userEvent.click(within(listbox).getByRole('option', { name: 'Green' }));
     await waitFor(() => expect(trigger).toHaveTextContent('Green'));

@@ -83,6 +83,15 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.
 - [ ] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`.
 
+## Parity
+
+Close the "Missing in Next" gaps of [AUDIT.md](./AUDIT.md) §1 for the existing components (Combobox's major gaps stay
+with Phase 4 milestone 5).
+
+### Tasks
+
+- [x] **Separator** — `Next.Separator`; `Toolbar.Separator` (Toolbar becomes `Toolbar.Root`), `Menu.Separator`, `Select.Separator` (DESIGN.md follow-up 38).
+
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
 Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in the milestone order of

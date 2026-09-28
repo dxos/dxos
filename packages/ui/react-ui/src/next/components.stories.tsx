@@ -25,7 +25,7 @@ const OPTIONS: Next.SelectOption[] = [
 
 const SizeSection = ({ size }: { size: Size }) => (
   <Next.Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
-    <Next.Toolbar data-testid={`toolbar-${size}`}>
+    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
       <Next.Block>
         <Next.Icon icon='ph--circle--regular' />
       </Next.Block>
@@ -41,7 +41,7 @@ const SizeSection = ({ size }: { size: Size }) => (
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
-    </Next.Toolbar>
+    </Next.Toolbar.Root>
 
     <Next.Container layout='row' data-testid={`row-${size}`}>
       <Next.Block rail='start' data-testid={`row-${size}-rail-start`}>
@@ -214,11 +214,11 @@ const FocusRingsStory = () => (
           <Next.Typography>Hidden content.</Next.Typography>
         </Next.Collapsible.Content>
       </Next.Collapsible.Root>
-      <Next.Toolbar>
+      <Next.Toolbar.Root>
         <Next.Button>Button</Next.Button>
         <Next.Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
         <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
-      </Next.Toolbar>
+      </Next.Toolbar.Root>
     </Next.Container>
   </div>
 );

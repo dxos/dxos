@@ -53,7 +53,7 @@ type StoryArgs = SizeArgs & {
  */
 const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
   <>
-    <Next.Toolbar data-testid={`toolbar-${size}`}>
+    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
       <Next.Button
         icon='ph--plus--regular'
         label={`Add ${size}`}
@@ -82,7 +82,7 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
       </Next.Button>
       <Next.Button icon='ph--share--regular' label={`Share ${size}`} data-testid={`share-${size}`} />
       <Next.Button iconEnd='ph--caret-down--regular' label={`More ${size}`} data-testid={`more-${size}`} />
-    </Next.Toolbar>
+    </Next.Toolbar.Root>
     <Next.Container gutter='rail' layout='row'>
       <Next.Block rail='start' data-testid={`rail-${size}`}>
         <Next.Icon icon='ph--circle--regular' />

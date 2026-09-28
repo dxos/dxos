@@ -21,12 +21,13 @@ const OPTIONS: Next.SelectOption[] = [
 ];
 
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Toolbar data-testid={`toolbar-${size}`}>
+  <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
     <Next.Block>
       <Next.Icon icon='ph--circle--regular' />
     </Next.Block>
     <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
     <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
+    <Next.Toolbar.Separator data-testid={`separator-${size}`} />
     <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
     <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
     <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
@@ -37,7 +38,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         ))}
       </Next.Select.Content>
     </Next.Select.Root>
-  </Next.Toolbar>
+  </Next.Toolbar.Root>
 );
 
 const meta = {
@@ -58,7 +59,7 @@ export const Default: Story = {};
  * from the machine that implements its keyboard contract (decision 9): arrow keys, Home and End rove across its items,
  * and only one item is in the tab order. The visible space between any two adjacent items is three control insets: the
  * toolbar's gap plus each item's inline margin (an icon-only Button's inset cell, or the same margin on a Button, Input
- * or Select trigger).
+ * or Select trigger); a Separator sits the same three insets from its neighbours and is skipped by the roving focus.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -80,9 +81,16 @@ export const Test: Story = {
     }
     await expectScoped(canvasElement);
 
+    // The separator is a control-tall vertical rule and no item: roving focus passes over it.
+    const separator = byTestId(canvasElement, 'separator-md');
+    await expect(separator).toHaveAttribute('role', 'separator');
+    await expect(separator).toHaveAttribute('aria-orientation', 'vertical');
+    await expect(separator.getBoundingClientRect().height).toBeCloseTo(controlSize('md'), 0);
+    await expect(separator).not.toHaveAttribute('tabindex');
+
     for (const size of ['md', 'lg'] as const) {
       const expected = 3 * GEOMETRY[size].inset;
-      const items = ['add', 'remove', 'button', 'input', 'select'].map((part) =>
+      const items = ['add', 'remove', 'separator', 'button', 'input', 'select'].map((part) =>
         byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect(),
       );
       for (let index = 1; index < items.length; index++) {

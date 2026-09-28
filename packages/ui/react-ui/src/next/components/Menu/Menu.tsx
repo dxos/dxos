@@ -112,8 +112,14 @@ MenuItem.displayName = 'Next.Menu.Item';
 
 type MenuSeparatorProps = ThemedClassName<MenuPrimitive.SeparatorProps>;
 
+/** Ark's separator (`role=separator`) with `Next.Separator`'s horizontal rule. */
 const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ classNames, ...props }, forwardedRef) => (
-  <MenuPrimitive.Separator {...props} className={mx(recipes.menuSeparator(), classNames)} ref={forwardedRef} />
+  <MenuPrimitive.Separator
+    {...props}
+    data-orientation='horizontal'
+    className={mx(recipes.separator(), classNames)}
+    ref={forwardedRef}
+  />
 ));
 
 MenuSeparator.displayName = 'Next.Menu.Separator';

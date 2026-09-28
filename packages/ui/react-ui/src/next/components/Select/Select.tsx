@@ -10,9 +10,11 @@ import React, { forwardRef, useMemo } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
+import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
@@ -156,12 +158,33 @@ const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, it
 
 SelectItem.displayName = 'Next.Select.Item';
 
+//
+// Separator
+//
+
+type SelectSeparatorProps = Omit<SeparatorProps, 'orientation' | 'decorative'>;
+
+/** A decorative rule between options: a listbox admits only options and groups, so it takes no separator role. */
+const SelectSeparator = composable<HTMLDivElement, SelectSeparatorProps>((props, forwardedRef) => (
+  <Separator {...props} decorative ref={forwardedRef} />
+));
+
+SelectSeparator.displayName = 'Next.Select.Separator';
+
 export const Select = {
   Root: SelectRoot,
   Label: SelectLabel,
   Trigger: SelectTrigger,
   Content: SelectContent,
   Item: SelectItem,
+  Separator: SelectSeparator,
 };
 
-export type { SelectContentProps, SelectItemProps, SelectLabelProps, SelectRootProps, SelectTriggerProps };
+export type {
+  SelectContentProps,
+  SelectItemProps,
+  SelectLabelProps,
+  SelectRootProps,
+  SelectSeparatorProps,
+  SelectTriggerProps,
+};

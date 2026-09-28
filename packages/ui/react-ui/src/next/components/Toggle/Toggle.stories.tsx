@@ -18,7 +18,7 @@ import { byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../
 const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
-    <Next.Toolbar>
+    <Next.Toolbar.Root>
       <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
       <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
       <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
@@ -31,7 +31,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         onPressedChange={setWrap}
       />
       <Next.Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
-    </Next.Toolbar>
+    </Next.Toolbar.Root>
   );
 };
 

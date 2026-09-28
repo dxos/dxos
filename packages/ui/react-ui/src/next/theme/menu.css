@@ -37,13 +37,6 @@
     color: var(--color-description);
   }
 
-  .nx-menu-separator {
-    height: 1px;
-    margin-block: var(--nx-control-inset);
-    border: none;
-    background: var(--color-separator);
-  }
-
   .nx-menu-group-label {
     display: flex;
     align-items: center;

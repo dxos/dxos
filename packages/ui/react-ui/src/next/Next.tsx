@@ -41,6 +41,8 @@ import {
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
+  Separator as NextSeparator,
+  type SeparatorProps as NextSeparatorProps,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
   Tag as NextTag,
@@ -51,7 +53,7 @@ import {
   Toggle as NextToggle,
   type ToggleProps as NextToggleProps,
   Toolbar as NextToolbar,
-  type ToolbarProps as NextToolbarProps,
+  type ToolbarRootProps as NextToolbarRootProps,
   Tooltip as NextTooltip,
   Typography as NextTypography,
 } from './components/index.ts';
@@ -66,7 +68,7 @@ export namespace Next {
   export type BlockProps = NextBlockProps;
   export const ScrollArea = NextScrollArea;
   export const Toolbar = NextToolbar;
-  export type ToolbarProps = NextToolbarProps;
+  export type ToolbarRootProps = NextToolbarRootProps;
   export const Icon = NextIcon;
   export type IconProps = NextIconProps;
   export const Typography = NextTypography;
@@ -109,4 +111,6 @@ export namespace Next {
   export type TagHue = NextTagHue;
   export const Toggle = NextToggle;
   export type ToggleProps = NextToggleProps;
+  export const Separator = NextSeparator;
+  export type SeparatorProps = NextSeparatorProps;
 }
