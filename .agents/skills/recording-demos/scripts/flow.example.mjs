@@ -11,6 +11,11 @@
  * overlay behave the same), and `page`, the raw Playwright page for anything the ops do not cover. A
  * step that throws stops the run; the driver screenshots the page after every step either way.
  *
+ * `done` is optional: a quick, read-only check that the step's outcome already holds. `run` with
+ * `restart: true` replays the steps before `from` off camera and skips any whose `done` answers true, so
+ * a step that creates something is not repeated on a profile that already has it. Write one for every
+ * step that changes app state; a step without one is always replayed.
+ *
  * Keep the file free of imports: it runs from outside the workspace, where no package resolves.
  */
 
@@ -24,6 +29,8 @@ export const steps = [
   },
   {
     name: 'Enable Chess',
+    done: ({ page }) =>
+      page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.chess' && plugin.enabled)),
     run: async ({ demo, page }) => {
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'chess' });
       await demo.click({ text: 'Chess', exact: true });

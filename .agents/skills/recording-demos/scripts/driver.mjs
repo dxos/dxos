@@ -272,6 +272,9 @@ const describe = async (target, command) => {
  * before its effect replaces it.
  */
 const pointAt = async (target, command, kind) => {
+  if (command.hud === false) {
+    return;
+  }
   const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
   // No box means no element yet; probing it for a name would wait out the default timeout first.
   const label = box
@@ -281,7 +284,7 @@ const pointAt = async (target, command, kind) => {
     await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   }
   await overlay.event({ kind, label, detail: command.value === undefined ? undefined : summarize(command.value) });
-  if (box && command.hud !== false) {
+  if (box) {
     await page.waitForTimeout(command.beat ?? 250);
   }
 };
@@ -417,7 +420,8 @@ const handlers = {
   },
   hover: async (command) => {
     const target = locator(command).first();
-    const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+    const box =
+      command.hud === false ? null : await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
     if (box) {
       await overlay.moveCursor({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
     }
@@ -432,24 +436,31 @@ const handlers = {
   drag: async (command) => {
     const from = command.fromXY ?? (await center(command.from));
     const to = command.toXY ?? (await center(command.to));
-    await overlay.click(from);
-    await overlay.event({
-      kind: 'drag',
-      label: command.label ?? `${command.from ?? 'point'} \u2192 ${command.to ?? 'point'}`,
-    });
+    const visible = command.hud !== false;
+    if (visible) {
+      await overlay.click(from);
+      await overlay.event({
+        kind: 'drag',
+        label: command.label ?? `${command.from ?? 'point'} \u2192 ${command.to ?? 'point'}`,
+      });
+    }
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     const steps = command.steps ?? 20;
     for (let step = 1; step <= steps; step++) {
       await page.mouse.move(from.x + ((to.x - from.x) * step) / steps, from.y + ((to.y - from.y) * step) / steps);
-      await overlay.moveCursor({
-        x: from.x + ((to.x - from.x) * step) / steps,
-        y: from.y + ((to.y - from.y) * step) / steps,
-      });
+      if (visible) {
+        await overlay.moveCursor({
+          x: from.x + ((to.x - from.x) * step) / steps,
+          y: from.y + ((to.y - from.y) * step) / steps,
+        });
+      }
       await page.waitForTimeout(command.stepDelay ?? 16);
     }
     await page.mouse.up();
-    await overlay.click(to);
+    if (visible) {
+      await overlay.click(to);
+    }
     return { from, to };
   },
   waitFor: async (command) => {
@@ -510,6 +521,10 @@ const handlers = {
    * Executes steps of a flow script (see `flow.example.mjs`) against the live page, screenshotting after
    * each one so a failure can be diagnosed from what the page showed rather than guessed at. Stops at the
    * first failure and leaves `next` on the failed step, so a fixed script is retried from there.
+   *
+   * `restart: true` reloads the app and `replay: true` (implied by `restart`) first brings it to the
+   * state `from` expects by running every earlier step off camera — skipping any whose `done` check
+   * already holds — so a flow can be picked up at any step after a reload, a crash or a new session.
    */
   run: async (command) => {
     if (!command.file && !flow.file) {
@@ -536,17 +551,64 @@ const handlers = {
       );
     };
 
-    // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically.
-    const demo = Object.fromEntries(
-      Object.entries(handlers)
-        .filter(([op]) => !['run', 'abort', 'steps', 'stop'].includes(op))
-        .map(([op, handler]) => [op, (args = {}) => handler({ op, ...args })]),
-    );
+    const failure = (error) =>
+      // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
+      stripVTControlCharacters(error.message ?? String(error))
+        .split('\n')
+        .slice(0, 6)
+        .join('\n');
+
+    // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically. The
+    // quiet variant is for replay: no cursor, no pills, no captions, since none of it is the demo.
+    const makeDemo = (quiet) =>
+      Object.fromEntries(
+        Object.entries(handlers)
+          .filter(([op]) => !['run', 'abort', 'steps', 'stop'].includes(op))
+          .map(([op, handler]) => [
+            op,
+            quiet && op === 'caption'
+              ? async () => ({})
+              : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
+          ]),
+      );
+    const demo = makeDemo(false);
     flow.aborted = false;
+
+    const replayed = [];
+    if (command.restart || command.replay) {
+      if (command.restart) {
+        await page.goto(command.url ?? options.url, { waitUntil: 'domcontentloaded' });
+        await page.locator(options.ready).first().waitFor({ state: 'visible', timeout: options['ready-timeout'] });
+        await page.waitForTimeout(options.settle);
+      }
+      const quiet = makeDemo(true);
+      for (let index = 0; index < from; index++) {
+        const step = steps[index];
+        try {
+          if (step.done && (await step.done({ page, demo: quiet }))) {
+            replayed.push({ step: index + 1, name: step.name, skipped: true });
+            continue;
+          }
+          await step.run({ page, demo: quiet });
+          replayed.push({ step: index + 1, name: step.name, ok: true });
+        } catch (error) {
+          flow.next = index;
+          replayed.push({
+            step: index + 1,
+            name: step.name,
+            ok: false,
+            error: failure(error),
+            screenshot: await screenshot(index),
+          });
+          return { replayed, steps: [], failed: index + 1, next: index + 1, of: steps.length };
+        }
+      }
+    }
+
     const results = [];
     for (let index = from; index <= until; index++) {
       if (flow.aborted) {
-        return { steps: results, aborted: true, next: index + 1, of: steps.length };
+        return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
       }
       const step = steps[index];
       try {
@@ -559,20 +621,16 @@ const handlers = {
           step: index + 1,
           name: step.name,
           ok: false,
-          // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
-          error: stripVTControlCharacters(error.message ?? String(error))
-            .split('\n')
-            .slice(0, 6)
-            .join('\n'),
+          error: failure(error),
           screenshot: await screenshot(index),
         });
-        return { steps: results, failed: index + 1, next: index + 1, of: steps.length };
+        return { replayed, steps: results, failed: index + 1, next: index + 1, of: steps.length };
       }
       if (index < until) {
         await page.waitForTimeout(command.pace ?? options.pace);
       }
     }
-    return { steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
+    return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
   },
   /** Takes effect between steps; the step in flight finishes first. */
   abort: () => {

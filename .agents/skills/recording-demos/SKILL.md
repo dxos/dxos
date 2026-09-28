@@ -106,6 +106,31 @@ C '{"op":"abort"}'                                 # stops the run in flight, be
 - **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
   can send `abort`.
 
+### Restarting from a step
+
+A flow is written to be picked up at any step, not only replayed from the top. A step that changes
+app state carries a `done` check next to its `run`. `done` is a quick, read-only test that answers
+whether the step's outcome already holds, such as whether the project exists or the plugin is on.
+
+```bash
+C '{"op":"run","from":4,"restart":true}'        # reload the app, bring it to step 4 off camera, run 4 on
+C '{"op":"run","from":4,"until":4,"replay":true}' # same without the reload, for a page already loaded
+```
+
+- **`restart: true` reloads the app,** waits for it to be ready (`--ready`/`--settle`, as for the
+  boot), then replays. Use it after the page is wedged, after a driver restart, or when a later
+  step needs a clean UI to start from.
+- **`replay: true` only replays.** It runs every step before `from` off camera: no cursor, no pills,
+  no captions, no pacing. A step whose `done` answers true is skipped, so work already in the
+  profile is not redone. The reply lists `replayed` steps as `ok` or `skipped`, and a replay step
+  that throws stops the run with its screenshot, like any other failure.
+- **Write `done` for every step that creates or changes something.** A step without one is always
+  replayed, which is fine for navigation but duplicates a create. Keep `done` read-only and fast:
+  `page.evaluate` against app state, or a locator `count()`, never a gesture.
+- **The persistent profile is why this matters.** State outlives the session, so the next session
+  usually starts partway through a flow. Restarting from the step the user names is what gets them
+  back on camera quickly.
+
 Single ops are still the right tool for a one-off correction the user asks for on the spot ("click
 that again"), and for probing a failure before you fix the script.
 
@@ -118,8 +143,9 @@ that again"), and for probing a failure before you fix the script.
    `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
    and what comes next, then wait.
 3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
-   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. A
-   change the user asks for is not a divergence to report.
+   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. "Start
+   again from step 4" is `run` with `from: 4` and `restart: true`. A change the user asks for is not
+   a divergence to report.
 4. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
    screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
    only when the user says so, since the retry happens on camera.
