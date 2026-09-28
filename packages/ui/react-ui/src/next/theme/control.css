@@ -34,6 +34,16 @@
     padding-block: calc((var(--nx-block-size) - var(--nx-line-height)) / 2);
   }
 
+  .nx-typography[data-truncate] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nx-typography[data-tone='description'] {
+    color: var(--color-description);
+  }
+
   .nx-icon {
     flex-shrink: 0;
     width: var(--nx-icon-size);
@@ -147,6 +157,18 @@
   .nx-label {
     font-size: var(--nx-label-font-size);
     line-height: var(--nx-label-line-height);
+  }
+  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`). */
+  .nx-label[data-sr-only] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
   }
 
   /* Field (decision 13): a flex stack in the content track; the field pads its control out to a block. */
@@ -303,6 +325,14 @@
   }
   .nx-group[data-justify='between'] {
     justify-content: space-between;
+  }
+  /* Equal shares of the width; a lone child stretches across (the current `Form.Submit`). */
+  .nx-group[data-fill] {
+    flex-wrap: nowrap;
+  }
+  .nx-group[data-fill] > * {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   /*

@@ -91,6 +91,7 @@ with Phase 4 milestone 5).
 ### Tasks
 
 - [x] **Separator** — `Next.Separator`; `Toolbar.Separator` (Toolbar becomes `Toolbar.Root`), `Menu.Separator`, `Select.Separator` (DESIGN.md follow-up 38).
+- [x] **Text and layout** — Typography `truncate`/`tone`, Label `srOnly`, Group `fill`, Container `gap`, ScrollArea `orientation`/`autoHide`/`snap`/`scrollbars`; section label and Block `compact`/`square` deliberate (DESIGN.md follow-up 39).
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 

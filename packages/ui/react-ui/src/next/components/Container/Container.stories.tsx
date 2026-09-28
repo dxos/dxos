@@ -53,6 +53,10 @@ type StoryArgs = SizeArgs & {
 const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
   <>
     <Section size={size} />
+    <Next.Container gap='lg' data-testid={`gap-${size}`}>
+      <Next.Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Next.Typography>
+      <Next.Typography data-testid={`gap-second-${size}`}>between its children</Next.Typography>
+    </Next.Container>
     {narrow && (
       <div className='@container w-[20rem]'>
         <Section size={size} prefix='narrow-' />
@@ -80,6 +84,7 @@ export const Default: Story = {};
  * A row is one block tall and centres its control (finding 11); rails, the content-sized label track and full bleed
  * line up across nested (subgrid) containers; `level='+1'` steps one rung above its host without leaving the host's
  * tracks (finding 8); below the query threshold rails collapse to the inset and the label stacks above its input.
+ * `gap` spaces rows only (0.75rem for `lg`), leaving the shared columns alone.
  */
 export const Test: Story = {
   args: { narrow: true },
@@ -92,6 +97,12 @@ export const Test: Story = {
       await expect(centreY(input), size).toBeCloseTo(centreY(row), 0);
     }
     await expectScoped(canvasElement);
+
+    const first = rect(canvasElement, 'gap-first-md');
+    const second = rect(canvasElement, 'gap-second-md');
+    await expect(second.top - first.bottom).toBeCloseTo(12, 0);
+    await expect(second.left).toBeCloseTo(first.left, 0);
+    await expect(getComputedStyle(byTestId(canvasElement, 'gap-md')).columnGap).toBe('normal');
 
     for (const size of SIZES) {
       const section = rect(canvasElement, `section-${size}`);

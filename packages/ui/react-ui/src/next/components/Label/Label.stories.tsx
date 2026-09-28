@@ -31,6 +31,12 @@ const DefaultStory = ({ size }: SizeArgs) => (
       </Next.Label>
       <Next.Input id={`display-${size}`} data-testid={`display-${size}`} />
     </Next.Container>
+    <Next.Container>
+      <Next.Label htmlFor={`search-${size}`} srOnly data-testid={`hidden-label-${size}`}>
+        Search {size}
+      </Next.Label>
+      <Next.Input id={`search-${size}`} placeholder='Search' data-testid={`search-${size}`} />
+    </Next.Container>
   </Next.Container>
 );
 
@@ -49,7 +55,8 @@ export const Default: Story = {};
 
 /**
  * A label names its control, focuses it on click and reads one text step below it; the content-sized label track is
- * shared through subgrid, so every row's input starts at the same x.
+ * shared through subgrid, so every row's input starts at the same x. An `srOnly` label is visually hidden and takes no
+ * box, yet still names its input.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -66,6 +73,14 @@ export const Test: Story = {
     }
     const md = parseFloat(getComputedStyle(byTestId(canvasElement, 'label-md')).fontSize);
     await expect(md).toBeLessThan(parseFloat(getComputedStyle(byTestId(canvasElement, 'input-md')).fontSize));
+
+    await expect(canvas.getByLabelText('Search md')).toBe(byTestId(canvasElement, 'search-md'));
+    const hidden = byTestId(canvasElement, 'hidden-label-md').getBoundingClientRect();
+    await expect(hidden.width).toBeLessThanOrEqual(1);
+    await expect(byTestId(canvasElement, 'search-md').getBoundingClientRect().left).toBeCloseTo(
+      byTestId(canvasElement, 'label-md').getBoundingClientRect().left,
+      0,
+    );
 
     await userEvent.click(canvas.getByText('Name md'));
     await expect(byTestId(canvasElement, 'input-md')).toHaveFocus();

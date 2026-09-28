@@ -14,7 +14,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, centreY, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 
 random.seed(123);
 
@@ -27,6 +27,14 @@ const DefaultStory = ({ size }: SizeArgs) => (
         <Next.Icon icon='ph--chat-circle--regular' />
       </Next.Block>
       <Next.Typography data-testid={`text-${size}`}>{TEXT}</Next.Typography>
+    </Next.Container>
+    <Next.Container layout='row' columns='minmax(0, 1fr) auto'>
+      <Next.Typography truncate data-testid={`truncate-${size}`}>
+        {TEXT}
+      </Next.Typography>
+      <Next.Typography tone='description' data-testid={`description-${size}`}>
+        Description
+      </Next.Typography>
     </Next.Container>
     <Next.Container>
       <Next.Typography asChild>
@@ -51,7 +59,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. */
+/**
+ * Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. `truncate`
+ * keeps one block-tall line ending in an ellipsis; `tone='description'` takes the secondary text colour.
+ */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
@@ -62,6 +73,18 @@ export const Test: Story = {
       await expect(text.height, size).toBeGreaterThan(parseFloat(style.lineHeight) * 2);
       const firstLine = text.top + parseFloat(style.paddingTop) + parseFloat(style.lineHeight) / 2;
       await expect(centreY(icon), size).toBeCloseTo(firstLine, 0);
+    }
+
+    for (const size of SIZES) {
+      const truncated = byTestId(canvasElement, `truncate-${size}`);
+      await expect(truncated.getBoundingClientRect().height, size).toBeCloseTo(GEOMETRY[size].block, 0);
+      await expect(truncated.scrollWidth, size).toBeGreaterThan(truncated.clientWidth);
+      await expect(getComputedStyle(truncated).textOverflow).toBe('ellipsis');
+      const description = byTestId(canvasElement, `description-${size}`);
+      await expect(getComputedStyle(description).color).not.toBe(getComputedStyle(truncated).color);
+      await expect(description.getBoundingClientRect().right).toBeLessThanOrEqual(
+        sizeRow(canvasElement, size).getBoundingClientRect().right,
+      );
     }
 
     // `asChild` moves the metrics onto the heading itself.

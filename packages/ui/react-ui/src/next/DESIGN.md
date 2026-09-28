@@ -295,6 +295,19 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     listbox owns only options and groups. `Toolbar.Separator` takes the axis across the toolbar's orientation and is
     not a roving item. Toolbar therefore became a namespace (`Toolbar.Root`), like every other composite.
 
+39. **Text and layout parity.** `Typography truncate` keeps one block-tall line with an ellipsis and `tone='description'`
+    takes `--color-description` (the current `Card.Text` variants). `Label srOnly` hides the label visually but keeps
+    it naming its control. `Group fill` gives every child an equal share (`flex: 1 1 0`), which is also the stretch
+    mode: a lone child (the current `Form.Submit`) spans the group, so no second prop. `Container gap` sets the row
+    gap only (`none|sm|md|lg` = 0/0.25/0.5/0.75rem, the current `ColumnGap`), since columns are shared through subgrid
+    and a column gap would move the parent's tracks. `Column.Section label` needs no part: an inheriting Container
+    with `Typography asChild` on an `<h2>` is the section, and a `label` prop would add a sibling that `asChild`
+    cannot carry. `Block` stays one block square: `square` is its only shape and `compact` would break the rail
+    alignment it exists for. ScrollArea takes `orientation` (`vertical|horizontal|all`, ui-types `AllowedAxis`, the
+    current values), `autoHide` (thumbs show on hover, through the thumbs' Tailwind group names), `snap` (mandatory on
+    the scrolling axis) and `scrollbars={false}` (no overlay thumb and no native bar); a horizontal pane reserves no
+    end-track width.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

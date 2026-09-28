@@ -15,7 +15,7 @@ import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 
 const JUSTIFY = ['start', 'end', 'between'] as const;
 
-/** One Group per `justify`, each holding a Cancel and a primary Save. */
+/** One Group per `justify`, each holding a Cancel and a primary Save, then a `fill` pair and a lone `fill` Submit. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {JUSTIFY.map((justify) => (
@@ -30,6 +30,17 @@ const DefaultStory = ({ size }: SizeArgs) => (
         </Next.Button>
       </Next.Group>
     ))}
+    <Next.Group fill data-testid={`fill-${size}`}>
+      <Next.Button data-testid={`fill-cancel-${size}`}>Cancel</Next.Button>
+      <Next.Button variant='primary' data-testid={`fill-save-${size}`}>
+        Save changes
+      </Next.Button>
+    </Next.Group>
+    <Next.Group fill data-testid={`stretch-${size}`}>
+      <Next.Button variant='primary' data-testid={`stretch-submit-${size}`}>
+        Submit
+      </Next.Button>
+    </Next.Group>
   </>
 );
 
@@ -54,7 +65,8 @@ export const Default: Story = {};
 
 /**
  * A group claims no role or keyboard contract, unlike Toolbar (follow-up 1); by default it packs to the start, and
- * `justify` packs it to the end or spreads it between.
+ * `justify` packs it to the end or spreads it between. `fill` gives each child an equal share of the width, so a lone
+ * child stretches across the group.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -73,5 +85,17 @@ export const Test: Story = {
     const between = edges(canvasElement, 'between');
     await expect(between.cancel.left).toBeCloseTo(between.group.left, 0);
     await expect(between.save.right).toBeCloseTo(between.group.right, 0);
+
+    const fill = byTestId(canvasElement, 'fill-md').getBoundingClientRect();
+    const cancel = byTestId(canvasElement, 'fill-cancel-md').getBoundingClientRect();
+    const save = byTestId(canvasElement, 'fill-save-md').getBoundingClientRect();
+    await expect(cancel.width).toBeCloseTo(save.width, 0);
+    await expect(cancel.left).toBeCloseTo(fill.left, 0);
+    await expect(save.right).toBeCloseTo(fill.right, 0);
+    const stretch = byTestId(canvasElement, 'stretch-md').getBoundingClientRect();
+    await expect(byTestId(canvasElement, 'stretch-submit-md').getBoundingClientRect().width).toBeCloseTo(
+      stretch.width,
+      0,
+    );
   },
 };

@@ -17,6 +17,7 @@ import {
   type ComboboxFilter as NextComboboxFilter,
   type ComboboxOption as NextComboboxOption,
   Container as NextContainer,
+  type ContainerGap as NextContainerGap,
   type ContainerProps as NextContainerProps,
   DateInput as NextDateInput,
   type DateInputProps as NextDateInputProps,
@@ -56,6 +57,7 @@ import {
   type ToolbarRootProps as NextToolbarRootProps,
   Tooltip as NextTooltip,
   Typography as NextTypography,
+  type TypographyProps as NextTypographyProps,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -63,6 +65,7 @@ export namespace Next {
   export const Container = NextContainer;
   export type ContainerProps = NextContainerProps;
   export type Gutter = NextGutter;
+  export type ContainerGap = NextContainerGap;
   export type Level = NextLevel;
   export const Block = NextBlock;
   export type BlockProps = NextBlockProps;
@@ -72,6 +75,7 @@ export namespace Next {
   export const Icon = NextIcon;
   export type IconProps = NextIconProps;
   export const Typography = NextTypography;
+  export type TypographyProps = NextTypographyProps;
   export const Group = NextGroup;
   export type GroupProps = NextGroupProps;
   export const Label = NextLabel;
