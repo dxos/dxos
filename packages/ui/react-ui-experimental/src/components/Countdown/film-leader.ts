@@ -60,7 +60,9 @@ export const FILM_LEADER_STYLES = `
   .logo svg { width: 100%; height: 100%; }
   .logo { transition: transform 600ms cubic-bezier(.6,0,.3,1); }
   .num { position: absolute; inset: 0; display: grid; place-items: center;
-    font: 800 132px/1 ui-sans-serif, system-ui, sans-serif; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
+    font: 800 132px/1 ui-sans-serif, system-ui, sans-serif;
+    /* Tailwind sky-400: the leader is injected where no theme tokens reach. */
+    color: #38bdf8; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: film-leader-pop 1000ms ease-out; }
   @keyframes film-leader-pop { 0% { transform: scale(1.35); opacity: 0; } 15% { transform: scale(1); opacity: 1; }
     85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0.2; } }
