@@ -43,8 +43,6 @@ const VARIANTS: { name: string; variant: Next.ButtonVariant; valence?: Next.Butt
 const HUES: Next.ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
 
 type StoryArgs = SizeArgs & {
-  variant?: Next.ButtonVariant;
-  valence?: Next.ButtonValence;
   /** Also show every variant, icon-only then as text. */
   variants?: boolean;
 };
@@ -52,31 +50,14 @@ type StoryArgs = SizeArgs & {
 /**
  * A toolbar of icon-only, text, disabled, leading-icon and trailing-icon buttons over a row with a rail Block, so the
  * first button's icon can be compared with the rail's; then caret, compact, tooltip-side and hue buttons.
- * `variant`/`valence` apply to the default buttons.
  */
-const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
+const DefaultStory = ({ size, variants }: StoryArgs) => (
   <>
     <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Button
-        icon='ph--plus--regular'
-        label={`Add ${size}`}
-        iconOnly
-        variant={variant}
-        valence={valence}
-        data-testid={`add-${size}`}
-      />
-      <Next.Button
-        icon='ph--minus--regular'
-        label={`Remove ${size}`}
-        iconOnly
-        variant={variant}
-        valence={valence}
-        data-testid={`remove-${size}`}
-      />
+      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
+      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
       <Next.Button icon='ph--trash--regular' label={`Delete ${size}`} iconOnly disabled />
-      <Next.Button variant={variant} valence={valence} data-testid={`button-${size}`}>
-        Save
-      </Next.Button>
+      <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
       <Next.Button variant='primary' data-testid={`primary-${size}`}>
         Publish
       </Next.Button>
@@ -148,11 +129,7 @@ const meta = {
   decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },
   args: { size: 'md' },
-  argTypes: {
-    ...SIZE_ARG_TYPES,
-    variant: { control: 'select', options: VARIANTS.map(({ variant }) => variant) },
-    valence: { control: 'select', options: ['neutral', 'info', 'success', 'warning', 'error'] },
-  },
+  argTypes: SIZE_ARG_TYPES,
 } satisfies Meta<StoryArgs>;
 
 export default meta;
