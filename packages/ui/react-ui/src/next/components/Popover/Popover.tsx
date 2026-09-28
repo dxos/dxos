@@ -69,11 +69,13 @@ PopoverAnchor.displayName = 'Next.Popover.Anchor';
 type PopoverContentProps = ThemedClassName<PopoverPrimitive.ContentProps> & {
   /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
   size?: Size;
+  /** Point at the trigger with an arrow in the popup's surface colour. */
+  arrow?: boolean;
 };
 
-/** Portalled panel at `level='popup'`, padded by the size's gap. */
+/** Portalled panel at `level='popup'`, padded by the size's gap, with an arrow unless `arrow={false}`. */
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
-  ({ classNames, size = 'md', children, ...props }, forwardedRef) => (
+  ({ classNames, size = 'md', arrow = true, children, ...props }, forwardedRef) => (
     <Portal>
       <PopoverPrimitive.Positioner>
         <PopoverPrimitive.Content
@@ -84,6 +86,11 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           ref={forwardedRef}
         >
           {children}
+          {arrow && (
+            <PopoverPrimitive.Arrow className={recipes.arrow()}>
+              <PopoverPrimitive.ArrowTip className={recipes.arrowTip()} />
+            </PopoverPrimitive.Arrow>
+          )}
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Positioner>
     </Portal>

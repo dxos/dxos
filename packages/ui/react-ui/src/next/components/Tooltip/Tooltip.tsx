@@ -78,11 +78,13 @@ TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
 type TooltipContentProps = ThemedClassName<TooltipPrimitive.ContentProps> & {
   /** Portalled content leaves the trigger's sized scope, so it takes its own size; `sm` reads as a caption. */
   size?: Size;
+  /** Point at the trigger with an arrow in the popup's surface colour. */
+  arrow?: boolean;
 };
 
-/** Portalled text at `level='popup'`, capped at 20rem wide. */
+/** Portalled text at `level='popup'`, capped at 20rem wide, with an arrow unless `arrow={false}`. */
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
-  ({ classNames, size = 'sm', children, ...props }, forwardedRef) => (
+  ({ classNames, size = 'sm', arrow = true, children, ...props }, forwardedRef) => (
     <Portal>
       <TooltipPrimitive.Positioner>
         <TooltipPrimitive.Content
@@ -93,6 +95,11 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
           ref={forwardedRef}
         >
           {children}
+          {arrow && (
+            <TooltipPrimitive.Arrow className={recipes.arrow()}>
+              <TooltipPrimitive.ArrowTip className={recipes.arrowTip()} />
+            </TooltipPrimitive.Arrow>
+          )}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Positioner>
     </Portal>

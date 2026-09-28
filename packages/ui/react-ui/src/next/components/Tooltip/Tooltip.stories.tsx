@@ -10,6 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { expectArrow } from '../../testing.ts';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
@@ -61,12 +62,7 @@ export const Open: Story = {
     const content = body.getByTestId('save-tooltip');
     await expect(content).toHaveAttribute('data-surface', 'popup');
     await expect(content).toHaveAttribute('data-size', 'sm');
-    await waitFor(() => {
-      const trigger = save.getBoundingClientRect();
-      const popup = content.getBoundingClientRect();
-      const gap = Math.max(popup.top - trigger.bottom, trigger.top - popup.bottom);
-      return expect(gap >= 0 && gap <= 3).toBe(true);
-    });
+    await expectArrow(save, content);
 
     // Hovering another trigger swaps tooltips after the open delay; long text wraps within the 20rem cap.
     await userEvent.hover(canvas.getByTestId('publish'));

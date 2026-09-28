@@ -30,6 +30,19 @@ export const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
 
 export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;
 
+/** A popup's arrow part, if it renders one. */
+const arrowOf = (popup: HTMLElement) => popup.querySelector<HTMLElement>('[data-part="arrow"]');
+
+/** The popup's box grown by its arrow, whose outer edge is the popup's edge facing the anchor. */
+const withArrow = (popup: HTMLElement) => {
+  const rect = popup.getBoundingClientRect();
+  const arrow = arrowOf(popup)?.getBoundingClientRect();
+  return {
+    top: Math.min(rect.top, arrow?.top ?? rect.top),
+    bottom: Math.max(rect.bottom, arrow?.bottom ?? rect.bottom),
+  };
+};
+
 /** Floating UI's default `overflowPadding`: a popup is shifted to keep this far from the viewport edge. */
 const OVERFLOW_PADDING = 8;
 
@@ -46,13 +59,42 @@ export const expectAnchoredBelow = async (
   await waitFor(async () => {
     const anchorRect = anchor.getBoundingClientRect();
     const popupRect = popup.getBoundingClientRect();
-    const gap = popupRect.top - anchorRect.bottom;
+    const gap = withArrow(popup).top - anchorRect.bottom;
     const ideal = align === 'start' ? anchorRect.left : centreX(anchorRect) - popupRect.width / 2;
     const maxLeft = popup.ownerDocument.documentElement.clientWidth - OVERFLOW_PADDING - popupRect.width;
     const expected = Math.min(Math.max(ideal, OVERFLOW_PADDING), maxLeft);
     const where = `popup ${JSON.stringify(popupRect)}, anchor ${JSON.stringify(anchorRect)}`;
     await expect(gap >= 0 && gap <= 3, `gap ${gap}: ${where}`).toBe(true);
     await expect(Math.abs(popupRect.left - expected) <= 1, `left ${popupRect.left} != ${expected}: ${where}`).toBe(
+      true,
+    );
+  });
+};
+
+/**
+ * Asserts `popup` shows an arrow in its own surface colour on the side facing `anchor`, within the anchor's span and
+ * with its tip 0–3px (the gutter) from it; the popup body keeps the arrow's half-size further off.
+ */
+export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
+  const arrow = arrowOf(popup);
+  await expect(arrow, 'arrow').not.toBeNull();
+  const tip = arrow?.querySelector<HTMLElement>('[data-part="arrow-tip"]');
+  await expect(tip && getComputedStyle(tip).backgroundColor).toBe(getComputedStyle(popup).backgroundColor);
+  await waitFor(async () => {
+    const anchorRect = anchor.getBoundingClientRect();
+    const popupRect = popup.getBoundingClientRect();
+    const arrowRect = arrow?.getBoundingClientRect() ?? popupRect;
+    const below = popupRect.top >= anchorRect.bottom;
+    const tipGap = below ? arrowRect.top - anchorRect.bottom : anchorRect.top - arrowRect.bottom;
+    const bodyGap = below ? popupRect.top - anchorRect.bottom : anchorRect.top - popupRect.bottom;
+    const where = `arrow ${JSON.stringify(arrowRect)}, popup ${JSON.stringify(popupRect)}, anchor ${JSON.stringify(anchorRect)}`;
+    await expect(tipGap >= 0 && tipGap <= 3, `tip gap ${tipGap}: ${where}`).toBe(true);
+    await expect(bodyGap - tipGap, `arrow overhang: ${where}`).toBeCloseTo(arrowRect.height / 2, 0);
+    // The rotated tip's corners touch the arrow box, so it overhangs neither the box nor the gutter.
+    const tipRect = tip?.getBoundingClientRect();
+    await expect(Math.abs((tipRect?.top ?? Number.NaN) - arrowRect.top) <= 0.5, `tip overhang: ${where}`).toBe(true);
+    const centre = centreX(arrowRect);
+    await expect(centre >= anchorRect.left && centre <= anchorRect.right, `arrow centre ${centre}: ${where}`).toBe(
       true,
     );
   });
@@ -79,7 +121,7 @@ export const expectTooltip = async (trigger: HTMLElement, text: string) => {
   const tooltip = body.getByRole('tooltip');
   await waitFor(() => {
     const anchor = trigger.getBoundingClientRect();
-    const popup = tooltip.getBoundingClientRect();
+    const popup = withArrow(tooltip);
     const gap = Math.max(popup.top - anchor.bottom, anchor.top - popup.bottom);
     return expect(gap >= 0 && gap <= 3).toBe(true);
   });

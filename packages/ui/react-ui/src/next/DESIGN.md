@@ -177,7 +177,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     from its trigger and mounts only while open. Items are block rows (leading Icon, label, trailing shortcut in
     `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
 17. **Tooltip** is Ark Tooltip: portalled text at `level='popup'` with an explicit `size` (`sm` by default), padded by
-    `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`) and without an arrow.
+    `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`), with an arrow (follow-up 32).
     Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20); IconButton uses it for its label (22).
 18. ~~**Checkbox and Switch occupy an IconButton's cell**~~ (superseded by 19): the box/track was centred in a
     `--nx-control-size`-wide cell.
@@ -235,6 +235,11 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     listbox rendered unpositioned at the viewport origin (likewise a Menu/Popover `asChild` trigger on a toolbar
     Button, and an Input's label `for`). `expectAnchoredBelow` (`testing.ts`) asserts gap and alignment in the
     Select, Combobox, Menu, Popover and Form stories.
+32. **Tooltip and Popover arrows**, on by default (`arrow={false}` on `Content` drops them), as the current primitives
+    show them. Ark's `Arrow`/`ArrowTip` sized `--arrow-size: calc(var(--nx-gap-size) + 2px)` and painted with the
+    popup's `--surface-bg`, so the arrow reads as part of the popup. zag grows the gutter by half the arrow box; the
+    tip is scaled by 1/√2 so its corners touch that box instead of overhanging it, keeping the tip exactly the 2px
+    gutter from the trigger. `expectArrow` (`testing.ts`) asserts colour, side, span and tip gap.
 
 ## Phase 3: react-ui-form port
 

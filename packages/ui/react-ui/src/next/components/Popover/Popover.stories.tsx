@@ -11,18 +11,19 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
-import { GEOMETRY, expectAnchoredBelow } from '../../testing.ts';
+import { GEOMETRY, expectAnchoredBelow, expectArrow } from '../../testing.ts';
 
 type StoryArgs = {
   size?: Size;
+  arrow?: boolean;
 };
 
-const DefaultStory = ({ size }: StoryArgs) => (
+const DefaultStory = ({ size, arrow }: StoryArgs) => (
   <Next.Popover.Root>
     <Next.Popover.Trigger asChild>
       <Next.Button data-testid='trigger'>Share</Next.Button>
     </Next.Popover.Trigger>
-    <Next.Popover.Content size={size} data-testid='popover'>
+    <Next.Popover.Content size={size} arrow={arrow} data-testid='popover'>
       <Next.Popover.Header>
         <Next.Popover.Title>Share space</Next.Popover.Title>
         <Next.Popover.CloseTrigger />
@@ -69,6 +70,7 @@ export const Open: Story = {
     await expect(popover).toHaveAttribute('data-size', 'md');
     await expect(getComputedStyle(popover).getPropertyValue('--nx-level').trim()).toBe('5');
     await expectAnchoredBelow(trigger, popover, 'center');
+    await expectArrow(trigger, popover);
     await waitFor(() => expect(popover.contains(canvasElement.ownerDocument.activeElement)).toBe(true));
   },
 };
@@ -82,6 +84,18 @@ export const Small: Story = {
     await expect(popover).toHaveAttribute('data-size', 'sm');
     const header = popover.querySelector<HTMLElement>('[data-part="header"]');
     await expect(header?.getBoundingClientRect().height).toBeCloseTo(GEOMETRY.sm.block, 0);
+  },
+};
+
+/** `arrow={false}` drops the arrow and its share of the gutter, so the panel sits 2px from the trigger. */
+export const NoArrow: Story = {
+  args: { arrow: false },
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByTestId('trigger');
+    await userEvent.click(trigger);
+    const popover = await within(canvasElement.ownerDocument.body).findByRole('dialog');
+    await expect(popover.querySelector('[data-part="arrow"]')).toBeNull();
+    await expectAnchoredBelow(trigger, popover, 'center');
   },
 };
 
