@@ -115,13 +115,36 @@ export const steps = [
   {
     name: 'Open the agent session',
     run: async ({ demo, page }) => {
-      // Assigning does not always bring the Assistant companion forward, so select its tab explicitly.
+      // Assigning does not reliably bring the Assistant companion forward: the pane can be closed, or its
+      // tab still mounting, so open the pane if needed and confirm the tab took rather than clicking once.
       await page.getByTestId('projectsPlugin.pipeline.chart').waitFor({ state: 'visible', timeout: 30_000 });
-      await demo.click({
-        selector: '[data-testid="deck.companion"] >> role=tab[name="Assistant"]',
-        label: 'Assistant',
-      });
-      await page.getByTestId('assistant.chat-status').waitFor({ state: 'visible', timeout: 30_000 });
+      const TAB = '[data-testid="deck.companion"] >> role=tab[name="Assistant"]';
+      const tab = page.locator(TAB).first();
+      const status = page.getByTestId('assistant.chat-status');
+      const visible = (locator, timeout) =>
+        locator.waitFor({ state: 'visible', timeout }).then(
+          () => true,
+          () => false,
+        );
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (!(await visible(tab, 10_000))) {
+          await demo.click({
+            selector:
+              '[data-testid="deck.plank"]:has([data-testid="projectsPlugin.pipeline.chart"]) [data-testid="plankHeading.companion"]',
+            label: 'Open companion',
+          });
+          if (!(await visible(tab, 10_000))) {
+            continue;
+          }
+        }
+        if ((await tab.getAttribute('aria-selected')) !== 'true') {
+          await demo.click({ selector: TAB, label: 'Assistant' });
+        }
+        if ((await tab.getAttribute('aria-selected')) === 'true' && (await visible(status, 15_000))) {
+          return;
+        }
+      }
+      throw new Error('the Assistant companion did not open after assigning the tasks');
     },
   },
   {
