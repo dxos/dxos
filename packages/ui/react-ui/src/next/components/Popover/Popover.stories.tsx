@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
-import { GEOMETRY } from '../../testing.ts';
+import { GEOMETRY, expectAnchoredBelow } from '../../testing.ts';
 
 type StoryArgs = {
   size?: Size;
@@ -68,11 +68,7 @@ export const Open: Story = {
     await expect(popover).toHaveAttribute('data-surface', 'popup');
     await expect(popover).toHaveAttribute('data-size', 'md');
     await expect(getComputedStyle(popover).getPropertyValue('--nx-level').trim()).toBe('5');
-    await waitFor(() => {
-      const anchor = trigger.getBoundingClientRect();
-      const popup = popover.getBoundingClientRect();
-      return expect(Math.max(popup.top - anchor.bottom, anchor.top - popup.bottom)).toBeCloseTo(2, 0);
-    });
+    await expectAnchoredBelow(trigger, popover, 'center');
     await waitFor(() => expect(popover.contains(canvasElement.ownerDocument.activeElement)).toBe(true));
   },
 };

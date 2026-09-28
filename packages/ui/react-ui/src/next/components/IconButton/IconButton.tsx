@@ -22,13 +22,11 @@ export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
   ({ icon, label, showTooltip = true, type = 'button', id, onFocus, ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
     const { className, ...rest } = composableProps(props, { classNames: recipes.button() });
-    // A toolbar item or an `asChild` parent may own the id, so the tooltip looks its trigger up by it.
-    const triggerId = toolbarItem?.id ?? id;
     const button = (
       <button
         {...rest}
         {...toolbarItem}
-        id={triggerId}
+        id={id}
         onFocus={(event) => {
           onFocus?.(event);
           toolbarItem?.onFocus();
@@ -50,7 +48,8 @@ export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
     }
 
     return (
-      <Tooltip.Root ids={triggerId ? { trigger: triggerId } : undefined}>
+      // An `asChild` parent (e.g. `Popover.Trigger`) may own the id, so the tooltip looks its trigger up by it.
+      <Tooltip.Root ids={id ? { trigger: id } : undefined}>
         <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
         <Tooltip.Content>{label}</Tooltip.Content>
       </Tooltip.Root>

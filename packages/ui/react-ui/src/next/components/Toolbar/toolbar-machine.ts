@@ -31,7 +31,6 @@ export type ToolbarSchema = {
 export type ToolbarService = Service<ToolbarSchema>;
 
 const getRootId = (scope: Scope) => `toolbar:${scope.id}`;
-const getItemId = (scope: Scope, value: string) => `toolbar:${scope.id}:item:${value}`;
 
 /** Items owned by this toolbar only, so a nested toolbar keeps its own roving set. */
 const getItems = (scope: Scope): HTMLElement[] => {
@@ -127,8 +126,8 @@ export type ToolbarApi = {
     'data-orientation': Orientation;
     'onKeyDown': (event: KeyEvent) => void;
   };
+  /** No `id`: items are found by `data-toolbar-item`, so a composing machine (Select, Tooltip) keeps its own ids. */
   getItemProps: (options: { value: string; disabled?: boolean }) => {
-    'id': string;
     'tabIndex': number;
     'data-toolbar-item': string;
     'data-value': string;
@@ -164,7 +163,6 @@ export const connect = (service: ToolbarService): ToolbarApi => {
       },
     }),
     getItemProps: ({ value, disabled }) => ({
-      'id': getItemId(scope, value),
       // Until an item is known every item stays tabbable, so the toolbar is never unreachable.
       'tabIndex': disabled ? -1 : focusedValue === null || focusedValue === value ? 0 : -1,
       'data-toolbar-item': getRootId(scope),

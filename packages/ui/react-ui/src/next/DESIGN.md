@@ -230,6 +230,11 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     machine (decision 9) and the label Tooltip is IconButton's; pressed takes `--color-accent-bg`/`-fg`.
 30. **Select option icons.** `SelectOption.icon` leads the item and, once selected, the trigger's value (read from
     the select context); the value text takes the free space so the caret stays at the end.
+31. **Toolbar items claim no `id`.** The roving machine finds its items by `data-toolbar-item`, so it leaves `id` to
+    the machine composing the element. A toolbar item id overwrote a Select trigger's, zag found no anchor, and the
+    listbox rendered unpositioned at the viewport origin (likewise a Menu/Popover `asChild` trigger on a toolbar
+    Button, and an Input's label `for`). `expectAnchoredBelow` (`testing.ts`) asserts gap and alignment in the
+    Select, Combobox, Menu, Popover and Form stories.
 
 ## Phase 3: react-ui-form port
 

@@ -28,6 +28,36 @@ export const byTestId = (root: HTMLElement, testId: string) => {
 
 export const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
 
+export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;
+
+/** Floating UI's default `overflowPadding`: a popup is shifted to keep this far from the viewport edge. */
+const OVERFLOW_PADDING = 8;
+
+/**
+ * Waits until `popup` sits 0–3px below `anchor` (the 2px gutter plus rounding) with its start edge or centre aligned
+ * to the anchor's, allowing only the shift that keeps it inside the viewport; an unpositioned popup sits at the
+ * viewport origin and fails.
+ */
+export const expectAnchoredBelow = async (
+  anchor: HTMLElement,
+  popup: HTMLElement,
+  align: 'start' | 'center' = 'start',
+) => {
+  await waitFor(async () => {
+    const anchorRect = anchor.getBoundingClientRect();
+    const popupRect = popup.getBoundingClientRect();
+    const gap = popupRect.top - anchorRect.bottom;
+    const ideal = align === 'start' ? anchorRect.left : centreX(anchorRect) - popupRect.width / 2;
+    const maxLeft = popup.ownerDocument.documentElement.clientWidth - OVERFLOW_PADDING - popupRect.width;
+    const expected = Math.min(Math.max(ideal, OVERFLOW_PADDING), maxLeft);
+    const where = `popup ${JSON.stringify(popupRect)}, anchor ${JSON.stringify(anchorRect)}`;
+    await expect(gap >= 0 && gap <= 3, `gap ${gap}: ${where}`).toBe(true);
+    await expect(Math.abs(popupRect.left - expected) <= 1, `left ${popupRect.left} != ${expected}: ${where}`).toBe(
+      true,
+    );
+  });
+};
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
   for (const part of root.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {

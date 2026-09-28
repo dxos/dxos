@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
+import { byTestId, centreY, controlSize, expectAnchoredBelow, expectScoped } from '../../testing.ts';
 
 const OPTIONS: Next.SelectOption[] = [
   { value: 'red', label: 'Red' },
@@ -83,6 +83,7 @@ export const Open: Story = {
     await userEvent.click(trigger);
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
+    await expectAnchoredBelow(trigger, listbox);
     await expect(listbox.dataset.surface).toBe('popup');
     await expect(listbox.dataset.size).toBe('md');
     await expect(getComputedStyle(listbox).getPropertyValue('--nx-level').trim()).toBe('5');

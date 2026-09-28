@@ -10,6 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { expectAnchoredBelow } from '../../testing.ts';
 
 const DefaultStory = () => {
   const [selected, setSelected] = useState<string>();
@@ -85,10 +86,8 @@ export const Open: Story = {
     await expect(within(menu).getAllByRole('menuitem')).toHaveLength(5);
     await expect(within(menu).getByRole('separator')).toBeInTheDocument();
 
-    // The popup sits close under its trigger.
-    const gap = menu.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
-    await expect(gap).toBeGreaterThanOrEqual(0);
-    await expect(gap).toBeLessThanOrEqual(3);
+    // The popup sits close under its trigger, start-aligned.
+    await expectAnchoredBelow(trigger, menu);
 
     // Items are block rows; the shortcut trails the label in the description colour.
     const cut = within(menu).getByRole('menuitem', { name: /Cut/ });

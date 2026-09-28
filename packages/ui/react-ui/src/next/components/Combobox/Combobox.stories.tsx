@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectAnchoredBelow, expectScoped } from '../../testing.ts';
 
 const OPTIONS: Next.ComboboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
@@ -87,6 +87,7 @@ export const Filter: Story = {
     await userEvent.click(within(byTestId(canvasElement, 'combobox-md')).getByRole('button'));
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
+    await expectAnchoredBelow(byTestId(canvasElement, 'combobox-md'), listbox);
     await expect(listbox).toHaveAttribute('data-surface', 'popup');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Dan Brown' })).toHaveAttribute('data-disabled');

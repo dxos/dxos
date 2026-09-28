@@ -6,10 +6,11 @@ import './theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
+import { expectAnchoredBelow } from './testing.ts';
 
 const ROLES: Next.SelectOption[] = [
   { value: 'owner', label: 'Owner' },
@@ -160,11 +161,7 @@ export const Layout: Story = {
     const trigger = canvas.getByRole('combobox', { name: 'Role' });
     await userEvent.click(trigger);
     const listbox = await within(canvasElement.ownerDocument.body).findByRole('listbox');
-    await waitFor(async () => {
-      const gap = listbox.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
-      await expect(gap).toBeGreaterThanOrEqual(0);
-      await expect(gap).toBeLessThanOrEqual(3);
-    });
+    await expectAnchoredBelow(trigger, listbox);
     await userEvent.keyboard('{Escape}');
 
     // Form actions claim no toolbar keyboard contract.
