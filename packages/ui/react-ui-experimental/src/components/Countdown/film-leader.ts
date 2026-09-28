@@ -116,9 +116,9 @@ export const playFilmLeader = async (
       // Reading layout restarts the animation for the next numeral.
       void num.offsetWidth;
       num.classList.add('pop');
-      // A quarter turn per count, accumulated so the mark keeps turning the same way.
+      // A half turn per count, accumulated so the mark keeps turning the same way.
       if (mark) {
-        mark.style.transform = `rotate(${(from - count + 1) * 90}deg)`;
+        mark.style.transform = `rotate(${(from - count + 1) * 180}deg)`;
       }
       await sleep(SECOND);
     }
