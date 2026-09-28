@@ -123,12 +123,12 @@ export default Capability.makeModule(
       }
 
       if (navigate) {
-        if (Obj.isObject(result?.object)) {
+        if (Obj.isObject(result?.object) && Obj.getDatabase(result.object)) {
           const { invoke } = capabilities.get(Capabilities.OperationInvoker);
           await EffectEx.runPromise(openObject(result.object, invoke, { pivotId }));
           return;
         }
-        // A target with no object to open (e.g. an external link) still gets its preview.
+        // A target with no stored object to open (e.g. an in-memory GitHub object) still gets its preview.
         activeTrigger = trigger;
       }
 
