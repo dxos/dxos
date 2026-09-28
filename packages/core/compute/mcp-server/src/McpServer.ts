@@ -364,6 +364,52 @@ const encodeInput = (
 };
 
 /**
+ * Runs an operation the caller has already resolved: encode the input, resolve the space, invoke,
+ * qualify refs. Shared by {@link invoke} and {@link invokeHosted}, which differ only in governance.
+ */
+const dispatch = (
+  host: HostShape,
+  record: Operation.PersistentOperation,
+  operationKey: string,
+  { input, spaceId }: { input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  Effect.gen(function* () {
+    // Encoded before the space is resolved, because the wire form is where a reference argument
+    // states which space it belongs to.
+    const arguments_ = input ?? {};
+    const wire = yield* encodeInput(record, arguments_, operationKey);
+
+    // Only what names a space counts; there is no session default to fall back to.
+    const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
+    const named = spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
+    const resolvedSpaceId = yield* spaceInternal.resolveId(host.spaceIds, named, {
+      required: viewInternal.requiresSpace(record),
+    });
+
+    const output = yield* host
+      .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
+      .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
+
+    // `structuredContent` must be a JSON value, so the output travels as the JSON its text block carries.
+    const text: string | undefined = yield* Effect.try({
+      try: () => JSON.stringify(output),
+      catch: (error) =>
+        failure('operation_failed', `${operationKey} returned a result that is not JSON: ${String(error)}`),
+    });
+    if (text === undefined) {
+      return {};
+    }
+    const json: unknown = JSON.parse(text);
+
+    // Nothing to qualify against when the call named no space: a space-less result carries no
+    // same-space references.
+    const result = resolvedSpaceId === undefined ? json : spaceInternal.qualifyRefs(json, resolvedSpaceId);
+    return result !== null && typeof result === 'object' && !Array.isArray(result)
+      ? (result as Record<string, unknown>)
+      : { output: result };
+  });
+
+/**
  * Dispatches one `invokeOperation` call: validate the input, resolve the space, invoke, qualify refs.
  *
  * The input arrives as raw JSON rather than through a per-operation tool schema, so validating it
@@ -401,42 +447,122 @@ export const invoke = (
         );
       }
 
-      // Encoded before the space is resolved, because the wire form is where a reference argument
-      // states which space it belongs to.
-      const arguments_ = input ?? {};
-      const wire = yield* encodeInput(record, arguments_, operationKey);
-
-      // Only what names a space counts; there is no session default to fall back to.
-      const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
-      const named =
-        spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
-      const resolvedSpaceId = yield* spaceInternal.resolveId(host.spaceIds, named, {
-        required: viewInternal.requiresSpace(record),
-      });
-
-      const output = yield* host
-        .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
-        .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
-
-      // `structuredContent` must be a JSON value, so the output travels as the JSON its text block carries.
-      const text: string | undefined = yield* Effect.try({
-        try: () => JSON.stringify(output),
-        catch: (error) =>
-          failure('operation_failed', `${operationKey} returned a result that is not JSON: ${String(error)}`),
-      });
-      if (text === undefined) {
-        return {};
-      }
-      const json: unknown = JSON.parse(text);
-
-      // Nothing to qualify against when the call named no space: a space-less result carries no
-      // same-space references.
-      const result = resolvedSpaceId === undefined ? json : spaceInternal.qualifyRefs(json, resolvedSpaceId);
-      return result !== null && typeof result === 'object' && !Array.isArray(result)
-        ? (result as Record<string, unknown>)
-        : { output: result };
+      return yield* dispatch(host, record, operationKey, { input, spaceId });
     }),
   );
+
+/**
+ * Runs an operation on behalf of a host's own tool, without the skill check {@link invoke} applies.
+ *
+ * For operations a host tool needs but a model must not call directly (e.g. `file.resolveDownload`,
+ * whose result is only useful once the host has signed a URL for it), so no skill lists them.
+ */
+export const invokeHosted = (
+  registry: Registry.Registry,
+  host: HostShape,
+  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  catchCollision(
+    Effect.gen(function* () {
+      const record = viewInternal.lookup(registry, key);
+      const operationKey = record != null ? viewInternal.nsid(Operation.getKey(record) ?? '') : undefined;
+      if (record == null || operationKey == null) {
+        return yield* Effect.fail(failure('operation_failed', `This host does not provide the ${key} operation.`));
+      }
+      return yield* dispatch(host, record, operationKey, { input, spaceId });
+    }),
+  );
+
+//
+// Downloads.
+//
+// The reverse of each host's `createUpload`: a file in a space becomes a short-lived URL an agent's
+// shell fetches, so its bytes reach disk without passing through the model. The tool is declared
+// here, once, because both hosts must describe it identically; each signs URLs its own way.
+//
+
+/** Key of the host-internal operation that names a file's bytes to the host. */
+export const RESOLVE_DOWNLOAD_KEY = 'org.dxos.operation.file.resolveDownload';
+
+/** What `file.resolveDownload` returns: an id only its host can sign, plus what the caller is told. */
+const ResolvedDownload = Schema.Struct({
+  downloadId: Schema.String,
+  name: Schema.optional(Schema.String),
+  type: Schema.String,
+  size: Schema.Number,
+});
+export type ResolvedDownload = Schema.Schema.Type<typeof ResolvedDownload>;
+
+export const CreateDownload = Tool.make('createDownload', {
+  description:
+    'Returns a short-lived URL for downloading a file object from a space straight to local disk, ' +
+    'bypassing the conversation entirely. Use this to save a file (an image, recording, PDF, log) ' +
+    'to disk; run the returned command in a shell. To look at a file yourself instead, read it with ' +
+    'the file.read operation. The URL expires in minutes: get it, use it, and do not save it for later.',
+  parameters: Schema.Struct({
+    file: Schema.Struct({ '/': Schema.String }).annotate({
+      description: 'Reference to the file object, exactly as another tool returned it.',
+    }),
+    spaceId: spaceInternal.idParameter,
+  }),
+  failure: ToolFailure,
+  success: Schema.Struct({
+    url: Schema.String,
+    method: Schema.Literal('GET'),
+    expiresAt: Schema.String.annotate({ description: 'ISO 8601 instant after which the URL is refused.' }),
+    name: Schema.String.annotate({ description: 'File name the command saves to.' }),
+    type: Schema.String,
+    size: Schema.Number,
+    command: Schema.String.annotate({ description: 'Ready-to-run download command.' }),
+  }),
+})
+  // Mints a credential and writes nothing to the space.
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
+
+export const DownloadToolkit = Toolkit.make(CreateDownload);
+
+/** Resolves a file reference through the host to the id the host signs a download URL for. */
+export const resolveDownload = (
+  registry: Registry.Registry,
+  host: HostShape,
+  { file, spaceId }: { file: { '/': string }; spaceId?: string },
+): Effect.Effect<ResolvedDownload, ToolFailure> =>
+  Effect.gen(function* () {
+    const resolvedSpaceId = yield* spaceInternal.resolveId(
+      host.spaceIds,
+      spaceId ?? spaceInternal.hintFromInput(file),
+      {
+        required: true,
+      },
+    );
+    const output = yield* invokeHosted(registry, host, {
+      key: RESOLVE_DOWNLOAD_KEY,
+      input: { file },
+      spaceId: resolvedSpaceId,
+    });
+    return yield* Schema.decodeUnknownEffect(ResolvedDownload)(output).pipe(
+      Effect.mapError((error) =>
+        failure('operation_failed', `${RESOLVE_DOWNLOAD_KEY} returned an unexpected result: ${String(error)}`),
+      ),
+    );
+  });
+
+/** The file name a download is saved under: a bare name, so the command never writes outside the working directory. */
+export const downloadFileName = ({ name, downloadId }: ResolvedDownload): string => {
+  const base = (name ?? '').split(/[\\/]/).pop()?.replace(/^\.+/, '') ?? '';
+  return base.length > 0 ? base : `download-${downloadId.slice(0, 12)}`;
+};
+
+/** Single-quotes a word for a POSIX shell, so a name with spaces, quotes or `$` stays one argument. */
+export const shellQuote = (word: string): string => `'${word.replaceAll("'", `'\\''`)}'`;
+
+/**
+ * `--fail` rather than the upload's `--fail-with-body`: with `-o`, the latter saves the error page
+ * as the file, which a caller then reads as the download.
+ */
+export const downloadCommand = (url: string, name: string): string =>
+  `curl --fail -sS -o ${shellQuote(`./${name}`)} ${shellQuote(url)}`;
 
 //
 // Layers.
