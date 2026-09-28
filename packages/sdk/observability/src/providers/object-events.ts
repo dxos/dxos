@@ -16,8 +16,15 @@ import { type EventAttributes, type RemoteEvents, TRACE_PROCESSOR } from '@dxos/
 import type * as Observability from '../Observability.ts';
 import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
 
-/** The product event a user creating an object stands for. */
-export const OBJECT_CREATED_EVENT = 'space.object.add';
+/** The product events ECHO's trace events are reported as. */
+export const EVENTS = {
+  objectAdd: 'space.object.add',
+  objectRemove: 'space.object.remove',
+  relationAdd: 'space.relation.add',
+  relationRemove: 'space.relation.remove',
+  typeAdd: 'space.type.add',
+  feedAppend: 'space.feed.append',
+} as const;
 
 /**
  * How long a new object must survive before it counts as created: the create dialog adds a draft when it
@@ -25,12 +32,15 @@ export const OBJECT_CREATED_EVENT = 'space.object.add';
  */
 export const DRAFT_WINDOW = Duration.seconds(30);
 
+/** Origins that are someone's activity; `integration` and `system` writes are not. */
+const ACTIVITY_ORIGINS = new Set(['user', 'agent']);
+
 type TraceEvent = { name: string; attributes: EventAttributes };
 
 /**
- * Reports ECHO's `echo.object.add` trace events as {@link OBJECT_CREATED_EVENT}, for user-facing types
- * only and not for objects an integration created. Events arrive only while registered; ECHO does not
- * replay them.
+ * Reports ECHO's trace events as product events: user-facing objects and every relation a user or agent adds or
+ * removes, types they persist, and items they append to feeds. An add that is removed within the draft window
+ * reports neither. Events arrive only while registered; ECHO does not replay them.
  */
 export const listen = (
   events: RemoteEvents,
@@ -47,34 +57,62 @@ export const listen = (
       () => Effect.sync(() => events.unregisterProcessor(processor)),
     );
 
+    const send = (event: string, properties: Record<string, unknown>) =>
+      Effect.try(() => capture(event, properties)).pipe(Effect.catch((error) => Effect.sync(() => log.catch(error))));
+
     // Keyed by object id so removing a draft interrupts its pending report.
     const pending = yield* FiberMap.make<string>();
     yield* Stream.fromQueue(queue).pipe(
       Stream.runForEach(({ name, attributes }) =>
         Effect.gen(function* () {
-          const objectId = attributes.objectId;
-          if (typeof objectId !== 'string') {
+          const { spaceId, objectId, typename, relation, userType, origin } = attributes;
+          if (typeof origin !== 'string' || !ACTIVITY_ORIGINS.has(origin)) {
+            // A draft cancelled by system code still must not be reported.
+            if (name === 'echo.object.remove' && typeof objectId === 'string') {
+              yield* FiberMap.remove(pending, objectId);
+            }
             return;
           }
 
-          if (name === 'echo.object.remove') {
-            yield* FiberMap.remove(pending, objectId);
-            return;
-          }
+          switch (name) {
+            case 'echo.object.add': {
+              if (typeof objectId !== 'string' || (relation !== true && userType !== true)) {
+                return;
+              }
+              const event = relation === true ? EVENTS.relationAdd : EVENTS.objectAdd;
+              yield* FiberMap.run(
+                pending,
+                objectId,
+                Effect.sleep(draftWindow).pipe(Effect.andThen(send(event, { spaceId, objectId, typename, origin }))),
+              );
+              return;
+            }
 
-          if (name !== 'echo.object.add' || attributes.userType !== true || attributes.external === true) {
-            return;
-          }
+            case 'echo.object.remove': {
+              if (typeof objectId !== 'string') {
+                return;
+              }
+              if (yield* FiberMap.has(pending, objectId)) {
+                yield* FiberMap.remove(pending, objectId);
+                return;
+              }
+              if (relation === true || userType === true) {
+                const event = relation === true ? EVENTS.relationRemove : EVENTS.objectRemove;
+                yield* send(event, { spaceId, objectId, typename, origin });
+              }
+              return;
+            }
 
-          const { spaceId, typename } = attributes;
-          yield* FiberMap.run(
-            pending,
-            objectId,
-            Effect.sleep(draftWindow).pipe(
-              Effect.andThen(Effect.try(() => capture(OBJECT_CREATED_EVENT, { spaceId, objectId, typename }))),
-              Effect.catch((error) => Effect.sync(() => log.catch(error))),
-            ),
-          );
+            case 'echo.type.add': {
+              yield* send(EVENTS.typeAdd, { spaceId, typename, version: attributes.version, origin });
+              return;
+            }
+
+            case 'echo.feed.append': {
+              yield* send(EVENTS.feedAppend, { spaceId, feedId: attributes.feedId, objectId, typename, origin });
+              return;
+            }
+          }
         }),
       ),
       Effect.forkScoped,
@@ -82,8 +120,8 @@ export const listen = (
   });
 
 /**
- * Sends {@link OBJECT_CREATED_EVENT} for every object a user creates in this realm, however it was
- * created: from a dialog, an agent tool call, or a raw `db.add` in a view.
+ * Reports what users and agents write in this realm's spaces, however it was written: from a dialog, an agent
+ * tool call, or a raw `db.add` in a view.
  */
 export const provider: Observability.DataProvider = Effect.fn(function* (observability) {
   const scope = yield* Scope.make();

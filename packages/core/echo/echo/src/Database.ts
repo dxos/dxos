@@ -55,6 +55,29 @@ export type GetObjectByIdOptions = {
 
 export type ObjectPlacement = 'root-doc' | 'linked-doc';
 
+/**
+ * Who a write is attributed to, reported with ECHO's trace events. `system` writes (seeded content,
+ * migrations, cleanup) are not user activity. When no origin is given, an object with foreign keys is
+ * attributed to an `integration` and anything else to the `user`.
+ */
+export type Origin = 'user' | 'agent' | 'integration' | 'system';
+
+/**
+ * The {@link Origin} the Effect wrappers ({@link add}, {@link remove}, {@link addType}, {@link appendToFeed})
+ * attribute their writes to. Provided once around a unit of work, e.g. `system` around seeding code or
+ * `agent` around an agent's operations, rather than at every write.
+ */
+export const Origin: Context.Reference<Origin | undefined> = Context.Reference<Origin | undefined>(
+  '@dxos/echo/Database/Origin',
+  { defaultValue: () => undefined },
+);
+
+/** Options for writes that only carry attribution. */
+export type WriteOptions = {
+  /** See {@link Origin}. */
+  origin?: Origin;
+};
+
 export type AddOptions = {
   /**
    * Where to place the object in the Automerge document tree.
@@ -66,13 +89,8 @@ export type AddOptions = {
    */
   placeIn?: ObjectPlacement;
 
-  /**
-   * Whether this add counts as the user creating the object, reported as the `echo.object.add` trace event.
-   * Seeded content (onboarding, samples) passes `false` so it does not read as user activity.
-   *
-   * @default true
-   */
-  track?: boolean;
+  /** See {@link Origin}. */
+  origin?: Origin;
 
   /**
    * Append the object to this feed instead of the automerge-backed space database. The object is
@@ -201,13 +219,13 @@ export interface Database extends Queryable {
    * this space, the existing persisted entity is returned and no duplicate is created. This is
    * the only supported way to add Type entities — {@link add} rejects them.
    */
-  addType<T extends Type.AnyEntity>(type: T): Promise<T>;
+  addType<T extends Type.AnyEntity>(type: T, opts?: WriteOptions): Promise<T>;
 
   /**
    * Removes object from the database.
    */
   // TODO(burdon): Return true if removed (currently throws if not present).
-  remove(obj: Entity.Unknown): void;
+  remove(obj: Entity.Unknown, opts?: WriteOptions): void;
 
   /**
    * Appends entities to a feed.
@@ -215,7 +233,7 @@ export interface Database extends Queryable {
    * The feed must already be stored in the database (added via {@link add}); its underlying
    * queue is addressed by the feed object's URI.
    */
-  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: WriteOptions): Promise<void>;
 
   /**
    * Removes entities from a feed.
@@ -539,45 +557,40 @@ export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Track, (track) => db.add<T>(obj, { track })))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Origin, (origin) => db.add<T>(obj, { origin })))).pipe(
     Effect.withSpan('Database.add'),
     withSpaceId,
   );
-
-/**
- * Whether {@link add} counts new objects as user activity (see {@link AddOptions.track}). Code that seeds
- * content provides `false` once around everything it writes, rather than at every add.
- */
-export const Track: Context.Reference<boolean> = Context.Reference<boolean>('@dxos/echo/Database/Track', {
-  defaultValue: () => true,
-});
 
 /**
  * Persists a Type definition to the database.
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
-    Effect.withSpan('Database.addType'),
-    withSpaceId,
-  );
+  Service.pipe(
+    Effect.flatMap(({ db }) => Effect.flatMap(Origin, (origin) => Effect.promise(() => db.addType(type, { origin })))),
+  ).pipe(Effect.withSpan('Database.addType'), withSpaceId);
 
 /**
  * Removes an object from the database.
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'), withSpaceId);
+  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Origin, (origin) => db.remove(obj, { origin })))).pipe(
+    Effect.withSpan('Database.remove'),
+    withSpaceId,
+  );
 
 /**
  * Appends entities to a feed.
  * @see {@link Database.appendToFeed}
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
-    Effect.withSpan('Database.appendToFeed'),
-    withSpaceId,
-  );
+  Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.flatMap(Origin, (origin) => Effect.promise(() => db.appendToFeed(feed, entities, { origin }))),
+    ),
+  ).pipe(Effect.withSpan('Database.appendToFeed'), withSpaceId);
 
 /**
  * Removes entities from a feed.

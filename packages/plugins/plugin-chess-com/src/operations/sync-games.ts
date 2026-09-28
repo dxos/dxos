@@ -60,7 +60,7 @@ export default ChessComOperation.SyncGames.pipe(
         gamesFeed,
         // TODO(dmaretskyi): `Feed.append` should auto-append unsaved refs.
         gameObjects.flatMap((game) => [game, game.variant.target!]),
-      );
+      ).pipe(Effect.provideService(Database.Origin, 'integration'));
       return { appended: gameObjects.length };
     }, Effect.provide(ChessComHttpClientLayer)),
   ),

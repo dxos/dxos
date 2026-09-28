@@ -27,6 +27,7 @@ import {
   QueryAST,
   Ref,
   type Registry,
+  Relation,
   Type,
 } from '@dxos/echo';
 import {
@@ -56,7 +57,7 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { trace } from '@dxos/tracing';
+import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
@@ -454,7 +455,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Codec<unknown, unknown> | Type.AnyEntity): Type.AnyEntity {
+  private _addPersistentSchema(
+    schemaInput: Schema.Codec<unknown, unknown> | Type.AnyEntity,
+    origin?: Database.Origin,
+  ): Type.AnyEntity {
     let schema: Schema.Codec<unknown, unknown>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
@@ -492,7 +496,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    const persistentSchema = this._addObject(schemaToStore);
+    const persistentSchema = this._addObject(schemaToStore, { origin });
     invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
     return persistentSchema;
   }
@@ -546,6 +550,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       // Synchronous feed append: registers the object as a live feed object and schedules the
       // background write. Returns the same instance; confirm persistence with `db.flush()`.
       this.#getFeedHandle(opts.to).appendSync([obj]);
+      this.#emitFeedAppend(opts.to, [obj], opts.origin);
       return obj;
     }
     return this._addObject(obj, opts);
@@ -554,7 +559,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Persist a Type definition (clones/forks the entity) so it replicates to other peers.
    */
-  async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
+  async addType<T extends Type.AnyEntity>(type: T, opts?: Database.WriteOptions): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
     const typename = Type.getTypename(type);
     const version = Type.getMeta(type).version ?? Type.getVersion(type);
@@ -574,7 +579,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // `_addPersistentSchema` reconstructs the entity from a JSON schema at runtime, so its result
     // can only be typed as `Type.AnyEntity`; the caller's `T` is verified by the `Type.isType`
     // invariant inside `_addPersistentSchema`, not by the compiler.
-    return this._addPersistentSchema(type) as T;
+    const persisted = this._addPersistentSchema(type, opts?.origin) as T;
+    trace.events.emit('echo.type.add', {
+      spaceId: this.spaceId,
+      typename,
+      version,
+      origin: opts?.origin ?? 'user',
+    });
+    return persisted;
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
@@ -616,32 +628,44 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
     this._entityManager.addCore(getObjectCore(obj), opts);
-    if (created && opts?.track !== false) {
-      const type = Entity.getType(obj);
-      trace.events.emit('echo.object.add', {
-        spaceId: this.spaceId,
-        objectId: obj.id,
-        typename: Entity.getTypename(obj),
-        userType: type != null && isUserType(type),
-        // Foreign keys mean an integration (a sync or import) created the object, not the user.
-        external: Entity.getMeta(obj).keys.length > 0,
-      });
+    if (created) {
+      trace.events.emit('echo.object.add', this.#entityAttributes(obj, opts?.origin));
     }
     return obj;
   }
 
-  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
+  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.WriteOptions): void {
     assertArgument(isEchoObject(obj), 'obj');
     this._entityManager.removeCore(getObjectCore(obj));
-    trace.events.emit('echo.object.remove', { spaceId: this.spaceId, objectId: obj.id });
+    trace.events.emit('echo.object.remove', this.#entityAttributes(obj, opts?.origin));
+  }
+
+  /** What ECHO's trace events report about a written entity. */
+  #entityAttributes(entity: Entity.Unknown, origin?: Database.Origin): EventAttributes {
+    const type = Entity.getType(entity);
+    return {
+      spaceId: this.spaceId,
+      objectId: entity.id,
+      typename: Entity.getTypename(entity),
+      relation: Relation.isRelation(entity),
+      userType: type != null && isUserFacing(type),
+      origin: resolveOrigin(entity, origin),
+    };
+  }
+
+  #emitFeedAppend(feed: Feed.Feed, entities: Entity.Unknown[], origin?: Database.Origin): void {
+    for (const entity of entities) {
+      trace.events.emit('echo.feed.append', { ...this.#entityAttributes(entity, origin), feedId: feed.id });
+    }
   }
 
   //
   // Feeds.
   //
 
-  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: Database.WriteOptions): Promise<void> {
     await this.#getFeedHandle(feed).append(entities);
+    this.#emitFeedAppend(feed, entities, opts?.origin);
   }
 
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
@@ -1183,14 +1207,17 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 }
 
 /**
- * Whether objects of this type are ones a user creates and sees: an object type (not a relation or meta-type)
- * persisted in a space or carrying {@link Annotation.UserType}. Mirrors `TypeOptions.isUserType` in
- * `@dxos/app-toolkit`, which ECHO cannot depend on.
+ * Whether entities of this type are ones a user creates and sees: not a meta-type, and persisted in a space
+ * or carrying {@link Annotation.UserType}. Mirrors `TypeOptions.isUserType` in `@dxos/app-toolkit`, which
+ * ECHO cannot depend on, except that relation types qualify too.
  */
-const isUserType = (type: Type.AnyEntity): boolean =>
-  !Type.isRelation(type) &&
+const isUserFacing = (type: Type.AnyEntity): boolean =>
   !Type.isTypeKind(type) &&
   (Type.getDatabase(type) != null || Option.isSome(Annotation.UserType.get(Type.getSchema(type))));
+
+/** The caller's origin, or else a guess: foreign keys mean a sync or import wrote the entity. */
+const resolveOrigin = (entity: Entity.Unknown, origin?: Database.Origin): Database.Origin =>
+  origin ?? (Entity.getMeta(entity).keys.length > 0 ? 'integration' : 'user');
 
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {

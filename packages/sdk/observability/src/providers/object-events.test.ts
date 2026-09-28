@@ -10,27 +10,28 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { type EventAttributes, RemoteEvents } from '@dxos/tracing';
 
-import { OBJECT_CREATED_EVENT, listen } from './object-events.ts';
+import { EVENTS, listen } from './object-events.ts';
 
 const DRAFT_WINDOW = Duration.millis(10);
 
 type Captured = { name: string; properties?: Record<string, unknown> };
 
-const added = (objectId: string, attributes: EventAttributes = {}): EventAttributes => ({
+const entity = (objectId: string, attributes: EventAttributes = {}): EventAttributes => ({
   spaceId: 'space-1',
   objectId,
   typename: 'com.example.type.person',
+  relation: false,
   userType: true,
-  external: false,
+  origin: 'user',
   ...attributes,
 });
 
-const reported = (objectId: string): Captured => ({
-  name: OBJECT_CREATED_EVENT,
-  properties: { spaceId: 'space-1', objectId, typename: 'com.example.type.person' },
+const reported = (name: string, objectId: string, origin = 'user'): Captured => ({
+  name,
+  properties: { spaceId: 'space-1', objectId, typename: 'com.example.type.person', origin },
 });
 
-/** Runs the listener over a private event channel; `next` waits for the next event it sends. */
+/** Runs the listener over a private event channel; `next` waits for the next event it captures. */
 const setup = Effect.gen(function* () {
   const events = new RemoteEvents();
   const sent = yield* Queue.unbounded<Captured>();
@@ -39,32 +40,61 @@ const setup = Effect.gen(function* () {
 });
 
 describe('object events', () => {
-  test('reports a user-created object once it outlives the draft window', ({ expect }) =>
+  test('reports an object once it outlives the draft window, with who created it', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const { events, next } = yield* setup;
 
-        events.emit('echo.object.add', added('a'));
+        events.emit('echo.object.add', entity('a', { origin: 'agent' }));
 
-        expect(yield* next).toEqual(reported('a'));
+        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'a', 'agent'));
       }).pipe(Effect.scoped),
     ));
 
-  test('skips internal types, integration-created objects and cancelled drafts', ({ expect }) =>
+  test('skips internal types, integration and system writes, and cancelled drafts', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const { events, next, pending } = yield* setup;
 
-        events.emit('echo.object.add', added('internal', { userType: false }));
-        events.emit('echo.object.add', added('synced', { external: true }));
-        events.emit('echo.object.add', added('draft'));
-        events.emit('echo.object.remove', { spaceId: 'space-1', objectId: 'draft' });
+        events.emit('echo.object.add', entity('internal', { userType: false }));
+        events.emit('echo.object.add', entity('synced', { origin: 'integration' }));
+        events.emit('echo.object.add', entity('seeded', { origin: 'system' }));
+        events.emit('echo.object.add', entity('draft'));
+        events.emit('echo.object.remove', entity('draft'));
         // Events are handled in order, so once this one is reported every earlier one has been decided.
-        events.emit('echo.object.add', added('kept'));
+        events.emit('echo.object.add', entity('kept'));
 
-        expect(yield* next).toEqual(reported('kept'));
+        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'kept'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));
         expect(yield* pending).toBe(0);
+      }).pipe(Effect.scoped),
+    ));
+
+  test('reports relations, removals, types and feed appends', ({ expect }) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const { events, next } = yield* setup;
+
+        events.emit('echo.object.remove', entity('old'));
+        events.emit('echo.object.add', entity('link', { relation: true, userType: false }));
+        events.emit('echo.type.add', {
+          spaceId: 'space-1',
+          typename: 'com.example.type.task',
+          version: '0.1.0',
+          origin: 'user',
+        });
+        events.emit('echo.feed.append', { ...entity('message'), feedId: 'feed-1' });
+
+        expect(yield* next).toEqual(reported(EVENTS.objectRemove, 'old'));
+        expect(yield* next).toEqual({
+          name: EVENTS.typeAdd,
+          properties: { spaceId: 'space-1', typename: 'com.example.type.task', version: '0.1.0', origin: 'user' },
+        });
+        expect(yield* next).toEqual({
+          name: EVENTS.feedAppend,
+          properties: { ...reported(EVENTS.feedAppend, 'message').properties, feedId: 'feed-1' },
+        });
+        expect(yield* next).toEqual(reported(EVENTS.relationAdd, 'link'));
       }).pipe(Effect.scoped),
     ));
 
@@ -75,7 +105,7 @@ describe('object events', () => {
         const sent: Captured[] = [];
         yield* listen(events, (name, properties) => sent.push({ name, properties }), DRAFT_WINDOW).pipe(Effect.scoped);
 
-        events.emit('echo.object.add', added('late'));
+        events.emit('echo.object.add', entity('late'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));
 
         expect(sent).toEqual([]);

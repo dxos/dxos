@@ -1378,7 +1378,34 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     output: Schema.Struct({ childSpaceId: Schema.String }),
   });
 
+  // Operation that reports the database origin its handler runs under, and one that asks a child for it.
+  const OriginOp = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.invoker.origin'), name: 'Origin' },
+    input: Schema.Void,
+    output: Schema.Struct({ origin: Schema.optional(Schema.String) }),
+  });
+  const ParentOriginOp = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.invoker.parentOrigin'), name: 'Parent origin' },
+    input: Schema.Void,
+    output: Schema.Struct({ origin: Schema.optional(Schema.String), childOrigin: Schema.optional(Schema.String) }),
+  });
+
   const inheritanceHandlers = OperationHandlerSet.make(
+    OriginOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          return { origin: yield* Database.Origin };
+        }),
+      ),
+    ),
+    ParentOriginOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          const child = yield* Operation.invoke(OriginOp, undefined);
+          return { origin: yield* Database.Origin, childOrigin: child.origin };
+        }),
+      ),
+    ),
     ChildOp.pipe(
       Operation.withHandler(
         Effect.fn(function* () {
@@ -1531,6 +1558,23 @@ describe('ProcessOperationInvoker environment inheritance', () => {
         throw new Error('child process not present in process tree');
       }
       expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'processes serving a conversation, and their children, attribute database writes to the agent',
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+
+      const agent = yield* invoker.invokeFiber(ParentOriginOp, undefined, {
+        environment: { space: db.spaceId, conversation },
+      });
+      const user = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
+
+      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'agent', childOrigin: 'agent' });
+      expect(yield* user.await.pipe(Effect.flatten)).toEqual({ origin: undefined, childOrigin: undefined });
     }, Effect.provide(InheritanceTestLayer)),
   );
 });

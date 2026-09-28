@@ -31,7 +31,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,6 +43,13 @@ import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
+
+/**
+ * A process serving a conversation is an agent's work, and its children inherit the conversation, so the
+ * database writes of every operation an agent calls are attributed to the agent.
+ */
+const withOrigin = (environment: Process.Environment): Context.Context<never> =>
+  environment.conversation != null ? Context.make(Database.Origin, 'agent') : Context.empty();
 
 export {
   type ProcessIdGenerator,
@@ -582,7 +589,7 @@ export class Impl implements Manager {
       // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      let builtinCtx = withOrigin(environment).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -793,7 +800,7 @@ export class Impl implements Manager {
       };
 
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      let builtinCtx = withOrigin(environment).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
