@@ -23,8 +23,8 @@ import { Icon, IconButton, Menu, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
-  TREE_BLOCK,
   Tree,
+  TREE_BLOCK,
   type TreeItemDataProps,
   type TreeModel,
 } from '@dxos/react-ui-list';
