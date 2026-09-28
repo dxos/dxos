@@ -214,9 +214,34 @@ genuinely sums is the realms' JS heaps plus everything else = `ciAppFootprintByt
 footprint of the renderer processes. The gap is the finding: most of this app's memory is wasm
 linear memory and native allocation, so optimizing a JS heap cannot move the memory number.
 
-Two caveats, both recorded in the tile's SQL. The footprint is read at each phase boundary while a
-heap peak is that phase's maximum, so the total is exact and the boundary between the segments is
-approximate. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
+**The `Native / unattributed` band is mostly garbage, not native memory.** The segments and the
+total are read at different points in the garbage collector's cycle: `readHeap` forces a three-pass
+GC before every heap, wasm and backing-store reading, while `readProcessFootprint` asks for a
+`light` dump with `deterministic: false`, which forces nothing. On Linux — where the nightly runs —
+`private_footprint_bytes` tracked `RssAnon` to within a megabyte on every process of every run taken
+here, so the total is whatever anonymous memory happened to be resident at the boundary and the band
+absorbs every collectable byte between the two reads. (Read that as an observation, not an identity:
+shared memory is accounted separately and these runs held little of it.) Measured against
+`composer-app/scripts/memory/ledger.mjs`, whose footprint and allocator tree both come out of ONE
+`deterministic: true` dump and are therefore the same instant, after the GC that dump forces:
+
+| stage         | band, this harness | residual, post-GC ledger |
+| ------------- | -----------------: | -----------------------: |
+| boot          |       275 MB (66%) |               18 MB (6%) |
+| open-tasks    |       290 MB (40%) |               10 MB (2%) |
+| scroll-tasks  |       178 MB (29%) |                7 MB (1%) |
+| edit-document |       283 MB (42%) |               25 MB (5%) |
+
+So the genuinely unnamed part is single-digit percent — anonymous pages no dump provider claims
+(PartitionAlloc's `<unspecified>`, malloc slack, thread stacks, V8's code range). File-backed
+mappings are outside the metric by construction: the 17 MB of private-clean chrome binary a renderer
+maps is in no band because `RssAnon` does not count it. Read the band as "garbage plus slack at the
+boundary" until the footprint is read after the same GC the heaps are.
+
+Two further caveats, both recorded in the tile's SQL. The footprint is read at each phase boundary
+while a heap peak is that phase's maximum, and — per the paragraph above — the two are read under
+different GC states, so the stack is not a decomposition of any total that existed at one instant:
+read the footprint as the level and the segments as a lower bound on what is named within it. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
 retired: that figure divided the heap into a sum of RSS over Chrome's whole process tree, which
 multi-counts shared pages and included the browser, GPU and service processes. Read the ratio off
 the tile rather than from any number written here.
