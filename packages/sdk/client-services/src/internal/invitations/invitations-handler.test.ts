@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -16,6 +16,7 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
+import { type StartSpanOptions, TRACE_PROCESSOR, type TracingBackend } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
@@ -182,8 +183,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         const guest = await createPeer(host.spaceKey);
         const codeInput = await acceptInvitation(guest, invitation);
         while (!guest.ctx.disposed) {
+          // `failCodeInput` already paces its own retries via `waitForCondition`, so looping it
+          // needs no sleep of its own between attempts.
           await failCodeInput(guest, codeInput, invitation);
-          await sleep(10);
         }
 
         await waitForCondition({ condition: () => guest.sink.lastState === Invitation_State.ERROR });
@@ -252,12 +254,74 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           }),
         );
 
+        await waitForCondition({ condition: () => guests.some((g) => g.sink.lastState === Invitation_State.SUCCESS) });
+        // Give the other racing guests a bounded window to settle before counting how many were
+        // admitted — a guest that loses the race is not guaranteed to reach an explicit ERROR
+        // state promptly, so this polls rather than requiring every guest to reach a terminal
+        // state, and tolerates the poll's own timeout rather than treating it as a failure.
         await waitForCondition({
-          condition: () => guests.find((g) => g.sink.lastState === Invitation_State.SUCCESS) != null,
-        });
-        await sleep(40);
+          condition: () =>
+            guests.every(
+              (g) => g.sink.lastState === Invitation_State.SUCCESS || g.sink.lastState === Invitation_State.ERROR,
+            ),
+          timeout: 200,
+        }).catch(() => {});
         const success = guests.filter((g) => g.sink.lastState === Invitation_State.SUCCESS);
         expect(success.length).to.eq(1);
+      });
+    });
+
+    describe('guest span', () => {
+      let savedBackend: TracingBackend;
+      let spans: RecordedSpan[];
+
+      beforeEach(() => {
+        savedBackend = TRACE_PROCESSOR.tracingBackend;
+        spans = [];
+        TRACE_PROCESSOR.tracingBackend = createRecordingBackend(spans);
+        // Installing a backend replays the spans earlier tests buffered; only this test's own are under test.
+        spans.length = 0;
+      });
+
+      afterEach(() => {
+        TRACE_PROCESSOR.tracingBackend = savedBackend;
+      });
+
+      const guestSpans = () => spans.filter((span) => span.options.name === 'InvitationsHandler.acceptInvitation');
+
+      test('ends with the outcome and the path that admitted the guest', async ({ expect }) => {
+        const host = await createPeer();
+        const invitation = await createInvitation(host);
+        await hostInvitation(host, invitation);
+
+        const guest = await createPeer(host.spaceKey);
+        await performAuth(guest, invitation);
+        await waitForCondition({ condition: () => guest.ctx.disposed });
+
+        const [span, ...rest] = guestSpans();
+        expect(rest).toEqual([]);
+        expect(span.options.attributes).toMatchObject({
+          'ctx.dxos.invitation.kind': 'SPACE',
+          'ctx.dxos.invitation.type': 'DELEGATED',
+          'ctx.spaceId': invitation.spaceId,
+        });
+        expect(span.ended).toBe(true);
+        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'success', 'ctx.dxos.invitation.admittedBy': 'peer' });
+      });
+
+      test('ends as timed out once a flow that timed out is disposed', async ({ expect }) => {
+        const host = await createPeer();
+        const invitation = await createInvitation(host, { timeout: 100 });
+        await hostInvitation(host, invitation);
+
+        const guest = await createPeer(host.spaceKey);
+        await acceptInvitation(guest, invitation);
+        await guest.sink.waitFor(Invitation_State.TIMEOUT);
+        // A timed-out flow stays open until its caller gives up on it.
+        expect(guestSpans()[0].ended).toBe(false);
+        await guest.ctx.dispose();
+
+        expect(guestSpans()[0].endAttributes).toEqual({ 'ctx.outcome': 'timeout' });
       });
     });
 
@@ -331,7 +395,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
       const newHost = await createPeer(toPublicKey(invitation.spaceKey));
       await performAuth(newHost, invitation);
-      await sleep(30);
+      // `hostInvitation` admits further guests into the space, which needs the space's own data
+      // pipeline caught up rather than merely the admission credential recorded.
+      await newHost.peer.dataSpaceManager.waitUntilSpaceReady(newHost.spaceKey);
       await hostInvitation(newHost, invitation);
       return newHost;
     };
@@ -388,3 +454,24 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
   },
 );
+
+type RecordedSpan = {
+  options: StartSpanOptions;
+  ended: boolean;
+  endAttributes?: Record<string, any>;
+};
+
+const createRecordingBackend = (spans: RecordedSpan[]): TracingBackend => ({
+  startSpan: (options) => {
+    const span: RecordedSpan = { options, ended: false };
+    spans.push(span);
+    return {
+      end: () => {
+        span.ended = true;
+      },
+      setAttributes: (attributes) => {
+        span.endAttributes = { ...span.endAttributes, ...attributes };
+      },
+    };
+  },
+});

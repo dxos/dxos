@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import { Button, Field, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -57,15 +57,22 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      <div className='flex justify-end gap-2'>
+      <Flex justify='end' gap='sm'>
         <Button onClick={onCancel}>{t('comment-cancel.label')}</Button>
         <Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
           {t('comment-submit.label')}
         </Button>
-      </div>
+      </Flex>
     </>
   );
 };
+
+/** The composer as a band under the toolbar, for a comment on the pull request as a whole. */
+export const CommentBand = (props: CommentComposerProps) => (
+  <Flex column gap='sm' classNames='p-3 border-b border-separator'>
+    <CommentComposer {...props} />
+  </Flex>
+);
 
 export type LineCommentPopoverProps = CommentComposerProps & {
   open: boolean;

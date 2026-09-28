@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { Field, IconButton, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
-import { setDeep } from '@dxos/util';
+import { gzip, setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -95,8 +95,8 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
   }, [client, download, handleToast, onUpload, t]);
 
   const handleDownloadLogs = useCallback(async () => {
-    const file = await logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    const file = await gzip(await logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES }));
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson.gz`;
     download(file, fileName);
   }, [download, logStore]);
 

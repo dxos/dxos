@@ -1032,3 +1032,8 @@ companion).
       remains is removing it, which needs creation somewhere else — an inline new
       row in the list, or a toolbar action that creates the task and opens its
       plank (plugin-inbox's draft pattern).
+- [x] **`SpacePlugin` never activates under plugin-tasks' storybook** — the cause was not the
+      lazy import: plugin-space's surface module activates only on a request for one of its
+      declared `roles`, and `org.dxos.role.cardMasonry` was missing from that list, so the grid
+      appeared only where some other plugin-space role (an article) had already activated the
+      module. Fixed by declaring the role; `CardMasonry`'s `ViaSurface` story guards it.

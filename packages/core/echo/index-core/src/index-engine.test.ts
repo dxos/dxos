@@ -24,6 +24,9 @@ const TYPE_B = DXN.make('com.example.type.TypeB', '0.1.0');
 class MockIndexDataSource implements IndexDataSource {
   readonly sourceName = 'mock-source';
 
+  /** Whether to say when the limit cut a read short, as a source predating `more` does not. */
+  constructor(private readonly _reportsMore = false) {}
+
   // Composite Key -> { object, hash, timestamp }
   // Key: `${spaceId}:${documentId}`
   private _state = new Map<string, { object: IndexerObject; hash: string }>();
@@ -43,7 +46,7 @@ class MockIndexDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more?: boolean }> {
     return Effect.sync(() => {
       const results: { object: IndexerObject; hash: string }[] = [];
 
@@ -76,7 +79,9 @@ class MockIndexDataSource implements IndexDataSource {
         cursor: r.hash,
       }));
 
-      return { objects, cursors: newCursors };
+      return this._reportsMore
+        ? { objects, cursors: newCursors, more: limitedResults.length < results.length }
+        : { objects, cursors: newCursors };
     });
   }
 }
@@ -136,6 +141,41 @@ describe('IndexEngine', () => {
     // one constructed here reads exactly what the engine wrote.
     return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
+
+  // `done` needs an empty batch, which writes arriving faster than passes never leave; `drained` is
+  // what lets a caller waiting for its own writes settle anyway.
+  it.effect(
+    'reports a batch drained once it indexed everything the source held, before any batch is empty',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const spaceId = SpaceId.random();
+      const makeObject = (documentId: string): IndexerObject => ({
+        spaceId,
+        documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: documentId },
+      });
+
+      const dataSource = new MockIndexDataSource(true);
+      dataSource.push(['doc-1', 'doc-2', 'doc-3'].map(makeObject));
+      const cut = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(cut).toMatchObject({ done: false, drained: false });
+      const rest = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(rest).toMatchObject({ done: false, drained: true });
+      const empty = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(empty).toMatchObject({ done: true, drained: true });
+
+      // A source that does not report `more` could have been cut short whenever it returned anything.
+      const legacySource = new MockIndexDataSource();
+      legacySource.push([makeObject('doc-4')]);
+      const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
+      expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
 
   it.effect(
     'should index and update objects',

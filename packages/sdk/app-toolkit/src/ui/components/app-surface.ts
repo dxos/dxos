@@ -3,11 +3,11 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type ReactNode } from 'react';
+import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
@@ -491,6 +491,52 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
 /** Component props for card role. */
 export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
   role?: string;
+};
+
+/**
+ * Role token for the `cardMasonry` role: several objects laid out as cards.
+ *
+ * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
+ * surface deriving them from a subject, which is what separates this from {@link Related}: the
+ * caller already knows what belongs in the grid and only wants it rendered.
+ */
+export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
+
+/** Surface data for the card-masonry role. */
+export type CardMasonryData = {
+  /**
+   * What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
+   * link to, and resolving them is the surface's job, so a cold load fills in rather than reading
+   * empty.
+   */
+  objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+  /** The plank the grid renders in, so a card's actions resolve against the right node. */
+  attendableId?: string;
+  /**
+   * `compact` renders the cards at three quarters of their size, so a companion-width host fits two
+   * columns where full-size cards would stack in one.
+   */
+  size?: 'default' | 'compact';
+  /**
+   * In the host's flow rather than in a scroller of its own: for a host that already scrolls, such
+   * as a section of an article, where a nested scroller would also pad and centre the grid.
+   */
+  inline?: boolean;
+  /**
+   * The host's items for each card's menu, alongside the object's own: rendered once per card, it
+   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` — the
+   * same contract as a type's {@link CardMenu} surface, so a host adds actions such as removing the
+   * object from its list without the card knowing what they mean.
+   */
+  CardMenu?: ComponentType<CardMenuData<Obj.Unknown>>;
+  /** Placeholder cards, after the resolved ones, for objects the host is still adding. */
+  pending?: ReadonlyArray<CardMasonryPending>;
+};
+
+/** A card-masonry placeholder: a card header with a spinner, titled with what is being added. */
+export type CardMasonryPending = {
+  id: string;
+  label: string;
 };
 
 /** Surface data for card-role ECHO object. */

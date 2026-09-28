@@ -119,3 +119,32 @@ export const Read = Operation.make({
   output: ContentBlock.ContentBlockResult,
   services: [Database.Service],
 });
+
+/**
+ * Names a file's bytes to the host that will sign a download URL for them — the reverse of
+ * {@link CreateFromUpload}.
+ *
+ * Host-internal: the MCP hosts' `createDownload` tool invokes it and signs the URL, since the
+ * signing secret (EDGE) or the loopback listener (`dx mcp serve`) lives in the host, not in the
+ * operation runtime. No skill lists it, so it is never offered to a model directly.
+ */
+export const ResolveDownload = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.file.resolveDownload'),
+    name: 'Resolve File Download',
+    description: 'Resolves a file to the id its host signs a download URL for.',
+    icon: 'ph--file-arrow-down--regular',
+  },
+  input: Schema.Struct({
+    file: Ref.Ref(File.File).annotate({ description: 'The file to download.' }),
+  }),
+  output: Schema.Struct({
+    downloadId: Schema.String.annotate({
+      description: 'Opaque to the caller; names the bytes to the host that signs the download URL.',
+    }),
+    name: Schema.optional(Schema.String),
+    type: Schema.String,
+    size: Schema.Number,
+  }),
+  services: [Database.Service],
+});

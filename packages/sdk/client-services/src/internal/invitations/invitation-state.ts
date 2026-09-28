@@ -75,6 +75,10 @@ export const createGuardedInvitationState = (
   };
 };
 
+/** How a flow ended, from its last state; a flow disposed before a terminal state is `closed`. */
+export const getInvitationOutcome = (state: Invitation_State): string =>
+  isNonTerminalState(state) ? 'closed' : Invitation_State[state].toLowerCase();
+
 const logStateUpdate = (
   invitation: Invitation,
   actor: FlowLockHolder | null | undefined,

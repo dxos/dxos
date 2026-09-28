@@ -1,0 +1,17 @@
+layer: library
+language: typescript
+tags:
+  - vite-plugin
+  - ts-compile
+
+tasks:
+  # Own task rather than the `ts-test` tag: that tag's deps include `node-std:build`, whose own test
+  # tasks depend on this plugin's build (the base vite config loads it), which would form a cycle.
+  test:
+    command: pnpm exec vitest run
+    inputs:
+      - src/**/*
+      - test/**/*
+      - vitest.config.ts
+    options:
+      cache: false

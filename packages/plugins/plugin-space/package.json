@@ -97,6 +97,11 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"
     },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "import": "./dist/lib/hooks.mjs"
+    },
     "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing.ts",

@@ -45,7 +45,8 @@ export type ClientServicesStackOptions = {
 
 /**
  * The configured query evaluation path, if any. `EchoHost` falls back to `DX_ECHO_QUERY_EXECUTOR`
- * and then to the in-memory executor, so an unset field stays undefined rather than defaulting here.
+ * and then to the compiled SQL executor, so an unset field stays undefined rather than defaulting
+ * here — one default, at the point the option enters the host.
  */
 const queryExecutorFromConfig = (config: Config): QueryExecutorMode | undefined => {
   switch (config.get('runtime.client.queryExecutor')) {

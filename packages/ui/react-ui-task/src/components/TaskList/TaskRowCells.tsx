@@ -4,10 +4,11 @@
 
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { Button, Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -114,6 +115,29 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
 
 TaskStatusControl.displayName = 'TaskList.StatusControl';
 
+/**
+ * The task's mnemonic, as a chip that copies a reference to it.
+ *
+ * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it shows: a mnemonic is
+ * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
+ * an MCP call, another space.
+ */
+export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
+  <SystemIconButton.Clipboard
+    classNames='font-mono'
+    density='sm'
+    variant='tag'
+    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+    hue={getHashHue(Obj.getMnemonic(task))}
+    label={Obj.getMnemonic(task)}
+    onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
+    data-testid='taskList.item.mnemonic'
+    onClick={(event) => event.stopPropagation()}
+  />
+);
+
+TaskMnemonic.displayName = 'TaskList.Mnemonic';
+
 export type TaskOrdinalProps = {
   task: Task.Task;
   ordinal: number;
@@ -127,7 +151,7 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   return (
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
-    <IconBlock square aria-hidden={false} classNames={classNames}>
+    <IconBlock square aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
       <Tag hue={hue} classNames='tabular-nums'>
         {ordinal}
       </Tag>

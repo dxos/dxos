@@ -11,9 +11,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -33,14 +31,15 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Loading, TestGrid, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
@@ -56,8 +55,14 @@ const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
+const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
+const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
+const TASK_ANSWER = 'On for internal spaces only';
+const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
+const OTHER_PROJECT_NAME = 'Project 2';
+const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -67,7 +72,14 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  */
 let generation = 0;
 let seeded:
-  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | {
+      generation: number;
+      space: Space;
+      project: Project.Project;
+      taskSet: TaskSet.TaskSet;
+      task: Task.Task;
+      destination: Project.Project;
+    }
   | undefined;
 
 /** Seeded at client init so every story starts populated, including the ones with no play function. */
@@ -97,6 +109,28 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
+  // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
+  // pair is what the detail pane renders as two lines — the question an agent asked, and the answer
+  // it was resumed on. `answer` refuses an id that is not in this task's log, so seeding through
+  // them is also the check that the two entries are joined.
+  const question = Task.ask(task, {
+    text: TASK_QUESTION,
+    context: 'The section ships behind a flag either way; the question is what the flag defaults to.',
+    options: [{ title: TASK_ANSWER }, { title: 'Off for everyone' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  Task.answer(task, question.id, TASK_ANSWER, { actor: { role: 'user', name: 'Rich' } });
+  // A second question, left open: answered, a question is a record and reads as two lines of the
+  // log; open, it is a prompt the pane puts to the reader, which is the other half of the surface.
+  Task.ask(task, {
+    text: TASK_OPEN_QUESTION,
+    context: 'Nobody has said which spaces count as internal, and the flag needs a list.',
+    options: [{ title: 'Every space the team owns' }, { title: 'Only the demo space' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  // What the task produced, linked the way the verbs link it: a ref on the task, with the object
+  // filed in the space rather than parented to the task.
+  Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
   const linkTask = space.db.add(
     Task.make({
       [Obj.Parent]: taskSet,
@@ -114,7 +148,10 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  seeded = { generation: storyGeneration, space, project, taskSet, task };
+  // A second project, so a task row's `Move to…` has somewhere to go.
+  const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
+
+  seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
 };
 
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
@@ -192,47 +229,6 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
 };
 
 /**
- * The project and the task it opens, side by side — the master-detail the deck renders as two planks
- * (see `docs/TASK-DETAIL.md`). The grid stands in for the deck, as `MailboxArticle`'s three-column
- * story does: the ledger row publishes its selection through `LayoutOperation.Select`, this reads it
- * back, and the detail is the same `Task` article surface the deck would mount.
- */
-const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
-  const [space] = useSpaces();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const project = projects.find((entry) => entry.name === PROJECT_NAME);
-  const tasks = useQuery(space?.db, Filter.type(Task.Task));
-  const selectedId = useSelection(attendableId, 'single');
-  const task = tasks.find((entry) => entry.id === selectedId);
-  if (!space?.db || !project) {
-    return <Loading data={{ db: !!space?.db, project: !!project }} />;
-  }
-
-  return (
-    <TestGrid.Root>
-      <TestGrid.Stack>
-        <TestGrid.Panel>
-          <AttendableContainer id={attendableId} classNames='contents'>
-            <ProjectArticle role={role} subject={project} attendableId={attendableId} />
-          </AttendableContainer>
-        </TestGrid.Panel>
-        {task && (
-          <TestGrid.Panel>
-            {/* Through the surface rather than the component, so the story also proves plugin-tasks'
-                `article.task` registration is what the deck would resolve. */}
-            <Surface.Surface
-              type={AppSurface.Article}
-              data={{ subject: task, attendableId: `${attendableId}/task` }}
-              limit={1}
-            />
-          </TestGrid.Panel>
-        )}
-      </TestGrid.Stack>
-    </TestGrid.Root>
-  );
-};
-
-/**
  * No-op for the one layout operation the ledger row invokes that belongs to DeckPlugin, which this
  * story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin (in
  * `corePlugins`), and it is what publishes the row the detail panel reads back.
@@ -260,7 +256,6 @@ const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -271,6 +266,9 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
+        // For the card stack under the task companion: the surface is plugin-space's, so without it
+        // the companion renders the article alone and the stack silently resolves to nothing.
+        SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
@@ -311,6 +309,9 @@ const meta = {
       // the first render.
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, as the app's theme is: the storybook layout portals its dialog outside the story,
+    // so a theme inside the plugin manager would leave the dialog without translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -339,24 +340,6 @@ export const Default: Story = {
   args: {
     role: 'article',
     attendableId: 'test',
-  },
-};
-
-/**
- * Master-detail: the ledger on the left, the selected task's article on the right — what the deck
- * shows as two planks once a row is clicked.
- */
-export const TaskDetail: Story = {
-  ...Default,
-  render: MasterDetailStory,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await seedContent();
-    await showTab(canvas, 'tasks');
-    await userEvent.click(await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 }));
-    // The detail panel renders the same title as an editable field, so the form is what is asserted
-    // rather than a second copy of the row's text.
-    await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 
@@ -458,6 +441,43 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Move to…` action: it opens the project picker (a dialog the storybook layout hosts),
+ * and picking another project transfers the task into that project's task set.
+ */
+export const MoveTaskToProject: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { taskSet, task, destination } = await seedContent();
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    const row = title.closest('[data-testid="taskList.item"]');
+    await expect(row).toBeTruthy();
+    await userEvent.click(
+      await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+    );
+    await userEvent.click(await screen.findByText(MOVE_ACTION_LABEL, undefined, { timeout: 10_000 }));
+
+    // The picker lists the other project only: the task's own project is not a destination.
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await expect(within(dialog).findByText('Move task to project')).resolves.toBeTruthy();
+    await expect(within(dialog).queryByText(PROJECT_NAME)).toBeNull();
+    await userEvent.click(await within(dialog).findByText(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 }));
+
+    await waitFor(
+      async () => {
+        await expect(TaskSet.resolveTasks(taskSet).map(({ id }) => id)).not.toContain(task.id);
+        await expect(destination.taskSet?.target?.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
   },
 };
 

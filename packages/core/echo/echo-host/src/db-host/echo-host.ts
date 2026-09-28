@@ -97,8 +97,11 @@ import { type QueryExecutorMode } from '../query/index.ts';
 
 /**
  * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
- * in-memory executor. Resolved here, where the option enters, so nothing below reads the
+ * compiled SQL executor. Resolved here, where the option enters, so nothing below reads the
  * environment — the planner and executor take the mode they are given.
+ *
+ * `memory` remains reachable so a regression can be bisected against the old path without a rebuild,
+ * and the planner still falls back to it per query for the shapes the compiler declines.
  */
 const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
   if (explicit) {
@@ -107,11 +110,11 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
   const fromEnv =
     import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
     (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
-  return fromEnv === 'sql' ? 'sql' : 'memory';
+  return fromEnv === 'memory' ? 'memory' : 'sql';
 };
 
 export type EchoHostProps = {
-  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the in-memory executor. */
+  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
 
   peerIdProvider?: PeerIdProvider;
@@ -195,9 +198,17 @@ export class EchoHost extends Resource {
 
   private _feedService: FeedService.Handlers;
 
-  private _indexesUpToDate = false;
+  /**
+   * Bumped by every change that needs indexing (not by a pass continuing its own backlog), so a
+   * caller can wait for the inputs that existed when it asked rather than for the index to go idle.
+   */
+  #inputGeneration = 0;
 
-  private _indexInputsChanged = true;
+  /** The newest input generation a drained pass has fully indexed. */
+  #indexedGeneration = 0;
+
+  /** Whether the last pass found nothing to index. */
+  #lastPassIdle = false;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
@@ -445,11 +456,10 @@ export class EchoHost extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     // Drain any in-flight indexer task before the Resource base disposes
     // `this._ctx`. Without this, an in-flight `DataServiceImpl.updateIndexes`
-    // RPC handler's `do { await runBlocking() } while (!_indexesUpToDate)`
-    // loop can hit a disposed ctx on its next iteration and throw
-    // `ContextDisposedError` — which escapes as an unhandled rejection
-    // because the originating client `flush()` is fire-and-forget at the
-    // test layer. The cooperative `_indexesUpToDate = true` set inside
+    // RPC handler's `runBlocking` loop can hit a disposed ctx on its next
+    // iteration and throw `ContextDisposedError` — which escapes as an
+    // unhandled rejection because the originating client `flush()` is
+    // fire-and-forget at the test layer. `#releaseIndexWaiters` inside
     // `_runUpdateIndexes` lets the loop exit cleanly once the current
     // iteration finishes.
     await this._updateIndexes?.join();
@@ -467,7 +477,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Perform any pending index updates.
+   * Waits until every change made before the call is indexed. Changes made during the wait are left
+   * to later passes, so a stream of writes cannot hold the caller.
    *
    * Bails as a no-op when the host has been closed: a late `db.flush()` RPC
    * (client still has an open service ref while the host is in/post-teardown)
@@ -485,8 +496,10 @@ export class EchoHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
-    // A pass in flight re-arms the flag when it schedules a continuation, so the check repeats.
-    while (this._indexInputsChanged || !this._indexesUpToDate) {
+    // Waits for the inputs that existed on entry, not for the index to go idle: writes arriving faster
+    // than a pass completes never leave the empty batch that idleness needs.
+    const target = this.#inputGeneration;
+    while (this.#indexedGeneration < target) {
       if (reason) {
         this.#noteIndexRunReason(reason);
       }
@@ -495,10 +508,18 @@ export class EchoHost extends Resource {
         return;
       }
     }
-    await this._updateIndexes.join();
-    if (this._indexInputsChanged || !this._indexesUpToDate) {
-      return this.updateIndexes({ secondaryIndexes, reason });
+    // One more pass when the last still found work, as the old wait-for-idle ended: under a quiet
+    // index it is empty and gives the results the last pass invalidated time to reach their clients,
+    // which callers that flush then read depend on. One, so a stream still cannot hold the caller.
+    if (!this.#lastPassIdle) {
+      await this._updateIndexes.runBlocking();
+      if (this._ctx.disposed) {
+        return;
+      }
     }
+    // A pass invalidates queries as it ends and they re-run on their own task; callers flushing the
+    // index expect those results too.
+    await this._queryService.awaitQueryUpdates();
 
     if (secondaryIndexes) {
       await this.updateSecondaryIndexes();
@@ -1190,7 +1211,9 @@ export class EchoHost extends Resource {
   }
 
   #scheduleIndexRun(reason: IndexRunReason): void {
-    this._indexInputsChanged = true;
+    if (reason !== 'batch-continuation') {
+      this.#inputGeneration++;
+    }
     this.#noteIndexRunReason(reason);
     this._updateIndexes.schedule();
   }
@@ -1233,12 +1256,17 @@ export class EchoHost extends Resource {
     return reasons;
   }
 
+  /**
+   * Lets every `updateIndexes` caller return: a closing host indexes nothing more, and a waiter left
+   * looping would call `runBlocking` again, which throws on the disposed context.
+   */
+  #releaseIndexWaiters(): void {
+    this.#indexedGeneration = this.#inputGeneration;
+  }
+
   private _runUpdateIndexes = async (): Promise<void> => {
     if (this._ctx.disposed || !this.isOpen) {
-      // Signal the `updateIndexes` RPC handler's `do-while` loop to exit
-      // cooperatively. Without this, the loop sees `_indexesUpToDate === false`
-      // and calls `runBlocking` again, which throws on the disposed context.
-      this._indexesUpToDate = true;
+      this.#releaseIndexWaiters();
       return;
     }
 
@@ -1247,10 +1275,14 @@ export class EchoHost extends Resource {
     // parenting those on `this._ctx` is an unbounded leak.
     const passCtx = this._ctx.derive();
     try {
-      // Cleared before the pass reads, so a change landing mid-pass re-arms the next request.
-      this._indexInputsChanged = false;
+      // Read before the pass reads its sources, so an input landing mid-pass is left to the next one.
+      const generation = this.#inputGeneration;
       // Drained here rather than inside the pass so the span can report what triggered it.
-      await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
+      const outcome = await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
+      this.#lastPassIdle = outcome?.done ?? false;
+      if (outcome?.drained) {
+        this.#indexedGeneration = Math.max(this.#indexedGeneration, generation);
+      }
     } finally {
       await passCtx.dispose();
     }
@@ -1279,6 +1311,7 @@ export class EchoHost extends Resource {
     resultAttributes: (outcome: IndexPassOutcome | undefined) => ({
       updated: outcome?.updated ?? 0,
       done: outcome?.done ?? false,
+      drained: outcome?.drained ?? false,
       // A pass that indexed nothing yet still invalidates queries is the signature of a
       // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
       invalidates: outcome?.invalidates ?? false,
@@ -1341,7 +1374,7 @@ export class EchoHost extends Resource {
         });
       }
       if (this._ctx.disposed || !this.isOpen) {
-        this._indexesUpToDate = true;
+        this.#releaseIndexWaiters();
         return;
       }
 
@@ -1378,6 +1411,7 @@ export class EchoHost extends Resource {
         invalidates: !!hint,
         updated: combinedResult.updated,
         done: combinedResult.done,
+        drained: combinedResult.drained,
         spaces: combinedResult.spaces.size,
         queues: combinedResult.queues.size,
         documents: combinedResult.documents.size,
@@ -1386,10 +1420,7 @@ export class EchoHost extends Resource {
       });
       await sleep(1);
       if (!combinedResult.done) {
-        this._indexesUpToDate = false;
         this.#scheduleIndexRun('batch-continuation');
-      } else {
-        this._indexesUpToDate = true;
       }
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
@@ -1399,13 +1430,14 @@ export class EchoHost extends Resource {
       return {
         updated: combinedResult.updated,
         done: combinedResult.done,
+        drained: combinedResult.drained,
         invalidates: !!hint,
         spaces: combinedResult.spaces.size,
         documents: combinedResult.documents.size,
       };
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
-        this._indexesUpToDate = true;
+        this.#releaseIndexWaiters();
         return;
       }
       log.catch(err);
@@ -1422,6 +1454,7 @@ export type { EchoDataStats };
 type IndexPassOutcome = {
   updated: number;
   done: boolean;
+  drained: boolean;
   invalidates: boolean;
   spaces: number;
   documents: number;
@@ -1430,6 +1463,7 @@ type IndexPassOutcome = {
 type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
+  drained: boolean;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1440,6 +1474,7 @@ type MutableIndexingAccumulator = {
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
   updated: 0,
   done: true,
+  drained: true,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -1450,6 +1485,7 @@ const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
 const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void => {
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
+  acc.drained = acc.drained && r.drained;
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }

@@ -65,7 +65,8 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "fast-check": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

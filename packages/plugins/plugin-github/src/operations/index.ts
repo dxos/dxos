@@ -24,4 +24,5 @@ export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./add-pull-request-review-comment.ts')),
   ),
   GitHubOperation.GetPullRequestStatus.pipe(Operation.lazyHandler(() => import('./get-pull-request-status.ts'))),
+  GitHubOperation.GetPullRequestDiff.pipe(Operation.lazyHandler(() => import('./get-pull-request-diff.ts'))),
 ]);

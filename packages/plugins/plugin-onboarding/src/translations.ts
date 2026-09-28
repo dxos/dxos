@@ -62,7 +62,7 @@ export const translations = [
         'get-an-invite.label': 'New here? Get an invite',
 
         'signup-code.title': 'Enter your invitation code',
-        'signup-code.description': "Codes are 8 characters. We'll verify yours before continuing.",
+        'signup-code.description': "Enter the code you were given. We'll verify it before continuing.",
         'signup-auth.title': 'Set up your account',
         'signup-auth.description': "Enter your email so we can confirm it later. You'll be admitted right away.",
         'no-invitation-code-link.label': "Don't have a code? Join the waiting list",
@@ -71,7 +71,7 @@ export const translations = [
         'or-divider.label': 'or',
         'atmosphere-account-button.label': 'Or use your Atmosphere account.',
         'atmosphere-handle-input.placeholder': 'you.bsky.social',
-        'invitation-code-format-error.message': 'Codes are 8 characters of A–Z and 0–9 (e.g. XK4F-9P2A).',
+        'invitation-code-format-error.message': 'Codes use A–Z, 0–9 and dashes (e.g. XK4F-9P2A or SF-MEETUP-7K2Q).',
         'invitation-code-invalid-error.message': "That code isn't valid. Check it for typos or request a new one.",
 
         'waitlist.title': 'Join the waiting list',

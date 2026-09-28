@@ -47,6 +47,7 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ch
     Annotation.LabelAnnotation.set(['username']),
     Annotation.IconAnnotation.set({ icon: 'ph--horse--regular', hue: 'green' }),
     FactoryAnnotation.set(((values) => makeAccount(values)) as FactoryFn),
+    Annotation.UserType.set(),
   ),
 ) {}
 

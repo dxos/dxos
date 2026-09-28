@@ -18,7 +18,7 @@ export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
   Schema.Struct({
     label: Schema.String,
     hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
-  }).pipe(internal.LabelAnnotation.set(['label']), internal.HiddenAnnotation.set(true)),
+  }).pipe(internal.LabelAnnotation.set(['label'])),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);

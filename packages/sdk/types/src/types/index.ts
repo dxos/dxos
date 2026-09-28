@@ -27,6 +27,7 @@ import * as PullRequest from './PullRequest.ts';
 import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
 import * as Task from './Task.ts';
+import * as TaskMigration from './TaskMigration.ts';
 import * as TaskSet from './TaskSet.ts';
 import * as Thread from './Thread.ts';
 import * as Transcript from './Transcript.ts';
@@ -75,6 +76,7 @@ export {
   RemoteSession,
   Repo,
   Task,
+  TaskMigration,
   TaskSet,
   Thread,
   Transcript,

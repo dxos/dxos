@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Children, type ReactNode } from 'react';
+import React, { Children, type ReactNode, memo } from 'react';
 import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -10,6 +10,8 @@ import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highligh
 import { ScrollArea, SystemIconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
+
+import { renderRows } from './renderer.ts';
 
 const zeroWidthSpace = '\u200b';
 
@@ -142,38 +144,13 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
         )}
         ref={forwardedRef}
       >
-        <NativeSyntaxHighlighter
+        <HighlightedSource
           language={languages[language as keyof typeof languages] || language}
           style={prismTheme}
-          // className='leading-6'
-          customStyle={{
-            background: 'unset',
-            border: 'none',
-            boxShadow: 'none',
-            padding: 0,
-            margin: 0,
-            // This allows setting max-h-[6lh] on the Syntax.Code component.
-            lineHeight: 'inherit',
-            // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
-            // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
-            // nested native horizontal scrollbar alongside the viewport's custom one.
-            overflow: 'visible',
-          }}
-          codeTagProps={{
-            style: {
-              lineHeight: 'inherit',
-              // `block`, not the default `inline`: as an inline box every line is the union of the
-              // <pre>'s strut and this element's own box, and the two carry different font stacks
-              // (the prism theme's vs the app's), so lines advanced 16.5px under a 16px
-              // line-height — enough that a `max-h-[Nlh]` cap showed N-1 lines and a sliver.
-              display: 'block',
-            },
-          }}
           {...nativeProps}
         >
-          {/* Non-empty fallback prevents collapse. */}
           {source}
-        </NativeSyntaxHighlighter>
+        </HighlightedSource>
 
         {copyButton && <CopyOverlay source={source} />}
       </div>
@@ -182,5 +159,56 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
 );
 
 SyntaxHighlighterLeaf.displayName = 'SyntaxHighlighterLeaf';
+
+const customStyle: NaturalSyntaxHighlighterProps['customStyle'] = {
+  background: 'unset',
+  border: 'none',
+  boxShadow: 'none',
+  padding: 0,
+  margin: 0,
+  // This allows setting max-h-[6lh] on the Syntax.Code component.
+  lineHeight: 'inherit',
+  // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
+  // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
+  // nested native horizontal scrollbar alongside the viewport's custom one.
+  overflow: 'visible',
+};
+
+const codeTagProps: NaturalSyntaxHighlighterProps['codeTagProps'] = {
+  style: {
+    lineHeight: 'inherit',
+    // `block`, not the default `inline`: as an inline box every line is the union of the
+    // <pre>'s strut and this element's own box, and the two carry different font stacks
+    // (the prism theme's vs the app's), so lines advanced 16.5px under a 16px
+    // line-height — enough that a `max-h-[Nlh]` cap showed N-1 lines and a sliver.
+    display: 'block',
+  },
+};
+
+type HighlightedSourceProps = Omit<SyntaxHighlighterProps, 'themeStyle' | 'fallback' | 'copyButton' | 'scroll'> & {
+  style: NaturalSyntaxHighlighterProps['style'];
+  children: string;
+};
+
+/**
+ * Memoized on primitive props because tokenizing and building the element tree is the expensive
+ * part, and streaming parents (e.g. the assistant's tool panel) re-render with unchanged source.
+ */
+const HighlightedSource = memo(({ children, renderer, wrapLines, ...props }: HighlightedSourceProps) => (
+  <NativeSyntaxHighlighter
+    customStyle={customStyle}
+    // Copied per render: the library writes `whiteSpace` into this style, which would leak across instances.
+    codeTagProps={{ ...codeTagProps, style: { ...codeTagProps?.style } }}
+    renderer={renderer ?? renderRows}
+    // Any renderer makes the library default `wrapLines` to true; only a caller's own renderer should get that.
+    wrapLines={wrapLines ?? (renderer ? undefined : false)}
+    {...props}
+  >
+    {/* Non-empty fallback prevents collapse. */}
+    {children}
+  </NativeSyntaxHighlighter>
+));
+
+HighlightedSource.displayName = 'HighlightedSource';
 
 SyntaxHighlighter.displayName = 'SyntaxHighlighter';

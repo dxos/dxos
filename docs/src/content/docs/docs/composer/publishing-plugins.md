@@ -124,17 +124,17 @@ export default Config2.make({
 
 Field reference for `plugin`:
 
-| Field         | Required | Notes                                                                                                           |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). The plugin's globally-unique key.                      |
-| `name`        | yes      | Human-readable name shown in the registry.                                                                      |
-| `description` | no       | Short description shown on the plugin's detail view.                                                            |
-| `author`      | no       | Author or organization name.                                                                                    |
-| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.    |
-| `source`      | no       | Source repository URL.                                                                                          |
-| `homePage`    | no       | Homepage URL.                                                                                                   |
-| `tags`        | no       | List of tags for categorization/discovery.                                                                      |
-| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs. |
+| Field         | Required | Notes                                                                                                                                   |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`) whose last segment is camelCase — no hyphens. The plugin's globally-unique key. |
+| `name`        | yes      | Human-readable name shown in the registry.                                                                                              |
+| `description` | no       | Short description shown on the plugin's detail view.                                                                                    |
+| `author`      | no       | Author or organization name.                                                                                                            |
+| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.                            |
+| `source`      | no       | Source repository URL.                                                                                                                  |
+| `homePage`    | no       | Homepage URL.                                                                                                                           |
+| `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
+| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
 
 Field reference for `publish`:
 
@@ -209,12 +209,496 @@ This removes the package profile and all of its release records from your PDS. T
 
 ## Local development
 
-You don't need to publish to test your plugin against Composer. Run your plugin's Vite dev server and load it by URL:
+You don't need to publish to test your plugin against Composer. Composer loads a plugin from the URL of its
+**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded:
 
-1. Start your dev server (e.g. `vite`) — note the port.
-2. In Composer, open **Settings → Plugins → Load by URL** and point it at your dev server's plugin entry (e.g. `http://localhost:5173/src/MyPlugin.tsx`).
+1. Serve the plugin. Either run your plugin's Vite dev server — `composerPlugin` serves a dev manifest at
+   `/manifest.json` (e.g. `http://localhost:3967/manifest.json`) — or serve a built `dist` directory, which
+   contains `manifest.json` and `index.mjs`.
+2. In Composer, open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste
+   the manifest URL. An assistant that has built a plugin offers the same step inline: it shows a prompt with
+   the manifest URL, and the plugin loads when you click **Load plugin**.
 
-> Loading by URL works against a **bundled build** of Composer. It does not work when running Composer from its own Vite dev server.
+The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
+the entry it names.
+
+To have the assistant build one for you, create a project from the **Composer Plugin** template (contributed
+by the Coding (Dev) plugin) in a Composer served locally by `vite preview`. Its parent task and four subtasks
+walk a chat through the example below, from writing the files to the load prompt; assign them to the agent to
+start it.
+
+> Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
+> app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
+> `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
+> imports fail there.
+
+### Example: a plugin with its own navtree group
+
+A small plugin in TypeScript that adds a group to every space's navtree, with one page under it, opened as an
+article. It builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+
+Four files:
+
+```ts
+// dx.config.ts
+import { Config2 } from '@dxos/app-framework/config';
+
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.hello', // must match the key the plugin declares; last segment camelCase
+    name: 'Hello',
+    icon: { key: 'ph--hand-waving--regular', hue: 'amber' },
+    tags: ['labs'], // lists it under Labs in the Plugins registry
+  },
+});
+```
+
+```ts
+// vite.config.ts
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+import { composerPlugin } from '@dxos/app-framework/vite-plugin';
+
+export default defineConfig({
+  plugins: [...composerPlugin({ entry: 'src/plugin.tsx' }), react()],
+  build: { outDir: 'dist' }, // any directory you serve
+});
+```
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": []
+  },
+  "include": ["src", "dx.config.ts"]
+}
+```
+
+```tsx
+// src/plugin.tsx
+import * as Effect from 'effect/Effect';
+import React from 'react';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { Surface } from '@dxos/app-framework/ui';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+
+import config from '../dx.config.ts';
+
+const meta = Plugin.getMetaFromConfig(config);
+const GROUP = 'helloGroup';
+const GROUP_TYPE = `${meta.profile.key}.group`;
+const PAGE = 'helloPage';
+
+const HelloArticle = () => (
+  <div style={{ padding: '2rem', fontSize: '2rem' }}>Hello from a plugin!</div>
+);
+
+export default Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'appGraph',
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AppGraphBuilder],
+    activate: () =>
+      Effect.gen(function* () {
+        // A group: an uppercase heading in each space's navtree, between CONTENT and SYSTEM.
+        const group = yield* AppGraphBuilder.createExtension({
+          id: 'helloGroup',
+          match: AppNodeMatcher.whenSpace,
+          connector: (space) =>
+            Effect.succeed([
+              AppNode.makeGroup({
+                id: GROUP,
+                type: GROUP_TYPE,
+                label: 'Hello',
+                space,
+                position: 400,
+              }),
+            ]),
+        });
+        // A page in that group. The URL binding is what lets the deck open it.
+        const page = yield* AppGraphBuilder.createExtension({
+          id: 'helloPage',
+          match: AppNodeMatcher.whenNavTreeGroup(GROUP_TYPE),
+          url: { key: PAGE, kind: 'singleton', path: [GROUP] },
+          connector: (space) =>
+            Effect.succeed([
+              AppGraphNode.make({
+                id: PAGE,
+                type: `${meta.profile.key}.page`,
+                data: PAGE,
+                properties: {
+                  label: 'Hello',
+                  icon: 'ph--article--regular',
+                  selectable: true,
+                  draggable: false,
+                  droppable: false,
+                  space,
+                },
+              }),
+            ]),
+        });
+        return [
+          Capability.contribute(AppCapabilities.AppGraphBuilder, [
+            ...group,
+            ...page,
+          ]),
+        ];
+      }),
+  }),
+  Plugin.addModule({
+    id: 'surface',
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.ReactSurface,
+          // Renders the page's article: the node's `data` is the subject.
+          Surface.create({
+            id: 'helloArticle',
+            filter: AppSurface.literal(AppSurface.Article, PAGE),
+            component: HelloArticle,
+          }),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
+```
+
+Typecheck, then build, from the plugin's directory:
+
+```bash
+tsc -p tsconfig.json   # vite does not typecheck
+vite build             # writes dist/manifest.json and dist/index.mjs
+```
+
+Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
+each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version
+in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` without one.
+
+Things to know:
+
+- Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
+  `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
+  so the build bundles whatever you use from them.
+- Ids are camelCase: the key's last segment (`org.example.plugin.helloWorld`, not `…hello-world`), module ids,
+  graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
+  is imported; a hyphenated extension or surface id is dropped without an error.
+- `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
+- A group is a heading, not a page: it has no URL binding and shows only once something is under it. Its
+  `position` orders it among the built-in groups (content 200, system 900).
+- A `singleton` page's node id must equal its URL `key`, and `path` names the group it sits under.
+- Every module lists the capabilities its `activate` returns in `provides`.
+- A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
+- The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
+  same URL.
+
+### Example: data, a form and another plugin's surface
+
+The same plugin grows three things: an ECHO type stored in the space, a form that edits it, and a map drawn by
+another plugin. Only the differences from the example above are shown.
+
+Depend on the plugin whose surface you render; enabling yours then enables it too:
+
+```ts
+// dx.config.ts
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.worldClock',
+    name: 'World Clock',
+    icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'sky' },
+    tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.map'],
+  },
+});
+```
+
+Define the type and register it, so the space can store it:
+
+```tsx
+import * as Schema from 'effect/Schema';
+
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
+
+export class Clock extends Type.makeObject<Clock>(DXN.make('org.example.type.worldClock', '0.1.0'))(
+  Schema.Struct({ timezones: Schema.optional(Schema.Array(Schema.String)) }),
+) {}
+
+// In the pipe, before the other modules:
+Plugin.addModule(AppCapability.schema([Clock])),
+```
+
+A page that needs the space carries it in the node's `data`, and the surface narrows on it:
+
+```tsx
+type Page = { type: typeof PAGE; space: { db: Database.Database } };
+const isPage = (data: unknown): data is Page =>
+  typeof data === 'object' && data !== null && 'type' in data && data.type === PAGE;
+
+// The page node:
+AppGraphNode.make({ id: PAGE, type: `${meta.profile.key}.page`, data: { type: PAGE, space }, properties: { ... } });
+
+// The surface:
+Surface.create({
+  id: 'worldClockArticle',
+  filter: AppSurface.subject(AppSurface.Article, isPage),
+  component: WorldClockArticle,
+  props: ({ data: { subject } }) => ({ db: subject.space.db }),
+});
+```
+
+Query the type, subscribe to the fields you render with `useObject`, and change the object with `Obj.update`:
+
+```tsx
+import { useObject, useQuery } from '@dxos/echo-react';
+
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
+  const [clock] = useQuery(db, Filter.type(Clock));
+  const [stored] = useObject(clock, 'timezones');
+  const timezones = stored ?? [localZone()];
+  const save = (next: string[]) => {
+    if (clock) {
+      Obj.update(clock, (clock) => {
+        clock.timezones = next;
+      });
+    } else {
+      db?.add(Obj.make(Clock, { timezones: next }));
+    }
+  };
+  const add = (timezone: string) =>
+    !timezones.includes(timezone) && save([...timezones, timezone]);
+  const remove = (timezone: string) =>
+    save(timezones.filter((zone) => zone !== timezone));
+  // ...
+};
+```
+
+- `useQuery` re-renders when the set of objects changes, not when a field of one changes; without `useObject`
+  an update is saved but the view never shows it.
+- Create the object on the first change, not in an effect on first view: the query is empty until it has
+  loaded, so an effect that creates when it finds nothing creates a duplicate on every visit.
+- A list rendered with its values as React keys must not hold the same value twice.
+
+A form is a schema; a `Schema.Literals` field renders as a select:
+
+```tsx
+import { Form } from '@dxos/react-ui-form';
+
+const schema = Schema.Struct({
+  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
+    title: 'Timezone',
+  }),
+});
+
+<Form.Root schema={schema} onSave={({ timezone }) => add(timezone)}>
+  <Form.Content>
+    <Form.Fields />
+    <Form.Actions />
+  </Form.Content>
+</Form.Root>;
+```
+
+Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws a
+plain world map: `projection` picks the projection (`equirectangular`, `mercator`, `transverse-mercator` or
+`orthographic`), and `fit` places the whole world inside the surface (`contain`) or fills it (`cover`), as
+`object-fit` does for an image:
+
+```tsx
+import * as MapRole from '@dxos/plugin-map/MapRole';
+
+<Surface.Surface
+  type={MapRole.World}
+  data={{ projection: 'equirectangular', fit: 'contain' }}
+  limit={1}
+/>;
+```
+
+Give the surface a sized container: the map fills its parent, so a parent with no height draws nothing.
+
+Put together, the article and its cards. Every card has one fixed size, so opening the form moves nothing, and
+the map sits in a 2:1 box so it fills the width with the whole world:
+
+```tsx
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const useNow = () => {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+};
+
+// Every card has one fixed size, so the empty card lines up with the clocks and opening its form moves nothing.
+const CARD: React.CSSProperties = {
+  boxSizing: 'border-box',
+  position: 'relative',
+  flex: 'none',
+  width: 240,
+  height: 176,
+  padding: 16,
+  borderRadius: 8,
+  border: '1px solid color-mix(in srgb, currentColor 25%, transparent)',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+};
+
+// 24-hour and zero-padded, so every clock is the same width.
+const TIME: Intl.DateTimeFormatOptions = {
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+};
+
+const ClockCard = ({
+  timeZone,
+  now,
+  onDelete,
+}: {
+  timeZone: string;
+  now: Date;
+  onDelete: () => void;
+}) => (
+  <div data-testid='worldClock.clock' style={CARD}>
+    <div style={{ opacity: 0.7 }}>
+      {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
+    </div>
+    <div style={{ fontSize: '2rem', fontVariantNumeric: 'tabular-nums' }}>
+      {now.toLocaleTimeString(undefined, { timeZone, ...TIME })}
+    </div>
+    <div style={{ opacity: 0.7 }}>{timeZone}</div>
+    {/* Last, so it paints above the text it overlaps. */}
+    <div style={{ position: 'absolute', top: 4, right: 4 }}>
+      <IconButton
+        data-testid='worldClock.delete'
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label='Delete clock'
+        onClick={onDelete}
+      />
+    </div>
+  </div>
+);
+
+const TimezoneForm = Schema.Struct({
+  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
+    title: 'Timezone',
+  }),
+});
+
+const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
+  const [adding, setAdding] = useState(false);
+  return (
+    <div
+      data-testid='worldClock.new'
+      style={{
+        ...CARD,
+        borderStyle: 'dashed',
+        alignItems: adding ? 'stretch' : 'center',
+      }}
+    >
+      {adding ? (
+        <Form.Root
+          schema={TimezoneForm}
+          onSave={({ timezone }) => {
+            onAdd(timezone);
+            setAdding(false);
+          }}
+          onCancel={() => setAdding(false)}
+        >
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Root>
+      ) : (
+        <IconButton
+          data-testid='worldClock.add'
+          variant='ghost'
+          icon='ph--plus--regular'
+          iconOnly
+          size={8}
+          label='Add clock'
+          onClick={() => setAdding(true)}
+        />
+      )}
+    </div>
+  );
+};
+
+const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
+  const now = useNow();
+  const [clock] = useQuery(db, Filter.type(Clock));
+  // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
+  const [stored] = useObject(clock, 'timezones');
+  const timezones = stored ?? [localZone()];
+  // Created on the first change rather than on first view: the query is empty until it has loaded.
+  const save = (next: string[]) => {
+    if (clock) {
+      Obj.update(clock, (clock) => {
+        clock.timezones = next;
+      });
+    } else {
+      db?.add(Obj.make(Clock, { timezones: next }));
+    }
+  };
+  const add = (timeZone: string) =>
+    !timezones.includes(timeZone) && save([...timezones, timeZone]);
+  const remove = (timeZone: string) =>
+    save(timezones.filter((zone) => zone !== timeZone));
+  return (
+    <div style={{ height: '100%', overflowY: 'auto' }}>
+      {/* The world is twice as wide as it is tall, so a 2:1 box fills the width with the whole map. */}
+      <div style={{ width: '100%', aspectRatio: '2 / 1' }}>
+        <Surface.Surface
+          type={MapRole.World}
+          data={{ projection: 'equirectangular', fit: 'contain' }}
+          limit={1}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 16, padding: 16, overflowX: 'auto' }}>
+        {timezones.map((timeZone) => (
+          <ClockCard
+            key={timeZone}
+            timeZone={timeZone}
+            now={now}
+            onDelete={() => remove(timeZone)}
+          />
+        ))}
+        <AddClock onAdd={add} />
+      </div>
+    </div>
+  );
+};
+```
 
 ## Command reference
 

@@ -6,8 +6,8 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Accordion, Banner, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
@@ -49,7 +49,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Empty label={t('history.empty.message')} />
+              <Banner.Empty label={t('history.empty.message')} />
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (

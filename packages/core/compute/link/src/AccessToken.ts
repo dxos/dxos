@@ -32,7 +32,6 @@ export class AccessToken extends Type.makeObject<AccessToken>(DXN.make('org.dxos
   }).pipe(
     Annotation.LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
     Annotation.IconAnnotation.set({ icon: 'ph--key--regular', hue: 'yellow' }),
-    Annotation.HiddenAnnotation.set(true),
     Schema.annotate({
       description: 'A credential or token for accessing a service.',
     }),

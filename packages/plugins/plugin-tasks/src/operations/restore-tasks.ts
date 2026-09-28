@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TaskOperation.RestoreTasks> = TaskOperation.RestoreTasks.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ entries, taskSet }) {
+    Effect.fnUntraced(function* ({ entries, taskSet, parentTask }) {
       if (entries.length === 0) {
         return;
       }
@@ -22,15 +23,15 @@ const handler: Operation.WithHandler<typeof TaskOperation.RestoreTasks> = TaskOp
 
       const restored = entries.map(({ task, index }) => ({ task: db.add(task), index }));
 
-      if (taskSet) {
-        const placed = restored
-          .flatMap(({ task, index }) => (index === undefined ? [] : [{ task, index }]))
-          .sort((a, b) => a.index - b.index);
-        Obj.update(taskSet, (taskSet) => {
-          for (const { task, index } of placed) {
-            taskSet.tasks.splice(index, 0, Ref.make(task));
+      // Sub-tasks come back still listed by their restored parents; only the deleted task itself
+      // left a list, and it goes back to the one it held.
+      const holder = parentTask ?? taskSet;
+      if (holder) {
+        for (const { task, index } of restored) {
+          if (index !== undefined) {
+            TaskSet.insertTaskAt(holder, task, index);
           }
-        });
+        }
       }
 
       yield* Effect.promise(() => db.flush());

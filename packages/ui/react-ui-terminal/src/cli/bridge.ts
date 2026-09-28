@@ -18,6 +18,8 @@ export interface TerminalBridge {
   readonly columns: number;
   readonly rows: number;
   readonly atLineStart: boolean;
+  /** How many writes have reached the terminal, so a caller can tell whether something printed. */
+  readonly written: number;
   write(text: string): void;
   clear(): void;
   subscribe(handler: InputHandler): () => void;
@@ -31,6 +33,7 @@ export class XtermBridge implements TerminalBridge {
   #subscribers: InputHandler[] = [];
   #subscription: IDisposable;
   #atLineStart = true;
+  #written = 0;
 
   constructor(terminal: XtermTerminal) {
     this.#terminal = terminal;
@@ -53,6 +56,10 @@ export class XtermBridge implements TerminalBridge {
     return this.#atLineStart;
   }
 
+  get written(): number {
+    return this.#written;
+  }
+
   /**
    * Writes text, translating bare newlines to CRLF since xterm does not reset the column on `\n`.
    */
@@ -63,6 +70,7 @@ export class XtermBridge implements TerminalBridge {
 
     this.#terminal.write(text.replace(/\r?\n/g, '\r\n'));
     this.#atLineStart = text.endsWith('\n');
+    this.#written++;
   }
 
   clear(): void {

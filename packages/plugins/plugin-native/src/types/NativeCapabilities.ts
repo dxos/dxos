@@ -15,6 +15,6 @@ import { meta } from '#meta';
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
-export const UpdateManager = Capability.makeSingleton<import('./Update.ts').Manager>()(
-  `${meta.profile.key}.capability.updateManager`,
-);
+// Re-exported rather than declared: plugin-pwa contributes the same capability, so a settings surface
+// resolves one identifier and gets whichever platform is present.
+export { UpdateManager } from '@dxos/app-toolkit/AppCapabilities';

@@ -177,6 +177,8 @@ export const ArtifactAdd = Operation.make({
       project's context, so the project owns it and it appears in the project's artifacts list.
       When the object was produced for a task on your checklist, pass that task too, so the finished
       task shows what it made. Adding the same object twice is a no-op.
+      A pull request is recorded on the ROOT of the task's tree, since all sub-tasks land in one PR;
+      it is refused when the root already has a different open PR.
     `,
   },
   input: Schema.Struct({

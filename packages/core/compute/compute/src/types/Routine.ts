@@ -59,6 +59,7 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

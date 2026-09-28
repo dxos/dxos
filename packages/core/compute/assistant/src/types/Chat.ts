@@ -9,10 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { SessionConfig } from '@dxos/ai';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 /**
@@ -40,13 +42,10 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
-     * The model this conversation runs on, selected in the chat rather than globally so it survives a
-     * remount and travels with the chat. Held as a ref whose URI is the model's DXN: there is no ECHO
-     * object behind it yet, so the ref is a stable handle rather than something that resolves. Unset
-     * means the agent's default.
+     * How this conversation runs (its model), chosen in the chat rather than globally so it survives
+     * a remount and travels with the chat. Unset fields fall back to the project's, then the agent's.
      */
-    // TODO(dmaretskyi): Register `Model` in the registry so this ref resolves to a catalog object.
-    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
+    session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
@@ -62,6 +61,8 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    Annotation.UserType.set(),
+    ArchivableAnnotation.set(true),
   ),
 ) {}
 
@@ -103,6 +104,20 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
     }
   }
   Obj.setParent(chat, subject);
+};
+
+/**
+ * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
+ * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.
+ */
+export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | undefined): void => {
+  if (!session || chat.session) {
+    return;
+  }
+
+  Obj.update(chat, (chat) => {
+    chat.session = { ...session };
+  });
 };
 
 /** Creates a task the chat owns and appends it to the checklist. */

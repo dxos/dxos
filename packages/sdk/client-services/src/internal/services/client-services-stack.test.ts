@@ -182,7 +182,7 @@ describe('ClientServicesLayer', () => {
 
 describe('runtimePropsFromConfig', () => {
   // The config field is the declared surface for the query executor; `DX_ECHO_QUERY_EXECUTOR` is the
-  // fallback `EchoHost` applies, so an unset field must stay undefined rather than pinning `memory`
+  // fallback `EchoHost` applies, so an unset field must stay undefined rather than pinning a mode
   // here and shadowing it.
   test('maps the configured query executor and leaves it unset otherwise', () => {
     expect(

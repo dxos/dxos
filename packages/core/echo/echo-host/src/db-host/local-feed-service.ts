@@ -49,21 +49,60 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   }
 
   /**
-   * Pushes a fresh query snapshot on subscribe, then again whenever {@link FeedStore.onNewBlocks}
-   * fires and the recomputed snapshot actually differs from the last one sent -- replacing the
-   * client's previous poll loop with a real subscription. Unlike `subscribeSyncState`'s small
-   * aggregate payload, this recomputation re-fetches the feed's full object set on every signal, so
-   * suppressing unchanged snapshots server-side (rather than leaving dedup to the client) matters
-   * more here.
+   * Pushes the feed's full contents on subscribe, then on every {@link FeedStore.onNewBlocks} signal
+   * a delta: the blocks written since, and position changes and removals of blocks sent before. Each
+   * push costs a scan of block heads plus the new payloads, not a re-read of the whole feed.
+   *
+   * `after`, `limit` and `reverse` are ignored: a subscriber is sent every block of its feeds.
    */
   ['FeedService.subscribeFeed'](
     request: FeedService.QueryFeedRequest,
   ): EffectStream.Stream<FeedService.FeedQueryResult, Error> {
+    const { query } = request;
+    invariant(query, 'query is required');
+    const spaceId = query.spaceId;
+    const feedNamespace = query.feedNamespace || FeedProtocol.WellKnownNamespaces.data;
+    const feedStore = this.#feedStore;
+    let dataAfter = -1;
+    let sent: Map<string, number | null> | undefined;
     return this.#recomputeOn(
       this.#feedStore.onNewBlocks,
-      request.query.spaceId,
-      () => this.#queryFeedImpl(request),
-      feedQueryResultChanged,
+      spaceId,
+      () =>
+        RuntimeProvider.runPromise(this.#runtime)(
+          Effect.gen(function* () {
+            const { heads, blocks } = yield* feedStore.queryHeads({
+              spaceId,
+              feedNamespace,
+              feedIds: query.feedIds,
+              dataAfter,
+            });
+            const current = new Map<string, number | null>();
+            for (const head of [...heads, ...blocks]) {
+              current.set(EchoFeedCodec.blockId(head.actorId, head.sequence), head.position);
+              dataAfter = Math.max(dataAfter, head.insertionId ?? -1);
+            }
+            const objects = blocks.map((block) => JSON.stringify(EchoFeedCodec.decodeBlock(block)));
+            const previous = sent;
+            sent = current;
+            if (previous === undefined) {
+              return Function.identity<FeedService.FeedQueryResult>({ objects, nextCursor: '', prevCursor: '' });
+            }
+            return Function.identity<FeedService.FeedQueryResult>({
+              objects,
+              nextCursor: '',
+              prevCursor: '',
+              delta: true,
+              positions: [...current]
+                .filter(([block, position]) => previous.has(block) && previous.get(block) !== position)
+                .map(([block, position]) => ({ block, position })),
+              removed: [...previous.keys()].filter((block) => !current.has(block)),
+            });
+          }),
+        ),
+      (_, next) =>
+        next.delta !== true ||
+        (next.objects?.length ?? 0) + (next.positions?.length ?? 0) + (next.removed?.length ?? 0) > 0,
     );
   }
 
@@ -83,7 +122,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         });
 
         const objects = result.blocks.map((block: FeedProtocol.Block) =>
-          JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
+          JSON.stringify(EchoFeedCodec.decodeBlock(block)),
         );
 
         return Function.identity<FeedService.FeedQueryResult>({
@@ -95,7 +134,9 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     );
   }
 
-  ['FeedService.insertIntoFeed'](request: FeedService.InsertIntoFeedRequest): Effect.Effect<void, BaseError> {
+  ['FeedService.insertIntoFeed'](
+    request: FeedService.InsertIntoFeedRequest,
+  ): Effect.Effect<FeedService.InsertIntoFeedResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const { subspaceTag, spaceId, feedId, objects } = request;
@@ -105,7 +146,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           'request.subspaceTag',
           'expected a well-known feed namespace',
         );
-        await RuntimeProvider.runPromise(this.#runtime)(
+        return RuntimeProvider.runPromise(this.#runtime)(
           Effect.gen({ self: this }, function* () {
             const messages = (objects ?? []).map((encoded) => ({
               spaceId: spaceId,
@@ -114,7 +155,8 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
               data: EchoFeedCodec.encode(JSON.parse(encoded) as ObjectJSON),
             }));
 
-            yield* this.#feedStore.appendLocal(messages);
+            const blocks = yield* this.#feedStore.appendLocal(messages);
+            return { blocks: blocks.map((block) => EchoFeedCodec.blockId(block.actorId, block.sequence)) };
           }),
         );
       },
@@ -294,21 +336,4 @@ const syncStateResponseChanged = (
       namespaceState.totalBlocks !== other.totalBlocks
     );
   });
-};
-
-/**
- * String equality on the encoded objects (not a decoded/semantic diff) plus cursors -- cheap, and
- * exact enough: a feed only grows via new blocks, so any real content change shows up as an
- * appended or altered entry in `objects`, or a moved cursor.
- */
-const feedQueryResultChanged = (before: FeedService.FeedQueryResult, after: FeedService.FeedQueryResult): boolean => {
-  if (before.nextCursor !== after.nextCursor || before.prevCursor !== after.prevCursor) {
-    return true;
-  }
-  const beforeObjects = before.objects ?? [];
-  const afterObjects = after.objects ?? [];
-  if (beforeObjects.length !== afterObjects.length) {
-    return true;
-  }
-  return beforeObjects.some((object, index) => object !== afterObjects[index]);
 };

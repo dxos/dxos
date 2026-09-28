@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Field, Icon, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Field, Panel, SystemIconButton, Toolbar, useFileDownload } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -53,10 +53,6 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
     }
   }, []);
 
-  const handleCopy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-  };
-
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
@@ -76,15 +72,8 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
       {info && (
         <Panel.Statusbar asChild>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
-            {info.map((text, i) => (
-              <button
-                key={i}
-                className='inline-flex items-center gap-1 cursor-pointer'
-                onClick={() => handleCopy(text)}
-              >
-                <Icon icon='ph--clipboard-text--regular' />
-                {text}
-              </button>
+            {info.map((text) => (
+              <SystemIconButton.Clipboard key={text} variant='ghost' label={text} value={text} />
             ))}
           </div>
         </Panel.Statusbar>

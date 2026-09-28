@@ -115,7 +115,12 @@ export class AutomergeDataSource implements IndexDataSource {
     ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number; activity?: boolean; objects?: boolean },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
+  ): Effect.Effect<{
+    objects: IndexerObject[];
+    cursors: DataSourceCursor[];
+    activity?: DocumentActivity[];
+    more: boolean;
+  }> {
     return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
       const cursorMap = new Map<string, string>();
@@ -130,12 +135,14 @@ export class AutomergeDataSource implements IndexDataSource {
       const allDocumentHeads = yield* Effect.promise(() => this.#listAllDocumentHeads());
       const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
       const limit = opts?.limit ?? Infinity;
+      let more = false;
       for (const { documentId, heads } of allDocumentHeads) {
         if (hasChanged(cursorMap.get(documentId), heads)) {
-          changedDocuments.push({ documentId, heads });
           if (changedDocuments.length >= limit) {
+            more = true;
             break;
           }
+          changedDocuments.push({ documentId, heads });
         }
       }
 
@@ -225,7 +232,7 @@ export class AutomergeDataSource implements IndexDataSource {
       }
 
       if (!opts?.activity) {
-        return { objects, cursors: updatedCursors };
+        return { objects, cursors: updatedCursors, more };
       }
       const activity: DocumentActivity[] = [...branchDiscards.values()];
       for (const [documentId, entry] of pendingActivity) {
@@ -235,7 +242,7 @@ export class AutomergeDataSource implements IndexDataSource {
         const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
         activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
       }
-      return { objects, cursors: updatedCursors, activity };
+      return { objects, cursors: updatedCursors, activity, more };
     });
   }
 }

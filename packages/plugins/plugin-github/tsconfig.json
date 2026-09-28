@@ -79,19 +79,31 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"

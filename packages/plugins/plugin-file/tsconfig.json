@@ -41,6 +41,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/echo/blob"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

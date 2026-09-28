@@ -34,14 +34,17 @@ describe('connectWithFallback', () => {
       timeout: 30_000,
     },
     async () => {
-      const toolkit = await EffectEx.runAndForwardErrors(
+      const tools = await EffectEx.runAndForwardErrors(
         McpToolkit.make({
           url: 'https://mcp.linear.app/mcp',
           protocol: 'sse',
           apiKey: process.env.LINEAR_API_KEY,
-        }),
+        }).pipe(
+          Effect.map((toolkit) => Object.keys(toolkit.toolkit.tools)),
+          Effect.scoped,
+        ),
       );
-      log.info('connected', { tools: Object.keys(toolkit.toolkit.tools) });
+      log.info('connected', { tools });
     },
   );
 });

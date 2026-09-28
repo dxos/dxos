@@ -11,8 +11,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ContentBlock } from '@dxos/types';
 
@@ -53,14 +52,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         const preset = yield* chatPreset;
         // As the chat's own UI does before its first request: the process reads the model off the
         // chat, so a chat without one is stamped with the model its picker would show.
-        if (!chat.model && preset) {
+        if (!chat.session?.model && preset) {
           Obj.update(chat, (chat) => {
-            chat.model = Ref.fromURI(preset.model);
+            chat.session = { ...chat.session, model: preset.model };
           });
         }
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
         // than whichever the settings now name — a chat outlives a provider change.
-        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
+        const model = chat.session?.model ?? preset?.model;
         const session = yield* AgentService.getSession(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location: chat.remote ? 'edge' : 'local',

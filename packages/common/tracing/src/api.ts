@@ -166,20 +166,29 @@ const spanStart = (params: ManualSpanParams): Context | null => {
   return params.parentCtx;
 };
 
+export type SpanEndOptions = {
+  /** Namespaced under `ctx.`, like start attributes. */
+  attributes?: Record<string, any>;
+};
+
 /**
  * Ends a span that was started manually.
  */
-const spanEnd = (id: string) => {
+const spanEnd = (id: string, { attributes }: SpanEndOptions = {}) => {
   const remoteSpan = manualSpans.get(id);
   if (remoteSpan) {
+    if (attributes) {
+      remoteSpan.setAttributes?.(resolveAttributes(attributes, []));
+    }
     remoteSpan.end();
     manualSpans.delete(id);
   }
 
   const timestamps = manualSpanTimestamps.get(id);
+  // Freed unconditionally: `spanStart` refuses an id that is still recorded.
+  manualSpanTimestamps.delete(id);
   if (timestamps && typeof globalThis?.performance?.measure === 'function') {
     performance.measure(timestamps.name, { start: timestamps.startTs, end: performance.now() });
-    manualSpanTimestamps.delete(id);
   }
 };
 

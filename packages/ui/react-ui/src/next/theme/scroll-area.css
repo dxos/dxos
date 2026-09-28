@@ -1,0 +1,56 @@
+/*
+ * Composed scrolling (decision 5): a non-scrolling frame hosts the overlay thumbs and becomes a subgrid when its
+ * viewport inherits; the viewport's gutter tracks are its padding, so the thumb sits in the end gutter.
+ */
+
+@layer dx-components {
+  .nx-scroll-root {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    container-type: inline-size;
+  }
+
+  /* `thin` fits inside the rail Block's margin at every size; `regular` may overlap its icon. */
+  .nx-scroll-root[data-width='thin'] {
+    --nx-scroll-width: 4px;
+  }
+  .nx-scroll-root[data-width='regular'] {
+    --nx-scroll-width: 8px;
+  }
+
+  .nx-scroll-root:has(> .nx-grid[data-gutter='inherit']) {
+    grid-column: full;
+    grid-template-columns: subgrid;
+    /* Containment makes a grid independent, which silently turns subgrid back into a standalone grid. */
+    container-type: normal;
+  }
+
+  .nx-scroll-viewport {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .nx-scroll-viewport:not([data-native]) {
+    scrollbar-width: none;
+  }
+  .nx-scroll-viewport:not([data-native])::-webkit-scrollbar {
+    display: none;
+  }
+  .nx-scroll-root[data-mode='reserve'] > .nx-scroll-viewport,
+  .nx-scroll-viewport[data-native] {
+    --nx-scroll-reserve: var(--nx-scroll-width);
+  }
+  .nx-scroll-viewport[data-native] {
+    scrollbar-gutter: stable;
+  }
+  .nx-scroll-viewport[data-native]::-webkit-scrollbar {
+    width: var(--nx-scroll-width);
+  }
+  .nx-scroll-viewport[data-native]::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb, gray);
+  }
+}

@@ -41,6 +41,7 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
     Annotation.LabelAnnotation.set(['title']),
     Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

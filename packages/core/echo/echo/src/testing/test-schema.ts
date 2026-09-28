@@ -8,6 +8,7 @@ import * as Struct from 'effect/Struct';
 
 import { DXN } from '@dxos/keys';
 
+import * as Annotation from '../Annotation.ts';
 import * as Obj from '../Obj.ts';
 import * as Ref from '../Ref.ts';
 import * as Type from '../Type.ts';
@@ -22,7 +23,9 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export class Expando extends Type.makeObject<Expando>(DXN.make('com.example.type.expando', '0.1.0'))(
-    Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]),
+    Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]).pipe(
+      Annotation.UserType.set(),
+    ),
   ) {}
 
   //
@@ -62,7 +65,9 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(ExampleSchema) {}
+  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(
+    ExampleSchema.pipe(Annotation.UserType.set()),
+  ) {}
 
   //
   // Message
@@ -75,7 +80,9 @@ export namespace TestSchema {
     timestamp: Schema.String.pipe(Schema.withConstructorDefault(Effect.sync(() => new Date().toISOString()))),
   });
 
-  export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(MessageStruct) {}
+  export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(
+    MessageStruct.pipe(Annotation.UserType.set()),
+  ) {}
 
   //
   // Organization
@@ -85,7 +92,7 @@ export namespace TestSchema {
     Schema.Struct({
       name: Schema.String,
       properties: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -113,7 +120,9 @@ export namespace TestSchema {
         label: Schema.String,
         value: Schema.String,
       }).pipe(Schema.Array, Schema.optional),
-    }).mapFields(Struct.map(Schema.optional)),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -129,7 +138,9 @@ export namespace TestSchema {
       previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
       subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
       description: Schema.optional(Schema.String),
-    }).mapFields(Struct.map(Schema.optional)),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -176,6 +187,8 @@ export namespace TestSchema {
           type: Schema.Enum(RecordType),
         }).mapFields(Struct.map(Schema.optional)),
       ),
-    }).mapFields(Struct.map(Schema.optional)),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 }
