@@ -440,15 +440,19 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     required `label`, there being no translation for it. `SystemButton` `Test` covers names, geometry against a
     plain `Button iconOnly`, the toggles, `aria-expanded` and a stubbed clipboard write.
 
-52. **Nested menus report to the root's `onSelect`** (amends 44). zag gives every `Menu.Sub` its own machine, linked
-    to its parent only through `setParent`/`setChild` for focus, pointer routing and closing: `invokeOnSelect` calls
-    the `onSelect` of the machine that owns the item, so a leaf in a Sub never reached the root's handler. `Menu.Root`
-    now publishes its `onSelect` in a context and a Sub without one of its own passes its parent's to its Ark Root,
-    so one handler on the root sees selections at any depth; a Sub's own `onSelect` still overrides. zag also selects
-    the _highlighted_ value, and highlights on pointer move only while the interaction modality is `pointer`, so a
-    synthetic hover after keyboard use highlights nothing. Menu `Test` walks File ▸ New ▸ Diagram ▸ Flowchart from
-    the keyboard (Enter, ArrowRight, ArrowDown, Enter), asserts each Sub opens to the right of its trigger item, that
-    `Selected: new-flowchart` reaches the root and that every menu closes.
+52. **Nested menus report to the root's `onSelect`, and a submenu's first item sits level with its trigger row**
+    (amends 44). zag gives every `Menu.Sub` its own machine, linked to its parent only through `setParent`/`setChild`
+    for focus, pointer routing and closing: `invokeOnSelect` calls the `onSelect` of the machine that owns the item,
+    so a leaf in a Sub never reached the root's handler. `Menu.Root` publishes its `onSelect` in a context and a Sub
+    without one of its own passes its parent's to its Ark Root, so one handler on the root sees selections at any
+    depth; a Sub's own `onSelect` still overrides. zag also selects the _highlighted_ value, and highlights on pointer
+    move only while the interaction modality is `pointer`, so a synthetic hover after keyboard use highlights nothing.
+    A Sub's Content takes `.nx-submenu`, whose frame overhangs the positioner by `--nx-control-inset` (the viewport's
+    block padding) above for a `-start` placement and below for a flipped `-end` one, so the first (or last) item
+    lines up with the row floating-ui aligns the positioner to, at every size and depth, with no gap between panels.
+    Menu `Test` walks File ▸ New ▸ Diagram ▸ Flowchart from the keyboard at every size, asserting each Sub opens to
+    the right with its first item level (±0.5px) with its trigger row, that `Selected: new-flowchart` reaches the root
+    and that every menu closes.
 
 53. **Popups reposition outside ResizeObserver callbacks** (amends 49). The Select `multiple` case (the popup stays
     open while its trigger widens) logged "ResizeObserver loop completed with undelivered notifications". floating-ui's

@@ -10,7 +10,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type Size } from '../../sizes.ts';
+import { type Size, SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectAnchoredBelow, expectArrow, expectScrollingPopup, popupFrame } from '../../testing.ts';
 
@@ -223,44 +223,50 @@ export const Default: Story = {};
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    // The hierarchy opens level by level from the keyboard, each submenu beside its trigger, and a third-level leaf
-    // reports to the root's `onSelect`.
+    // At every size the hierarchy opens level by level from the keyboard, each submenu beside its trigger row with its
+    // first item level with that row, and a third-level leaf reports to the root's `onSelect`.
     const page = within(canvasElement.ownerDocument.body);
     const beside = async (triggerName: string, itemName: string) => {
       const triggerItem = page.getByRole('menuitem', { name: triggerName });
       await waitFor(() => expect(page.getByRole('menuitem', { name: itemName })).toBeVisible());
-      const submenu = page.getByRole('menuitem', { name: itemName }).closest<HTMLElement>('[role="menu"]');
+      const first = page.getByRole('menuitem', { name: itemName });
+      const submenu = first.closest<HTMLElement>('[role="menu"]');
       await expect(triggerItem).toHaveAttribute('aria-expanded', 'true');
       await waitFor(() => {
         const triggerRect = triggerItem.getBoundingClientRect();
-        const subRect = popupFrame(submenu ?? triggerItem).getBoundingClientRect();
-        const where = `submenu ${JSON.stringify(subRect)}, trigger ${JSON.stringify(triggerRect)}`;
+        const subRect = popupFrame(submenu ?? first).getBoundingClientRect();
+        const firstRect = first.getBoundingClientRect();
+        const where = `submenu ${JSON.stringify(subRect)}, first ${JSON.stringify(firstRect)}, trigger ${JSON.stringify(triggerRect)}`;
         return expect(
-          subRect.left >= triggerRect.right - 1 && Math.abs(subRect.top - triggerRect.top) <= 8,
+          subRect.left >= triggerRect.right - 1 && Math.abs(firstRect.top - triggerRect.top) <= 0.5,
           where,
         ).toBe(true);
       });
       return submenu;
     };
-    byTestId(canvasElement, 'file-md').focus();
-    await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(page.getByRole('menuitem', { name: 'New' })).toBeVisible());
-    const fileMenu = page.getByRole('menuitem', { name: 'New' }).closest<HTMLElement>('[role="menu"]');
-    await waitFor(() => expect(fileMenu).toHaveFocus());
-    await userEvent.keyboard('{Home}');
-    await waitFor(() => expect(fileMenu && highlighted(fileMenu)).toBe('New'));
-    await userEvent.keyboard('{ArrowRight}');
-    const newMenu = await beside('New', 'Document');
-    await waitFor(() => expect(newMenu).toHaveFocus());
-    await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Document'));
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-    await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
-    await userEvent.keyboard('{ArrowRight}');
-    const diagramMenu = await beside('Diagram', 'Flowchart');
-    await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
-    await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(byTestId(canvasElement, 'selected-md')).toHaveTextContent('Selected: new-flowchart'));
-    await waitFor(() => expect(page.queryByRole('menu')).toBeNull());
+    for (const size of SIZES) {
+      byTestId(canvasElement, `file-${size}`).focus();
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(page.getByRole('menuitem', { name: 'New' })).toBeVisible());
+      const fileMenu = page.getByRole('menuitem', { name: 'New' }).closest<HTMLElement>('[role="menu"]');
+      await waitFor(() => expect(fileMenu).toHaveFocus());
+      await userEvent.keyboard('{Home}');
+      await waitFor(() => expect(fileMenu && highlighted(fileMenu)).toBe('New'));
+      await userEvent.keyboard('{ArrowRight}');
+      const newMenu = await beside('New', 'Document');
+      await waitFor(() => expect(newMenu).toHaveFocus());
+      await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Document'));
+      await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+      await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
+      await userEvent.keyboard('{ArrowRight}');
+      const diagramMenu = await beside('Diagram', 'Flowchart');
+      await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() =>
+        expect(byTestId(canvasElement, `selected-${size}`)).toHaveTextContent('Selected: new-flowchart'),
+      );
+      await waitFor(() => expect(page.queryByRole('menu')).toBeNull());
+    }
 
     await open(canvasElement);
     await userEvent.keyboard('{Escape}');

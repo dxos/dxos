@@ -24,16 +24,21 @@ const POPUP_GUTTER = 2;
 
 type MenuRootProps = MenuPrimitive.RootProps;
 
-/** The enclosing menu's `onSelect`, so a nested menu reports its selections to the root by default. */
-const MenuSelectContext = createContext<MenuRootProps['onSelect']>(undefined);
-
 /**
- * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
- * trigger), open it under control and anchor it with `positioning.getAnchorRect` (Ark has no virtual-trigger part).
+ * The enclosing menu: its `onSelect`, so a nested menu reports its selections to the root by default, and whether it
+ * is a `Menu.Sub`, whose Content lines its first item up with the SubTrigger row.
  */
+const MenuContext = createContext<{ onSelect?: MenuRootProps['onSelect']; sub: boolean }>({ sub: false });
 
-const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, onSelect, ...props }: MenuRootProps) => (
-  <MenuSelectContext.Provider value={onSelect}>
+const MenuRootBase = ({
+  lazyMount = true,
+  unmountOnExit = true,
+  positioning,
+  onSelect,
+  sub,
+  ...props
+}: MenuRootProps & { sub: boolean }) => (
+  <MenuContext.Provider value={{ onSelect, sub }}>
     <MenuPrimitive.Root
       {...props}
       onSelect={onSelect}
@@ -42,8 +47,14 @@ const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, onSelec
       // Ark's 8px default reads as detached from the trigger.
       positioning={popupPositioning(POPUP_GUTTER, positioning)}
     />
-  </MenuSelectContext.Provider>
+  </MenuContext.Provider>
 );
+
+/**
+ * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
+ * trigger), open it under control and anchor it with `positioning.getAnchorRect` (Ark has no virtual-trigger part).
+ */
+const MenuRoot = (props: MenuRootProps) => <MenuRootBase {...props} sub={false} />;
 
 MenuRoot.displayName = 'Next.Menu.Root';
 
@@ -99,27 +110,30 @@ const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((pro
  * Content is the same part inside a `Menu.Sub`.
  */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size = 'md', arrow = false, container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <MenuPrimitive.Positioner>
-        <PopupScroll
-          size={size}
-          classNames={mx(recipes.menuContent(), classNames)}
-          outside={
-            arrow && (
-              <MenuPrimitive.Arrow className={recipes.arrow()}>
-                <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
-              </MenuPrimitive.Arrow>
-            )
-          }
-        >
-          <MenuViewport {...props} ref={forwardedRef}>
-            {children}
-          </MenuViewport>
-        </PopupScroll>
-      </MenuPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size = 'md', arrow = false, container, children, ...props }, forwardedRef) => {
+    const { sub } = useContext(MenuContext);
+    return (
+      <Portal container={container}>
+        <MenuPrimitive.Positioner>
+          <PopupScroll
+            size={size}
+            classNames={mx(recipes.menuContent(), sub && recipes.submenuContent(), classNames)}
+            outside={
+              arrow && (
+                <MenuPrimitive.Arrow className={recipes.arrow()}>
+                  <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
+                </MenuPrimitive.Arrow>
+              )
+            }
+          >
+            <MenuViewport {...props} ref={forwardedRef}>
+              {children}
+            </MenuViewport>
+          </PopupScroll>
+        </MenuPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 MenuContent.displayName = 'Next.Menu.Content';
@@ -244,11 +258,12 @@ type MenuSubProps = MenuRootProps;
  * nested item only to its own menu, so without an `onSelect` of its own a Sub forwards selections to its parent's.
  */
 const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
-  const parentSelect = useContext(MenuSelectContext);
+  const parent = useContext(MenuContext);
   return (
-    <MenuRoot
+    <MenuRootBase
       {...props}
-      onSelect={onSelect ?? parentSelect}
+      sub
+      onSelect={onSelect ?? parent.onSelect}
       positioning={{ placement: 'right-start', gutter: 0, ...positioning }}
     />
   );

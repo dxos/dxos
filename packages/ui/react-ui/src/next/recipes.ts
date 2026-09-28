@@ -69,6 +69,7 @@ export const recipes = {
   collapsibleIndicator: () => 'nx-collapsible-indicator',
   collapsibleContent: () => 'nx-collapsible-content',
   menuContent: () => 'nx-menu',
+  submenuContent: () => 'nx-submenu',
   menuItem: () => 'nx-menu-item',
   menuItemText: () => 'nx-menu-item-text',
   menuShortcut: () => 'nx-menu-shortcut',

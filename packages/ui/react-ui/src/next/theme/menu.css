@@ -7,6 +7,16 @@
   .nx-menu {
     min-width: 10rem;
   }
+  /*
+   * A submenu's frame overhangs its positioner by the viewport's block padding, so the first item (or, flipped, the
+   * last) lines up with the SubTrigger row that floating-ui aligns the positioner to.
+   */
+  .nx-submenu:has(> [data-placement$='-start']) {
+    margin-block-start: calc(-1 * var(--nx-control-inset));
+  }
+  .nx-submenu:has(> [data-placement$='-end']) {
+    margin-block-end: calc(-1 * var(--nx-control-inset));
+  }
 
   .nx-menu-item {
     display: flex;
