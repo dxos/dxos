@@ -99,6 +99,8 @@ with Phase 4 milestone 5).
 - [x] **Menu** — `ContextTrigger`, `CheckboxItem`, `RadioGroup`/`RadioItem`, `ItemIndicator`, `Sub`/`SubTrigger`, `arrow`, scrolling content; virtual trigger via `positioning.getAnchorRect` (DESIGN.md follow-up 44).
 - [x] **Popover, Tooltip, Dialog** — portal `container` on every popup; Popover `Body`, `modal`, lazy-mount naming fix; Tooltip `content`/`side` shorthand, `TextTooltip`; `AlertDialog`, `DIALOG_AUTOFOCUS_ATTRIBUTE`; virtual triggers via `positioning.getAnchorRect` (DESIGN.md follow-up 45).
 - [x] **Card** — `Section`, `Row`, `Text`, `Action`, `Link`, `Menu`, `DragHandle`; root `border`, `selected`, clickable `onClick`; `fullWidth` deliberate, `Html` deferred (DESIGN.md follow-up 46).
+- [x] **Image** — `onClick` as a button (Enter/Space) (DESIGN.md follow-up 47).
+- [ ] **Image dominant colour** — decide whether to move the current `Image`'s sampler to a shared utility and adopt it, given decision 11 (DESIGN.md follow-up 47).
 - [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite

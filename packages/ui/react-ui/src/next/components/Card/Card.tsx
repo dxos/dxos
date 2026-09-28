@@ -2,18 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  type ComponentPropsWithoutRef,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-  forwardRef,
-  useId,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, type ReactNode, forwardRef, useId } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
@@ -28,29 +22,6 @@ import { Typography } from '../Typography/index.ts';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */
 const stopPropagation = (event: MouseEvent) => event.stopPropagation();
-
-/**
- * Makes a card or row a button when it has an `onClick`: focusable, named by its content, activated by Enter and Space
- * (only on itself, so a nested control's keys stay its own).
- */
-const clickableProps = <T extends HTMLElement>(
-  onClick: ((event: MouseEvent<T>) => void) | undefined,
-  onKeyDown: ((event: KeyboardEvent<T>) => void) | undefined,
-) =>
-  onClick
-    ? {
-        role: 'button',
-        tabIndex: 0,
-        onClick,
-        onKeyDown: (event: KeyboardEvent<T>) => {
-          onKeyDown?.(event);
-          if (!event.defaultPrevented && event.target === event.currentTarget && [' ', 'Enter'].includes(event.key)) {
-            event.preventDefault();
-            event.currentTarget.click();
-          }
-        },
-      }
-    : { onKeyDown };
 
 //
 // Root

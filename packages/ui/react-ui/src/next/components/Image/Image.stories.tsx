@@ -5,8 +5,8 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
@@ -25,20 +25,31 @@ const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
 /** A malformed data URI fails to decode without any network request. */
 const BROKEN = 'data:image/png;base64,AAAA';
 
-const DefaultStory = ({ size }: SizeArgs) => (
-  <div className='grid grid-cols-4 gap-2'>
-    <Next.Image src={LANDSCAPE} alt={`Mountains at dusk ${size}`} data-testid={`cover-${size}`} />
-    <Next.Image
-      src={LANDSCAPE}
-      alt={`Mountains, contained ${size}`}
-      aspectRatio='1'
-      fit='contain'
-      data-testid={`contain-${size}`}
-    />
-    <Next.Image src={BROKEN} alt={`Missing photo ${size}`} data-testid={`broken-${size}`} />
-    <Next.Image src={LANDSCAPE} alt={`Mountains, square ${size}`} aspectRatio='1' data-testid={`square-${size}`} />
-  </div>
-);
+/** Cover, contain, broken and square frames, and a clickable image. */
+const DefaultStory = ({ size }: SizeArgs) => {
+  const [clicks, setClicks] = useState(0);
+  return (
+    <div className='grid grid-cols-4 gap-2'>
+      <Next.Image src={LANDSCAPE} alt={`Mountains at dusk ${size}`} data-testid={`cover-${size}`} />
+      <Next.Image
+        src={LANDSCAPE}
+        alt={`Mountains, contained ${size}`}
+        aspectRatio='1'
+        fit='contain'
+        data-testid={`contain-${size}`}
+      />
+      <Next.Image src={BROKEN} alt={`Missing photo ${size}`} data-testid={`broken-${size}`} />
+      <Next.Image src={LANDSCAPE} alt={`Mountains, square ${size}`} aspectRatio='1' data-testid={`square-${size}`} />
+      <Next.Image
+        src={LANDSCAPE}
+        alt={`Open mountains ${size}`}
+        onClick={() => setClicks((count) => count + 1)}
+        data-testid={`clickable-${size}`}
+      />
+      <Next.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Next.Typography>
+    </div>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/next/components/image',
@@ -53,7 +64,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. */
+/**
+ * Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. With `onClick` the
+ * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
+ */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
@@ -81,5 +95,19 @@ export const Test: Story = {
     const glyph = icon.getBoundingClientRect();
     await expect(glyph.left + glyph.width / 2).toBeCloseTo(frame.left + frame.width / 2, 0);
     await expect(glyph.top + glyph.height / 2).toBeCloseTo(frame.top + frame.height / 2, 0);
+
+    const clickable = canvas.getByRole('button', { name: 'Open mountains md' });
+    await expect(clickable).toBe(canvas.getByTestId('clickable-md'));
+    await userEvent.click(clickable);
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 1'));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 2'));
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 3'));
+    await userEvent.tab({ shift: true });
+    await userEvent.tab();
+    await expect(clickable).toHaveFocus();
+    await expect(getComputedStyle(clickable).outlineStyle).toBe('solid');
+    await expect(canvas.getByTestId('cover-md')).not.toHaveAttribute('role');
   },
 };

@@ -387,6 +387,13 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `DragHandle` moved out of the Toolbar namespace into `Next.DragHandle`, shared as `Toolbar.DragHandle` and
     `Card.DragHandle`.
 
+47. **Image parity.** `Image onClick` makes the frame a `button` named by the image's `alt`, activated by Enter and
+    Space (`clickable.ts`, shared with clickable Cards and Card rows); its ring is an outline, since the image fills
+    the frame and would cover an inset one. Dominant-colour sampling is deferred: the sampler is private to the current
+    `Image`, so reusing it means moving it to a shared utility (a change to the current component, out of this
+    scope), and it reads pixels in JS, which decision 11 keeps to the scroll thumbs. Until a decision, a `contain`
+    frame shows the well around the image.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

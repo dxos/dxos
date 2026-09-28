@@ -51,6 +51,7 @@ export const recipes = {
   fieldsetRoot: () => 'nx-fieldset',
   fieldsetLegend: () => 'nx-fieldset-legend',
   image: () => 'nx-image',
+  imageClickable: () => 'nx-image-clickable',
   cardRoot: () => 'nx-card',
   cardPoster: () => 'nx-card-poster',
   cardHeader: () => 'nx-card-header',
