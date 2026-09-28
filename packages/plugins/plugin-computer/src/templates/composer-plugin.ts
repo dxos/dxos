@@ -52,7 +52,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   },
   {
     title: 'Write the plugin in TypeScript',
-    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "Space Clock" group in each space's navtree with a "Clock" page under it whose article shows a large live clock that ticks every second. Add to the navtree, never replace it: no workspace, no rail tab. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
+    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "Space Clock" group in each space's navtree with a "Clock" page under it whose article shows a large live clock that ticks every second. Add to the navtree, never replace it: no workspace, no rail tab. Tag it \`labs\` in \`dx.config.ts\`, as the guide does, so it lists under Labs. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
     estimate: 's',
   },
   {

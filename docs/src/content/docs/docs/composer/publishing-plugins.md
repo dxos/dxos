@@ -248,6 +248,7 @@ export default Config2.make({
     key: 'org.example.plugin.hello', // must match the key the plugin declares; last segment camelCase
     name: 'Hello',
     icon: { key: 'ph--hand-waving--regular', hue: 'amber' },
+    tags: ['labs'], // lists it under Labs in the Plugins registry
   },
 });
 ```

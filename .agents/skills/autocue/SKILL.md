@@ -597,6 +597,9 @@ These cost a cycle each; none is guessable from the source.
   Clicking `spacePlugin.space` toggles it. Reopen it before blaming the selector.
 - **Clicking the account avatar navigates away.** `clientPlugin.account` opens the profile pane, and
   `Back to Space` in the sidebar does not return; click `spacePlugin.space` instead.
+- **A narrow window collapses the navtree.** Its items are in the DOM but never "visible and stable";
+  click the visible `button:visible:has-text("Open sidebar")` first. A flow can't assume the window
+  size — the user resizes it for their capture.
 - **The privacy toast has no testid.** `li[role="status"]:has-text("Privacy Notice") button:has-text("Close")`.
 
 ## Where the spec and the app disagreed

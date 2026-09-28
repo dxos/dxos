@@ -48,6 +48,18 @@ const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}
 /** The first space in the rail, where the take runs. */
 const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
 
+/** A narrow window collapses the navtree into an overlay; open it before clicking an item in it. */
+const showSidebar = async ({ demo, page }, testId, label) => {
+  if (!(await page.getByTestId(testId).first().isVisible())) {
+    await demo.click({
+      selector: 'button:visible:has-text("Open sidebar")',
+      label: 'Open sidebar',
+      hud: label !== undefined,
+    });
+  }
+  await demo.click({ selector: `[data-testid="${testId}"]`, ...(label ? { label } : { hud: false }) });
+};
+
 /** Contributed by plugin-computer's `src/templates/composer-plugin.ts`. */
 const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
 
@@ -97,12 +109,20 @@ export const steps = [
       }
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
 
-      // A plugin loaded in an earlier take persists in the profile; uninstall it from its detail page.
-      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text=Enabled', hud: false });
-      if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
-        await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
-        await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
-        await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
+      // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
+      // its tag); uninstall it from its detail page.
+      for (const category of ['installed', 'labs']) {
+        const tab = page.getByTestId(`pluginRegistry.${category}`);
+        if ((await tab.count()) === 0) {
+          continue;
+        }
+        await showSidebar({ demo, page }, `pluginRegistry.${category}`);
+        await page.waitForTimeout(500);
+        if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
+          await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
+          await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
+          await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
+        }
       }
 
       // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
@@ -218,34 +238,47 @@ export const steps = [
     },
   },
   {
+    // The prompt loads without enabling, so the plugin is turned on in the registry, on camera.
     name: 'Load the plugin',
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="assistant.pluginUrlPrompt.load"]', label: 'Load' });
-      await page.waitForFunction(
-        (name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active),
-        PLUGIN_NAME,
-        { timeout: 30_000 },
-      );
+      await page.waitForFunction((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME, {
+        timeout: 30_000,
+      });
       await page.waitForTimeout(LINGER);
     },
   },
   {
-    // Slowed down on purpose: the registry card is the viewer's proof that the agent's plugin is installed.
-    name: 'See the plugin in the registry',
-    done: async ({ page }) => (await page.locator(card(PLUGIN_NAME)).count()) > 0,
+    // The registry shot is the one that proves the load, so the side panels close first and the take
+    // slows down: Labs after a beat, then the card, then the toggle.
+    name: 'Enable the plugin in the registry',
+    done: async ({ page }) =>
+      page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name && plugin.enabled), PLUGIN_NAME),
     run: async ({ demo, page }) => {
+      for (const label of ['Close companion', 'Close context sidebar']) {
+        const button = page.locator(`button:has-text("${label}")`).first();
+        if (await button.isVisible().catch(() => false)) {
+          await demo.click({ selector: `button:has-text("${label}") >> nth=0`, label });
+          await page.waitForTimeout(LINGER / 5);
+        }
+      }
       await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text=Enabled', label: 'Enabled' });
-      await page.waitForTimeout(LINGER / 2);
-      await demo.type({ selector: 'input[placeholder="Filter…"]', value: PLUGIN_NAME, delay: 120, label: 'Filter' });
+      await page.waitForTimeout(1_000);
+      await showSidebar({ demo, page }, 'pluginRegistry.labs', 'Labs');
       const plugin = page.locator(card(PLUGIN_NAME));
       await plugin.waitFor({ state: 'visible', timeout: 10_000 });
+      await plugin.scrollIntoViewIfNeeded();
       await demo.hover({ selector: card(PLUGIN_NAME), label: PLUGIN_NAME });
       await page.waitForTimeout(LINGER);
-      await demo.hover({ selector: `${card(PLUGIN_NAME)} input[type="checkbox"]`, label: 'Enabled' });
-      if (!(await plugin.locator('input[type="checkbox"]').isChecked())) {
-        throw new Error(`${PLUGIN_NAME} is listed but not enabled`);
+      const toggle = `${card(PLUGIN_NAME)} input[type="checkbox"]`;
+      if (!(await page.locator(toggle).isChecked())) {
+        await demo.click({ selector: toggle, label: 'Enable' });
       }
+      await page.waitForFunction(
+        (name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active),
+        PLUGIN_NAME,
+        { timeout: 15_000 },
+      );
       await page.waitForTimeout(LINGER);
     },
   },

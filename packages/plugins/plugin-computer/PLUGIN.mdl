@@ -154,10 +154,15 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
     - name: Load the plugin
       do: Click Load on the prompt.
-      expect: the Space Clock plugin loads without an error toast
-    - name: See the plugin in the registry
-      do: Open Plugins, choose Enabled, and filter for "Space Clock".
-      expect: the Space Clock card is listed with its toggle on
+      expect: Space Clock loads without an error toast, but stays off — the prompt only loads it
+    - name: Enable the plugin in the registry
+      do: Close the companion and the context sidebar, open Plugins, wait a beat, then open Labs and turn Space Clock on.
+      expect: |
+        the Space Clock card is listed under Labs (its `dx.config.ts` tags it `labs`) with its toggle off,
+        and turning the toggle on activates it
+      note: |
+        Enabling is deliberately a second step: the reader sees what the plugin is before it runs, which is
+        why the prompt's LoadPlugin call passes `enable: false`.
     - name: Open the Clock page
       do: Return to the space and click Clock under the SPACE CLOCK group.
       expect: |

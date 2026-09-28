@@ -42,6 +42,22 @@ describe('RegistryOperation.LoadPlugin', () => {
     expect(harness.manager.getEnabled()).toContain(remoteMeta.profile.key);
   });
 
+  test('loads a plugin without enabling it when asked', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [RegistryPlugin()],
+      enabled: [meta.profile.key],
+      pluginLoader: remoteLoader,
+    });
+
+    const { id } = await harness.runPromise(
+      Operation.invoke(RegistryOperation.LoadPlugin, { url: REMOTE_URL, enable: false }),
+    );
+
+    expect(id).toBe(remoteMeta.profile.key);
+    expect(harness.manager.getPlugins().map((plugin) => plugin.meta.profile.key)).toContain(remoteMeta.profile.key);
+    expect(harness.manager.getEnabled()).not.toContain(remoteMeta.profile.key);
+  });
+
   test('fails for a URL that does not load', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [RegistryPlugin()],
