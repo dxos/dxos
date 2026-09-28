@@ -6,13 +6,14 @@ import './theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useLayoutEffect, useRef } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect } from 'storybook/test';
 
 import { log } from '@dxos/log';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
+import { byTestId } from './testing.ts';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -21,15 +22,6 @@ const OPTIONS: Next.SelectOption[] = [
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
 ];
-
-/** Expected geometry per size in px (decision 12); asserting literals checks the theme, not just self-consistency. */
-const GEOMETRY: Record<Size, { block: number; inset: number; icon: number }> = {
-  xs: { block: 20, inset: 1, icon: 12 },
-  sm: { block: 24, inset: 2, icon: 14 },
-  md: { block: 32, inset: 2, icon: 16 },
-  lg: { block: 40, inset: 3, icon: 20 },
-  xl: { block: 48, inset: 3, icon: 24 },
-};
 
 const SizeSection = ({ size }: { size: Size }) => (
   <Next.Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
@@ -110,121 +102,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const byTestId = (root: HTMLElement, testId: string) => {
-  const element = root.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
-  if (!element) {
-    throw new Error(`missing ${testId}`);
-  }
-  return element;
-};
-
-const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
-
-/** Every control is `block - 2 * inset` tall and vertically centred in its block (decision 12). */
+/** Cross-component gallery; per-component assertions live in each component's own stories. */
 export const Default: Story = {};
-
-/** Per-size control height, centring and icon scale. */
-export const Geometry: Story = {
-  play: async ({ canvasElement }) => {
-    for (const size of SIZES) {
-      const { block, inset, icon } = GEOMETRY[size];
-      const control = block - 2 * inset;
-
-      const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
-      await expect(toolbar.height).toBeCloseTo(block, 0);
-      for (const part of ['add', 'remove', 'button', 'input', 'select']) {
-        const rect = byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect();
-        await expect(rect.height, `${part}-${size} height`).toBeCloseTo(control, 0);
-        await expect(centreY(rect), `${part}-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
-      }
-      // Icon-only buttons are square.
-      await expect(byTestId(canvasElement, `add-${size}`).getBoundingClientRect().width).toBeCloseTo(control, 0);
-
-      // One icon scale: a control's icon matches a rail Block's.
-      const railIcon = byTestId(canvasElement, `row-${size}-rail-start`).querySelector('svg');
-      const buttonIcon = byTestId(canvasElement, `add-${size}`).querySelector('svg');
-      await expect(railIcon?.getBoundingClientRect().width).toBeCloseTo(icon, 0);
-      await expect(buttonIcon?.getBoundingClientRect().width).toBeCloseTo(icon, 0);
-
-      const row = byTestId(canvasElement, `row-${size}`).getBoundingClientRect();
-      const rowInput = byTestId(canvasElement, `row-input-${size}`).getBoundingClientRect();
-      await expect(row.height).toBeCloseTo(block, 0);
-      await expect(rowInput.height).toBeCloseTo(control, 0);
-      await expect(centreY(rowInput)).toBeCloseTo(centreY(row), 0);
-
-      const checkbox = byTestId(canvasElement, `checkbox-${size}`);
-      const box = checkbox.querySelector('[data-part="control"]')?.getBoundingClientRect();
-      await expect(box?.height).toBeCloseTo(icon, 0);
-      await expect(box && centreY(box)).toBeCloseTo(centreY(checkbox.getBoundingClientRect()), 0);
-
-      // In a Field stack the field pads its control out to a block.
-      const fieldInput = byTestId(canvasElement, `field-input-${size}`);
-      await expect(fieldInput.getBoundingClientRect().height).toBeCloseTo(control, 0);
-      await expect(parseFloat(getComputedStyle(fieldInput).marginTop)).toBeCloseTo(inset, 0);
-    }
-  },
-};
-
-/** Roles come from the machines that implement them (decision 9). */
-export const Roles: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getAllByRole('toolbar')).toHaveLength(SIZES.length);
-    await expect(canvas.getByRole('button', { name: 'Add md' })).toBeInTheDocument();
-    await expect(canvas.getByRole('img', { name: 'Clear md' })).toBeInTheDocument();
-    for (const icon of canvasElement.querySelectorAll('svg[data-scope="icon"]:not([aria-label])')) {
-      await expect(icon.getAttribute('aria-hidden')).toBe('true');
-    }
-    // Decision 10: every themed part carries Ark's scope/part attributes.
-    for (const part of canvasElement.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {
-      await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
-    }
-
-    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe md' });
-    await expect(checkbox).toBeChecked();
-    await userEvent.click(byTestId(canvasElement, 'checkbox-md'));
-    await expect(checkbox).not.toBeChecked();
-
-    const field = byTestId(canvasElement, 'field-md');
-    await expect(canvas.getByRole('textbox', { name: 'Email md' })).toBe(byTestId(canvasElement, 'field-input-md'));
-    await expect(field.dataset.scope).toBe('field');
-
-    const trigger = canvas.getByRole('combobox', { name: 'Color md' });
-    await userEvent.click(trigger);
-    const body = within(canvasElement.ownerDocument.body);
-    const listbox = await body.findByRole('listbox');
-    await expect(listbox.dataset.surface).toBe('popup');
-    await expect(getComputedStyle(listbox).getPropertyValue('--nx-level').trim()).toBe('5');
-    await userEvent.click(body.getByRole('option', { name: 'Green' }));
-    await waitFor(() => expect(trigger).toHaveTextContent('Green'));
-  },
-};
-
-/** Arrow keys, Home and End rove across toolbar items; only one item is in the tab order. */
-export const ToolbarFocus: Story = {
-  play: async ({ canvasElement }) => {
-    const add = byTestId(canvasElement, 'add-md');
-    const remove = byTestId(canvasElement, 'remove-md');
-    const save = byTestId(canvasElement, 'button-md');
-    const select = byTestId(canvasElement, 'select-md');
-    await waitFor(() => expect(add.tabIndex).toBe(0));
-    await expect(remove.tabIndex).toBe(-1);
-
-    add.focus();
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(remove).toHaveFocus();
-    await expect(remove.tabIndex).toBe(0);
-    await expect(add.tabIndex).toBe(-1);
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(save).toHaveFocus();
-    await userEvent.keyboard('{End}');
-    await expect(select).toHaveFocus();
-    await userEvent.keyboard('{Home}');
-    await expect(add).toHaveFocus();
-    await userEvent.keyboard('{ArrowLeft}');
-    await expect(select).toHaveFocus();
-  },
-};
 
 //
 // Benchmark

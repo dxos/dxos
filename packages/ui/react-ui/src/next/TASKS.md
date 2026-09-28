@@ -61,3 +61,5 @@ FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
 - [x] **Collapsible** — Ark Collapsible; caret trigger row; `--height` animation, reduced-motion aware (DESIGN.md follow-up 15). — `components/Collapsible/`; Toggle play test.
 - [x] **Menu** — Ark Menu; portalled popup with explicit `size`; Item icon/shortcut, Separator, ItemGroup + label (DESIGN.md follow-up 16). — `components/Menu/`; Open, Dismiss play tests.
 - [x] **Tooltip** — Ark Tooltip; portalled `sm` popup, 20rem cap, 300ms open delay (DESIGN.md follow-up 17). — `components/Tooltip/`; Open play test.
+- [x] **Per-component stories** — a `<Name>.stories.tsx` for Block, Button, Checkbox, Container, Field, Group, Icon, IconButton, Input, Label, ScrollArea, Select, Toolbar, Typography; per-component assertions moved out of `components.stories.tsx` (now a gallery + Benchmark); shared helpers in `testing.ts`. — 84 storybook tests pass.
+- [x] **Block-sized cells** — IconButton, Checkbox and Switch occupy a block square with the control inset (DESIGN.md follow-up 19). — IconButton Sizes, Checkbox Sizes, Form/FieldSet/Card Layout play tests.
