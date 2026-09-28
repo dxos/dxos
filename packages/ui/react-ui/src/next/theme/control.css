@@ -76,6 +76,8 @@
     line-height: var(--nx-line-height);
   }
   .nx-control .nx-icon {
+    /* A one-line label can outgrow its row; the icon keeps its size rather than absorbing the squeeze. */
+    flex-shrink: 0;
     width: var(--nx-control-icon);
     height: var(--nx-control-icon);
   }
@@ -143,6 +145,10 @@
     gap: var(--nx-gap-size);
     width: fit-content;
     min-width: var(--nx-control-size);
+    /* A button is one line at control height; a wrapped label would overflow it. The explicit `min-width` replaces the
+       flex minimum of its content, so without `flex-shrink: 0` a crowded row would squeeze the label out of it. */
+    white-space: nowrap;
+    flex-shrink: 0;
     background: var(--color-input-surface);
     cursor: pointer;
   }

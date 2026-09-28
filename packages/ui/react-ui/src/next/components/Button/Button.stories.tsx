@@ -182,6 +182,15 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    // A label never wraps: squeezed to a sliver, a button stays one control tall.
+    const sample = canvasElement.querySelector<HTMLElement>('.nx-button:not([data-square])');
+    if (sample) {
+      const height = sample.getBoundingClientRect().height;
+      sample.style.maxWidth = '2rem';
+      await expect(sample.getBoundingClientRect().height).toBeCloseTo(height, 0);
+      sample.style.maxWidth = '';
+    }
+
     // Geometry.
     for (const size of SIZES) {
       const { block, inset, icon } = GEOMETRY[size];
