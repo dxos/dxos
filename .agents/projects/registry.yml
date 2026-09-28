@@ -789,7 +789,7 @@ projects:
     tasks: packages/ui/react-ui/src/next/TASKS.md
     design: packages/ui/react-ui/src/next/DESIGN.md
     prs: []
-    resume: 'Design decisions 1-4, 6, 7 recorded in DESIGN.md; NEXT: grid/Column discussion (decision 5), then milestone 1.'
+    resume: 'All design decisions (1-7) recorded in DESIGN.md; NEXT: Phase 1 — move size metrics to CSS, then Container rails/columns/scroll.'
 ended:
   - name: task-planning-skill
     user: burdon

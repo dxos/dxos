@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: grid/Column discussion (DESIGN.md decision 5). Uncommitted: none. Last: design decisions recorded._
+_Resume: start Phase 1 (sizes to CSS). Uncommitted: none. Last: grid model decided (DESIGN.md decision 5)._
 
 ## Phase 0: Design
 
@@ -9,7 +9,7 @@ Settle the constraints in [DESIGN.md](./DESIGN.md) before building.
 ### Tasks
 
 - [x] **Record scope, sizes, framework, levels, spacing and milestone decisions** — DESIGN.md decisions 1–4, 6, 7.
-- [ ] **Decide the grid model** — general grids plus the current `Column` case (vertical scroll, left/right gutters).
+- [x] **Decide the grid model** — configurable Container with inherited rails/columns (DESIGN.md decision 5).
 
 ## Phase 1: Model (story components)
 
@@ -22,4 +22,10 @@ Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed
 - [ ] **Input/Button fill `--block-size`** — resolve the padding TODOs; align with `Block` per size.
 - [ ] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`.
 - [ ] **ARIA fixes** — `aria-hidden` icons, labels.
-- [ ] **Play tests** — per-size block-height alignment and roles.
+- [ ] **Container rails** — `gutter` with named lines; `Block rail`; `gutter='inherit'` subgrid nesting.
+- [ ] **Container columns** — inner template inherited via subgrid; `auto` label track aligns across nesting.
+- [ ] **Container scroll** — own viewport; scrollbar in end gutter; `scrollbar-gutter: stable`.
+- [ ] **Responsive collapse** — `container-type` on template roots; rail→inset, columns stack.
+- [ ] **Direct-nesting dev warning** — warn when a Container's parent is not a Container.
+- [ ] **Nested-form story** — rails, gutter Blocks, scroll, sizes.
+- [ ] **Play tests** — per-size block-height alignment, rail alignment across nesting, and roles.
