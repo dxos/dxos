@@ -10,6 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
@@ -89,9 +91,9 @@ const ProfileDialog = ({ size, title, testId, paragraphs }: ProfileDialogProps) 
       </Next.Dialog.Body>
       <Next.Dialog.Footer data-testid='footer'>
         <Next.Dialog.CloseTrigger asChild>
-          <Next.Button>Cancel</Next.Button>
+          <Next.SystemButton.Cancel iconOnly={false} />
         </Next.Dialog.CloseTrigger>
-        <Next.Button variant='primary'>Save</Next.Button>
+        <Next.SystemButton.Save iconOnly={false} />
       </Next.Dialog.Footer>
     </Next.Dialog.Content>
   </Next.Dialog.Root>
@@ -111,7 +113,7 @@ const meta = {
   decorators: [withSizes(), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<SizeArgs>;
 
 export default meta;

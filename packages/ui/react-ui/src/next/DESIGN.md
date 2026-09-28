@@ -314,7 +314,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     control icon, one inset from what it follows; an icon-only button with a caret, or `compact` (one inset of inline
     padding), gives up its square but keeps its inset cell. `tooltipSide` places the label Tooltip. `Toggle activeIcon`
     swaps the icon while pressed, read from the zag toggle context so uncontrolled toggles swap too; the current
-    90° rotation is not copied, since a disclosure is a `Collapsible`. `Next.ToggleGroup` is Ark ToggleGroup over
+    toggle's 90° rotation lives on `SystemButton.Disclosure` instead (51), a disclosure not being a pressed toggle. `Next.ToggleGroup` is Ark ToggleGroup over
     Buttons with the current `type='single'|'multiple'` value API: single is a `radiogroup` of `radio` items
     (`aria-checked`, styled like pressed), multiple a `group` of pressed toggles. `Toolbar.ToggleGroup` turns zag's
     roving off and drops the root's tab stop, so its items join the toolbar's roving set through Button's
@@ -427,18 +427,26 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     and text match the tokens' computed colours and differ from `--dx-surface-popup`; `expectArrow` checks the arrow.
 
 51. **`SystemButton` presets** port `SystemIconButton` (`Add`, `Ai`, `Bookmark`, `Clipboard`, `Close`, `Delete`,
-    `Disclosure`, `Download`, `Edit`, `Mic`, `Star`, `Upload`) as `Next.SystemButton.*`: every preset is an icon-only
-    `Next.Button` (or `Next.Toggle` for Star and Bookmark), so it takes Button's variant, valence, hue and Tooltip
-    props but not `icon` or `iconOnly`. Labels default from react-ui's `system-button.*` translations via
-    `useTranslation(translationKey)` — the first i18n in Next, so a story needs `parameters: { translations }` —
-    and `label` overrides them. Star and Bookmark take Toggle's `pressed`/`defaultPressed`/`onPressedChange` and own
-    the state (`useControllableState`) because the label, not only the icon, follows it. Disclosure is a Button with
-    `aria-expanded` (`expanded`/`defaultExpanded`/`onExpandedChange`) and swaps caret-right for caret-down, since
-    Next has no rotation (15). Colour classes became a `data-icon-valence` rule (`theme/system-button.css`): a
-    pressed Star's glyph takes `--color-warning-text` and a landed copy's check `--color-success-text`; a recording
-    Mic takes `hue='error'`. Clipboard is always icon-only, so its label always swaps to "Copied"; Mic keeps a
-    required `label`, there being no translation for it. `SystemButton` `Test` covers names, geometry against a
-    plain `Button iconOnly`, the toggles, `aria-expanded` and a stubbed clipboard write.
+    `Disclosure`, `Download`, `Edit`, `Mic`, `Star`, `Upload`) as `Next.SystemButton.*`, plus `Save` (`primary` by
+    default, `ph--check--regular`) and `Cancel` (Close's glyph, its own label and intent) for form and dialog
+    footers. Every preset is a `Next.Button` (or `Next.Toggle` for Star and Bookmark), icon-only by default:
+    `iconOnly` (default `true`) passes through as on `Next.Button`, so `iconOnly={false}` shows the label after the
+    icon with no Tooltip, and `showTooltip`/`tooltipSide` apply only to the icon-only form; a preset takes Button's
+    variant, valence, hue and Tooltip props but not `icon`. Labels default from react-ui's `system-button.*`
+    translations via `useTranslation(translationKey)` — the first i18n in Next, so a story needs
+    `parameters: { translations }` — and `label` overrides them. Star and Bookmark take Toggle's
+    `pressed`/`defaultPressed`/`onPressedChange` and own the state (`useControllableState`) because the label, not
+    only the icon, follows it. Disclosure is a Button with `aria-expanded` (`expanded`/`defaultExpanded`/
+    `onExpandedChange`), named "Open" or "Close" (`system-button.open`/`close`; the current `SystemIconButton` keeps
+    `expand`/`collapse`), and one caret-right that turns 90° while expanded (`data-disclosure` with
+    `aria-expanded='true'` in `theme/system-button.css`, a 150ms transition dropped under `prefers-reduced-motion`),
+    replacing the swap to caret-down. Colour classes became a `data-icon-valence` rule: a pressed Star's glyph takes
+    `--color-warning-text` and a landed copy's check `--color-success-text`; a recording Mic takes `hue='error'`.
+    Clipboard's label swaps to "Copied" once a copy lands; Mic keeps a required `label`, there being no translation
+    for it. The story shows one row per preset, icon-only then labelled; `SystemButton` `Test` covers names, geometry
+    against a plain `Button iconOnly` (the labelled form is as tall), the labelled text with no Tooltip, Save's
+    variant, the toggles, `aria-expanded` and the caret's computed rotation, and a stubbed clipboard write. Form and
+    Dialog stories use labelled `Save`/`Cancel` in their actions.
 
 52. **Nested menus report to the root's `onSelect`, and a submenu's first item sits level with its trigger row**
     (amends 44). zag gives every `Menu.Sub` its own machine, linked to its parent only through `setParent`/`setChild`

@@ -10,4 +10,17 @@
   .nx-button[data-icon-valence='success'] > .nx-icon {
     color: var(--color-success-text);
   }
+
+  /* Disclosure: one caret that turns a quarter to point down while its region is expanded. */
+  .nx-button[data-disclosure] > .nx-icon {
+    transition: transform 150ms ease;
+  }
+  .nx-button[data-disclosure][aria-expanded='true'] > .nx-icon {
+    transform: rotate(90deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-button[data-disclosure] > .nx-icon {
+      transition: none;
+    }
+  }
 }

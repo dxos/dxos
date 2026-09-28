@@ -5,50 +5,82 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import React, { type ReactNode, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { translations } from '#translations';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { SIZES } from '../../sizes.ts';
+import { type Size, SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, sizeRow } from '../../testing.ts';
+import { byTestId, expectNoTooltip, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
 
-/** Every preset in a Toolbar row, plus a plain icon-only Button whose geometry the presets must match. */
-const DefaultStory = ({ size }: SizeArgs) => {
+type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
+
+/** Each preset once per form, keyed for the Test: `<preset>-<size>` icon-only, `<preset>-labelled-<size>` labelled. */
+const PRESETS: { id: string; render: (props: PresetProps, size?: Size) => ReactNode }[] = [
+  { id: 'disclosure', render: (props) => <Next.SystemButton.Disclosure {...props} /> },
+  { id: 'star', render: (props) => <Next.SystemButton.Star {...props} /> },
+  { id: 'bookmark', render: (props) => <Next.SystemButton.Bookmark {...props} /> },
+  { id: 'clipboard', render: (props, size) => <Next.SystemButton.Clipboard {...props} value={`Copied at ${size}`} /> },
+  { id: 'mic', render: (props) => <MicPreset {...props} /> },
+  { id: 'upload', render: (props) => <Next.SystemButton.Upload {...props} accept='*/*' /> },
+  {
+    id: 'download',
+    render: (props) => (
+      <Next.SystemButton.Download
+        {...props}
+        filename='example.txt'
+        onDownload={() => new Blob(['Hello from SystemButton'])}
+      />
+    ),
+  },
+  { id: 'ai', render: (props) => <Next.SystemButton.Ai {...props} /> },
+  { id: 'add', render: (props) => <Next.SystemButton.Add {...props} /> },
+  { id: 'edit', render: (props) => <Next.SystemButton.Edit {...props} /> },
+  { id: 'delete', render: (props) => <Next.SystemButton.Delete {...props} /> },
+  { id: 'close', render: (props) => <Next.SystemButton.Close {...props} /> },
+  { id: 'save', render: (props) => <Next.SystemButton.Save {...props} /> },
+  { id: 'cancel', render: (props) => <Next.SystemButton.Cancel {...props} /> },
+];
+
+/** Mic has no translated label: the caller's recording state names it. */
+const MicPreset = (props: PresetProps) => {
   const [recording, setRecording] = useState(false);
   return (
-    <Next.Toolbar.Root>
-      <Next.SystemButton.Disclosure data-testid={`disclosure-${size}`} />
-      <Next.SystemButton.Star data-testid={`star-${size}`} />
-      <Next.SystemButton.Bookmark data-testid={`bookmark-${size}`} />
-      <Next.SystemButton.Clipboard value={`Copied at ${size}`} data-testid={`clipboard-${size}`} />
-      <Next.Toolbar.Separator />
-      <Next.SystemButton.Mic
-        label={recording ? 'Stop recording' : 'Start recording'}
-        recording={recording}
-        onToggle={() => setRecording((value) => !value)}
-      />
-      <Next.SystemButton.Upload accept='*/*' />
-      <Next.SystemButton.Download filename='example.txt' onDownload={() => new Blob(['Hello from SystemButton'])} />
-      <Next.Toolbar.Separator />
-      <Next.SystemButton.Ai />
-      <Next.SystemButton.Add />
-      <Next.SystemButton.Edit />
-      <Next.SystemButton.Delete />
-      <Next.SystemButton.Close />
-      <Next.Toolbar.Separator />
-      <Next.Button iconOnly icon='ph--plus--regular' label={`Reference ${size}`} data-testid={`reference-${size}`} />
-    </Next.Toolbar.Root>
+    <Next.SystemButton.Mic
+      {...props}
+      label={recording ? 'Stop recording' : 'Start recording'}
+      recording={recording}
+      onToggle={() => setRecording((value) => !value)}
+    />
   );
 };
+
+/**
+ * One row per preset, icon-only then labelled (`iconOnly={false}`), and a last row holding a plain icon-only Button
+ * and labelled Button whose geometry the presets must match.
+ */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    {PRESETS.map(({ id, render }) => (
+      <Next.Group key={id} data-testid={`row-${id}-${size}`}>
+        {render({ 'iconOnly': true, 'data-testid': `${id}-${size}` }, size)}
+        {render({ 'iconOnly': false, 'data-testid': `${id}-labelled-${size}` }, size)}
+      </Next.Group>
+    ))}
+    <Next.Group>
+      <Next.Button iconOnly icon='ph--plus--regular' label={`Reference ${size}`} data-testid={`reference-${size}`} />
+      <Next.Button icon='ph--plus--regular' label='Reference' data-testid={`reference-labelled-${size}`} />
+    </Next.Group>
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-core/next/components/SystemButton',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
+  decorators: [withSizes({ width: 'w-[24rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered', translations },
@@ -63,45 +95,98 @@ export const Default: Story = {};
 /** The icon's sprite reference, which resolves once the sprite registry has the icon. */
 const iconHref = (button: HTMLElement) => button.querySelector('use')?.getAttribute('href') ?? '';
 
+const NAMES: Record<string, string> = {
+  disclosure: 'Open',
+  star: 'Star',
+  bookmark: 'Bookmark',
+  clipboard: 'Copy',
+  mic: 'Start recording',
+  upload: 'Upload',
+  download: 'Download',
+  ai: 'Run AI',
+  add: 'Add',
+  edit: 'Edit',
+  delete: 'Delete',
+  close: 'Close',
+  save: 'Save',
+  cancel: 'Cancel',
+};
+
+/** The icon's rotation in degrees, from its computed transform matrix (`none` is 0). */
+const rotation = (element: Element) => {
+  const transform = getComputedStyle(element).transform;
+  if (transform === 'none') {
+    return 0;
+  }
+  const [a, b] = transform
+    .slice(transform.indexOf('(') + 1, -1)
+    .split(',')
+    .map(Number);
+  return Math.round((Math.atan2(b, a) * 180) / Math.PI);
+};
+
 /**
- * Every preset is an icon-only button named by its translated label and sized like a plain `Button iconOnly`; Star and
- * Bookmark are toggles that swap icon and label; Disclosure reports `aria-expanded` (not `aria-pressed`); Clipboard
+ * Every preset is an icon-only button by default, named by its translated label and sized like a plain `Button
+ * iconOnly`; `iconOnly={false}` shows the label instead, with no Tooltip, as tall as the icon-only form and a plain
+ * labelled Button. Star and Bookmark are toggles that swap icon and label; Disclosure reports `aria-expanded` (not
+ * `aria-pressed`) and turns its one caret a quarter while expanded; Save is primary and Cancel is not; Clipboard
  * writes its value and confirms with a check and a "Copied" label.
  */
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
-      const reference = byTestId(canvasElement, `reference-${size}`).getBoundingClientRect();
-      for (const preset of ['disclosure', 'star', 'bookmark', 'clipboard']) {
-        const rect = byTestId(canvasElement, `${preset}-${size}`).getBoundingClientRect();
-        await expect(rect.width, `${preset} ${size}`).toBeCloseTo(reference.width, 0);
-        await expect(rect.height, `${preset} ${size}`).toBeCloseTo(reference.height, 0);
+      const row = sizeRow(canvasElement, size);
+      const reference = byTestId(row, `reference-${size}`).getBoundingClientRect();
+      const labelled = byTestId(row, `reference-labelled-${size}`).getBoundingClientRect();
+      await expect(labelled.height, `labelled reference ${size}`).toBeCloseTo(reference.height, 0);
+      for (const { id } of PRESETS) {
+        const rect = byTestId(row, `${id}-${size}`).getBoundingClientRect();
+        await expect(rect.width, `${id} ${size}`).toBeCloseTo(reference.width, 0);
+        await expect(rect.height, `${id} ${size}`).toBeCloseTo(reference.height, 0);
+        const text = byTestId(row, `${id}-labelled-${size}`).getBoundingClientRect();
+        await expect(text.height, `${id} labelled ${size}`).toBeCloseTo(reference.height, 0);
+        await expect(text.width, `${id} labelled ${size}`).toBeGreaterThan(reference.width);
       }
     }
 
-    const canvas = within(sizeRow(canvasElement, 'md'));
-    const names = [
-      'Expand',
-      'Star',
-      'Bookmark',
-      'Copy',
-      'Start recording',
-      'Upload',
-      'Download',
-      'Run AI',
-      'Add',
-      'Edit',
-      'Delete',
-      'Close',
-    ];
-    for (const name of names) {
-      const button = await canvas.findByRole('button', { name }, { timeout: 10_000 });
+    const md = sizeRow(canvasElement, 'md');
+    for (const { id } of PRESETS) {
+      const name = NAMES[id];
+      const button = byTestId(md, `${id}-md`);
+      await waitFor(() => expect(button, name).toHaveAccessibleName(name), { timeout: 10_000 });
       await expect(button, name).toHaveAttribute('data-square');
       await expect(button.querySelector('svg'), name).not.toBeNull();
+      await expect(button.textContent, name).toBe('');
+      // The labelled form shows its label as text beside the icon, named by that text rather than `aria-label`.
+      const labelled = byTestId(md, `${id}-labelled-md`);
+      await expect(labelled, name).not.toHaveAttribute('data-square');
+      await expect(labelled, name).not.toHaveAttribute('aria-label');
+      await expect(labelled, name).toHaveTextContent(name);
+      await expect(labelled, name).toHaveAccessibleName(name);
+      await expect(labelled.querySelector('svg'), name).not.toBeNull();
     }
 
-    const star = byTestId(sizeRow(canvasElement, 'md'), 'star-md');
+    // A labelled preset has no Tooltip on hover, while the icon-only form still has one.
+    const labelledAdd = byTestId(md, 'add-labelled-md');
+    await realHover(labelledAdd);
+    await expectNoTooltip(labelledAdd);
+    const add = byTestId(md, 'add-md');
+    await realHover(add);
+    await expectTooltip(add, 'Add');
+    await realUnhover(add);
+
+    // Save is primary; Cancel keeps the default variant.
+    await expect(byTestId(md, 'save-labelled-md')).toHaveAttribute('data-variant', 'primary');
+    await expect(byTestId(md, 'save-md')).toHaveAttribute('data-variant', 'primary');
+    await expect(byTestId(md, 'cancel-labelled-md')).toHaveAttribute('data-variant', 'default');
+    await expect(getComputedStyle(byTestId(md, 'save-labelled-md')).backgroundColor).not.toBe(
+      getComputedStyle(byTestId(md, 'cancel-labelled-md')).backgroundColor,
+    );
+    await waitFor(() => expect(iconHref(byTestId(md, 'save-md'))).toContain('ph--check--regular'));
+    await waitFor(() => expect(iconHref(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
+
+    const star = byTestId(md, 'star-md');
     await expect(star).toHaveAttribute('aria-pressed', 'false');
     await waitFor(() => expect(iconHref(star)).toContain('ph--star--regular'));
     await userEvent.click(star);
@@ -110,8 +195,12 @@ export const Test: Story = {
     await expect(star).toHaveAccessibleName('Unstar');
     await expect(star).toHaveAttribute('data-icon-valence', 'warning');
     await expect(star).not.toHaveAttribute('aria-expanded');
+    // The labelled Star's text follows its pressed state too.
+    const labelledStar = byTestId(md, 'star-labelled-md');
+    await userEvent.click(labelledStar);
+    await waitFor(() => expect(labelledStar).toHaveTextContent('Unstar'));
 
-    const bookmark = byTestId(sizeRow(canvasElement, 'md'), 'bookmark-md');
+    const bookmark = byTestId(md, 'bookmark-md');
     await userEvent.click(bookmark);
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'true'));
     await waitFor(() => expect(iconHref(bookmark)).toContain('ph--bookmark-simple--fill'));
@@ -120,15 +209,28 @@ export const Test: Story = {
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'false'));
     await expect(bookmark).toHaveAccessibleName('Bookmark');
 
-    const disclosure = byTestId(sizeRow(canvasElement, 'md'), 'disclosure-md');
+    // One caret, turned a quarter while expanded and back when collapsed.
+    const disclosure = byTestId(md, 'disclosure-md');
+    const caret = disclosure.querySelector('svg');
+    if (!caret) {
+      throw new Error('missing caret');
+    }
     await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect(disclosure).not.toHaveAttribute('aria-pressed');
+    await waitFor(() => expect(iconHref(disclosure)).toContain('ph--caret-right--regular'));
+    await expect(getComputedStyle(caret).transform).toBe('none');
     await userEvent.click(disclosure);
     await waitFor(() => expect(disclosure).toHaveAttribute('aria-expanded', 'true'));
-    await expect(disclosure).toHaveAccessibleName('Collapse');
-    await waitFor(() => expect(iconHref(disclosure)).toContain('ph--caret-down--regular'));
+    await expect(disclosure).toHaveAccessibleName('Close');
+    await expect(iconHref(disclosure)).toContain('ph--caret-right--regular');
+    await expect(getComputedStyle(caret).transitionProperty).toContain('transform');
+    await waitFor(() => expect(rotation(caret)).toBe(90));
+    await userEvent.click(disclosure);
+    await waitFor(() => expect(disclosure).toHaveAttribute('aria-expanded', 'false'));
+    await expect(disclosure).toHaveAccessibleName('Open');
+    await waitFor(() => expect(getComputedStyle(caret).transform).toBe('none'));
 
-    const mic = canvas.getByRole('button', { name: 'Start recording' });
+    const mic = byTestId(md, 'mic-md');
     await userEvent.click(mic);
     await waitFor(() => expect(mic).toHaveAccessibleName('Stop recording'));
     await expect(mic).toHaveAttribute('data-hue', 'error');
@@ -144,7 +246,7 @@ export const Test: Story = {
       },
     });
     try {
-      const copy = byTestId(sizeRow(canvasElement, 'md'), 'clipboard-md');
+      const copy = byTestId(md, 'clipboard-md');
       await userEvent.click(copy);
       await waitFor(() => expect(written).toEqual(['Copied at md']));
       await waitFor(() => expect(copy).toHaveAccessibleName('Copied'));

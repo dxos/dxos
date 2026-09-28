@@ -21,20 +21,39 @@ import { downloadBlob } from '@dxos/util';
 import { translationKey } from '#translations';
 
 import { composable } from '../../../util/index.ts';
-import { Button, type ButtonVariantProps } from '../Button/index.ts';
+import { Button, type ButtonContentProps, type ButtonVariantProps } from '../Button/index.ts';
 import { Toggle } from '../Toggle/index.ts';
 import { type TooltipSide } from '../Tooltip/index.ts';
 
 /**
- * Every preset is an icon-only Button whose icon is fixed and whose label defaults from the `system-button.*`
- * translations; callers may still override `label`.
+ * Every preset is a Button whose icon is fixed and whose label defaults from the `system-button.*` translations;
+ * callers may still override `label`.
  */
 export type SystemButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
   ButtonVariantProps & {
     label?: string;
+    /** Only the icon, named by the label in a Tooltip (the default); `false` shows the label after the icon. */
+    iconOnly?: boolean;
+    /** Icon-only: opt out of the label Tooltip. */
     showTooltip?: boolean;
+    /** Icon-only: the side the label Tooltip opens on. */
     tooltipSide?: TooltipSide;
   };
+
+type PresetContent = Pick<SystemButtonProps, 'iconOnly' | 'showTooltip' | 'tooltipSide'> & {
+  icon: string;
+  label: string;
+};
+
+/** Button content for a preset: icon-only with its Tooltip unless `iconOnly` is false, when the label shows. */
+const presetContent = ({
+  icon,
+  label,
+  iconOnly = true,
+  showTooltip,
+  tooltipSide,
+}: PresetContent): ButtonContentProps =>
+  iconOnly ? { iconOnly: true, icon, label, showTooltip, tooltipSide } : { icon, label };
 
 /** Star and Bookmark: a Toggle (`aria-pressed`) whose icon and label follow the pressed state. */
 export type SystemTogglePresetProps = SystemButtonProps & {
@@ -56,7 +75,10 @@ const createTogglePreset = (
   { icon, activeIcon, labelKey, activeLabelKey, iconValence }: ToggleSpec,
 ) => {
   const Preset = composable<HTMLButtonElement, SystemTogglePresetProps>(
-    ({ label, pressed: pressedProp, defaultPressed, onPressedChange, ...props }, forwardedRef) => {
+    (
+      { label, iconOnly, showTooltip, tooltipSide, pressed: pressedProp, defaultPressed, onPressedChange, ...props },
+      forwardedRef,
+    ) => {
       const { t } = useTranslation(translationKey);
       // Owned here, not left to the toggle machine, because the label (not only the icon) follows the pressed state.
       const [pressed = false, setPressed] = useControllableState({
@@ -67,10 +89,14 @@ const createTogglePreset = (
       return (
         <Toggle
           {...props}
-          iconOnly
-          icon={icon}
+          {...presetContent({
+            icon,
+            label: label ?? t(pressed ? activeLabelKey : labelKey),
+            iconOnly,
+            showTooltip,
+            tooltipSide,
+          })}
           activeIcon={activeIcon}
-          label={label ?? t(pressed ? activeLabelKey : labelKey)}
           pressed={pressed}
           onPressedChange={setPressed}
           data-icon-valence={pressed ? iconValence : undefined}
@@ -83,11 +109,25 @@ const createTogglePreset = (
   return Preset;
 };
 
-const createStaticPreset = (displayName: string, icon: string, labelKey: string) => {
-  const Preset = composable<HTMLButtonElement, SystemButtonProps>(({ label, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    return <Button {...props} iconOnly icon={icon} label={label ?? t(labelKey)} ref={forwardedRef} />;
-  });
+const createStaticPreset = (
+  displayName: string,
+  icon: string,
+  labelKey: string,
+  defaults: Pick<SystemButtonProps, 'variant'> = {},
+) => {
+  const Preset = composable<HTMLButtonElement, SystemButtonProps>(
+    ({ label, iconOnly, showTooltip, tooltipSide, ...props }, forwardedRef) => {
+      const { t } = useTranslation(translationKey);
+      return (
+        <Button
+          {...defaults}
+          {...props}
+          {...presetContent({ icon, label: label ?? t(labelKey), iconOnly, showTooltip, tooltipSide })}
+          ref={forwardedRef}
+        />
+      );
+    },
+  );
   Preset.displayName = displayName;
   return Preset;
 };
@@ -123,10 +163,24 @@ export type SystemDisclosureProps = SystemButtonProps & {
 
 /**
  * Shows and hides a region — the WAI-ARIA disclosure pattern, so it reports `aria-expanded` rather than the
- * `aria-pressed` of a toggle. Give it `aria-controls` at the call site, where the region's id is known.
+ * `aria-pressed` of a toggle. Give it `aria-controls` at the call site, where the region's id is known. Its caret
+ * turns a quarter while expanded (`theme/system-button.css`).
  */
 const Disclosure = composable<HTMLButtonElement, SystemDisclosureProps>(
-  ({ label, expanded: expandedProp, defaultExpanded, onExpandedChange, onClick, ...props }, forwardedRef) => {
+  (
+    {
+      label,
+      iconOnly,
+      showTooltip,
+      tooltipSide,
+      expanded: expandedProp,
+      defaultExpanded,
+      onExpandedChange,
+      onClick,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const [expanded = false, setExpanded] = useControllableState({
       prop: expandedProp,
@@ -136,10 +190,15 @@ const Disclosure = composable<HTMLButtonElement, SystemDisclosureProps>(
     return (
       <Button
         {...props}
-        iconOnly
-        icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-        label={label ?? t(expanded ? 'system-button.collapse.label' : 'system-button.expand.label')}
+        {...presetContent({
+          icon: 'ph--caret-right--regular',
+          label: label ?? t(expanded ? 'system-button.close.label' : 'system-button.open.label'),
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
         aria-expanded={expanded}
+        data-disclosure=''
         onClick={composeEventHandlers(onClick, () => setExpanded(!expanded))}
         ref={forwardedRef}
       />
@@ -160,6 +219,14 @@ const Ai = createStaticPreset('Next.SystemButton.Ai', AI_ACTION_ICON, 'system-bu
 
 const Close = createStaticPreset('Next.SystemButton.Close', 'ph--x--regular', 'system-button.close.label');
 
+/** Commits a form or dialog; `primary` by default, and usually labelled (`iconOnly={false}`) in a footer. */
+const Save = createStaticPreset('Next.SystemButton.Save', 'ph--check--regular', 'system-button.save.label', {
+  variant: 'primary',
+});
+
+/** Abandons a form or dialog; the glyph is Close's, the label and intent differ. */
+const Cancel = createStaticPreset('Next.SystemButton.Cancel', 'ph--x--regular', 'system-button.cancel.label');
+
 const Delete = createStaticPreset('Next.SystemButton.Delete', 'ph--trash--regular', 'system-button.delete.label');
 
 const Edit = createStaticPreset('Next.SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
@@ -175,7 +242,10 @@ export type SystemClipboardProps = SystemButtonProps & {
 } & ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const Clipboard = composable<HTMLButtonElement, SystemClipboardProps>(
-  ({ label, value, onCopy, icon = 'ph--clipboard--regular', onClick, ...props }, forwardedRef) => {
+  (
+    { label, iconOnly, showTooltip, tooltipSide, value, onCopy, icon = 'ph--clipboard--regular', onClick, ...props },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -204,9 +274,13 @@ const Clipboard = composable<HTMLButtonElement, SystemClipboardProps>(
     return (
       <Button
         {...props}
-        iconOnly
-        icon={copied ? 'ph--check--regular' : icon}
-        label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
+        {...presetContent({
+          icon: copied ? 'ph--check--regular' : icon,
+          label: copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label')),
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
         data-icon-valence={copied ? 'success' : undefined}
         onClick={composeEventHandlers(onClick, handleCopy)}
         ref={forwardedRef}
@@ -227,7 +301,7 @@ export type SystemUploadProps = SystemButtonProps &
   };
 
 const Upload = composable<HTMLButtonElement, SystemUploadProps>(
-  ({ accept, multiple, onFileChange, label, onClick, ...props }, forwardedRef) => {
+  ({ accept, multiple, onFileChange, label, iconOnly, showTooltip, tooltipSide, onClick, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const fileInputRef = useRef<HTMLInputElement>(null);
     return (
@@ -235,9 +309,13 @@ const Upload = composable<HTMLButtonElement, SystemUploadProps>(
         <input hidden type='file' accept={accept} multiple={multiple} onChange={onFileChange} ref={fileInputRef} />
         <Button
           {...props}
-          iconOnly
-          icon='ph--upload-simple--regular'
-          label={label ?? t('system-button.upload.label')}
+          {...presetContent({
+            icon: 'ph--upload-simple--regular',
+            label: label ?? t('system-button.upload.label'),
+            iconOnly,
+            showTooltip,
+            tooltipSide,
+          })}
           onClick={composeEventHandlers(onClick, () => fileInputRef.current?.click())}
           ref={forwardedRef}
         />
@@ -259,7 +337,7 @@ export type SystemDownloadProps = SystemButtonProps & {
 };
 
 const Download = composable<HTMLButtonElement, SystemDownloadProps>(
-  ({ filename, onDownload, label, onClick, ...props }, forwardedRef) => {
+  ({ filename, onDownload, label, iconOnly, showTooltip, tooltipSide, onClick, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const handleDownload = useCallback(async () => {
       try {
@@ -276,9 +354,13 @@ const Download = composable<HTMLButtonElement, SystemDownloadProps>(
     return (
       <Button
         {...props}
-        iconOnly
-        icon='ph--download-simple--regular'
-        label={label ?? t('system-button.download.label')}
+        {...presetContent({
+          icon: 'ph--download-simple--regular',
+          label: label ?? t('system-button.download.label'),
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
         onClick={composeEventHandlers(onClick, () => void handleDownload())}
         ref={forwardedRef}
       />
@@ -314,7 +396,21 @@ export type SystemMicProps = Omit<SystemButtonProps, 'label' | 'onClick'> & {
  * release still arrives if the pointer leaves the button.
  */
 const Mic = composable<HTMLButtonElement, SystemMicProps>(
-  ({ mode = 'toggle', recording, onToggle, onPressStart, onPressEnd, ...props }, forwardedRef) => {
+  (
+    {
+      label,
+      iconOnly,
+      showTooltip,
+      tooltipSide,
+      mode = 'toggle',
+      recording,
+      onToggle,
+      onPressStart,
+      onPressEnd,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     // A press spans down→up; the guard fires start/end once though a release arrives as both `pointerup` and
     // `lostpointercapture`.
     const pressedRef = useRef(false);
@@ -382,8 +478,13 @@ const Mic = composable<HTMLButtonElement, SystemMicProps>(
       <Button
         {...props}
         {...handlers}
-        iconOnly
-        icon={recording ? 'ph--microphone--duotone' : 'ph--microphone--regular'}
+        {...presetContent({
+          icon: recording ? 'ph--microphone--duotone' : 'ph--microphone--regular',
+          label,
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
         hue={recording ? 'error' : props.hue}
         ref={forwardedRef}
       />
@@ -397,11 +498,12 @@ Mic.displayName = 'Next.SystemButton.Mic';
 // Namespace
 //
 
-/** Icon-only Button and Toggle presets with fixed icons, translated default labels and built-in behaviour. */
+/** Button and Toggle presets with fixed icons, translated default labels and built-in behaviour; icon-only by default. */
 export const SystemButton = {
   Add,
   Ai,
   Bookmark,
+  Cancel,
   Clipboard,
   Close,
   Delete,
@@ -409,6 +511,7 @@ export const SystemButton = {
   Download,
   Edit,
   Mic,
+  Save,
   Star,
   Upload,
 };

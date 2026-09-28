@@ -227,9 +227,9 @@ const FocusRingsStory = () => (
   </div>
 );
 
-/** Colours a focused part and its immediate relatives paint for focus. */
+/** Colours a focused part, its immediate relatives and the control row hosting it (DateInput's segments) paint for focus. */
 const focusPaint = (element: Element) =>
-  [element, element.parentElement, ...(element.parentElement?.children ?? [])]
+  [element, element.parentElement, ...(element.parentElement?.children ?? []), element.closest('.nx-control')]
     .filter((node): node is Element => node instanceof Element)
     .map((node) => {
       const style = getComputedStyle(node);

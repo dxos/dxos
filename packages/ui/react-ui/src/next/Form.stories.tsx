@@ -8,6 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
@@ -70,10 +72,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Field.Root>
 
       <Next.Group justify='end' data-testid='actions'>
-        <Next.Button>Cancel</Next.Button>
-        <Next.Button type='submit' variant='primary'>
-          Save
-        </Next.Button>
+        <Next.SystemButton.Cancel iconOnly={false} />
+        <Next.SystemButton.Save iconOnly={false} type='submit' />
       </Next.Group>
     </Next.Container>
   </div>
@@ -85,7 +85,7 @@ const meta = {
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   decorators: [withTheme()],
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<SizeArgs>;
 
 export default meta;
