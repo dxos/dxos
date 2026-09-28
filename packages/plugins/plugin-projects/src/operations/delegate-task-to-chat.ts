@@ -48,9 +48,14 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
 
+        // A parent brings its subtasks: handing over the heading of a piece of work hands over the work,
+        // parent first, then its subtree in order. Deduped, so ticking a parent and a child does not
+        // list the child twice.
+        const subtrees = yield* Effect.forEach(requested, (task) => Task.collectSubtree(task));
+
         // Idempotent over re-invocation: a task the agent already holds is skipped rather than
         // handed to a second session, and a list of nothing else stops here the way an empty one does.
-        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        const tasks = Task.dedupeById(subtrees.flat()).filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
@@ -72,9 +77,9 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const [project] = projects.values();
 
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-          // Named after the task only when it is about exactly one: a chat holding three would be
-          // claiming to be about whichever happened to be first.
-          ...(tasks.length === 1 && { name: tasks[0].title }),
+          // Named after the task only when it was handed exactly one (with its subtasks): a chat holding
+          // three would be claiming to be about whichever happened to be first.
+          ...(requested.length === 1 && { name: requested[0].title }),
         });
 
         // The tasks join the chat's checklist in the order they were given, which is the order the

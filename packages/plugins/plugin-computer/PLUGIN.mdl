@@ -119,8 +119,9 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
     - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
       create dialog offers it only when that plugin is on
     - the Assistant's default remote model is DeepSeek V4 Pro
-    - no plugin named "Space Clock" is loaded, and `temp/plugins/space-clock` and
-      `out/composer/plugins/space-clock` do not exist, so the agent starts from an empty folder
+    - no plugin named "Space Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
+      `temp/plugins/space-clock` and `out/composer/plugins/space-clock` do not exist, so the agent starts from
+      an empty folder (the autocue flow's first setup step restores all of this)
   steps:
     - name: Create a project from the Composer Plugin template
       do: Click + on the space, choose Project, pick the "Composer Plugin" template and click Create.
@@ -131,15 +132,16 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       expect: |
         one parent task, "Build the Space Clock plugin", with four subtasks under it, all to do — read the
         guide, write the plugin, typecheck and build, offer it
-    - name: Select the parent task and its subtasks and assign them to the agent
-      do: Tick the parent's checkbox and each subtask's, then click "Assign selected tasks to agent".
-      expect: the project's pipeline chart appears and the five tasks are delegated to a chat
-      note: |
-        Delegation sends only the rows that are ticked — ticking the parent does not bring its subtasks —
-        and the agent's checklist is flat, so every row is ticked.
+    - name: Select the parent task and assign it to the agent
+      do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
+      expect: |
+        the project's pipeline chart appears and a chat named "Build the Space Clock plugin" holds the parent
+        and its four subtasks
+      note: Delegating a parent hands over its whole subtree (DelegateTaskToChat collects it), parent first.
     - name: Open the agent session
-      do: Open the plank's companion and pick its Assistant tab.
-      expect: the delegated chat is shown with its status line
+      do: Open the plank's companion, pick its Assistant tab, and show the chat's tasks.
+      expect: the delegated chat is shown with its status line and its checklist of five tasks
+      note: The checklist starts collapsed (it is the assistant's working state), so it is opened on purpose.
     - name: Ask the agent to start
       do: Type "Start working on the tasks." into the companion's prompt and press Enter.
       expect: the chat shows "Generating" and the agent starts on the first subtask

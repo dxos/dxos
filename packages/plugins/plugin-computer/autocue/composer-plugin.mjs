@@ -57,6 +57,12 @@ const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}
 /** The first space in the rail, where the take runs. */
 const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
 
+/** The same tab as a CSS selector, for code that runs in the page. */
+const SPACE_TAB = '[data-testid="spacePlugin.space"]';
+
+/** The project the template creates, by its default name. */
+const PROJECT_NAME = 'Composer Plugin';
+
 /** A narrow window collapses the navtree into an overlay; open it before clicking an item in it. */
 const showSidebar = async ({ demo, page }, testId, label) => {
   if (!(await page.getByTestId(testId).first().isVisible())) {
@@ -80,11 +86,33 @@ export const steps = [
     name: 'Prep (off camera): clear the last take',
     setup: true,
     done: () => existsSync(new URL(LEFTOVERS[0], import.meta.url)),
-    run: async () => {
+    run: async ({ page }) => {
       for (const folder of LEFTOVERS) {
         await rm(new URL(folder, import.meta.url), { recursive: true, force: true });
       }
       await rm(TAKE_PROJECT, { force: true });
+
+      // Earlier takes' projects (and the chats filed under them) go too, so the navtree shows only this
+      // take's. Through the space's own remove operation, so it cascades as a delete from the UI does.
+      await page.waitForFunction(
+        () => globalThis.composer?.invoke && globalThis.dxos?.spaces && document.querySelector(SPACE_TAB),
+        undefined,
+        { timeout: 60_000 },
+      );
+      await page.evaluate(
+        async ({ tab, name }) => {
+          const spaceId = document.querySelector(tab).dataset.value.split('/').pop();
+          const projects = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
+            .run();
+          const objects = projects.filter((project) => project.name === name);
+          if (objects.length > 0) {
+            await composer.invoke('org.dxos.operation.space.removeObjects', { objects }, { spaceId });
+          }
+        },
+        { tab: SPACE_TAB, name: PROJECT_NAME },
+      );
     },
   },
   {
@@ -205,16 +233,13 @@ export const steps = [
     },
   },
   {
-    // Delegation sends only the ticked rows and the agent's checklist is flat, so tick the parent and every subtask.
-    name: 'Select the parent task and its subtasks and assign them to the agent',
-    run: async ({ demo, page }) => {
-      const count = await page.getByTestId('taskList.item.checkbox').count();
-      for (let index = 0; index < count; index++) {
-        await demo.click({
-          selector: `[data-testid="taskList.item"] >> nth=${index} >> [data-testid="taskList.item.checkbox"]`,
-          label: 'Select task',
-        });
-      }
+    // Delegating a parent hands the agent its whole subtree, so the one tick is enough.
+    name: 'Select the parent task and assign it to the agent',
+    run: async ({ demo }) => {
+      await demo.click({
+        selector: '[data-testid="taskList.item"] >> nth=0 >> [data-testid="taskList.item.checkbox"]',
+        label: 'Select task',
+      });
       await demo.click({
         selector: '[data-testid="projectsPlugin.delegateTasks"]',
         label: 'Assign selected tasks to agent',
@@ -250,6 +275,15 @@ export const steps = [
           await demo.click({ selector: TAB, label: 'Assistant' });
         }
         if ((await tab.getAttribute('aria-selected')) === 'true' && (await visible(status, 15_000))) {
+          // The chat's checklist starts collapsed; open it so the viewer sees the tasks the agent holds.
+          const checklist = page.locator('[data-testid="deck.companion"] [data-testid="taskList.item"]').first();
+          if (!(await checklist.isVisible().catch(() => false))) {
+            await demo.click({
+              selector: '[data-testid="deck.companion"] [data-testid="assistant.toggle-tasks"]',
+              label: 'Show tasks',
+            });
+            await checklist.waitFor({ state: 'visible', timeout: 10_000 });
+          }
           return;
         }
       }
