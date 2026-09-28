@@ -2,22 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import { rm } from 'node:fs/promises';
+
 /**
  * An agent works the four tasks of the Composer Plugin space template to build the Space Clock plugin,
- * then the reader loads it and opens its Clock page.
+ * then the reader loads it, finds it in the registry, and opens its Clock page from the navtree group it adds.
  *
- * @mdl none — walks plugin-debug's Composer Plugin space template (`packages/plugins/plugin-debug/src/samples/plugin`)
+ * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-4
  * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
  *
  * Built and served from `packages/apps/composer-app`. Loading a plugin by URL needs the bundle's import
  * map, and the Computer shell only mounts in a vite server; EDGE production rejects the AI requests:
  *
  *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
- *   pnpm exec vite build --configLoader native
+ *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * Remove `temp/plugins/space-clock` and `out/composer/plugins/space-clock` first, so the agent starts
- * from an empty folder. Step 1 is off-camera prep and persists in the profile.
+ * Step 1 is off-camera prep and persists in the profile. It also clears the last take: the Space Clock
+ * plugin is uninstalled and its source and build folders are deleted, so the agent starts from nothing.
  */
 
 const TWENTY_MIN = 20 * 60_000;
@@ -27,12 +29,28 @@ const MODEL = 'DeepSeek V4 Pro';
 
 const NUDGE = 'Start working on the tasks.';
 
+/** The plugin the agent builds, as the template's tasks name it. */
+const PLUGIN_NAME = 'Space Clock';
+
+/** A beat for the viewer to read the registry card, which is the one shot that proves the load. */
+const LINGER = 2_500;
+
+/** The last take's source and build, relative to this file (`composer-app/autocue/`). */
+const LEFTOVERS = ['../temp/plugins/space-clock/', '../../../../out/composer/plugins/space-clock/'];
+
+/** A plugin card in the registry list, by its display name. */
+const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+
 export const steps = [
   {
     // No `done`: every action here is idempotent, so a replay simply re-applies it.
-    name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
+    name: 'Prep (off camera): clear the last take, enable Coding (Dev), pick the model, dismiss notices',
     setup: true,
     run: async ({ demo, page }) => {
+      for (const folder of LEFTOVERS) {
+        await rm(new URL(folder, import.meta.url), { recursive: true, force: true });
+      }
+
       // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
       const notice = page.locator(
         '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
@@ -68,6 +86,14 @@ export const steps = [
         await toggle.click();
       }
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+
+      // A plugin loaded in an earlier take persists in the profile; uninstall it from its detail page.
+      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text=Enabled', hud: false });
+      if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
+        await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
+        await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
+        await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
+      }
 
       // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
       // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
@@ -194,14 +220,49 @@ export const steps = [
     name: 'Load the plugin',
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="assistant.pluginUrlPrompt.load"]', label: 'Load' });
-      await page.getByText('Space Clock').first().waitFor({ state: 'visible', timeout: 30_000 });
+      await page.waitForFunction(
+        (name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active),
+        PLUGIN_NAME,
+        { timeout: 30_000 },
+      );
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    // Slowed down on purpose: the registry card is the viewer's proof that the agent's plugin is installed.
+    name: 'See the plugin in the registry',
+    done: async ({ page }) => (await page.locator(card(PLUGIN_NAME)).count()) > 0,
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text=Enabled', label: 'Enabled' });
+      await page.waitForTimeout(LINGER / 2);
+      await demo.type({ selector: 'input[placeholder="Filter…"]', value: PLUGIN_NAME, delay: 120, label: 'Filter' });
+      const plugin = page.locator(card(PLUGIN_NAME));
+      await plugin.waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.hover({ selector: card(PLUGIN_NAME), label: PLUGIN_NAME });
+      await page.waitForTimeout(LINGER);
+      await demo.hover({ selector: `${card(PLUGIN_NAME)} input[type="checkbox"]`, label: 'Enabled' });
+      if (!(await plugin.locator('input[type="checkbox"]').isChecked())) {
+        throw new Error(`${PLUGIN_NAME} is listed but not enabled`);
+      }
+      await page.waitForTimeout(LINGER);
     },
   },
   {
     name: 'Open the Clock page',
     run: async ({ demo, page }) => {
-      await demo.click({ text: 'Space Clock', exact: true });
-      await demo.click({ text: 'Clock', exact: true });
+      // An earlier take's space keeps the same name; the rail lists spaces oldest first, so take the newest.
+      await demo.click({
+        selector: '[data-testid="spacePlugin.space"]:has-text("Composer Plugin") >> nth=-1',
+        label: 'Composer Plugin',
+      });
+      // The plugin adds a group to the space's navtree; the built-in groups must still be there beside it.
+      const sidebar = page.getByTestId('deck.sidebar');
+      await sidebar.getByText(PLUGIN_NAME, { exact: true }).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await sidebar.getByTestId('spacePlugin.collectionsSection').waitFor({ state: 'visible', timeout: 5_000 });
+      await page.waitForTimeout(LINGER / 2);
+      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Clock"', label: 'Clock' });
+      await page.locator('[data-testid="deck.plank"]', { hasText: 'Clock' }).first().waitFor({ state: 'visible' });
       await page.waitForTimeout(3_000);
     },
   },

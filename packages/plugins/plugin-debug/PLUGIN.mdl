@@ -296,3 +296,70 @@ test QA-3: Walk the review-queue demo space
       expect: the workspace is the default space and no error is logged
       assert: return $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0
 ```
+
+```mdl
+test QA-4: Build a plugin with an agent from the Composer Plugin template
+  desc: |
+    The demo script for the Composer Plugin template (`samples/plugin`): an agent works the project's four
+    tasks on this machine — read the guide, write a TypeScript plugin, build it, offer it — and the reader
+    loads the result. The plugin adds a "Space Clock" group to each space's navtree with a live "Clock"
+    page under it. Walked by the autocue flow `packages/apps/composer-app/autocue/composer-plugin.mjs`.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — loading by URL
+      needs the bundle's import map, and EDGE production rejects the AI requests
+    - plugin-debug, plugin-projects and Coding (Dev) (plugin-computer) are enabled
+    - the Assistant's default remote model is DeepSeek V4 Pro
+    - no plugin named "Space Clock" is loaded, and `temp/plugins/space-clock` and
+      `out/composer/plugins/space-clock` do not exist, so the agent starts from an empty folder
+  before:
+    - name: Create a space from the Composer Plugin template
+      do: Open the app menu, choose Create space, pick "Composer Plugin" and click Create.
+      invoke: org.dxos.operation.debug.createSpaceFromTemplate { id: "org.dxos.plugin-debug.template.plugin" }
+      capture: seeded
+      expect: a space named "Composer Plugin" appears in the space list
+      assert: return $snapshot.spaces.some((s) => s.id === $result.spaceId)
+  steps:
+    - name: Open the project and its tasks
+      do: Open the space's Home, click the "Composer Plugin" project, then its Tasks tab.
+      expect: four tasks, all to do — read the guide, write the plugin, typecheck and build, offer it
+    - name: Select all four tasks and assign them to the agent
+      do: Tick each task's checkbox, then click "Assign selected tasks to agent".
+      expect: the project's pipeline chart appears and the tasks are delegated to a chat
+    - name: Open the agent session
+      do: Open the plank's companion and pick its Assistant tab.
+      expect: the delegated chat is shown with its status line
+    - name: Ask the agent to start
+      do: Type "Start working on the tasks." into the companion's prompt and press Enter.
+      expect: the chat shows "Generating" and the agent starts on the first task
+      note: |
+        Showing the companion restarts the delegated agent, which drops its opening prompt, so the reader
+        nudges it. Known defect; remove this step once the companion no longer restarts the agent.
+    - name: Wait for the agent to offer the plugin
+      do: Watch the tasks tick off.
+      expect: all four tasks are done and the chat shows a "Load plugin" prompt naming Space Clock
+      note: |
+        Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
+        delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
+    - name: Load the plugin
+      do: Click Load on the prompt.
+      expect: the Space Clock plugin loads without an error toast
+    - name: See the plugin in the registry
+      do: Open Plugins and filter for "Space Clock".
+      expect: the Space Clock card is listed with its toggle on
+    - name: Open the Clock page
+      do: Return to the space and click Clock under the SPACE CLOCK group.
+      expect: |
+        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a SPACE CLOCK group holding Clock; the
+        page opens as an article showing a large clock that ticks every second
+      note: |
+        An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
+        navtree with its own; the guide now teaches a navtree group.
+  after:
+    - name: Delete the space
+      do: Open the space's settings and delete the space.
+      invoke: org.dxos.operation.space.delete { space: Space($seeded.spaceId) }
+      expect: the space leaves the space list
+```

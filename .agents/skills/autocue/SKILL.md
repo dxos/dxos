@@ -6,11 +6,16 @@ description: >-
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. Also covers
   manual mode, where the user records their own screen while the agent drives a visible browser
-  step by step on their cue. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
+  step by step on their cue. "Cue <demo>" (e.g. "cue the projects demo") means run a committed flow
+  this way. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
 # Autocue
+
+**"Cue" is the verb.** "Cue the projects demo" means: find the committed flow whose name or doc comment
+matches, serve the app its `@app` line names, open the driver in manual mode, load the flow with `steps`,
+and wait at step 1 for the user's go (see "The protocol"). Cueing never starts the run by itself.
 
 The agent drives the real app one gesture at a time and the session is recorded. Three things make
 this different from a Playwright spec, and they are the reasons to reach for it:
@@ -81,11 +86,21 @@ run, edit the script when the user steers, and read the result.
 
 Check for a committed flow first: one that has already run end to end lives in an `autocue/` folder at the
 root of the package it exercises (`packages/apps/composer-app/autocue/`, or a plugin's own), and running it
-in place beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
-per QA step. Each step
-gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
-and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
-wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
+in place beats rewriting it.
+
+**Otherwise the `.mdl` test comes first, and the script second.** A flow binds a spec; it is not one. The
+test carries the intent a reviewer checks — `given`, each step's `do:`/`expect:`, and every product fact the
+run surfaces as a `note:` (a known defect it works around, a model that stayed silent). The script carries
+only mechanics: selectors, retries, waits, pacing, `setup`. Writing the test from the script instead loses
+nothing that matters but duplicates it, and the copy drifts unreviewed. So:
+
+1. Find the test the demo walks, in the `PLUGIN.mdl` of the plugin under test. If there is none, draft a
+   `test QA-n` there (the `composer-qa` format) before writing a line of script, and show it to the user
+   with the step list.
+2. Copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per test step. Each step
+   gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
+   and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
+   wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
 
 ```bash
 C '{"op":"steps","file":"/tmp/demo/flow.mjs"}'   # numbered step names; `next` is where `run` resumes
@@ -157,7 +172,7 @@ that again"), and for probing a failure before you fix the script.
 ### The protocol
 
 1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run
-   a setup step. Write the flow script, send `steps`, and show the user the numbered list. Wait for
+   a setup step. Find or draft the `.mdl` test, write the flow script from it, send `steps`, and show the user the numbered list. Wait for
    them to say go, since they are setting up their recorder.
 2. **Run only what they release.** "Go" runs the next step. "Run until step 4" is `run` with
    `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
@@ -190,8 +205,8 @@ reader can tell whether it is still in step with its spec:
  */
 ```
 
-- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. A flow with
-  no spec behind it says `@mdl none` and names what it walks instead, such as a space template.
+- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. It is
+  required: a flow with no test behind it is a spec nobody reviews, so write the test first.
 - **`@app`** says how to serve the app the flow runs against, including any build flags and
   environment it depends on.
 - Name each step after its `do:` text, so the flow and the spec can be read side by side.

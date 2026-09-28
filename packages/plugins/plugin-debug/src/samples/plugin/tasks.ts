@@ -26,12 +26,12 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Read the plugin guide',
     description:
-      'Read the "Example: a plugin with its own sidebar page" section of `../../../docs/src/content/docs/docs/composer/publishing-plugins.md`. Every file the plugin needs is in it; the rules list under it is where a first build goes wrong.',
+      'Read the "Example: a plugin with its own navtree group" section of `../../../docs/src/content/docs/docs/composer/publishing-plugins.md`. Every file the plugin needs is in it; the rules list under it is where a first build goes wrong.',
     estimate: 'xs',
   },
   {
     title: 'Write the plugin in TypeScript',
-    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "Space Clock" workspace in the left rail with a "Clock" page whose article shows a large live clock that ticks every second. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
+    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "Space Clock" group in each space's navtree with a "Clock" page under it whose article shows a large live clock that ticks every second. Add to the navtree, never replace it: no workspace, no rail tab. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
     estimate: 's',
   },
   {

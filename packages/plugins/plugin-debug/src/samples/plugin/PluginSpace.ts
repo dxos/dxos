@@ -22,7 +22,7 @@ const phases = {
 
 /**
  * A Composer plugin built from inside Composer: four tasks from an empty folder to a TypeScript
- * plugin, compiled with the official tooling, that adds a live clock page to the sidebar and is
+ * plugin, compiled with the official tooling, that adds a live clock page under its own navtree group and is
  * offered back as an inline load prompt.
  *
  * Runs against a local Composer served by `vite preview` with the Computer shell mounted — the
@@ -49,6 +49,6 @@ export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.plugin',
     description:
-      'Four tasks an agent runs on this machine: a TypeScript Composer plugin with its own sidebar page, built and offered to load.',
+      'Four tasks an agent runs on this machine: a TypeScript Composer plugin with its own navtree group, built and offered to load.',
     definition: make(),
   });

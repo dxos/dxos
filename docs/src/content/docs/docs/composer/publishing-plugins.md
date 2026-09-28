@@ -231,10 +231,10 @@ through the example below, from writing the files to the load prompt; delegate t
 > `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
 > imports fail there.
 
-### Example: a plugin with its own sidebar page
+### Example: a plugin with its own navtree group
 
-A small plugin in TypeScript that adds a workspace to the left rail with one page, opened as an article. It
-builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+A small plugin in TypeScript that adds a group to every space's navtree, with one page under it, opened as an
+article. It builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
 
 Four files:
 
@@ -264,7 +264,7 @@ export default defineConfig({
 });
 ```
 
-```json
+````json
 // tsconfig.json
 {
   "compilerOptions": {
@@ -278,11 +278,7 @@ export default defineConfig({
     "allowImportingTsExtensions": true,
     "types": []
   },
-  "include": ["src", "dx.config.ts"]
-}
-```
-
-```tsx
+  "include": ["src", "dx.conf```tsx
 // src/plugin.tsx
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -295,13 +291,15 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import config from '../dx.config.ts';
 
 const meta = Plugin.getMetaFromConfig(config);
-const WORKSPACE = 'helloWorkspace';
+const GROUP = 'helloGroup';
+const GROUP_TYPE = `${meta.profile.key}.group`;
 const PAGE = 'helloPage';
 
 const HelloArticle = () => (
@@ -315,47 +313,40 @@ export default Plugin.define(meta).pipe(
     provides: [AppCapabilities.AppGraphBuilder],
     activate: () =>
       Effect.gen(function* () {
-        // A workspace: a tab in the left rail.
-        const workspace = yield* AppGraphBuilder.createExtension({
-          id: 'helloWorkspace',
-          match: GraphNodeMatcher.whenRoot,
-          connector: () =>
+        // A group: an uppercase heading in each space's navtree, between CONTENT and SYSTEM.
+        const group = yield* AppGraphBuilder.createExtension({
+          id: 'helloGroup',
+          match: AppNodeMatcher.whenSpace,
+          connector: (space) =>
             Effect.succeed([
-              AppGraphNode.make({
-                id: WORKSPACE,
-                type: `${meta.profile.key}.workspace`,
-                data: null,
-                properties: {
-                  label: 'Hello',
-                  icon: 'ph--hand-waving--regular',
-                  disposition: 'workspace',
-                },
-              }),
+              AppNode.makeGroup({ id: GROUP, type: GROUP_TYPE, label: 'Hello', space, position: 400 }),
             ]),
         });
-        // A page in that workspace. The URL binding is what lets the deck open it.
+        // A page in that group. The URL binding is what lets the deck open it.
         const page = yield* AppGraphBuilder.createExtension({
           id: 'helloPage',
-          match: GraphNodeMatcher.whenId(`root/${WORKSPACE}`),
-          url: {
-            key: PAGE,
-            kind: 'singleton',
-            path: [],
-            workspace: (id) => id === WORKSPACE,
-          },
-          connector: () =>
+          match: AppNodeMatcher.whenNavTreeGroup(GROUP_TYPE),
+          url: { key: PAGE, kind: 'singleton', path: [GROUP] },
+          connector: (space) =>
             Effect.succeed([
               AppGraphNode.make({
                 id: PAGE,
                 type: `${meta.profile.key}.page`,
                 data: PAGE,
-                properties: { label: 'Hello', icon: 'ph--article--regular' },
+                properties: {
+                  label: 'Hello',
+                  icon: 'ph--article--regular',
+                  selectable: true,
+                  draggable: false,
+                  droppable: false,
+                  space,
+                },
               }),
             ]),
         });
         return [
           Capability.contribute(AppCapabilities.AppGraphBuilder, [
-            ...workspace,
+            ...group,
             ...page,
           ]),
         ];
@@ -380,17 +371,22 @@ export default Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
-```
+````
+
+n.make,
+);
+
+````
 
 Typecheck, then build, from the plugin's directory:
 
 ```bash
 tsc -p tsconfig.json   # vite does not typecheck
 vite build             # writes dist/manifest.json and dist/index.mjs
-```
+````
 
-Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads, a
-new tab appears in the left rail; selecting it opens the page. The version in the manifest comes from a
+Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
+each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version in the manifest comes from a
 `package.json` next to `dx.config.ts`, or `0.0.0` without one.
 
 Things to know:
@@ -402,6 +398,9 @@ Things to know:
   graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
   is imported; a hyphenated extension or surface id is dropped without an error.
 - `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
+- A group is a heading, not a page: it has no URL binding and shows only once something is under it. Its
+  `position` orders it among the built-in groups (content 200, system 900).
+- A `singleton` page's node id must equal its URL `key`, and `path` names the group it sits under.
 - Every module lists the capabilities its `activate` returns in `provides`.
 - A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
 - The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the

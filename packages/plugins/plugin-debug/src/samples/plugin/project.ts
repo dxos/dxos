@@ -33,7 +33,7 @@ commands in the tasks exactly as written, without \`cd\`. Write files with a quo
 Never run \`vite build\` without the \`temp/plugins/${FOLDER}\` argument, and never \`pnpm exec\`: both \
 rebuild Composer itself, and the app you are running in goes blank.
 
-Plugin, workspace, page and surface ids are camelCase: a hyphenated id is dropped without an error, \
+Plugin, group, page and surface ids are camelCase: a hyphenated id is dropped without an error, \
 and the plugin then loads with nothing to show.`;
 
 /**
@@ -60,7 +60,7 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
       Project.make({
         name: 'Composer Plugin',
         description:
-          'A TypeScript plugin that adds a live clock page to the sidebar, built on this machine and loaded into the running app.',
+          'A TypeScript plugin that adds a live clock page under its own group in the navtree of every space, built on this machine and loaded into the running app.',
         status: 'active',
         instructions: Ref.make(instructions),
         taskSet: Ref.make(tasks.taskSet),
