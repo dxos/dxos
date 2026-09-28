@@ -101,10 +101,10 @@ export const Layout: Story = {
     const footer = canvas.getByTestId('footer').getBoundingClientRect();
     await expect(description.left).toBeCloseTo(title.left, 0);
     await expect(footer.left).toBeCloseTo(title.left, 0);
-    // The trailing action ends where the footer's last action does.
+    // The trailing action's block-sized cell ends where the footer's last action does.
     const more = canvas.getByRole('button', { name: 'More actions' }).getBoundingClientRect();
     const review = canvas.getByRole('button', { name: 'Review' }).getBoundingClientRect();
-    await expect(more.right).toBeCloseTo(review.right, 0);
+    await expect(more.right + 2).toBeCloseTo(review.right, 0);
     // The content edge is inset from the card's own edge by the gutter.
     await expect(title.left - card.getBoundingClientRect().left).toBeGreaterThan(8);
   },

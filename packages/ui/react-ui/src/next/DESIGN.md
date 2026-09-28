@@ -180,5 +180,12 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`) and without an arrow.
     Open issue: tabbing straight from one tooltip trigger to the next opens the second and closes it at once (zag
     1.43.3); pointer hover and the first keyboard focus behave. `IconButton`'s native `title` would double a Tooltip.
-18. **Checkbox and Switch occupy an IconButton's cell**: the box/track is centred in a `--nx-control-size`-wide
-    cell (inline margin inside the part), so their labels align with each other and with icon-button rows.
+18. ~~**Checkbox and Switch occupy an IconButton's cell**~~ (superseded by 19): the box/track was centred in a
+    `--nx-control-size`-wide cell.
+19. **IconButton, Checkbox and Switch occupy a block-sized cell** (`--nx-block-size` square, 32px at md). The visible
+    IconButton stays control-sized and is inset by `--nx-control-inset` on every side (margin inside the part, so a
+    stack's or Field's `margin-block` inset is the same value and the occupied height stays one block); the checkbox
+    box and switch track are centred in the cell with inline margin. An IconButton's icon therefore sits at the same x
+    as a rail Block's, and labels after a checkbox or switch align with icon-button rows. Trailing Blocks in
+    `Field.Header`, `FieldSet.Legend` and `Card.Header` take the same visible box and inset, so they keep matching
+    IconButtons; the occupied cell, not the visible box, ends at the control's edge.

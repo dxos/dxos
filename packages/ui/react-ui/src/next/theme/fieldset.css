@@ -38,6 +38,7 @@
   .nx-fieldset-legend > .nx-block {
     width: var(--nx-control-size);
     height: var(--nx-control-size);
+    margin: var(--nx-control-inset);
   }
   .nx-fieldset[data-disabled] {
     opacity: 0.5;

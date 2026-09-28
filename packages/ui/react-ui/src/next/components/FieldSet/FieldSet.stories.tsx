@@ -100,13 +100,14 @@ export const Layout: Story = {
     const input = bounds(canvasElement, '[data-testid="name"] .nx-input');
     await expect(legend.height).toBeCloseTo(24, 0);
     await expect(legend.left).toBeCloseTo(label.left, 0);
-    await expect(bounds(canvasElement, '[data-testid="profile-lock"]').right).toBeCloseTo(input.right, 0);
+    // The trailing Block is inset in a block-sized cell that ends at the control's edge.
+    await expect(bounds(canvasElement, '[data-testid="profile-lock"]').right + 2).toBeCloseTo(input.right, 0);
 
     // Fields are spaced by the gap token; switches and the checkbox start on the legend's edge.
     const email = bounds(canvasElement, '[data-testid="email"]');
     const name = bounds(canvasElement, '[data-testid="name"]');
     await expect(email.top - name.bottom).toBeCloseTo(8, 0);
-    // Switches and the checkbox each take an IconButton's control-sized cell on the legend's edge, so labels align.
+    // Switches and the checkbox each take an IconButton's block-sized cell on the legend's edge, so labels align.
     const notifications = bounds(canvasElement, '[data-testid="notifications"] legend');
     const controls = canvasElement.querySelectorAll<HTMLElement>(
       '[data-testid="notifications"] :is([data-scope="switch"], [data-scope="checkbox"])[data-part="control"]',
@@ -121,7 +122,7 @@ export const Layout: Story = {
       const cellWidth = rect.width + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
       await expect(cellLeft).toBeCloseTo(notifications.left, 0);
       await expect(cellLeft).toBeCloseTo(legend.left, 0);
-      await expect(cellWidth).toBeCloseTo(28, 0);
+      await expect(cellWidth).toBeCloseTo(32, 0);
     }
     for (const label of labels) {
       await expect(label.getBoundingClientRect().left).toBeCloseTo(labels[0].getBoundingClientRect().left, 0);

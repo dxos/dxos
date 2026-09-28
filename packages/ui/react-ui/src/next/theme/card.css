@@ -29,6 +29,7 @@
   .nx-card-header > .nx-block {
     width: var(--nx-control-size);
     height: var(--nx-control-size);
+    margin: var(--nx-control-inset);
   }
 
   .nx-card-title {

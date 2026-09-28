@@ -125,20 +125,20 @@ export const Layout: Story = {
     await userEvent.click(name);
     await expect(getComputedStyle(name).boxShadow).not.toBe('none');
 
-    // The checkbox's control-sized cell starts at the column's left edge, like every other control.
+    // The checkbox's block-sized cell starts at the column's left edge, like every other control.
     const boxElement = canvasElement.querySelector<HTMLElement>('[data-scope="checkbox"][data-part="control"]');
     const box = boxElement?.getBoundingClientRect();
     const boxMargin = boxElement ? parseFloat(getComputedStyle(boxElement).marginLeft) : Number.NaN;
     await expect((box?.left ?? Number.NaN) - boxMargin).toBeCloseTo(part(canvasElement, 'name', '.nx-input').left, 0);
 
-    // The label row is an sm block row whose trailing IconButton ends at the control's right edge.
+    // The label row is an sm block row; its trailing IconButton is inset in a block-sized cell ending at the control's edge.
     const header = canvasElement.querySelector('[data-testid="email"] [data-part="header"]')?.getBoundingClientRect();
     const info = canvas.getByRole('button', { name: 'About email' }).getBoundingClientRect();
     await expect(header?.height).toBeCloseTo(24, 0);
     await expect(info.height).toBeCloseTo(20, 0);
-    await expect(info.right).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
+    await expect(info.right + 2).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
 
-    // A trailing Block (a static icon) takes the same cell as an IconButton, so both line up at the row's end.
+    // A trailing Block (a static icon) takes the same box and cell as an IconButton, so both line up at the row's end.
     const lock = canvas.getByTestId('role-lock').getBoundingClientRect();
     await expect(lock.width).toBeCloseTo(info.width, 0);
     await expect(lock.height).toBeCloseTo(info.height, 0);
