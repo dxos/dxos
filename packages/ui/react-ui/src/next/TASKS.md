@@ -20,7 +20,7 @@ Settle the constraints in [DESIGN.md](./DESIGN.md) before building.
 
 ## Phase 1: Model (story components)
 
-Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed model.
+Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typography, Input, Button, IconButton, Field (Root, Label, HelperText, ErrorText), Label, Checkbox, Select. CSS lives in `next/theme/` (no ui-theme edits).
 
 ### Tasks
 
@@ -28,7 +28,11 @@ Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed
 - [x] **Typography owns first-line centring** — `Next.Typography` pads to `--nx-block-size`; spike message row uses it.
 - [ ] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`.
 - [ ] **Add levels** — `level` prop emits `data-surface`; `--nx-level` rungs; style-query `+1`.
-- [x] **Input/Button fill `--block-size`** — `h-(--nx-block-size)`; padding TODOs removed.
+- [x] **Input/Button fill `--block-size`** — superseded by decision 12.
+- [ ] **Control sizing** — `--nx-control-inset`/`--nx-control-size`/`--nx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12).
+- [ ] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13).
+- [ ] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label.
+- [ ] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`.
 - [ ] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`.
 - [ ] **ARIA fixes** — `aria-hidden` icons, labels.
 - [ ] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting.

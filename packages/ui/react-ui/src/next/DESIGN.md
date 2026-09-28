@@ -84,6 +84,16 @@
     A benchmark story (e.g. 1,000 rows in a nested Container inside a ScrollArea) tracks render and layout cost, since
     deep subgrids and `:has` are the design's unmeasured risks.
 
+12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger, Checkbox box) are shorter than the block
+    and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
+    inset (provisional: xs 2px, sm 3px, md 4px, lg 5px, xl 6px) and a matching `--nx-control-icon` for icons inside
+    controls. The block stays the row height, so rails and Typography's first-line centring are unchanged.
+    Illustrated in `spike/Choices.stories.tsx` (ControlSizing).
+13. **Field layout.** Field is a part, not a container (containers are Container, Form, Toolbar). `Field.Root` is a
+    flex stack placed in the content track: Label above the control, HelperText/ErrorText below. Labels do not share a
+    column across fields; `columns` remains for other row layouts. Illustrated in `spike/Choices.stories.tsx`
+    (FieldLayout).
+
 ## Spike findings
 
 `spike/Spike.stories.tsx` (`playground/spike`) exercises decision 5 with play tests that measure alignment across a
