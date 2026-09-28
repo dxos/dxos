@@ -59,10 +59,10 @@ const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
 const SPACE_TAB = '[data-testid="spacePlugin.space"]';
 
 /** The project's title, typed on camera. */
-const PROJECT_TITLE = 'Clock Plugin';
+const PROJECT_TITLE = 'World Clock';
 
-/** Projects an earlier take may have left: this title, and the template's default name. */
-const LEFTOVER_PROJECTS = [PROJECT_TITLE, 'Composer Plugin'];
+/** Projects an earlier take may have left: this title, an earlier one, and the template's default name. */
+const LEFTOVER_PROJECTS = [PROJECT_TITLE, 'Clock Plugin', 'Composer Plugin'];
 
 /** The project plank's rows, and the companion beside it. */
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';

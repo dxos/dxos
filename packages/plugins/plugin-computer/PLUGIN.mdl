@@ -125,9 +125,9 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       an empty folder (the autocue flow's first setup step restores all of this)
   steps:
     - name: Create a project from the Composer Plugin template
-      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "Clock Plugin" and click Create.
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create.
       capture: project
-      expect: a "Clock Plugin" project opens
+      expect: a "World Clock" project opens
     - name: Open the project's tasks
       do: Click the project's Tasks tab.
       expect: |
@@ -187,7 +187,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       note: The timezones live on the space's `Clock` object, so they survive a reload.
   after:
     - name: Delete the project
-      do: Right-click the "Clock Plugin" project in the navtree and choose Delete.
+      do: Right-click the "World Clock" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
       expect: the project and its tasks leave the navtree
     - name: Uninstall World Clock
