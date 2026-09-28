@@ -17,6 +17,7 @@ import {
   centreY,
   controlSize,
   expectDecorativeIconsHidden,
+  expectNoTooltip,
   expectScoped,
   expectTooltip,
 } from '../../testing.ts';
@@ -130,5 +131,21 @@ export const LabelTooltip: Story = {
     await userEvent.hover(addLg);
     await expectTooltip(addLg, 'Add lg');
     await expect(addLg).not.toHaveAttribute('title');
+  },
+};
+
+/** A click neither opens nor flashes the label Tooltip; keyboard focus still shows it. The story ends open. */
+export const ClickNoTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const add = byTestId(canvasElement, 'add-md');
+    const watch = expectNoTooltip(canvasElement);
+    await userEvent.click(add);
+    await watch;
+    await expect(add).toHaveFocus();
+
+    await userEvent.tab();
+    const next = byTestId(canvasElement, 'add-lg');
+    await expect(next).toHaveFocus();
+    await expectTooltip(next, 'Add lg');
   },
 };

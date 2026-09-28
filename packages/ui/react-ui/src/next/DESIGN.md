@@ -240,6 +240,12 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     popup's `--surface-bg`, so the arrow reads as part of the popup. zag grows the gutter by half the arrow box; the
     tip is scaled by 1/√2 so its corners touch that box instead of overhanging it, keeping the tip exactly the 2px
     gutter from the trigger. `expectArrow` (`testing.ts`) asserts colour, side, span and tip gap.
+33. **Tooltips open on hover (after the delay) and keyboard focus only.** zag opens without the delay while any
+    tooltip is open, or was unmounted open (its shared store is never cleared), so a click right after entering a
+    trigger opened the tooltip and closed it on `pointerdown`: a flash. `Tooltip.Trigger` blocks zag's pointer-move
+    opening and runs the Root's `openDelay` from `pointerenter`; `pointerdown` cancels it and closes, and the trigger
+    stays suppressed until the pointer leaves; a focus that is not `:focus-visible` never opens. The follow-up 20
+    blur deferral is unchanged. Covered by IconButton `ClickNoTooltip`.
 
 ## Phase 3: react-ui-form port
 

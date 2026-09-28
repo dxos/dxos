@@ -114,6 +114,19 @@ export const expectDecorativeIconsHidden = async (root: HTMLElement) => {
   }
 };
 
+/** Watches for `ms` and fails if any tooltip appears meanwhile, even briefly (a flash). */
+export const expectNoTooltip = async (root: HTMLElement, ms = 500) => {
+  const doc = root.ownerDocument;
+  let seen = doc.querySelector('[role="tooltip"]') !== null;
+  const observer = new MutationObserver(() => {
+    seen ||= doc.querySelector('[role="tooltip"]') !== null;
+  });
+  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+  await new Promise((resolve) => setTimeout(resolve, ms));
+  observer.disconnect();
+  await expect(seen, 'a tooltip appeared').toBe(false);
+};
+
 /** Waits for the one open tooltip to show `text` within the 2px gutter (+ rounding) of `trigger`, and returns it. */
 export const expectTooltip = async (trigger: HTMLElement, text: string) => {
   const body = within(trigger.ownerDocument.body);

@@ -4,7 +4,7 @@
 
 import { Portal } from '@ark-ui/react/portal';
 import { Tooltip as TooltipPrimitive, useTooltipContext } from '@ark-ui/react/tooltip';
-import React, { forwardRef } from 'react';
+import React, { createContext, forwardRef, useContext, useEffect, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -17,6 +17,9 @@ const POPUP_GUTTER = 2;
 
 /** Short enough to feel responsive, long enough that sweeping the pointer across a toolbar shows nothing. */
 const OPEN_DELAY = 300;
+
+/** The Root's `openDelay`, read by the Trigger, which runs the hover delay itself (DESIGN.md follow-up 33). */
+const OpenDelayContext = createContext(OPEN_DELAY);
 
 //
 // Root
@@ -32,13 +35,15 @@ const TooltipRoot = ({
   positioning,
   ...props
 }: TooltipRootProps) => (
-  <TooltipPrimitive.Root
-    {...props}
-    openDelay={openDelay}
-    lazyMount={lazyMount}
-    unmountOnExit={unmountOnExit}
-    positioning={{ gutter: POPUP_GUTTER, ...positioning }}
-  />
+  <OpenDelayContext.Provider value={openDelay}>
+    <TooltipPrimitive.Root
+      {...props}
+      openDelay={openDelay}
+      lazyMount={lazyMount}
+      unmountOnExit={unmountOnExit}
+      positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+    />
+  </OpenDelayContext.Provider>
 );
 
 TooltipRoot.displayName = 'Next.Tooltip.Root';
@@ -49,25 +54,77 @@ TooltipRoot.displayName = 'Next.Tooltip.Root';
 
 type TooltipTriggerProps = TooltipPrimitive.TriggerProps;
 
-/** Use `asChild` to describe a `Next.Button` or `Next.IconButton`. */
-const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(({ onBlur, ...props }, forwardedRef) => {
-  const tooltip = useTooltipContext();
-  return (
-    <TooltipPrimitive.Trigger
-      {...props}
-      onBlur={(event) => {
-        onBlur?.(event);
-        if (event.defaultPrevented) {
-          return;
-        }
-        // Deferred so a tooltip opened by the same focus move claims zag's shared store first (DESIGN.md follow-up 20).
-        event.preventDefault();
-        setTimeout(() => tooltip.setOpen(false));
-      }}
-      ref={forwardedRef}
-    />
-  );
-});
+/**
+ * Use `asChild` to describe a `Next.Button` or `Next.IconButton`. Opens on hover after the Root's delay and on keyboard
+ * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
+ * (DESIGN.md follow-up 33).
+ */
+const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
+  (
+    { onBlur, onFocus, onPointerMove, onPointerOver, onPointerEnter, onPointerLeave, onPointerDown, ...props },
+    forwardedRef,
+  ) => {
+    const tooltip = useTooltipContext();
+    const openDelay = useContext(OpenDelayContext);
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const pressed = useRef(false);
+    const cancel = () => clearTimeout(timer.current);
+    useEffect(() => cancel, []);
+
+    return (
+      <TooltipPrimitive.Trigger
+        {...props}
+        onPointerMove={(event) => {
+          onPointerMove?.(event);
+          event.preventDefault();
+        }}
+        onPointerOver={(event) => {
+          onPointerOver?.(event);
+          event.preventDefault();
+        }}
+        onPointerEnter={(event) => {
+          onPointerEnter?.(event);
+          if (event.defaultPrevented || event.pointerType === 'touch' || pressed.current) {
+            return;
+          }
+          cancel();
+          timer.current = setTimeout(() => {
+            if (!pressed.current) {
+              tooltip.setOpen(true);
+            }
+          }, openDelay);
+        }}
+        onPointerLeave={(event) => {
+          onPointerLeave?.(event);
+          pressed.current = false;
+          cancel();
+        }}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          pressed.current = true;
+          cancel();
+          tooltip.setOpen(false);
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (pressed.current || !event.currentTarget.matches(':focus-visible')) {
+            event.preventDefault();
+          }
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          if (event.defaultPrevented) {
+            return;
+          }
+          // Deferred so a tooltip opened by the same focus move claims zag's shared store first (DESIGN.md follow-up 20).
+          event.preventDefault();
+          setTimeout(() => tooltip.setOpen(false));
+        }}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
 
