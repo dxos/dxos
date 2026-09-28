@@ -40,6 +40,8 @@ const VARIANTS: { name: string; variant: Next.ButtonVariant; valence?: Next.Butt
   })),
 ];
 
+const HUES: Next.ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
+
 type StoryArgs = SizeArgs & {
   variant?: Next.ButtonVariant;
   valence?: Next.ButtonValence;
@@ -49,7 +51,8 @@ type StoryArgs = SizeArgs & {
 
 /**
  * A toolbar of icon-only, text, disabled, leading-icon and trailing-icon buttons over a row with a rail Block, so the
- * first button's icon can be compared with the rail's; `variant`/`valence` apply to the default buttons.
+ * first button's icon can be compared with the rail's; then caret, compact, tooltip-side and hue buttons.
+ * `variant`/`valence` apply to the default buttons.
  */
 const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
   <>
@@ -108,6 +111,40 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
         ))}
       </Next.Group>
     )}
+    <Next.Group>
+      <Next.Button caretDown data-testid={`caret-${size}`}>
+        Format
+      </Next.Button>
+      <Next.Button
+        icon='ph--text-aa--regular'
+        label={`Style ${size}`}
+        iconOnly
+        caretDown
+        data-testid={`icon-caret-${size}`}
+      />
+      <Next.Button compact data-testid={`compact-${size}`}>
+        1
+      </Next.Button>
+      <Next.Button
+        icon='ph--caret-left--regular'
+        label={`Previous ${size}`}
+        iconOnly
+        compact
+        data-testid={`icon-compact-${size}`}
+      />
+      <Next.Button
+        icon='ph--info--regular'
+        label={`Details ${size}`}
+        iconOnly
+        tooltipSide='right'
+        data-testid={`side-${size}`}
+      />
+      {HUES.map((hue) => (
+        <Next.Button key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+          {hue}
+        </Next.Button>
+      ))}
+    </Next.Group>
   </>
 );
 
@@ -136,7 +173,9 @@ export const Default: Story = {};
  * but not on click. A labelled icon is spaced by the gap and padded like text, at the icon-only height, with no Tooltip.
  * Disabled buttons drop out of the roving focus and ignore clicks. Every variant repaints the default: filled variants
  * change background and text, ghost and outline drop the fill (outline keeps a border), each valence has its own
- * colour, and every variant has a hover state. The story ends with a tooltip open.
+ * colour, and every variant has a hover state. `caretDown` adds a smaller trailing caret (an icon-only button then
+ * widens to fit it), `compact` pads by one inset, `tooltipSide` moves the label Tooltip, and `hue` fills with a Tag's
+ * hue, shifting brightness on hover. The story ends with a tooltip open.
  */
 export const Test: Story = {
   args: { variants: true },
@@ -295,6 +334,45 @@ export const Test: Story = {
         await expect(getComputedStyle(button).backgroundColor, `${testId} hover`).not.toBe(rest);
       }
     }
+
+    // Caret, compact, tooltip side and hue.
+    for (const size of SIZES) {
+      const { inset, icon } = GEOMETRY[size];
+      const caret = byTestId(canvasElement, `caret-${size}`);
+      const caretIcon = caret.querySelector('svg')?.getBoundingClientRect();
+      await expect(caretIcon?.width, `caret-${size}`).toBeCloseTo(icon * 0.75, 0);
+      await expect(caretIcon?.right, `caret-${size} end`).toBeCloseTo(
+        caret.getBoundingClientRect().right - parseFloat(getComputedStyle(caret).paddingRight),
+        0,
+      );
+      const iconCaret = byTestId(canvasElement, `icon-caret-${size}`);
+      await expect(iconCaret.querySelectorAll('svg')).toHaveLength(2);
+      await expect(iconCaret.getBoundingClientRect().height, `icon-caret-${size}`).toBeCloseTo(controlSize(size), 0);
+      await expect(iconCaret.getBoundingClientRect().width).toBeGreaterThan(iconCaret.getBoundingClientRect().height);
+      await expect(iconCaret).toHaveAttribute('aria-label', `Style ${size}`);
+      await expect(parseFloat(getComputedStyle(byTestId(canvasElement, `compact-${size}`)).paddingLeft)).toBeCloseTo(
+        inset,
+        0,
+      );
+      await expect(byTestId(canvasElement, `icon-compact-${size}`).getBoundingClientRect().width).toBeCloseTo(
+        icon + 2 * inset,
+        0,
+      );
+    }
+    const hues = HUES.map((hue) => getComputedStyle(byTestId(canvasElement, `hue-${hue}-md`)).backgroundColor);
+    await expect(new Set(hues).size).toBe(HUES.length);
+    await expect(hues).not.toContain(base.background);
+    const red = byTestId(canvasElement, 'hue-red-md');
+    await realHover(red);
+    await waitFor(() => expect(getComputedStyle(red).filter).not.toBe('none'));
+    const side = byTestId(canvasElement, 'side-md');
+    await userEvent.hover(side);
+    const sideTooltip = await within(canvasElement.ownerDocument.body).findByRole('tooltip');
+    await waitFor(() =>
+      expect(sideTooltip.getBoundingClientRect().left).toBeGreaterThanOrEqual(side.getBoundingClientRect().right),
+    );
+    await userEvent.unhover(side);
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
     // Rest on an open tooltip.
     await userEvent.hover(addLg);

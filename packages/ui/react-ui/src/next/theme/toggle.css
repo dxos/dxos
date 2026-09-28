@@ -1,13 +1,28 @@
 /*
- * Toggle: a Button whose pressed state (`aria-pressed`, from the zag toggle machine) takes the accent.
+ * Toggle: a Button whose pressed state (`aria-pressed` from the zag toggle machine, or `aria-checked` on a single-select
+ * ToggleGroup's radio items) takes the accent.
  */
 
 @layer dx-components {
-  .nx-button[aria-pressed='true'] {
+  .nx-button:is([aria-pressed='true'], [aria-checked='true']) {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
-  .nx-button[aria-pressed='true']:hover:not(:disabled) {
+  .nx-button:is([aria-pressed='true'], [aria-checked='true']):hover:not(:disabled) {
     background: var(--color-accent-bg-hover, var(--color-accent-bg));
+  }
+
+  /* A flex run like Group, spaced like toolbar items; roles and roving focus come from the zag machine. */
+  .nx-toggle-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+  }
+  .nx-toggle-group[data-orientation='vertical'] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nx-toolbar > .nx-toggle-group > .nx-control:not([data-square]) {
+    margin-inline: var(--nx-control-inset);
   }
 }

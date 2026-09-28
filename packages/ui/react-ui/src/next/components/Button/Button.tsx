@@ -4,7 +4,7 @@
 
 import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
-import { type MessageValence } from '@dxos/ui-types';
+import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
@@ -17,10 +17,21 @@ export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destr
 
 export type ButtonValence = MessageValence;
 
+/** Tag's palette (`Next.TagHue`), repeated here since Tag builds on nothing of Button's. */
+export type ButtonHue = NeutralPalette | ChromaticPalette | MessageValence;
+
+export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
+
 export type ButtonVariantProps = {
   variant?: ButtonVariant;
   /** Colour of the `valence` variant; without it the button adopts an enclosing valence surface's, else neutral. */
   valence?: ButtonValence;
+  /** Fills the button with a Tag's hue (`--color-<hue>-surface`/`-fg`), in place of the variant's fill. */
+  hue?: ButtonHue;
+  /** Dense inline padding (one control inset), e.g. for a run of pager buttons; an icon-only button loses its square. */
+  compact?: boolean;
+  /** A trailing caret marking a button that opens a menu. */
+  caretDown?: boolean;
 };
 
 /** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
@@ -34,6 +45,7 @@ export type ButtonContentProps =
       label?: string;
       iconOnly?: false;
       showTooltip?: never;
+      tooltipSide?: never;
       children?: ReactNode;
     }
   | {
@@ -44,6 +56,8 @@ export type ButtonContentProps =
       iconOnly: true;
       /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
       showTooltip?: boolean;
+      /** Side of the trigger the label Tooltip opens on; below by default. */
+      tooltipSide?: TooltipSide;
       iconEnd?: never;
       children?: never;
     };
@@ -59,6 +73,9 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       type = 'button',
       variant = 'default',
       valence,
+      hue,
+      compact,
+      caretDown,
       id,
       onFocus,
       icon,
@@ -66,6 +83,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       label,
       iconOnly,
       showTooltip = true,
+      tooltipSide,
       children,
       ...buttonProps
     },
@@ -89,12 +107,16 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         data-square={iconOnly ? '' : undefined}
         data-variant={variant}
         data-valence={variant === 'valence' ? valence : undefined}
+        data-hue={hue}
+        data-compact={compact ? '' : undefined}
+        data-caret={caretDown ? '' : undefined}
         className={className}
         ref={forwardedRef}
       >
         {icon && <Icon icon={icon} />}
         {!iconOnly && (children ?? label)}
         {iconEnd && <Icon icon={iconEnd} />}
+        {caretDown && <Icon icon='ph--caret-down--bold' />}
       </button>
     );
 
@@ -104,7 +126,10 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
 
     return (
       // An `asChild` parent (e.g. `Popover.Trigger`) may own the id, so the tooltip looks its trigger up by it.
-      <Tooltip.Root ids={id ? { trigger: id } : undefined}>
+      <Tooltip.Root
+        ids={id ? { trigger: id } : undefined}
+        positioning={tooltipSide ? { placement: tooltipSide } : undefined}
+      >
         <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
         <Tooltip.Content>{label}</Tooltip.Content>
       </Tooltip.Root>

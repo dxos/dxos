@@ -308,6 +308,18 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     the scrolling axis) and `scrollbars={false}` (no overlay thumb and no native bar); a horizontal pane reserves no
     end-track width.
 
+40. **Button and Toggle parity.** `Button hue` fills with a Tag's hue: the per-hue rules in `tag.css` now set
+    `--nx-hue-bg`/`-fg` for `:is(.nx-tag, .nx-button)`, and a hued button's hover shifts brightness (0.94, 1.12 in dark),
+    as the current `tag` variant does, since the tag palette has no hover step. `caretDown` appends a caret at 75% of the
+    control icon, one inset from what it follows; an icon-only button with a caret, or `compact` (one inset of inline
+    padding), gives up its square but keeps its inset cell. `tooltipSide` places the label Tooltip. `Toggle activeIcon`
+    swaps the icon while pressed, read from the zag toggle context so uncontrolled toggles swap too; the current
+    90° rotation is not copied, since a disclosure is a `Collapsible`. `Next.ToggleGroup` is Ark ToggleGroup over
+    Buttons with the current `type='single'|'multiple'` value API: single is a `radiogroup` of `radio` items
+    (`aria-checked`, styled like pressed), multiple a `group` of pressed toggles. `Toolbar.ToggleGroup` turns zag's
+    roving off and drops the root's tab stop, so its items join the toolbar's roving set through Button's
+    `useToolbarItem` and the toolbar's arrow handler moves over them.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

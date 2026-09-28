@@ -6,6 +6,7 @@ import {
   Block as NextBlock,
   type BlockProps as NextBlockProps,
   Button as NextButton,
+  type ButtonHue as NextButtonHue,
   type ButtonProps as NextButtonProps,
   type ButtonValence as NextButtonValence,
   type ButtonVariant as NextButtonVariant,
@@ -52,6 +53,7 @@ import {
   Textarea as NextTextarea,
   type TextareaProps as NextTextareaProps,
   Toggle as NextToggle,
+  ToggleGroup as NextToggleGroup,
   type ToggleProps as NextToggleProps,
   Toolbar as NextToolbar,
   type ToolbarRootProps as NextToolbarRootProps,
@@ -86,6 +88,7 @@ export namespace Next {
   export type ButtonProps = NextButtonProps;
   export type ButtonVariant = NextButtonVariant;
   export type ButtonValence = NextButtonValence;
+  export type ButtonHue = NextButtonHue;
   export const Field = NextField;
   export const Checkbox = NextCheckbox;
   export type CheckboxProps = NextCheckboxProps;
@@ -115,6 +118,7 @@ export namespace Next {
   export type TagHue = NextTagHue;
   export const Toggle = NextToggle;
   export type ToggleProps = NextToggleProps;
+  export const ToggleGroup = NextToggleGroup;
   export const Separator = NextSeparator;
   export type SeparatorProps = NextSeparatorProps;
 }

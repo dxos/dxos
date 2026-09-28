@@ -75,4 +75,5 @@ export const recipes = {
   comboboxEmpty: () => 'nx-combobox-empty',
   tag: () => 'nx-tag',
   separator: () => 'nx-separator',
+  toggleGroup: () => 'nx-toggle-group',
 } as const;

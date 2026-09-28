@@ -12,7 +12,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 
 const OPTIONS: Next.SelectOption[] = [
   { value: 'red', label: 'Red' },
@@ -38,6 +38,22 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         ))}
       </Next.Select.Content>
     </Next.Select.Root>
+    <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label={`View ${size}`}>
+      <Next.Toolbar.ToggleGroupItem
+        value='list'
+        icon='ph--list--regular'
+        label={`List ${size}`}
+        iconOnly
+        data-testid={`list-${size}`}
+      />
+      <Next.Toolbar.ToggleGroupItem
+        value='grid'
+        icon='ph--squares-four--regular'
+        label={`Grid ${size}`}
+        iconOnly
+        data-testid={`grid-${size}`}
+      />
+    </Next.Toolbar.ToggleGroup>
   </Next.Toolbar.Root>
 );
 
@@ -60,13 +76,14 @@ export const Default: Story = {};
  * and only one item is in the tab order. The visible space between any two adjacent items is three control insets: the
  * toolbar's gap plus each item's inline margin (an icon-only Button's inset cell, or the same margin on a Button, Input
  * or Select trigger); a Separator sits the same three insets from its neighbours and is skipped by the roving focus.
+ * A `Toolbar.ToggleGroup`'s items join the toolbar's roving focus, so the group adds no tab stop.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
       await expect(toolbar.height, `toolbar-${size}`).toBeCloseTo(GEOMETRY[size].block, 0);
-      for (const part of ['add', 'remove', 'button', 'input', 'select']) {
+      for (const part of ['add', 'remove', 'button', 'input', 'select', 'list', 'grid']) {
         const rect = byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect();
         await expect(rect.height, `${part}-${size} height`).toBeCloseTo(controlSize(size), 0);
         await expect(centreY(rect), `${part}-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
@@ -90,7 +107,7 @@ export const Test: Story = {
 
     for (const size of ['md', 'lg'] as const) {
       const expected = 3 * GEOMETRY[size].inset;
-      const items = ['add', 'remove', 'separator', 'button', 'input', 'select'].map((part) =>
+      const items = ['add', 'remove', 'separator', 'button', 'input', 'select', 'list', 'grid'].map((part) =>
         byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect(),
       );
       for (let index = 1; index < items.length; index++) {
@@ -113,10 +130,23 @@ export const Test: Story = {
     await userEvent.keyboard('{ArrowRight}');
     await expect(save).toHaveFocus();
     await userEvent.keyboard('{End}');
+    const grid = byTestId(canvasElement, 'grid-md');
+    await expect(grid).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(byTestId(canvasElement, 'list-md')).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
     await expect(select).toHaveFocus();
     await userEvent.keyboard('{Home}');
     await expect(add).toHaveFocus();
     await userEvent.keyboard('{ArrowLeft}');
-    await expect(select).toHaveFocus();
+    await expect(grid).toHaveFocus();
+
+    // A toolbar ToggleGroup's items are toolbar items: one tab stop in all, and the group itself takes none.
+    const view = within(sizeRow(canvasElement, 'md')).getByRole('radiogroup', { name: 'View md' });
+    await expect(view.tabIndex).toBe(-1);
+    await expect(byTestId(canvasElement, 'list-md').tabIndex).toBe(-1);
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(grid).toHaveAttribute('aria-checked', 'true'));
+    await expect(byTestId(canvasElement, 'list-md')).toHaveAttribute('aria-checked', 'false');
   },
 };

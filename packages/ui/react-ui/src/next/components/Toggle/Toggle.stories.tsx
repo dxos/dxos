@@ -14,7 +14,7 @@ import { SIZES } from '../../sizes.ts';
 import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 
-/** Icon-only toggles (one pressed, one disabled), a labelled toggle, and a controlled one. */
+/** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
@@ -29,6 +29,13 @@ const DefaultStory = ({ size }: SizeArgs) => {
         iconOnly
         pressed={wrap}
         onPressedChange={setWrap}
+      />
+      <Next.Toggle
+        icon='ph--star--regular'
+        activeIcon='ph--star--fill'
+        label={`Pin ${size}`}
+        iconOnly
+        data-testid={`pin-${size}`}
       />
       <Next.Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
     </Next.Toolbar.Root>
@@ -50,7 +57,8 @@ export const Default: Story = {};
 
 /**
  * A button with `aria-pressed` that toggles on click and Space, and the pressed state takes the accent fill; a
- * labelled toggle is named by its text; like an icon-only Button, the label shows in a Tooltip (left open).
+ * labelled toggle is named by its text; `activeIcon` replaces the icon while pressed; like an icon-only Button, the
+ * label shows in a Tooltip (left open).
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -86,6 +94,15 @@ export const Test: Story = {
     await expect(preview).not.toHaveAttribute('aria-label');
     await userEvent.click(preview);
     await waitFor(() => expect(preview).toHaveAttribute('aria-pressed', 'true'));
+
+    const pin = byTestId(canvasElement, 'pin-md');
+    const href = () => pin.querySelector('use')?.getAttribute('href') ?? '';
+    await expect(href()).toContain('ph--star--regular');
+    await userEvent.click(pin);
+    await waitFor(() => expect(href()).toContain('ph--star--fill'));
+    await expect(pin).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(pin);
+    await waitFor(() => expect(href()).toContain('ph--star--regular'));
 
     const italic = canvas.getByRole('button', { name: 'Italic md' });
     await userEvent.hover(italic);

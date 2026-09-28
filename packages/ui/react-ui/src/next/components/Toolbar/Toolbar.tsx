@@ -4,12 +4,13 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
-import React, { createContext, useContext, useId } from 'react';
+import React, { createContext, forwardRef, useContext, useId } from 'react';
 
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
+import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
 import * as toolbar from './toolbar-machine.ts';
 
 // Optional by design: a control outside a toolbar renders without roving props.
@@ -76,9 +77,24 @@ const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>((prop
 
 ToolbarSeparator.displayName = 'Next.Toolbar.Separator';
 
+//
+// ToggleGroup
+//
+
+type ToolbarToggleGroupProps = ToggleGroupRootProps;
+
+/** A ToggleGroup whose items join the toolbar's roving focus, so the group adds no tab stop or arrow handling of its own. */
+const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => (
+  <ToggleGroup.Root {...props} rovingFocus={false} ref={forwardedRef} />
+));
+
+ToolbarToggleGroup.displayName = 'Next.Toolbar.ToggleGroup';
+
 export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
+  ToggleGroup: ToolbarToggleGroup,
+  ToggleGroupItem: ToggleGroup.Item,
 };
 
-export type { ToolbarRootProps, ToolbarSeparatorProps };
+export type { ToolbarRootProps, ToolbarSeparatorProps, ToolbarToggleGroupProps };

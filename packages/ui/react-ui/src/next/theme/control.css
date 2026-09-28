@@ -143,6 +143,33 @@
     --nx-valence-bg: var(--color-error-bg);
     --nx-valence-bg-hover: var(--color-error-bg-hover);
   }
+  /* A Tag's hue in place of the variant's fill; the tag palette has no hover step, so hover shifts brightness. */
+  .nx-button[data-hue] {
+    background: var(--nx-hue-bg);
+    color: var(--nx-hue-fg);
+  }
+  .nx-button[data-hue]:hover:not(:disabled) {
+    background: var(--nx-hue-bg);
+    filter: brightness(0.94);
+  }
+  :where(.dark) .nx-button[data-hue]:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+  /* Dense: one inset of inline padding; an icon-only button gives up its square for it. */
+  .nx-button[data-compact] {
+    min-width: 0;
+    padding-inline: var(--nx-control-inset);
+  }
+  .nx-button[data-square]:is([data-compact], [data-caret]) {
+    width: auto;
+    padding-inline: var(--nx-control-inset);
+  }
+  /* The caret is a smaller trailing icon, set closer to what it follows than a label is. */
+  .nx-button[data-caret] > .nx-icon:last-child {
+    width: calc(var(--nx-control-icon) * 0.75);
+    height: calc(var(--nx-control-icon) * 0.75);
+    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
+  }
   .nx-button:disabled {
     opacity: 0.5;
     cursor: default;
