@@ -19,4 +19,7 @@ export const DROP_INDENTATION = 24;
  */
 export const TREE_BLOCK = '1.5rem';
 
-export const indentTrack = (level: number): string => `calc(${level - 1} * ${TREE_BLOCK})`;
+/** Half a block per level: a `compact` tree, where depth reads from the guides rather than a wide step. */
+export const COMPACT_INDENT = `calc(${TREE_BLOCK} / 2)`;
+
+export const indentTrack = (level: number, step: string = TREE_BLOCK): string => `calc(${level - 1} * ${step})`;

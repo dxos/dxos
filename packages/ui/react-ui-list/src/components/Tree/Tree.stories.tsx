@@ -49,6 +49,7 @@ const DefaultStory = ({
   branches,
   features,
   indentGuides,
+  compact,
   openDepth = 0,
   onItemHover,
 }: {
@@ -66,6 +67,8 @@ const DefaultStory = ({
   features?: boolean;
   /** Draw a guide line down each open branch's children. */
   indentGuides?: boolean;
+  /** Half the indent per level. */
+  compact?: boolean;
   /** Opens this many levels down the first branch at each depth, so a story shows nesting without a click. */
   openDepth?: number;
   onItemHover?: (params: { item: TestItem }) => void;
@@ -300,6 +303,7 @@ const DefaultStory = ({
       virtualize={virtualize}
       dropAtEnd={features}
       indentGuides={indentGuides}
+      compact={compact}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -344,6 +348,11 @@ export const Draggable: Story = {
 /** Guides down each open branch, under its own chevron; each child's chevron is centred under its parent's icon. */
 export const WithIndent: Story = {
   args: { indentGuides: true, openDepth: 2 },
+};
+
+/** Half the indent per level, as the navtree uses; the guides keep depth readable. */
+export const Compact: Story = {
+  args: { compact: true, indentGuides: true, openDepth: 2 },
 };
 
 export const WithGroups: Story = {
