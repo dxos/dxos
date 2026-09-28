@@ -105,13 +105,13 @@ export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
 
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */
 export const realHover = async (element: HTMLElement) => {
-  const { userEvent } = await import('@vitest/browser/context');
+  const { userEvent } = await import('vitest/browser');
   await userEvent.hover(element);
 };
 
 /** Moves the real pointer off `element` (to the page's top-left corner), so `pointerleave` and `:hover` follow. */
 export const realUnhover = async (element: HTMLElement) => {
-  const { userEvent } = await import('@vitest/browser/context');
+  const { userEvent } = await import('vitest/browser');
   await userEvent.unhover(element);
 };
 
