@@ -37,7 +37,10 @@ describe('Composer Plugin project template', () => {
     );
     await db.flush();
 
-    const taskSet = await project.taskSet!.load();
+    const taskSet = await project.taskSet?.load();
+    if (!taskSet) {
+      throw new Error('the template must give the project its task set');
+    }
     expect(taskSet.tasks).toHaveLength(1);
     const parent = await taskSet.tasks[0].load();
     expect(parent.title).toBe('Build the Space Clock plugin');
@@ -58,7 +61,7 @@ describe('Composer Plugin project template', () => {
       }
     }
 
-    const instructions = await project.instructions!.load();
-    expect(instructions.skills).toHaveLength(1);
+    const instructions = await project.instructions?.load();
+    expect(instructions?.skills).toHaveLength(1);
   });
 });
