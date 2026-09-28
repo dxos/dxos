@@ -144,3 +144,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
 3. **Toolbar gap is `--nx-gap-size`**, the same spacing token as Group and Container gaps.
 4. **`experimental.stories.tsx` removed**; `components.stories.tsx` covers it.
+5. **Controls fill with the host-derived well** (`--color-input-surface`, a small lightness step off the hosting
+   surface) instead of ui-theme's fixed `--color-input-bg`, so they stay close to whatever panel hosts them.
+6. **Focus ring is Next's own**: `.nx-focus-ring` draws `--nx-focus-ring-width` (2px) in `--nx-focus-ring-color`
+   (orange by default), so a theme recolours it by setting one variable; the Select popup uses the same variables as
+   an outline so item highlights cannot cover it.

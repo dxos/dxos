@@ -7,7 +7,7 @@
  * emit identical classes. Geometry and colour live in `theme/*.css`; recipes only name the rules.
  */
 
-const FOCUS_RING = 'dx-focus-ring-inset';
+const FOCUS_RING = 'nx-focus-ring';
 
 export const recipes = {
   container: () => 'nx-grid',

@@ -20,7 +20,7 @@ const ROLES: Next.SelectOption[] = [
 /** A basic form: each Field stacks its label above the control (decision 13). */
 const DefaultStory = () => (
   <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
-    <Next.Container gutter='rail'>
+    <Next.Container gutter='rail' level='base'>
       <Next.Field.Root data-testid='name'>
         <Next.Field.Label>Name</Next.Field.Label>
         <Next.Input placeholder='Ada Lovelace' />
@@ -98,6 +98,11 @@ export const Default: Story = {
     await expect(canvas.getByRole('combobox', { name: 'Role' })).toBeInTheDocument();
     await expect(canvas.getByRole('checkbox', { name: 'Subscribe to updates' })).not.toBeChecked();
     await expect(canvas.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'submit');
+    // Focus shows the themable ring (`--nx-focus-ring-color`), not ui-theme's.
+    const name = canvas.getByRole('textbox', { name: 'Name' });
+    await userEvent.click(name);
+    await expect(getComputedStyle(name).boxShadow).not.toBe('none');
+
     // The checkbox starts at the column's left edge, like every other control.
     const box = canvasElement.querySelector('[data-scope="checkbox"][data-part="control"]')?.getBoundingClientRect();
     await expect(box?.left).toBeCloseTo(part(canvasElement, 'name', '.nx-control').left, 0);

@@ -4,6 +4,18 @@
  */
 
 @layer dx-components {
+  /* Focus ring: its own themable variables rather than ui-theme's ring, so a theme can recolour it (decision 8). */
+  :root {
+    --nx-focus-ring-color: var(--color-orange-500, oklch(70.5% 0.213 47.604));
+    --nx-focus-ring-width: 2px;
+  }
+  .nx-focus-ring:focus {
+    outline: none;
+  }
+  .nx-focus-ring:focus-visible {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+
   .nx-typography {
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
@@ -32,10 +44,11 @@
     height: var(--nx-control-icon);
   }
 
+  /* Controls fill with the host-derived well (a small step off whatever surface hosts them), not a fixed raised fill. */
   .nx-input {
     width: 100%;
     min-width: 0;
-    background: var(--color-input-bg);
+    background: var(--color-input-surface);
   }
 
   .nx-button {
@@ -45,11 +58,11 @@
     gap: var(--nx-control-inset);
     width: fit-content;
     min-width: var(--nx-control-size);
-    background: var(--color-input-bg);
+    background: var(--color-input-surface);
     cursor: pointer;
   }
   .nx-button:hover:not(:disabled) {
-    background: var(--color-input-bg-hover, var(--color-hover-surface));
+    background: var(--color-hover-surface);
   }
   .nx-button:disabled {
     opacity: 0.5;
@@ -105,7 +118,7 @@
     width: var(--nx-control-size);
     height: var(--nx-control-size);
     border-radius: var(--radius-sm, 0.25rem);
-    background: var(--color-input-bg);
+    background: var(--color-input-surface);
   }
   .nx-checkbox-control .nx-icon {
     width: var(--nx-control-icon);
@@ -118,8 +131,7 @@
   }
 
   .nx-checkbox-control[data-focus-visible] {
-    outline: 2px solid var(--color-focus-ring-subtle, currentColor);
-    outline-offset: 1px;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
   }
 
   /* The select root takes no box, so its label and trigger are laid out as the parent's children. */
@@ -137,7 +149,7 @@
     gap: var(--nx-control-inset);
     width: 100%;
     min-width: 0;
-    background: var(--color-input-bg);
+    background: var(--color-input-surface);
     cursor: pointer;
     text-align: start;
   }
@@ -156,8 +168,8 @@
     outline: none;
   }
   .nx-popup:focus-visible {
-    outline: var(--dx-focus-line, 2px) solid var(--color-focus-ring-subtle);
-    outline-offset: calc(-1 * var(--dx-focus-line, 2px));
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
   .nx-select-item {
     display: flex;
