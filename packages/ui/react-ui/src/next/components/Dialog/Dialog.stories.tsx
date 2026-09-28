@@ -132,7 +132,6 @@ const open = async (canvasElement: HTMLElement, size: Size) => {
 
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    const trigger = within(canvasElement).getByTestId('trigger-md');
     const dialog = await open(canvasElement, 'md');
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     await expect(dialog).toHaveAccessibleDescription(DESCRIPTION);
@@ -164,18 +163,25 @@ export const Default: Story = {
     await userEvent.click(await body.findByRole('option', { name: 'Editor' }));
     await waitFor(() => expect(within(dialog).getByRole('combobox', { name: 'Role' })).toHaveTextContent('Editor'));
     await expect(body.getByRole('dialog', { name: 'Edit profile' })).toBeVisible();
-    within(dialog).getByRole('button', { name: 'Save' }).focus();
+  },
+};
+
+/** Escape, Cancel and the header's close button each dismiss the dialog; this story ends closed by design. */
+export const Dismiss: Story = {
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByTestId('trigger-md');
+    const body = within(canvasElement.ownerDocument.body);
 
     // Escape closes and returns focus to the trigger.
+    await open(canvasElement, 'md');
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(trigger).toHaveFocus());
 
-    // Cancel and the header's close button close it too.
     for (const name of ['Cancel', 'Close']) {
       const reopened = await open(canvasElement, 'md');
       await userEvent.click(within(reopened).getByRole('button', { name }));
-      await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull());
+      await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
     }
   },
 };
@@ -193,7 +199,6 @@ export const LongContent: Story = {
     const footer = within(dialog).getByTestId('footer').getBoundingClientRect();
     await expect(footer.bottom).toBeLessThanOrEqual(bounds.bottom + 0.5);
     await expect(footer.height).toBeGreaterThan(0);
-    await userEvent.keyboard('{Escape}');
   },
 };
 
@@ -210,8 +215,11 @@ export const Sizes: Story = {
       const dialog = await open(canvasElement, size);
       await expect(dialog).toHaveAttribute('data-size', size);
       await expect(within(dialog).getByTestId('header').getBoundingClientRect().height, size).toBeCloseTo(block, 0);
-      await userEvent.keyboard('{Escape}');
-      await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull());
+      // Leave the last dialog open so the story rests on something to look at.
+      if (size !== HEADER_BLOCK[HEADER_BLOCK.length - 1][0]) {
+        await userEvent.keyboard('{Escape}');
+        await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull());
+      }
     }
   },
 };
