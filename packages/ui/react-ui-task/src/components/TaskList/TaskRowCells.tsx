@@ -138,9 +138,9 @@ export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => 
 TaskMnemonic.displayName = 'TaskList.Mnemonic';
 
 export type TaskOrdinalProps = {
+  classNames?: string;
   task: Task.Task;
   ordinal: number;
-  classNames?: string;
 };
 
 /** The gutter's ordinal, tinted by outcome so a scan down the column reads as progress. */

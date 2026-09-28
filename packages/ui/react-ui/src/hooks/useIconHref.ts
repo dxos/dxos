@@ -4,7 +4,7 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-import { useIconRegistry } from '../providers/ThemeProvider/icon-registry.ts';
+import { useIconRegistry } from '../providers/index.ts';
 
 /**
  * Resolves an icon name to a same-document `<use href>`.
@@ -26,11 +26,9 @@ export const useIconHref = (icon?: string) => {
   if (!icon) {
     return undefined;
   }
-
   if (!hasIcon) {
     registry.requestIcon(icon);
     return undefined;
   }
-
   return `#${icon}`;
 };

@@ -1,0 +1,62 @@
+# Resolution — 26f8347f
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 26f8347f-1 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:378:3
+- 26f8347f-2 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:400:9
+- 26f8347f-3 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:436:3
+- 26f8347f-4 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:454:31
+- 26f8347f-5 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:504:20
+- 26f8347f-6 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:654:7
+- 26f8347f-7 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:663:9
+- 26f8347f-8 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:697:5
+- 26f8347f-9 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:698:7
+- 26f8347f-10 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:712:7
+- 26f8347f-11 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:727
+- 26f8347f-12 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:852
+- 26f8347f-13 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1044
+- 26f8347f-14 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1048
+- 26f8347f-15 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1094
+- 26f8347f-16 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1107
+- 26f8347f-17 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1118
+- 26f8347f-18 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1399
+- 26f8347f-19 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1400
+- 26f8347f-20 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1428
+- 26f8347f-21 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1429
+- 26f8347f-22 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1445
+- 26f8347f-23 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1485
+- 26f8347f-24 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1486
+- 26f8347f-25 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1493
+- 26f8347f-26 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1509
+- 26f8347f-27 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1529
+- 26f8347f-28 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1530
+- 26f8347f-29 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1532
+- 26f8347f-30 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1561
+- 26f8347f-31 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1643
+- 26f8347f-32 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1644
+- 26f8347f-33 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1649
+- 26f8347f-34 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1840
+- 26f8347f-35 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1918
+- 26f8347f-36 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1931
+- 26f8347f-37 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1970
+- 26f8347f-38 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1971
+- 26f8347f-39 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2043
+- 26f8347f-40 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2054
+- 26f8347f-41 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2068
+- 26f8347f-42 - unresolved - keep-parallel-apis-structurally-aligned - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:44:3
+- 26f8347f-43 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:140:1
+- 26f8347f-44 - unresolved - name-for-general-behavior - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:253
+- 26f8347f-45 - resolved - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1
+- 26f8347f-46 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/hooks/useIconHref.ts:29:3
+- 26f8347f-47 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
+- 26f8347f-48 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
+- 26f8347f-49 - resolved - comment-hygiene - packages/ui/react-ui/src/playground/experimental.stories.tsx:11:1 (file deleted)
+- 26f8347f-50 - resolved - reuse-existing-mechanism - packages/ui/react-ui/src/playground/experimental.stories.tsx:67 (file deleted)
+- 26f8347f-51 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:70:5 (file deleted)
+- 26f8347f-52 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:88:10 (file deleted)
+- 26f8347f-53 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:134:5 (file deleted)
+- 26f8347f-54 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:135:7 (file deleted)
+- 26f8347f-55 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:136:11 (file deleted)
+- 26f8347f-56 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:144:7 (file deleted)
+- 26f8347f-57 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:145:11 (file deleted)
+- 26f8347f-58 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:157:9 (file deleted)

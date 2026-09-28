@@ -642,6 +642,7 @@ const DefaultStory = ({
       debug={debug}
       tasks={tasks}
       selected={selected}
+      checked={checked}
       hierarchical={hierarchical}
       groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
@@ -651,7 +652,6 @@ const DefaultStory = ({
       getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
-      checked={checked}
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
@@ -723,8 +723,14 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
 };
 
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
-const titleCell = (row: Element): HTMLElement =>
-  row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
+const titleCell = (row: Element): HTMLElement => {
+  const title = row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]');
+  const cell = title?.parentElement;
+  if (!cell) {
+    throw new Error('Task title cell not found.');
+  }
+  return cell;
+};
 
 const meta = {
   title: 'ui/react-ui-task/TaskList',
@@ -848,11 +854,6 @@ export const TestListAndDetail: Story = {
   },
 };
 
-/** A single-task list whose description runs past the row's three-line clamp. */
-const seedDescription = (description: string) => () => [
-  Task.make({ title: 'Plan the cupping', status: 'todo', description }),
-];
-
 /**
  * The row shows exactly three whole lines of the description and no sliver of a fourth: the box is
  * three line-heights tall, and every line of text is wholly inside it or wholly below it.
@@ -890,20 +891,24 @@ const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
 /** Every block the default renderer pads or rescales — heading, code, quote, list — inside the clamp. */
 export const TestDescriptionClamp: Story = {
   args: {
-    seed: seedDescription(
-      [
-        '# Cupping plan',
-        '',
-        '```',
-        'roast --profile city',
-        '```',
-        '',
-        '> Book the roaster first.',
-        '',
-        '- Ethiopian Guji',
-        '- Colombian Huila',
-      ].join('\n'),
-    ),
+    seed: () => [
+      Task.make({
+        title: 'Plan the cupping',
+        status: 'todo',
+        description: [
+          '# Cupping plan',
+          '',
+          '```',
+          'roast --profile city',
+          '```',
+          '',
+          '> Book the roaster first.',
+          '',
+          '- Ethiopian Guji',
+          '- Colombian Huila',
+        ].join('\n'),
+      }),
+    ],
     showGroupLabels: false,
   },
   play: assertDescriptionClamp,
@@ -912,16 +917,20 @@ export const TestDescriptionClamp: Story = {
 /** A paragraph run into a list, so the clamp falls between two list items. */
 export const TestDescriptionClampList: Story = {
   args: {
-    seed: seedDescription(
-      [
-        'Line up the samples before the roaster is booked.',
-        '',
-        '- Ethiopian Guji',
-        '- Colombian Huila',
-        '- Kenyan Nyeri',
-        '- Sumatra Mandheling',
-      ].join('\n'),
-    ),
+    seed: () => [
+      Task.make({
+        title: 'Plan the cupping',
+        status: 'todo',
+        description: [
+          'Line up the samples before the roaster is booked.',
+          '',
+          '- Ethiopian Guji',
+          '- Colombian Huila',
+          '- Kenyan Nyeri',
+          '- Sumatra Mandheling',
+        ].join('\n'),
+      }),
+    ],
     showGroupLabels: false,
   },
   play: assertDescriptionClamp,
@@ -1040,12 +1049,17 @@ export const TestArtifactsHiddenInRow: Story = {
     const row = await waitFor(
       async () => {
         const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-        await expect(row).toBeTruthy();
-        return row!;
+        if (!row) {
+          throw new Error('Task row not found.');
+        }
+        return row;
       },
       { timeout: 10_000 },
     );
-    const title = row.querySelector<HTMLElement>('span.truncate')!;
+    const title = row.querySelector<HTMLElement>('span.truncate');
+    if (!title) {
+      throw new Error('Task title not found.');
+    }
     await waitFor(async () => {
       await expect(row.querySelector('[data-testid="taskList.item.chips"] > *')).toBeNull();
       await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
@@ -1090,8 +1104,10 @@ export const WithTags: Story = {
     for (const row of tagged) {
       const title = titleCell(row).getBoundingClientRect();
       const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]');
-      await expect(chips).toBeTruthy();
-      const box = chips!.getBoundingClientRect();
+      if (!chips) {
+        throw new Error('Task chips not found.');
+      }
+      const box = chips.getBoundingClientRect();
       await expect(box.top).toBeGreaterThanOrEqual(title.bottom - 0.5);
       await expect(Math.abs(box.left - title.left)).toBeLessThan(1);
       const description = row.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
@@ -1104,7 +1120,10 @@ export const WithTags: Story = {
     const assigned = rows.filter((row) => row.querySelector('[data-testid="taskList.item.assignee"]'));
     await expect(assigned.length).toBeGreaterThan(0);
     for (const row of assigned) {
-      const assignee = row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!;
+      const assignee = row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]');
+      if (!assignee) {
+        throw new Error('Task assignee not found.');
+      }
       await expect(
         row.querySelector('[data-testid="taskList.item.chips"] [data-testid="taskList.item.assignee"]'),
       ).toBeNull();
@@ -1114,9 +1133,11 @@ export const WithTags: Story = {
       // On the title's line, after it, and flush against the trailing controls.
       await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
       await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
-      const priority = row
-        .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
-        .getBoundingClientRect();
+      const priorityElement = row.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]');
+      if (!priorityElement) {
+        throw new Error('Task priority not found.');
+      }
+      const priority = priorityElement.getBoundingClientRect();
       await expect(priority.left - box.right).toBeLessThan(40);
     }
 
@@ -1396,8 +1417,17 @@ export const TestCreateFailureKeepsDraft: Story = {
     showGroupLabels: false,
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const titles = () =>
       [...canvasElement.querySelectorAll('[data-testid="taskList.item.title"]')].map((element) => element.textContent);
 
@@ -1425,8 +1455,17 @@ export const TestCreateWithAttachments: Story = {
     acceptFiles: true,
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const chips = () => [...pane.querySelectorAll<HTMLElement>('[data-testid="taskList.edit.file"]')];
 
     const dataTransfer = new DataTransfer();
@@ -1442,7 +1481,11 @@ export const TestCreateWithAttachments: Story = {
       ),
     );
 
-    await userEvent.click(chips()[1].querySelector<HTMLElement>('button')!);
+    const removeChipButton = chips()[1].querySelector<HTMLElement>('button');
+    if (!removeChipButton) {
+      throw new Error('Attachment chip remove button not found.');
+    }
+    await userEvent.click(removeChipButton);
     await waitFor(async () => expect(chips()).toHaveLength(1));
 
     await userEvent.click(title());
@@ -1482,15 +1525,34 @@ export const TestCreateWithDescription: Story = {
     showDescription: true,
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     // Nothing selected, and the field is there anyway — a new task can be given a description.
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(description()).not.toBeNull());
-    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const content = () => {
+      const element = description();
+      if (!element) {
+        throw new Error('Task description editor not found.');
+      }
+      const cm = element.querySelector<HTMLElement>('.cm-content');
+      if (!cm) {
+        throw new Error('Task description content not found.');
+      }
+      return cm;
+    };
     await waitFor(async () => expect(content()).not.toBeNull());
 
     // Type the description FIRST, then the title, and create from the title with Enter — the field
@@ -1505,8 +1567,10 @@ export const TestCreateWithDescription: Story = {
     // Found by title, not by position: the list groups by status, so a new todo lands in its group
     // rather than at the end.
     const created = rows().find((row) => row.textContent?.includes('New task'));
-    await expect(created).not.toBeUndefined();
-    await expect(created!.textContent).toContain('Roast it twice');
+    if (!created) {
+      throw new Error('Created task row not found.');
+    }
+    await expect(created.textContent).toContain('Roast it twice');
 
     // ...and the pane resets, so the next task does not inherit the last one's description. The
     // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
@@ -1526,10 +1590,29 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
     showDescription: true,
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
-    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const content = () => {
+      const element = description();
+      if (!element) {
+        throw new Error('Task description editor not found.');
+      }
+      const cm = element.querySelector<HTMLElement>('.cm-content');
+      if (!cm) {
+        throw new Error('Task description content not found.');
+      }
+      return cm;
+    };
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     await waitFor(async () => expect(content()).not.toBeNull());
@@ -1557,8 +1640,10 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
     await userEvent.keyboard('Clean task{Enter}');
     await waitFor(async () => expect(rows()).toHaveLength(before + 1));
     const created = rows().find((row) => row.textContent?.includes('Clean task'));
-    await expect(created).not.toBeUndefined();
-    await expect(created!.textContent).not.toContain('LEAKED');
+    if (!created) {
+      throw new Error('Created task row not found.');
+    }
+    await expect(created.textContent).not.toContain('LEAKED');
   },
 };
 
@@ -1640,13 +1725,26 @@ export const TestEditWithoutDescription: Story = {
     showDescription: false,
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     const first = rows()[0];
-    const firstTitle = first.querySelector('[data-testid="taskList.item.title"]')!.textContent;
+    const firstTitleElement = first.querySelector('[data-testid="taskList.item.title"]');
+    if (!firstTitleElement) {
+      throw new Error('Task title not found.');
+    }
+    const firstTitle = firstTitleElement.textContent;
     first.click();
 
     // The task IS selected — the title proves the pane followed the selection — and the description
@@ -1837,7 +1935,13 @@ export const TestHierarchy: Story = {
           ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
-    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const toggle = (row: HTMLElement) => {
+      const element = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      if (!element) {
+        throw new Error('Tree item toggle not found.');
+      }
+      return element;
+    };
     const press = (row: HTMLElement, key: string) => {
       row.focus();
       row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
@@ -1915,7 +2019,14 @@ export const TestHierarchy: Story = {
     await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
     // Moving a parent carries its sub-tasks: they stay listed in its `subtasks` wherever it lands.
-    const release = rows().find(({ title }) => title === 'Ship the spring release')!;
+    const findReleaseRow = () => {
+      const found = rows().find(({ title }) => title === 'Ship the spring release');
+      if (!found) {
+        throw new Error('Release row not found.');
+      }
+      return found;
+    };
+    const release = findReleaseRow();
     press(release.row, 'ArrowDown');
     await waitFor(async () =>
       expect(shape()).toEqual([
@@ -1928,7 +2039,7 @@ export const TestHierarchy: Story = {
         'Write the tasting notes:2',
       ]),
     );
-    press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
+    press(findReleaseRow().row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
     await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
@@ -1967,8 +2078,14 @@ export const TestHierarchy: Story = {
 
     // A description lines up under its own title cell (the mnemonic chip leads the title in it), not
     // under the column — it is indented with the row and clears the disclosure toggle.
-    const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'))!;
-    const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
+    const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'));
+    if (!described) {
+      throw new Error('Row with a clamped description not found.');
+    }
+    const description = described.row.querySelector<HTMLElement>('.line-clamp-3');
+    if (!description) {
+      throw new Error('Clamped description not found.');
+    }
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
     await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
@@ -2040,7 +2157,13 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     const first = rows()[0];
     // Re-read rather than held: building the menu re-parents the trigger under it, so the node that
     // took the first click is gone by the time the menu is open.
-    const trigger = () => first.querySelector<HTMLElement>('[data-testid="taskList.item.status"]')!;
+    const trigger = () => {
+      const element = first.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
+      if (!element) {
+        throw new Error('Task status trigger not found.');
+      }
+      return element;
+    };
 
     // Nothing is built for a row at rest.
     await expect(options()).toHaveLength(0);
@@ -2051,7 +2174,10 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     await expect(options().filter((option) => option.getAttribute('aria-checked') === 'true')).toHaveLength(1);
 
     // Picking another status closes the menu and writes the value, which the next open reports.
-    const next = options().find((option) => option.getAttribute('aria-checked') !== 'true')!;
+    const next = options().find((option) => option.getAttribute('aria-checked') !== 'true');
+    if (!next) {
+      throw new Error('Unchecked status option not found.');
+    }
     const nextLabel = next.textContent;
     await userEvent.click(next);
     await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
@@ -2065,7 +2191,11 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     // from the tree row changed when the row commits — so it is opened here rather than assumed.
     await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
-    await userEvent.click(first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!);
+    const priorityTrigger = first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]');
+    if (!priorityTrigger) {
+      throw new Error('Task priority trigger not found.');
+    }
+    await userEvent.click(priorityTrigger);
     await waitFor(async () => expect(options()).toHaveLength(Task.PriorityOptions.length + 1), { timeout: 5_000 });
   },
 };
