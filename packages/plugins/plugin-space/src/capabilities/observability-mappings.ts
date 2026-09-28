@@ -52,15 +52,6 @@ export default Capability.makeModule(
           }),
         }),
         ObservabilityMapping.make({
-          operation: SpaceOperation.AddObject,
-          event: 'space.object.add',
-          properties: (_input, output) => ({
-            spaceId: Obj.getDatabase(output.object)?.spaceId,
-            objectId: output.object.id,
-            typename: Obj.getTypename(output.object),
-          }),
-        }),
-        ObservabilityMapping.make({
           operation: SpaceOperation.AddType,
           event: 'space.type.add',
           properties: (_input, output) => ({

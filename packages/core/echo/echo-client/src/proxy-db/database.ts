@@ -5,6 +5,7 @@
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
@@ -12,6 +13,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  Annotation,
   type Blob,
   type Change,
   Database,
@@ -54,6 +56,7 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
@@ -604,6 +607,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(obj));
     getObjectCore(obj).rootProxy = obj;
 
+    // An object already bound to a database is being restored, not created.
+    const created = getObjectCore(obj).entityManager == null;
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     // Re-stamp relation endpoints now that the database (and thus space) is known: cross-space
@@ -611,12 +616,24 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
     this._entityManager.addCore(getObjectCore(obj), opts);
+    if (created && opts?.track !== false) {
+      const type = Entity.getType(obj);
+      trace.events.emit('echo.object.add', {
+        spaceId: this.spaceId,
+        objectId: obj.id,
+        typename: Entity.getTypename(obj),
+        userType: type != null && isUserType(type),
+        // Foreign keys mean an integration (a sync or import) created the object, not the user.
+        external: Entity.getMeta(obj).keys.length > 0,
+      });
+    }
     return obj;
   }
 
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     assertArgument(isEchoObject(obj), 'obj');
-    return this._entityManager.removeCore(getObjectCore(obj));
+    this._entityManager.removeCore(getObjectCore(obj));
+    trace.events.emit('echo.object.remove', { spaceId: this.spaceId, objectId: obj.id });
   }
 
   //
@@ -1166,6 +1183,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 }
 
 // TODO(burdon): Create APIError class.
+/**
+ * Whether objects of this type are ones a user creates and sees: an object type (not a relation or meta-type)
+ * persisted in a space or carrying {@link Annotation.UserType}. Mirrors `TypeOptions.isUserType` in
+ * `@dxos/app-toolkit`, which ECHO cannot depend on.
+ */
+const isUserType = (type: Type.AnyEntity): boolean =>
+  !Type.isRelation(type) &&
+  !Type.isTypeKind(type) &&
+  (Type.getDatabase(type) != null || Option.isSome(Annotation.UserType.get(Type.getSchema(type))));
+
 const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {
   const message = 'Schema not registered';
   if (schema != null) {

@@ -63,7 +63,7 @@ export default Capability.makeModule(
       ).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
       const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
-      defaultSpace.db.add(welcomeDoc);
+      defaultSpace.db.add(welcomeDoc, { track: false });
       Obj.update(rootCollection, (rootCollection) => {
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });

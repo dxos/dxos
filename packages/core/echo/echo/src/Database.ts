@@ -67,6 +67,14 @@ export type AddOptions = {
   placeIn?: ObjectPlacement;
 
   /**
+   * Whether this add counts as the user creating the object, reported as the `echo.object.add` trace event.
+   * Seeded content (onboarding, samples) passes `false` so it does not read as user activity.
+   *
+   * @default true
+   */
+  track?: boolean;
+
+  /**
    * Append the object to this feed instead of the automerge-backed space database. The object is
    * returned synchronously (a live feed object) and persisted in the background — confirm the write
    * completed with {@link Database.flush}. Synchronous alternative to the async
@@ -531,7 +539,18 @@ export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'), withSpaceId);
+  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Track, (track) => db.add<T>(obj, { track })))).pipe(
+    Effect.withSpan('Database.add'),
+    withSpaceId,
+  );
+
+/**
+ * Whether {@link add} counts new objects as user activity (see {@link AddOptions.track}). Code that seeds
+ * content provides `false` once around everything it writes, rather than at every add.
+ */
+export const Track: Context.Reference<boolean> = Context.Reference<boolean>('@dxos/echo/Database/Track', {
+  defaultValue: () => true,
+});
 
 /**
  * Persists a Type definition to the database.

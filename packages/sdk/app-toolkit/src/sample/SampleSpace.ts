@@ -414,6 +414,8 @@ export const applyTo = <Phases extends PhaseMap, A>(
     yield* Database.flush();
     return result;
   }).pipe(
+    // Sample content is seeded, not created by the user.
+    Effect.provideService(Database.Track, false),
     Effect.provide(
       Layer.provideMerge(
         layer({ properties: space.properties, reference: definition.reference }),
