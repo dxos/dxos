@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
+import { InvariantViolation } from '@dxos/invariant';
 import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { concatUint8Arrays, isNonNullable } from '@dxos/util';
@@ -247,6 +248,38 @@ describe('WebSocketMuxerTest', () => {
     expect(socket.frames).toHaveLength(2);
   });
 
+  test('sendSync blocks later segmented sends once it cut a message off', ({ expect }) => {
+    const socket = new TestSocket();
+    const failure = new Error("Can't call WebSocket send() after close()");
+    socket.onFrame = () => {
+      socket.sendError = failure;
+    };
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(failure);
+    expect(socket.frames).toHaveLength(1);
+
+    socket.onFrame = undefined;
+    socket.sendError = undefined;
+    // The receiver still holds the first segment, which a later sequence would be appended to.
+    expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(failure);
+    expect(socket.frames).toHaveLength(1);
+    muxer.sendSync(unsegmentedMessage('small'));
+    expect(socket.frames).toHaveLength(2);
+  });
+
+  test('sendSync refused on its first segment leaves later sends free', ({ expect }) => {
+    const socket = new TestSocket();
+    const failure = new Error('refused');
+    socket.sendError = failure;
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(failure);
+
+    socket.sendError = undefined;
+    const message = textMessage(SEGMENTED_CONTENT);
+    muxer.sendSync(message);
+    expect(socket.frames).toHaveLength(segmentCount(message));
+  });
+
   describe('send timing', () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
@@ -374,6 +407,72 @@ describe('WebSocketMuxerTest', () => {
       const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
       expect(received.map((message) => message.serviceId).sort()).toEqual([...services].sort());
       expect(received.every((message) => textOf(message) === `${message.serviceId}:${SEGMENTED_CONTENT}`)).toBe(true);
+    });
+
+    test("a small message waits behind its service's queued segments", async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = 0;
+      socket.onFrame = () => {
+        socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      };
+      const muxer = new WebSocketMuxer(socket);
+      const large = textMessage('A'.repeat(2 * WIRE_SEGMENT_BYTES));
+      const sends = [
+        muxer.send(large),
+        muxer.send(textMessage('small')),
+        muxer.send(textMessage('other', 'other-service')),
+      ];
+      // The first segment went out before the buffer filled, and another service has nothing to wait for.
+      expect(socket.frames).toHaveLength(2);
+
+      socket.onFrame = undefined;
+      socket.bufferedAmount = 0;
+      vi.runAllTimers();
+      await Promise.all(sends);
+
+      const receiver = new WebSocketMuxer(new TestSocket());
+      const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
+      expect(received.map(textOf)).toEqual(['other', textOf(large), 'small']);
+    });
+
+    test('a small message sent from the queue leaves no sequence open', async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      const muxer = new WebSocketMuxer(socket);
+      const sends = [muxer.send(textMessage('A'.repeat(2 * WIRE_SEGMENT_BYTES))), muxer.send(textMessage('small'))];
+      socket.bufferedAmount = 0;
+      vi.runAllTimers();
+      await Promise.all(sends);
+
+      const failure = new Error('refused');
+      socket.sendError = failure;
+      await expect(muxer.send(textMessage('B'.repeat(2 * WIRE_SEGMENT_BYTES)))).rejects.toBe(failure);
+      socket.sendError = undefined;
+      // The refused message never reached the receiver, so nothing was cut off and the next one goes out.
+      await muxer.send(textMessage('C'.repeat(2 * WIRE_SEGMENT_BYTES)));
+    });
+
+    test('sendSync refuses to cut into segments send has queued', async ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = 0;
+      socket.onFrame = () => {
+        socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      };
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const queued = textMessage(SEGMENTED_CONTENT);
+      const sent = muxer.send(queued);
+      expect(socket.frames).toHaveLength(1);
+
+      expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(InvariantViolation);
+      expect(socket.frames).toHaveLength(1);
+
+      socket.onFrame = undefined;
+      socket.bufferedAmount = 0;
+      vi.runAllTimers();
+      await sent;
+      const receiver = new WebSocketMuxer(new TestSocket());
+      const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
+      expect(received.map(textOf)).toEqual([SEGMENTED_CONTENT]);
     });
   });
 });

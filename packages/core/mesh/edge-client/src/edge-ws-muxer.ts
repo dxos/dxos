@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -24,6 +25,8 @@ const FLAG_SEGMENT_SEQ = 1;
  * and interpreted as a valid Message proto binary.
  */
 const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
+
+const isSegment = (frame: Uint8Array): boolean => (frame[0] & FLAG_SEGMENT_SEQ) !== 0;
 
 /**
  * https://developers.cloudflare.com/durable-objects/platform/limits/
@@ -80,24 +83,25 @@ export class WebSocketMuxer {
 
   /**
    * Resolves once the socket has taken the whole message; segments wait only while the socket is connecting or its
-   * buffer is full.
+   * buffer is full, and a message never overtakes one its service sent before it.
    * Rejects with {@link MessageTooLargeError} past the Cloudflare limit, and with {@link WebSocketClosedError} if the
-   * socket is closing or closed, or starts closing or the muxer is destroyed while segments wait. A segmented send also
-   * rejects with the error the socket's `send` throws. A close or a throw drops every queued segmented message, and
-   * once a message was cut off mid-sequence every later segmented message rejects with that error.
+   * socket is closing or closed, or starts closing or the muxer is destroyed while the message waits. A queued message
+   * also rejects with the error the socket's `send` throws. A close or a throw drops every queued message, and once a
+   * message was cut off mid-sequence every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
     const { frames, channelId } = this._encode(message);
-    if (channelId == null) {
+    const segmented = isSegment(frames[0]);
+    if (channelId === undefined || (!segmented && !this._outMessageChunks.has(channelId))) {
       this._ws.send(frames[0]);
       return;
     }
-    if (this._segmentedSendError) {
+    if (segmented && this._segmentedSendError) {
       throw this._segmentedSendError;
     }
 
-    log('muxer sending segmented message', {
-      chunkCount: frames.length,
+    log('muxer queueing message', {
+      frameCount: frames.length,
       channelId,
       serviceId: message.serviceId,
       payload: protocol.getPayloadType(message),
@@ -118,8 +122,8 @@ export class WebSocketMuxer {
     this._sendChunkedMessages();
 
     await terminatorSentTrigger.wait();
-    log.debug('muxer segmented message send enqueued', {
-      chunkCount: frames.length,
+    log.debug('muxer queued message sent', {
+      frameCount: frames.length,
       channelId,
       serviceId: message.serviceId,
     });
@@ -127,12 +131,25 @@ export class WebSocketMuxer {
 
   /**
    * Writes every frame of the message before returning, with no queue, timer or back-pressure: for a socket that takes
-   * frames at once and throws once closed, such as workerd's. Throws where {@link send} rejects. Use it or `send` on a
-   * muxer, not both, since its segments would cut into a sequence `send` has queued.
+   * frames at once and throws once closed, such as workerd's. Throws where {@link send} rejects, and on any message
+   * while `send` has messages queued, since its frames would cut into them.
    */
   public sendSync(message: Message): void {
-    for (const frame of this._encode(message).frames) {
-      this._ws.send(frame);
+    invariant(this._outMessageChunks.size === 0, 'sendSync would cut into messages send has queued.');
+    const { frames } = this._encode(message);
+    if (isSegment(frames[0]) && this._segmentedSendError) {
+      throw this._segmentedSendError;
+    }
+    for (const [index, frame] of frames.entries()) {
+      try {
+        this._ws.send(frame);
+      } catch (error) {
+        // The receiver keeps the segments already written and would prepend them to the next sequence.
+        if (index > 0) {
+          this._segmentedSendError ??= error instanceof Error ? error : new Error(String(error));
+        }
+        throw error;
+      }
     }
   }
 
@@ -222,10 +239,10 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Splits a message into its wire frames: one whole frame, or segments on its service's channel, which is returned
-   * only then. Throws on a closing or closed socket and past the Cloudflare limit.
+   * Splits a message into its wire frames: one whole frame, or segments on its service's channel. Returns the channel
+   * of any message that names a service. Throws on a closing or closed socket and past the Cloudflare limit.
    */
-  private _encode(message: Message): { frames: Uint8Array[]; channelId?: number } {
+  private _encode(message: Message): { frames: Uint8Array[]; channelId: number | undefined } {
     if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
       throw new WebSocketClosedError(this._ws.readyState);
     }
@@ -241,7 +258,7 @@ export class WebSocketMuxer {
       });
     }
     if (channelId == null || binary.byteLength < this._maxChunkLength) {
-      return { frames: [concatUint8Arrays(new Uint8Array([0]), binary)] };
+      return { frames: [concatUint8Arrays(new Uint8Array([0]), binary)], channelId };
     }
 
     const frames: Uint8Array[] = [];
@@ -261,7 +278,7 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.delete(channelId);
   }
 
-  /** Writes queued segments one per channel per round until none are left or the socket cannot take more. */
+  /** Writes queued frames one per channel per round until none are left or the socket cannot take more. */
   private _sendChunkedMessages(): void {
     if (this._sendTimeout) {
       return;
@@ -311,17 +328,19 @@ export class WebSocketMuxer {
           this._rejectPendingSends(sendError);
           return;
         }
-        if ((chunk.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
-          this._outOpenSequences.add(channelId);
-        } else {
-          this._outOpenSequences.delete(channelId);
+        if (isSegment(chunk.payload)) {
+          if ((chunk.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
+            this._outOpenSequences.add(channelId);
+          } else {
+            this._outOpenSequences.delete(channelId);
+          }
         }
         chunk.trigger?.wake();
       }
     }
   }
 
-  /** Rejects every queued segmented send and drops the chunks they had yet to send. */
+  /** Rejects every queued send and drops the frames they had yet to write. */
   private _rejectPendingSends(error: Error): void {
     for (const channelChunks of this._outMessageChunks.values()) {
       channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
@@ -393,6 +412,7 @@ type WebSocketCompat = {
   send(message: (ArrayBuffer | ArrayBufferView) | string): void;
 };
 
+/** A frame in a channel's queue: a segment, or a whole message waiting behind its service's segments. */
 type MessageChunk = {
   payload: Uint8Array;
   /**
