@@ -25,6 +25,10 @@
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
  * a persistent profile (`--profile`, default `~/.local/state/dxos/recording-demos/profile`).
+ *
+ * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
+ * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
+ * is the least time between two on-camera gestures.
  */
 
 import { chromium } from '@playwright/test';
@@ -66,6 +70,12 @@ const parseArgs = () => {
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
     'profile': path.join(homedir(), '.local/state/dxos/recording-demos/profile'),
+    // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
+    'theme': 'dark',
+    // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
+    'action-timeout': 5_000,
+    // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
+    'cadence': 600,
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -129,21 +139,25 @@ const launchOptions = {
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
 const browser = manual ? undefined : await chromium.launch(launchOptions);
 const context = manual
-  ? await chromium.launchPersistentContext(options.profile, { ...launchOptions, viewport: null }).catch((error) => {
-      // Chromium locks a profile to one process; the usual cause is the previous session's window.
-      if (/already in use/.test(error.message)) {
-        console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
-        process.exit(1);
-      }
-      throw error;
-    })
+  ? await chromium
+      .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+      .catch((error) => {
+        // Chromium locks a profile to one process; the usual cause is the previous session's window.
+        if (/already in use/.test(error.message)) {
+          console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
+          process.exit(1);
+        }
+        throw error;
+      })
   : await browser.newContext({
       viewport,
       deviceScaleFactor: scale,
+      colorScheme: options.theme,
       recordVideo: hires ? undefined : { dir: options.out, size: viewport },
     });
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = context.pages()[0] ?? (await context.newPage());
+page.setDefaultTimeout(options['action-timeout']);
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -267,6 +281,26 @@ const describe = async (target, command) => {
   return summarize(name || command.text || command.selector, 60);
 };
 
+let lastGesture = 0;
+
+/**
+ * Holds a gesture until `--cadence` has passed since the previous one, so back-to-back clicks read as a
+ * person's rather than a script's; a gesture after a long wait goes at once. Off-camera gestures skip it.
+ */
+const cadence = async (command) => {
+  if (command.hud === false) {
+    return;
+  }
+  const wait = (command.cadence ?? options.cadence) - (Date.now() - lastGesture);
+  if (wait > 0) {
+    await page.waitForTimeout(wait);
+  }
+};
+
+const gestured = () => {
+  lastGesture = Date.now();
+};
+
 /**
  * Cursor and ripple go up first, then a beat, then the click: the viewer's eye has to reach the target
  * before its effect replaces it.
@@ -275,7 +309,7 @@ const pointAt = async (target, command, kind) => {
   if (command.hud === false) {
     return;
   }
-  const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+  const box = await target.boundingBox({ timeout: command.timeout ?? options['action-timeout'] }).catch(() => null);
   // No box means no element yet; probing it for a name would wait out the default timeout first.
   const label = box
     ? await describe(target, command)
@@ -328,7 +362,23 @@ let booted = false;
  * The flow script `run` last executed and the 0-based index of its next step, so a bare `run` resumes
  * where the previous one stopped — "carry on" needs no bookkeeping from the caller.
  */
-const flow = { file: undefined, next: 0, aborted: false };
+const flow = { file: undefined, next: 0, aborted: false, interrupt: undefined };
+
+class Aborted extends Error {}
+
+/**
+ * Races a step against `abort`, so a step blocked on a long wait (an agent run can take many minutes)
+ * stops now rather than when its wait expires; the abandoned wait times out on its own later.
+ */
+const interruptible = (promise) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      flow.interrupt = () => reject(new Aborted('aborted'));
+    }),
+  ]).finally(() => {
+    flow.interrupt = undefined;
+  });
 
 const slug = (text) =>
   String(text)
@@ -390,28 +440,36 @@ const handlers = {
   cut: () => cut(),
   click: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'click');
-    await target.click({ timeout: command.timeout ?? 15_000, button: command.button ?? 'left' });
+    await target.click({ timeout: command.timeout ?? options['action-timeout'], button: command.button ?? 'left' });
+    gestured();
     return {};
   },
   fill: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'type');
-    await target.fill(command.value, { timeout: command.timeout ?? 15_000 });
+    await target.fill(command.value, { timeout: command.timeout ?? options['action-timeout'] });
+    gestured();
     return {};
   },
   type: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'type');
     await target.pressSequentially(command.value, { delay: command.delay ?? 60 });
+    gestured();
     return {};
   },
   /** The entry goes up first so the chord and the key's effect share frames. */
   press: async (command) => {
+    await cadence(command);
     if (command.hud !== false) {
       await overlay.event({ kind: 'key', label: keyLabel(command.key), keys: true });
     }
     await page.keyboard.press(command.key);
+    gestured();
     return {};
   },
   keys: async (command) => {
@@ -420,12 +478,16 @@ const handlers = {
   },
   hover: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     const box =
-      command.hud === false ? null : await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+      command.hud === false
+        ? null
+        : await target.boundingBox({ timeout: command.timeout ?? options['action-timeout'] }).catch(() => null);
     if (box) {
       await overlay.moveCursor({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
     }
-    await target.hover({ timeout: command.timeout ?? 15_000 });
+    await target.hover({ timeout: command.timeout ?? options['action-timeout'] });
+    gestured();
     return {};
   },
   /**
@@ -437,6 +499,7 @@ const handlers = {
     const from = command.fromXY ?? (await center(command.from));
     const to = command.toXY ?? (await center(command.to));
     const visible = command.hud !== false;
+    await cadence(command);
     if (visible) {
       await overlay.click(from);
       await overlay.event({
@@ -458,6 +521,7 @@ const handlers = {
       await page.waitForTimeout(command.stepDelay ?? 16);
     }
     await page.mouse.up();
+    gestured();
     if (visible) {
       await overlay.click(to);
     }
@@ -612,11 +676,14 @@ const handlers = {
       }
       const step = steps[index];
       try {
-        await step.run({ page, demo });
+        await interruptible(step.run({ page, demo }));
         results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
         flow.next = index + 1;
       } catch (error) {
         flow.next = index;
+        if (error instanceof Aborted) {
+          return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
+        }
         results.push({
           step: index + 1,
           name: step.name,
@@ -632,9 +699,10 @@ const handlers = {
     }
     return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
   },
-  /** Takes effect between steps; the step in flight finishes first. */
+  /** Stops the step in flight at once and leaves `next` on it, so a bare `run` retries it. */
   abort: () => {
     flow.aborted = true;
+    flow.interrupt?.();
     return {};
   },
   /** Loads a script without running it: its step names, and which one a bare `run` starts from. */

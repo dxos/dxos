@@ -79,7 +79,7 @@ over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the
 between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
 run, edit the script when the user steers, and read the result.
 
-Copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per QA step. Each step
+Flows that have been run end to end live in `flows/` (`composer-plugin.mjs`: the agent builds and loads the Space Clock plugin); run one in place or copy it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per QA step. Each step
 gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
 and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
 wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
@@ -89,7 +89,7 @@ C '{"op":"steps","file":"/tmp/demo/flow.mjs"}'   # numbered step names; `next` i
 C '{"op":"run","until":4}'                         # runs from `next` through step 4, then stops
 C '{"op":"run"}'                                   # carries on to the end
 C '{"op":"run","from":3,"until":3}'                # re-runs step 3 alone
-C '{"op":"abort"}'                                 # stops the run in flight, between steps
+C '{"op":"abort"}'                                 # stops the run now, mid-step; `next` stays on that step
 ```
 
 - **`run` re-imports the file every time.** Edit the script and run again; the browser and the
@@ -272,13 +272,16 @@ are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x21
 viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
 encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
 
-| flag        | default | effect                                                                                                     |
-| ----------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `--scale`   | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                           |
-| `--width`   | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look |
-| `--crf`     | `28`    | VP9 quality, lower is better and larger                                                                    |
-| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                          |
-| `--quality` | `92`    | JPEG quality of the screencast frames                                                                      |
+| flag               | default | effect                                                                                                                            |
+| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--scale`          | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
+| `--width`          | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
+| `--crf`            | `28`    | VP9 quality, lower is better and larger                                                                                           |
+| `--fps`            | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
+| `--quality`        | `92`    | JPEG quality of the screencast frames                                                                                             |
+| `--theme`          | `dark`  | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
+| `--action-timeout` | `5000`  | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
+| `--cadence`        | `600`   | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
