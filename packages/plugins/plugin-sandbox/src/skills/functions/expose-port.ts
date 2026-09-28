@@ -11,7 +11,7 @@ import { SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.ExposePort.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sandbox, port }) {
+    Effect.fn('SandboxExposePort')(function* ({ sandbox, port }) {
       const { db } = yield* Database.Service;
       const loaded = yield* Database.load(sandbox);
       const sandboxService = yield* SandboxService.Service;
