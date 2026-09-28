@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { sizeRow } from '../../testing.ts';
+import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 
 const DefaultStory = () => (
   <Next.Collapsible.Root>
@@ -52,6 +52,14 @@ export const Test: Story = {
     const trigger = canvas.getByRole('button', { name: 'Advanced settings' });
     const content = canvas.getByTestId('content');
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    // Hover recolours the text and leaves the row unfilled.
+    const rest = getComputedStyle(trigger);
+    const [restColor, restBackground] = [rest.color, rest.backgroundColor];
+    await realHover(trigger);
+    await waitFor(() => expect(getComputedStyle(trigger).color).not.toBe(restColor));
+    await expect(getComputedStyle(trigger).backgroundColor).toBe(restBackground);
+    await realUnhover(trigger);
     await expect(content).not.toBeVisible();
 
     // The trigger is a block row.
