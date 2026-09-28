@@ -81,7 +81,7 @@ const loadCounterFont = async () => {
     document.head.append(link);
     await Promise.race([loaded, sleep(1_500)]);
   }
-  await Promise.race([document.fonts.load(`132px "${COUNTER_FONT}"`, '0123456789').catch(() => []), sleep(1_500)]);
+  await Promise.race([document.fonts.load(`120px "${COUNTER_FONT}"`, '0123456789').catch(() => []), sleep(1_500)]);
 };
 
 /**
