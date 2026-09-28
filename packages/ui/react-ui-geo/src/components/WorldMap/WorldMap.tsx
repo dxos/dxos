@@ -57,7 +57,9 @@ export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onVie
     } else if (location) {
       // Turned about the axis to the marker's meridian and kept level on the equator, so the move reads
       // as the earth spinning. A newer selection interrupts this one, which rejects; that is expected.
-      controller.flyTo({ lat: 0, lng: location.lng }, { path: 'axis' }).catch(() => {});
+      controller
+        .flyTo({ lat: 0, lng: location.lng }, { path: 'axis', duration: 600, msPerRadian: 400 })
+        .catch(() => {});
     }
   }, [controller, view, location?.lat, location?.lng]);
 

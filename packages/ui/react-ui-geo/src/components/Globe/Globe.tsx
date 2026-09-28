@@ -331,7 +331,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
       setTranslation,
       setRotation,
       flyTo: (target, options = {}) => {
-        const { duration = 1_200, tilt = 0, onTick, path = 'arc' } = options;
+        const { duration = 1_200, msPerRadian = 1_500, tilt = 0, onTick, path = 'arc' } = options;
         const p2 = geoToPosition(target);
         const r1 = projection.rotate() as Vector;
         const r2 = positionToRotation(p2, tilt);
@@ -347,7 +347,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
         const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
 
         flyToSelection.interrupt(flyToTransitionName);
-        const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, 1_500));
+        const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, msPerRadian));
         if (onTick) {
           tx.tween('flyToOnTick', () => onTick);
         }

@@ -41,6 +41,8 @@ export type GlobeContextType = {
 export type FlyToOptions = {
   /** Base duration in ms (scales with great-circle distance). */
   duration?: number;
+  /** Milliseconds per radian of arc added to `duration` for longer moves (default 1500). */
+  msPerRadian?: number;
   /** Optional pitch offset applied along the latitude axis of the target. */
   tilt?: number;
   /**
