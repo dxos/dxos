@@ -20,13 +20,15 @@
  */
 
 /**
- * Installed with `executeScript`, idempotent. Self-contained, since it is serialized into the page.
+ * Installed with `executeScript`, idempotent per `version`. Self-contained, since it is serialized into the page.
  * Exposes `window.__autocueQuery(selector, scope?)`, which answers the matching elements in document order.
  */
-export const installSelectors = () => {
-  if (window.__autocueQuery) {
+export const installSelectors = (version) => {
+  // Keyed by the engine's own source, so an edited engine replaces the copy a long-lived page already holds.
+  if (window.__autocueQuery && window.__autocueVersion === version) {
     return;
   }
+  window.__autocueVersion = version;
 
   const CUSTOM = new Set(['visible', 'has-text', 'text', 'text-is', 'has']);
 
@@ -143,9 +145,10 @@ export const installSelectors = () => {
         native += char;
         continue;
       }
-      if (char === '[') {
+      // Brackets and parentheses alike: `:not(.a .b)` and `:nth-child(2n + 1)` hold no combinator of this compound.
+      if (char === '[' || char === '(') {
         depth++;
-      } else if (char === ']') {
+      } else if (char === ']' || char === ')') {
         depth--;
       }
       if (depth === 0 && char === ':' && text[index + 1] !== ':') {
@@ -335,6 +338,21 @@ export const installSelectors = () => {
     return textOf(element) || normalize(element.getAttribute('title') ?? element.getAttribute('placeholder') ?? '');
   };
 
+  /**
+   * Playwright's `role=` skips what assistive technology cannot see — here the native `<select>` a styled combobox
+   * keeps hidden behind itself, whose options would otherwise match before the visible ones.
+   */
+  const isHiddenForAria = (element) => {
+    if (element.closest('[aria-hidden="true"], [hidden], [inert]')) {
+      return true;
+    }
+    if (getComputedStyle(element).visibility === 'hidden') {
+      return true;
+    }
+    const owner = element instanceof HTMLOptionElement ? element.closest('select') : undefined;
+    return (owner ?? element).getClientRects().length === 0;
+  };
+
   const queryRole = (raw, roots) => {
     const match = /^([a-z]+)(.*)$/s.exec(raw.trim());
     if (!match) {
@@ -346,6 +364,9 @@ export const installSelectors = () => {
     ].map(([, name, value, flag]) => ({ name, value: value === undefined ? undefined : parseText(value).text, flag }));
     const css = `[role="${role}"]${IMPLICIT_ROLES[role] ? `,${IMPLICIT_ROLES[role]}` : ''}`;
     return queryCss(css, roots).filter((element) => {
+      if (isHiddenForAria(element)) {
+        return false;
+      }
       const explicit = element.getAttribute('role');
       if (explicit && explicit !== role) {
         return false;

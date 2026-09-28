@@ -179,6 +179,10 @@ const native = tauri
   : undefined;
 if (native) {
   options.url = new URL(native.page.url()).origin;
+  // `about:blank` or a custom scheme has an opaque origin, and a `restart` would navigate to "null".
+  if (options.url === 'null') {
+    throw new Error(`the app did not load an http origin (at ${native.page.url()})`);
+  }
 }
 
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.

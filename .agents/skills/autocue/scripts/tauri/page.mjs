@@ -15,6 +15,7 @@
  * Playwright's are lazy. Waits poll in short in-page slices, so a navigation or a slow script costs one slice.
  */
 
+import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 
 import { installSelectors } from './selectors.mjs';
@@ -72,8 +73,10 @@ const chordKeys = (chord) =>
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Where a locator's steps are resolved to elements, in the page; installs the selector engine first. */
+const ENGINE = installSelectors.toString();
+
 const RESOLVE = `
-  (${installSelectors.toString()})();
+  (${ENGINE})(${JSON.stringify(createHash('sha1').update(ENGINE).digest('hex'))});
   const resolve = (steps) => {
     let current = [document];
     let scoped = false;
@@ -114,7 +117,10 @@ const asyncScript = (body) => `
   };
   Promise.resolve()
     .then(async () => { ${body} })
-    .then((value) => done({ ok: true, value: clone(value) }), (error) => done({ ok: false, error: String(error?.stack ?? error) }));
+    .then(
+      (value) => done({ ok: true, value: clone(value), url: location.href }),
+      (error) => done({ ok: false, error: String(error?.stack ?? error), url: location.href }),
+    );
 `;
 
 /** In the page: polls `check(elements)` until truthy or `ms` passes; answers the last result. */
@@ -141,6 +147,10 @@ export const createTauriPage = ({ session }) => {
 
   const run = async (body, arg) => {
     const result = await session.executeAsync(asyncScript(body), [arg ?? null]);
+    // Every call reports where the page is, so `url()` follows the app's own navigation without a round trip.
+    if (result?.url) {
+      page.currentUrl = result.url;
+    }
     if (!result?.ok) {
       throw new EvaluateError(result?.error ?? 'script failed');
     }
@@ -167,7 +177,9 @@ export const createTauriPage = ({ session }) => {
   const typeText = async (text, delay = 0) => {
     const actions = [];
     for (const char of text) {
-      actions.push({ type: 'keyDown', value: char }, { type: 'keyUp', value: char });
+      // As Playwright types them: a newline is Enter and a tab is Tab, not the raw control characters.
+      const value = char === '\n' ? KEYS.Enter : char === '\t' ? KEYS.Tab : char;
+      actions.push({ type: 'keyDown', value }, { type: 'keyUp', value });
       if (delay > 0) {
         actions.push({ type: 'pause', duration: delay });
       }
@@ -206,7 +218,7 @@ export const createTauriPage = ({ session }) => {
     }
 
     getByTestId(id) {
-      return this.#with({ selector: `[data-testid="${id}"]` });
+      return this.#with({ selector: `[data-testid=${JSON.stringify(id)}]` });
     }
 
     getByText(text, { exact = false } = {}) {
@@ -277,9 +289,16 @@ export const createTauriPage = ({ session }) => {
               reason = 'disabled'; return null;
             }
             let rect = element.getBoundingClientRect();
-            if (rect.bottom < 0 || rect.right < 0 || rect.top > innerHeight || rect.left > innerWidth) {
+            // The pointer goes to the center, so that is what must be on screen; a partly visible row is not enough.
+            const offscreen = (box) => {
+              const cx = box.left + box.width / 2;
+              const cy = box.top + box.height / 2;
+              return cx < 0 || cy < 0 || cx >= innerWidth || cy >= innerHeight;
+            };
+            if (offscreen(rect)) {
               element.scrollIntoView({ block: 'center', inline: 'center' });
               rect = element.getBoundingClientRect();
+              if (offscreen(rect)) { reason = 'outside the viewport'; return null; }
             }
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
@@ -290,6 +309,15 @@ export const createTauriPage = ({ session }) => {
             }
             return { x, y };
           });
+          if (point) {
+            // Stable, as Playwright requires: a list still animating in moves the target between aim and click.
+            const before = resolve(arg.steps)[0]?.getBoundingClientRect();
+            await new Promise((next) => requestAnimationFrame(() => requestAnimationFrame(next)));
+            const after = resolve(arg.steps)[0]?.getBoundingClientRect();
+            if (!before || !after || before.x !== after.x || before.y !== after.y || before.width !== after.width) {
+              return { reason: 'not stable' };
+            }
+          }
           return point ?? { reason };`,
           { steps: this.steps, enabled },
           deadline,

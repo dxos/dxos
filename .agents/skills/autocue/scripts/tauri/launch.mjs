@@ -25,7 +25,7 @@ import { createSession } from './webdriver.mjs';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const which = (command) => {
-  const result = spawnSync('sh', ['-c', `command -v ${command}`], { encoding: 'utf8' });
+  const result = spawnSync('which', [command], { encoding: 'utf8' });
   return result.status === 0 ? result.stdout.trim() : undefined;
 };
 
@@ -124,6 +124,9 @@ export const launchTauri = async ({ app, width, height, scale, theme, port, head
     const lock = `/tmp/.X${display.slice(1)}-lock`;
     for (let attempt = 0; attempt < 50 && !existsSync(lock); attempt++) {
       await sleep(100);
+    }
+    if (!existsSync(lock)) {
+      throw new Error(`Xvfb did not start on ${display}`);
     }
   }
 

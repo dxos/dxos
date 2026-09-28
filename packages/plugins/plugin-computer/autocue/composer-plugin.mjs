@@ -205,6 +205,16 @@ export const steps = [
       const model = page.locator('role=combobox[name="Remote language model"]').first();
       for (let attempt = 0; attempt < 3; attempt++) {
         await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
+        // The desktop app opens its settings on the App page (updates), not the Assistant's.
+        const assistant = page.locator('[data-testid="deck.sidebar"] >> text="Assistant"').first();
+        if (
+          await assistant.waitFor({ state: 'visible', timeout: 3_000 }).then(
+            () => true,
+            () => false,
+          )
+        ) {
+          await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Assistant" >> nth=0', hud: false });
+        }
         if (
           await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
             () => true,

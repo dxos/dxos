@@ -39,6 +39,9 @@ let observability: ReturnType<typeof initializeObservability> | undefined;
  * Nothing survives a reload; it is for demos and automated runs, never a shipped build.
  */
 const sqliteLayer = import.meta.env.VITE_DX_STORAGE === 'memory' ? layerMemory : undefined;
+if (sqliteLayer) {
+  log.warn('database is in memory (VITE_DX_STORAGE=memory): nothing survives a reload');
+}
 
 runDedicatedWorker({
   sqliteLayer,

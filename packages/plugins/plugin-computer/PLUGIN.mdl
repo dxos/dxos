@@ -232,7 +232,7 @@ test QA-3: Build a plugin with an agent in the desktop app
       do: Watch the subtasks tick off.
       expect: |
         a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
-        URL is `http://127.0.0.1:<port>/files/<key>/manifest.json`
+        URL is `http://localhost:<port>/files/<key>/manifest.json`
     - name: Load and enable the plugin
       do: As QA-2 steps 10 and 11.
       expect: World Clock loads from the sandbox's published directory and activates from Labs

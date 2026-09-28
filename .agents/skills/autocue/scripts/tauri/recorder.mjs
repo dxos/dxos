@@ -58,6 +58,11 @@ export const startX11Recorder = async ({ display, dir, file, size, fps, crf }) =
   grab.on('exit', () => {
     exited = true;
   });
+  // A missing ffmpeg or x11grab is a recording lost, not a reason to take the driver down with it.
+  grab.on('error', (error) => {
+    exited = true;
+    console.error(`x11grab failed: ${error.message}`);
+  });
 
   const stop = async () => {
     const stoppedMs = Date.now() - started;
@@ -94,6 +99,7 @@ export const startX11Recorder = async ({ display, dir, file, size, fps, crf }) =
       file,
     ]);
     encoder.stderr.pipe(process.stderr);
+    encoder.on('error', (error) => console.error(`encoder failed: ${error.message}`));
     const [code] = await once(encoder, 'close');
     if (code !== 0) {
       throw new Error(`ffmpeg exited ${code}; the raw capture is kept at ${capture}`);

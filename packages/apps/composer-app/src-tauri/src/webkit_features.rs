@@ -4,6 +4,10 @@
 //! WebKitGTK compiles both the Storage API and the File System API in but leaves them disabled by default,
 //! so the client fails to open (`navigator.storage` is undefined). They are runtime features, switched on per
 //! webview through `WebKitSettings` — an API newer (2.42) than the `webkit2gtk` crate's bindings, hence FFI.
+//! The symbols are linked directly, so the Linux build needs WebKitGTK 2.42 or later at run time.
+//!
+//! This is necessary, not sufficient: WebKitGTK still cannot hand a worker an OPFS sync access handle, which the
+//! client's SQLite store needs, so a Linux bundle also needs `VITE_DX_STORAGE=memory` (see the app's worker).
 
 use std::ffi::{c_char, c_void, CStr};
 

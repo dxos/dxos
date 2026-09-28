@@ -339,9 +339,22 @@ pub fn run() {
                     use webkit2gtk::WebViewExt;
                     let view = webview.inner();
                     webkit_features::enable(&view);
-                    // The first load began under the defaults; restart it with the features on. Through
-                    // WebKit, not `navigate`, which dispatches to this (main) thread and would wait on itself.
+                    // Through WebKit, not `navigate`, which dispatches to this (main) thread and would wait on itself.
                     view.reload();
+                    // Tauri's termination hook is macOS-only; without this a dead WebContent process freezes the window.
+                    let last_reload = std::cell::Cell::new(None::<std::time::Instant>);
+                    view.connect_web_process_terminated(move |view, reason| {
+                        web_process::record(MAIN_WINDOW_LABEL, true);
+                        // A page that dies again within a minute of its reload would only crash-loop.
+                        let recent = last_reload.get().is_some_and(|at| at.elapsed() < std::time::Duration::from_secs(60));
+                        if recent {
+                            log::error!("web process terminated again ({reason:?}); not reloading");
+                            return;
+                        }
+                        log::warn!("web process terminated ({reason:?}); reloading");
+                        last_reload.set(Some(std::time::Instant::now()));
+                        view.reload();
+                    });
                 })?;
 
                 if let Some(saved_state) = WindowState::load(&app.handle()) {

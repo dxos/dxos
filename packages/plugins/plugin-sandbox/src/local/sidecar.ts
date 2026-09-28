@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { type Readable, type Writable } from 'node:stream';
 
@@ -20,10 +21,16 @@ const DESKTOP_PATH = ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin',
 const MIN_TOKEN_LENGTH = 32;
 
 /**
- * Host directories, `:`-separated, that commands may read although they sit under the user's home — how a
- * dev build lets an agent build against the Composer source tree it came from.
+ * Source trees, `:`-separated, whose build inputs ({@link buildTree}) commands may read although they sit under
+ * the user's home — how a dev build lets an agent build against the Composer source tree it came from.
  */
 export const ALLOW_READ_ENV = 'DX_SANDBOX_ALLOW_READ';
+
+/**
+ * The parts of a source tree a plugin build reads — dependencies, package sources and builds, and the docs —
+ * rather than the whole tree, whose root holds `.secrets/`, `.git/` and `.claude/`.
+ */
+const buildTree = (root: string): string[] => ['node_modules', 'packages', 'docs'].map((dir) => join(root, dir));
 
 export type SidecarOptions = {
   input: Readable;
@@ -46,7 +53,7 @@ export const runSidecar = async ({ input, output, env }: SidecarOptions): Promis
   }
 
   const path = [...new Set([...(env.PATH ?? '').split(':').filter(Boolean), ...DESKTOP_PATH])].join(':');
-  const allowRead = (env[ALLOW_READ_ENV] ?? '').split(':').filter(Boolean);
+  const allowRead = (env[ALLOW_READ_ENV] ?? '').split(':').filter(Boolean).flatMap(buildTree);
   const backend = new LocalSandboxBackend({ root: env.DX_SANDBOX_ROOT, path, allowRead });
   const server = await serve({ backend, token });
   output.write(`${JSON.stringify({ port: server.port })}\n`);

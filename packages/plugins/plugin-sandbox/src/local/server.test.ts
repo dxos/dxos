@@ -119,6 +119,12 @@ describe.skipIf(unavailable)('local sandbox server', { timeout: 60_000 }, () => 
       const unknown = yield* Effect.promise(() => fetch(`${url}/files/${'0'.repeat(32)}/index.mjs`));
       expect(unknown.status).toBe(404);
 
+      // A symlink the sandbox itself wrote must not carry a host file out through the published URL.
+      yield* remote.exec(SPACE_ID, 'sbx2', { command: 'ln -s /etc/hostname site/dist/leak' });
+      const leak = yield* Effect.promise(() => fetch(`${base}leak`));
+      expect(leak.status).toBe(404);
+      expect(module.headers.get('x-content-type-options')).toBe('nosniff');
+
       const error = yield* publish(SPACE_ID, 'sbx2', 'site/secret.txt').pipe(Effect.flip);
       expect(error.message).toMatch(/not a directory/);
     }),

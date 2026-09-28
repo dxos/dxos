@@ -96,7 +96,7 @@ const handle = async (
     request.headers['access-control-request-headers'] ?? 'authorization, content-type',
   );
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.setHeader('Vary', 'Origin');
+  response.setHeader('Vary', 'Origin, Access-Control-Request-Headers');
   if (request.method === 'OPTIONS') {
     send(response, 204);
     return;
@@ -159,12 +159,10 @@ const publish = (
 /** Content types a module loader insists on; anything else keeps the type the backend sniffed. */
 const CONTENT_TYPES: Record<string, string> = {
   '.css': 'text/css',
-  '.html': 'text/html',
   '.js': 'text/javascript',
   '.json': 'application/json',
   '.map': 'application/json',
   '.mjs': 'text/javascript',
-  '.svg': 'image/svg+xml',
   '.wasm': 'application/wasm',
 };
 
@@ -196,7 +194,10 @@ const serveFile = async (
   }
   response.statusCode = 200;
   response.setHeader('Content-Type', CONTENT_TYPES[posix.extname(relative)] ?? exit.value.type);
-  // A rebuilt plugin is republished under the same key; a cached copy would load the last build.
+  // This origin is same-site with the app's, so nothing served here may run as a document of its own.
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('Content-Security-Policy', 'sandbox');
+  // A rebuild rewrites the files behind the same URL; a cached copy would load the last build.
   response.setHeader('Cache-Control', 'no-store');
   response.end(Buffer.from(exit.value.bytes));
 };

@@ -336,6 +336,16 @@ node .agents/skills/autocue/scripts/driver.mjs --target tauri --out /tmp/demo
 - **The app keeps a profile** (`~/.local/share/org.dxos.composer`), like manual mode's Chromium profile: its
   identity and spaces carry over between runs. Delete that directory for a first-run take.
 - `--app <binary>` drives another build; `--driver-port` moves tauri-driver off 4444.
+- **Bundle with `VITE_DX_STORAGE=memory` for Linux.** WebKitGTK cannot hand a worker an OPFS sync access
+  handle (its file-handle IPC is Cocoa-only), so Composer's SQLite store cannot open there and the app stops
+  at a System Error. The app switches the needed WebKit features on itself (`src-tauri/src/webkit_features.rs`),
+  but the handle is not a feature. With the memory store every launch — and every reload — is a new identity;
+  only localStorage (plugin settings, layout) persists, so a flow that reloads re-selects the first space.
+- **Nothing on Xvfb may disable the DMA-BUF renderer.** `WEBKIT_DISABLE_DMABUF_RENDERER=1` makes the app
+  segfault in `AcceleratedBackingStore::update` on the first composited frame; the launcher sets
+  `LIBGL_ALWAYS_SOFTWARE=1` instead. For a crash, run the app under `gdb` via a wrapper passed as `--app`,
+  with `libwebkit2gtk-4.1-0-dbgsym` from `ddebs.ubuntu.com` for symbols.
+- **Restart the driver after editing `scripts/tauri/*`**: the adapter loads once. Flow scripts reload per `run`.
 
 ## 2. Start the driver
 
