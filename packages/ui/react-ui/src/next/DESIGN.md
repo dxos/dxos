@@ -427,6 +427,20 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `--surface-bg`, so the arrow (which paints `--surface-bg`) needs no rule of its own. Tooltip `Test` asserts the fill
     and text match the tokens' computed colours and differ from `--dx-surface-popup`; `expectArrow` checks the arrow.
 
+51. **`SystemButton` presets** port `SystemIconButton` (`Add`, `Ai`, `Bookmark`, `Clipboard`, `Close`, `Delete`,
+    `Disclosure`, `Download`, `Edit`, `Mic`, `Star`, `Upload`) as `Next.SystemButton.*`: every preset is an icon-only
+    `Next.Button` (or `Next.Toggle` for Star and Bookmark), so it takes Button's variant, valence, hue and Tooltip
+    props but not `icon` or `iconOnly`. Labels default from react-ui's `system-button.*` translations via
+    `useTranslation(translationKey)` — the first i18n in Next, so a story needs `parameters: { translations }` —
+    and `label` overrides them. Star and Bookmark take Toggle's `pressed`/`defaultPressed`/`onPressedChange` and own
+    the state (`useControllableState`) because the label, not only the icon, follows it. Disclosure is a Button with
+    `aria-expanded` (`expanded`/`defaultExpanded`/`onExpandedChange`) and swaps caret-right for caret-down, since
+    Next has no rotation (15). Colour classes became a `data-icon-valence` rule (`theme/system-button.css`): a
+    pressed Star's glyph takes `--color-warning-text` and a landed copy's check `--color-success-text`; a recording
+    Mic takes `hue='error'`. Clipboard is always icon-only, so its label always swaps to "Copied"; Mic keeps a
+    required `label`, there being no translation for it. `SystemButton` `Test` covers names, geometry against a
+    plain `Button iconOnly`, the toggles, `aria-expanded` and a stubbed clipboard write.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

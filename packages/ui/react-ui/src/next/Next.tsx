@@ -52,6 +52,8 @@ import {
   type SeparatorProps as NextSeparatorProps,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
+  SystemButton as NextSystemButton,
+  type SystemButtonProps as NextSystemButtonProps,
   Tag as NextTag,
   type TagHue as NextTagHue,
   type TagProps as NextTagProps,
@@ -107,6 +109,8 @@ export namespace Next {
   export const AlertDialog = NextAlertDialog;
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
+  export const SystemButton = NextSystemButton;
+  export type SystemButtonProps = NextSystemButtonProps;
   export const FieldSet = NextFieldSet;
   export const Image = NextImage;
   export type ImageProps = NextImageProps;

@@ -25,6 +25,7 @@ export * from './ScrollArea/index.ts';
 export * from './Select/index.ts';
 export * from './Separator/index.ts';
 export * from './Switch/index.ts';
+export * from './SystemButton/index.ts';
 export * from './Tag/index.ts';
 export * from './Textarea/index.ts';
 export * from './Toggle/index.ts';

@@ -1,0 +1,13 @@
+/*
+ * SystemButton: a preset's glyph takes a valence's text colour (a pressed Star, a landed copy) over the button's own
+ * fill, in place of the current presets' Tailwind colour classes.
+ */
+
+@layer dx-components {
+  .nx-button[data-icon-valence='warning'] > .nx-icon {
+    color: var(--color-warning-text);
+  }
+  .nx-button[data-icon-valence='success'] > .nx-icon {
+    color: var(--color-success-text);
+  }
+}
