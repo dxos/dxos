@@ -23,6 +23,7 @@ import {
   type ContainerGap as NextContainerGap,
   type ContainerProps as NextContainerProps,
   DateInput as NextDateInput,
+  type DateInputGranularity as NextDateInputGranularity,
   type DateInputProps as NextDateInputProps,
   type DateInputType as NextDateInputType,
   Dialog as NextDialog,
@@ -44,6 +45,12 @@ import {
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
   Menu as NextMenu,
+  NumberInput as NextNumberInput,
+  type NumberInputProps as NextNumberInputProps,
+  PasswordInput as NextPasswordInput,
+  type PasswordInputProps as NextPasswordInputProps,
+  PinInput as NextPinInput,
+  type PinInputProps as NextPinInputProps,
   Popover as NextPopover,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
@@ -127,6 +134,13 @@ export namespace Next {
   export const DateInput = NextDateInput;
   export type DateInputProps = NextDateInputProps;
   export type DateInputType = NextDateInputType;
+  export type DateInputGranularity = NextDateInputGranularity;
+  export const PinInput = NextPinInput;
+  export type PinInputProps = NextPinInputProps;
+  export const NumberInput = NextNumberInput;
+  export type NumberInputProps = NextNumberInputProps;
+  export const PasswordInput = NextPasswordInput;
+  export type PasswordInputProps = NextPasswordInputProps;
   export const Popover = NextPopover;
   export const Combobox = NextCombobox;
   export type ComboboxOption = NextComboboxOption;
