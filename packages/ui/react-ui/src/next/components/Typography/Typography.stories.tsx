@@ -85,8 +85,9 @@ export const Test: Story = {
       await expect(getComputedStyle(truncated).textOverflow).toBe('ellipsis');
       const description = byTestId(canvasElement, `description-${size}`);
       await expect(getComputedStyle(description).color).not.toBe(getComputedStyle(truncated).color);
-      await expect(description.getBoundingClientRect().right).toBeLessThanOrEqual(
-        sizeRow(canvasElement, size).getBoundingClientRect().right,
+      // The row keeps both columns inside the content track, clear of the end rail.
+      await expect(description.getBoundingClientRect().right, size).toBeLessThanOrEqual(
+        sizeRow(canvasElement, size).getBoundingClientRect().right - GEOMETRY[size].block + 0.5,
       );
     }
 
