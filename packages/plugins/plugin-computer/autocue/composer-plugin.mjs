@@ -80,6 +80,9 @@ const showSidebar = async ({ demo, page }, testId, label) => {
   await demo.click({ selector: `[data-testid="${testId}"]`, ...(label ? { label } : { hud: false }) });
 };
 
+/** The type the plugin stores its timezones in, as the guide defines it. */
+const CLOCK_TYPE = 'org.example.type.worldClock';
+
 /** Timezones added on camera, beside the local one the page starts with. */
 const TIMEZONES = ['Asia/Tokyo', 'Europe/London'];
 
@@ -108,18 +111,23 @@ export const steps = [
         { timeout: 60_000 },
       );
       await page.evaluate(
-        async ({ tab, names }) => {
+        async ({ tab, names, CLOCK_TYPE }) => {
           const spaceId = document.querySelector(tab).dataset.value.split('/').pop();
           const projects = await dxos
             .spaces(spaceId)
             .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
             .run();
-          const objects = projects.filter((project) => names.includes(project.name));
+          // The last take's clocks go too, so this one starts from the local timezone alone.
+          const clocks = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make(CLOCK_TYPE)))
+            .run();
+          const objects = [...projects.filter((project) => names.includes(project.name)), ...clocks];
           if (objects.length > 0) {
             await composer.invoke('org.dxos.operation.space.removeObjects', { objects }, { spaceId });
           }
         },
-        { tab: SPACE_TAB, names: LEFTOVER_PROJECTS },
+        { tab: SPACE_TAB, names: LEFTOVER_PROJECTS, CLOCK_TYPE },
       );
     },
   },
@@ -231,6 +239,24 @@ export const steps = [
         .getAttribute('data-attendable-id');
       if (plank) {
         await writeFile(TAKE_PROJECT, plank.split('/').at(-1) ?? '');
+      }
+
+      // The project opens as a folder in the navtree, so the viewer sees what it holds as the run fills it.
+      // Matched on the row's own heading: a parent item's text includes its children's.
+      const row = `[data-testid="deck.sidebar"] [data-part="branch-control"]:has(> * > [data-testid="treeItem.heading"] span:text-is("${PROJECT_TITLE}"))`;
+      await page.locator(row).first().waitFor({ state: 'attached', timeout: 10_000 });
+      if ((await page.locator(row).first().getAttribute('data-state')) !== 'open') {
+        if (!(await page.locator(row).first().isVisible())) {
+          await demo.click({ selector: 'button:visible:has-text("Open sidebar")', label: 'Open sidebar' });
+        }
+        // The toggle stays disabled until the project's children have loaded.
+        const toggle = `${row} >> [data-testid="treeItem.toggle"] >> nth=0`;
+        await page
+          .locator(`${row} >> [data-testid="treeItem.toggle"]:not([disabled])`)
+          .first()
+          .waitFor({ timeout: 15_000 });
+        await demo.click({ selector: toggle, label: 'Open project' });
+        await page.locator(`${row}[data-state="open"]`).first().waitFor({ timeout: 5_000 });
       }
     },
   },
@@ -398,6 +424,8 @@ export const steps = [
   {
     name: 'Add two timezones',
     run: async ({ demo, page }) => {
+      const clocks = page.getByTestId('worldClock.clock');
+      const start = await clocks.count();
       for (const [index, timezone] of TIMEZONES.entries()) {
         await demo.click({ selector: '[data-testid="worldClock.add"]', label: 'Add clock' });
         await demo.click({ selector: '[data-testid="worldClock.new"] >> role=combobox', label: 'Timezone' });

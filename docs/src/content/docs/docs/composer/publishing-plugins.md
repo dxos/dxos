@@ -469,28 +469,39 @@ Surface.create({
 });
 ```
 
-Query the type, create the object on first view, and change it with `Obj.update`:
+Query the type, subscribe to the fields you render with `useObject`, and change the object with `Obj.update`:
 
 ```tsx
+import { useObject, useQuery } from '@dxos/echo-react';
+
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   const [clock] = useQuery(db, Filter.type(Clock));
-  useEffect(() => {
-    if (db && !clock) {
-      db.add(
-        Obj.make(Clock, {
-          timezones: [Intl.DateTimeFormat().resolvedOptions().timeZone],
-        }),
-      );
+  const [stored] = useObject(clock, 'timezones');
+  const timezones = stored ?? [localZone()];
+  const save = (next: string[]) => {
+    if (clock) {
+      Obj.update(clock, (clock) => {
+        clock.timezones = next;
+      });
+    } else {
+      db?.add(Obj.make(Clock, { timezones: next }));
     }
-  }, [db, clock]);
+  };
   const add = (timezone: string) =>
-    clock &&
-    Obj.update(clock, (clock) => {
-      clock.timezones = [...(clock.timezones ?? []), timezone];
-    });
+    !timezones.includes(timezone) && save([...timezones, timezone]);
+  const remove = (timezone: string) =>
+    save(timezones.filter((zone) => zone !== timezone));
   // ...
 };
 ```
+
+- `useQuery` re-renders when the set of objects changes, not when a field of one changes; without `useObject`
+  an update is saved but the view never shows it.
+- Create the object on the first change, not in an effect on first view: the query is empty until it has
+  loaded, so an effect that creates when it finds nothing creates a duplicate on every visit.
+- A list rendered with its values as React keys must not hold the same value twice.
 
 A form is a schema; a `Schema.Literals` field renders as a select:
 
@@ -527,6 +538,167 @@ import * as MapRole from '@dxos/plugin-map/MapRole';
 ```
 
 Give the surface a sized container: the map fills its parent, so a parent with no height draws nothing.
+
+Put together, the article and its cards. Every card has one fixed size, so opening the form moves nothing, and
+the map sits in a 2:1 box so it fills the width with the whole world:
+
+```tsx
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const useNow = () => {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+};
+
+// Every card has one fixed size, so the empty card lines up with the clocks and opening its form moves nothing.
+const CARD: React.CSSProperties = {
+  boxSizing: 'border-box',
+  position: 'relative',
+  flex: 'none',
+  width: 240,
+  height: 176,
+  padding: 16,
+  borderRadius: 8,
+  border: '1px solid color-mix(in srgb, currentColor 25%, transparent)',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+};
+
+// 24-hour and zero-padded, so every clock is the same width.
+const TIME: Intl.DateTimeFormatOptions = {
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+};
+
+const ClockCard = ({
+  timeZone,
+  now,
+  onDelete,
+}: {
+  timeZone: string;
+  now: Date;
+  onDelete: () => void;
+}) => (
+  <div data-testid='worldClock.clock' style={CARD}>
+    <div style={{ opacity: 0.7 }}>
+      {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
+    </div>
+    <div style={{ fontSize: '2rem', fontVariantNumeric: 'tabular-nums' }}>
+      {now.toLocaleTimeString(undefined, { timeZone, ...TIME })}
+    </div>
+    <div style={{ opacity: 0.7 }}>{timeZone}</div>
+    {/* Last, so it paints above the text it overlaps. */}
+    <div style={{ position: 'absolute', top: 4, right: 4 }}>
+      <IconButton
+        data-testid='worldClock.delete'
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label='Delete clock'
+        onClick={onDelete}
+      />
+    </div>
+  </div>
+);
+
+const TimezoneForm = Schema.Struct({
+  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
+    title: 'Timezone',
+  }),
+});
+
+const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
+  const [adding, setAdding] = useState(false);
+  return (
+    <div
+      data-testid='worldClock.new'
+      style={{
+        ...CARD,
+        borderStyle: 'dashed',
+        alignItems: adding ? 'stretch' : 'center',
+      }}
+    >
+      {adding ? (
+        <Form.Root
+          schema={TimezoneForm}
+          onSave={({ timezone }) => {
+            onAdd(timezone);
+            setAdding(false);
+          }}
+          onCancel={() => setAdding(false)}
+        >
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Root>
+      ) : (
+        <IconButton
+          data-testid='worldClock.add'
+          variant='ghost'
+          icon='ph--plus--regular'
+          iconOnly
+          size={8}
+          label='Add clock'
+          onClick={() => setAdding(true)}
+        />
+      )}
+    </div>
+  );
+};
+
+const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
+  const now = useNow();
+  const [clock] = useQuery(db, Filter.type(Clock));
+  // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
+  const [stored] = useObject(clock, 'timezones');
+  const timezones = stored ?? [localZone()];
+  // Created on the first change rather than on first view: the query is empty until it has loaded.
+  const save = (next: string[]) => {
+    if (clock) {
+      Obj.update(clock, (clock) => {
+        clock.timezones = next;
+      });
+    } else {
+      db?.add(Obj.make(Clock, { timezones: next }));
+    }
+  };
+  const add = (timeZone: string) =>
+    !timezones.includes(timeZone) && save([...timezones, timeZone]);
+  const remove = (timeZone: string) =>
+    save(timezones.filter((zone) => zone !== timeZone));
+  return (
+    <div style={{ height: '100%', overflowY: 'auto' }}>
+      {/* The world is twice as wide as it is tall, so a 2:1 box fills the width with the whole map. */}
+      <div style={{ width: '100%', aspectRatio: '2 / 1' }}>
+        <Surface.Surface
+          type={MapRole.World}
+          data={{ projection: 'equirectangular', fit: 'contain' }}
+          limit={1}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 16, padding: 16, overflowX: 'auto' }}>
+        {timezones.map((timeZone) => (
+          <ClockCard
+            key={timeZone}
+            timeZone={timeZone}
+            now={now}
+            onDelete={() => remove(timeZone)}
+          />
+        ))}
+        <AddClock onAdd={add} />
+      </div>
+    </div>
+  );
+};
+```
 
 ## Command reference
 

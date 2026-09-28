@@ -125,9 +125,9 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       an empty folder (the autocue flow's first setup step restores all of this)
   steps:
     - name: Create a project from the Composer Plugin template
-      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create.
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create, then open the project's folder in the navtree.
       capture: project
-      expect: a "World Clock" project opens
+      expect: a "World Clock" project opens, and its navtree folder shows what it holds
     - name: Open the project's tasks
       do: Click the project's Tasks tab.
       expect: |
