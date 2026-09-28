@@ -430,6 +430,7 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@dxos/echo',
     '@dxos/echo-react',
     '@dxos/graph',
+    '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
   ],
   // edge-compute generates a function entrypoint containing

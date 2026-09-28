@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
 
-import { MapSurface, MapViewEditor, WorldMap } from '#containers';
+import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
 import { Map } from '#types';
 
 import { LocationAnnotationId } from '../types/MapCapabilities.ts';
@@ -42,8 +42,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.worldMap',
         filter: Surface.makeFilter(World),
-        component: WorldMap,
-        props: ({ data: { projection, fit } }) => ({ projection, fit }),
+        component: WorldMapSurface,
+        props: ({ data: { markers, subject, view } }) => ({ markers, subject, view }),
       }),
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).
